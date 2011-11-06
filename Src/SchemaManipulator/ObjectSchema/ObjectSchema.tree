@@ -1,0 +1,232 @@
+﻿$Comment
+    ==========================================================================
+    
+      File:        ObjectSchema.tree
+      Location:    Yuki.SchemaManipulator <Tree>
+      Description: 对象元类型结构
+      Version:     2011.11.07.
+      Copyright(C) F.R.C.
+    
+    ==========================================================================
+
+Schema
+    Concepts
+        $List ConceptDef
+            Primitive IntegerLiteral
+            Primitive StringLiteral
+            TaggedUnion
+                Name TypeDef
+                Alternatives
+                    Alternative
+                        Name Primitive
+                        Type ConceptRef Primitive
+                    Alternative
+                        Name Alias
+                        Type ConceptRef Alias
+                    Alternative
+                        Name Record
+                        Type ConceptRef Record
+                    Alternative
+                        Name TaggedUnion
+                        Type ConceptRef TaggedUnion
+                    Alternative
+                        Name Enum
+                        Type ConceptRef Enum
+                    Alternative
+                        Name ClientCommand
+                        Type ConceptRef ClientCommand
+                    Alternative
+                        Name ServerCommand
+                        Type ConceptRef ServerCommand
+            Alias
+                Name TypeRef
+                Type ConceptRef StringLiteral
+            Alias
+                Name GenericParameterRef
+                Type ConceptRef StringLiteral
+            TaggedUnion
+                Name TypeSpec
+                Alternatives
+                    Alternative
+                        Name TypeRef
+                        Type ConceptRef TypeRef
+                    Alternative
+                        Name GenericParameterRef
+                        Type ConceptRef GenericParameterRef
+                    Alternative
+                        Name Tuple
+                        Type ConceptRef Tuple
+                    Alternative
+                        Name GenericTypeSpec
+                        Type ConceptRef GenericTypeSpec
+            Record
+                Name Variable
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name Type
+                        Type ConceptRef TypeSpec
+                    Field
+                        Name Description
+                        Type ConceptRef StringLiteral
+            Record
+                Name Primitive
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name GenericParameters
+                        Type List ElementType ConceptRef Variable
+                    Field
+                        Name Description
+                        Type ConceptRef StringLiteral
+            Record
+                Name Alias
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name GenericParameters
+                        Type List ElementType ConceptRef Variable
+                    Field
+                        Name Type
+                        Type ConceptRef TypeSpec
+                    Field
+                        Name Description
+                        Type ConceptRef StringLiteral
+            Record
+                Name Tuple
+                Fields
+                    Field
+                        Name Types
+                        Type List ElementType ConceptRef TypeSpec
+            Record
+                Name Record
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name GenericParameters
+                        Type List ElementType ConceptRef Variable
+                    Field
+                        Name Fields
+                        Type List ElementType ConceptRef Variable
+                    Field
+                        Name Description
+                        Type ConceptRef StringLiteral
+            Record
+                Name TaggedUnion
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name GenericParameters
+                        Type List ElementType ConceptRef Variable
+                    Field
+                        Name Alternatives
+                        Type List ElementType ConceptRef Variable
+                    Field
+                        Name Description
+                        Type ConceptRef StringLiteral
+            Record
+                Name GenericTypeSpec
+                Fields
+                    Field
+                        Name TypeSpec
+                        Type ConceptRef TypeSpec
+                    Field
+                        Name GenericParameterValues
+                        Type List ElementType ConceptRef GenericParameterValue
+            TaggedUnion
+                Name GenericParameterValue
+                Alternatives
+                    Alternative
+                        Name Literal
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name TypeSpec
+                        Type ConceptRef TypeSpec
+            Record
+                Name Literal
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name Value
+                        Type ConceptRef IntegerLiteral
+                    Field
+                        Name Description
+                        Type ConceptRef StringLiteral
+            Record
+                Name Enum
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name UnderlyingType
+                        Type ConceptRef TypeSpec
+                    Field
+                        Name Literals
+                        Type List ElementType ConceptRef Literal
+                    Field
+                        Name Description
+                        Type ConceptRef StringLiteral
+            Record
+                Name ClientCommand
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name OutParameters
+                        Type List ElementType ConceptRef Variable
+                    Field
+                        Name InParameters
+                        Type List ElementType ConceptRef Variable
+                    Field
+                        Name Description
+                        Type ConceptRef StringLiteral
+            Record
+                Name ServerCommand
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name OutParameters
+                        Type List ElementType ConceptRef Variable
+                    Field
+                        Name Description
+                        Type ConceptRef StringLiteral
+            Record
+                Name TypePath
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name Path
+                        Type ConceptRef StringLiteral
+            Record
+                Name Schema
+                Fields
+                    Field
+                        Name Types
+                        Type List ElementType ConceptRef TypeDef
+                    Field
+                        Name TypeRefs
+                        Type List ElementType ConceptRef TypeDef
+                    Field
+                        Name Imports
+                        Type List ElementType ConceptRef StringLiteral
+                    Field
+                        Name TypePaths
+                        Type List ElementType ConceptRef TypePath
