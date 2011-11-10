@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2011.11.07.
+//  Version:     2011.11.10.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -28,6 +28,7 @@ using Yuki.RelationSchema.SqlDatabase;
 using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpDatabase;
 using Yuki.ObjectSchema.Xhtml;
+using Yuki.ObjectSchema.Cpp;
 
 namespace Yuki.SchemaManipulator
 {
@@ -247,6 +248,23 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2cpp")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ObjectSchemaToCppCode(Schema(), args[0], "");
+                    }
+                    else if (args.Length == 2)
+                    {
+                        ObjectSchemaToCppCode(Schema(), args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else
                 {
                     throw (new ArgumentException(opt.Name));
@@ -285,6 +303,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2csd:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成XHTML文档");
             Console.WriteLine(@"/t2xhtml:<XhtmlDir>,<Title>,<CopyrightText>");
+            Console.WriteLine(@"生成C++类型");
+            Console.WriteLine(@"/t2cpp:<CppCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"ObjectSchemaDir|ObjectSchemaFile 对象类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"CsCodePath C#代码文件路径。");
             Console.WriteLine(@"NamespaceName C#文件中的命名空间名称。");
@@ -438,6 +458,22 @@ namespace Yuki.SchemaManipulator
                 if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
                 Txt.WriteFile(Path, TextEncoding.UTF8, Compiled);
             }
+        }
+
+        public static void ObjectSchemaToCppCode(OS.Schema ObjectSchema, String CppCodePath, String NamespaceName)
+        {
+            var Compiled = ObjectSchema.CompileToCpp(NamespaceName);
+            if (File.Exists(CppCodePath))
+            {
+                var Original = Txt.ReadFile(CppCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
+            if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CppCodePath, Compiled);
         }
     }
 }
