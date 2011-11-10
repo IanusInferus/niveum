@@ -121,6 +121,9 @@
   <data name="ActionScriptCommunication" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\actionscriptcommunication\actionscriptcommunication.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Cpp" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\cpp\cpp.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="CSharp" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\csharp\csharp.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
