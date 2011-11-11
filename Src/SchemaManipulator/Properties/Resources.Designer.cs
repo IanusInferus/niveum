@@ -74,6 +74,13 @@ namespace Yuki.SchemaManipulator.Properties {
             }
         }
         
+        internal static byte[] CppBinary {
+            get {
+                object obj = ResourceManager.GetObject("CppBinary", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
         internal static byte[] CSharp {
             get {
                 object obj = ResourceManager.GetObject("CSharp", resourceCulture);

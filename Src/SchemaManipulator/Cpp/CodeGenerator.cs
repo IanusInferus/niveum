@@ -164,13 +164,22 @@ namespace Yuki.ObjectSchema.Cpp.Common
                         return Type.GenericParameterRef.Value;
                     case TypeSpecTag.Tuple:
                         {
+                            if (ForceAsValue)
+                            {
+                                return Type.TypeFriendlyName();
+                            }
                             return "std::shared_ptr<" + Type.TypeFriendlyName() + ">";
                         }
                     case TypeSpecTag.GenericTypeSpec:
                         {
                             if (Type.GenericTypeSpec.GenericParameterValues.Count() > 0 && Type.GenericTypeSpec.GenericParameterValues.All(gpv => gpv.OnTypeSpec))
                             {
-                                return "std::shared_ptr<" + GetTypeString(Type.GenericTypeSpec.TypeSpec, true) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p.TypeSpec)).ToArray()) + ">" + ">";
+                                var TypeString = GetTypeString(Type.GenericTypeSpec.TypeSpec, true) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p.TypeSpec)).ToArray()) + ">";
+                                if (ForceAsValue)
+                                {
+                                    return TypeString;
+                                }
+                                return "std::shared_ptr<" + TypeString + ">";
                             }
                             else
                             {
@@ -179,6 +188,10 @@ namespace Yuki.ObjectSchema.Cpp.Common
                                     GetTypeString(t.TypeSpec);
                                 }
 
+                                if (ForceAsValue)
+                                {
+                                    return Type.TypeFriendlyName();
+                                }
                                 return "std::shared_ptr<" + Type.TypeFriendlyName() + ">";
                             }
                         }
@@ -202,6 +215,10 @@ namespace Yuki.ObjectSchema.Cpp.Common
                     return "<" + String.Join(", ", GenericParameters.Select(gp => gp.Name).ToArray()) + ">";
                 }
             }
+            public String[] GetTypePredefinition(String Name, String MetaType, String[] GenericParameterLine)
+            {
+                return GetTemplate("TypePredefinition").Substitute("Name", Name).Substitute("MetaType", MetaType).Substitute("GenericParameterLine", GenericParameterLine);
+            }
             public String[] GetTypePredefinition(TypeDef t)
             {
                 var Name = t.Name();
@@ -219,7 +236,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 {
                     MetaType = "enum";
                 }
-                return GetTemplate("TypePredefinition").Substitute("Name", Name).Substitute("MetaType", MetaType).Substitute("GenericParameterLine", GenericParameterLine);
+                return GetTypePredefinition(Name, MetaType, GenericParameterLine);
             }
             public String[] GetAlias(Alias a)
             {
@@ -393,6 +410,10 @@ namespace Yuki.ObjectSchema.Cpp.Common
                     l.AddRange(GetTemplate("PredefinedTypes"));
                 }
 
+                var ltf = new TupleAndGenericTypeSpecFetcher();
+                ltf.PushTypeDefs(Schema.Types);
+                var Tuples = ltf.GetTuples();
+
                 foreach (var c in Schema.Types)
                 {
                     if (c.OnPrimitive)
@@ -401,6 +422,10 @@ namespace Yuki.ObjectSchema.Cpp.Common
                     }
 
                     l.AddRange(GetTypePredefinition(c));
+                }
+                foreach (var t in Tuples)
+                {
+                    l.AddRange(GetTypePredefinition(t.TypeFriendlyName(), "class", new String[] { }));
                 }
                 l.Add("");
 
@@ -433,9 +458,6 @@ namespace Yuki.ObjectSchema.Cpp.Common
                     l.Add("");
                 }
 
-                var ltf = new TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Schema.Types);
-                var Tuples = ltf.GetTuples();
                 foreach (var t in Tuples)
                 {
                     l.AddRange(GetTuple(t.TypeFriendlyName(), t.Tuple));
@@ -466,7 +488,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                     var IdentifierPart = m.Value;
                     if (TemplateInfo.Keywords.Contains(IdentifierPart))
                     {
-                        return "@" + IdentifierPart;
+                        return "_" + IdentifierPart;
                     }
                     else
                     {

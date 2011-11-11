@@ -29,6 +29,7 @@ using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpDatabase;
 using Yuki.ObjectSchema.Xhtml;
 using Yuki.ObjectSchema.Cpp;
+using Yuki.ObjectSchema.CppBinary;
 
 namespace Yuki.SchemaManipulator
 {
@@ -265,6 +266,23 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2cppb")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ObjectSchemaToCppBinaryCode(Schema(), args[0], "");
+                    }
+                    else if (args.Length == 2)
+                    {
+                        ObjectSchemaToCppBinaryCode(Schema(), args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else
                 {
                     throw (new ArgumentException(opt.Name));
@@ -305,6 +323,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2xhtml:<XhtmlDir>,<Title>,<CopyrightText>");
             Console.WriteLine(@"生成C++类型");
             Console.WriteLine(@"/t2cpp:<CppCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"生成C++二进制类型");
+            Console.WriteLine(@"/t2cppb:<CppCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"ObjectSchemaDir|ObjectSchemaFile 对象类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"CsCodePath C#代码文件路径。");
             Console.WriteLine(@"NamespaceName C#文件中的命名空间名称。");
@@ -463,6 +483,22 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCppCode(OS.Schema ObjectSchema, String CppCodePath, String NamespaceName)
         {
             var Compiled = ObjectSchema.CompileToCpp(NamespaceName);
+            if (File.Exists(CppCodePath))
+            {
+                var Original = Txt.ReadFile(CppCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
+            if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CppCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToCppBinaryCode(OS.Schema ObjectSchema, String CppCodePath, String NamespaceName)
+        {
+            var Compiled = ObjectSchema.CompileToCppBinary(NamespaceName);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);
