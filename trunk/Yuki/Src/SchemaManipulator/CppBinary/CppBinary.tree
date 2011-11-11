@@ -337,7 +337,7 @@ ObjectSchemaTemplate
                             {
                                 Chars.push_back((wchar_t)ReadUInt16());
                             }
-                            if ((n & 1) != 0)
+                            if ((Length & 1) != 0)
                             {
                                 ReadByte();
                             }
