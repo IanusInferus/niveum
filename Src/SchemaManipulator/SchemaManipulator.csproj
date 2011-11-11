@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionScriptCommunication\CodeGenerator.cs" />
+    <Compile Include="CppBinary\CodeGenerator.cs" />
     <Compile Include="Cpp\CodeGenerator.cs" />
     <Compile Include="CSharpCommunication\CodeGenerator.cs" />
     <Compile Include="CSharp\CodeGenerator.cs" />
@@ -66,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ActionScriptCommunication\ActionScriptCommunication.tree" />
+    <None Include="CppBinary\CppBinary.tree" />
     <None Include="Cpp\Cpp.tree" />
     <None Include="CSharpCommunication\CSharpCommunication.tree" />
     <None Include="CSharp\CSharp.tree" />
