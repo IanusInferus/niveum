@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Yuki.SchemaManipulator <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2011.11.12.
+      Version:     2011.11.16.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -534,7 +534,7 @@ ObjectSchemaTemplate
                 $String
                     static std::shared_ptr<[[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
                     {
-                        auto o = rcnew(new [[${Name}]]());
+                        auto o = std::make_shared<[[${Name}]]>();
                         o->Value = [[${ValueTypeFriendlyName}FromBinary]](s);
                         return o;
                     }
@@ -549,7 +549,7 @@ ObjectSchemaTemplate
                 $String
                     static std::shared_ptr<[[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
                     {
-                        auto o = rcnew(new [[${Name}]]());
+                        auto o = std::make_shared<[[${Name}]]>();
                         ${FieldFroms}
                         return o;
                     }
@@ -576,7 +576,7 @@ ObjectSchemaTemplate
                 $String
                     static std::shared_ptr<[[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
                     {
-                        auto o = rcnew(new [[${Name}]]());
+                        auto o = std::make_shared<[[${Name}]]>();
                         o->_Tag = [[${Name}TagFromBinary]](s);
                         ${AlternativeFroms}
                         throw std::logic_error("InvalidOperation");
@@ -627,7 +627,7 @@ ObjectSchemaTemplate
                 $String
                     static std::shared_ptr<[[${TypeFriendlyName}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
-                        auto t = rcnew(new [[${TypeFriendlyName}]]());
+                        auto t = std::make_shared<[[${TypeFriendlyName}]]>();
                         ${TupleElementFroms}
                         return t;
                     }
@@ -654,7 +654,7 @@ ObjectSchemaTemplate
                 $String
                     static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
-                        auto l = rcnew(new [[${TypeString}]]());
+                        auto l = std::make_shared<[[${TypeString}]]>();
                         int32_t Length = IntFromBinary(s);
                         for (int k = 0; k < Length; k += 1)
                         {
@@ -678,7 +678,7 @@ ObjectSchemaTemplate
                 $String
                     static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
-                        auto o = rcnew(new [[${TypeString}]]());
+                        auto o = std::make_shared<[[${TypeString}]]>();
                         o->_Tag = OptionalTagFromBinary(s);
                         ${AlternativeFroms}
                         throw std::logic_error("InvalidOperation");
