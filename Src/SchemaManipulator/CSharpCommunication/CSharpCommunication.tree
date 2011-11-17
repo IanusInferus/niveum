@@ -1,12 +1,12 @@
 ﻿$Comment
     ==========================================================================
-    
+
       File:        CSharpCommunication.tree
       Location:    Yuki.SchemaManipulator <Tree>
       Description: 对象类型结构C#通讯模板数据
-      Version:     2011.11.07.
+      Version:     2011.11.17.
       Copyright(C) F.R.C.
-    
+
     ==========================================================================
 
 ObjectSchemaTemplate
@@ -126,7 +126,7 @@ ObjectSchemaTemplate
                     ${Header}
                     using ${Imports};
                     ${Primitives}
-                    
+
                     namespace [[${NamespaceName}]]
                     {
                         ${ComplexTypes}
@@ -197,7 +197,7 @@ ObjectSchemaTemplate
                     public sealed class Server<TContext>
                     {
                         private Dictionary<String, Func<TContext, String, String>> ClientCommands;
-                    
+
                         public Server(IServerImplementation<TContext> i)
                         {
                             ClientCommands = new Dictionary<String, Func<TContext, String, String>>(StringComparer.OrdinalIgnoreCase);
@@ -211,18 +211,18 @@ ObjectSchemaTemplate
                                 return 0x${Hash};
                             }
                         }
-                    
+
                         public Boolean HasCommand(String CommandName)
                         {
                             return ClientCommands.ContainsKey(CommandName);
                         }
-                    
+
                         public String ExecuteCommand(TContext c, String CommandName, String Parameters)
                         {
                             var cmd = ClientCommands[CommandName];
                             return cmd(c, Parameters);
                         }
-                    
+
                         public delegate void ServerEventDelegate(TContext c, String CommandName, String Parameters);
                         public event ServerEventDelegate ServerEvent;
                         private void OnServerEvent(TContext c, String CommandName, String Parameters)
@@ -242,6 +242,117 @@ ObjectSchemaTemplate
             Value
                 $String
                     i.${Name} += (c, e) => OnServerEvent(c, @"${Name}", JsonTranslator.[[${Name}EventToJson]](e).ToString(Formatting.None));
+        Template
+            Name ISender
+            Value
+                $String
+                    public interface ISender
+                    {
+                        void Send(String CommandName, String Params);
+                    }
+        Template
+            Name IClientImplementation
+            //Parameters: ${Commands}
+            Value
+                $String
+                    public interface IClientImplementation<TContext>
+                    {
+                        ${Commands}
+                    }
+        Template
+            Name IClientImplementation_ServerCommand
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    void [[${Name}]](TContext c, [[${Name}Event]] e);
+        Template
+            Name Client
+            //Parameters: ${Hash}, ${ClientCommands}, ${ServerCommands}
+            Value
+                $String
+                    public sealed class Client<TContext>
+                    {
+                        private ISender s;
+                        private IClientImplementation<TContext> i;
+                        private Dictionary<String, Queue<Action<TContext,  String>>> ClientCommandCallbacks;
+                        private Dictionary<String, Action<TContext, String>> ServerCommands;
+
+                        public Client(ISender s, IClientImplementation<TContext> i)
+                        {
+                            this.s = s;
+                            this.i = i;
+                            ClientCommandCallbacks = new Dictionary<String, Queue<Action<TContext, String>>>(StringComparer.OrdinalIgnoreCase);
+                            ServerCommands = new Dictionary<String, Action<TContext, String>>(StringComparer.OrdinalIgnoreCase);
+                            ${ServerCommands}
+                        }
+
+                        public UInt64 Hash
+                        {
+                            get
+                            {
+                                return 0x${Hash};
+                            }
+                        }
+
+                        public void HandleResult(TContext c, String CommandName, String Params)
+                        {
+                            if (ClientCommandCallbacks.ContainsKey(CommandName))
+                            {
+                                var q = ClientCommandCallbacks[CommandName];
+                                if (q.Count == 0)
+                                {
+                                    throw new InvalidOperationException(CommandName);
+                                }
+                                var Callback = q.Dequeue();
+                                Callback(c, Params);
+                                return;
+                            }
+
+                            if (ServerCommands.ContainsKey(CommandName))
+                            {
+                                var a = ServerCommands[CommandName];
+                                a(c, Params);
+                                return;
+                            }
+
+                            throw new InvalidOperationException(CommandName);
+                        }
+
+                        private void AddCallback(String CommandName, Action<TContext, String> Callback)
+                        {
+                            if (ClientCommandCallbacks.ContainsKey(CommandName))
+                            {
+                                ClientCommandCallbacks[CommandName].Enqueue(Callback);
+                            }
+                            else
+                            {
+                                var q = new Queue<Action<TContext, String>>();
+                                q.Enqueue(Callback);
+                                ClientCommandCallbacks.Add(CommandName, q);
+                            }
+                        }
+
+                        ${ClientCommands}
+                    }
+        Template
+            Name Client_ClientCommand
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    public void [[${Name}]]([[${Name}Request]] r, Action<TContext, [[${Name}Reply]]> Callback)
+                    {
+                        var Request = JsonTranslator.[[${Name}RequestToJson]](r).ToString(Formatting.None);
+                        AddCallback(@"${Name}", (c, Params) => Callback(c, JsonTranslator.[[${Name}ReplyFromJson]](JToken.Parse(Params))));
+                        s.Send(@"${Name}", Request);
+                    }
+        Template
+            Name Client_ServerCommand
+            //Parameters: ${Name}
+            Value
+                $String
+                    ServerCommands.Add("${Name}", (c, Params) => i.[[${Name}]](c, JsonTranslator.[[${Name}EventFromJson]](JToken.Parse(Params))));
         Template
             Name JsonTranslator
             //Parameters: ${Serializers}
