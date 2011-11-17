@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构C#通讯代码生成器
-//  Version:     2011.11.07.
+//  Version:     2011.11.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -191,6 +191,51 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                     else if (c._Tag == CommandTag.Server)
                     {
                         l.AddRange(GetTemplate("Server_ServerCommand").Substitute("Name", c.Server.Name));
+                    }
+                }
+                return l.ToArray();
+            }
+
+            public String[] GetIClientImplementation(Command[] Commands)
+            {
+                return GetTemplate("IClientImplementation").Substitute("Commands", GetIClientImplementationCommands(Commands));
+            }
+            public String[] GetIClientImplementationCommands(Command[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c._Tag == CommandTag.Server)
+                    {
+                        l.AddRange(GetTemplate("IClientImplementation_ServerCommand").Substitute("Name", c.Server.Name).Substitute("XmlComment", GetXmlComment(c.Server.Description)));
+                    }
+                }
+                return l.ToArray();
+            }
+            public String[] GetClient(Command[] Commands)
+            {
+                return GetTemplate("Client").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommands", GetClientClientCommands(Commands)).Substitute("ServerCommands", GetClientServerCommands(Commands));
+            }
+            public String[] GetClientClientCommands(Command[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c._Tag == CommandTag.Client)
+                    {
+                        l.AddRange(GetTemplate("Client_ClientCommand").Substitute("Name", c.Client.Name).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
+                    }
+                }
+                return l.ToArray();
+            }
+            public String[] GetClientServerCommands(Command[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c._Tag == CommandTag.Server)
+                    {
+                        l.AddRange(GetTemplate("Client_ServerCommand").Substitute("Name", c.Server.Name));
                     }
                 }
                 return l.ToArray();
@@ -487,9 +532,17 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 }
 
                 var ca = cl.ToArray();
+                
                 l.AddRange(GetIServerImplementation(ca));
                 l.Add("");
                 l.AddRange(GetServer(ca));
+                l.Add("");
+
+                l.AddRange(GetTemplate("ISender"));
+                l.Add("");
+                l.AddRange(GetIClientImplementation(ca));
+                l.Add("");
+                l.AddRange(GetClient(ca));
                 l.Add("");
 
                 l.AddRange(GetJsonTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray()));
