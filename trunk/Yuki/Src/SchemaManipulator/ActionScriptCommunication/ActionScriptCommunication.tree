@@ -4,7 +4,7 @@
       File:        ActionScriptCommunication.tree
       Location:    Yuki.SchemaManipulator <Tree>
       Description: 对象类型结构ActionScript3.0通讯模板数据
-      Version:     2011.11.07.
+      Version:     2011.11.21.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -121,7 +121,7 @@ ObjectSchemaTemplate
                     public var [[${name}]]:[[${Type}]];
         Template
             Name Record
-            //Parameters: ${Name}, ${Fields}, ${FieldFroms}, ${XmlComment}
+            //Parameters: ${Name}, ${Fields}, ${FieldFroms}, ${FieldTos}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
@@ -140,7 +140,9 @@ ObjectSchemaTemplate
                     	}
                     	public static function toJson(o:[[${Name}]]):*
                     	{
-                    		return o;
+                    		var jo:* = new Object();
+                    		${FieldTos}
+                    		return jo;
                     	}
                     }
         Template
@@ -362,7 +364,7 @@ ObjectSchemaTemplate
                     public function [[${name}]](r:[[${Name}Request]], callback:Function):void
                     {
                     	var ra:Vector.<Function> = requests[${ClientCommandIndex}];
-                    	s.send("${Name}", JSON.encode(r));
+                    	s.send("${Name}", JSON.encode(JsonTranslator.[[${name}RequestToJson]](r)));
                     	ra.push(callback);
                     }
         Template
@@ -395,13 +397,19 @@ ObjectSchemaTemplate
             Value
                 $String
                     public static function [[${name}FromJson]](jo:*):[[${Name}]] { return [[${Name}]].fromJson(jo); }
-                    public static function [[${name}ToJson]](o:[[${Name}]]):* { return o; }
+                    public static function [[${name}ToJson]](o:[[${Name}]]):* { return [[${Name}]].toJson(o); }
         Template
             Name JsonTranslator_FieldFrom
             //Parameters: ${Name}, ${TypeFriendlyName}
             Value
                 $String
                     o.[[${name}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](jo.[[${name}]]);
+        Template
+            Name JsonTranslator_FieldTo
+            //Parameters: ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    jo.[[${name}]] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[${name}]]);
         Template
             Name JsonTranslator_TaggedUnion
             //Parameters: ${Name}
@@ -450,4 +458,12 @@ ObjectSchemaTemplate
                     	}
                     	return l;
                     }
-                    public static function [[${typeFriendlyName}ToJson]](l:[[${TypeString}]]):* { return l; }
+                    public static function [[${typeFriendlyName}ToJson]](l:[[${TypeString}]]):*
+                    {
+                    	var jl:Array = new Array();
+                    	for (var k:int = 0; k < l.length; k += 1)
+                    	{
+                    		jl.push([[${elementTypeFriendlyName}ToJson]](l[k]));
+                    	}
+                    	return jl;
+                    }
