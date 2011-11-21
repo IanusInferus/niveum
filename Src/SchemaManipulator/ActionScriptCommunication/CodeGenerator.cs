@@ -261,7 +261,7 @@ namespace Yuki.ObjectSchema.ActionScriptCommunication
             public String[] GetRecord(Record r)
             {
                 var Fields = GetFields(r.Fields);
-                return GetTemplate("Record").Substitute("Name", r.Name).Substitute("Fields", Fields).Substitute("FieldFroms", GetJsonTranslatorFieldFroms(r.Fields)).Substitute("XmlComment", GetXmlComment(r.Description));
+                return GetTemplate("Record").Substitute("Name", r.Name).Substitute("Fields", Fields).Substitute("FieldFroms", GetJsonTranslatorFieldFroms(r.Fields)).Substitute("FieldTos", GetJsonTranslatorFieldTos(r.Fields)).Substitute("XmlComment", GetXmlComment(r.Description));
             }
             public String[] GetAlternativeCreate(TaggedUnion tu, Variable a)
             {
@@ -536,6 +536,15 @@ namespace Yuki.ObjectSchema.ActionScriptCommunication
                 foreach (var a in Fields)
                 {
                     l.AddRange(GetTemplate("JsonTranslator_FieldFrom").Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
+            public String[] GetJsonTranslatorFieldTos(Variable[] Fields)
+            {
+                List<String> l = new List<String>();
+                foreach (var a in Fields)
+                {
+                    l.AddRange(GetTemplate("JsonTranslator_FieldTo").Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
                 }
                 return l.ToArray();
             }
