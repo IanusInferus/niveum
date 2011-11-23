@@ -148,6 +148,10 @@ namespace Yuki.ObjectSchema
                 switch (t._Tag)
                 {
                     case TypeSpecTag.TypeRef:
+                        if (!Types.ContainsKey(t.TypeRef.Value))
+                        {
+                            throw new InvalidOperationException(String.Format("TypeNotExist: {0}", t.TypeRef.Value));
+                        }
                         Mark(Types[t.TypeRef.Value]);
                         break;
                     case TypeSpecTag.GenericParameterRef:
