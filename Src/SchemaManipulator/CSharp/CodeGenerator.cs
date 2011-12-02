@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2011.11.07.
+//  Version:     2011.12.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -359,12 +359,12 @@ namespace Yuki.ObjectSchema.CSharp.Common
                 var LiteralDict = e.Literals.ToDictionary(l => l.Name);
                 var LiteralNameAdds = e.Literals.Select(l => new { Name = l.Name, NameOrDescription = l.Name });
                 var LiteralDescriptionAdds = e.Literals.GroupBy(l => l.Description).Where(l => l.Count() == 1).Select(l => l.Single()).Where(l => !LiteralDict.ContainsKey(l.Description)).Select(l => new { Name = l.Name, NameOrDescription = l.Description });
-                var LiteralAdds = LiteralNameAdds.Concat(LiteralDescriptionAdds).Select(l => GetTemplate("LiteralAdd").Substitute("EnumName", e.Name).Substitute("LiteralName", l.Name).Substitute("NameOrDescription", l.NameOrDescription).Single()).ToArray();
+                var LiteralAdds = LiteralNameAdds.Concat(LiteralDescriptionAdds).Select(l => GetTemplate("LiteralAdd").Substitute("EnumName", e.Name).Substitute("LiteralName", l.Name).Substitute("NameOrDescription", l.NameOrDescription.Escape()).Single()).ToArray();
                 return GetTemplate("EnumParser").Substitute("Name", e.Name).Substitute("LiteralAdds", LiteralAdds).Substitute("XmlComment", GetXmlComment(e.Description));
             }
             public String[] GetEnumWriter(Enum e)
             {
-                var LiteralAddWriters = e.Literals.Select(l => GetTemplate("LiteralAddWriter").Substitute("EnumName", e.Name).Substitute("LiteralName", l.Name).Substitute("Description", l.Description).Single()).ToArray();
+                var LiteralAddWriters = e.Literals.Select(l => GetTemplate("LiteralAddWriter").Substitute("EnumName", e.Name).Substitute("LiteralName", l.Name).Substitute("Description", l.Description.Escape()).Single()).ToArray();
                 return GetTemplate("EnumWriter").Substitute("Name", e.Name).Substitute("LiteralAddWriters", LiteralAddWriters).Substitute("XmlComment", GetXmlComment(e.Description));
             }
             public String[] GetClientCommand(ClientCommand c)
