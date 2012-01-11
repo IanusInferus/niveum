@@ -1,4 +1,4 @@
-Yummy Ultimate Kata(型) Infrastructure (Yuki)
+Yummy Ultimate Kata(型) Infrastructure (YUKI)
 
 地狱门神(F.R.C.)
 
