@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2011.11.07.
+//  Version:     2012.01.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -174,7 +174,7 @@ namespace Yuki.ObjectSchema.Xhtml
                         else if (c.OnServerCommand)
                         {
                             var OutParameters = GetVariables(c.ServerCommand.OutParameters);
-                            var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.ServerCommand.Name)).Substitute("MetaType", "服务端事件").Substitute("Fields", OutParameters).Substitute("Description", GetEscaped(c.ServerCommand.Description));
+                            var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.ServerCommand.Name)).Substitute("MetaType", "服务端事件").Substitute("GenericParameters", GetGenericParameters(new Variable[] { })).Substitute("Fields", OutParameters).Substitute("Description", GetEscaped(c.ServerCommand.Description));
                             Content.AddRange(Lines);
 
                             Commands.AddRange(GetTemplate("TypeBrief").Substitute("Name", GetEscaped(c.ServerCommand.Name)).Substitute("GenericParameters", GetGenericParameters(new Variable[] { })).Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Value = c.ServerCommand.Name }))).Substitute("MetaType", "客户端方法").Substitute("Description", GetEscaped(c.ServerCommand.Description)));
