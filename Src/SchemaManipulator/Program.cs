@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2011.11.10.
+//  Version:     2012.01.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -97,7 +97,7 @@ namespace Yuki.SchemaManipulator
                         var ObjectSchemaPath = args[0];
                         if (Directory.Exists(ObjectSchemaPath))
                         {
-                            foreach (var f in Directory.EnumerateFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories))
+                            foreach (var f in Directory.GetFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories).OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
                             {
                                 osl.LoadTypeRef(f);
                             }
@@ -121,7 +121,7 @@ namespace Yuki.SchemaManipulator
                         var ObjectSchemaPath = args[0];
                         if (Directory.Exists(ObjectSchemaPath))
                         {
-                            foreach (var f in Directory.EnumerateFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories))
+                            foreach (var f in Directory.GetFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories).OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
                             {
                                 osl.LoadType(f);
                             }
