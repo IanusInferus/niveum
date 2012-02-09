@@ -4,7 +4,7 @@
       File:        ActionScriptCommunication.tree
       Location:    Yuki.SchemaManipulator <Tree>
       Description: 对象类型结构ActionScript3.0通讯模板数据
-      Version:     2011.11.21.
+      Version:     2012.02.09.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -104,7 +104,6 @@ ObjectSchemaTemplate
                     {
                     	import flash.errors.IllegalOperationError;
                     	import flash.utils.Dictionary;
-                    	import com.amf.cairngorm.vo.ValueObject;
                     	import com.utils.json.JSON;
                     	import ${Imports};
 
@@ -125,7 +124,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    public class [[${Name}]] implements ValueObject
+                    public class [[${Name}]]
                     {
                     	${Fields}
 
@@ -191,7 +190,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    public class [[${Name}]] implements ValueObject
+                    public class [[${Name}]]
                     {
                     	public var _tag:int;
 
