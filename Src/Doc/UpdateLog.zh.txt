@@ -1,4 +1,7 @@
-﻿2012.01.14
+﻿2012.02.09
+删除ActionScript代码中的com.amf.cairngorm.vo依赖。
+
+2012.01.14
 修正XHTML生成时，服务器事件中出现多余的${GenericParameters}字样的问题。
 
 2012.01.11
