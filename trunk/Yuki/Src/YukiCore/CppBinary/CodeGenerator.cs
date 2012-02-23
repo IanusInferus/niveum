@@ -177,6 +177,39 @@ namespace Yuki.ObjectSchema.CppBinary
                             case "Real":
                                 l.AddRange(GetTemplate("BinaryTranslator_Primitive_Real"));
                                 break;
+                            case "Byte":
+                                l.AddRange(GetTemplate("BinaryTranslator_Primitive_Byte"));
+                                break;
+                            case "UInt8":
+                                l.AddRange(GetTemplate("BinaryTranslator_Primitive_UInt8"));
+                                break;
+                            case "UInt16":
+                                l.AddRange(GetTemplate("BinaryTranslator_Primitive_UInt16"));
+                                break;
+                            case "UInt32":
+                                l.AddRange(GetTemplate("BinaryTranslator_Primitive_UInt32"));
+                                break;
+                            case "UInt64":
+                                l.AddRange(GetTemplate("BinaryTranslator_Primitive_UInt64"));
+                                break;
+                            case "Int8":
+                                l.AddRange(GetTemplate("BinaryTranslator_Primitive_Int8"));
+                                break;
+                            case "Int16":
+                                l.AddRange(GetTemplate("BinaryTranslator_Primitive_Int16"));
+                                break;
+                            case "Int32":
+                                l.AddRange(GetTemplate("BinaryTranslator_Primitive_Int32"));
+                                break;
+                            case "Int64":
+                                l.AddRange(GetTemplate("BinaryTranslator_Primitive_Int64"));
+                                break;
+                            case "Float32":
+                                l.AddRange(GetTemplate("BinaryTranslator_Primitive_Float32"));
+                                break;
+                            case "Float64":
+                                l.AddRange(GetTemplate("BinaryTranslator_Primitive_Float64"));
+                                break;
                             case "Type":
                                 l.AddRange(GetTemplate("BinaryTranslator_Primitive_Type"));
                                 break;
@@ -239,6 +272,16 @@ namespace Yuki.ObjectSchema.CppBinary
                     if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Value == "List")
                     {
                         l.AddRange(GetBinaryTranslatorList(gps));
+                        l.Add("");
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Value == "Set")
+                    {
+                        l.AddRange(GetBinaryTranslatorSet(gps));
+                        l.Add("");
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Value == "Map")
+                    {
+                        l.AddRange(GetBinaryTranslatorMap(gps));
                         l.Add("");
                     }
                     else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef == "Optional")
@@ -368,6 +411,19 @@ namespace Yuki.ObjectSchema.CppBinary
             {
                 return GetTemplate("BinaryTranslator_List").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l, true)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
             }
+            public String[] GetBinaryTranslatorSet(TypeSpec l)
+            {
+                return GetTemplate("BinaryTranslator_Set").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l, true)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+            }
+            public String[] GetBinaryTranslatorMap(TypeSpec l)
+            {
+                var gp = l.GenericTypeSpec.GenericParameterValues.ToArray();
+                if (gp.Length != 2)
+                {
+                    throw new ArgumentException();
+                }
+                return GetTemplate("BinaryTranslator_Map").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l, true)).Substitute("KeyTypeFriendlyName", gp[0].TypeSpec.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", gp[1].TypeSpec.TypeFriendlyName());
+            }
             public String[] GetBinaryTranslatorOptional(TypeSpec o, TaggedUnion GenericOptionalType)
             {
                 var ElementType = o.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
@@ -382,11 +438,6 @@ namespace Yuki.ObjectSchema.CppBinary
             public String[] GetComplexTypes(Schema Schema)
             {
                 List<String> l = new List<String>();
-
-                if (Schema.TypeRefs.Length == 0)
-                {
-                    l.AddRange(InnerWriter.GetTemplate("PredefinedTypes"));
-                }
 
                 var ltf = new TupleAndGenericTypeSpecFetcher();
                 ltf.PushTypeDefs(Schema.Types);

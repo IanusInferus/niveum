@@ -175,6 +175,39 @@ ObjectSchemaTemplate
             Name Real
             PlatformName double
         PrimitiveMapping
+            Name Byte
+            PlatformName uint8_t
+        PrimitiveMapping
+            Name UInt8
+            PlatformName uint8_t
+        PrimitiveMapping
+            Name UInt16
+            PlatformName uint16_t
+        PrimitiveMapping
+            Name UInt32
+            PlatformName uint32_t
+        PrimitiveMapping
+            Name UInt64
+            PlatformName uint64_t
+        PrimitiveMapping
+            Name Int8
+            PlatformName int8_t
+        PrimitiveMapping
+            Name Int16
+            PlatformName int16_t
+        PrimitiveMapping
+            Name Int32
+            PlatformName int32_t
+        PrimitiveMapping
+            Name Int64
+            PlatformName int64_t
+        PrimitiveMapping
+            Name Float32
+            PlatformName float
+        PrimitiveMapping
+            Name Float64
+            PlatformName double
+        PrimitiveMapping
             Name Type
             PlatformName std::wstring
         PrimitiveMapping
@@ -212,10 +245,10 @@ ObjectSchemaTemplate
             Name PredefinedTypes
             Value
                 $String
-                    struct Unit
-                    {
-                    };
-
+                    #ifndef _UNIT_TYPE_
+                        typedef struct {} Unit;
+                        #define _UNIT_TYPE_
+                    #endif
                 $End
         Template
             Name Header
