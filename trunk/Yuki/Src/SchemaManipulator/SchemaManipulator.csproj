@@ -13,6 +13,11 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(FLTKey)</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" Exists('$(FLTKey)') ">
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,6 +27,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -41,53 +47,16 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActionScriptCommunication\CodeGenerator.cs" />
-    <Compile Include="CppBinary\CodeGenerator.cs" />
-    <Compile Include="Cpp\CodeGenerator.cs" />
-    <Compile Include="CSharpCommunication\CodeGenerator.cs" />
-    <Compile Include="CSharp\CodeGenerator.cs" />
-    <Compile Include="ObjectSchema\TupleAndGenericTypeSpecFetcher.cs" />
-    <Compile Include="ObjectSchema\ObjectSchemaExtensions.cs" />
-    <Compile Include="SqlDatabase\CodeGenerator.cs" />
-    <Compile Include="RelationSchema\RelationSchemaTranslator.cs" />
-    <Compile Include="ObjectSchema\ObjectSchemaLoader.cs" />
-    <Compile Include="ObjectSchema\ObjectSchemaTemplate.cs" />
-    <Compile Include="ObjectSchema\ObjectSchema.Designer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="RelationSchema\RelationSchema.Designer.cs" />
-    <Compile Include="DbmlDatabase\CodeGenerator.cs" />
-    <Compile Include="CSharpDatabase\CodeGenerator.cs" />
-    <Compile Include="Xhtml\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ActionScriptCommunication\ActionScriptCommunication.tree" />
-    <None Include="CppBinary\CppBinary.tree" />
-    <None Include="Cpp\Cpp.tree" />
-    <None Include="CSharpCommunication\CSharpCommunication.tree" />
-    <None Include="CSharp\CSharp.tree" />
-    <None Include="SqlDatabase\SqlDatabase.tree" />
-    <None Include="ObjectSchema\ObjectSchema.tree" />
-    <None Include="RelationSchema\RelationSchema.tree" />
-    <None Include="CSharpDatabase\CSharpDatabase.tree" />
-    <None Include="Xhtml\Xhtml.tree" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <ProjectReference Include="..\YukiCore\YukiCore.csproj">
+      <Project>{23021296-4E59-4532-9B5F-CB3CED3A978E}</Project>
+      <Name>YukiCore</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="BeforeBuild">
-    <Exec Command="&quot;Lib\Firefly\MetaSchemaManipulator.exe&quot; /t2cs:&quot;SchemaManipulator\ObjectSchema\ObjectSchema.tree&quot;,&quot;SchemaManipulator\ObjectSchema\ObjectSchema.Designer.cs&quot;,Yuki.ObjectSchema" WorkingDirectory="$(SolutionDir)" />
-    <Exec Command="&quot;Lib\Firefly\MetaSchemaManipulator.exe&quot; /t2cs:&quot;SchemaManipulator\RelationSchema\RelationSchema.tree&quot;,&quot;SchemaManipulator\RelationSchema\RelationSchema.Designer.cs&quot;,Yuki.RelationSchema" WorkingDirectory="$(SolutionDir)" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="AfterBuild">
