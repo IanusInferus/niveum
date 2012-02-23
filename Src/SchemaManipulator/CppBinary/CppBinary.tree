@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Yuki.SchemaManipulator <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2011.11.16.
+      Version:     2012.02.23.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -540,7 +540,7 @@ ObjectSchemaTemplate
                     }
                     static void [[${Name}ToBinary]](IWritableStream &s, std::shared_ptr<[[${Name}]]> o)
                     {
-                        [[${ValueTypeFriendlyName}ToBinary]](o->Value);
+                        [[${ValueTypeFriendlyName}ToBinary]](s, o->Value);
                     }
         Template
             Name BinaryTranslator_Record
