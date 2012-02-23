@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2011.11.10.
+//  Version:     2012.02.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -114,7 +114,13 @@ namespace Yuki.ObjectSchema.Cpp.Common
             {
                 List<String> l = new List<String>();
 
-                foreach (var p in Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnPrimitive).Select(c => c.Primitive))
+                var Types = new List<TypeDef>(Schema.TypeRefs.Concat(Schema.Types));
+                var Dict = Types.ToDictionary(t => t.Name());
+                if (!Dict.ContainsKey("Boolean"))
+                {
+                    Types.Add(TypeDef.CreatePrimitive(new Primitive { Name = "Boolean", GenericParameters = new Variable[] { }, Description = "" }));
+                }
+                foreach (var p in Types.Where(c => c.OnPrimitive).Select(c => c.Primitive))
                 {
                     if (TemplateInfo.PrimitiveMappings.ContainsKey(p.Name))
                     {
