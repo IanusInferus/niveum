@@ -112,6 +112,39 @@ ObjectSchemaTemplate
             Name Real
             PlatformName System.Double
         PrimitiveMapping
+            Name Byte
+            PlatformName System.Byte
+        PrimitiveMapping
+            Name UInt8
+            PlatformName System.Byte
+        PrimitiveMapping
+            Name UInt16
+            PlatformName System.UInt16
+        PrimitiveMapping
+            Name UInt32
+            PlatformName System.UInt32
+        PrimitiveMapping
+            Name UInt64
+            PlatformName System.UInt64
+        PrimitiveMapping
+            Name Int8
+            PlatformName System.SByte
+        PrimitiveMapping
+            Name Int16
+            PlatformName System.Int16
+        PrimitiveMapping
+            Name Int32
+            PlatformName System.Int32
+        PrimitiveMapping
+            Name Int64
+            PlatformName System.Int64
+        PrimitiveMapping
+            Name Float32
+            PlatformName System.Single
+        PrimitiveMapping
+            Name Float64
+            PlatformName System.Double
+        PrimitiveMapping
             Name Type
             PlatformName System.Type
         PrimitiveMapping
@@ -119,7 +152,7 @@ ObjectSchemaTemplate
             PlatformName System.Collections.Generic.List
         PrimitiveMapping
             Name Set
-            PlatformName System.Collections.Generic.Set
+            PlatformName System.Collections.Generic.HashSet
         PrimitiveMapping
             Name Map
             PlatformName System.Collections.Generic.Dictionary

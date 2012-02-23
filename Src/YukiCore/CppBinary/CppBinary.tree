@@ -175,6 +175,39 @@ ObjectSchemaTemplate
             Name Real
             PlatformName double
         PrimitiveMapping
+            Name Byte
+            PlatformName uint8_t
+        PrimitiveMapping
+            Name UInt8
+            PlatformName uint8_t
+        PrimitiveMapping
+            Name UInt16
+            PlatformName uint16_t
+        PrimitiveMapping
+            Name UInt32
+            PlatformName uint32_t
+        PrimitiveMapping
+            Name UInt64
+            PlatformName uint64_t
+        PrimitiveMapping
+            Name Int8
+            PlatformName int8_t
+        PrimitiveMapping
+            Name Int16
+            PlatformName int16_t
+        PrimitiveMapping
+            Name Int32
+            PlatformName int32_t
+        PrimitiveMapping
+            Name Int64
+            PlatformName int64_t
+        PrimitiveMapping
+            Name Float32
+            PlatformName float
+        PrimitiveMapping
+            Name Float64
+            PlatformName double
+        PrimitiveMapping
             Name Type
             PlatformName std::wstring
         PrimitiveMapping
@@ -516,6 +549,138 @@ ObjectSchemaTemplate
                         s.WriteFloat64(v);
                     }
         Template
+            Name BinaryTranslator_Primitive_Byte
+            Value
+                $String
+                    static Byte ByteFromBinary(IReadableStream &s)
+                    {
+                        return s.ReadByte();
+                    }
+                    static void ByteToBinary(IWritableStream &s, Byte v)
+                    {
+                        s.WriteByte(v);
+                    }
+        Template
+            Name BinaryTranslator_Primitive_UInt8
+            Value
+                $String
+                    static UInt8 UInt8FromBinary(IReadableStream &s)
+                    {
+                        return s.ReadUInt8();
+                    }
+                    static void UInt8ToBinary(IWritableStream &s, UInt8 v)
+                    {
+                        s.WriteUInt8(v);
+                    }
+        Template
+            Name BinaryTranslator_Primitive_UInt16
+            Value
+                $String
+                    static UInt16 UInt16FromBinary(IReadableStream &s)
+                    {
+                        return s.ReadUInt16();
+                    }
+                    static void UInt16ToBinary(IWritableStream &s, UInt16 v)
+                    {
+                        s.WriteUInt16(v);
+                    }
+        Template
+            Name BinaryTranslator_Primitive_UInt32
+            Value
+                $String
+                    static UInt32 UInt32FromBinary(IReadableStream &s)
+                    {
+                        return s.ReadUInt32();
+                    }
+                    static void UInt32ToBinary(IWritableStream &s, UInt32 v)
+                    {
+                        s.WriteUInt32(v);
+                    }
+        Template
+            Name BinaryTranslator_Primitive_UInt64
+            Value
+                $String
+                    static UInt64 UInt64FromBinary(IReadableStream &s)
+                    {
+                        return s.ReadUInt64();
+                    }
+                    static void UInt64ToBinary(IWritableStream &s, UInt64 v)
+                    {
+                        s.WriteUInt64(v);
+                    }
+        Template
+            Name BinaryTranslator_Primitive_Int8
+            Value
+                $String
+                    static Int8 Int8FromBinary(IReadableStream &s)
+                    {
+                        return s.ReadInt8();
+                    }
+                    static void Int8ToBinary(IWritableStream &s, Int8 v)
+                    {
+                        s.WriteInt8(v);
+                    }
+        Template
+            Name BinaryTranslator_Primitive_Int16
+            Value
+                $String
+                    static Int16 Int16FromBinary(IReadableStream &s)
+                    {
+                        return s.ReadInt16();
+                    }
+                    static void Int16ToBinary(IWritableStream &s, Int16 v)
+                    {
+                        s.WriteInt16(v);
+                    }
+        Template
+            Name BinaryTranslator_Primitive_Int32
+            Value
+                $String
+                    static Int32 Int32FromBinary(IReadableStream &s)
+                    {
+                        return s.ReadInt32();
+                    }
+                    static void Int32ToBinary(IWritableStream &s, Int32 v)
+                    {
+                        s.WriteInt32(v);
+                    }
+        Template
+            Name BinaryTranslator_Primitive_Int64
+            Value
+                $String
+                    static Int64 Int64FromBinary(IReadableStream &s)
+                    {
+                        return s.ReadInt64();
+                    }
+                    static void Int64ToBinary(IWritableStream &s, Int64 v)
+                    {
+                        s.WriteInt64(v);
+                    }
+        Template
+            Name BinaryTranslator_Primitive_Float32
+            Value
+                $String
+                    static Float32 Float32FromBinary(IReadableStream &s)
+                    {
+                        return s.ReadFloat32();
+                    }
+                    static void Float32ToBinary(IWritableStream &s, Float32 v)
+                    {
+                        s.WriteFloat32(v);
+                    }
+        Template
+            Name BinaryTranslator_Primitive_Float64
+            Value
+                $String
+                    static Float64 Float64FromBinary(IReadableStream &s)
+                    {
+                        return s.ReadFloat64();
+                    }
+                    static void Float64ToBinary(IWritableStream &s, Float64 v)
+                    {
+                        s.WriteFloat64(v);
+                    }
+        Template
             Name BinaryTranslator_Primitive_Type
             Value
                 $String
@@ -669,6 +834,56 @@ ObjectSchemaTemplate
                         for (int k = 0; k < Length; k += 1)
                         {
                             [[${ElementTypeFriendlyName}ToBinary]](s, (*l)[k]);
+                        }
+                    }
+        Template
+            Name BinaryTranslator_Set
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
+            Value
+                $String
+                    static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+                    {
+                        auto l = std::make_shared<[[${TypeString}]]>();
+                        int32_t Length = IntFromBinary(s);
+                        for (int k = 0; k < Length; k += 1)
+                        {
+                            l->insert([[${ElementTypeFriendlyName}FromBinary]](s));
+                        }
+                        return l;
+                    }
+                    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeString}]]> l)
+                    {
+                        int32_t Length = l->size();
+                        IntToBinary(s, Length);
+                        for (auto i = l->begin(); i != l->end(); i.operator++())
+                        {
+                            [[${ElementTypeFriendlyName}ToBinary]](s, (*i));
+                        }
+                    }
+        Template
+            Name BinaryTranslator_Map
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${KeyTypeFriendlyName}, ${ValueTypeFriendlyName}
+            Value
+                $String
+                    static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+                    {
+                        auto l = std::make_shared<[[${TypeString}]]>();
+                        int32_t Length = IntFromBinary(s);
+                        for (int k = 0; k < Length; k += 1)
+                        {
+                            auto Key = [[${KeyTypeFriendlyName}FromBinary]](s);
+                            (*l)[Key] = [[${ValueTypeFriendlyName}FromBinary]](s);
+                        }
+                        return l;
+                    }
+                    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeString}]]> l)
+                    {
+                        int32_t Length = l->size();
+                        IntToBinary(s, Length);
+                        for (auto i = l->begin(); i != l->end(); i.operator++())
+                        {
+                            [[${KeyTypeFriendlyName}ToBinary]](s, std::get<0>(*i));
+                            [[${ValueTypeFriendlyName}ToBinary]](s, std::get<1>(*i));
                         }
                     }
         Template
