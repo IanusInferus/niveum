@@ -4,7 +4,7 @@
       File:        CSharpDatabase.tree
       Location:    Yuki.SchemaManipulator <Tree>
       Description: 对象类型结构C#数据库模板数据
-      Version:     2011.11.07.
+      Version:     2012.02.23.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -433,6 +433,10 @@ ObjectSchemaTemplate
             //Parameters: ${RecordName}, ${KeyFriendlyName}, ${KeyParameters}, ${KeyWhereExpressions}
             Value
                 $String
+                    public static [[${RecordName}]] [[By${KeyFriendlyName}]](this IQueryable<[[${RecordName}]]> _This, ${KeyParameters})
+                    {
+                        return _This.${KeyWhereExpressions}.Single();
+                    }
                     public static [[${RecordName}]] [[By${KeyFriendlyName}]](this IEnumerable<[[${RecordName}]]> _This, ${KeyParameters})
                     {
                         return _This.${KeyWhereExpressions}.Single();
@@ -442,6 +446,10 @@ ObjectSchemaTemplate
             //Parameters: ${RecordName}, ${KeyFriendlyName}, ${KeyParameters}, ${KeyWhereExpressions}
             Value
                 $String
+                    public static _T [[By${KeyFriendlyName}]]<_T>(this IQueryable<[[${RecordName}]]> _This, ${KeyParameters}, Func<[[${RecordName}]], _T> _Projector)
+                    {
+                        return _This.${KeyWhereExpressions}.Select(_Projector).Single();
+                    }
                     public static _T [[By${KeyFriendlyName}]]<_T>(this IEnumerable<[[${RecordName}]]> _This, ${KeyParameters}, Func<[[${RecordName}]], _T> _Projector)
                     {
                         return _This.${KeyWhereExpressions}.Select(_Projector).Single();
