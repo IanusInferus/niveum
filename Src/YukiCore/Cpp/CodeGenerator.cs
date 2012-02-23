@@ -114,6 +114,11 @@ namespace Yuki.ObjectSchema.Cpp.Common
             {
                 List<String> l = new List<String>();
 
+                if (Schema.TypeRefs.Length == 0)
+                {
+                    l.AddRange(GetTemplate("PredefinedTypes"));
+                }
+
                 var Types = new List<TypeDef>(Schema.TypeRefs.Concat(Schema.Types));
                 var Dict = Types.ToDictionary(t => t.Name());
                 if (!Dict.ContainsKey("Boolean"))
@@ -410,11 +415,6 @@ namespace Yuki.ObjectSchema.Cpp.Common
             public String[] GetComplexTypes(Schema Schema)
             {
                 List<String> l = new List<String>();
-
-                if (Schema.TypeRefs.Length == 0)
-                {
-                    l.AddRange(GetTemplate("PredefinedTypes"));
-                }
 
                 var ltf = new TupleAndGenericTypeSpecFetcher();
                 ltf.PushTypeDefs(Schema.Types);
