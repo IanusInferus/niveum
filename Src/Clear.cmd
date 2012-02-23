@@ -7,7 +7,7 @@
 @cd..
 @if exist Bin (
   @cd Bin
-  @for %%a in (*.exe;*.dll) do @(
+  @for %%a in (*.exe) do @(
     @del %%~na.pdb /F /Q
     @del %%~na.xml /F /Q
   )
