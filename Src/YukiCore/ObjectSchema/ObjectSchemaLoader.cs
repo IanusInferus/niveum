@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2012.02.24.
+//  Version:     2012.02.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.IO;
 using Firefly;
 using Firefly.Mapping.XmlText;
 using Firefly.Texting;
@@ -126,11 +127,26 @@ namespace Yuki.ObjectSchema
         {
             Load(TreePath, Types);
         }
+        public void LoadType(String TreePath, StreamReader Reader)
+        {
+            Load(TreePath, Reader, Types);
+        }
         public void LoadTypeRef(String TreePath)
         {
             Load(TreePath, TypeRefs);
         }
+        public void LoadTypeRef(String TreePath, StreamReader Reader)
+        {
+            Load(TreePath, Reader, TypeRefs);
+        }
         private void Load(String TreePath, List<Semantics.Node> Types)
+        {
+            using (var Reader = Txt.CreateTextReader(TreePath))
+            {
+                Load(TreePath, Reader, Types);
+            }
+        }
+        private void Load(String TreePath, StreamReader Reader, List<Semantics.Node> Types)
         {
             var TableParameterFunctions = new HashSet<String>() { "Primitive", "Alias", "Record", "TaggedUnion", "Enum", "ClientCommand", "ServerCommand" };
             var TableContentFunctions = new HashSet<String>() { "Primitive", "Alias", "Record", "TaggedUnion", "Enum", "ClientCommand", "ServerCommand" };
@@ -592,7 +608,7 @@ namespace Yuki.ObjectSchema
                 }
             };
 
-            var t = TreeFile.ReadDirect(TreePath, ps, es);
+            var t = TreeFile.ReadDirect(Reader, ps, es);
             Types.AddRange(t.Value.Nodes);
             foreach (var p in t.Positions)
             {
