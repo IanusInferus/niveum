@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Sql数据库代码生成器
-//  Version:     2012.02.24.
+//  Version:     2012.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -196,19 +196,19 @@ namespace Yuki.RelationSchema.SqlDatabase
                     }
                 }
                 {
-                    var Name = String.Format("PK_{0}_{1}", r.CollectionName, String.Join("_", r.PrimaryKey.Columns));
+                    var Name = String.Format("PK_{0}_{1}", r.CollectionName, String.Join("_", r.PrimaryKey.Columns.Select(c => c.Name).ToArray()));
                     FieldsAndKeys.Add(GetPrimaryKey(r.PrimaryKey, Name));
                 }
                 foreach (var k in r.UniqueKeys)
                 {
-                    var Name = String.Format("UQ_{0}_{1}", r.CollectionName, String.Join("_", k.Columns));
+                    var Name = String.Format("UQ_{0}_{1}", r.CollectionName, String.Join("_", k.Columns.Select(c => c.Name).ToArray()));
                     FieldsAndKeys.Add(GetUniqueKey(k, Name));
                 }
 
                 var NonUniqueKeys = new List<String>();
                 foreach (var k in r.NonUniqueKeys)
                 {
-                    var Name = String.Format("IX_{0}_{1}", r.CollectionName, String.Join("_", k.Columns));
+                    var Name = String.Format("IX_{0}_{1}", r.CollectionName, String.Join("_", k.Columns.Select(c => c.Name).ToArray()));
                     NonUniqueKeys.AddRange(GetNonUniqueKey(k, Name, r.CollectionName));
                 }
 
@@ -302,12 +302,16 @@ namespace Yuki.RelationSchema.SqlDatabase
 
             public String[] GetForeignKey(String Name, String ThisTableName, String[] ThisKeyColumns, String OtherTableName, String[] OtherKeyColumns)
             {
-                return GetTemplate("ForeignKey").Substitute("Name", Name).Substitute("ThisTableName", ThisTableName).Substitute("ThisKeyColumns", GetColumns(ThisKeyColumns)).Substitute("OtherTableName", OtherTableName).Substitute("OtherKeyColumns", GetColumns(OtherKeyColumns));
+                return GetTemplate("ForeignKey").Substitute("Name", Name).Substitute("ThisTableName", ThisTableName).Substitute("ThisKeyColumns", GetForeignColumns(ThisKeyColumns)).Substitute("OtherTableName", OtherTableName).Substitute("OtherKeyColumns", GetForeignColumns(OtherKeyColumns));
             }
 
-            public String[] GetColumns(String[] Columns)
+            public String[] GetForeignColumns(String[] Columns)
             {
                 return JoinWithComma(Columns.Select(c => new String[] { String.Format("[{0}]", c) }).ToArray());
+            }
+            public String[] GetColumns(KeyColumn[] Columns)
+            {
+                return JoinWithComma(Columns.Select(c => new String[] { c.IsDescending ? String.Format("[{0}] DESC", c.Name) : String.Format("[{0}]", c.Name) }).ToArray());
             }
 
             public String[] GetComments(Schema s, Boolean WithComment)
