@@ -4,7 +4,7 @@
       File:        RelationSchema.tree
       Location:    Yuki.Core <Tree>
       Description: 关系元类型结构
-      Version:     2012.02.24.
+      Version:     2012.02.27.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -106,11 +106,20 @@ Schema
                         Name OtherKey
                         Type List ElementType ConceptRef StringLiteral
             Record
+                Name KeyColumn
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name IsDescending
+                        Type ConceptRef BooleanLiteral
+            Record
                 Name Key
                 Fields
                     Field
                         Name Columns
-                        Type List ElementType ConceptRef StringLiteral
+                        Type List ElementType ConceptRef KeyColumn
                     Field
                         Name IsClustered
                         Type ConceptRef BooleanLiteral

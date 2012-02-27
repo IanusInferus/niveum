@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2012.02.24.
+//  Version:     2012.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -38,7 +38,8 @@ namespace Yuki.RelationSchema
     //  FK和FNK只需要目标表上的键有索引，RFK和RFNK需要当前表和目标表的键都有索引
     //
     //标记可以叠加，如[CN:Users][PKC:Id1, Id2]
-    //外键中可有多个键，例如[FK:Id1, Id2=Id1,Id2]
+    //外键中可有多个键，例如[FK:Id1, Id2=Id1, Id2]
+    //索引列上可以标注减号表示递减，比如[PKC:Id1, Id2-]
     //
     //如果不存在CN，则默认使用<EntityName>
     //如果没有声明PK，则自动寻找名称为Id或者<EntityName>Id(不区分大小写)的列为[PK]，但不会将该字段记为[I]
@@ -83,14 +84,14 @@ namespace Yuki.RelationSchema
             foreach (var r in Records)
             {
                 var h = new HashSet<Index>();
-                h.Add(new Index { Columns = r.PrimaryKey.Columns });
+                h.Add(new Index { Columns = r.PrimaryKey.Columns.Select(c => c.Name).ToArray() });
                 foreach (var k in r.UniqueKeys)
                 {
-                    h.Add(new Index { Columns = k.Columns });
+                    h.Add(new Index { Columns = k.Columns.Select(c => c.Name).ToArray() });
                 }
                 foreach (var k in r.NonUniqueKeys)
                 {
-                    h.Add(new Index { Columns = k.Columns });
+                    h.Add(new Index { Columns = k.Columns.Select(c => c.Name).ToArray() });
                 }
                 IndexDict.Add(r.Name, h);
             }
@@ -372,27 +373,27 @@ namespace Yuki.RelationSchema
                     }
                     else if (a.Name == "PK")
                     {
-                        PrimaryKey = new RS.Key { Columns = GetKey(a.Parameters), IsClustered = false };
+                        PrimaryKey = new RS.Key { Columns = GetColumns(a.Parameters), IsClustered = false };
                     }
                     else if (a.Name == "PKC")
                     {
-                        PrimaryKey = new RS.Key { Columns = GetKey(a.Parameters), IsClustered = true };
+                        PrimaryKey = new RS.Key { Columns = GetColumns(a.Parameters), IsClustered = true };
                     }
                     else if (a.Name == "UK")
                     {
-                        UniqueKeys.Add(new RS.Key { Columns = GetKey(a.Parameters), IsClustered = false });
+                        UniqueKeys.Add(new RS.Key { Columns = GetColumns(a.Parameters), IsClustered = false });
                     }
                     else if (a.Name == "UKC")
                     {
-                        UniqueKeys.Add(new RS.Key { Columns = GetKey(a.Parameters), IsClustered = true });
+                        UniqueKeys.Add(new RS.Key { Columns = GetColumns(a.Parameters), IsClustered = true });
                     }
                     else if (a.Name == "NK")
                     {
-                        NonUniqueKeys.Add(new RS.Key { Columns = GetKey(a.Parameters), IsClustered = false });
+                        NonUniqueKeys.Add(new RS.Key { Columns = GetColumns(a.Parameters), IsClustered = false });
                     }
                     else if (a.Name == "NKC")
                     {
-                        NonUniqueKeys.Add(new RS.Key { Columns = GetKey(a.Parameters), IsClustered = true });
+                        NonUniqueKeys.Add(new RS.Key { Columns = GetColumns(a.Parameters), IsClustered = true });
                     }
                 }
 
@@ -413,7 +414,7 @@ namespace Yuki.RelationSchema
                     {
                         throw new InvalidOperationException(String.Format("没有标注主键，且默认主键字段类型不为简单类型: {0}", r.Name));
                     }
-                    PrimaryKey = new RS.Key { Columns = new String[] { Id.Name }, IsClustered = false };
+                    PrimaryKey = new RS.Key { Columns = new KeyColumn[] { new KeyColumn { Name = Id.Name, IsDescending = false } }, IsClustered = false };
                     //Id.Attribute.Column.IsIdentity = true;
                 }
 
@@ -427,9 +428,9 @@ namespace Yuki.RelationSchema
                 {
                     foreach (var c in k.Columns)
                     {
-                        if (Fields.Where(f => f.Name.Equals(c, StringComparison.OrdinalIgnoreCase)).Count() == 0)
+                        if (Fields.Where(f => f.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).Count() == 0)
                         {
-                            throw new InvalidOperationException(String.Format("键中的字段不存在: {0}.{1}", r.Name, c));
+                            throw new InvalidOperationException(String.Format("键中的字段不存在: {0}.{1}", r.Name, c.Name));
                         }
                     }
                 }
@@ -468,7 +469,7 @@ namespace Yuki.RelationSchema
                                 var FieldNameId = FieldNameIds.Single();
                                 if (TypeRecord.PrimaryKey.Columns.Length == 1)
                                 {
-                                    f.Attribute.Navigation = new RS.NavigationAttribute { IsReverse = false, IsUnique = true, ThisKey = new String[] { FieldNameId.Name }, OtherKey = new String[] { TypeRecord.PrimaryKey.Columns.Single() } };
+                                    f.Attribute.Navigation = new RS.NavigationAttribute { IsReverse = false, IsUnique = true, ThisKey = new String[] { FieldNameId.Name }, OtherKey = new String[] { TypeRecord.PrimaryKey.Columns.Select(c => c.Name).Single() } };
                                     continue;
                                 }
                             }
@@ -479,7 +480,7 @@ namespace Yuki.RelationSchema
                                 var TableNameId = TableNameIds.Single();
                                 if (r.PrimaryKey.Columns.Length == 1)
                                 {
-                                    f.Attribute.Navigation = new RS.NavigationAttribute { IsReverse = true, IsUnique = true, ThisKey = new String[] { r.PrimaryKey.Columns.Single() }, OtherKey = new String[] { TableNameId.Name } };
+                                    f.Attribute.Navigation = new RS.NavigationAttribute { IsReverse = true, IsUnique = true, ThisKey = new String[] { r.PrimaryKey.Columns.Select(c => c.Name).Single() }, OtherKey = new String[] { TableNameId.Name } };
                                     continue;
                                 }
                             }
@@ -535,14 +536,25 @@ namespace Yuki.RelationSchema
                 return new KeyMap { ThisKey = ThisKey, OtherKey = OtherKey };
             }
 
-            private String[] GetKey(String Parameters)
+            private KeyColumn[] GetColumns(String Parameters)
             {
-                var Key = Parameters.Split(',').Select(f => f.Trim(' ')).ToArray();
-                if (Key.Length == 0)
+                var Columns = new List<KeyColumn>();
+                foreach (var cs in Parameters.Split(',').Select(f => f.Trim(' ')).ToArray())
+                {
+                    if (cs.EndsWith("-"))
+                    {
+                        Columns.Add(new KeyColumn { Name = cs.Substring(0, cs.Length - 1), IsDescending = true });
+                    }
+                    else
+                    {
+                        Columns.Add(new KeyColumn { Name = cs, IsDescending = false });
+                    }
+                }
+                if (Columns.Count == 0)
                 {
                     throw new InvalidOperationException(String.Format("键无效: {0}", Parameters));
                 }
-                return Key;
+                return Columns.ToArray();
             }
         }
     }

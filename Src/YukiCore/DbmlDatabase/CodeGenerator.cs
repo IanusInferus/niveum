@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Dbml数据库代码生成器
-//  Version:     2012.02.24.
+//  Version:     2012.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -155,7 +155,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                     x.SetAttributeValue("Name", f.Name);
                     x.SetAttributeValue("Type", GetClrTypeString(f.Type));
                     x.SetAttributeValue("DbType", GetDbTypeString(f.Type, ca));
-                    if (r.PrimaryKey.Columns.Contains(f.Name, StringComparer.OrdinalIgnoreCase))
+                    if (r.PrimaryKey.Columns.Select(c => c.Name).Contains(f.Name, StringComparer.OrdinalIgnoreCase))
                     {
                         x.SetAttributeValue("IsPrimaryKey", "true");
                     }
