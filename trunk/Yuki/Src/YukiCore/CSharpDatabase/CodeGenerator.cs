@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#枚举数据库代码生成器
-//  Version:     2012.02.24.
+//  Version:     2012.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -373,7 +373,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 }
                 var DbTypeString = c.Attribute("DbType").Value;
                 l.Add(String.Format(@"DbType = ""{0}""", DbTypeString));
-                if (r.PrimaryKey.Columns.Contains(f.Name, StringComparer.OrdinalIgnoreCase))
+                if (r.PrimaryKey.Columns.Select(co => co.Name).Contains(f.Name, StringComparer.OrdinalIgnoreCase))
                 {
                     l.Add("IsPrimaryKey = true");
                 }
@@ -540,8 +540,8 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 var l = new List<String>();
                 foreach (var c in k.Columns)
                 {
-                    var t = GetTypeFriendlyName(r.Fields.Where(f => f.Name.Equals(c, StringComparison.OrdinalIgnoreCase)).Single().Type);
-                    l.Add(String.Format("[[{0}]] [[{1}]]", t, c));
+                    var t = GetTypeFriendlyName(r.Fields.Where(f => f.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).Single().Type);
+                    l.Add(String.Format("[[{0}]] [[{1}]]", t, c.Name));
                 }
                 return String.Join(", ", l.ToArray());
             }
@@ -550,27 +550,27 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 var l = new List<String>();
                 foreach (var c in k.Columns)
                 {
-                    l.Add(String.Format("Where(e => e.[[{0}]] == [[{0}]])", c));
+                    l.Add(String.Format("Where(e => e.[[{0}]] == [[{0}]])", c.Name));
                 }
                 return String.Join(".", l.ToArray());
             }
             public String[] GetWhereKeyIs(Record r, Key k)
             {
-                var KeyFriendlyName = String.Join("And", k.Columns);
+                var KeyFriendlyName = String.Join("And", k.Columns.Select(c => c.Name).ToArray());
                 var KeyParameters = GetKeyParameters(r, k);
                 var KeyWhereExpressions = GetKeyWhereExpressions(r, k);
                 return GetTemplate("WhereKeyIs").Substitute("RecordName", r.Name).Substitute("KeyFriendlyName", KeyFriendlyName).Substitute("KeyParameters", KeyParameters).Substitute("KeyWhereExpressions", KeyWhereExpressions);
             }
             public String[] GetByKey(Record r, Key k)
             {
-                var KeyFriendlyName = String.Join("And", k.Columns);
+                var KeyFriendlyName = String.Join("And", k.Columns.Select(c => c.Name).ToArray());
                 var KeyParameters = GetKeyParameters(r, k);
                 var KeyWhereExpressions = GetKeyWhereExpressions(r, k);
                 return GetTemplate("ByKey").Substitute("RecordName", r.Name).Substitute("KeyFriendlyName", KeyFriendlyName).Substitute("KeyParameters", KeyParameters).Substitute("KeyWhereExpressions", KeyWhereExpressions);
             }
             public String[] GetByKeyT(Record r, Key k)
             {
-                var KeyFriendlyName = String.Join("And", k.Columns);
+                var KeyFriendlyName = String.Join("And", k.Columns.Select(c => c.Name).ToArray());
                 var KeyParameters = GetKeyParameters(r, k);
                 var KeyWhereExpressions = GetKeyWhereExpressions(r, k);
                 return GetTemplate("ByKeyT").Substitute("RecordName", r.Name).Substitute("KeyFriendlyName", KeyFriendlyName).Substitute("KeyParameters", KeyParameters).Substitute("KeyWhereExpressions", KeyWhereExpressions);
@@ -582,9 +582,20 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 {
                     var Keys = (new Key[] { r.PrimaryKey }).Concat(r.UniqueKeys).Concat(r.NonUniqueKeys);
                     var UniqueKeys = (new Key[] { r.PrimaryKey }).Concat(r.UniqueKeys);
+                    var h = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
                     foreach (var k in Keys)
                     {
-                        l.AddRange(GetWhereKeyIs(r, k));
+                        for (int m = 1; m <= k.Columns.Length; m += 1)
+                        {
+                            var Subkey = new Key { Columns = k.Columns.Take(m).ToArray(), IsClustered = k.IsClustered };
+                            var KeyFriendlyName = String.Join("And", Subkey.Columns.Select(c => c.Name).ToArray());
+                            if (h.Contains(KeyFriendlyName))
+                            {
+                                continue;
+                            }
+                            h.Add(KeyFriendlyName);
+                            l.AddRange(GetWhereKeyIs(r, Subkey));
+                        }
                     }
                     foreach (var k in UniqueKeys)
                     {
