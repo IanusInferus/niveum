@@ -1,4 +1,8 @@
-﻿2012.03.01
+﻿2012.03.05
+Yuki.DatabaseRegenerator:
+修正由于SQL Server CE不支持递减索引导致的问题。
+
+2012.03.01
 Yuki.Core:
 修正ActionScript代码中的一个命名问题。
 
