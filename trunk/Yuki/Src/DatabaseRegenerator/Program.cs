@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2011.11.07.
+//  Version:     2012.03.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -363,7 +363,7 @@ namespace Yuki.DatabaseRegenerator
 
             var RegenSqls = Regex.Split(s.CompileToSqlDatabase("Dummy"), @"\r\nGO(\r\n)+", RegexOptions.ExplicitCapture);
             RegenSqls = RegenSqls.Where(q => !(q == "" || q.StartsWith("--") || q.StartsWith("CREATE DATABASE") || q.StartsWith("USE"))).ToArray();
-            RegenSqls = RegenSqls.Select(q => q.Replace("[dbo].", "").Replace("(max)", "(1024)").Replace(" CLUSTERED", "").Replace(" NONCLUSTERED", "")).ToArray();
+            RegenSqls = RegenSqls.Select(q => q.Replace("[dbo].", "").Replace("(max)", "(1024)").Replace(" CLUSTERED", "").Replace(" NONCLUSTERED", "").Replace(" DESC", "")).ToArray();
             var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToArray();
             var Alters = RegenSqls.Where(q => q.StartsWith("ALTER")).ToArray();
 
