@@ -362,6 +362,10 @@ namespace Yuki.RelationSchema.SqlDatabase
                     l.Add(String.Format(@"'{0}'", new String(sl.ToArray())));
                     sl.Clear();
                 }
+                if (l.Count == 0)
+                {
+                    return "''";
+                }
                 return String.Join(" + ", l.ToArray());
             }
 
