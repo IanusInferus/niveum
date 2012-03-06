@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Sql数据库代码生成器
-//  Version:     2012.02.27.
+//  Version:     2012.03.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -81,9 +81,9 @@ namespace Yuki.RelationSchema.SqlDatabase
             private Dictionary<String, Record> Records;
             public String[] GetSchema()
             {
-                Primitives = Schema.TypeRefs.Concat(Schema.Types).Where(t => t._Tag == TypeDefTag.Primitive).Select(t => t.Primitive).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
-                Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t._Tag == TypeDefTag.Enum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
-                Records = Schema.Types.Where(t => t._Tag == TypeDefTag.Record).Select(t => t.Record).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
+                Primitives = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive).Select(t => t.Primitive).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+                Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
+                Records = Schema.Types.Where(t => t.OnRecord).Select(t => t.Record).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
 
                 var Tables = GetTables(Schema);
                 var ForeignKeys = GetForeignKeys(Schema);
@@ -97,7 +97,7 @@ namespace Yuki.RelationSchema.SqlDatabase
                 var l = new List<String>();
                 foreach (var t in s.Types)
                 {
-                    if (t._Tag == TypeDefTag.Record)
+                    if (t.OnRecord)
                     {
                         l.AddRange(GetTable(t.Record));
                     }
@@ -137,22 +137,22 @@ namespace Yuki.RelationSchema.SqlDatabase
                 var l = new List<String>();
                 foreach (var t in s.Types)
                 {
-                    if (t._Tag == TypeDefTag.Record)
+                    if (t.OnRecord)
                     {
                         foreach (var f in t.Record.Fields)
                         {
-                            if (f.Attribute._Tag == FieldAttributeTag.Navigation)
+                            if (f.Attribute.OnNavigation)
                             {
                                 if (!f.Attribute.Navigation.IsUnique) { continue; }
 
                                 if (f.Attribute.Navigation.IsReverse)
                                 {
                                     Record ThisTable = null;
-                                    if (f.Type._Tag == TypeSpecTag.TypeRef)
+                                    if (f.Type.OnTypeRef)
                                     {
                                         ThisTable = Records[f.Type.TypeRef.Value];
                                     }
-                                    else if (f.Type._Tag == TypeSpecTag.List)
+                                    else if (f.Type.OnList)
                                     {
                                         ThisTable = Records[f.Type.List.ElementType.TypeRef.Value];
                                     }
@@ -190,7 +190,7 @@ namespace Yuki.RelationSchema.SqlDatabase
                 var FieldsAndKeys = new List<String[]>();
                 foreach (var f in r.Fields)
                 {
-                    if (f.Attribute._Tag == FieldAttributeTag.Column)
+                    if (f.Attribute.OnColumn)
                     {
                         FieldsAndKeys.Add(GetColumnDef(f));
                     }
@@ -217,7 +217,7 @@ namespace Yuki.RelationSchema.SqlDatabase
 
             public String[] GetColumnDef(Field f)
             {
-                if (f.Type._Tag != TypeSpecTag.TypeRef)
+                if (!f.Type.OnTypeRef)
                 {
                     throw new InvalidOperationException(String.Format("列必须是简单类型: {0}", f.Name));
                 }

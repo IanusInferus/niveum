@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0通讯代码生成器
-//  Version:     2012.02.24.
+//  Version:     2012.03.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -90,7 +90,7 @@ namespace Yuki.ObjectSchema.ActionScriptCommunication
 
                 List<FileResult> l = new List<FileResult>();
 
-                EnumSet = new HashSet<String>(Schema.TypeRefs.Concat(Schema.Types).Where(c => c._Tag == TypeDefTag.Enum).Select(c => c.Enum.Name).Distinct());
+                EnumSet = new HashSet<String>(Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).Select(c => c.Enum.Name).Distinct());
                 var ltf = new TupleAndGenericTypeSpecFetcher();
                 ltf.PushTypeDefs(Schema.TypeRefs.Concat(Schema.Types));
                 var Tuples = ltf.GetTuples();
@@ -102,37 +102,37 @@ namespace Yuki.ObjectSchema.ActionScriptCommunication
                     {
                         continue;
                     }
-                    if (c._Tag == TypeDefTag.Primitive)
+                    if (c.OnPrimitive)
                     {
                         if (c.Primitive.Name == "Unit")
                         {
                             l.Add(GetFile("Unit", GetRecord(new Record { Name = "Unit", Fields = new Variable[] { }, Description = "" })));
                         }
                     }
-                    else if (c._Tag == TypeDefTag.Alias)
+                    else if (c.OnAlias)
                     {
                         l.Add(GetFile(c.Alias.Name, GetRecord(new Record { Name = c.Alias.Name, Fields = new Variable[] { new Variable { Name = "Value", Type = c.Alias.Type, Description = "" } }, Description = "" })));
                     }
-                    else if (c._Tag == TypeDefTag.Record)
+                    else if (c.OnRecord)
                     {
                         l.Add(GetFile(c.Record.Name, GetRecord(c.Record)));
                     }
-                    else if (c._Tag == TypeDefTag.TaggedUnion)
+                    else if (c.OnTaggedUnion)
                     {
                         l.Add(GetFile(c.TaggedUnion.Name + "Tag", GetEnum(new Enum { Name = c.TaggedUnion.Name + "Tag", UnderlyingType = TypeSpec.CreateTypeRef("Int"), Literals = c.TaggedUnion.Alternatives.Select((a, i) => new Literal { Name = a.Name, Value = i, Description = a.Description }).ToArray(), Description = c.TaggedUnion.Description })));
                         l.Add(GetFile(c.TaggedUnion.Name, GetTaggedUnion(c.TaggedUnion)));
                     }
-                    else if (c._Tag == TypeDefTag.Enum)
+                    else if (c.OnEnum)
                     {
                         l.Add(GetFile(c.Enum.Name, GetEnum(c.Enum)));
                     }
-                    else if (c._Tag == TypeDefTag.ClientCommand)
+                    else if (c.OnClientCommand)
                     {
                         l.Add(GetFile(c.ClientCommand.Name + "Request", GetRecord(new Record { Name = c.ClientCommand.Name + "Request", Fields = c.ClientCommand.OutParameters, Description = c.ClientCommand.Description })));
                         l.Add(GetFile(c.ClientCommand.Name + "ReplyTag", GetEnum(new Enum { Name = c.ClientCommand.Name + "ReplyTag", UnderlyingType = TypeSpec.CreateTypeRef("Int"), Literals = c.ClientCommand.InParameters.Select((a, i) => new Literal { Name = a.Name, Value = i, Description = a.Description }).ToArray(), Description = c.ClientCommand.Description })));
                         l.Add(GetFile(c.ClientCommand.Name + "Reply", GetTaggedUnion(new TaggedUnion { Name = c.ClientCommand.Name + "Reply", Alternatives = c.ClientCommand.InParameters, Description = c.ClientCommand.Description })));
                     }
-                    else if (c._Tag == TypeDefTag.ServerCommand)
+                    else if (c.OnServerCommand)
                     {
                         l.Add(GetFile(c.ServerCommand.Name + "Event", GetRecord(new Record { Name = c.ServerCommand.Name + "Event", Fields = c.ServerCommand.OutParameters, Description = c.ServerCommand.Description })));
                     }
@@ -236,7 +236,7 @@ namespace Yuki.ObjectSchema.ActionScriptCommunication
             public String[] GetField(Variable f)
             {
                 var d = f.Description;
-                if (f.Type._Tag == TypeSpecTag.TypeRef && EnumSet.Contains(f.Type.TypeRef.Value))
+                if (f.Type.OnTypeRef && EnumSet.Contains(f.Type.TypeRef.Value))
                 {
                     if (d == "")
                     {
@@ -265,7 +265,7 @@ namespace Yuki.ObjectSchema.ActionScriptCommunication
             }
             public String[] GetAlternativeCreate(TaggedUnion tu, Variable a)
             {
-                if ((a.Type._Tag == TypeSpecTag.TypeRef) && (a.Type.TypeRef.Value.Equals("Unit", StringComparison.OrdinalIgnoreCase)))
+                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Value.Equals("Unit", StringComparison.OrdinalIgnoreCase)))
                 {
                     return GetTemplate("AlternativeCreateUnit").Substitute("TaggedUnionName", tu.Name).Substitute("Name", a.Name).Substitute("XmlComment", GetXmlComment(a.Description));
                 }
@@ -299,7 +299,7 @@ namespace Yuki.ObjectSchema.ActionScriptCommunication
             public String[] GetAlternative(Variable a)
             {
                 var d = a.Description;
-                if (a.Type._Tag == TypeSpecTag.TypeRef && EnumSet.Contains(a.Type.TypeRef.Value))
+                if (a.Type.OnTypeRef && EnumSet.Contains(a.Type.TypeRef.Value))
                 {
                     if (d == "")
                     {
@@ -441,31 +441,31 @@ namespace Yuki.ObjectSchema.ActionScriptCommunication
                     {
                         continue;
                     }
-                    if (c._Tag == TypeDefTag.Primitive)
+                    if (c.OnPrimitive)
                     {
                         continue;
                     }
-                    else if (c._Tag == TypeDefTag.Alias)
+                    else if (c.OnAlias)
                     {
                         l.AddRange(GetJsonTranslatorRecord(new Record { Name = c.Alias.Name, Fields = new Variable[] { new Variable { Name = "Value", Type = c.Alias.Type, Description = "" } }, Description = "" }));
                     }
-                    else if (c._Tag == TypeDefTag.Record)
+                    else if (c.OnRecord)
                     {
                         l.AddRange(GetJsonTranslatorRecord(c.Record));
                     }
-                    else if (c._Tag == TypeDefTag.TaggedUnion)
+                    else if (c.OnTaggedUnion)
                     {
                         l.AddRange(GetJsonTranslatorTaggedUnion(c.TaggedUnion));
                     }
-                    else if (c._Tag == TypeDefTag.Enum)
+                    else if (c.OnEnum)
                     {
                         l.AddRange(GetJsonTranslatorEnum(c.Enum));
                     }
-                    else if (c._Tag == TypeDefTag.ClientCommand)
+                    else if (c.OnClientCommand)
                     {
                         l.AddRange(GetJsonTranslatorClientCommand(c.ClientCommand));
                     }
-                    else if (c._Tag == TypeDefTag.ServerCommand)
+                    else if (c.OnServerCommand)
                     {
                         l.AddRange(GetJsonTranslatorServerCommand(c.ServerCommand));
                     }

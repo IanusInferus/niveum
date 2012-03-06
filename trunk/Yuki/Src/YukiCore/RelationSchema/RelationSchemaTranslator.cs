@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2012.02.27.
+//  Version:     2012.03.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -183,15 +183,59 @@ namespace Yuki.RelationSchema
                     }
                 }
 
+                var ltfRefs = new OS.TupleAndGenericTypeSpecFetcher();
+                ltfRefs.PushTypeDefs(Schema.TypeRefs);
+                var GenericTypeSpecsRefs = ltfRefs.GetGenericTypeSpecs();
+                foreach (var t in GenericTypeSpecsRefs)
+                {
+                    if (t.OnGenericTypeSpec)
+                    {
+                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Value == "List" && t.GenericTypeSpec.GenericParameterValues.Length == 1)
+                        {
+                            var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
+                            if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Value == "Byte")
+                            {
+                                if (!OPrimitives.Contains("Binary"))
+                                {
+                                    OPrimitives.Add("Binary");
+                                    TypeRefs.Add(RS.TypeDef.CreatePrimitive(new Primitive { Name = "Binary", Description = "二进制数据" }));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                var ltf = new OS.TupleAndGenericTypeSpecFetcher();
+                ltf.PushTypeDefs(Schema.Types);
+                var GenericTypeSpecss = ltf.GetGenericTypeSpecs();
+                foreach (var t in GenericTypeSpecss)
+                {
+                    if (t.OnGenericTypeSpec)
+                    {
+                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Value == "List" && t.GenericTypeSpec.GenericParameterValues.Length == 1)
+                        {
+                            var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
+                            if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Value == "Byte")
+                            {
+                                if (!OPrimitives.Contains("Binary"))
+                                {
+                                    OPrimitives.Add("Binary");
+                                    Types.Add(RS.TypeDef.CreatePrimitive(new Primitive { Name = "Binary", Description = "二进制数据" }));
+                                }
+                            }
+                        }
+                    }
+                }
+
                 foreach (var t in Schema.TypeRefs)
                 {
                     if (t.OnPrimitive)
                     {
-                        TypeRefs.Add(new RS.TypeDef { _Tag = RS.TypeDefTag.Primitive, Primitive = TranslatePrimitive(t.Primitive) });
+                        TypeRefs.Add(RS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)));
                     }
                     else if (t.OnEnum)
                     {
-                        TypeRefs.Add(new RS.TypeDef { _Tag = RS.TypeDefTag.Enum, Enum = TranslateEnum(t.Enum) });
+                        TypeRefs.Add(RS.TypeDef.CreateEnum(TranslateEnum(t.Enum)));
                     }
                 }
 
@@ -199,17 +243,17 @@ namespace Yuki.RelationSchema
                 {
                     if (t.OnPrimitive)
                     {
-                        Types.Add(new RS.TypeDef { _Tag = RS.TypeDefTag.Primitive, Primitive = TranslatePrimitive(t.Primitive) });
+                        Types.Add(RS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)));
                     }
                     else if (t.OnEnum)
                     {
-                        Types.Add(new RS.TypeDef { _Tag = RS.TypeDefTag.Enum, Enum = TranslateEnum(t.Enum) });
+                        Types.Add(RS.TypeDef.CreateEnum(TranslateEnum(t.Enum)));
                     }
                     else if (t.OnRecord)
                     {
                         var r = TranslateRecord(t.Record);
                         Records.Add(r.Name, r);
-                        Types.Add(new RS.TypeDef { _Tag = RS.TypeDefTag.Record, Record = r });
+                        Types.Add(RS.TypeDef.CreateRecord(r));
                     }
                     else
                     {
@@ -243,11 +287,19 @@ namespace Yuki.RelationSchema
             {
                 if (t.OnTypeRef)
                 {
-                    return new RS.TypeSpec { _Tag = RS.TypeSpecTag.TypeRef, TypeRef = new RS.TypeRef { Value = t.TypeRef.Value } };
+                    return RS.TypeSpec.CreateTypeRef(new RS.TypeRef { Value = t.TypeRef.Value });
                 }
                 else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Value == "List")
                 {
-                    return new RS.TypeSpec { _Tag = RS.TypeSpecTag.List, List = new RS.List { ElementType = TranslateTypeSpec(t.GenericTypeSpec.GenericParameterValues.Single().TypeSpec) } };
+                    if (t.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    {
+                        var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
+                        if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Value == "Byte")
+                        {
+                            return RS.TypeSpec.CreateTypeRef(new RS.TypeRef { Value = "Binary" });
+                        }
+                    }
+                    return RS.TypeSpec.CreateList(new RS.List { ElementType = TranslateTypeSpec(t.GenericTypeSpec.GenericParameterValues.Single().TypeSpec) });
                 }
                 else
                 {
@@ -258,7 +310,7 @@ namespace Yuki.RelationSchema
             private RS.Field TranslateField(OS.Variable f)
             {
                 var t = TranslateTypeSpec(f.Type);
-                var IsColumn = t._Tag == RS.TypeSpecTag.TypeRef && (OPrimitives.Contains(t.TypeRef.Value) || OEnums.Contains(t.TypeRef.Value));
+                var IsColumn = t.OnTypeRef && (OPrimitives.Contains(t.TypeRef.Value) || OEnums.Contains(t.TypeRef.Value));
                 var dc = Decompose(f.Description);
                 RS.FieldAttribute fa = null;
 
@@ -289,7 +341,7 @@ namespace Yuki.RelationSchema
                         TypeParameters = "";
                     }
 
-                    fa = new RS.FieldAttribute { _Tag = RS.FieldAttributeTag.Column, Column = new RS.ColumnAttribute { IsIdentity = IsIdentity, IsNullable = IsNullable, TypeParameters = TypeParameters } };
+                    fa = RS.FieldAttribute.CreateColumn(new RS.ColumnAttribute { IsIdentity = IsIdentity, IsNullable = IsNullable, TypeParameters = TypeParameters });
                 }
                 else
                 {
@@ -306,7 +358,7 @@ namespace Yuki.RelationSchema
                             var IsUnique = true;
                             var ThisKey = km.ThisKey;
                             var OtherKey = km.OtherKey;
-                            fa = new RS.FieldAttribute { _Tag = RS.FieldAttributeTag.Navigation, Navigation = new RS.NavigationAttribute { IsReverse = IsReverse, IsUnique = IsUnique, ThisKey = ThisKey, OtherKey = OtherKey } };
+                            fa = RS.FieldAttribute.CreateNavigation(new RS.NavigationAttribute { IsReverse = IsReverse, IsUnique = IsUnique, ThisKey = ThisKey, OtherKey = OtherKey });
                         }
                         else if (a.Name == "RFK")
                         {
@@ -314,7 +366,7 @@ namespace Yuki.RelationSchema
                             var IsUnique = true;
                             var ThisKey = km.ThisKey;
                             var OtherKey = km.OtherKey;
-                            fa = new RS.FieldAttribute { _Tag = RS.FieldAttributeTag.Navigation, Navigation = new RS.NavigationAttribute { IsReverse = IsReverse, IsUnique = IsUnique, ThisKey = ThisKey, OtherKey = OtherKey } };
+                            fa = RS.FieldAttribute.CreateNavigation(new RS.NavigationAttribute { IsReverse = IsReverse, IsUnique = IsUnique, ThisKey = ThisKey, OtherKey = OtherKey });
                         }
                         else if (a.Name == "FNK")
                         {
@@ -322,7 +374,7 @@ namespace Yuki.RelationSchema
                             var IsUnique = false;
                             var ThisKey = km.ThisKey;
                             var OtherKey = km.OtherKey;
-                            fa = new RS.FieldAttribute { _Tag = RS.FieldAttributeTag.Navigation, Navigation = new RS.NavigationAttribute { IsReverse = IsReverse, IsUnique = IsUnique, ThisKey = ThisKey, OtherKey = OtherKey } };
+                            fa = RS.FieldAttribute.CreateNavigation(new RS.NavigationAttribute { IsReverse = IsReverse, IsUnique = IsUnique, ThisKey = ThisKey, OtherKey = OtherKey });
                         }
                         else if (a.Name == "RFNK")
                         {
@@ -330,12 +382,12 @@ namespace Yuki.RelationSchema
                             var IsUnique = false;
                             var ThisKey = km.ThisKey;
                             var OtherKey = km.OtherKey;
-                            fa = new RS.FieldAttribute { _Tag = RS.FieldAttributeTag.Navigation, Navigation = new RS.NavigationAttribute { IsReverse = IsReverse, IsUnique = IsUnique, ThisKey = ThisKey, OtherKey = OtherKey } };
+                            fa = RS.FieldAttribute.CreateNavigation(new RS.NavigationAttribute { IsReverse = IsReverse, IsUnique = IsUnique, ThisKey = ThisKey, OtherKey = OtherKey });
                         }
                     }
                     if (fa == null)
                     {
-                        fa = new RS.FieldAttribute { _Tag = RS.FieldAttributeTag.Navigation, Navigation = null };
+                        fa = RS.FieldAttribute.CreateNavigation(null);
                     }
                 }
 
@@ -410,7 +462,7 @@ namespace Yuki.RelationSchema
                         throw new InvalidOperationException(String.Format("没有标注主键，且找不到默认主键字段: {0}", r.Name));
                     }
                     var Id = Ids.Single();
-                    if (Id.Attribute._Tag != RS.FieldAttributeTag.Column)
+                    if (!Id.Attribute.OnColumn)
                     {
                         throw new InvalidOperationException(String.Format("没有标注主键，且默认主键字段类型不为简单类型: {0}", r.Name));
                     }
@@ -444,14 +496,14 @@ namespace Yuki.RelationSchema
                 //    2)如果类型表有一个<TableName>Id的列，且该列为简单类型，当前表的主键列数量为1，则将该字段标明为[RFK:<PrimaryKey>=<Type/ElementType>.<TableName>Id]
                 foreach (var f in r.Fields)
                 {
-                    if (f.Attribute._Tag == RS.FieldAttributeTag.Navigation)
+                    if (f.Attribute.OnNavigation)
                     {
                         var t = f.Type;
-                        if (t._Tag == RS.TypeSpecTag.List)
+                        if (t.OnList)
                         {
                             t = t.List.ElementType;
                         }
-                        if (t._Tag == RS.TypeSpecTag.List)
+                        if (t.OnList)
                         {
                             throw new InvalidOperationException(String.Format("导航属性的类型不能为多重List: {0}.{1}", r.Name, f.Name));
                         }
@@ -463,7 +515,7 @@ namespace Yuki.RelationSchema
 
                         if (f.Attribute.Navigation == null)
                         {
-                            var FieldNameIds = r.Fields.Where(rf => rf.Attribute._Tag == RS.FieldAttributeTag.Column && rf.Name.Equals(f.Name + "Id", StringComparison.OrdinalIgnoreCase)).ToArray();
+                            var FieldNameIds = r.Fields.Where(rf => rf.Attribute.OnColumn && rf.Name.Equals(f.Name + "Id", StringComparison.OrdinalIgnoreCase)).ToArray();
                             if (FieldNameIds.Length == 1)
                             {
                                 var FieldNameId = FieldNameIds.Single();
@@ -474,7 +526,7 @@ namespace Yuki.RelationSchema
                                 }
                             }
 
-                            var TableNameIds = TypeRecord.Fields.Where(rf => rf.Attribute._Tag == RS.FieldAttributeTag.Column && rf.Name.Equals(r.Name + "Id", StringComparison.OrdinalIgnoreCase)).ToArray();
+                            var TableNameIds = TypeRecord.Fields.Where(rf => rf.Attribute.OnColumn && rf.Name.Equals(r.Name + "Id", StringComparison.OrdinalIgnoreCase)).ToArray();
                             if (TableNameIds.Length == 1)
                             {
                                 var TableNameId = TableNameIds.Single();

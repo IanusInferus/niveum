@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2011.11.07.
+//  Version:     2012.03.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.IO;
 using System.Data;
 using Firefly;
@@ -43,7 +44,7 @@ namespace Yuki.DatabaseRegenerator
             var Meta = TableMetas[CollectionName];
             var Name = Meta.Name;
             var Values = t.Value;
-            var Columns = Meta.Fields.Where(f => f.Attribute._Tag == FieldAttributeTag.Column).ToArray();
+            var Columns = Meta.Fields.Where(f => f.Attribute.OnColumn).ToArray();
 
             if (!IsMySql)
             {
@@ -86,7 +87,7 @@ namespace Yuki.DatabaseRegenerator
                             }
 
                             var cv = cvs.Single().Stem.Children.Single().Leaf;
-                            if (f.Type._Tag != RelationSchema.TypeSpecTag.TypeRef)
+                            if (!f.Type.OnTypeRef)
                             {
                                 throw new InvalidOperationException(String.Format("InvalidType: {0}.{1}", CollectionName, f.Name));
                             }
@@ -163,6 +164,18 @@ namespace Yuki.DatabaseRegenerator
                                         p.Value = Double.Parse(cv);
                                     }
                                 }
+                                else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Binary);
+                                    if (f.Attribute.Column.IsNullable && cv == "-")
+                                    {
+                                        p.Value = DBNull.Value;
+                                    }
+                                    else
+                                    {
+                                        p.Value = Regex.Split(cv.Trim(" \t\r\n".ToCharArray()), "( |\t|\r|\n)+", RegexOptions.ExplicitCapture).Select(s => Byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToArray();
+                                    }
+                                }
                                 else
                                 {
                                     throw new InvalidOperationException("InvalidType");
@@ -232,7 +245,7 @@ namespace Yuki.DatabaseRegenerator
             var EnumMetas = new Dictionary<String, Dictionary<String, Int64>>(StringComparer.OrdinalIgnoreCase);
             foreach (var t in s.TypeRefs.Concat(s.Types))
             {
-                if (t._Tag == RelationSchema.TypeDefTag.Enum)
+                if (t.OnEnum)
                 {
                     if (!EnumMetas.ContainsKey(t.Enum.Name))
                     {
@@ -271,7 +284,7 @@ namespace Yuki.DatabaseRegenerator
             }
             foreach (var t in s.Types)
             {
-                if (t._Tag == RelationSchema.TypeDefTag.Record)
+                if (t.OnRecord)
                 {
                     TableMetas.Add(t.Record.CollectionName, t.Record);
                 }
