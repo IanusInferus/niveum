@@ -84,14 +84,16 @@ namespace Yuki.RelationSchema
             foreach (var r in Records)
             {
                 var h = new HashSet<Index>();
-                h.Add(new Index { Columns = r.PrimaryKey.Columns.Select(c => c.Name).ToArray() });
-                foreach (var k in r.UniqueKeys)
+                foreach (var k in (new Key[] { r.PrimaryKey }).Concat(r.UniqueKeys).Concat(r.NonUniqueKeys))
                 {
-                    h.Add(new Index { Columns = k.Columns.Select(c => c.Name).ToArray() });
-                }
-                foreach (var k in r.NonUniqueKeys)
-                {
-                    h.Add(new Index { Columns = k.Columns.Select(c => c.Name).ToArray() });
+                    for (int i = 1; i <= k.Columns.Length; i += 1)
+                    {
+                        var SubIndex = new Index { Columns = k.Columns.Take(i).Select(c => c.Name).ToArray() };
+                        if (!h.Contains(SubIndex))
+                        {
+                            h.Add(SubIndex);
+                        }
+                    }
                 }
                 IndexDict.Add(r.Name, h);
             }
