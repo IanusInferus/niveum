@@ -2,6 +2,7 @@
 Yuki.Core:
 整理代码。
 增加数据库二进制流数据类型。
+修正外键索引检测。
 Yuki.DatabaseRegenerator:
 增加数据库二进制流数据类型导入支持。
 
