@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#枚举数据库代码生成器
-//  Version:     2012.02.27.
+//  Version:     2012.03.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -105,13 +105,13 @@ namespace Yuki.RelationSchema.CSharpDatabase
             {
                 List<String> l = new List<String>();
 
-                foreach (var p in Schema.TypeRefs.Concat(Schema.Types).Where(c => c._Tag == TypeDefTag.Primitive).Select(c => c.Primitive))
+                foreach (var p in Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnPrimitive).Select(c => c.Primitive))
                 {
                     if (TemplateInfo.PrimitiveMappings.ContainsKey(p.Name))
                     {
                         var Name = p.Name;
                         var PlatformName = TemplateInfo.PrimitiveMappings[Name].PlatformName;
-                        if (Name != PlatformName)
+                        if (Name != PlatformName && !(PlatformName.Contains("[") || PlatformName.Contains("]")))
                         {
                             l.AddRange(GetPrimitive(Name, PlatformName));
                         }
@@ -224,13 +224,19 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 {
                     if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Value))
                     {
+                        var Name = Type.TypeRef.Value;
+                        var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Value].PlatformName;
+                        if (PlatformName.Contains("[") || PlatformName.Contains("]"))
+                        {
+                            Name = PlatformName;
+                        }
                         if (f.Attribute.Column.IsNullable && IsValueType(Type))
                         {
-                            return GetEscapedIdentifier(Type.TypeRef.Value) + "?";
+                            return GetEscapedIdentifier(Name) + "?";
                         }
                         else
                         {
-                            return Type.TypeRef.Value;
+                            return Name;
                         }
                     }
                     else if (Enums.ContainsKey(Type.TypeRef.Value))
@@ -277,13 +283,19 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 {
                     if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Value))
                     {
+                        var Name = Type.TypeRef.Value;
+                        var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Value].PlatformName;
+                        if (PlatformName.Contains("[") || PlatformName.Contains("]"))
+                        {
+                            Name = PlatformName;
+                        }
                         if (f.Attribute.Column.IsNullable && IsValueType(Type))
                         {
-                            return GetEscapedIdentifier(Type.TypeRef.Value) + "?";
+                            return GetEscapedIdentifier(Name) + "?";
                         }
                         else
                         {
-                            return Type.TypeRef.Value;
+                            return Name;
                         }
                     }
                     else if (Enums.ContainsKey(Type.TypeRef.Value))
@@ -607,7 +619,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
             }
             public String[] GetDbExtensions(Schema Schema)
             {
-                return GetTemplate("DbExtensions").Substitute("Methods", GetMethods(Schema.Types.Where(t => t._Tag == TypeDefTag.Record).Select(t => t.Record).ToArray()));
+                return GetTemplate("DbExtensions").Substitute("Methods", GetMethods(Schema.Types.Where(t => t.OnRecord).Select(t => t.Record).ToArray()));
             }
 
             public String[] GetXmlComment(String Description)
@@ -633,12 +645,12 @@ namespace Yuki.RelationSchema.CSharpDatabase
 
                 foreach (var c in Schema.Types)
                 {
-                    if (c._Tag == TypeDefTag.Enum)
+                    if (c.OnEnum)
                     {
                         l.AddRange(GetEnum(c.Enum));
                         l.Add("");
                     }
-                    else if (c._Tag == TypeDefTag.Record)
+                    else if (c.OnRecord)
                     {
                         l.AddRange(GetTable(c.Record));
                         l.Add("");

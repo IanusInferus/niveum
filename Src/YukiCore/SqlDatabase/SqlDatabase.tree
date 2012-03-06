@@ -4,7 +4,7 @@
       File:        SqlDatabase.tree
       Location:    Yuki.Core <Tree>
       Description: 关系类型结构Sql数据库模板数据
-      Version:     2012.02.24.
+      Version:     2012.03.06.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -25,6 +25,9 @@ ObjectSchemaTemplate
         PrimitiveMapping
             Name Real
             PlatformName float
+        PrimitiveMapping
+            Name Binary
+            PlatformName varbinary
     Templates
         Template
             Name Main

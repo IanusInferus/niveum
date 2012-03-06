@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Dbml数据库代码生成器
-//  Version:     2012.02.27.
+//  Version:     2012.03.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -48,12 +48,14 @@ namespace Yuki.RelationSchema.DbmlDatabase
                 ClrPrimitiveMappings.Add("String", "System.String");
                 ClrPrimitiveMappings.Add("Int", "System.Int32");
                 ClrPrimitiveMappings.Add("Real", "System.Double");
+                ClrPrimitiveMappings.Add("Binary", "System.Byte[]");
 
                 DbPrimitiveMappings = new Dictionary<String, String>();
                 DbPrimitiveMappings.Add("Boolean", "Bit");
                 DbPrimitiveMappings.Add("String", "NVarChar");
                 DbPrimitiveMappings.Add("Int", "Int");
                 DbPrimitiveMappings.Add("Real", "Float");
+                DbPrimitiveMappings.Add("Binary", "VarBinary");
             }
 
             private XNamespace ns = XNamespace.Get(@"http://schemas.microsoft.com/linqtosql/dbml/2007");
@@ -63,16 +65,16 @@ namespace Yuki.RelationSchema.DbmlDatabase
             private Dictionary<ForeignKey, String> AssociationNames;
             public XElement GetSchema()
             {
-                Primitives = Schema.TypeRefs.Concat(Schema.Types).Where(t => t._Tag == TypeDefTag.Primitive).Select(t => t.Primitive).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
-                Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t._Tag == TypeDefTag.Enum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
-                Records = Schema.Types.Where(t => t._Tag == TypeDefTag.Record).Select(t => t.Record).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
+                Primitives = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive).Select(t => t.Primitive).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+                Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
+                Records = Schema.Types.Where(t => t.OnRecord).Select(t => t.Record).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
 
                 AssociationNames = new Dictionary<ForeignKey, String>();
                 foreach (var r in Records.Values)
                 {
                     foreach (var f in r.Fields)
                     {
-                        if (f.Attribute._Tag == FieldAttributeTag.Navigation && !f.Attribute.Navigation.IsReverse)
+                        if (f.Attribute.OnNavigation && !f.Attribute.Navigation.IsReverse)
                         {
                             var fk = new ForeignKey { ThisTableName = r.CollectionName, ThisKeyColumns = f.Attribute.Navigation.ThisKey, OtherTableName = Records[f.Type.TypeRef.Value].CollectionName, OtherKeyColumns = f.Attribute.Navigation.OtherKey };
                             var AssociationName = fk.ThisTableName + "_" + fk.ThisKeyColumns.Aggregate((a, b) => a + "_" + b) + "_" + fk.OtherTableName + "_" + fk.OtherKeyColumns.Aggregate((a, b) => a + "_" + b);
@@ -87,14 +89,14 @@ namespace Yuki.RelationSchema.DbmlDatabase
                 {
                     foreach (var f in r.Fields)
                     {
-                        if (f.Attribute._Tag == FieldAttributeTag.Navigation && f.Attribute.Navigation.IsReverse)
+                        if (f.Attribute.OnNavigation && f.Attribute.Navigation.IsReverse)
                         {
                             Record ThisTable = null;
-                            if (f.Type._Tag == TypeSpecTag.TypeRef)
+                            if (f.Type.OnTypeRef)
                             {
                                 ThisTable = Records[f.Type.TypeRef.Value];
                             }
-                            else if (f.Type._Tag == TypeSpecTag.List)
+                            else if (f.Type.OnList)
                             {
                                 ThisTable = Records[f.Type.List.ElementType.TypeRef.Value];
                             }
@@ -120,7 +122,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
 
                 foreach (var t in Schema.Types)
                 {
-                    if (t._Tag == TypeDefTag.Record)
+                    if (t.OnRecord)
                     {
                         x.Add(GetTable(t.Record));
                     }
@@ -147,7 +149,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
 
             private XElement GetField(Record r, Field f)
             {
-                if (f.Attribute._Tag == FieldAttributeTag.Column)
+                if (f.Attribute.OnColumn)
                 {
                     var ca = f.Attribute.Column;
 
@@ -174,18 +176,18 @@ namespace Yuki.RelationSchema.DbmlDatabase
 
                     return x;
                 }
-                else if (f.Attribute._Tag == FieldAttributeTag.Navigation)
+                else if (f.Attribute.OnNavigation)
                 {
                     var na = f.Attribute.Navigation;
                     var x = new XElement(ns + "Association");
                     if (na.IsReverse)
                     {
                         Record ThisTable = null;
-                        if (f.Type._Tag == TypeSpecTag.TypeRef)
+                        if (f.Type.OnTypeRef)
                         {
                             ThisTable = Records[f.Type.TypeRef.Value];
                         }
-                        else if (f.Type._Tag == TypeSpecTag.List)
+                        else if (f.Type.OnList)
                         {
                             ThisTable = Records[f.Type.List.ElementType.TypeRef.Value];
                         }
@@ -210,7 +212,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
 
                     var IsMultiple = false;
                     var Type = "";
-                    if (f.Type._Tag == TypeSpecTag.List)
+                    if (f.Type.OnList)
                     {
                         IsMultiple = true;
                         Type = GetClrTypeString(f.Type.List.ElementType);
@@ -242,7 +244,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
 
             private String GetClrTypeString(TypeSpec Type)
             {
-                if (Type._Tag != TypeSpecTag.TypeRef)
+                if (!Type.OnTypeRef)
                 {
                     throw new InvalidOperationException();
                 }
@@ -258,7 +260,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
 
             private String GetDbTypeString(TypeSpec Type, ColumnAttribute ca)
             {
-                if (Type._Tag != TypeSpecTag.TypeRef)
+                if (!Type.OnTypeRef)
                 {
                     throw new InvalidOperationException();
                 }
