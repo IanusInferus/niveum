@@ -78,31 +78,31 @@ namespace Yuki.ObjectSchema
             {
                 PushTypeSpec(gp.Type);
             }
-            if (c._Tag == TypeDefTag.Primitive)
+            if (c.OnPrimitive)
             {
             }
-            else if (c._Tag == TypeDefTag.Alias)
+            else if (c.OnAlias)
             {
                 PushTypeSpec(c.Alias.Type);
             }
-            else if (c._Tag == TypeDefTag.Record)
+            else if (c.OnRecord)
             {
                 foreach (var f in c.Record.Fields)
                 {
                     PushTypeSpec(f.Type);
                 }
             }
-            else if (c._Tag == TypeDefTag.TaggedUnion)
+            else if (c.OnTaggedUnion)
             {
                 foreach (var a in c.TaggedUnion.Alternatives)
                 {
                     PushTypeSpec(a.Type);
                 }
             }
-            else if (c._Tag == TypeDefTag.Enum)
+            else if (c.OnEnum)
             {
             }
-            else if (c._Tag == TypeDefTag.ClientCommand)
+            else if (c.OnClientCommand)
             {
                 foreach (var p in c.ClientCommand.InParameters)
                 {
@@ -113,7 +113,7 @@ namespace Yuki.ObjectSchema
                     PushTypeSpec(p.Type);
                 }
             }
-            else if (c._Tag == TypeDefTag.ServerCommand)
+            else if (c.OnServerCommand)
             {
                 foreach (var p in c.ServerCommand.OutParameters)
                 {
