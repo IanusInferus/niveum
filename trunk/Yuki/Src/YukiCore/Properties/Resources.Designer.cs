@@ -102,6 +102,20 @@ namespace Yuki.Properties {
             }
         }
         
+        internal static byte[] Java {
+            get {
+                object obj = ResourceManager.GetObject("Java", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        internal static byte[] JavaBinary {
+            get {
+                object obj = ResourceManager.GetObject("JavaBinary", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
         internal static byte[] SqlDatabase {
             get {
                 object obj = ResourceManager.GetObject("SqlDatabase", resourceCulture);

@@ -1,4 +1,8 @@
-﻿2012.03.06
+﻿2012.03.18.0
+Yuki.Core, Yuki.SchemaManipulator:
+增加Java类型定义和二进制序列化支持。
+
+2012.03.06
 Yuki.Core:
 整理代码。
 增加数据库二进制流数据类型。

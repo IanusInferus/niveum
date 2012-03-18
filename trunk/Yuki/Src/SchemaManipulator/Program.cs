@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.01.31.
+//  Version:     2012.03.18.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -30,6 +30,8 @@ using Yuki.RelationSchema.CSharpDatabase;
 using Yuki.ObjectSchema.Xhtml;
 using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
+using Yuki.ObjectSchema.Java;
+using Yuki.ObjectSchema.JavaBinary;
 
 namespace Yuki.SchemaManipulator
 {
@@ -283,6 +285,40 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2jv")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        ObjectSchemaToJavaCode(Schema(), args[0], args[1], "");
+                    }
+                    else if (args.Length == 3)
+                    {
+                        ObjectSchemaToJavaCode(Schema(), args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "t2jvb")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        ObjectSchemaToJavaBinaryCode(Schema(), args[0], args[1], "");
+                    }
+                    else if (args.Length == 3)
+                    {
+                        ObjectSchemaToJavaBinaryCode(Schema(), args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else
                 {
                     throw (new ArgumentException(opt.Name));
@@ -325,11 +361,15 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2cpp:<CppCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C++二进制类型");
             Console.WriteLine(@"/t2cppb:<CppCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"生成Java类型");
+            Console.WriteLine(@"/t2jv:<JavaCodePath>,<ClassName>[,<PackageName>]");
+            Console.WriteLine(@"生成Java二进制类型");
+            Console.WriteLine(@"/t2jvb:<JavaCodePath>,<ClassName>[,<PackageName>]");
             Console.WriteLine(@"ObjectSchemaDir|ObjectSchemaFile 对象类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"CsCodePath C#代码文件路径。");
             Console.WriteLine(@"NamespaceName C#文件中的命名空间名称。");
             Console.WriteLine(@"AsCodeDir ActionScript代码文件夹路径。");
-            Console.WriteLine(@"PackageName ActionScript文件中的包名。");
+            Console.WriteLine(@"PackageName ActionScript/Java文件中的包名。");
             Console.WriteLine(@"UseTryWrapper 是否使用try包装构造函数。");
             Console.WriteLine(@"SqlCodePath SQL代码文件路径。");
             Console.WriteLine(@"DatabaseName 数据库名。");
@@ -338,6 +378,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"ContextNamespaceName 上下文命名空间名称。");
             Console.WriteLine(@"ContextClassName 上下文类名称。");
             Console.WriteLine(@"XhtmlDir XHTML文件夹路径。");
+            Console.WriteLine(@"ClassName Java文件中的类名。");
             Console.WriteLine(@"Title 标题。");
             Console.WriteLine(@"CopyrightText 版权文本。");
             Console.WriteLine(@"");
@@ -510,6 +551,38 @@ namespace Yuki.SchemaManipulator
             var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
             if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CppCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToJavaCode(OS.Schema ObjectSchema, String JavaCodePath, String ClassName, String PackageName)
+        {
+            var Compiled = ObjectSchema.CompileToJava(ClassName, PackageName);
+            if (File.Exists(JavaCodePath))
+            {
+                var Original = Txt.ReadFile(JavaCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(JavaCodePath);
+            if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(JavaCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToJavaBinaryCode(OS.Schema ObjectSchema, String JavaCodePath, String ClassName, String PackageName)
+        {
+            var Compiled = ObjectSchema.CompileToJavaBinary(ClassName, PackageName);
+            if (File.Exists(JavaCodePath))
+            {
+                var Original = Txt.ReadFile(JavaCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(JavaCodePath);
+            if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(JavaCodePath, Compiled);
         }
     }
 }
