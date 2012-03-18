@@ -56,6 +56,8 @@
     <Compile Include="Cpp\CodeGenerator.cs" />
     <Compile Include="CSharpCommunication\CodeGenerator.cs" />
     <Compile Include="CSharp\CodeGenerator.cs" />
+    <Compile Include="JavaBinary\CodeGenerator.cs" />
+    <Compile Include="Java\CodeGenerator.cs" />
     <Compile Include="ObjectSchema\TupleAndGenericTypeSpecFetcher.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaExtensions.cs" />
     <Compile Include="SqlDatabase\CodeGenerator.cs" />
@@ -80,6 +82,8 @@
     <None Include="Cpp\Cpp.tree" />
     <None Include="CSharpCommunication\CSharpCommunication.tree" />
     <None Include="CSharp\CSharp.tree" />
+    <None Include="JavaBinary\JavaBinary.tree" />
+    <None Include="Java\Java.tree" />
     <None Include="SqlDatabase\SqlDatabase.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
     <None Include="RelationSchema\RelationSchema.tree" />
