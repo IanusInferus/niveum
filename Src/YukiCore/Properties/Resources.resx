@@ -142,4 +142,10 @@
   <data name="CppBinary" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\cppbinary\cppbinary.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Java" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\java\java.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="JavaBinary" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\javabinary\javabinary.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>
