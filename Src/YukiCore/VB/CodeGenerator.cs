@@ -2,8 +2,8 @@
 //
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
-//  Description: 对象类型结构C#代码生成器
-//  Version:     2012.02.24.
+//  Description: 对象类型结构VB.Net代码生成器
+//  Version:     2012.03.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,25 +20,25 @@ using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 
-namespace Yuki.ObjectSchema.CSharp
+namespace Yuki.ObjectSchema.VB
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharp(this Schema Schema, String NamespaceName)
+        public static String CompileToVB(this Schema Schema, String NamespaceName)
         {
             var w = new Common.CodeGenerator.Writer() { Schema = Schema, NamespaceName = NamespaceName };
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
-        public static String CompileToCSharp(this Schema Schema)
+        public static String CompileToVB(this Schema Schema)
         {
-            return CompileToCSharp(Schema, "");
+            return CompileToVB(Schema, "");
         }
 
     }
 }
 
-namespace Yuki.ObjectSchema.CSharp.Common
+namespace Yuki.ObjectSchema.VB.Common
 {
     public static class CodeGenerator
     {
@@ -65,7 +65,7 @@ namespace Yuki.ObjectSchema.CSharp.Common
 
             static Writer()
             {
-                var b = Properties.Resources.CSharp;
+                var b = Properties.Resources.VB;
                 XElement x;
                 using (ByteArrayStream s = new ByteArrayStream(b))
                 {
@@ -134,35 +134,7 @@ namespace Yuki.ObjectSchema.CSharp.Common
 
             public String GetEnumTypeString(TypeSpec Type)
             {
-                if (!Type.OnTypeRef)
-                {
-                    throw new InvalidOperationException();
-                }
-                if (!TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Value))
-                {
-                    return GetEscapedIdentifier(Type.TypeRef.Value);
-                }
-                switch (TemplateInfo.PrimitiveMappings[Type.TypeRef.Value].PlatformName)
-                {
-                    case "System.UInt8":
-                        return "byte";
-                    case "System.UInt16":
-                        return "ushort";
-                    case "System.UInt32":
-                        return "uint";
-                    case "System.UInt64":
-                        return "ulong";
-                    case "System.Int8":
-                        return "sbyte";
-                    case "System.Int16":
-                        return "short";
-                    case "System.Int32":
-                        return "int";
-                    case "System.Int64":
-                        return "long";
-                    default:
-                        return GetEscapedIdentifier(Type.TypeRef.Value);
-                }
+                return GetTypeString(Type);
             }
 
             public String GetTypeString(TypeSpec Type)
@@ -370,7 +342,7 @@ namespace Yuki.ObjectSchema.CSharp.Common
             public String[] GetClientCommand(ClientCommand c)
             {
                 var l = new List<String>();
-                l.AddRange(GetRecord(new Record { Name = c.Name + "Request", GenericParameters = {}, Fields = c.OutParameters, Description = c.Description }));
+                l.AddRange(GetRecord(new Record { Name = c.Name + "Request", GenericParameters = { }, Fields = c.OutParameters, Description = c.Description }));
                 l.AddRange(GetTaggedUnion(new TaggedUnion { Name = c.Name + "Reply", GenericParameters = { }, Alternatives = c.InParameters, Description = c.Description }));
                 return l.ToArray();
             }
@@ -460,7 +432,7 @@ namespace Yuki.ObjectSchema.CSharp.Common
             {
                 return Value.UnifyNewLineToLf().Split('\n');
             }
-            private static Regex rIdentifierPart = new Regex(@"[^\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F]+");
+            private static Regex rIdentifierPart = new Regex(@"[^\u0000-\u002D\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F]+");
             public String GetEscapedIdentifier(String Identifier)
             {
                 return rIdentifierPart.Replace(Identifier, m =>
@@ -468,13 +440,13 @@ namespace Yuki.ObjectSchema.CSharp.Common
                     var IdentifierPart = m.Value;
                     if (TemplateInfo.Keywords.Contains(IdentifierPart))
                     {
-                        return "@" + IdentifierPart;
+                        return "[" + IdentifierPart + "]";
                     }
                     else
                     {
                         return IdentifierPart;
                     }
-                });
+                }).Replace("<", "(Of ").Replace(">", ")");
             }
             private Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
             public String[] EvaluateEscapedIdentifiers(String[] Lines)
