@@ -19,9 +19,10 @@ using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Yuki.ObjectSchema;
 using OS = Yuki.ObjectSchema;
+using Yuki.ObjectSchema.VB;
+using Yuki.ObjectSchema.CSharp;
 using Yuki.ObjectSchema.CSharpCommunication;
 using Yuki.ObjectSchema.ActionScriptCommunication;
-using Yuki.ObjectSchema.CSharp;
 using Yuki.RelationSchema;
 using RS = Yuki.RelationSchema;
 using Yuki.RelationSchema.SqlDatabase;
@@ -145,6 +146,23 @@ namespace Yuki.SchemaManipulator
                     if (args.Length == 1)
                     {
                         osl.AddImport(args[0]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "t2vb")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ObjectSchemaToVBCode(Schema(), args[0], "");
+                    }
+                    else if (args.Length == 2)
+                    {
+                        ObjectSchemaToVBCode(Schema(), args[0], args[1]);
                     }
                     else
                     {
@@ -343,6 +361,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/loadtype:<ObjectSchemaDir|ObjectSchemaFile>");
             Console.WriteLine(@"增加命名空间引用");
             Console.WriteLine(@"/import:<NamespaceName>");
+            Console.WriteLine(@"生成VB类型");
+            Console.WriteLine(@"/t2vb:<VbCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C#类型");
             Console.WriteLine(@"/t2cs:<CsCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C#通讯类型");
@@ -383,7 +403,39 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"CopyrightText 版权文本。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
-            Console.WriteLine(@"SchemaManipulator /t2csc:..\..\Schema\Communication,..\..\GameServer\Src\Schema\Communication.cs,Yuki.Communication");
+            Console.WriteLine(@"SchemaManipulator /loadtype:..\..\Schema\Communication /t2csc:..\..\GameServer\Src\Schema\Communication.cs,Yuki.Communication");
+        }
+
+        public static void ObjectSchemaToVBCode(OS.Schema ObjectSchema, String VbCodePath, String NamespaceName)
+        {
+            var Compiled = ObjectSchema.CompileToVB(NamespaceName);
+            if (File.Exists(VbCodePath))
+            {
+                var Original = Txt.ReadFile(VbCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(VbCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(VbCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToCSharpCode(OS.Schema ObjectSchema, String CsCodePath, String NamespaceName)
+        {
+            var Compiled = ObjectSchema.CompileToCSharp(NamespaceName);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
         }
 
         public static void ObjectSchemaToCSharpCommunicationCode(OS.Schema ObjectSchema, String CsCodePath, String NamespaceName)
@@ -398,7 +450,7 @@ namespace Yuki.SchemaManipulator
                 }
             }
             var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
-            if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
@@ -418,25 +470,9 @@ namespace Yuki.SchemaManipulator
                     }
                 }
                 var Dir = FileNameHandling.GetFileDirectory(AsCodePath);
-                if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
                 Txt.WriteFile(AsCodePath, TextEncoding.UTF8, Compiled);
             }
-        }
-
-        public static void ObjectSchemaToCSharpCode(OS.Schema ObjectSchema, String CsCodePath, String NamespaceName)
-        {
-            var Compiled = ObjectSchema.CompileToCSharp(NamespaceName);
-            if (File.Exists(CsCodePath))
-            {
-                var Original = Txt.ReadFile(CsCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
-            if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(CsCodePath, Compiled);
         }
 
         public static void ObjectSchemaToSqlDatabaseCode(OS.Schema ObjectSchema, String SqlCodePath, String DatabaseName)
@@ -496,7 +532,7 @@ namespace Yuki.SchemaManipulator
                 }
             }
             var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
-            if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
@@ -516,7 +552,7 @@ namespace Yuki.SchemaManipulator
                     }
                 }
                 var Dir = FileNameHandling.GetFileDirectory(Path);
-                if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
                 Txt.WriteFile(Path, TextEncoding.UTF8, Compiled);
             }
         }
@@ -533,7 +569,7 @@ namespace Yuki.SchemaManipulator
                 }
             }
             var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
-            if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CppCodePath, Compiled);
         }
 
@@ -549,7 +585,7 @@ namespace Yuki.SchemaManipulator
                 }
             }
             var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
-            if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CppCodePath, Compiled);
         }
 
@@ -565,7 +601,7 @@ namespace Yuki.SchemaManipulator
                 }
             }
             var Dir = FileNameHandling.GetFileDirectory(JavaCodePath);
-            if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(JavaCodePath, Compiled);
         }
 
@@ -581,7 +617,7 @@ namespace Yuki.SchemaManipulator
                 }
             }
             var Dir = FileNameHandling.GetFileDirectory(JavaCodePath);
-            if (!Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(JavaCodePath, Compiled);
         }
     }

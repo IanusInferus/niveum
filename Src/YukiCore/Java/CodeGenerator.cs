@@ -120,7 +120,7 @@ namespace Yuki.ObjectSchema.Java.Common
             }
             public String[] GetPrimitive(String Name, String PlatformName)
             {
-                return GetTemplate("Primitive").Substitute("Name", GetEscapedIdentifier(Name)).Substitute("PlatformName", PlatformName);
+                return GetTemplate("Primitive").Substitute("Name", Name).Substitute("PlatformName", PlatformName);
             }
             public String[] GetPrimitives()
             {
