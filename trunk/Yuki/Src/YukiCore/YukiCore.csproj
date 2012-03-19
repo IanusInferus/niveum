@@ -74,6 +74,7 @@
     <Compile Include="RelationSchema\RelationSchema.Designer.cs" />
     <Compile Include="DbmlDatabase\CodeGenerator.cs" />
     <Compile Include="CSharpDatabase\CodeGenerator.cs" />
+    <Compile Include="VB\CodeGenerator.cs" />
     <Compile Include="Xhtml\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -88,6 +89,7 @@
     <None Include="ObjectSchema\ObjectSchema.tree" />
     <None Include="RelationSchema\RelationSchema.tree" />
     <None Include="CSharpDatabase\CSharpDatabase.tree" />
+    <None Include="VB\VB.tree" />
     <None Include="Xhtml\Xhtml.tree" />
   </ItemGroup>
   <ItemGroup>
