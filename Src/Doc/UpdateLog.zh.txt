@@ -1,4 +1,4 @@
-﻿2012.03.19
+﻿2012.03.19.0
 Yuki.Core, Yuki.SchemaManipulator:
 增加VB.Net类型定义和二进制序列化支持。
 
