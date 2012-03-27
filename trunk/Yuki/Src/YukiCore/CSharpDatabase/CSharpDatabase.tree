@@ -4,7 +4,7 @@
       File:        CSharpDatabase.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#数据库模板数据
-      Version:     2012.03.06.
+      Version:     2012.03.27.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -387,7 +387,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     [System.Data.Linq.Mapping.Database(Name = "${DatabaseName}")]
-                    public partial class [[${ContextClassName}]] : System.Data.Linq.DataContext
+                    public partial class [[${ContextClassName}]] : System.Data.Linq.DataContext, IReadonlyContext
                     {
                         public [[${ContextClassName}]](System.Data.IDbConnection connection) :
                             base(connection)
@@ -402,13 +402,60 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    public System.Data.Linq.Table<[[${RecordName}]]> [[${TableName}]]
+                    public System.Data.Linq.Table<[[${RecordName}]]> [[${TableName}]] { get { return this.GetTable<[[${RecordName}]]>(); } }
+                    IQueryable<[[${RecordName}]]> IReadonlyContext.[[${TableName}]] { get { return [[${TableName}]]; } }
+        Template
+            Name StaticDataContext
+            //Parameters: ${ContextClassName}, ${TableGetters}, ${StaticDataLoadWiths}, ${StaticDataTableSets}
+            Value
+                $String
+                    public partial class StaticDataContext : IReadonlyContext
                     {
-                        get
+                        public StaticDataContext(${ContextClassName} Context)
                         {
-                            return this.GetTable<[[${RecordName}]]>();
+                            var LoadOptions = new System.Data.Linq.DataLoadOptions();
+                            ${StaticDataLoadWiths}
+                            Context.LoadOptions = LoadOptions;
+                            ${StaticDataTableSets}
                         }
+
+                        ${TableGetters}
                     }
+        Template
+            Name StaticDataTableGetter
+            //Parameters: ${RecordName}, ${TableName}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    public IQueryable<[[${RecordName}]]> [[${TableName}]] { get; private set; }
+        Template
+            Name StaticDataLoadWith
+            //Parameters: ${RecordName}, ${AssociationFieldName}
+            Value
+                $String
+                    LoadOptions.LoadWith<[[${RecordName}]]>(o => o.[[${AssociationFieldName}]]);
+        Template
+            Name StaticDataTableSet
+            //Parameters: ${TableName}
+            Value
+                $String
+                    this.[[${TableName}]] = Context.[[${TableName}]].ToArray().AsQueryable();
+        Template
+            Name IReadonlyContext
+            //Parameters: ${TableGetters}
+            Value
+                $String
+                    public interface IReadonlyContext
+                    {
+                        ${TableGetters}
+                    }
+        Template
+            Name IReadonlyContextTableGetter
+            //Parameters: ${RecordName}, ${TableName}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    IQueryable<[[${RecordName}]]> [[${TableName}]] { get; }
         Template
             Name DbExtensions
             //Parameters: ${Methods}
