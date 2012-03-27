@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#枚举数据库代码生成器
-//  Version:     2012.03.06.
+//  Version:     2012.03.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -547,6 +547,37 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 return GetTemplate("Context").Substitute("DatabaseName", DatabaseName).Substitute("ContextClassName", ContextClassName).Substitute("TableGetters", TableGetters);
             }
 
+            public String[] GetStaticDataTableGetter(Record r)
+            {
+                return GetTemplate("StaticDataTableGetter").Substitute("RecordName", r.Name).Substitute("TableName", r.CollectionName).Substitute("XmlComment", GetXmlComment(r.Description));
+            }
+            public String[] GetStaticDataLoadWith(Record r)
+            {
+                var LoadWiths = r.Fields.Where(f => f.Attribute.OnNavigation).SelectMany(f => GetTemplate("StaticDataLoadWith").Substitute("RecordName", r.Name).Substitute("AssociationFieldName", f.Name)).ToArray();
+                return LoadWiths;
+            }
+            public String[] GetStaticDataTableSet(Record r)
+            {
+                return GetTemplate("StaticDataTableSet").Substitute("TableName", r.CollectionName);
+            }
+            public String[] GetStaticDataContext(Schema s)
+            {
+                var TableGetters = s.Types.Where(t => t.OnRecord).SelectMany(t => GetStaticDataTableGetter(t.Record)).ToArray();
+                var StaticDataLoadWiths = s.Types.Where(t => t.OnRecord).SelectMany(t => GetStaticDataLoadWith(t.Record)).ToArray();
+                var StaticDataTableSets = s.Types.Where(t => t.OnRecord).SelectMany(t => GetStaticDataTableSet(t.Record)).ToArray();
+                return GetTemplate("StaticDataContext").Substitute("ContextClassName", ContextClassName).Substitute("TableGetters", TableGetters).Substitute("StaticDataLoadWiths", StaticDataLoadWiths).Substitute("StaticDataTableSets", StaticDataTableSets);
+            }
+
+            public String[] GetIReadonlyContextTableGetter(Record r)
+            {
+                return GetTemplate("IReadonlyContextTableGetter").Substitute("RecordName", r.Name).Substitute("TableName", r.CollectionName).Substitute("XmlComment", GetXmlComment(r.Description));
+            }
+            public String[] GetIReadonlyContext(Schema s)
+            {
+                var TableGetters = s.Types.Where(t => t.OnRecord).SelectMany(t => GetIReadonlyContextTableGetter(t.Record)).ToArray();
+                return GetTemplate("IReadonlyContext").Substitute("TableGetters", TableGetters);
+            }
+
             public String GetKeyParameters(Record r, Key k)
             {
                 var l = new List<String>();
@@ -670,6 +701,10 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 List<String> l = new List<String>();
 
                 l.AddRange(GetContext(Schema));
+                l.Add("");
+                l.AddRange(GetStaticDataContext(Schema));
+                l.Add("");
+                l.AddRange(GetIReadonlyContext(Schema));
                 l.Add("");
                 l.AddRange(GetDbExtensions(Schema));
                 l.Add("");
