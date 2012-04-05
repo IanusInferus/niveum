@@ -4,7 +4,7 @@
       File:        VB.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构VB.Net模板数据
-      Version:     2012.03.19.
+      Version:     2012.04.05.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -257,6 +257,7 @@ ObjectSchemaTemplate
             //Parameters:
             Value
                 $String
+                    <Record()>
                     Public Structure Unit
                     End Structure
 
