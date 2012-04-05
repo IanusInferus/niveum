@@ -4,7 +4,7 @@ $Comment
       File:        Java.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Java模板数据
-      Version:     2012.03.18.
+      Version:     2012.04.05.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -147,6 +147,7 @@ ObjectSchemaTemplate
             //Parameters:
             Value
                 $String
+                    @Record
                     public static class Unit
                     {
                     }

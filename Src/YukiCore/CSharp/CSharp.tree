@@ -4,7 +4,7 @@
       File:        CSharp.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#模板数据
-      Version:     2012.02.24.
+      Version:     2012.04.05.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -189,6 +189,7 @@ ObjectSchemaTemplate
             //Parameters:
             Value
                 $String
+                    [Record]
                     public struct Unit
                     {
                     }
