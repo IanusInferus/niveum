@@ -4,7 +4,7 @@
       File:        ObjectSchema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象元类型结构
-      Version:     2012.02.24.
+      Version:     2012.04.06.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -19,28 +19,34 @@ Schema
                 Alternatives
                     Alternative
                         Name Primitive
-                        Type ConceptRef Primitive
+                        Type ConceptRef PrimitiveDef
                     Alternative
                         Name Alias
-                        Type ConceptRef Alias
+                        Type ConceptRef AliasDef
                     Alternative
                         Name Record
-                        Type ConceptRef Record
+                        Type ConceptRef RecordDef
                     Alternative
                         Name TaggedUnion
-                        Type ConceptRef TaggedUnion
+                        Type ConceptRef TaggedUnionDef
                     Alternative
                         Name Enum
-                        Type ConceptRef Enum
+                        Type ConceptRef EnumDef
                     Alternative
                         Name ClientCommand
-                        Type ConceptRef ClientCommand
+                        Type ConceptRef ClientCommandDef
                     Alternative
                         Name ServerCommand
-                        Type ConceptRef ServerCommand
-            Alias
+                        Type ConceptRef ServerCommandDef
+            Record
                 Name TypeRef
-                Type ConceptRef StringLiteral
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name Version
+                        Type ConceptRef StringLiteral
             Alias
                 Name GenericParameterRef
                 Type ConceptRef StringLiteral
@@ -55,12 +61,12 @@ Schema
                         Type ConceptRef GenericParameterRef
                     Alternative
                         Name Tuple
-                        Type ConceptRef Tuple
+                        Type ConceptRef TupleDef
                     Alternative
                         Name GenericTypeSpec
                         Type ConceptRef GenericTypeSpec
             Record
-                Name Variable
+                Name VariableDef
                 Fields
                     Field
                         Name Name
@@ -72,26 +78,29 @@ Schema
                         Name Description
                         Type ConceptRef StringLiteral
             Record
-                Name Primitive
+                Name PrimitiveDef
                 Fields
                     Field
                         Name Name
                         Type ConceptRef StringLiteral
                     Field
                         Name GenericParameters
-                        Type List ElementType ConceptRef Variable
+                        Type List ElementType ConceptRef VariableDef
                     Field
                         Name Description
                         Type ConceptRef StringLiteral
             Record
-                Name Alias
+                Name AliasDef
                 Fields
                     Field
                         Name Name
                         Type ConceptRef StringLiteral
                     Field
+                        Name Version
+                        Type ConceptRef StringLiteral
+                    Field
                         Name GenericParameters
-                        Type List ElementType ConceptRef Variable
+                        Type List ElementType ConceptRef VariableDef
                     Field
                         Name Type
                         Type ConceptRef TypeSpec
@@ -99,38 +108,44 @@ Schema
                         Name Description
                         Type ConceptRef StringLiteral
             Record
-                Name Tuple
+                Name TupleDef
                 Fields
                     Field
                         Name Types
                         Type List ElementType ConceptRef TypeSpec
             Record
-                Name Record
+                Name RecordDef
                 Fields
                     Field
                         Name Name
                         Type ConceptRef StringLiteral
                     Field
+                        Name Version
+                        Type ConceptRef StringLiteral
+                    Field
                         Name GenericParameters
-                        Type List ElementType ConceptRef Variable
+                        Type List ElementType ConceptRef VariableDef
                     Field
                         Name Fields
-                        Type List ElementType ConceptRef Variable
+                        Type List ElementType ConceptRef VariableDef
                     Field
                         Name Description
                         Type ConceptRef StringLiteral
             Record
-                Name TaggedUnion
+                Name TaggedUnionDef
                 Fields
                     Field
                         Name Name
                         Type ConceptRef StringLiteral
                     Field
+                        Name Version
+                        Type ConceptRef StringLiteral
+                    Field
                         Name GenericParameters
-                        Type List ElementType ConceptRef Variable
+                        Type List ElementType ConceptRef VariableDef
                     Field
                         Name Alternatives
-                        Type List ElementType ConceptRef Variable
+                        Type List ElementType ConceptRef VariableDef
                     Field
                         Name Description
                         Type ConceptRef StringLiteral
@@ -153,7 +168,7 @@ Schema
                         Name TypeSpec
                         Type ConceptRef TypeSpec
             Record
-                Name Literal
+                Name LiteralDef
                 Fields
                     Field
                         Name Name
@@ -165,44 +180,53 @@ Schema
                         Name Description
                         Type ConceptRef StringLiteral
             Record
-                Name Enum
+                Name EnumDef
                 Fields
                     Field
                         Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name Version
                         Type ConceptRef StringLiteral
                     Field
                         Name UnderlyingType
                         Type ConceptRef TypeSpec
                     Field
                         Name Literals
-                        Type List ElementType ConceptRef Literal
+                        Type List ElementType ConceptRef LiteralDef
                     Field
                         Name Description
                         Type ConceptRef StringLiteral
             Record
-                Name ClientCommand
+                Name ClientCommandDef
                 Fields
                     Field
                         Name Name
                         Type ConceptRef StringLiteral
                     Field
+                        Name Version
+                        Type ConceptRef StringLiteral
+                    Field
                         Name OutParameters
-                        Type List ElementType ConceptRef Variable
+                        Type List ElementType ConceptRef VariableDef
                     Field
                         Name InParameters
-                        Type List ElementType ConceptRef Variable
+                        Type List ElementType ConceptRef VariableDef
                     Field
                         Name Description
                         Type ConceptRef StringLiteral
             Record
-                Name ServerCommand
+                Name ServerCommandDef
                 Fields
                     Field
                         Name Name
                         Type ConceptRef StringLiteral
                     Field
+                        Name Version
+                        Type ConceptRef StringLiteral
+                    Field
                         Name OutParameters
-                        Type List ElementType ConceptRef Variable
+                        Type List ElementType ConceptRef VariableDef
                     Field
                         Name Description
                         Type ConceptRef StringLiteral

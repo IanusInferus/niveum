@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2012.03.06.
+//  Version:     2012.04.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -192,10 +192,10 @@ namespace Yuki.RelationSchema
                 {
                     if (t.OnGenericTypeSpec)
                     {
-                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Value == "List" && t.GenericTypeSpec.GenericParameterValues.Length == 1)
+                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.GenericParameterValues.Length == 1)
                         {
                             var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
-                            if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Value == "Byte")
+                            if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Name == "Byte")
                             {
                                 if (!OPrimitives.Contains("Binary"))
                                 {
@@ -214,10 +214,10 @@ namespace Yuki.RelationSchema
                 {
                     if (t.OnGenericTypeSpec)
                     {
-                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Value == "List" && t.GenericTypeSpec.GenericParameterValues.Length == 1)
+                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.GenericParameterValues.Length == 1)
                         {
                             var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
-                            if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Value == "Byte")
+                            if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Name == "Byte")
                             {
                                 if (!OPrimitives.Contains("Binary"))
                                 {
@@ -271,16 +271,16 @@ namespace Yuki.RelationSchema
                 return new RS.Schema { Types = Types.ToArray(), TypeRefs = TypeRefs.ToArray(), Imports = Schema.Imports.ToArray() };
             }
 
-            private RS.Primitive TranslatePrimitive(OS.Primitive e)
+            private RS.Primitive TranslatePrimitive(OS.PrimitiveDef e)
             {
                 return new RS.Primitive { Name = e.Name, Description = e.Description };
             }
 
-            private RS.Literal TranslateLiteral(OS.Literal l)
+            private RS.Literal TranslateLiteral(OS.LiteralDef l)
             {
                 return new RS.Literal { Name = l.Name, Value = l.Value, Description = l.Description };
             }
-            private RS.Enum TranslateEnum(OS.Enum e)
+            private RS.Enum TranslateEnum(OS.EnumDef e)
             {
                 return new RS.Enum { Name = e.Name, UnderlyingType = TranslateTypeSpec(e.UnderlyingType), Literals = e.Literals.Select(l => TranslateLiteral(l)).ToArray(), Description = e.Description };
             }
@@ -289,14 +289,14 @@ namespace Yuki.RelationSchema
             {
                 if (t.OnTypeRef)
                 {
-                    return RS.TypeSpec.CreateTypeRef(new RS.TypeRef { Value = t.TypeRef.Value });
+                    return RS.TypeSpec.CreateTypeRef(new RS.TypeRef { Value = t.TypeRef.Name });
                 }
-                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Value == "List")
+                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List")
                 {
                     if (t.GenericTypeSpec.GenericParameterValues.Length == 1)
                     {
                         var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
-                        if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Value == "Byte")
+                        if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Name == "Byte")
                         {
                             return RS.TypeSpec.CreateTypeRef(new RS.TypeRef { Value = "Binary" });
                         }
@@ -309,7 +309,7 @@ namespace Yuki.RelationSchema
                 }
             }
 
-            private RS.Field TranslateField(OS.Variable f)
+            private RS.Field TranslateField(OS.VariableDef f)
             {
                 var t = TranslateTypeSpec(f.Type);
                 var IsColumn = t.OnTypeRef && (OPrimitives.Contains(t.TypeRef.Value) || OEnums.Contains(t.TypeRef.Value));
@@ -395,7 +395,7 @@ namespace Yuki.RelationSchema
 
                 return new RS.Field { Name = f.Name, Type = t, Description = dc.Description, Attribute = fa };
             }
-            private RS.Record TranslateRecord(OS.Record r)
+            private RS.Record TranslateRecord(OS.RecordDef r)
             {
                 var dc = Decompose(r.Description);
                 var Fields = r.Fields.Select(f => TranslateField(f)).ToArray();
