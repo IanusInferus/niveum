@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2012.02.24.
+//  Version:     2012.04.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -26,7 +26,7 @@ namespace Yuki.ObjectSchema
     {
         public static IEnumerable<KeyValuePair<String, TypeDef>> GetMap(this Schema s)
         {
-            return s.TypeRefs.Concat(s.Types).Select(t => CollectionOperations.CreatePair(t.Name(), t));
+            return s.TypeRefs.Concat(s.Types).Select(t => CollectionOperations.CreatePair(t.VersionedName(), t));
         }
 
         public static UInt64 Hash(this Schema s)
@@ -148,11 +148,15 @@ namespace Yuki.ObjectSchema
                 switch (t._Tag)
                 {
                     case TypeSpecTag.TypeRef:
-                        if (!Types.ContainsKey(t.TypeRef.Value))
+                        var VersionedName = t.TypeRef.VersionedName();
+                        if (Types.ContainsKey(VersionedName))
                         {
-                            throw new InvalidOperationException(String.Format("TypeNotExist: {0}", t.TypeRef.Value));
+                            Mark(Types[VersionedName]);
                         }
-                        Mark(Types[t.TypeRef.Value]);
+                        else
+                        {
+                            throw new InvalidOperationException(String.Format("TypeNotExist: {0}", VersionedName));
+                        }
                         break;
                     case TypeSpecTag.GenericParameterRef:
                         break;
@@ -181,6 +185,7 @@ namespace Yuki.ObjectSchema
         public static void Verify(this Schema s)
         {
             VerifyDuplicatedNames(s);
+            VerifyTypes(s);
         }
 
         public static void VerifyDuplicatedNames(this Schema s)
@@ -196,37 +201,48 @@ namespace Yuki.ObjectSchema
                     case TypeDefTag.Record:
                         {
                             var r = t.Record;
-                            CheckDuplicatedNames(r.Fields, rf => rf.Name, rf => String.Format("DuplicatedField {0}: record {1}, at {2}", rf.Name, r.Name, PathDict[r.Name]));
+                            CheckDuplicatedNames(r.Fields, rf => rf.Name, rf => String.Format("DuplicatedField {0}: record {1}, at {2}", rf.Name, r.VersionedName(), PathDict[r.VersionedName()]));
                         }
                         break;
                     case TypeDefTag.TaggedUnion:
                         {
                             var tu = t.TaggedUnion;
-                            CheckDuplicatedNames(tu.Alternatives, tua => tua.Name, tua => String.Format("DuplicatedAlternative {0}: tagged union {1}, at {2}", tua.Name, tu.Name, PathDict[tu.Name]));
+                            CheckDuplicatedNames(tu.Alternatives, tua => tua.Name, tua => String.Format("DuplicatedAlternative {0}: tagged union {1}, at {2}", tua.Name, tu.VersionedName(), PathDict[tu.VersionedName()]));
                         }
                         break;
                     case TypeDefTag.Enum:
                         {
                             var e = t.Enum;
-                            CheckDuplicatedNames(e.Literals, el => el.Name, el => String.Format("DuplicatedLiteral {0}: enum {1}, at {2}", el.Name, e.Name, PathDict[e.Name]));
+                            CheckDuplicatedNames(e.Literals, el => el.Name, el => String.Format("DuplicatedLiteral {0}: enum {1}, at {2}", el.Name, e.VersionedName(), PathDict[e.VersionedName()]));
                         }
                         break;
                     case TypeDefTag.ClientCommand:
                         {
                             var cc = t.ClientCommand;
-                            CheckDuplicatedNames(cc.OutParameters, op => op.Name, op => String.Format("DuplicatedOutParameter {0}: client command {1}, at {2}", op.Name, cc.Name, PathDict[cc.Name]));
-                            CheckDuplicatedNames(cc.InParameters, op => op.Name, op => String.Format("DuplicatedInParameter {0}: client command {1}, at {2}", op.Name, cc.Name, PathDict[cc.Name]));
+                            CheckDuplicatedNames(cc.OutParameters, op => op.Name, op => String.Format("DuplicatedOutParameter {0}: client command {1}, at {2}", op.Name, cc.VersionedName(), PathDict[cc.VersionedName()]));
+                            CheckDuplicatedNames(cc.InParameters, op => op.Name, op => String.Format("DuplicatedInParameter {0}: client command {1}, at {2}", op.Name, cc.VersionedName(), PathDict[cc.VersionedName()]));
                         }
                         break;
                     case TypeDefTag.ServerCommand:
                         {
                             var sc = t.ServerCommand;
-                            CheckDuplicatedNames(sc.OutParameters, op => op.Name, op => String.Format("DuplicatedOutParameter {0}: server command {1}, at {2}", op.Name, sc.Name, PathDict[sc.Name]));
+                            CheckDuplicatedNames(sc.OutParameters, op => op.Name, op => String.Format("DuplicatedOutParameter {0}: server command {1}, at {2}", op.Name, sc.VersionedName(), PathDict[sc.VersionedName()]));
                         }
                         break;
                     default:
                         break;
                 }
+            }
+        }
+
+        public static void VerifyTypes(this Schema s)
+        {
+            var Types = s.GetMap().ToDictionary(t => t.Key, t => t.Value, StringComparer.OrdinalIgnoreCase);
+
+            var m = new Marker { Types = Types };
+            foreach (var t in s.Types)
+            {
+                m.Mark(t);
             }
         }
 
@@ -270,6 +286,93 @@ namespace Yuki.ObjectSchema
             }
         }
 
+        public static String Version(this TypeDef t)
+        {
+            switch (t._Tag)
+            {
+                case TypeDefTag.Primitive:
+                    return "";
+                case TypeDefTag.Alias:
+                    return t.Alias.Version;
+                case TypeDefTag.Record:
+                    return t.Record.Version;
+                case TypeDefTag.TaggedUnion:
+                    return t.TaggedUnion.Version;
+                case TypeDefTag.Enum:
+                    return t.Enum.Version;
+                case TypeDefTag.ClientCommand:
+                    return t.ClientCommand.Version;
+                case TypeDefTag.ServerCommand:
+                    return t.ServerCommand.Version;
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        public static String VersionedName(this PrimitiveDef t)
+        {
+            var Name = t.Name;
+            var Version = "";
+            if (Version == "") { return Name; }
+            return Name + "[" + Version + "]";
+        }
+        public static String VersionedName(this AliasDef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "[" + Version + "]";
+        }
+        public static String VersionedName(this RecordDef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "[" + Version + "]";
+        }
+        public static String VersionedName(this TaggedUnionDef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "[" + Version + "]";
+        }
+        public static String VersionedName(this EnumDef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "[" + Version + "]";
+        }
+        public static String VersionedName(this ClientCommandDef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "[" + Version + "]";
+        }
+        public static String VersionedName(this ServerCommandDef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "[" + Version + "]";
+        }
+        public static String VersionedName(this TypeDef t)
+        {
+            var Name = t.Name();
+            var Version = t.Version();
+            if (Version == "") { return Name; }
+            return Name + "[" + Version + "]";
+        }
+        public static String VersionedName(this TypeRef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "[" + Version + "]";
+        }
+
         public static String Description(this TypeDef t)
         {
             switch (t._Tag)
@@ -293,7 +396,7 @@ namespace Yuki.ObjectSchema
             }
         }
 
-        public static Variable[] GenericParameters(this TypeDef t)
+        public static VariableDef[] GenericParameters(this TypeDef t)
         {
             switch (t._Tag)
             {
@@ -306,30 +409,93 @@ namespace Yuki.ObjectSchema
                 case TypeDefTag.TaggedUnion:
                     return t.TaggedUnion.GenericParameters;
                 case TypeDefTag.Enum:
-                    return new Variable[] { };
+                    return new VariableDef[] { };
                 case TypeDefTag.ClientCommand:
-                    return new Variable[] { };
+                    return new VariableDef[] { };
                 case TypeDefTag.ServerCommand:
-                    return new Variable[] { };
+                    return new VariableDef[] { };
                 default:
                     throw new InvalidOperationException();
             }
         }
 
-        public static String TypeFriendlyName(this TypeSpec Type)
+        public static String TypeFriendlyName(this PrimitiveDef t)
         {
-            return TypeFriendlyName(Type, gpr => gpr.Value);
+            var Name = t.Name;
+            var Version = "";
+            if (Version == "") { return Name; }
+            return Name + "At" + Version;
         }
-        public static String TypeFriendlyName(this TypeSpec Type, Func<GenericParameterRef, String> EvaluateGenericParameterRef)
+        public static String TypeFriendlyName(this AliasDef t)
         {
-            return TypeFriendlyName(Type, EvaluateGenericParameterRef, TypeFriendlyName);
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "At" + Version;
+        }
+        public static String TypeFriendlyName(this RecordDef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "At" + Version;
+        }
+        public static String TypeFriendlyName(this TaggedUnionDef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "At" + Version;
+        }
+        public static String TypeFriendlyName(this EnumDef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "At" + Version;
+        }
+        public static String TypeFriendlyName(this ClientCommandDef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "At" + Version;
+        }
+        public static String TypeFriendlyName(this ServerCommandDef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "At" + Version;
+        }
+        public static String TypeFriendlyName(this TypeDef t)
+        {
+            var Name = t.Name();
+            var Version = t.Version();
+            if (Version == "") { return Name; }
+            return Name + "At" + Version;
+        }
+        public static String TypeFriendlyName(this TypeRef t)
+        {
+            var Name = t.Name;
+            var Version = t.Version;
+            if (Version == "") { return Name; }
+            return Name + "At" + Version;
+        }
+        public static String TypeFriendlyName(this TypeSpec t)
+        {
+            return TypeFriendlyName(t, gpr => gpr.Value);
+        }
+        public static String TypeFriendlyName(this TypeSpec t, Func<GenericParameterRef, String> EvaluateGenericParameterRef)
+        {
+            return TypeFriendlyName(t, EvaluateGenericParameterRef, TypeFriendlyName);
         }
         public static String TypeFriendlyName(this TypeSpec Type, Func<GenericParameterRef, String> EvaluateGenericParameterRef, Func<TypeSpec, Func<GenericParameterRef, String>, String> Kernel)
         {
             switch (Type._Tag)
             {
                 case TypeSpecTag.TypeRef:
-                    return Type.TypeRef.Value;
+                    return Type.TypeRef.TypeFriendlyName();
                 case TypeSpecTag.GenericParameterRef:
                     return EvaluateGenericParameterRef(Type.GenericParameterRef);
                 case TypeSpecTag.Tuple:

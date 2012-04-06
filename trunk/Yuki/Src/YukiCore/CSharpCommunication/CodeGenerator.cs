@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯代码生成器
-//  Version:     2012.02.24.
+//  Version:     2012.04.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -71,9 +71,9 @@ namespace Yuki.ObjectSchema.CSharpCommunication
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
-                    if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && TemplateInfo.PrimitiveMappings.ContainsKey(gp.Type.TypeRef.Value) && TemplateInfo.PrimitiveMappings[gp.Type.TypeRef.Value].PlatformName == "System.Type"))
+                    if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && TemplateInfo.PrimitiveMappings.ContainsKey(gp.Type.TypeRef.Name) && TemplateInfo.PrimitiveMappings[gp.Type.TypeRef.Name].PlatformName == "System.Type"))
                     {
-                        throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.Name()));
+                        throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                     }
                 }
 
@@ -105,36 +105,36 @@ namespace Yuki.ObjectSchema.CSharpCommunication
             {
                 return InnerWriter.GetTypeString(Type);
             }
-            public String[] GetAlias(Alias a)
+            public String[] GetAlias(AliasDef a)
             {
                 return InnerWriter.GetAlias(a);
             }
-            public String[] GetTuple(String Name, Tuple t)
+            public String[] GetTuple(String Name, TupleDef t)
             {
                 return InnerWriter.GetTuple(Name, t);
             }
-            public String[] GetRecord(Record r)
+            public String[] GetRecord(RecordDef r)
             {
                 return InnerWriter.GetRecord(r);
             }
-            public String[] GetTaggedUnion(TaggedUnion tu)
+            public String[] GetTaggedUnion(TaggedUnionDef tu)
             {
                 return InnerWriter.GetTaggedUnion(tu);
             }
-            public String[] GetEnum(Enum e)
+            public String[] GetEnum(EnumDef e)
             {
                 return InnerWriter.GetEnum(e);
             }
-            public String[] GetClientCommand(ClientCommand c)
+            public String[] GetClientCommand(ClientCommandDef c)
             {
                 var l = new List<String>();
-                l.AddRange(GetRecord(new Record { Name = c.Name + "Request", GenericParameters = new Variable[] { }, Fields = c.OutParameters, Description = c.Description }));
-                l.AddRange(GetTaggedUnion(new TaggedUnion { Name = c.Name + "Reply", GenericParameters = new Variable[] { }, Alternatives = c.InParameters, Description = c.Description }));
+                l.AddRange(GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description }));
+                l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new VariableDef[] { }, Alternatives = c.InParameters, Description = c.Description }));
                 return l.ToArray();
             }
-            public String[] GetServerCommand(ServerCommand c)
+            public String[] GetServerCommand(ServerCommandDef c)
             {
-                return GetRecord(new Record { Name = c.Name + "Event", GenericParameters = new Variable[] { }, Fields = c.OutParameters, Description = c.Description });
+                return GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description });
             }
             public String[] GetXmlComment(String Description)
             {
@@ -151,8 +151,8 @@ namespace Yuki.ObjectSchema.CSharpCommunication
             {
                 [Tag]
                 public CommandTag _Tag;
-                public ClientCommand Client;
-                public ServerCommand Server;
+                public ClientCommandDef Client;
+                public ServerCommandDef Server;
             }
 
             public String[] GetIServerImplementation(Command[] Commands)
@@ -166,11 +166,11 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 {
                     if (c._Tag == CommandTag.Client)
                     {
-                        l.AddRange(GetTemplate("IServerImplementation_ClientCommand").Substitute("Name", c.Client.Name).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
+                        l.AddRange(GetTemplate("IServerImplementation_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
                     }
                     else if (c._Tag == CommandTag.Server)
                     {
-                        l.AddRange(GetTemplate("IServerImplementation_ServerCommand").Substitute("Name", c.Server.Name).Substitute("XmlComment", GetXmlComment(c.Server.Description)));
+                        l.AddRange(GetTemplate("IServerImplementation_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Server.Description)));
                     }
                 }
                 return l.ToArray();
@@ -186,11 +186,11 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 {
                     if (c._Tag == CommandTag.Client)
                     {
-                        l.AddRange(GetTemplate("Server_ClientCommand").Substitute("Name", c.Client.Name));
+                        l.AddRange(GetTemplate("Server_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()));
                     }
                     else if (c._Tag == CommandTag.Server)
                     {
-                        l.AddRange(GetTemplate("Server_ServerCommand").Substitute("Name", c.Server.Name));
+                        l.AddRange(GetTemplate("Server_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()));
                     }
                 }
                 return l.ToArray();
@@ -207,7 +207,7 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 {
                     if (c._Tag == CommandTag.Server)
                     {
-                        l.AddRange(GetTemplate("IClientImplementation_ServerCommand").Substitute("Name", c.Server.Name).Substitute("XmlComment", GetXmlComment(c.Server.Description)));
+                        l.AddRange(GetTemplate("IClientImplementation_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Server.Description)));
                     }
                 }
                 return l.ToArray();
@@ -223,7 +223,7 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 {
                     if (c._Tag == CommandTag.Client)
                     {
-                        l.AddRange(GetTemplate("Client_ClientCommand").Substitute("Name", c.Client.Name).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
+                        l.AddRange(GetTemplate("Client_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
                     }
                 }
                 return l.ToArray();
@@ -235,7 +235,7 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 {
                     if (c._Tag == CommandTag.Server)
                     {
-                        l.AddRange(GetTemplate("Client_ServerCommand").Substitute("Name", c.Server.Name));
+                        l.AddRange(GetTemplate("Client_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()));
                     }
                 }
                 return l.ToArray();
@@ -325,7 +325,7 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 }
 
                 var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToArray();
-                TaggedUnion GenericOptionalType = null;
+                TaggedUnionDef GenericOptionalType = null;
                 if (GenericOptionalTypes.Length > 0)
                 {
                     GenericOptionalType = GenericOptionalTypes.Single().TaggedUnion;
@@ -334,19 +334,19 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 }
                 foreach (var gps in GenericTypeSpecs)
                 {
-                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && TemplateInfo.PrimitiveMappings.ContainsKey(gps.GenericTypeSpec.TypeSpec.TypeRef.Value) && TemplateInfo.PrimitiveMappings[gps.GenericTypeSpec.TypeSpec.TypeRef.Value].PlatformName == "System.Collections.Generic.List")
+                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && TemplateInfo.PrimitiveMappings.ContainsKey(gps.GenericTypeSpec.TypeSpec.TypeRef.Name) && TemplateInfo.PrimitiveMappings[gps.GenericTypeSpec.TypeSpec.TypeRef.Name].PlatformName == "System.Collections.Generic.List")
                     {
                         l.AddRange(GetJsonTranslatorList(gps));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef == "Optional")
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
                     {
                         l.AddRange(GetJsonTranslatorOptional(gps, GenericOptionalType));
                         l.Add("");
                     }
                     else
                     {
-                        throw new InvalidOperationException(String.Format("NonListGenericTypeNotSupported: {0}", gps.GenericTypeSpec.TypeSpec.TypeRef.Value));
+                        throw new InvalidOperationException(String.Format("NonListGenericTypeNotSupported: {0}", gps.GenericTypeSpec.TypeSpec.TypeRef.VersionedName()));
                     }
                 }
 
@@ -357,21 +357,21 @@ namespace Yuki.ObjectSchema.CSharpCommunication
 
                 return l.ToArray();
             }
-            public String[] GetJsonTranslatorAlias(Alias a)
+            public String[] GetJsonTranslatorAlias(AliasDef a)
             {
-                return GetTemplate("JsonTranslator_Alias").Substitute("Name", a.Name).Substitute("ValueTypeFriendlyName", a.Type.TypeFriendlyName());
+                return GetTemplate("JsonTranslator_Alias").Substitute("Name", a.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", a.Type.TypeFriendlyName());
             }
-            public String[] GetJsonTranslatorRecord(Record a)
+            public String[] GetJsonTranslatorRecord(RecordDef a)
             {
-                return GetJsonTranslatorRecord(a.Name, a.Fields);
+                return GetJsonTranslatorRecord(a.TypeFriendlyName(), a.Fields);
             }
-            public String[] GetJsonTranslatorRecord(String Name, Variable[] Fields)
+            public String[] GetJsonTranslatorRecord(String Name, VariableDef[] Fields)
             {
                 List<String> l = new List<String>();
                 l.AddRange(GetTemplate("JsonTranslator_Record").Substitute("Name", Name).Substitute("FieldFroms", GetJsonTranslatorFieldFroms(Fields)).Substitute("FieldTos", GetJsonTranslatorFieldTos(Fields)));
                 return l.ToArray();
             }
-            public String[] GetJsonTranslatorFieldFroms(Variable[] Fields)
+            public String[] GetJsonTranslatorFieldFroms(VariableDef[] Fields)
             {
                 List<String> l = new List<String>();
                 foreach (var a in Fields)
@@ -380,7 +380,7 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 }
                 return l.ToArray();
             }
-            public String[] GetJsonTranslatorFieldTos(Variable[] Fields)
+            public String[] GetJsonTranslatorFieldTos(VariableDef[] Fields)
             {
                 List<String> l = new List<String>();
                 foreach (var a in Fields)
@@ -389,18 +389,19 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 }
                 return l.ToArray();
             }
-            public String[] GetJsonTranslatorTaggedUnion(TaggedUnion tu)
+            public String[] GetJsonTranslatorTaggedUnion(TaggedUnionDef tu)
             {
-                return GetJsonTranslatorTaggedUnion(tu.Name, tu.Alternatives);
+                return GetJsonTranslatorTaggedUnion(tu.TypeFriendlyName(), tu.Alternatives);
             }
-            public String[] GetJsonTranslatorTaggedUnion(String Name, Variable[] Alternatives)
+            public String[] GetJsonTranslatorTaggedUnion(String Name, VariableDef[] Alternatives)
             {
+                var TagName = Name + "Tag";
                 List<String> l = new List<String>();
-                l.AddRange(GetTemplate("JsonTranslator_Enum").Substitute("Name", Name + "Tag"));
+                l.AddRange(GetTemplate("JsonTranslator_Enum").Substitute("Name", TagName));
                 l.AddRange(GetTemplate("JsonTranslator_TaggedUnion").Substitute("Name", Name).Substitute("AlternativeFroms", GetJsonTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetJsonTranslatorAlternativeTos(Name, Alternatives)));
                 return l.ToArray();
             }
-            public String[] GetJsonTranslatorAlternativeFroms(String TaggedUnionName, Variable[] Alternatives)
+            public String[] GetJsonTranslatorAlternativeFroms(String TaggedUnionName, VariableDef[] Alternatives)
             {
                 List<String> l = new List<String>();
                 foreach (var a in Alternatives)
@@ -409,7 +410,7 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 }
                 return l.ToArray();
             }
-            public String[] GetJsonTranslatorAlternativeTos(String TaggedUnionName, Variable[] Alternatives)
+            public String[] GetJsonTranslatorAlternativeTos(String TaggedUnionName, VariableDef[] Alternatives)
             {
                 List<String> l = new List<String>();
                 foreach (var a in Alternatives)
@@ -418,21 +419,21 @@ namespace Yuki.ObjectSchema.CSharpCommunication
                 }
                 return l.ToArray();
             }
-            public String[] GetJsonTranslatorEnum(Enum e)
+            public String[] GetJsonTranslatorEnum(EnumDef e)
             {
-                return GetTemplate("JsonTranslator_Enum").Substitute("Name", e.Name);
+                return GetTemplate("JsonTranslator_Enum").Substitute("Name", e.TypeFriendlyName());
             }
-            public String[] GetJsonTranslatorClientCommand(ClientCommand c)
+            public String[] GetJsonTranslatorClientCommand(ClientCommandDef c)
             {
                 List<String> l = new List<String>();
-                l.AddRange(GetJsonTranslatorRecord(c.Name + "Request", c.OutParameters));
-                l.AddRange(GetJsonTranslatorTaggedUnion(c.Name + "Reply", c.InParameters));
+                l.AddRange(GetJsonTranslatorRecord(c.TypeFriendlyName() + "Request", c.OutParameters));
+                l.AddRange(GetJsonTranslatorTaggedUnion(c.TypeFriendlyName() + "Reply", c.InParameters));
                 return l.ToArray();
             }
-            public String[] GetJsonTranslatorServerCommand(ServerCommand c)
+            public String[] GetJsonTranslatorServerCommand(ServerCommandDef c)
             {
                 List<String> l = new List<String>();
-                return GetJsonTranslatorRecord(c.Name + "Event", c.OutParameters);
+                return GetJsonTranslatorRecord(c.TypeFriendlyName() + "Event", c.OutParameters);
             }
             public String[] GetJsonTranslatorTuple(TypeSpec t)
             {
@@ -466,10 +467,10 @@ namespace Yuki.ObjectSchema.CSharpCommunication
             {
                 return GetTemplate("JsonTranslator_List").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
             }
-            public String[] GetJsonTranslatorOptional(TypeSpec o, TaggedUnion GenericOptionalType)
+            public String[] GetJsonTranslatorOptional(TypeSpec o, TaggedUnionDef GenericOptionalType)
             {
                 var ElementType = o.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
-                var Alternatives = GenericOptionalType.Alternatives.Select(a => new Variable { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToArray();
+                var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToArray();
 
                 var TypeFriendlyName = o.TypeFriendlyName();
                 var TypeString = GetTypeString(o);

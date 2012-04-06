@@ -3,7 +3,7 @@
 //  File:        TupleAndGenericTypeSpecFetcher.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 元组和泛型特化获取器
-//  Version:     2012.02.24.
+//  Version:     2012.04.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -26,7 +26,7 @@ namespace Yuki.ObjectSchema
             switch (Type._Tag)
             {
                 case TypeSpecTag.TypeRef:
-                    return Type.TypeRef.Value;
+                    return Type.TypeRef.VersionedName();
                 case TypeSpecTag.GenericParameterRef:
                     return Type.GenericParameterRef.Value;
                 case TypeSpecTag.Tuple:

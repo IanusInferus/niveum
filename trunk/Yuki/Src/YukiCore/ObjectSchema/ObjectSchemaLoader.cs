@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2012.02.25.
+//  Version:     2012.04.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -62,41 +62,41 @@ namespace Yuki.ObjectSchema
                     case TypeDefTag.Primitive:
                         foreach (var v in t.Primitive.GenericParameters)
                         {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Value, t.Primitive.Name, Map, TypePathDict);
+                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Primitive.Name, Map, TypePathDict);
                         }
                         break;
                     case TypeDefTag.Alias:
                         foreach (var v in t.Alias.GenericParameters)
                         {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Value, t.Alias.Name, Map, TypePathDict);
+                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Alias.Name, Map, TypePathDict);
                         }
-                        t.Alias.Type = ParseTypeSpec(t.Alias.Type.TypeRef.Value, t.Alias.Name, Map, TypePathDict);
+                        t.Alias.Type = ParseTypeSpec(t.Alias.Type.TypeRef.Name, t.Alias.Name, Map, TypePathDict);
                         break;
                     case TypeDefTag.Record:
                         foreach (var v in t.Record.GenericParameters.Concat(t.Record.Fields))
                         {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Value, t.Record.Name, Map, TypePathDict);
+                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Record.Name, Map, TypePathDict);
                         }
                         break;
                     case TypeDefTag.TaggedUnion:
                         foreach (var v in t.TaggedUnion.GenericParameters.Concat(t.TaggedUnion.Alternatives))
                         {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Value, t.TaggedUnion.Name, Map, TypePathDict);
+                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.TaggedUnion.Name, Map, TypePathDict);
                         }
                         break;
                     case TypeDefTag.Enum:
-                        t.Enum.UnderlyingType = ParseTypeSpec(t.Enum.UnderlyingType.TypeRef.Value, t.Enum.Name, Map, TypePathDict);
+                        t.Enum.UnderlyingType = ParseTypeSpec(t.Enum.UnderlyingType.TypeRef.Name, t.Enum.Name, Map, TypePathDict);
                         break;
                     case TypeDefTag.ClientCommand:
                         foreach (var v in t.ClientCommand.OutParameters.Concat(t.ClientCommand.InParameters))
                         {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Value, t.ClientCommand.Name, Map, TypePathDict);
+                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.ClientCommand.Name, Map, TypePathDict);
                         }
                         break;
                     case TypeDefTag.ServerCommand:
                         foreach (var v in t.ServerCommand.OutParameters)
                         {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Value, t.ServerCommand.Name, Map, TypePathDict);
+                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.ServerCommand.Name, Map, TypePathDict);
                         }
                         break;
                     default:
@@ -161,7 +161,9 @@ namespace Yuki.ObjectSchema
                 {
                     if (f.Parameters.Length < 1 || f.Parameters.Length > 2) { throw new Syntax.InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
-                    var Name = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
+                    var VersionedName = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
+                    var Name = VersionedName;
+                    var Version = GetVersion(ref Name);
 
                     String Description = "";
                     if (f.Parameters.Length >= 2)
@@ -183,6 +185,8 @@ namespace Yuki.ObjectSchema
                     {
                         case "Primitive":
                             {
+                                if (Version != "") { throw new Syntax.InvalidEvaluationException("InvalidName", nm.GetFileRange(f.Parameters[0]), f.Parameters[0]); }
+
                                 var GenericParameters = new List<Semantics.Node>();
 
                                 foreach (var Line in ContentLines)
@@ -299,6 +303,7 @@ namespace Yuki.ObjectSchema
                                 return new Semantics.Node[] {
                                     MakeStemNode("Alias",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
+                                        MakeStemNode("Version", MakeLeafNode(Version)),
                                         MakeStemNode("GenericParameters", GenericParameters.ToArray()),
                                         Type,
                                         MakeStemNode("Description", MakeLeafNode(Description))
@@ -359,6 +364,7 @@ namespace Yuki.ObjectSchema
                                 return new Semantics.Node[] {
                                     MakeStemNode("Record",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
+                                        MakeStemNode("Version", MakeLeafNode(Version)),
                                         MakeStemNode("GenericParameters", GenericParameters.ToArray()),
                                         MakeStemNode("Fields", Fields.ToArray()),
                                         MakeStemNode("Description", MakeLeafNode(Description))
@@ -419,6 +425,7 @@ namespace Yuki.ObjectSchema
                                 return new Semantics.Node[] {
                                     MakeStemNode("TaggedUnion",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
+                                        MakeStemNode("Version", MakeLeafNode(Version)),
                                         MakeStemNode("GenericParameters", GenericParameters.ToArray()),
                                         MakeStemNode("Alternatives", Alternatives.ToArray()),
                                         MakeStemNode("Description", MakeLeafNode(Description))
@@ -474,7 +481,8 @@ namespace Yuki.ObjectSchema
                                 return new Semantics.Node[] {
                                     MakeStemNode("Enum",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
-                                        MakeStemNode("UnderlyingType", MakeStemNode("TypeRef", MakeLeafNode("Int"))),
+                                        MakeStemNode("Version", MakeLeafNode(Version)),
+                                        MakeStemNode("UnderlyingType", BuildVirtualTypeSpec("Int")),
                                         MakeStemNode("Literals", Literals.ToArray()),
                                         MakeStemNode("Description", MakeLeafNode(Description))
                                     )
@@ -548,6 +556,7 @@ namespace Yuki.ObjectSchema
                                 return new Semantics.Node[] {
                                     MakeStemNode("ClientCommand",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
+                                        MakeStemNode("Version", MakeLeafNode(Version)),
                                         MakeStemNode("OutParameters", OutParameters.ToArray()),
                                         MakeStemNode("InParameters", InParameters.ToArray()),
                                         MakeStemNode("Description", MakeLeafNode(Description))
@@ -595,6 +604,7 @@ namespace Yuki.ObjectSchema
                                 return new Semantics.Node[] {
                                     MakeStemNode("ServerCommand",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
+                                        MakeStemNode("Version", MakeLeafNode(Version)),
                                         MakeStemNode("OutParameters", OutParameters.ToArray()),
                                         MakeStemNode("Description", MakeLeafNode(Description))
                                     )
@@ -617,10 +627,21 @@ namespace Yuki.ObjectSchema
             foreach (var n in t.Value.Nodes)
             {
                 var Type = n.Stem.Name;
+                var Name = n.Stem.Children.Single(c => c.Stem.Name == "Name").Stem.Children.Single().Leaf;
+                var Version = "";
+                if (n.Stem.Children.Where(c => c.Stem.Name == "Version").Any())
+                {
+                    Version = n.Stem.Children.Single(c => c.Stem.Name == "Version").Stem.Children.Single().Leaf;
+                }
+                var VersionedName = Name;
+                if (Version != "")
+                {
+                    VersionedName = Name + "[" + Version + "]";
+                }
                 TypePaths.Add
                 (
                     MakeStemNode("TypePath",
-                        MakeStemNode("Name", MakeLeafNode(n.Stem.Children.Single(c => c.Stem.Name == "Name").Stem.Children.Single().Leaf)),
+                        MakeStemNode("Name", MakeLeafNode(VersionedName)),
                         MakeStemNode("Path", MakeLeafNode(TreePath))
                     )
                 );
@@ -633,10 +654,27 @@ namespace Yuki.ObjectSchema
             return n.Leaf;
         }
 
+        private static Regex rVersion = new Regex(@"^(?<Name>.*?)\[(?<Version>.*?)\]$", RegexOptions.ExplicitCapture);
+        private String GetVersion(ref String Name)
+        {
+            var m = rVersion.Match(Name);
+            if (m.Success)
+            {
+                Name = m.Result("${Name}");
+                return m.Result("${Version}");
+            }
+            return "";
+        }
+
         private static Regex rErrorChars = new Regex(@"^(\s|\>)$", RegexOptions.ExplicitCapture);
         private Semantics.Node VirtualParseTypeSpec(Semantics.Node TypeNode, ISemanticsNodeMaker nm)
         {
-            return MakeStemNode("TypeRef", MakeLeafNode(GetLeafNodeValue(TypeNode, nm, "InvalidTypeSpec")));
+            var TypeSpec = GetLeafNodeValue(TypeNode, nm, "InvalidTypeSpec");
+            return BuildVirtualTypeSpec(TypeSpec);
+        }
+        private Semantics.Node BuildVirtualTypeSpec(String TypeSpec)
+        {
+            return MakeStemNode("TypeRef", MakeStemNode("Name", MakeLeafNode(TypeSpec)), MakeStemNode("Version", MakeLeafNode("")));
         }
 
         private TypeSpec ParseTypeSpec(String TypeString, String TypeDefName, Dictionary<String, TypeDef> TypeMap, Dictionary<String, TypePath> TypePaths)
@@ -654,13 +692,14 @@ namespace Yuki.ObjectSchema
                 }
                 else
                 {
-                    return TypeSpec.CreateTypeRef(TypeName);
+                    var Version = GetVersion(ref TypeName);
+                    return TypeSpec.CreateTypeRef(new TypeRef { Name = TypeName, Version = Version });
                 }
             }
 
             if (String.Equals(TypeName, "Tuple", StringComparison.OrdinalIgnoreCase))
             {
-                return TypeSpec.CreateTuple(new Tuple { Types = Parameters.Select(p => ParseTypeSpec(p, TypeDefName, TypeMap, TypePaths)).ToArray() });
+                return TypeSpec.CreateTuple(new TupleDef { Types = Parameters.Select(p => ParseTypeSpec(p, TypeDefName, TypeMap, TypePaths)).ToArray() });
             }
 
             var ts = ParseTypeSpec(TypeName, TypeDefName, TypeMap, TypePaths);
@@ -671,7 +710,7 @@ namespace Yuki.ObjectSchema
 
             var t = TypeMap[TypeName];
 
-            Variable[] GenericParameters = null;
+            VariableDef[] GenericParameters = null;
 
             switch (t._Tag)
             {
@@ -693,14 +732,14 @@ namespace Yuki.ObjectSchema
 
             return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = ts, GenericParameterValues = Parameters.ZipStrict(GenericParameters, (v, p) => ParseGenericParameterValue(v, p, TypeDefName, TypeMap, TypePaths)).ToArray() });
         }
-        private GenericParameterValue ParseGenericParameterValue(String GenericParameterValueString, Variable GenericParameter, String TypeDefName, Dictionary<String, TypeDef> TypeMap, Dictionary<String, TypePath> TypePaths)
+        private GenericParameterValue ParseGenericParameterValue(String GenericParameterValueString, VariableDef GenericParameter, String TypeDefName, Dictionary<String, TypeDef> TypeMap, Dictionary<String, TypePath> TypePaths)
         {
             if (!GenericParameter.Type.OnTypeRef)
             {
                 return GenericParameterValue.CreateLiteral(GenericParameterValueString);
             }
 
-            if (!String.Equals(GenericParameter.Type.TypeRef.Value, "Type", StringComparison.OrdinalIgnoreCase))
+            if (!String.Equals(GenericParameter.Type.TypeRef.Name, "Type", StringComparison.OrdinalIgnoreCase))
             {
                 return GenericParameterValue.CreateLiteral(GenericParameterValueString);
             }
