@@ -1,6 +1,7 @@
 ﻿2012.04.07
 Yuki.Core, Yuki.SchemaManipulator:
 增加Tree文件数据和二进制数据互相转换的功能。
+增加静态类型的Tree文件数据和二进制数据互相转换的功能。
 
 2012.04.06
 Yuki.Core:

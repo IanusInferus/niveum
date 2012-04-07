@@ -46,6 +46,16 @@ namespace Yuki.ObjectSchema
             var tbc = Activator.CreateInstance(typeof(TypedTreeBinaryConverter<>).MakeGenericType(t), bs, xs) as ITreeBinaryConverter;
             return tbc.BinaryToTree(b);
         }
+        public Byte[] TreeToBinary<T>(XElement x)
+        {
+            var tbc = new TypedTreeBinaryConverter<T>(bs, xs) as ITreeBinaryConverter;
+            return tbc.TreeToBinary(x);
+        }
+        public XElement BinaryToTree<T>(Byte[] b)
+        {
+            var tbc = new TypedTreeBinaryConverter<T>(bs, xs) as ITreeBinaryConverter;
+            return tbc.BinaryToTree(b);
+        }
 
         private class StringTranslator : IProjectorToProjectorDomainTranslator<String, Byte[]>, IProjectorToProjectorRangeTranslator<String, Byte[]>
         {
