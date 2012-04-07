@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2012.04.06.
+//  Version:     2012.04.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -655,7 +655,7 @@ namespace Yuki.ObjectSchema
         }
 
         private static Regex rVersion = new Regex(@"^(?<Name>.*?)\[(?<Version>.*?)\]$", RegexOptions.ExplicitCapture);
-        private String GetVersion(ref String Name)
+        private static String GetVersion(ref String Name)
         {
             var m = rVersion.Match(Name);
             if (m.Success)
@@ -664,6 +664,13 @@ namespace Yuki.ObjectSchema
                 return m.Result("${Version}");
             }
             return "";
+        }
+
+        public static String GetTypeFriendlyNameFromVersionedName(String VersionedName)
+        {
+            var Name = VersionedName;
+            var Version = GetVersion(ref Name);
+            return (new TypeRef { Name = Name, Version = Version }).TypeFriendlyName();
         }
 
         private static Regex rErrorChars = new Regex(@"^(\s|\>)$", RegexOptions.ExplicitCapture);

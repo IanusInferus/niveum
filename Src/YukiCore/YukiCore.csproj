@@ -58,6 +58,7 @@
     <Compile Include="CSharp\CodeGenerator.cs" />
     <Compile Include="JavaBinary\CodeGenerator.cs" />
     <Compile Include="Java\CodeGenerator.cs" />
+    <Compile Include="ObjectSchema\TreeBinaryConverter.cs" />
     <Compile Include="ObjectSchema\TupleAndGenericTypeSpecFetcher.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaExtensions.cs" />
     <Compile Include="SqlDatabase\CodeGenerator.cs" />
