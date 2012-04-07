@@ -16,6 +16,14 @@ if exist CSharp\Bin\DataConv.exe (
   CSharp\Bin\DataConv.exe /t2b:Data\WorldData.tree,CSharp\Data\WorldData.bin /b2t:CSharp\Data\WorldData.bin,CSharp\Data\WorldData2.tree /t2b:CSharp\Data\WorldData2.tree,CSharp\Data\WorldData2.bin
 )
 
+:: Java
+@if not exist Java\Data @md Java\Data
+if exist Java\bin\Program.class (
+  @pushd Java\bin\
+  java Program ..\..\SchemaManipulator\Data\WorldData.bin ..\Data\WorldData.bin
+  @popd
+)
+
 :: C++2011
 @if not exist CPP\Data @md CPP\Data
 if exist CPP\Bin\DataCopy.exe (

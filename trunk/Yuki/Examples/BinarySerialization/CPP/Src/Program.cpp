@@ -38,8 +38,8 @@ void DisplayInfo()
     wprintf(L"%ls\n", L"BinaryFile2 二进制文件路径。");
     wprintf(L"%ls\n", L"");
     wprintf(L"%ls\n", L"示例:");
-    wprintf(L"%ls\n", L"DataCopy /b2b:..\\..\\Data\\WorldData.tree,..\\Data\\WorldData.bin");
-    wprintf(L"%ls\n", L"将WorldData.tree转化为WorldData.bin。");
+    wprintf(L"%ls\n", L"DataCopy /b2b:..\\..\\SchemaManipulator\\Data\\WorldData.bin,..\\Data\\WorldData.bin");
+    wprintf(L"%ls\n", L"复制WorldData.bin。");
 }
 
 void BinaryToBinary(wstring BinaryPath1, wstring BinaryPath2)
