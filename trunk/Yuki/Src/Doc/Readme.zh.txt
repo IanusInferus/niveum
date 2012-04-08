@@ -60,10 +60,10 @@ VB.Net              √              Firefly库动态支持   ×              ×
 C#                  √              Firefly库动态支持   √              √
 Java                √              √                  ×              ×
 C++2011             √              √                  ×              ×
-ActionScript        √              ×                  √              √
+ActionScript        √              √                  √              √
 Xhtml               √              无需                无需            √
 
-其中，ActionScript的二进制序列化和VB.Net、Java、C++2011的通讯功能，将会在今后逐步增加。
+其中，VB.Net、Java、C++2011的通讯功能，将会在今后逐步增加。
 
 
 3 基于关系数据结构的代码生成
