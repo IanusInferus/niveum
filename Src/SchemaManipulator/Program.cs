@@ -24,6 +24,7 @@ using OS = Yuki.ObjectSchema;
 using Yuki.ObjectSchema.VB;
 using Yuki.ObjectSchema.CSharp;
 using Yuki.ObjectSchema.CSharpCommunication;
+using Yuki.ObjectSchema.ActionScript;
 using Yuki.ObjectSchema.ActionScriptCommunication;
 using Yuki.RelationSchema.SqlDatabase;
 using Yuki.RelationSchema.DbmlDatabase;
@@ -226,6 +227,19 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2as")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        ObjectSchemaToActionScriptCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (opt.Name.ToLower() == "t2asc")
                 {
                     var args = opt.Arguments;
@@ -393,6 +407,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2cs:<CsCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C#通讯类型");
             Console.WriteLine(@"/t2csc:<CsCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"生成ActionScript类型");
+            Console.WriteLine(@"/t2as:<AsCodeDir>,<PackageName>");
             Console.WriteLine(@"生成ActionScript通讯类型");
             Console.WriteLine(@"/t2asc:<AsCodeDir>,<PackageName>");
             Console.WriteLine(@"生成SQL数据库DROP和CREATE脚本");
@@ -561,6 +577,28 @@ namespace Yuki.SchemaManipulator
             var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToActionScriptCode(String AsCodeDir, String PackageName)
+        {
+            var ObjectSchema = Schema();
+            var CompiledFiles = ObjectSchema.CompileToActionScript(PackageName);
+            foreach (var f in CompiledFiles)
+            {
+                var Compiled = f.Content;
+                var AsCodePath = FileNameHandling.GetPath(AsCodeDir, f.Path + ".as");
+                if (File.Exists(AsCodePath))
+                {
+                    var Original = Txt.ReadFile(AsCodePath);
+                    if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+                }
+                var Dir = FileNameHandling.GetFileDirectory(AsCodePath);
+                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+                Txt.WriteFile(AsCodePath, TextEncoding.UTF8, Compiled);
+            }
         }
 
         public static void ObjectSchemaToActionScriptCommunicationCode(String AsCodeDir, String PackageName)
