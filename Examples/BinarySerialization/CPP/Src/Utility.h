@@ -14,6 +14,9 @@
 #include <memory>
 #include <vector>
 #include <sstream>
+#include <exception>
+#include <stdexcept>
+#include <locale>
 
 #define PRIVATE static
 
@@ -22,31 +25,39 @@ bool EqualIgnoreCase(std::shared_ptr<std::wstring> l, const std::wstring& r);
 bool EqualIgnoreCase(std::shared_ptr<std::wstring> l, std::shared_ptr<std::wstring> r);
 
 template<typename T>
-std::shared_ptr<std::wstring> ToString(T value)
+std::wstring ToString(T value)
 {
     std::wstringstream s;
     s << value;
-    return std::make_shared<std::wstring>(s.str());
-}
-
-template<typename T>
-T Parse(std::shared_ptr<std::wstring> str)
-{
-    std::wstringstream s;
-    s << *str;
-    T t;
-    s >> t;
-    return t;
+    return std::wstring(s.str());
 }
 
 template<typename T>
 T Parse(const std::wstring& str)
 {
+    if (str.size() > 0)
+    {
+         wchar_t c = str[0];
+         if (!(isdigit(c) || (c == '+') || (c == '-') || (c == '.')))
+         {
+             throw logic_error("InvalidFormat");
+         }
+    }
     std::wstringstream s;
     s << str;
     T t;
     s >> t;
+    if (!s.eof())
+    {
+        throw logic_error("InvalidFormat");
+    }
     return t;
+}
+
+template<typename T>
+T Parse(std::shared_ptr<std::wstring> str)
+{
+    return Parse<T>(*str);
 }
 
 std::shared_ptr<std::wstring> s2w(std::shared_ptr<std::string> s);
