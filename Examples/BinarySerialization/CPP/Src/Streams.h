@@ -1,9 +1,9 @@
-//==========================================================================
+Ôªø//==========================================================================
 //
 //  File:        Streams.h
-//  Location:    Yuki.Examples <Visual C++ 2010>
-//  Description: Œƒº˛¡˜
-//  Version:     2012.04.07.
+//  Location:    Yuki.Examples <C++ 2011>
+//  Description: Êñá‰ª∂ÊµÅ
+//  Version:     2012.04.08.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -15,8 +15,6 @@
 #include "WorldBinary.h"
 
 #include <cstdio>
-
-#pragma warning (disable : 4996)
 
 namespace World
 {
@@ -31,7 +29,7 @@ namespace World
         public:
             ReadableStream(String Path)
             {
-                f = _wfopen(Path.c_str(), L"rb");
+                f = fopen(w2s(Path).c_str(), "rb");
                 if (f == NULL)
                 {
                     throw runtime_error("IOException");
@@ -64,7 +62,7 @@ namespace World
         public:
             WritableStream(String Path)
             {
-                f = _wfopen(Path.c_str(), L"wb");
+                f = fopen(w2s(Path).c_str(), "wb");
                 if (f == NULL)
                 {
                     throw runtime_error("IOException");

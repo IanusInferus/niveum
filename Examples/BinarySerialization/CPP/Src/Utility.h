@@ -1,9 +1,9 @@
-//==========================================================================
+ï»¿//==========================================================================
 //
 //  File:        Utility.h
-//  Location:    Yuki.Examples <Visual C++ 2010>
-//  Description: ¹¤¾ßº¯Êý
-//  Version:     2012.04.07.
+//  Location:    Yuki.Examples <C++ 2011>
+//  Description: å·¥å…·å‡½æ•°
+//  Version:     2012.04.08.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -16,21 +16,6 @@
 #include <sstream>
 
 #define PRIVATE static
-
-class CommandLineOption
-{
-public:
-    std::shared_ptr<std::wstring> Name;
-    std::shared_ptr<std::vector<std::shared_ptr<std::wstring>>> Arguments;
-};
-
-class CommandLineArguments {
-public:
-    std::shared_ptr<std::vector<std::shared_ptr<std::wstring>>> Arguments;
-    std::shared_ptr<std::vector<std::shared_ptr<CommandLineOption>>> Options;
-};
-
-std::shared_ptr<CommandLineArguments> GetCmdLine();
 
 bool EqualIgnoreCase(const std::wstring& l, const std::wstring& r);
 bool EqualIgnoreCase(std::shared_ptr<std::wstring> l, const std::wstring& r);

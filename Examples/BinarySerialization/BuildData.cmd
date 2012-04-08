@@ -27,7 +27,7 @@ if exist Java\bin\Program.class (
 :: C++2011
 @if not exist CPP\Data @md CPP\Data
 if exist CPP\Bin\DataCopy.exe (
-  CPP\Bin\DataCopy.exe /b2b:SchemaManipulator\Data\WorldData.bin,CPP\Data\WorldData.bin
+  CPP\Bin\DataCopy.exe SchemaManipulator\Data\WorldData.bin CPP\Data\WorldData.bin
 )
 
 @pause
