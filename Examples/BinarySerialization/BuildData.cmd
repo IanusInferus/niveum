@@ -30,4 +30,12 @@ if exist CPP\Bin\DataCopy.exe (
   CPP\Bin\DataCopy.exe SchemaManipulator\Data\WorldData.bin CPP\Data\WorldData.bin
 )
 
+:: ActionScript
+@if not exist ActionScript\Data @md ActionScript\Data
+if exist ActionScript\bin\DataCopy.swf (
+  @pushd ActionScript
+  Run.bat
+  @popd
+)
+
 @pause
