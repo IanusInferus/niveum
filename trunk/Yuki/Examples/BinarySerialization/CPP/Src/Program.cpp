@@ -1,15 +1,16 @@
-//==========================================================================
+ï»¿//==========================================================================
 //
 //  File:        Program.cpp
-//  Location:    Yuki.Examples <Visual C++ 2010>
-//  Description: Êı¾İ¸´ÖÆ¹¤¾ß
-//  Version:     2012.04.07.
+//  Location:    Yuki.Examples <C++ 2011>
+//  Description: æ•°æ®å¤åˆ¶å·¥å…·
+//  Version:     2012.04.08.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
 //==========================================================================
 
 #pragma warning (disable : 4345)
+#pragma warning (disable : 4996)
 
 #include "Utility.h"
 #include "World.h"
@@ -26,20 +27,19 @@ using namespace ::World::Streams;
 
 void DisplayInfo()
 {
-    wprintf(L"%ls\n", L"Êı¾İ¸´ÖÆ¹¤¾ß");
-    wprintf(L"%ls\n", L"DataCopy£¬Public Domain");
+    wprintf(L"%ls\n", L"æ•°æ®å¤åˆ¶å·¥å…·");
+    wprintf(L"%ls\n", L"DataCopyï¼ŒPublic Domain");
     wprintf(L"%ls\n", L"F.R.C.");
     wprintf(L"%ls\n", L"");
-    wprintf(L"%ls\n", L"ÓÃ·¨:");
-    wprintf(L"%ls\n", L"DataCopy (/<Command>)*");
-    wprintf(L"%ls\n", L"¸´ÖÆ¶ş½øÖÆÊı¾İ");
-    wprintf(L"%ls\n", L"/b2b:<BinaryFile1>,<BinaryFile2>");
-    wprintf(L"%ls\n", L"BinaryFile1 ¶ş½øÖÆÎÄ¼şÂ·¾¶¡£");
-    wprintf(L"%ls\n", L"BinaryFile2 ¶ş½øÖÆÎÄ¼şÂ·¾¶¡£");
+    wprintf(L"%ls\n", L"ç”¨æ³•:");
+    wprintf(L"%ls\n", L"DataCopy <BinaryFile1> <BinaryFile2>");
+    wprintf(L"%ls\n", L"å¤åˆ¶äºŒè¿›åˆ¶æ•°æ®");
+    wprintf(L"%ls\n", L"BinaryFile1 äºŒè¿›åˆ¶æ–‡ä»¶è·¯å¾„ã€‚");
+    wprintf(L"%ls\n", L"BinaryFile2 äºŒè¿›åˆ¶æ–‡ä»¶è·¯å¾„ã€‚");
     wprintf(L"%ls\n", L"");
-    wprintf(L"%ls\n", L"Ê¾Àı:");
-    wprintf(L"%ls\n", L"DataCopy /b2b:..\\..\\SchemaManipulator\\Data\\WorldData.bin,..\\Data\\WorldData.bin");
-    wprintf(L"%ls\n", L"¸´ÖÆWorldData.bin¡£");
+    wprintf(L"%ls\n", L"ç¤ºä¾‹:");
+    wprintf(L"%ls\n", L"DataCopy ..\\..\\SchemaManipulator\\Data\\WorldData.bin ..\\Data\\WorldData.bin");
+    wprintf(L"%ls\n", L"å¤åˆ¶WorldData.binã€‚");
 }
 
 void BinaryToBinary(wstring BinaryPath1, wstring BinaryPath2)
@@ -53,49 +53,14 @@ void BinaryToBinary(wstring BinaryPath1, wstring BinaryPath2)
     BinaryTranslator::WorldToBinary(ws, Data);
 }
 
-int MainInner()
+int MainInner(int argc, char **argv)
 {
-    auto CmdLine = GetCmdLine();
-
-    if (CmdLine->Arguments->size() != 0)
+    if (argc != 3)
     {
         DisplayInfo();
         return -1;
     }
-
-    if (CmdLine->Options->size() == 0)
-    {
-        DisplayInfo();
-        return 0;
-    }
-
-    for (auto iopt = CmdLine->Options->begin(); iopt != CmdLine->Options->end(); iopt.operator++())
-    {
-        auto opt = *iopt;
-        if (EqualIgnoreCase(opt->Name, L"?") || EqualIgnoreCase(opt->Name, L"help"))
-        {
-            DisplayInfo();
-            return 0;
-        }
-        else if (EqualIgnoreCase(opt->Name, L"b2b"))
-        {
-            auto args = opt->Arguments;
-            if (args->size() == 2)
-            {
-                BinaryToBinary(*(*args)[0], *(*args)[1]);
-            }
-            else
-            {
-                DisplayInfo();
-                return -1;
-            }
-        }
-        else
-        {
-            throw logic_error(w2s(L"ArgumentException: " + *opt->Name));
-        }
-    }
-
+    BinaryToBinary(s2w(argv[1]), s2w(argv[2]));
     return 0;
 }
 
@@ -105,7 +70,7 @@ int main(int argc, char **argv)
 
     try
     {
-        return MainInner();
+        return MainInner(argc, argv);
     }
     catch (std::exception &ex)
     {
