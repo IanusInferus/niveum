@@ -1,6 +1,14 @@
-﻿2012.04.08
+﻿2012.04.09
+Yuki.Core, Yuki.SchemaManipulator:
+增加ActionScript二进制序列化支持。
+Examples:
+增加二进制序列化ActionScript示例项目。
+
+2012.04.08
 Examples:
 增加二进制序列化Java示例项目。
+修改二进制序列化C++示例项目，使其能在GNU C++ 4.6上运行。
+修改二进制序列化Schema格式，增加字符串。
 
 2012.04.07
 Yuki.Core, Yuki.SchemaManipulator:

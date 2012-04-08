@@ -4,7 +4,7 @@
       File:        ActionScriptCommunication.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构ActionScript3.0通讯模板数据
-      Version:     2012.03.01.
+      Version:     2012.04.09.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -64,6 +64,9 @@ ObjectSchemaTemplate
             true
     PrimitiveMappings
         PrimitiveMapping
+            Name Unit
+            PlatformName Unit
+        PrimitiveMapping
             Name Boolean
             PlatformName Boolean
         PrimitiveMapping
@@ -74,6 +77,39 @@ ObjectSchemaTemplate
             PlatformName int
         PrimitiveMapping
             Name Real
+            PlatformName Number
+        PrimitiveMapping
+            Name Byte
+            PlatformName uint
+        PrimitiveMapping
+            Name UInt8
+            PlatformName uint
+        PrimitiveMapping
+            Name UInt16
+            PlatformName uint
+        PrimitiveMapping
+            Name UInt32
+            PlatformName uint
+        PrimitiveMapping
+            Name UInt64
+            PlatformName Error
+        PrimitiveMapping
+            Name Int8
+            PlatformName int
+        PrimitiveMapping
+            Name Int16
+            PlatformName int
+        PrimitiveMapping
+            Name Int32
+            PlatformName int
+        PrimitiveMapping
+            Name Int64
+            PlatformName Error
+        PrimitiveMapping
+            Name Float32
+            PlatformName Number
+        PrimitiveMapping
+            Name Float64
             PlatformName Number
         PrimitiveMapping
             Name Type
@@ -102,12 +138,16 @@ ObjectSchemaTemplate
 
                     package [[${PackageName}]]
                     {
-                    	import flash.errors.IllegalOperationError;
-                    	import flash.utils.Dictionary;
-                    	import com.utils.json.JSON;
-                    	import ${Imports};
+                        import flash.errors.IllegalOperationError;
+                        import flash.utils.Dictionary;
+                        import flash.utils.IDataInput;
+                        import flash.utils.IDataOutput;
+                        import flash.utils.ByteArray;
+                        import flash.utils.Endian;
+                        import com.utils.json.JSON;
+                        import ${Imports};
 
-                    	${Type}
+                        ${Type}
                     }
 
                 $End
@@ -120,29 +160,39 @@ ObjectSchemaTemplate
                     public var [[${name}]]:[[${Type}]];
         Template
             Name Record
-            //Parameters: ${Name}, ${Fields}, ${FieldFroms}, ${FieldTos}, ${XmlComment}
+            //Parameters: ${Name}, ${Fields}, ${BinaryFieldFroms}, ${BinaryFieldTos}, ${JsonFieldFroms}, ${JsonFieldTos}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
                     public class [[${Name}]]
                     {
-                    	${Fields}
+                        ${Fields}
 
-                    	public function [[${Name}]]()
-                    	{
-                    	}
-                    	public static function fromJson(jo:*):[[${Name}]]
-                    	{
-                    		var o:[[${Name}]] = new [[${Name}]]();
-                    		${FieldFroms}
-                    		return o;
-                    	}
-                    	public static function toJson(o:[[${Name}]]):*
-                    	{
-                    		var jo:* = new Object();
-                    		${FieldTos}
-                    		return jo;
-                    	}
+                        public function [[${Name}]]()
+                        {
+                        }
+                        public static function fromBinary(ba:IDataInput):[[${Name}]]
+                        {
+                            var o:[[${Name}]] = new [[${Name}]]();
+                            ${BinaryFieldFroms}
+                            return o;
+                        }
+                        public static function toBinary(ba:IDataOutput, o:[[${Name}]]):void
+                        {
+                            ${BinaryFieldTos}
+                        }
+                        public static function fromJson(jo:*):[[${Name}]]
+                        {
+                            var o:[[${Name}]] = new [[${Name}]]();
+                            ${JsonFieldFroms}
+                            return o;
+                        }
+                        public static function toJson(o:[[${Name}]]):*
+                        {
+                            var jo:* = new Object();
+                            ${JsonFieldTos}
+                            return jo;
+                        }
                     }
         Template
             Name Alternative
@@ -159,10 +209,10 @@ ObjectSchemaTemplate
                     ${XmlComment}
                     public static function [[create${Name}]](value:[[${Type}]]):[[${TaggedUnionName}]]
                     {
-                    	var r:[[${TaggedUnionName}]] = new [[${TaggedUnionName}]]();
-                    	r._tag = [[${TaggedUnionName}Tag.${NAME}]];
-                    	r.[[${name}]] = value;
-                    	return r;
+                        var r:[[${TaggedUnionName}]] = new [[${TaggedUnionName}]]();
+                        r._tag = [[${TaggedUnionName}Tag.${NAME}]];
+                        r.[[${name}]] = value;
+                        return r;
                     }
         Template
             Name AlternativeCreateUnit
@@ -172,10 +222,10 @@ ObjectSchemaTemplate
                     ${XmlComment}
                     public static function [[create${Name}]]():[[${TaggedUnionName}]]
                     {
-                    	var r:[[${TaggedUnionName}]] = new [[${TaggedUnionName}]]();
-                    	r._tag = [[${TaggedUnionName}Tag.${NAME}]];
-                    	r.[[${name}]] = new Unit();
-                    	return r;
+                        var r:[[${TaggedUnionName}]] = new [[${TaggedUnionName}]]();
+                        r._tag = [[${TaggedUnionName}Tag.${NAME}]];
+                        r.[[${name}]] = new Unit();
+                        return r;
                     }
         Template
             Name AlternativePredicate
@@ -186,37 +236,50 @@ ObjectSchemaTemplate
                     public function get [[on${Name}]]():Boolean { return _tag == [[${TaggedUnionName}Tag.${NAME}]]; }
         Template
             Name TaggedUnion
-            //Parameters: ${Name}, ${Alternatives}, ${AlternativeCreates}, ${AlternativePredicates}, ${AlternativeFroms}, ${AlternativeTos}, ${XmlComment}
+            //Parameters: ${Name}, ${Alternatives}, ${AlternativeCreates}, ${AlternativePredicates}, ${BinaryAlternativeFroms}, ${BinaryAlternativeTos}, ${JsonAlternativeFroms}, ${JsonAlternativeTos}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
                     public class [[${Name}]]
                     {
-                    	public var _tag:int;
+                        public var _tag:int;
 
-                    	${Alternatives}
+                        ${Alternatives}
 
-                    	${AlternativeCreates}
+                        ${AlternativeCreates}
 
-                    	${AlternativePredicates}
+                        ${AlternativePredicates}
 
-                    	public function [[${Name}]]()
-                    	{
-                    	}
-                    	public static function fromJson(jo:*):[[${Name}]]
-                    	{
-                    		var o:[[${Name}]] = new [[${Name}]]();
-                    		o._tag = JsonTranslator.[[${name}TagFromJson]](jo._tag);
-                    		${AlternativeFroms}
-                    		throw new flash.errors.IllegalOperationError();
-                    	}
-                    	public static function toJson(o:[[${Name}]]):*
-                    	{
-                    		var jo:* = new Object();
-                    		jo._tag = JsonTranslator.[[${name}TagToJson]](o._tag);
-                    		${AlternativeTos}
-                    		throw new flash.errors.IllegalOperationError();
-                    	}
+                        public function [[${Name}]]()
+                        {
+                        }
+                        public static function fromBinary(ba:IDataInput):[[${Name}]]
+                        {
+                            var o:[[${Name}]] = new [[${Name}]]();
+                            o._tag = BinaryTranslator.[[${name}TagFromBinary]](ba);
+                            ${BinaryAlternativeFroms}
+                            throw new flash.errors.IllegalOperationError();
+                        }
+                        public static function toBinary(ba:IDataOutput, o:[[${Name}]]):void
+                        {
+                            BinaryTranslator.[[${name}TagToBinary]](ba, o._tag);
+                            ${BinaryAlternativeTos}
+                            throw new flash.errors.IllegalOperationError();
+                        }
+                        public static function fromJson(jo:*):[[${Name}]]
+                        {
+                            var o:[[${Name}]] = new [[${Name}]]();
+                            o._tag = JsonTranslator.[[${name}TagFromJson]](jo._tag);
+                            ${JsonAlternativeFroms}
+                            throw new flash.errors.IllegalOperationError();
+                        }
+                        public static function toJson(o:[[${Name}]]):*
+                        {
+                            var jo:* = new Object();
+                            jo._tag = JsonTranslator.[[${name}TagToJson]](o._tag);
+                            ${JsonAlternativeTos}
+                            throw new flash.errors.IllegalOperationError();
+                        }
                     }
         Template
             Name Literal
@@ -233,11 +296,11 @@ ObjectSchemaTemplate
                     ${XmlComment}
                     public class [[${Name}]]
                     {
-                    	${Literals}
+                        ${Literals}
 
-                    	public function [[${Name}]]()
-                    	{
-                    	}
+                        public function [[${Name}]]()
+                        {
+                        }
                     }
         Template
             Name MultiLineXmlComment
@@ -257,9 +320,9 @@ ObjectSchemaTemplate
             Name ISender
             Value
                 $String
-                    public interface ISender 
+                    public interface ISender
                     {
-                    	function send(commandName:String, params:String):void;
+                        function send(commandName:String, params:String):void;
                     }
         Template
             Name IClientImplementation
@@ -268,7 +331,7 @@ ObjectSchemaTemplate
                 $String
                     public interface IClientImplementation
                     {
-                    	${Commands}
+                        ${Commands}
                     }
         Template
             Name IClientImplementation_ServerCommand
@@ -284,51 +347,51 @@ ObjectSchemaTemplate
                 $String
                     public class Client
                     {
-                    	private var s:ISender;
-                    	private var ci:IClientImplementation;
-                    	private var requests:Vector.<Vector.<Function>>;
-                    	
-                    	public function Client(s:ISender, ci:IClientImplementation)
-                    	{
-                    		this.s = s;
-                    		this.ci = ci;
-                    		requests = new Vector.<Vector.<Function>>();
-                    		for (var k:int = 0; k < ${NumClientCommand}; k += 1)
-                    		{
-                    			requests.push(new Vector.<Function>());
-                    		}
-                    	}
-                    	
-                    	public function get hash():String
-                    	{
-                    		return "${Hash}";
-                    	}
+                        private var s:ISender;
+                        private var ci:IClientImplementation;
+                        private var requests:Vector.<Vector.<Function>>;
 
-                    	public function handleResult(commandName:String, params:String):void
-                    	{
-                    		switch (commandName)
-                    		{
-                    			${Client_ServerCommandHandles}
-                    		}
-                    		var callback:Function = dequeueCallback(commandName);
-                    		if (callback == null) { return; }
-                    		switch (commandName)
-                    		{
-                    			${Client_ClientCommandHandles}
-                    		}
-                    		throw new IllegalOperationError(commandName);
-                    	}
-                    
-                    	public function dequeueCallback(commandName:String):Function {
-                    		switch (commandName)
-                    		{
-                    			${Client_ClientCommandDeques}
-                    			default:
-                    				throw new IllegalOperationError(commandName);
-                    		}
-                    	}
-                    	
-                    	${Client_ClientCommands}
+                        public function Client(s:ISender, ci:IClientImplementation)
+                        {
+                            this.s = s;
+                            this.ci = ci;
+                            requests = new Vector.<Vector.<Function>>();
+                            for (var k:int = 0; k < ${NumClientCommand}; k += 1)
+                            {
+                                requests.push(new Vector.<Function>());
+                            }
+                        }
+
+                        public function get hash():String
+                        {
+                            return "${Hash}";
+                        }
+
+                        public function handleResult(commandName:String, params:String):void
+                        {
+                            switch (commandName)
+                            {
+                                ${Client_ServerCommandHandles}
+                            }
+                            var callback:Function = dequeueCallback(commandName);
+                            if (callback == null) { return; }
+                            switch (commandName)
+                            {
+                                ${Client_ClientCommandHandles}
+                            }
+                            throw new IllegalOperationError(commandName);
+                        }
+
+                        public function dequeueCallback(commandName:String):Function {
+                            switch (commandName)
+                            {
+                                ${Client_ClientCommandDeques}
+                                default:
+                                    throw new IllegalOperationError(commandName);
+                            }
+                        }
+
+                        ${Client_ClientCommands}
                     }
         Template
             Name Client_ServerCommandHandle
@@ -336,24 +399,24 @@ ObjectSchemaTemplate
             Value
                 $String
                     case "${Name}":
-                    	ci.[[${name}]](JsonTranslator.[[${name}EventFromJson]](JSON.decode(params)));
-                    	return;
+                        ci.[[${name}]](JsonTranslator.[[${name}EventFromJson]](JSON.decode(params)));
+                        return;
         Template
             Name Client_ClientCommandHandle
             //Parameters: ${Name}
             Value
                 $String
                     case "${Name}":
-                    	callback(JsonTranslator.[[${name}ReplyFromJson]](JSON.decode(params)));
-                    	return;
+                        callback(JsonTranslator.[[${name}ReplyFromJson]](JSON.decode(params)));
+                        return;
         Template
             Name Client_ClientCommandDeque
             //Parameters: ${Name}, ${ClientCommandIndex}
             Value
                 $String
                     case "${Name}":
-                    	var [[r${ClientCommandIndex}]]:Vector.<Function> = requests[${ClientCommandIndex}];
-                    	return [[r${ClientCommandIndex}]].shift();
+                        var [[r${ClientCommandIndex}]]:Vector.<Function> = requests[${ClientCommandIndex}];
+                        return [[r${ClientCommandIndex}]].shift();
         Template
             Name Client_ClientCommand
             //Parameters: ${Name}, ${ClientCommandIndex}, ${XmlComment}
@@ -362,9 +425,244 @@ ObjectSchemaTemplate
                     ${XmlComment}
                     public function [[${name}]](r:[[${Name}Request]], callback:Function):void
                     {
-                    	var ra:Vector.<Function> = requests[${ClientCommandIndex}];
-                    	s.send("${Name}", JSON.encode(JsonTranslator.[[${name}RequestToJson]](r)));
-                    	ra.push(callback);
+                        var ra:Vector.<Function> = requests[${ClientCommandIndex}];
+                        s.send("${Name}", JSON.encode(JsonTranslator.[[${name}RequestToJson]](r)));
+                        ra.push(callback);
+                    }
+        Template
+            Name BinaryTranslator
+            //Parameters: ${Serializers}
+            Value
+                $String
+                    public class BinaryTranslator
+                    {
+                        public static function unitFromBinary(ba:IDataInput):Unit { return new Unit(); }
+                        public static function unitToBinary(ba:IDataOutput, v:Unit):void { }
+
+                        public static function booleanFromBinary(ba:IDataInput):Boolean { return uint8FromBinary(ba) != 0; }
+                        public static function booleanToBinary(ba:IDataOutput, v:Boolean):void
+                        {
+                            if (v)
+                            {
+                                uint8ToBinary(ba, 0xFF);
+                            }
+                            else
+                            {
+                                uint8ToBinary(ba, 0);
+                            }
+                        }
+
+                        public static function stringFromBinary(ba:IDataInput):String
+                        {
+                            var n:int = int32FromBinary(ba);
+                            if ((n % 2) != 0) { throw new IllegalOperationError(); }
+                            var l:Vector.<String> = new Vector.<String>();
+                            for (var k:int = 0; k < n / 2; k += 1)
+                            {
+                                var lower:uint = uint8FromBinary(ba);
+                                var upper:uint = uint8FromBinary(ba);
+                                var c:uint = (upper << 8) | lower;
+                                l.push(String.fromCharCode(c));
+                            }
+                            return l.join("");
+                        }
+                        public static function stringToBinary(ba:IDataOutput, v:String):void
+                        {
+                            int32ToBinary(ba, v.length * 2);
+                            for (var k:int = 0; k < v.length; k += 1)
+                            {
+                                var c:uint = (uint)(v.charCodeAt(k));
+                                uint8ToBinary(ba, c & 0xFF);
+                                uint8ToBinary(ba, (c >> 8) & 0xFF);
+                            }
+                        }
+
+                        public static function intFromBinary(ba:IDataInput):int { return int32FromBinary(ba); }
+                        public static function intToBinary(ba:IDataOutput, v:int):void { int32ToBinary(ba, v); }
+
+                        public static function realFromBinary(ba:IDataInput):Number { return float64FromBinary(ba); }
+                        public static function realToBinary(ba:IDataOutput, v:Number):void { float64ToBinary(ba, v); }
+
+                        public static function byteFromBinary(ba:IDataInput):uint { return uint8FromBinary(ba);  }
+                        public static function byteToBinary(ba:IDataOutput, v:uint):void { uint8ToBinary(ba, v); }
+
+                        public static function uint8FromBinary(ba:IDataInput):uint { return ba.readUnsignedByte();}
+                        public static function uint8ToBinary(ba:IDataOutput, v:uint):void { ba.writeByte((int)(v)); }
+
+                        public static function uint16FromBinary(ba:IDataInput):uint
+                        {
+                            var o:uint;
+                            o = uint8FromBinary(ba);
+                            o = (uint8FromBinary(ba) << 8) | o;
+                            return o;
+                        }
+                        public static function uint16ToBinary(ba:IDataOutput, v:uint):void
+                        {
+                            uint8ToBinary(ba, v & 0xFF);
+                            uint8ToBinary(ba, (v >> 8) & 0xFF);
+                        }
+
+                        public static function uint32FromBinary(ba:IDataInput):uint
+                        {
+                            var o:uint;
+                            o = uint8FromBinary(ba);
+                            o = (uint8FromBinary(ba) << 8) | o;
+                            o = (uint8FromBinary(ba) << 16) | o;
+                            o = (uint8FromBinary(ba) << 24) | o;
+                            return o;
+                        }
+                        public static function uint32ToBinary(ba:IDataOutput, v:uint):void
+                        {
+                            uint8ToBinary(ba, v & 0xFF);
+                            uint8ToBinary(ba, (v >> 8) & 0xFF);
+                            uint8ToBinary(ba, (v >> 16) & 0xFF);
+                            uint8ToBinary(ba, (v >> 24) & 0xFF);
+                        }
+
+                        public static function int8FromBinary(ba:IDataInput):int { return ba.readByte(); }
+                        public static function int8ToBinary(ba:IDataOutput, v:int):void { ba.writeByte(v); }
+
+                        public static function int16FromBinary(ba:IDataInput):int
+                        {
+                            var o:uint;
+                            o = int8FromBinary(ba);
+                            o = (int8FromBinary(ba) << 8) | o;
+                            return o;
+                        }
+                        public static function int16ToBinary(ba:IDataOutput, v:int):void
+                        {
+                            int8ToBinary(ba, v & 0xFF);
+                            int8ToBinary(ba, (v >> 8) & 0xFF);
+                        }
+
+                        public static function int32FromBinary(ba:IDataInput):int
+                        {
+                            var o:int;
+                            o = int8FromBinary(ba);
+                            o = (int8FromBinary(ba) << 8) | o;
+                            o = (int8FromBinary(ba) << 16) | o;
+                            o = (int8FromBinary(ba) << 24) | o;
+                            return o;
+                        }
+                        public static function int32ToBinary(ba:IDataOutput, v:int):void
+                        {
+                            int8ToBinary(ba, v & 0xFF);
+                            int8ToBinary(ba, (v >> 8) & 0xFF);
+                            int8ToBinary(ba, (v >> 16) & 0xFF);
+                            int8ToBinary(ba, (v >> 24) & 0xFF);
+                        }
+
+                        public static function float32FromBinary(ba:IDataInput):Number
+                        {
+                            var b:ByteArray = new ByteArray();
+                            b.endian = Endian.LITTLE_ENDIAN;
+                            ba.readBytes(b, 0, 4);
+                            b.position = 0;
+                            return b.readFloat();
+                        }
+                        public static function float32ToBinary(ba:IDataOutput, v:Number):void
+                        {
+                            var b:ByteArray = new ByteArray();
+                            b.endian = Endian.LITTLE_ENDIAN;
+                            b.writeFloat(v);
+                            b.position = 0;
+                            ba.writeBytes(b, 0, 4);
+                        }
+
+                        public static function float64FromBinary(ba:IDataInput):Number
+                        {
+                            var b:ByteArray = new ByteArray();
+                            b.endian = Endian.LITTLE_ENDIAN;
+                            ba.readBytes(b, 0, 8);
+                            b.position = 0;
+                            return b.readDouble();
+                        }
+                        public static function float64ToBinary(ba:IDataOutput, v:Number):void
+                        {
+                            var b:ByteArray = new ByteArray();
+                            b.endian = Endian.LITTLE_ENDIAN;
+                            b.writeDouble(v);
+                            b.position = 0;
+                            ba.writeBytes(b, 0, 8);
+                        }
+
+                        ${Serializers}
+                    }
+        Template
+            Name BinaryTranslator_Record
+            //Parameters: ${Name}
+            Value
+                $String
+                    public static function [[${name}FromBinary]](ba:IDataInput):[[${Name}]] { return [[${Name}]].fromBinary(ba); }
+                    public static function [[${name}ToBinary]](ba:IDataOutput, o:[[${Name}]]):void { [[${Name}]].toBinary(ba, o); }
+        Template
+            Name BinaryTranslator_FieldFrom
+            //Parameters: ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    o.[[${name}]] = BinaryTranslator.[[${typeFriendlyName}FromBinary]](ba);
+        Template
+            Name BinaryTranslator_FieldTo
+            //Parameters: ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    BinaryTranslator.[[${typeFriendlyName}ToBinary]](ba, o.[[${name}]]);
+        Template
+            Name BinaryTranslator_TaggedUnion
+            //Parameters: ${Name}
+            Value
+                $String
+                    public static function [[${name}FromBinary]](ba:IDataInput):[[${Name}]] { return [[${Name}]].fromBinary(ba); }
+                    public static function [[${name}ToBinary]](ba:IDataOutput, o:[[${Name}]]):void { [[${Name}]].toBinary(ba, o); }
+        Template
+            Name BinaryTranslator_AlternativeFrom
+            //Parameters: ${TaggedUnionName}, ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    if (o._tag == [[${TaggedUnionName}Tag.${NAME}]])
+                    {
+                        o.[[${name}]] = BinaryTranslator.[[${typeFriendlyName}FromBinary]](ba);
+                        return o;
+                    }
+        Template
+            Name BinaryTranslator_AlternativeTo
+            //Parameters: ${TaggedUnionName}, ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    if (o._tag == [[${TaggedUnionName}Tag.${NAME}]])
+                    {
+                        BinaryTranslator.[[${typeFriendlyName}ToBinary]](ba, o.[[${name}]]);
+                        return;
+                    }
+        Template
+            Name BinaryTranslator_Enum
+            //Parameters: ${Name}
+            Value
+                $String
+                    public static function [[${name}FromBinary]](ba:IDataInput):int { return intFromBinary(ba); }
+                    public static function [[${name}ToBinary]](ba:IDataOutput, v:int):void { intToBinary(ba, v); }
+        Template
+            Name BinaryTranslator_List
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
+            Value
+                $String
+                    public static function [[${typeFriendlyName}FromBinary]](ba:IDataInput):[[${TypeString}]]
+                    {
+                        var l:[[${TypeString}]] = new [[${TypeString}]]();
+                        var n:int = intFromBinary(ba);
+                        for (var k:int = 0; k < n; k += 1)
+                        {
+                            l.push([[${elementTypeFriendlyName}FromBinary]](ba));
+                        }
+                        return l;
+                    }
+                    public static function [[${typeFriendlyName}ToBinary]](ba:IDataOutput, l:[[${TypeString}]]):void
+                    {
+                        BinaryTranslator.intToBinary(ba, l.length);
+                        for (var k:int = 0; k < l.length; k += 1)
+                        {
+                            [[${elementTypeFriendlyName}ToBinary]](ba, l[k]);
+                        }
                     }
         Template
             Name JsonTranslator
@@ -373,22 +671,49 @@ ObjectSchemaTemplate
                 $String
                     public class JsonTranslator
                     {
-                    	public static function unitFromJson(j:*):Unit { return new Unit(); }
-                    	public static function unitToJson(v:Unit):* { return v; }
+                        public static function unitFromJson(j:*):Unit { return new Unit(); }
+                        public static function unitToJson(v:Unit):* { return v; }
 
-                    	public static function booleanFromJson(j:*):Boolean { return j; }
-                    	public static function booleanToJson(v:Boolean):* { return v; }
+                        public static function booleanFromJson(j:*):Boolean { return j; }
+                        public static function booleanToJson(v:Boolean):* { return v; }
 
-                    	public static function stringFromJson(j:*):String { return j; }
-                    	public static function stringToJson(v:String):* { return v; }
+                        public static function stringFromJson(j:*):String { return j; }
+                        public static function stringToJson(v:String):* { return v; }
 
-                    	public static function intFromJson(j:*):int { return j; }
-                    	public static function intToJson(v:int):* { return v; }
+                        public static function intFromJson(j:*):int { return j; }
+                        public static function intToJson(v:int):* { return v; }
 
-                    	public static function realFromJson(j:*):Number { return j; }
-                    	public static function realToJson(v:Number):* { return v; }
+                        public static function realFromJson(j:*):Number { return j; }
+                        public static function realToJson(v:Number):* { return v; }
 
-                    	${Serializers}
+                        public static function byteFromJson(j:*):uint { return j; }
+                        public static function byteToJson(v:uint):* { return v; }
+
+                        public static function uint8FromJson(j:*):uint { return j; }
+                        public static function uint8ToJson(v:uint):* { return v; }
+
+                        public static function uint16FromJson(j:*):uint { return j; }
+                        public static function uint16ToJson(v:uint):* { return v; }
+
+                        public static function uint32FromJson(j:*):uint { return j; }
+                        public static function uint32ToJson(v:uint):* { return v; }
+
+                        public static function int8FromJson(j:*):int { return j; }
+                        public static function int8ToJson(v:int):* { return v; }
+
+                        public static function int16FromJson(j:*):int { return j; }
+                        public static function int16ToJson(v:int):* { return v; }
+
+                        public static function int32FromJson(j:*):int { return j; }
+                        public static function int32ToJson(v:int):* { return v; }
+
+                        public static function float32FromJson(j:*):Number { return j; }
+                        public static function float32ToJson(v:Number):* { return v; }
+
+                        public static function float64FromJson(j:*):Number { return j; }
+                        public static function float64ToJson(v:Number):* { return v; }
+
+                        ${Serializers}
                     }
         Template
             Name JsonTranslator_Record
@@ -423,8 +748,8 @@ ObjectSchemaTemplate
                 $String
                     if (o._tag == [[${TaggedUnionName}Tag.${NAME}]])
                     {
-                    	o.[[${name}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](jo.[[${name}]]);
-                    	return o;
+                        o.[[${name}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](jo.[[${name}]]);
+                        return o;
                     }
         Template
             Name JsonTranslator_AlternativeTo
@@ -433,8 +758,8 @@ ObjectSchemaTemplate
                 $String
                     if (o._tag == [[${TaggedUnionName}Tag.${NAME}]])
                     {
-                    	jo.[[${name}]] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[${name}]]);
-                    	return jo;
+                        jo.[[${name}]] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[${name}]]);
+                        return jo;
                     }
         Template
             Name JsonTranslator_Enum
@@ -450,19 +775,19 @@ ObjectSchemaTemplate
                 $String
                     public static function [[${typeFriendlyName}FromJson]](j:*):[[${TypeString}]]
                     {
-                    	var l:[[${TypeString}]] = new [[${TypeString}]]();
-                    	for (var k:int = 0; k < j.length; k += 1)
-                    	{
-                    		l.push([[${elementTypeFriendlyName}FromJson]](j[k]));
-                    	}
-                    	return l;
+                        var l:[[${TypeString}]] = new [[${TypeString}]]();
+                        for (var k:int = 0; k < j.length; k += 1)
+                        {
+                            l.push([[${elementTypeFriendlyName}FromJson]](j[k]));
+                        }
+                        return l;
                     }
                     public static function [[${typeFriendlyName}ToJson]](l:[[${TypeString}]]):*
                     {
-                    	var jl:Array = new Array();
-                    	for (var k:int = 0; k < l.length; k += 1)
-                    	{
-                    		jl.push([[${elementTypeFriendlyName}ToJson]](l[k]));
-                    	}
-                    	return jl;
+                        var jl:Array = new Array();
+                        for (var k:int = 0; k < l.length; k += 1)
+                        {
+                            jl.push([[${elementTypeFriendlyName}ToJson]](l[k]));
+                        }
+                        return jl;
                     }
