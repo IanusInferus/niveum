@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#枚举数据库代码生成器
-//  Version:     2012.03.27.
+//  Version:     2012.04.12.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -13,13 +13,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
-using System.Reflection;
 using Firefly;
-using Firefly.Streaming;
-using Firefly.Mapping.XmlText;
 using Firefly.TextEncoding;
-using Firefly.Texting;
-using Firefly.Texting.TreeFormat;
 using OS = Yuki.ObjectSchema;
 using Yuki.RelationSchema.DbmlDatabase;
 
@@ -38,24 +33,10 @@ namespace Yuki.RelationSchema.CSharpDatabase
             return CompileToCSharpDatabase(RelationSchemaTranslator.Translate(Schema), DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
         }
 
-        private class TemplateInfo
-        {
-            public HashSet<String> Keywords;
-            public Dictionary<String, OS.PrimitiveMapping> PrimitiveMappings;
-            public Dictionary<String, OS.Template> Templates;
-
-            public TemplateInfo(OS.ObjectSchemaTemplate Template)
-            {
-                Keywords = new HashSet<String>(Template.Keywords, StringComparer.Ordinal);
-                PrimitiveMappings = Template.PrimitiveMappings.ToDictionary(m => m.Name, StringComparer.OrdinalIgnoreCase);
-                Templates = Template.Templates.ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
-            }
-        }
-
         private class Writer
         {
 
-            private static TemplateInfo TemplateInfo;
+            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
             private XElement Dbml;
 
             public Schema Schema;
@@ -66,19 +47,9 @@ namespace Yuki.RelationSchema.CSharpDatabase
 
             static Writer()
             {
-                var b = Properties.Resources.CSharpDatabase;
-                XElement x;
-                using (ByteArrayStream s = new ByteArrayStream(b))
-                {
-                    using (var sr = Txt.CreateTextReader(s.AsNewReading(), TextEncoding.Default, true))
-                    {
-                        x = TreeFile.ReadFile(sr);
-                    }
-                }
-
-                XmlSerializer xs = new XmlSerializer();
-                var t = xs.Read<OS.ObjectSchemaTemplate>(x);
-                TemplateInfo = new TemplateInfo(t);
+                var OriginalTemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpDatabase);
+                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpCommunication);
+                TemplateInfo.Keywords = OriginalTemplateInfo.Keywords;
             }
 
             private Dictionary<String, Enum> Enums;

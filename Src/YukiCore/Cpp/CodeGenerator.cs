@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2012.04.06.
+//  Version:     2012.04.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -11,14 +11,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
-using Firefly.Streaming;
-using Firefly.Mapping.XmlText;
 using Firefly.TextEncoding;
-using Firefly.Texting;
-using Firefly.Texting.TreeFormat;
 
 namespace Yuki.ObjectSchema.Cpp
 {
@@ -42,23 +37,9 @@ namespace Yuki.ObjectSchema.Cpp.Common
 {
     public static class CodeGenerator
     {
-        public class TemplateInfo
-        {
-            public HashSet<String> Keywords;
-            public Dictionary<String, PrimitiveMapping> PrimitiveMappings;
-            public Dictionary<String, Template> Templates;
-
-            public TemplateInfo(ObjectSchemaTemplate Template)
-            {
-                Keywords = new HashSet<String>(Template.Keywords, StringComparer.Ordinal);
-                PrimitiveMappings = Template.PrimitiveMappings.ToDictionary(m => m.Name, StringComparer.OrdinalIgnoreCase);
-                Templates = Template.Templates.ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
-            }
-        }
-
         public class Writer
         {
-            private static TemplateInfo TemplateInfo;
+            private static ObjectSchemaTemplateInfo TemplateInfo;
 
             public Schema Schema;
             public String NamespaceName;
@@ -66,18 +47,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
             static Writer()
             {
                 var b = Properties.Resources.Cpp;
-                XElement x;
-                using (ByteArrayStream s = new ByteArrayStream(b))
-                {
-                    using (var sr = Txt.CreateTextReader(s.AsNewReading(), TextEncoding.Default, true))
-                    {
-                        x = TreeFile.ReadFile(sr);
-                    }
-                }
-
-                XmlSerializer xs = new XmlSerializer();
-                var t = xs.Read<ObjectSchemaTemplate>(x);
-                TemplateInfo = new TemplateInfo(t);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(b);
             }
 
             public String[] GetSchema()
