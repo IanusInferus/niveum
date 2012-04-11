@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2012.04.06.
+//  Version:     2012.04.12.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -11,15 +11,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
-using System.Text.RegularExpressions;
 using Firefly;
-using Firefly.Streaming;
 using Firefly.Mapping.MetaSchema;
-using Firefly.Mapping.XmlText;
 using Firefly.TextEncoding;
-using Firefly.Texting;
-using Firefly.Texting.TreeFormat;
 
 namespace Yuki.ObjectSchema.CppBinary
 {
@@ -38,7 +32,7 @@ namespace Yuki.ObjectSchema.CppBinary
 
         public class Writer
         {
-            private static Cpp.Common.CodeGenerator.TemplateInfo TemplateInfo;
+            private static ObjectSchemaTemplateInfo TemplateInfo;
 
             private Cpp.Common.CodeGenerator.Writer InnerWriter;
 
@@ -47,19 +41,10 @@ namespace Yuki.ObjectSchema.CppBinary
 
             static Writer()
             {
-                var b = Properties.Resources.CppBinary;
-                XElement x;
-                using (ByteArrayStream s = new ByteArrayStream(b))
-                {
-                    using (var sr = Txt.CreateTextReader(s.AsNewReading(), TextEncoding.Default, true))
-                    {
-                        x = TreeFile.ReadFile(sr);
-                    }
-                }
-
-                XmlSerializer xs = new XmlSerializer();
-                var t = xs.Read<ObjectSchemaTemplate>(x);
-                TemplateInfo = new Cpp.Common.CodeGenerator.TemplateInfo(t);
+                var OriginalTemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.Cpp);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CppBinary);
+                TemplateInfo.Keywords = OriginalTemplateInfo.Keywords;
+                TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
             public String[] GetSchema()

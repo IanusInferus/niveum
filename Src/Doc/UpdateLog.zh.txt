@@ -1,4 +1,8 @@
-﻿2012.04.09
+﻿2012.04.12
+Yuki.Core:
+删减重复代码。
+
+2012.04.09
 Yuki.Core, Yuki.SchemaManipulator:
 增加ActionScript二进制序列化支持。
 Examples:
