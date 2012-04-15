@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2012.04.06.
+//  Version:     2012.04.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -32,14 +32,16 @@ namespace Yuki.ObjectSchema
         public static UInt64 Hash(this Schema s)
         {
             var Types = s.GetMap().OrderBy(t => t.Key, StringComparer.Ordinal).Select(t => t.Value).ToArray();
+            var TypesWithoutDescription = Types.Select(t => MapWithoutDescription(t)).ToArray();
+
             var bs = new BinarySerializer();
-            bs.PutWriter((String str, IWritableStream ws) => ws.Write(TextEncoding.UTF8.GetBytes(str)));
+            bs.PutWriter((String str, IWritableStream ws) => ws.Write(TextEncoding.UTF16.GetBytes(str)));
             var sha = new SHA1CryptoServiceProvider();
             Byte[] result;
 
             using (var ms = Streams.CreateMemoryStream())
             {
-                bs.Write(Types, ms);
+                bs.Write(TypesWithoutDescription, ms);
                 ms.Position = 0;
 
                 result = sha.ComputeHash(ms.ToUnsafeStream());
@@ -54,27 +56,79 @@ namespace Yuki.ObjectSchema
             }
         }
 
-        public static Schema Reduce(this Schema s)
+        private static TypeDef MapWithoutDescription(TypeDef t)
+        {
+            if (t.OnPrimitive)
+            {
+                var p = t.Primitive;
+                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters.Select(gp => MapWithoutDescription(gp)).ToArray(), Description = "" });
+            }
+            else if (t.OnAlias)
+            {
+                var a = t.Alias;
+                return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters.Select(gp => MapWithoutDescription(gp)).ToArray(), Type = a.Type, Description = "" });
+            }
+            else if (t.OnRecord)
+            {
+                var r = t.Record;
+                return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters.Select(gp => MapWithoutDescription(gp)).ToArray(), Fields = r.Fields.Select(gp => MapWithoutDescription(gp)).ToArray(), Description = "" });
+            }
+            else if (t.OnTaggedUnion)
+            {
+                var tu = t.TaggedUnion;
+                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters.Select(gp => MapWithoutDescription(gp)).ToArray(), Alternatives = tu.Alternatives.Select(gp => MapWithoutDescription(gp)).ToArray(), Description = "" });
+            }
+            else if (t.OnEnum)
+            {
+                var e = t.Enum;
+                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = e.UnderlyingType, Literals = e.Literals.Select(l => MapWithoutDescription(l)).ToArray(), Description = "" });
+            }
+            else if (t.OnClientCommand)
+            {
+                var cc = t.ClientCommand;
+                return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters.Select(p => MapWithoutDescription(p)).ToArray(), InParameters = cc.InParameters.Select(p => MapWithoutDescription(p)).ToArray(), Description = "" });
+            }
+            else if (t.OnServerCommand)
+            {
+                var sc = t.ServerCommand;
+                return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters.Select(p => MapWithoutDescription(p)).ToArray(), Description = "" });
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+        private static VariableDef MapWithoutDescription(VariableDef v)
+        {
+            return new VariableDef { Name = v.Name, Type = v.Type, Description = "" };
+        }
+        private static LiteralDef MapWithoutDescription(LiteralDef l)
+        {
+            return new LiteralDef { Name = l.Name, Value = l.Value, Description = "" };
+        }
+
+        public static Schema GetSubSchema(this Schema s, IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs)
         {
             var Types = s.GetMap().ToDictionary(t => t.Key, t => t.Value, StringComparer.OrdinalIgnoreCase);
 
             var m = new Marker { Types = Types };
-            foreach (var t in s.Types)
+            foreach (var t in TypeDefs)
             {
-                switch (t._Tag)
-                {
-                    case TypeDefTag.ClientCommand:
-                        m.Mark(t);
-                        break;
-                    case TypeDefTag.ServerCommand:
-                        m.Mark(t);
-                        break;
-                }
+                m.Mark(t);
+            }
+            foreach (var t in TypeSpecs)
+            {
+                m.Mark(t);
             }
 
             var MarkedNames = new HashSet<String>(Types.Where(p => m.Marked.Contains(p.Value)).Select(p => p.Key), StringComparer.OrdinalIgnoreCase);
 
             return new Schema { Types = s.Types.Where(t => m.Marked.Contains(t)).ToArray(), TypeRefs = s.TypeRefs.Where(t => m.Marked.Contains(t)).ToArray(), Imports = s.Imports, TypePaths = s.TypePaths.Where(tp => MarkedNames.Contains(tp.Name)).ToArray() };
+        }
+
+        public static Schema Reduce(this Schema s)
+        {
+            return GetSubSchema(s, s.TypeRefs.Concat(s.Types).Where(t => t.OnClientCommand || t.OnServerCommand), new TypeSpec[] { });
         }
 
         private class Marker
