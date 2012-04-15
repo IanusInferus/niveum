@@ -127,9 +127,6 @@
   <data name="CSharp" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\csharp\csharp.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="CSharpCommunication" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\csharpcommunication\csharpcommunication.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="CSharpDatabase" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\csharpdatabase\csharpdatabase.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
@@ -150,5 +147,11 @@
   </data>
   <data name="VB" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\vb\vb.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CSharpJson" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\csharpjson\csharpjson.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CSharpBinary" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\csharpbinary\csharpbinary.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

@@ -54,7 +54,8 @@
     <Compile Include="ActionScriptCommunication\CodeGenerator.cs" />
     <Compile Include="CppBinary\CodeGenerator.cs" />
     <Compile Include="Cpp\CodeGenerator.cs" />
-    <Compile Include="CSharpCommunication\CodeGenerator.cs" />
+    <Compile Include="CSharpBinary\CodeGenerator.cs" />
+    <Compile Include="CSharpJson\CodeGenerator.cs" />
     <Compile Include="CSharp\CodeGenerator.cs" />
     <Compile Include="JavaBinary\CodeGenerator.cs" />
     <Compile Include="Java\CodeGenerator.cs" />
@@ -83,7 +84,8 @@
     <None Include="ActionScriptCommunication\ActionScriptCommunication.tree" />
     <None Include="CppBinary\CppBinary.tree" />
     <None Include="Cpp\Cpp.tree" />
-    <None Include="CSharpCommunication\CSharpCommunication.tree" />
+    <None Include="CSharpBinary\CSharpBinary.tree" />
+    <None Include="CSharpJson\CSharpJson.tree" />
     <None Include="CSharp\CSharp.tree" />
     <None Include="JavaBinary\JavaBinary.tree" />
     <None Include="Java\Java.tree" />
@@ -98,6 +100,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

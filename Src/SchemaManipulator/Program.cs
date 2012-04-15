@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.04.07.
+//  Version:     2012.04.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,7 +23,8 @@ using Yuki.ObjectSchema;
 using OS = Yuki.ObjectSchema;
 using Yuki.ObjectSchema.VB;
 using Yuki.ObjectSchema.CSharp;
-using Yuki.ObjectSchema.CSharpCommunication;
+using Yuki.ObjectSchema.CSharpBinary;
+using Yuki.ObjectSchema.CSharpJson;
 using Yuki.ObjectSchema.ActionScript;
 using Yuki.ObjectSchema.ActionScriptCommunication;
 using Yuki.RelationSchema.SqlDatabase;
@@ -210,16 +211,33 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2csc")
+                else if (opt.Name.ToLower() == "t2csb")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        ObjectSchemaToCSharpCommunicationCode(args[0], "");
+                        ObjectSchemaToCSharpBinaryCode(args[0], "");
                     }
                     else if (args.Length == 2)
                     {
-                        ObjectSchemaToCSharpCommunicationCode(args[0], args[1]);
+                        ObjectSchemaToCSharpBinaryCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "t2csj")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ObjectSchemaToCSharpJsonCode(args[0], "");
+                    }
+                    else if (args.Length == 2)
+                    {
+                        ObjectSchemaToCSharpJsonCode(args[0], args[1]);
                     }
                     else
                     {
@@ -405,8 +423,10 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2vb:<VbCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C#类型");
             Console.WriteLine(@"/t2cs:<CsCodePath>[,<NamespaceName>]");
-            Console.WriteLine(@"生成C#通讯类型");
-            Console.WriteLine(@"/t2csc:<CsCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"生成C#二进制通讯类型");
+            Console.WriteLine(@"/t2csb:<CsCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"生成C# JSON通讯类型");
+            Console.WriteLine(@"/t2csj:<CsCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成ActionScript类型");
             Console.WriteLine(@"/t2as:<AsCodeDir>,<PackageName>");
             Console.WriteLine(@"生成ActionScript通讯类型");
@@ -562,10 +582,27 @@ namespace Yuki.SchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpCommunicationCode(String CsCodePath, String NamespaceName)
+        public static void ObjectSchemaToCSharpBinaryCode(String CsCodePath, String NamespaceName)
         {
             var ObjectSchema = Schema();
-            var Compiled = ObjectSchema.CompileToCSharpCommunication(NamespaceName);
+            var Compiled = ObjectSchema.CompileToCSharpBinary(NamespaceName);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToCSharpJsonCode(String CsCodePath, String NamespaceName)
+        {
+            var ObjectSchema = Schema();
+            var Compiled = ObjectSchema.CompileToCSharpJson(NamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);

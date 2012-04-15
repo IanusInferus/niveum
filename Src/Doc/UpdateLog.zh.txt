@@ -1,4 +1,14 @@
-﻿2012.04.12
+﻿2012.04.15
+Yuki.Core:
+增加子Schema计算功能。
+修改Schema Hash计算方法，排除注释。
+移动C#代码生成中的客户端命令和服务端事件的类型定义到公共代码生成中。
+Yuki.Core, Yuki.SchemaManipulator:
+将C#通讯代码改为C# JSON通讯代码。
+将VB代码做C#代码的对应修改。
+增加C#二进制通讯代码。
+
+2012.04.12
 Yuki.Core:
 删减重复代码。
 
