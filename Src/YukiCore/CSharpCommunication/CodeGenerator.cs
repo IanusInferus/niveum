@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯代码生成器
-//  Version:     2012.04.12.
+//  Version:     2012.04.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -90,137 +90,56 @@ namespace Yuki.ObjectSchema.CSharpCommunication
             {
                 return InnerWriter.GetTypeString(Type);
             }
-            public String[] GetAlias(AliasDef a)
-            {
-                return InnerWriter.GetAlias(a);
-            }
-            public String[] GetTuple(String Name, TupleDef t)
-            {
-                return InnerWriter.GetTuple(Name, t);
-            }
-            public String[] GetRecord(RecordDef r)
-            {
-                return InnerWriter.GetRecord(r);
-            }
-            public String[] GetTaggedUnion(TaggedUnionDef tu)
-            {
-                return InnerWriter.GetTaggedUnion(tu);
-            }
-            public String[] GetEnum(EnumDef e)
-            {
-                return InnerWriter.GetEnum(e);
-            }
-            public String[] GetClientCommand(ClientCommandDef c)
-            {
-                var l = new List<String>();
-                l.AddRange(GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description }));
-                l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new VariableDef[] { }, Alternatives = c.InParameters, Description = c.Description }));
-                return l.ToArray();
-            }
-            public String[] GetServerCommand(ServerCommandDef c)
-            {
-                return GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description });
-            }
             public String[] GetXmlComment(String Description)
             {
                 return InnerWriter.GetXmlComment(Description);
             }
 
-            public enum CommandTag
+            public String[] GetJsonServer(CommandDef[] Commands)
             {
-                Client = 0,
-                Server = 1
+                return GetTemplate("JsonServer").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("Commands", GetJsonServerCommands(Commands));
             }
-            [TaggedUnion]
-            public class Command
-            {
-                [Tag]
-                public CommandTag _Tag;
-                public ClientCommandDef Client;
-                public ServerCommandDef Server;
-            }
-
-            public String[] GetIServerImplementation(Command[] Commands)
-            {
-                return GetTemplate("IServerImplementation").Substitute("Commands", GetIServerImplementationCommands(Commands));
-            }
-            public String[] GetIServerImplementationCommands(Command[] Commands)
+            public String[] GetJsonServerCommands(CommandDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandTag.Client)
+                    if (c._Tag == CommandDefTag.Client)
                     {
-                        l.AddRange(GetTemplate("IServerImplementation_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
+                        l.AddRange(GetTemplate("JsonServer_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()));
                     }
-                    else if (c._Tag == CommandTag.Server)
+                    else if (c._Tag == CommandDefTag.Server)
                     {
-                        l.AddRange(GetTemplate("IServerImplementation_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Server.Description)));
-                    }
-                }
-                return l.ToArray();
-            }
-            public String[] GetServer(Command[] Commands)
-            {
-                return GetTemplate("Server").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("Commands", GetServerCommands(Commands));
-            }
-            public String[] GetServerCommands(Command[] Commands)
-            {
-                List<String> l = new List<String>();
-                foreach (var c in Commands)
-                {
-                    if (c._Tag == CommandTag.Client)
-                    {
-                        l.AddRange(GetTemplate("Server_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()));
-                    }
-                    else if (c._Tag == CommandTag.Server)
-                    {
-                        l.AddRange(GetTemplate("Server_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()));
+                        l.AddRange(GetTemplate("JsonServer_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()));
                     }
                 }
                 return l.ToArray();
             }
 
-            public String[] GetIClientImplementation(Command[] Commands)
+            public String[] GetJsonClient(CommandDef[] Commands)
             {
-                return GetTemplate("IClientImplementation").Substitute("Commands", GetIClientImplementationCommands(Commands));
+                return GetTemplate("JsonClient").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommands", GetJsonClientClientCommands(Commands)).Substitute("ServerCommands", GetJsonClientServerCommands(Commands));
             }
-            public String[] GetIClientImplementationCommands(Command[] Commands)
+            public String[] GetJsonClientClientCommands(CommandDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandTag.Server)
+                    if (c._Tag == CommandDefTag.Client)
                     {
-                        l.AddRange(GetTemplate("IClientImplementation_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Server.Description)));
+                        l.AddRange(GetTemplate("JsonClient_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
                     }
                 }
                 return l.ToArray();
             }
-            public String[] GetClient(Command[] Commands)
-            {
-                return GetTemplate("Client").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommands", GetClientClientCommands(Commands)).Substitute("ServerCommands", GetClientServerCommands(Commands));
-            }
-            public String[] GetClientClientCommands(Command[] Commands)
+            public String[] GetJsonClientServerCommands(CommandDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandTag.Client)
+                    if (c._Tag == CommandDefTag.Server)
                     {
-                        l.AddRange(GetTemplate("Client_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
-                    }
-                }
-                return l.ToArray();
-            }
-            public String[] GetClientServerCommands(Command[] Commands)
-            {
-                List<String> l = new List<String>();
-                foreach (var c in Commands)
-                {
-                    if (c._Tag == CommandTag.Server)
-                    {
-                        l.AddRange(GetTemplate("Client_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()));
+                        l.AddRange(GetTemplate("JsonClient_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()));
                     }
                 }
                 return l.ToArray();
@@ -467,68 +386,27 @@ namespace Yuki.ObjectSchema.CSharpCommunication
             {
                 List<String> l = new List<String>();
 
-                List<Command> cl = new List<Command>();
+                List<CommandDef> cl = new List<CommandDef>();
 
                 foreach (var c in Schema.Types)
                 {
-                    if (c.OnPrimitive)
+                    if (c.OnClientCommand)
                     {
-                        continue;
-                    }
-                    else if (c.OnAlias)
-                    {
-                        l.AddRange(GetAlias(c.Alias));
-                    }
-                    else if (c.OnRecord)
-                    {
-                        l.AddRange(GetRecord(c.Record));
-                    }
-                    else if (c.OnTaggedUnion)
-                    {
-                        l.AddRange(GetTaggedUnion(c.TaggedUnion));
-                    }
-                    else if (c.OnEnum)
-                    {
-                        l.AddRange(GetEnum(c.Enum));
-                    }
-                    else if (c.OnClientCommand)
-                    {
-                        l.AddRange(GetClientCommand(c.ClientCommand));
-                        cl.Add(new Command { _Tag = CommandTag.Client, Client = c.ClientCommand });
+                        cl.Add(CommandDef.CreateClient(c.ClientCommand));
                     }
                     else if (c.OnServerCommand)
                     {
-                        l.AddRange(GetServerCommand(c.ServerCommand));
-                        cl.Add(new Command { _Tag = CommandTag.Server, Server = c.ServerCommand });
+                        cl.Add(CommandDef.CreateServer(c.ServerCommand));
                     }
-                    else
-                    {
-                        throw new InvalidOperationException();
-                    }
-                    l.Add("");
-                }
-
-                var ltf = new TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Schema.Types);
-                var Tuples = ltf.GetTuples();
-                foreach (var t in Tuples)
-                {
-                    l.AddRange(GetTuple(t.TypeFriendlyName(), t.Tuple));
-                    l.Add("");
                 }
 
                 var ca = cl.ToArray();
                 
-                l.AddRange(GetIServerImplementation(ca));
+                l.AddRange(GetJsonServer(ca));
                 l.Add("");
-                l.AddRange(GetServer(ca));
+                l.AddRange(GetTemplate("IJsonSender"));
                 l.Add("");
-
-                l.AddRange(GetTemplate("ISender"));
-                l.Add("");
-                l.AddRange(GetIClientImplementation(ca));
-                l.Add("");
-                l.AddRange(GetClient(ca));
+                l.AddRange(GetJsonClient(ca));
                 l.Add("");
 
                 l.AddRange(GetJsonTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray()));

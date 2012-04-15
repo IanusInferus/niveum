@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java代码生成器
-//  Version:     2012.04.12.
+//  Version:     2012.04.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -361,13 +361,13 @@ namespace Yuki.ObjectSchema.Java.Common
             public String[] GetClientCommand(ClientCommandDef c)
             {
                 var l = new List<String>();
-                l.AddRange(GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = { }, Fields = c.OutParameters, Description = c.Description }));
-                l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = { }, Alternatives = c.InParameters, Description = c.Description }));
+                l.AddRange(GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description }));
+                l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new VariableDef[] { }, Alternatives = c.InParameters, Description = c.Description }));
                 return l.ToArray();
             }
             public String[] GetServerCommand(ServerCommandDef c)
             {
-                return GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = { }, Fields = c.OutParameters, Description = c.Description });
+                return GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description });
             }
             public String[] GetXmlComment(String Description)
             {
