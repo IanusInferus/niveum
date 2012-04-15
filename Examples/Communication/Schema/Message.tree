@@ -1,0 +1,20 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Message.tree
+      Location:    Yuki.Examples <Tree>
+      Description: 消息
+      Version:     2012.04.15.
+      Author:      F.R.C.
+      Copyright(C) Public Domain
+
+    ==========================================================================
+
+#ClientCommand SendMessage                          发送消息
+    Content             String                      内容
+    >
+    Success             Unit                        成功
+    TooLong             Unit                        内容过长
+
+#ServerCommand MessageReceived                      接收到消息
+    Content             String                      内容

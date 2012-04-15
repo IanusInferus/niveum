@@ -1,0 +1,27 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Base.tree
+      Location:    Yuki.Examples <Tree>
+      Description: 基础
+      Version:     2012.04.15.
+      Author:      F.R.C.
+      Copyright(C) Public Domain
+
+    ==========================================================================
+
+#ServerCommand Error                                错误
+    CommandName         String                      客户端命令名称
+    Message             String                      错误信息
+
+#ClientCommand ServerTime                           服务器时间
+    >
+    Success             String                      服务器时间
+
+#ClientCommand Quit                                 退出
+    >
+    Success             Unit                        成功
+
+#Record Range                                       索引范围
+    Skip                Int                         跳过个数
+    Take                Int                         取值个数
