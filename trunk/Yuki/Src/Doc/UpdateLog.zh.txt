@@ -7,6 +7,8 @@ Yuki.Core, Yuki.SchemaManipulator:
 将C#通讯代码改为C# JSON通讯代码。
 将VB代码做C#代码的对应修改。
 增加C#二进制通讯代码。
+Examples:
+增加二进制通讯C#示例项目。
 
 2012.04.12
 Yuki.Core:
