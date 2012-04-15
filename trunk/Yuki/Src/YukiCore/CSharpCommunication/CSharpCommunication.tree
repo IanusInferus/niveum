@@ -4,7 +4,7 @@
       File:        CSharpCommunication.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#通讯模板数据
-      Version:     2012.04.12.
+      Version:     2012.04.15.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -64,30 +64,7 @@ ObjectSchemaTemplate
                     using Newtonsoft.Json;
                     using Newtonsoft.Json.Linq;
         Template
-            Name IServerImplementation
-            //Parameters: ${Commands}
-            Value
-                $String
-                    public interface IServerImplementation<TContext>
-                    {
-                        ${Commands}
-                    }
-        Template
-            Name IServerImplementation_ClientCommand
-            //Parameters: ${Name}, ${XmlComment}
-            Value
-                $String
-                    ${XmlComment}
-                    [[${Name}Reply]] [[${Name}]](TContext c, [[${Name}Request]] r);
-        Template
-            Name IServerImplementation_ServerCommand
-            //Parameters: ${Name}, ${XmlComment}
-            Value
-                $String
-                    ${XmlComment}
-                    event Action<TContext, [[${Name}Event]]> [[${Name}]];
-        Template
-            Name Server
+            Name JsonServer
             //Parameters: ${Hash}, ${Commands}
             Value
                 $String
@@ -128,54 +105,38 @@ ObjectSchemaTemplate
                         }
                     }
         Template
-            Name Server_ClientCommand
+            Name JsonServer_ClientCommand
             //Parameters: ${Name}
             Value
                 $String
                     ClientCommands.Add(@"${Name}", (c, p) => JsonTranslator.[[${Name}ReplyToJson]](i.[[${Name}]](c, JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
         Template
-            Name Server_ServerCommand
+            Name JsonServer_ServerCommand
             //Parameters: ${Name}
             Value
                 $String
                     i.${Name} += (c, e) => OnServerEvent(c, @"${Name}", JsonTranslator.[[${Name}EventToJson]](e).ToString(Formatting.None));
         Template
-            Name ISender
+            Name IJsonSender
             Value
                 $String
-                    public interface ISender
+                    public interface IJsonSender
                     {
                         void Send(String CommandName, String Params);
                     }
         Template
-            Name IClientImplementation
-            //Parameters: ${Commands}
-            Value
-                $String
-                    public interface IClientImplementation<TContext>
-                    {
-                        ${Commands}
-                    }
-        Template
-            Name IClientImplementation_ServerCommand
-            //Parameters: ${Name}, ${XmlComment}
-            Value
-                $String
-                    ${XmlComment}
-                    void [[${Name}]](TContext c, [[${Name}Event]] e);
-        Template
-            Name Client
+            Name JsonClient
             //Parameters: ${Hash}, ${ClientCommands}, ${ServerCommands}
             Value
                 $String
                     public sealed class Client<TContext>
                     {
-                        private ISender s;
+                        private IJsonSender s;
                         private IClientImplementation<TContext> i;
-                        private Dictionary<String, Queue<Action<TContext,  String>>> ClientCommandCallbacks;
+                        private Dictionary<String, Queue<Action<TContext, String>>> ClientCommandCallbacks;
                         private Dictionary<String, Action<TContext, String>> ServerCommands;
 
-                        public Client(ISender s, IClientImplementation<TContext> i)
+                        public Client(IJsonSender s, IClientImplementation<TContext> i)
                         {
                             this.s = s;
                             this.i = i;
@@ -233,7 +194,7 @@ ObjectSchemaTemplate
                         ${ClientCommands}
                     }
         Template
-            Name Client_ClientCommand
+            Name JsonClient_ClientCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
@@ -245,7 +206,7 @@ ObjectSchemaTemplate
                         s.Send(@"${Name}", Request);
                     }
         Template
-            Name Client_ServerCommand
+            Name JsonClient_ServerCommand
             //Parameters: ${Name}
             Value
                 $String
