@@ -1,4 +1,3 @@
-@rd "FireflyCore\My Project" /S /Q
 @for /d %%a in (*) do @(
   @if exist %%a\obj @(
     @rd %%a\obj /S /Q
