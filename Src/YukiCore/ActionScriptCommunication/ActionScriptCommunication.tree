@@ -4,7 +4,7 @@
       File:        ActionScriptCommunication.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构ActionScript3.0通讯模板数据
-      Version:     2012.04.09.
+      Version:     2012.04.15.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -322,7 +322,7 @@ ObjectSchemaTemplate
                 $String
                     public interface ISender
                     {
-                        function send(commandName:String, params:String):void;
+                        function send(commandName:String, parameters:String):void;
                     }
         Template
             Name IClientImplementation
@@ -367,7 +367,7 @@ ObjectSchemaTemplate
                             return "${Hash}";
                         }
 
-                        public function handleResult(commandName:String, params:String):void
+                        public function handleResult(commandName:String, parameters:String):void
                         {
                             switch (commandName)
                             {
@@ -399,7 +399,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     case "${Name}":
-                        ci.[[${name}]](JsonTranslator.[[${name}EventFromJson]](JSON.decode(params)));
+                        ci.[[${name}]](JsonTranslator.[[${name}EventFromJson]](JSON.decode(parameters)));
                         return;
         Template
             Name Client_ClientCommandHandle
@@ -407,7 +407,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     case "${Name}":
-                        callback(JsonTranslator.[[${name}ReplyFromJson]](JSON.decode(params)));
+                        callback(JsonTranslator.[[${name}ReplyFromJson]](JSON.decode(parameters)));
                         return;
         Template
             Name Client_ClientCommandDeque

@@ -4,7 +4,7 @@
       File:        VB.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构VB.Net模板数据
-      Version:     2012.04.05.
+      Version:     2012.04.15.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -488,3 +488,40 @@ ObjectSchemaTemplate
             Value
                 $String
                     ''' <summary>${Description}</summary>
+        Template
+            Name IServerImplementation
+            //Parameters: ${Commands}
+            Value
+                $String
+                    Public Interface IServerImplementation(Of TContext)
+                        ${Commands}
+                    End Interface
+        Template
+            Name IServerImplementation_ClientCommand
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    Function [[${Name}]](ByVal c As TContext, ByVal r As [[${Name}Request]]) As [[${Name}Reply]]
+        Template
+            Name IServerImplementation_ServerCommand
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    Event [[${Name}]] As Action(Of TContext, [[${Name}Event]])
+        Template
+            Name IClientImplementation
+            //Parameters: ${Commands}
+            Value
+                $String
+                    Public Interface IClientImplementation(Of TContext)
+                        ${Commands}
+                    End Interface
+        Template
+            Name IClientImplementation_ServerCommand
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    Sub [[${Name}]](ByVal c As TContext, ByVal e As [[${Name}Event]])

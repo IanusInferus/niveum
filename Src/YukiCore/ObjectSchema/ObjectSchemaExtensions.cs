@@ -56,6 +56,92 @@ namespace Yuki.ObjectSchema
             }
         }
 
+        private static TypeDef MapWithoutVersion(TypeDef t)
+        {
+            if (t.OnPrimitive)
+            {
+                var p = t.Primitive;
+                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters.Select(gp => MapWithoutVersion(gp)).ToArray(), Description = p.Description });
+            }
+            else if (t.OnAlias)
+            {
+                var a = t.Alias;
+                return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = "", GenericParameters = a.GenericParameters.Select(gp => MapWithoutVersion(gp)).ToArray(), Type = MapWithoutVersion(a.Type), Description = a.Description });
+            }
+            else if (t.OnRecord)
+            {
+                var r = t.Record;
+                return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = "", GenericParameters = r.GenericParameters.Select(gp => MapWithoutVersion(gp)).ToArray(), Fields = r.Fields.Select(gp => MapWithoutVersion(gp)).ToArray(), Description = r.Description });
+            }
+            else if (t.OnTaggedUnion)
+            {
+                var tu = t.TaggedUnion;
+                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = "", GenericParameters = tu.GenericParameters.Select(gp => MapWithoutVersion(gp)).ToArray(), Alternatives = tu.Alternatives.Select(gp => MapWithoutVersion(gp)).ToArray(), Description = tu.Description });
+            }
+            else if (t.OnEnum)
+            {
+                var e = t.Enum;
+                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = "", UnderlyingType = MapWithoutVersion(e.UnderlyingType), Literals = e.Literals, Description = e.Description });
+            }
+            else if (t.OnClientCommand)
+            {
+                var cc = t.ClientCommand;
+                return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = "", OutParameters = cc.OutParameters.Select(p => MapWithoutVersion(p)).ToArray(), InParameters = cc.InParameters.Select(p => MapWithoutVersion(p)).ToArray(), Description = cc.Description });
+            }
+            else if (t.OnServerCommand)
+            {
+                var sc = t.ServerCommand;
+                return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = "", OutParameters = sc.OutParameters.Select(p => MapWithoutVersion(p)).ToArray(), Description = sc.Description });
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+        private static VariableDef MapWithoutVersion(VariableDef v)
+        {
+            return new VariableDef { Name = v.Name, Type = MapWithoutVersion(v.Type), Description = v.Description };
+        }
+        private static TypeSpec MapWithoutVersion(TypeSpec t)
+        {
+            if (t.OnTypeRef)
+            {
+                return TypeSpec.CreateTypeRef(new TypeRef { Name = t.TypeRef.Name, Version = "" });
+            }
+            else if (t.OnGenericParameterRef)
+            {
+                return t;
+            }
+            else if (t.OnTuple)
+            {
+                return TypeSpec.CreateTuple(new TupleDef { Types = t.Tuple.Types.Select(tt => MapWithoutVersion(tt)).ToArray() });
+            }
+            else if (t.OnGenericTypeSpec)
+            {
+                var gts = t.GenericTypeSpec;
+                return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = MapWithoutVersion(gts.TypeSpec), GenericParameterValues = gts.GenericParameterValues.Select(gpv => MapWithoutVersion(gpv)).ToArray() });
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+        private static GenericParameterValue MapWithoutVersion(GenericParameterValue gpv)
+        {
+            if (gpv.OnLiteral)
+            {
+                return gpv;
+            }
+            else if (gpv.OnTypeSpec)
+            {
+                return GenericParameterValue.CreateTypeSpec(MapWithoutVersion(gpv.TypeSpec));
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
         private static TypeDef MapWithoutDescription(TypeDef t)
         {
             if (t.OnPrimitive)
@@ -107,6 +193,14 @@ namespace Yuki.ObjectSchema
             return new LiteralDef { Name = l.Name, Value = l.Value, Description = "" };
         }
 
+        public static Schema GetNonversioned(this Schema s)
+        {
+            var Types = s.Types.Select(t => new { Original = t, Current = MapWithoutVersion(t) }).ToArray();
+            var TypeRefs = s.TypeRefs.Select(t => new { Original = t, Current = MapWithoutVersion(t) }).ToArray();
+            var Dict = Types.Concat(TypeRefs).ToDictionary(t => t.Original.VersionedName(), t => t.Current.VersionedName(), StringComparer.OrdinalIgnoreCase);
+            var TypePaths = s.TypePaths.Select(tp => new TypePath { Name = Dict[tp.Name], Path = tp.Path }).ToArray();
+            return new Schema { Types = Types.Select(t => t.Current).ToArray(), TypeRefs = TypeRefs.Select(t => t.Current).ToArray(), Imports = s.Imports, TypePaths = TypePaths };
+        }
         public static Schema GetSubSchema(this Schema s, IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs)
         {
             var Types = s.GetMap().ToDictionary(t => t.Key, t => t.Value, StringComparer.OrdinalIgnoreCase);
