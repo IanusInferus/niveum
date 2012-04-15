@@ -2,7 +2,7 @@
 //
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
-//  Description: 对象类型结构C#通讯代码生成器
+//  Description: 对象类型结构C# JSON通讯代码生成器
 //  Version:     2012.04.15.
 //  Copyright(C) F.R.C.
 //
@@ -15,11 +15,11 @@ using Firefly;
 using Firefly.Mapping.MetaSchema;
 using Firefly.TextEncoding;
 
-namespace Yuki.ObjectSchema.CSharpCommunication
+namespace Yuki.ObjectSchema.CSharpJson
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpCommunication(this Schema Schema, String NamespaceName)
+        public static String CompileToCSharpJson(this Schema Schema, String NamespaceName)
         {
             var s = Schema.Reduce();
             var h = s.Hash();
@@ -27,9 +27,9 @@ namespace Yuki.ObjectSchema.CSharpCommunication
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
-        public static String CompileToCSharpCommunication(this Schema Schema)
+        public static String CompileToCSharpJson(this Schema Schema)
         {
-            return CompileToCSharpCommunication(Schema, "");
+            return CompileToCSharpJson(Schema, "");
         }
 
         public class Writer
@@ -45,7 +45,7 @@ namespace Yuki.ObjectSchema.CSharpCommunication
             static Writer()
             {
                 var OriginalTemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharp);
-                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpCommunication);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpJson);
                 TemplateInfo.Keywords = OriginalTemplateInfo.Keywords;
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }

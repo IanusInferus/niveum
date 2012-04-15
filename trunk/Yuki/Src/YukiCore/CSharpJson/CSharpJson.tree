@@ -1,9 +1,9 @@
 ﻿$Comment
     ==========================================================================
 
-      File:        CSharpCommunication.tree
+      File:        CSharpJson.tree
       Location:    Yuki.Core <Tree>
-      Description: 对象类型结构C#通讯模板数据
+      Description: 对象类型结构C# JSON通讯模板数据
       Version:     2012.04.15.
       Copyright(C) F.R.C.
 
@@ -68,11 +68,11 @@ ObjectSchemaTemplate
             //Parameters: ${Hash}, ${Commands}
             Value
                 $String
-                    public sealed class Server<TContext>
+                    public sealed class JsonServer<TContext>
                     {
                         private Dictionary<String, Func<TContext, String, String>> ClientCommands;
 
-                        public Server(IServerImplementation<TContext> i)
+                        public JsonServer(IServerImplementation<TContext> i)
                         {
                             ClientCommands = new Dictionary<String, Func<TContext, String, String>>(StringComparer.OrdinalIgnoreCase);
                             ${Commands}
@@ -122,21 +122,21 @@ ObjectSchemaTemplate
                 $String
                     public interface IJsonSender
                     {
-                        void Send(String CommandName, String Params);
+                        void Send(String CommandName, String Parameters);
                     }
         Template
             Name JsonClient
             //Parameters: ${Hash}, ${ClientCommands}, ${ServerCommands}
             Value
                 $String
-                    public sealed class Client<TContext>
+                    public sealed class JsonClient<TContext>
                     {
                         private IJsonSender s;
                         private IClientImplementation<TContext> i;
                         private Dictionary<String, Queue<Action<TContext, String>>> ClientCommandCallbacks;
                         private Dictionary<String, Action<TContext, String>> ServerCommands;
 
-                        public Client(IJsonSender s, IClientImplementation<TContext> i)
+                        public JsonClient(IJsonSender s, IClientImplementation<TContext> i)
                         {
                             this.s = s;
                             this.i = i;
@@ -153,7 +153,7 @@ ObjectSchemaTemplate
                             }
                         }
 
-                        public void HandleResult(TContext c, String CommandName, String Params)
+                        public void HandleResult(TContext c, String CommandName, String Parameters)
                         {
                             if (ClientCommandCallbacks.ContainsKey(CommandName))
                             {
@@ -163,14 +163,14 @@ ObjectSchemaTemplate
                                     throw new InvalidOperationException(CommandName);
                                 }
                                 var Callback = q.Dequeue();
-                                Callback(c, Params);
+                                Callback(c, Parameters);
                                 return;
                             }
 
                             if (ServerCommands.ContainsKey(CommandName))
                             {
                                 var a = ServerCommands[CommandName];
-                                a(c, Params);
+                                a(c, Parameters);
                                 return;
                             }
 
@@ -202,7 +202,7 @@ ObjectSchemaTemplate
                     public void [[${Name}]]([[${Name}Request]] r, Action<TContext, [[${Name}Reply]]> Callback)
                     {
                         var Request = JsonTranslator.[[${Name}RequestToJson]](r).ToString(Formatting.None);
-                        AddCallback(@"${Name}", (c, Params) => Callback(c, JsonTranslator.[[${Name}ReplyFromJson]](JToken.Parse(Params))));
+                        AddCallback(@"${Name}", (c, Parameters) => Callback(c, JsonTranslator.[[${Name}ReplyFromJson]](JToken.Parse(Parameters))));
                         s.Send(@"${Name}", Request);
                     }
         Template
@@ -210,7 +210,7 @@ ObjectSchemaTemplate
             //Parameters: ${Name}
             Value
                 $String
-                    ServerCommands.Add("${Name}", (c, Params) => i.[[${Name}]](c, JsonTranslator.[[${Name}EventFromJson]](JToken.Parse(Params))));
+                    ServerCommands.Add(@"${Name}", (c, Parameters) => i.[[${Name}]](c, JsonTranslator.[[${Name}EventFromJson]](JToken.Parse(Parameters))));
         Template
             Name JsonTranslator
             //Parameters: ${Serializers}

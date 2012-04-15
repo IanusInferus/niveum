@@ -336,9 +336,48 @@ namespace Yuki.ObjectSchema.VB.Common
                 }
             }
 
+            public String[] GetIServerImplementation(CommandDef[] Commands)
+            {
+                return GetTemplate("IServerImplementation").Substitute("Commands", GetIServerImplementationCommands(Commands));
+            }
+            public String[] GetIServerImplementationCommands(CommandDef[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c._Tag == CommandDefTag.Client)
+                    {
+                        l.AddRange(GetTemplate("IServerImplementation_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
+                    }
+                    else if (c._Tag == CommandDefTag.Server)
+                    {
+                        l.AddRange(GetTemplate("IServerImplementation_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Server.Description)));
+                    }
+                }
+                return l.ToArray();
+            }
+            public String[] GetIClientImplementation(CommandDef[] Commands)
+            {
+                return GetTemplate("IClientImplementation").Substitute("Commands", GetIClientImplementationCommands(Commands));
+            }
+            public String[] GetIClientImplementationCommands(CommandDef[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c._Tag == CommandDefTag.Server)
+                    {
+                        l.AddRange(GetTemplate("IClientImplementation_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Server.Description)));
+                    }
+                }
+                return l.ToArray();
+            }
+
             public String[] GetComplexTypes(Schema Schema)
             {
                 List<String> l = new List<String>();
+
+                List<CommandDef> cl = new List<CommandDef>();
 
                 if (Schema.TypeRefs.Length == 0)
                 {
@@ -369,6 +408,16 @@ namespace Yuki.ObjectSchema.VB.Common
                         l.AddRange(GetEnumParser(c.Enum));
                         l.AddRange(GetEnumWriter(c.Enum));
                     }
+                    else if (c.OnClientCommand)
+                    {
+                        l.AddRange(GetClientCommand(c.ClientCommand));
+                        cl.Add(new CommandDef { _Tag = CommandDefTag.Client, Client = c.ClientCommand });
+                    }
+                    else if (c.OnServerCommand)
+                    {
+                        l.AddRange(GetServerCommand(c.ServerCommand));
+                        cl.Add(new CommandDef { _Tag = CommandDefTag.Server, Server = c.ServerCommand });
+                    }
                     else
                     {
                         throw new InvalidOperationException();
@@ -382,6 +431,16 @@ namespace Yuki.ObjectSchema.VB.Common
                 foreach (var t in Tuples)
                 {
                     l.AddRange(GetTuple(t.TypeFriendlyName(), t.Tuple));
+                    l.Add("");
+                }
+
+                if (cl.Count > 0)
+                {
+                    var ca = cl.ToArray();
+
+                    l.AddRange(GetIServerImplementation(ca));
+                    l.Add("");
+                    l.AddRange(GetIClientImplementation(ca));
                     l.Add("");
                 }
 
