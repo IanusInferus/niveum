@@ -25,16 +25,17 @@ using Yuki.ObjectSchema.VB;
 using Yuki.ObjectSchema.CSharp;
 using Yuki.ObjectSchema.CSharpBinary;
 using Yuki.ObjectSchema.CSharpJson;
+using Yuki.ObjectSchema.Java;
+using Yuki.ObjectSchema.JavaBinary;
+using Yuki.ObjectSchema.Cpp;
+using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.ActionScript;
+using Yuki.ObjectSchema.ActionScriptBinary;
 using Yuki.ObjectSchema.ActionScriptJson;
+using Yuki.ObjectSchema.Xhtml;
 using Yuki.RelationSchema.SqlDatabase;
 using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpDatabase;
-using Yuki.ObjectSchema.Xhtml;
-using Yuki.ObjectSchema.Cpp;
-using Yuki.ObjectSchema.CppBinary;
-using Yuki.ObjectSchema.Java;
-using Yuki.ObjectSchema.JavaBinary;
 
 namespace Yuki.SchemaManipulator
 {
@@ -326,6 +327,19 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2asb")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        ObjectSchemaToActionScriptBinaryCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (opt.Name.ToLower() == "t2asj")
                 {
                     var args = opt.Arguments;
@@ -437,6 +451,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2cppb:<CppCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成ActionScript类型");
             Console.WriteLine(@"/t2as:<AsCodeDir>,<PackageName>");
+            Console.WriteLine(@"生成ActionScript二进制通讯类型");
+            Console.WriteLine(@"/t2asb:<AsCodeDir>,<PackageName>");
             Console.WriteLine(@"生成ActionScript JSON通讯类型");
             Console.WriteLine(@"/t2asj:<AsCodeDir>,<PackageName>");
             Console.WriteLine(@"生成XHTML文档");
@@ -688,6 +704,28 @@ namespace Yuki.SchemaManipulator
         {
             var ObjectSchema = Schema();
             var CompiledFiles = ObjectSchema.CompileToActionScript(PackageName);
+            foreach (var f in CompiledFiles)
+            {
+                var Compiled = f.Content;
+                var AsCodePath = FileNameHandling.GetPath(AsCodeDir, f.Path + ".as");
+                if (File.Exists(AsCodePath))
+                {
+                    var Original = Txt.ReadFile(AsCodePath);
+                    if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+                }
+                var Dir = FileNameHandling.GetFileDirectory(AsCodePath);
+                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+                Txt.WriteFile(AsCodePath, TextEncoding.UTF8, Compiled);
+            }
+        }
+
+        public static void ObjectSchemaToActionScriptBinaryCode(String AsCodeDir, String PackageName)
+        {
+            var ObjectSchema = Schema();
+            var CompiledFiles = ObjectSchema.CompileToActionScriptBinary(PackageName);
             foreach (var f in CompiledFiles)
             {
                 var Compiled = f.Content;

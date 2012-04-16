@@ -67,6 +67,13 @@ namespace Yuki.Properties {
             }
         }
         
+        internal static byte[] ActionScriptBinary {
+            get {
+                object obj = ResourceManager.GetObject("ActionScriptBinary", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
         internal static byte[] ActionScriptJson {
             get {
                 object obj = ResourceManager.GetObject("ActionScriptJson", resourceCulture);

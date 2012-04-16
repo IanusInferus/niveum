@@ -1,10 +1,12 @@
-﻿2012.04.16
+﻿2012.04.16.0
 Yuki.Core, Yuki.SchemaManipulator:
 分离ActionScript类型结构和通讯代码生成。
 整理程序命令行提示信息顺序。
 将ActionScript通讯代码改为ActionScript JSON通讯代码。
+增加ActionScript二进制通讯代码。
 Examples:
-修正一处错误。
+修正两处错误。
+增加二进制通讯ActionScript示例项目。
 
 2012.04.15
 Yuki.Core:
