@@ -1,9 +1,9 @@
 ﻿$Comment
     ==========================================================================
 
-      File:        ActionScriptCommunication.tree
+      File:        ActionScriptJson.tree
       Location:    Yuki.Core <Tree>
-      Description: 对象类型结构ActionScript3.0通讯模板数据
+      Description: 对象类型结构ActionScript3.0 JSON通讯模板数据
       Version:     2012.04.16.
       Copyright(C) F.R.C.
 

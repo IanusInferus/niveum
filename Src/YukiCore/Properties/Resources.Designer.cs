@@ -67,9 +67,9 @@ namespace Yuki.Properties {
             }
         }
         
-        internal static byte[] ActionScriptCommunication {
+        internal static byte[] ActionScriptJson {
             get {
-                object obj = ResourceManager.GetObject("ActionScriptCommunication", resourceCulture);
+                object obj = ResourceManager.GetObject("ActionScriptJson", resourceCulture);
                 return ((byte[])(obj));
             }
         }
