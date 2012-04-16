@@ -12,7 +12,9 @@ SchemaManipulator.exe /loadtype:Schema /t2csj:CSharp\Src\CommunicationJson.cs,Co
 
 :: ActionScript
 @if not exist ActionScript\src\communication @md ActionScript\src\communication
-SchemaManipulator.exe /loadtype:Schema /t2asc:ActionScript\Src\communication,communication
+SchemaManipulator.exe /loadtype:Schema /t2as:ActionScript\Src\communication,communication
+SchemaManipulator.exe /loadtype:Schema /t2asb:ActionScript\Src\communication,communication
+SchemaManipulator.exe /loadtype:Schema /t2asj:ActionScript\Src\communication,communication
 
 :: Xhtml
 @if not exist XHTML @md XHTML
