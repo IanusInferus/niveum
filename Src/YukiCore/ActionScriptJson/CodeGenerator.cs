@@ -2,7 +2,7 @@
 //
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
-//  Description: 对象类型结构ActionScript3.0通讯代码生成器
+//  Description: 对象类型结构ActionScript3.0 JSON通讯代码生成器
 //  Version:     2012.04.16.
 //  Copyright(C) F.R.C.
 //
@@ -15,11 +15,11 @@ using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
 
-namespace Yuki.ObjectSchema.ActionScriptCommunication
+namespace Yuki.ObjectSchema.ActionScriptJson
 {
     public static class CodeGenerator
     {
-        public static ActionScript.FileResult[] CompileToActionScriptCommunication(this Schema Schema, String PackageName)
+        public static ActionScript.FileResult[] CompileToActionScriptJson(this Schema Schema, String PackageName)
         {
             var s = Schema.Reduce();
             var h = s.Hash();
@@ -41,7 +41,7 @@ namespace Yuki.ObjectSchema.ActionScriptCommunication
             static Writer()
             {
                 var OriginalTemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.ActionScript);
-                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.ActionScriptCommunication);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.ActionScriptJson);
                 TemplateInfo.Keywords = OriginalTemplateInfo.Keywords;
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
@@ -62,8 +62,8 @@ namespace Yuki.ObjectSchema.ActionScriptCommunication
 
                 InnerWriter.FillEnumSet();
 
-                var ClientCommands = Schema.Types.Where(t => t.OnClientCommand).Select(t => t.ClientCommand).ToArray();
-                var ServerCommands = Schema.Types.Where(t => t.OnServerCommand).Select(t => t.ServerCommand).ToArray();
+                var ClientCommands = Schema.Types.Where(t => t.OnClientCommand).Select(t => t.ClientCommand).Where(c => c.Version == "").ToArray();
+                var ServerCommands = Schema.Types.Where(t => t.OnServerCommand).Select(t => t.ServerCommand).Where(c => c.Version == "").ToArray();
                 l.Add(GetFile("IJsonSender", GetTemplate("IJsonSender")));
                 l.Add(GetFile("JsonClient", GetClient(ClientCommands, ServerCommands)));
 

@@ -2,6 +2,7 @@
 Yuki.Core, Yuki.SchemaManipulator:
 分离ActionScript类型结构和通讯代码生成。
 整理程序命令行提示信息顺序。
+将ActionScript通讯代码改为ActionScript JSON通讯代码。
 Examples:
 修正一处错误。
 
