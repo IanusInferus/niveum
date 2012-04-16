@@ -51,6 +51,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActionScriptBinary\CodeGenerator.cs" />
     <Compile Include="ActionScriptJson\CodeGenerator.cs" />
     <Compile Include="ActionScript\CodeGenerator.cs" />
     <Compile Include="CppBinary\CodeGenerator.cs" />
@@ -82,6 +83,7 @@
     <Compile Include="Xhtml\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ActionScriptBinary\ActionScriptBinary.tree" />
     <None Include="ActionScriptJson\ActionScriptJson.tree" />
     <None Include="ActionScript\ActionScript.tree" />
     <None Include="CppBinary\CppBinary.tree" />
