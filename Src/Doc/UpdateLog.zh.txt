@@ -1,4 +1,11 @@
-﻿2012.04.15
+﻿2012.04.16
+Yuki.Core, Yuki.SchemaManipulator:
+分离ActionScript类型结构和通讯代码生成。
+整理程序命令行提示信息顺序。
+Examples:
+修正一处错误。
+
+2012.04.15
 Yuki.Core:
 增加子Schema计算功能。
 修改Schema Hash计算方法，排除注释。
