@@ -26,7 +26,7 @@ using Yuki.ObjectSchema.CSharp;
 using Yuki.ObjectSchema.CSharpBinary;
 using Yuki.ObjectSchema.CSharpJson;
 using Yuki.ObjectSchema.ActionScript;
-using Yuki.ObjectSchema.ActionScriptCommunication;
+using Yuki.ObjectSchema.ActionScriptJson;
 using Yuki.RelationSchema.SqlDatabase;
 using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpDatabase;
@@ -326,12 +326,12 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2asc")
+                else if (opt.Name.ToLower() == "t2asj")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
                     {
-                        ObjectSchemaToActionScriptCommunicationCode(args[0], args[1]);
+                        ObjectSchemaToActionScriptJsonCode(args[0], args[1]);
                     }
                     else
                     {
@@ -437,8 +437,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2cppb:<CppCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成ActionScript类型");
             Console.WriteLine(@"/t2as:<AsCodeDir>,<PackageName>");
-            Console.WriteLine(@"生成ActionScript通讯类型");
-            Console.WriteLine(@"/t2asc:<AsCodeDir>,<PackageName>");
+            Console.WriteLine(@"生成ActionScript JSON通讯类型");
+            Console.WriteLine(@"/t2asj:<AsCodeDir>,<PackageName>");
             Console.WriteLine(@"生成XHTML文档");
             Console.WriteLine(@"/t2xhtml:<XhtmlDir>,<Title>,<CopyrightText>");
             Console.WriteLine(@"生成SQL数据库DROP和CREATE脚本");
@@ -706,10 +706,10 @@ namespace Yuki.SchemaManipulator
             }
         }
 
-        public static void ObjectSchemaToActionScriptCommunicationCode(String AsCodeDir, String PackageName)
+        public static void ObjectSchemaToActionScriptJsonCode(String AsCodeDir, String PackageName)
         {
             var ObjectSchema = Schema();
-            var CompiledFiles = ObjectSchema.CompileToActionScriptCommunication(PackageName);
+            var CompiledFiles = ObjectSchema.CompileToActionScriptJson(PackageName);
             foreach (var f in CompiledFiles)
             {
                 var Compiled = f.Content;
