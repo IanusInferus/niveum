@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2012.04.15.
+//  Version:     2012.04.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -390,11 +390,11 @@ namespace Yuki.ObjectSchema.CSharpJson
 
                 foreach (var c in Schema.Types)
                 {
-                    if (c.OnClientCommand)
+                    if (c.OnClientCommand && c.ClientCommand.Version == "")
                     {
                         cl.Add(CommandDef.CreateClient(c.ClientCommand));
                     }
-                    else if (c.OnServerCommand)
+                    else if (c.OnServerCommand && c.ServerCommand.Version == "")
                     {
                         cl.Add(CommandDef.CreateServer(c.ServerCommand));
                     }
