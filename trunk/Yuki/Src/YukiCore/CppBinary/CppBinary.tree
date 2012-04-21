@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2012.04.12.
+      Version:     2012.04.21.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -55,10 +55,216 @@ ObjectSchemaTemplate
                     #include <cstdint>
                     #include <string>
                     #include <vector>
+                    #include <queue>
                     #include <unordered_set>
                     #include <unordered_map>
                     #include <memory>
+                    #include <functional>
                     #include <stdexcept>
+        Template
+            Name BinaryServer
+            //Parameters: ${Hash}, ${Commands}
+            Value
+                $String
+                    template<typename TContext>
+                    class BinaryServer /* final */
+                    {
+                    private:
+                        struct Hash
+                        {
+                            size_t operator() (const std::pair<std::wstring, uint32_t> &p) const
+                            {
+                                return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);
+                            }
+                        };
+                        std::unordered_map<std::pair<std::wstring, uint32_t>, std::function<std::shared_ptr<std::vector<uint8_t>>(TContext &, std::shared_ptr<std::vector<uint8_t>>)>, Hash> ClientCommands;
+                        std::shared_ptr<IServerImplementation<TContext>> i;
+
+                    public:
+                        BinaryServer(std::shared_ptr<IServerImplementation<TContext>> si)
+                        {
+                            i = si;
+                            ${Commands}
+                        }
+
+                        uint64_t Hash()
+                        {
+                            return 0x${Hash};
+                        }
+
+                        Boolean HasCommand(std::wstring CommandName, uint32_t CommandHash)
+                        {
+                            return ClientCommands.count(std::pair<String, uint32_t>(CommandName, CommandHash)) > 0;
+                        }
+
+                        std::shared_ptr<std::vector<uint8_t>> ExecuteCommand(TContext &c, std::wstring CommandName, uint32_t CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters)
+                        {
+                            auto cmd = ClientCommands[std::pair<std::wstring, uint32_t>(CommandName, CommandHash)];
+                            return cmd(c, Parameters);
+                        }
+
+                        /// (TContext &c, std::wstring CommandName, UInt32 CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters) -> void
+                        typedef std::function<void(TContext &, std::wstring, UInt32, std::shared_ptr<std::vector<uint8_t>>)> ServerEventDelegate;
+                        ServerEventDelegate ServerEvent;
+                    private:
+                        void OnServerEvent(TContext &c, std::wstring CommandName, uint32_t CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters)
+                        {
+                            if (ServerEvent != nullptr) { ServerEvent(c, CommandName, CommandHash, Parameters); }
+                        }
+                    };
+        Template
+            Name BinaryServer_ClientCommand
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}
+            Value
+                $String
+                    ClientCommands[std::pair<std::wstring, uint32_t>(L"${CommandName}", 0x${CommandHash})] = [&](TContext &c, std::shared_ptr<std::vector<uint8_t>> p) -> std::shared_ptr<std::vector<uint8_t>>
+                    {
+                        ByteArrayStream bas;
+                        bas.WriteBytes(p);
+                        bas.SetPosition(0);
+                        auto Request = BinaryTranslator::[[${Name}RequestFromBinary]](bas);
+                        auto Reply = i->[[${Name}]](c, Request);
+                        bas.SetPosition(0);
+                        bas.SetLength(0);
+                        BinaryTranslator::[[${Name}ReplyToBinary]](bas, Reply);
+                        bas.SetPosition(0);
+                        return bas.ReadBytes(bas.GetLength());
+                    };
+        Template
+            Name BinaryServer_ServerCommand
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}
+            Value
+                $String
+                    i->${Name} = [&](TContext &c, std::shared_ptr<[[${Name}Event]]> e)
+                    {
+                        ByteArrayStream bas;
+                        BinaryTranslator::[[${Name}EventToBinary]](bas, e);
+                        bas.SetPosition(0);
+                        OnServerEvent(c, L"${CommandName}", 0x${CommandHash}, bas.ReadBytes(bas.GetLength()));
+                    };
+        Template
+            Name IBinarySender
+            Value
+                $String
+                    class IBinarySender
+                    {
+                    public:
+                        virtual void Send(std::wstring CommandName, uint32_t CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters) = 0;
+                    };
+        Template
+            Name BinaryClient
+            //Parameters: ${Hash}, ${ClientCommands}, ${ServerCommands}
+            Value
+                $String
+                    template<typename TContext>
+                    class BinaryClient /* final */
+                    {
+                    private:
+                        struct Hash
+                        {
+                            size_t operator() (const std::pair<std::wstring, uint32_t> &p) const
+                            {
+                                return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);
+                            }
+                        };
+                        typedef std::function<void(TContext &, std::shared_ptr<std::vector<uint8_t>>)> CommandCallback;
+                        std::shared_ptr<IBinarySender> s;
+                        std::shared_ptr<IClientImplementation<TContext>> i;
+                        std::unordered_map<std::pair<std::wstring, uint32_t>, std::shared_ptr<std::queue<CommandCallback>>, Hash> ClientCommandCallbacks;
+                        std::unordered_map<std::pair<std::wstring, uint32_t>, CommandCallback, Hash> ServerCommands;
+
+                    public:
+                        BinaryClient(std::shared_ptr<IBinarySender> s, std::shared_ptr<IClientImplementation<TContext>> ci)
+                        {
+                            this->s = s;
+                            i = ci;
+                            ${ServerCommands}
+                        }
+
+                        uint64_t Hash()
+                        {
+                            return 0x${Hash};
+                        }
+
+                        void HandleResult(TContext &c, std::wstring CommandName, uint32_t CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters)
+                        {
+                            auto p = std::pair<std::wstring, uint32_t>(CommandName, CommandHash);
+                            if (ClientCommandCallbacks.count(p) > 0)
+                            {
+                                auto q = ClientCommandCallbacks[p];
+                                if (q->size() == 0)
+                                {
+                                    throw logic_error(w2s(L"InvalidOperationException" + CommandName));
+                                }
+                                auto Callback = q->front();
+                                q->pop();
+                                Callback(c, Parameters);
+                                return;
+                            }
+
+                            if (ServerCommands.count(p) > 0)
+                            {
+                                auto a = ServerCommands[p];
+                                a(c, Parameters);
+                                return;
+                            }
+
+                            throw logic_error(w2s(L"InvalidOperationException" + CommandName));
+                        }
+
+                    private:
+                        void AddCallback(std::pair<std::wstring, uint32_t> CommandSign, CommandCallback Callback)
+                        {
+                            if (ClientCommandCallbacks.count(CommandSign) > 0)
+                            {
+                                ClientCommandCallbacks[CommandSign]->push(Callback);
+                            }
+                            else
+                            {
+                                auto q = std::make_shared<std::queue<CommandCallback>>();
+                                q->push(Callback);
+                                ClientCommandCallbacks[CommandSign] = q;
+                            }
+                        }
+
+                    public:
+                        ${ClientCommands}
+                    };
+        Template
+            Name BinaryClient_ClientCommand
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    void [[${Name}]](std::shared_ptr<[[${Name}Request]]> r, std::function<void(TContext &, std::shared_ptr<[[${Name}Reply]]>)> Callback)
+                    {
+                        ByteArrayStream bas;
+                        BinaryTranslator::[[${Name}RequestToBinary]](bas, r);
+                        bas.SetPosition(0);
+                        auto Request = bas.ReadBytes(bas.GetLength());
+                        AddCallback(std::pair<String, UInt32>(L"${CommandName}", 0x${CommandHash}), [=](TContext &c, std::shared_ptr<std::vector<uint8_t>> Parameters)
+                        {
+                            ByteArrayStream bas;
+                            bas.WriteBytes(Parameters);
+                            bas.SetPosition(0);
+                            auto Reply = BinaryTranslator::[[${Name}ReplyFromBinary]](bas);
+                            Callback(c, Reply);
+                        });
+                        s->Send(L"${CommandName}", 0x${CommandHash}, Request);
+                    }
+        Template
+            Name BinaryClient_ServerCommand
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}
+            Value
+                $String
+                    ServerCommands[std::pair<String, UInt32>(L"${CommandName}", 0x${CommandHash})] = [&](TContext &c, std::shared_ptr<std::vector<uint8_t>> Parameters)
+                    {
+                        ByteArrayStream bas;
+                        bas.WriteBytes(Parameters);
+                        bas.SetPosition(0);
+                        auto e = BinaryTranslator::[[${Name}EventFromBinary]](bas);
+                        i->[[${Name}]](c, e);
+                    };
         Template
             Name Streams
             Value
@@ -67,7 +273,7 @@ ObjectSchemaTemplate
                     {
                     public:
                         virtual uint8_t ReadByte() = 0;
-                        virtual std::vector<uint8_t> ReadBytes(size_t Size) = 0;
+                        virtual std::shared_ptr<std::vector<uint8_t>> ReadBytes(size_t Size) = 0;
 
                         Unit ReadUnit()
                         {
@@ -177,7 +383,7 @@ ObjectSchemaTemplate
                     {
                     public:
                         virtual void WriteByte(uint8_t b) = 0;
-                        virtual void WriteBytes(std::vector<uint8_t> l) = 0;
+                        virtual void WriteBytes(std::shared_ptr<std::vector<uint8_t>> l) = 0;
 
                         void WriteUnit(Unit v)
                         {
@@ -272,6 +478,68 @@ ObjectSchemaTemplate
 
                     class IReadableWritableStream : public IReadableStream, public IWritableStream
                     {
+                    };
+
+                    class ByteArrayStream : public IReadableWritableStream /* final */
+                    {
+                    private:
+                        std::vector<uint8_t> Buffer;
+                        size_t Position;
+                    public:
+                        ByteArrayStream() : Position(0)
+                        {
+                        }
+
+                        uint8_t ReadByte()
+                        {
+                            if (Position + 1 > Buffer.size()) { throw std::out_of_range(""); }
+                            uint8_t b = Buffer[Position];
+                            Position += 1;
+                            return b;
+                        }
+                        std::shared_ptr<std::vector<uint8_t>> ReadBytes(size_t Size)
+                        {
+                            if (Position + Size > Buffer.size()) { throw std::out_of_range(""); }
+                            auto l = std::make_shared<std::vector<uint8_t>>();
+                            l->resize(Size, 0);
+                            std::copy(&Buffer[Position], &Buffer[Position + Size], &(*l)[0]);
+                            Position += Size;
+                            return l;
+                        }
+
+                        void WriteByte(uint8_t b)
+                        {
+                            if (Position + 1 > Buffer.size()) { Buffer.resize(Position + 1, 0); }
+                            Buffer[Position] = b;
+                            Position += 1;
+                        }
+                        void WriteBytes(std::shared_ptr<std::vector<uint8_t>> l)
+                        {
+                            auto Size = l->size();
+                            if (Position + Size > Buffer.size()) { Buffer.resize(Position + Size, 0); }
+                            std::copy(&(*l)[0], &(*l)[Size], &Buffer[Position]);
+                            Position += Size;
+                        }
+
+                        size_t GetPosition()
+                        {
+                            return Position;
+                        }
+
+                        void SetPosition(size_t Position)
+                        {
+                            this->Position = Position;
+                        }
+
+                        size_t GetLength()
+                        {
+                            return Buffer.size();
+                        }
+
+                        void SetLength(size_t Length)
+                        {
+                            Buffer.resize(Length, 0);
+                        }
                     };
         Template
             Name BinaryTranslator

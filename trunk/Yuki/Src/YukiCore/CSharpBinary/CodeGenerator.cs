@@ -21,7 +21,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
     {
         public static String CompileToCSharpBinary(this Schema Schema, String NamespaceName)
         {
-            var s = Schema.Reduce();
+            var s = Schema;
             var h = s.Hash();
             Writer w = new Writer() { Schema = s, NamespaceName = NamespaceName, Hash = h };
             var a = w.GetSchema();
