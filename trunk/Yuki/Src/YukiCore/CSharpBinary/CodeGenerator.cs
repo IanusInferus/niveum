@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#二进制通讯代码生成器
-//  Version:     2012.04.15.
+//  Version:     2012.04.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -172,14 +172,17 @@ namespace Yuki.ObjectSchema.CSharpBinary
                     }
                 }
 
-                var ca = cl.ToArray();
-                
-                l.AddRange(GetBinaryServer(ca));
-                l.Add("");
-                l.AddRange(GetTemplate("IBinarySender"));
-                l.Add("");
-                l.AddRange(GetBinaryClient(ca));
-                l.Add("");
+                if (cl.Count > 0)
+                {
+                    var ca = cl.ToArray();
+
+                    l.AddRange(GetBinaryServer(ca));
+                    l.Add("");
+                    l.AddRange(GetTemplate("IBinarySender"));
+                    l.Add("");
+                    l.AddRange(GetBinaryClient(ca));
+                    l.Add("");
+                }
 
                 l.AddRange(GetBinaryTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray()));
                 l.Add("");
