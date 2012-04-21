@@ -21,7 +21,7 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
     {
         public static ActionScript.FileResult[] CompileToActionScriptBinary(this Schema Schema, String PackageName)
         {
-            var s = Schema.Reduce();
+            var s = Schema;
             var h = s.Hash();
             Writer w = new Writer() { Schema = s, PackageName = PackageName, Hash = h };
             var Files = w.GetFiles();
