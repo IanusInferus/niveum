@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2012.04.17.
+//  Version:     2012.04.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -400,14 +400,17 @@ namespace Yuki.ObjectSchema.CSharpJson
                     }
                 }
 
-                var ca = cl.ToArray();
-                
-                l.AddRange(GetJsonServer(ca));
-                l.Add("");
-                l.AddRange(GetTemplate("IJsonSender"));
-                l.Add("");
-                l.AddRange(GetJsonClient(ca));
-                l.Add("");
+                if (cl.Count > 0)
+                {
+                    var ca = cl.ToArray();
+
+                    l.AddRange(GetJsonServer(ca));
+                    l.Add("");
+                    l.AddRange(GetTemplate("IJsonSender"));
+                    l.Add("");
+                    l.AddRange(GetJsonClient(ca));
+                    l.Add("");
+                }
 
                 l.AddRange(GetJsonTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray()));
                 l.Add("");
