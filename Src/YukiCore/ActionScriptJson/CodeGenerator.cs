@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0 JSON通讯代码生成器
-//  Version:     2012.04.16.
+//  Version:     2012.04.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -64,8 +64,11 @@ namespace Yuki.ObjectSchema.ActionScriptJson
 
                 var ClientCommands = Schema.Types.Where(t => t.OnClientCommand).Select(t => t.ClientCommand).Where(c => c.Version == "").ToArray();
                 var ServerCommands = Schema.Types.Where(t => t.OnServerCommand).Select(t => t.ServerCommand).Where(c => c.Version == "").ToArray();
-                l.Add(GetFile("IJsonSender", GetTemplate("IJsonSender")));
-                l.Add(GetFile("JsonClient", GetClient(ClientCommands, ServerCommands)));
+                if (ClientCommands.Length + ServerCommands.Length > 0)
+                {
+                    l.Add(GetFile("IJsonSender", GetTemplate("IJsonSender")));
+                    l.Add(GetFile("JsonClient", GetClient(ClientCommands, ServerCommands)));
+                }
 
                 return l.ToArray();
             }
