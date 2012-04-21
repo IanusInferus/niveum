@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2012.04.12.
+//  Version:     2012.04.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,7 +21,9 @@ namespace Yuki.ObjectSchema.CppBinary
     {
         public static String CompileToCppBinary(this Schema Schema, String NamespaceName)
         {
-            Writer w = new Writer() { Schema = Schema, NamespaceName = NamespaceName };
+            var s = Schema;
+            var h = s.Hash();
+            Writer w = new Writer() { Schema = s, NamespaceName = NamespaceName, Hash = h };
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -38,6 +40,7 @@ namespace Yuki.ObjectSchema.CppBinary
 
             public Schema Schema;
             public String NamespaceName;
+            public UInt64 Hash;
 
             static Writer()
             {
@@ -84,48 +87,63 @@ namespace Yuki.ObjectSchema.CppBinary
             {
                 return InnerWriter.GetTypeString(Type, ForceAsValue);
             }
-            public String[] GetTypePredefinition(String Name, String MetaType, String[] GenericParameterLine)
-            {
-                return InnerWriter.GetTypePredefinition(Name, MetaType, GenericParameterLine);
-            }
-            public String[] GetTypePredefinition(TypeDef t)
-            {
-                return InnerWriter.GetTypePredefinition(t);
-            }
-            public String[] GetAlias(AliasDef a)
-            {
-                return InnerWriter.GetAlias(a);
-            }
-            public String[] GetTuple(String Name, TupleDef t)
-            {
-                return InnerWriter.GetTuple(Name, t);
-            }
-            public String[] GetRecord(RecordDef r)
-            {
-                return InnerWriter.GetRecord(r);
-            }
-            public String[] GetTaggedUnion(TaggedUnionDef tu)
-            {
-                return InnerWriter.GetTaggedUnion(tu);
-            }
-            public String[] GetEnum(EnumDef e)
-            {
-                return InnerWriter.GetEnum(e);
-            }
-            public String[] GetClientCommand(ClientCommandDef c)
-            {
-                var l = new List<String>();
-                l.AddRange(GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description }));
-                l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new VariableDef[] { }, Alternatives = c.InParameters, Description = c.Description }));
-                return l.ToArray();
-            }
-            public String[] GetServerCommand(ServerCommandDef c)
-            {
-                return GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description });
-            }
             public String[] GetXmlComment(String Description)
             {
                 return InnerWriter.GetXmlComment(Description);
+            }
+
+            public String[] GetBinaryServer(CommandDef[] Commands)
+            {
+                return GetTemplate("BinaryServer").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("Commands", GetBinaryServerCommands(Commands));
+            }
+            public String[] GetBinaryServerCommands(CommandDef[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c._Tag == CommandDefTag.Client)
+                    {
+                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { TypeDef.CreateClientCommand(c.Client) }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        l.AddRange(GetTemplate("BinaryServer_ClientCommand").Substitute("CommandName", c.Client.Name.Escape()).Substitute("Name", c.Client.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                    }
+                    else if (c._Tag == CommandDefTag.Server)
+                    {
+                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { TypeDef.CreateServerCommand(c.Server) }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        l.AddRange(GetTemplate("BinaryServer_ServerCommand").Substitute("CommandName", c.Server.Name.Escape()).Substitute("Name", c.Server.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                    }
+                }
+                return l.ToArray();
+            }
+
+            public String[] GetBinaryClient(CommandDef[] Commands)
+            {
+                return GetTemplate("BinaryClient").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommands", GetBinaryClientClientCommands(Commands)).Substitute("ServerCommands", GetBinaryClientServerCommands(Commands));
+            }
+            public String[] GetBinaryClientClientCommands(CommandDef[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c._Tag == CommandDefTag.Client)
+                    {
+                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { TypeDef.CreateClientCommand(c.Client) }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        l.AddRange(GetTemplate("BinaryClient_ClientCommand").Substitute("CommandName", c.Client.Name.Escape()).Substitute("Name", c.Client.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
+                    }
+                }
+                return l.ToArray();
+            }
+            public String[] GetBinaryClientServerCommands(CommandDef[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c._Tag == CommandDefTag.Server)
+                    {
+                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { TypeDef.CreateServerCommand(c.Server) }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        l.AddRange(GetTemplate("BinaryClient_ServerCommand").Substitute("CommandName", c.Server.Name.Escape()).Substitute("Name", c.Server.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                    }
+                }
+                return l.ToArray();
             }
 
             public String[] GetBinaryTranslator(TypeDef[] Types)
@@ -425,66 +443,18 @@ namespace Yuki.ObjectSchema.CppBinary
             {
                 List<String> l = new List<String>();
 
-                var ltf = new TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Schema.Types);
-                var Tuples = ltf.GetTuples();
+                List<CommandDef> cl = new List<CommandDef>();
 
                 foreach (var c in Schema.Types)
                 {
-                    if (c.OnPrimitive)
+                    if (c.OnClientCommand)
                     {
-                        continue;
-                    }
-
-                    l.AddRange(GetTypePredefinition(c));
-                }
-                foreach (var t in Tuples)
-                {
-                    l.AddRange(GetTypePredefinition(t.TypeFriendlyName(), "class", new String[] { }));
-                }
-                l.Add("");
-
-                foreach (var c in Schema.Types)
-                {
-                    if (c.OnPrimitive)
-                    {
-                        continue;
-                    }
-                    else if (c.OnAlias)
-                    {
-                        l.AddRange(GetAlias(c.Alias));
-                    }
-                    else if (c.OnRecord)
-                    {
-                        l.AddRange(GetRecord(c.Record));
-                    }
-                    else if (c.OnTaggedUnion)
-                    {
-                        l.AddRange(GetTaggedUnion(c.TaggedUnion));
-                    }
-                    else if (c.OnEnum)
-                    {
-                        l.AddRange(GetEnum(c.Enum));
-                    }
-                    else if (c.OnClientCommand)
-                    {
-                        l.AddRange(GetClientCommand(c.ClientCommand));
+                        cl.Add(CommandDef.CreateClient(c.ClientCommand));
                     }
                     else if (c.OnServerCommand)
                     {
-                        l.AddRange(GetServerCommand(c.ServerCommand));
+                        cl.Add(CommandDef.CreateServer(c.ServerCommand));
                     }
-                    else
-                    {
-                        throw new InvalidOperationException();
-                    }
-                    l.Add("");
-                }
-
-                foreach (var t in Tuples)
-                {
-                    l.AddRange(GetTuple(t.TypeFriendlyName(), t.Tuple));
-                    l.Add("");
                 }
 
                 l.AddRange(GetTemplate("Streams"));
@@ -492,6 +462,18 @@ namespace Yuki.ObjectSchema.CppBinary
 
                 l.AddRange(GetBinaryTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray()));
                 l.Add("");
+
+                if (cl.Count > 0)
+                {
+                    var ca = cl.ToArray();
+
+                    l.AddRange(GetBinaryServer(ca));
+                    l.Add("");
+                    l.AddRange(GetTemplate("IBinarySender"));
+                    l.Add("");
+                    l.AddRange(GetBinaryClient(ca));
+                    l.Add("");
+                }
 
                 if (l.Count > 0)
                 {
