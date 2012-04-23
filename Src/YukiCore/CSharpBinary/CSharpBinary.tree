@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板数据
-      Version:     2012.04.17.
+      Version:     2012.04.23.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -134,7 +134,7 @@ ObjectSchemaTemplate
                     {
                         private IBinarySender s;
                         private IClientImplementation<TContext> i;
-                        private Dictionary<KeyValuePair<String, UInt32>, Queue<Action<TContext, Byte[]>>> ClientCommandCallbacks;
+                        private Dictionary<String, Queue<KeyValuePair<UInt32, Action<TContext, Byte[]>>>> ClientCommandCallbacks;
                         private Dictionary<KeyValuePair<String, UInt32>, Action<TContext, Byte[]>> ServerCommands;
                         private BinaryTranslator bt = new BinaryTranslator();
 
@@ -142,7 +142,7 @@ ObjectSchemaTemplate
                         {
                             this.s = s;
                             this.i = i;
-                            ClientCommandCallbacks = new Dictionary<KeyValuePair<String, UInt32>, Queue<Action<TContext, Byte[]>>>();
+                            ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<TContext, Byte[]>>>>();
                             ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<TContext, Byte[]>>();
                             ${ServerCommands}
                         }
@@ -157,19 +157,25 @@ ObjectSchemaTemplate
 
                         public void HandleResult(TContext c, String CommandName, UInt32 CommandHash, Byte[] Parameters)
                         {
-                            var p = new KeyValuePair<String, UInt32>(CommandName, CommandHash);
-                            if (ClientCommandCallbacks.ContainsKey(p))
+                            if (ClientCommandCallbacks.ContainsKey(CommandName))
                             {
-                                var q = ClientCommandCallbacks[p];
+                                var q = ClientCommandCallbacks[CommandName];
                                 if (q.Count == 0)
                                 {
                                     throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8"));
                                 }
-                                var Callback = q.Dequeue();
+                                var CallbackPair = q.Peek();
+                                if (CallbackPair.Key != CommandHash)
+                                {
+                                    throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8"));
+                                }
+                                q.Dequeue();
+                                var Callback = CallbackPair.Value;
                                 Callback(c, Parameters);
                                 return;
                             }
 
+                            var p = new KeyValuePair<String, UInt32>(CommandName, CommandHash);
                             if (ServerCommands.ContainsKey(p))
                             {
                                 var a = ServerCommands[p];
@@ -177,21 +183,26 @@ ObjectSchemaTemplate
                                 return;
                             }
 
-                            throw new InvalidOperationException(CommandName);
+                            throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8"));
                         }
 
-                        private void AddCallback(KeyValuePair<String, UInt32> CommandSign, Action<TContext, Byte[]> Callback)
+                        private void AddCallback(String CommandName, UInt32 CommandHash, Action<TContext, Byte[]> Callback)
                         {
-                            if (ClientCommandCallbacks.ContainsKey(CommandSign))
+                            if (ClientCommandCallbacks.ContainsKey(CommandName))
                             {
-                                ClientCommandCallbacks[CommandSign].Enqueue(Callback);
+                                ClientCommandCallbacks[CommandName].Enqueue(new KeyValuePair<UInt32, Action<TContext, Byte[]>>(CommandHash, Callback));
                             }
                             else
                             {
-                                var q = new Queue<Action<TContext, Byte[]>>();
-                                q.Enqueue(Callback);
-                                ClientCommandCallbacks.Add(CommandSign, q);
+                                var q = new Queue<KeyValuePair<UInt32, Action<TContext, Byte[]>>>();
+                                q.Enqueue(new KeyValuePair<UInt32, Action<TContext, Byte[]>>(CommandHash, Callback));
+                                ClientCommandCallbacks.Add(CommandName, q);
                             }
+                        }
+
+                        public void DequeueCallback(String CommandName)
+                        {
+                            ClientCommandCallbacks[CommandName].Dequeue();
                         }
 
                         ${ClientCommands}
@@ -205,7 +216,7 @@ ObjectSchemaTemplate
                     public void [[${Name}]]([[${Name}Request]] r, Action<TContext, [[${Name}Reply]]> Callback)
                     {
                         var Request = bt.Serialize(r);
-                        AddCallback(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (c, Parameters) => Callback(c, bt.Deserialize<[[${Name}Reply]]>(Parameters)));
+                        AddCallback(@"${CommandName}", 0x${CommandHash}, (c, Parameters) => Callback(c, bt.Deserialize<[[${Name}Reply]]>(Parameters)));
                         s.Send(@"${CommandName}", 0x${CommandHash}, Request);
                     }
         Template

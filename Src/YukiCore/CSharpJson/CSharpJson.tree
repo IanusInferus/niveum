@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2012.04.15.
+      Version:     2012.04.23.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -189,6 +189,11 @@ ObjectSchemaTemplate
                                 q.Enqueue(Callback);
                                 ClientCommandCallbacks.Add(CommandName, q);
                             }
+                        }
+
+                        public void DequeueCallback(String CommandName)
+                        {
+                            ClientCommandCallbacks[CommandName].Dequeue();
                         }
 
                         ${ClientCommands}
