@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2012.04.21.
+      Version:     2012.04.23.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -212,18 +212,25 @@ ObjectSchemaTemplate
                             throw logic_error(w2s(L"InvalidOperationException" + CommandName));
                         }
 
-                    private:
-                        void AddCallback(std::pair<std::wstring, uint32_t> CommandSign, CommandCallback Callback)
+                        void DequeueCallback(std::wstring CommandName, uint32_t CommandHash)
                         {
-                            if (ClientCommandCallbacks.count(CommandSign) > 0)
+                            auto p = std::pair<std::wstring, uint32_t>(CommandName, CommandHash);
+                            ClientCommandCallbacks[p]->pop();
+                        }
+
+                    private:
+                        void AddCallback(std::wstring CommandName, uint32_t CommandHash, CommandCallback Callback)
+                        {
+                            auto p = std::pair<std::wstring, uint32_t>(CommandName, CommandHash);
+                            if (ClientCommandCallbacks.count(p) > 0)
                             {
-                                ClientCommandCallbacks[CommandSign]->push(Callback);
+                                ClientCommandCallbacks[p]->push(Callback);
                             }
                             else
                             {
                                 auto q = std::make_shared<std::queue<CommandCallback>>();
                                 q->push(Callback);
-                                ClientCommandCallbacks[CommandSign] = q;
+                                ClientCommandCallbacks[p] = q;
                             }
                         }
 
@@ -242,7 +249,7 @@ ObjectSchemaTemplate
                         BinaryTranslator::[[${Name}RequestToBinary]](bas, r);
                         bas.SetPosition(0);
                         auto Request = bas.ReadBytes(bas.GetLength());
-                        AddCallback(std::pair<String, UInt32>(L"${CommandName}", 0x${CommandHash}), [=](TContext &c, std::shared_ptr<std::vector<uint8_t>> Parameters)
+                        AddCallback(L"${CommandName}", 0x${CommandHash}, [=](TContext &c, std::shared_ptr<std::vector<uint8_t>> Parameters)
                         {
                             ByteArrayStream bas;
                             bas.WriteBytes(Parameters);

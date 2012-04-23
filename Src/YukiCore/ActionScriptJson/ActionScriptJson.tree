@@ -4,7 +4,7 @@
       File:        ActionScriptJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构ActionScript3.0 JSON通讯模板数据
-      Version:     2012.04.16.
+      Version:     2012.04.23.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -83,7 +83,7 @@ ObjectSchemaTemplate
                             {
                                 ${Client_ServerCommandHandles}
                             }
-                            var callback:Function = dequeueCallback(commandName);
+                            var callback:Function = dequeueCallbackInner(commandName);
                             if (callback == null) { return; }
                             switch (commandName)
                             {
@@ -92,13 +92,19 @@ ObjectSchemaTemplate
                             throw new IllegalOperationError(commandName);
                         }
 
-                        public function dequeueCallback(commandName:String):Function {
+                        private function dequeueCallbackInner(commandName:String):Function
+                        {
                             switch (commandName)
                             {
                                 ${Client_ClientCommandDeques}
                                 default:
                                     throw new IllegalOperationError(commandName);
                             }
+                        }
+
+                        public function dequeueCallback(commandName:String):void
+                        {
+                            dequeueCallbackInner(commandName);
                         }
 
                         ${Client_ClientCommands}
