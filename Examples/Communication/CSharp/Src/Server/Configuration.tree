@@ -1,0 +1,18 @@
+﻿Configuration
+    ProtocolType Json
+    Bindings
+        Binding
+            IpAddress 0.0.0.0
+            Port 8001
+    EnableLogNormalIn True
+    EnableLogNormalOut True
+    EnableLogUnknownError True
+    EnableLogCriticalError True
+    EnableLogPerformance True
+    EnableLogSystem True
+    EnableLogConsole True
+    SessionIdleTimeout 600
+    MaxConnections 1000
+    MaxConnectionsPerIP 10
+    MaxBadCommands 8
+    ClientDebug True

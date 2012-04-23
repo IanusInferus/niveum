@@ -4,7 +4,7 @@
       File:        Base.tree
       Location:    Yuki.Examples <Tree>
       Description: 基础
-      Version:     2012.04.15.
+      Version:     2012.04.17.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -21,7 +21,3 @@
 #ClientCommand Quit                                 退出
     >
     Success             Unit                        成功
-
-#Record Range                                       索引范围
-    Skip                Int                         跳过个数
-    Take                Int                         取值个数
