@@ -34,23 +34,17 @@
     <Reference Include="Firefly.Core">
       <HintPath>..\..\..\..\..\Bin\Firefly.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\JsonNet\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Communication.cs">
-      <Link>Communication.cs</Link>
-    </Compile>
-    <Compile Include="..\CommunicationBinary.cs">
-      <Link>CommunicationBinary.cs</Link>
-    </Compile>
-    <Compile Include="..\CommunicationJson.cs">
-      <Link>CommunicationJson.cs</Link>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Communication\Communication.csproj">
+      <Project>{4EC01D0D-A0BD-4402-9338-F9962ADABAFE}</Project>
+      <Name>Communication</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
