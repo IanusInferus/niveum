@@ -204,7 +204,6 @@ namespace Client
                     return;
                 }
                 var FirstPosition = 0;
-                var CheckPosition = BufferLength;
                 BufferLength += Count;
                 while (true)
                 {
