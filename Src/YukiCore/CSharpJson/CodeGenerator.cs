@@ -36,6 +36,7 @@ namespace Yuki.ObjectSchema.CSharpJson
 
             private CSharp.Common.CodeGenerator.Writer InnerWriter;
 
+            private Schema OriginalSchema;
             private Schema Schema;
             private String NamespaceName;
             private UInt64 Hash;
@@ -50,6 +51,7 @@ namespace Yuki.ObjectSchema.CSharpJson
 
             public Writer(Schema Schema, String NamespaceName)
             {
+                this.OriginalSchema = Schema;
                 this.Schema = Schema.Reduce();
                 this.NamespaceName = NamespaceName;
                 this.Hash = this.Schema.Hash();
@@ -145,6 +147,36 @@ namespace Yuki.ObjectSchema.CSharpJson
                     if (c._Tag == CommandDefTag.Server)
                     {
                         l.AddRange(GetTemplate("JsonClient_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()));
+                    }
+                }
+                return l.ToArray();
+            }
+
+            public String[] GetJsonLogAspectWrapper(CommandDef[] Commands)
+            {
+                return GetTemplate("JsonLogAspectWrapper").Substitute("ServerCommandHooks", GetJsonLogAspectWrapperServerCommandHooks(Commands.Where(c => c.OnServer).Select(c => c.Server).ToArray())).Substitute("Commands", GetJsonLogAspectWrapperCommands(Commands));
+            }
+            public String[] GetJsonLogAspectWrapperServerCommandHooks(ServerCommandDef[] ServerCommands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in ServerCommands)
+                {
+                    l.AddRange(GetTemplate("JsonLogAspectWrapper_ServerCommandHook").Substitute("Name", c.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
+            public String[] GetJsonLogAspectWrapperCommands(CommandDef[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c._Tag == CommandDefTag.Client)
+                    {
+                        l.AddRange(GetTemplate("JsonLogAspectWrapper_ClientCommandHook").Substitute("Name", c.Client.TypeFriendlyName()));
+                    }
+                    else if (c._Tag == CommandDefTag.Server)
+                    {
+                        l.AddRange(GetTemplate("JsonLogAspectWrapper_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()));
                     }
                 }
                 return l.ToArray();
@@ -414,6 +446,13 @@ namespace Yuki.ObjectSchema.CSharpJson
                     l.AddRange(GetTemplate("IJsonSender"));
                     l.Add("");
                     l.AddRange(GetJsonClient(ca));
+                    l.Add("");
+                }
+
+                var oca = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Select(t => t.OnClientCommand ? CommandDef.CreateClient(t.ClientCommand) : CommandDef.CreateServer(t.ServerCommand)).ToArray();
+                if (oca.Length > 0)
+                {
+                    l.AddRange(GetJsonLogAspectWrapper(oca));
                     l.Add("");
                 }
 

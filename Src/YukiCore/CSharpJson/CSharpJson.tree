@@ -217,6 +217,55 @@ ObjectSchemaTemplate
                 $String
                     ServerCommands.Add(@"${Name}", (c, Parameters) => i.[[${Name}]](c, JsonTranslator.[[${Name}EventFromJson]](JToken.Parse(Parameters))));
         Template
+            Name JsonLogAspectWrapper
+            //Parameters: ${ServerCommandHooks}, ${Commands}
+            Value
+                $String
+                    public sealed class JsonLogAspectWrapper<TContext> : IServerImplementation<TContext>
+                    {
+                        private IServerImplementation<TContext> Inner;
+
+                        public JsonLogAspectWrapper(IServerImplementation<TContext> Inner)
+                        {
+                            this.Inner = Inner;
+                            ${ServerCommandHooks}
+                        }
+
+                        public event Action<TContext, String, String> ClientCommandIn;
+                        public event Action<TContext, String, String> ClientCommandOut;
+                        public event Action<TContext, String, String> ServerCommand;
+
+                        ${Commands}
+                    }
+        Template
+            Name JsonLogAspectWrapper_ServerCommandHook
+            //Parameters: ${Name}
+            Value
+                $String
+                    Inner.[[${Name}]] += (c, e) =>
+                    {
+                        if (ServerCommand != null) { ServerCommand(c, @"${Name}", JsonTranslator.[[${Name}EventToJson]](e).ToString(Formatting.None)); }
+                        if ([[${Name}]] != null) { [[${Name}]](c, e); }
+                    };
+        Template
+            Name JsonLogAspectWrapper_ClientCommandHook
+            //Parameters: ${Name}
+            Value
+                $String
+                    public [[${Name}Reply]] [[${Name}]](TContext c, [[${Name}Request]] Request)
+                    {
+                        if (ClientCommandIn != null) { ClientCommandIn(c, @"${Name}", JsonTranslator.[[${Name}RequestToJson]](Request).ToString(Formatting.None)); }
+                        var Reply = Inner.[[${Name}]](c, Request);
+                        if (ClientCommandOut != null) { ClientCommandOut(c, @"${Name}", JsonTranslator.[[${Name}ReplyToJson]](Reply).ToString(Formatting.None)); }
+                        return Reply;
+                    }
+        Template
+            Name JsonLogAspectWrapper_ServerCommand
+            //Parameters: ${Name}
+            Value
+                $String
+                    public event Action<TContext, [[${Name}Event]]> [[${Name}]];
+        Template
             Name JsonTranslator
             //Parameters: ${Serializers}
             Value
