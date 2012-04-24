@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Dbml数据库代码生成器
-//  Version:     2012.03.06.
+//  Version:     2012.04.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,7 +20,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
     {
         public static XElement CompileToDbmlDatabase(this Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
         {
-            Writer w = new Writer() { Schema = Schema, DatabaseName = DatabaseName, EntityNamespaceName = EntityNamespaceName, ContextNamespaceName = ContextNamespaceName, ContextClassName = ContextClassName };
+            Writer w = new Writer(Schema, DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
             var a = w.GetSchema();
             return a;
         }
@@ -35,11 +35,11 @@ namespace Yuki.RelationSchema.DbmlDatabase
             private static Dictionary<String, String> ClrPrimitiveMappings;
             private static Dictionary<String, String> DbPrimitiveMappings;
 
-            public Schema Schema;
-            public String DatabaseName;
-            public String EntityNamespaceName;
-            public String ContextNamespaceName;
-            public String ContextClassName;
+            private Schema Schema;
+            private String DatabaseName;
+            private String EntityNamespaceName;
+            private String ContextNamespaceName;
+            private String ContextClassName;
 
             static Writer()
             {
@@ -56,6 +56,15 @@ namespace Yuki.RelationSchema.DbmlDatabase
                 DbPrimitiveMappings.Add("Int", "Int");
                 DbPrimitiveMappings.Add("Real", "Float");
                 DbPrimitiveMappings.Add("Binary", "VarBinary");
+            }
+
+            public Writer(Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
+            {
+                this.Schema = Schema;
+                this.DatabaseName = DatabaseName;
+                this.EntityNamespaceName = EntityNamespaceName;
+                this.ContextNamespaceName = ContextNamespaceName;
+                this.ContextClassName = ContextClassName;
             }
 
             private XNamespace ns = XNamespace.Get(@"http://schemas.microsoft.com/linqtosql/dbml/2007");

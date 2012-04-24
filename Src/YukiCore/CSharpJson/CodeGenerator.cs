@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2012.04.21.
+//  Version:     2012.04.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,9 +21,7 @@ namespace Yuki.ObjectSchema.CSharpJson
     {
         public static String CompileToCSharpJson(this Schema Schema, String NamespaceName)
         {
-            var s = Schema.Reduce();
-            var h = s.Hash();
-            Writer w = new Writer() { Schema = s, NamespaceName = NamespaceName, Hash = h };
+            Writer w = new Writer(Schema, NamespaceName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -38,9 +36,9 @@ namespace Yuki.ObjectSchema.CSharpJson
 
             private CSharp.Common.CodeGenerator.Writer InnerWriter;
 
-            public Schema Schema;
-            public String NamespaceName;
-            public UInt64 Hash;
+            private Schema Schema;
+            private String NamespaceName;
+            private UInt64 Hash;
 
             static Writer()
             {
@@ -50,9 +48,16 @@ namespace Yuki.ObjectSchema.CSharpJson
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
+            public Writer(Schema Schema, String NamespaceName)
+            {
+                this.Schema = Schema.Reduce();
+                this.NamespaceName = NamespaceName;
+                this.Hash = this.Schema.Hash();
+            }
+
             public String[] GetSchema()
             {
-                InnerWriter = new CSharp.Common.CodeGenerator.Writer { Schema = Schema, NamespaceName = NamespaceName };
+                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {

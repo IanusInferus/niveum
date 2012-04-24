@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java二进制代码生成器
-//  Version:     2012.04.11.
+//  Version:     2012.04.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,7 +20,7 @@ namespace Yuki.ObjectSchema.JavaBinary
     {
         public static String CompileToJavaBinary(this Schema Schema, String ClassName, String PackageName)
         {
-            Writer w = new Writer() { Schema = Schema, ClassName = ClassName, PackageName = PackageName };
+            Writer w = new Writer(Schema, ClassName, PackageName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -35,9 +35,9 @@ namespace Yuki.ObjectSchema.JavaBinary
 
             private Java.Common.CodeGenerator.Writer InnerWriter;
 
-            public Schema Schema;
-            public String ClassName;
-            public String PackageName;
+            private Schema Schema;
+            private String ClassName;
+            private String PackageName;
 
             static Writer()
             {
@@ -47,9 +47,16 @@ namespace Yuki.ObjectSchema.JavaBinary
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
+            public Writer(Schema Schema, String ClassName, String PackageName)
+            {
+                this.Schema = Schema;
+                this.ClassName = ClassName;
+                this.PackageName = PackageName;
+            }
+
             public String[] GetSchema()
             {
-                InnerWriter = new Java.Common.CodeGenerator.Writer { Schema = Schema, ClassName = ClassName, PackageName = PackageName };
+                InnerWriter = new Java.Common.CodeGenerator.Writer(Schema, ClassName, PackageName);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {

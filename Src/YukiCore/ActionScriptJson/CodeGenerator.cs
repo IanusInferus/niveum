@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0 JSON通讯代码生成器
-//  Version:     2012.04.21.
+//  Version:     2012.04.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,9 +21,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
     {
         public static ActionScript.FileResult[] CompileToActionScriptJson(this Schema Schema, String PackageName)
         {
-            var s = Schema.Reduce();
-            var h = s.Hash();
-            Writer w = new Writer() { Schema = s, PackageName = PackageName, Hash = h };
+            var w = new Writer(Schema, PackageName);
             var Files = w.GetFiles();
             return Files;
         }
@@ -34,9 +32,9 @@ namespace Yuki.ObjectSchema.ActionScriptJson
 
             private ActionScript.Common.CodeGenerator.Writer InnerWriter;
 
-            public Schema Schema;
-            public String PackageName;
-            public UInt64 Hash;
+            private Schema Schema;
+            private String PackageName;
+            private UInt64 Hash;
 
             static Writer()
             {
@@ -46,9 +44,16 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
+            public Writer(Schema Schema, String PackageName)
+            {
+                this.Schema = Schema.Reduce();
+                this.PackageName = PackageName;
+                this.Hash = this.Schema.Hash();
+            }
+            
             public ActionScript.FileResult[] GetFiles()
             {
-                InnerWriter = new ActionScript.Common.CodeGenerator.Writer { Schema = Schema, PackageName = PackageName, Hash = Hash };
+                InnerWriter = new ActionScript.Common.CodeGenerator.Writer(Schema, PackageName);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
