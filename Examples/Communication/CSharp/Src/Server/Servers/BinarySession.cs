@@ -182,6 +182,7 @@ namespace Server
             if (se == SocketError.ConnectionAborted) { return true; }
             if (se == SocketError.ConnectionReset) { return true; }
             if (se == SocketError.Shutdown) { return true; }
+            if (se == SocketError.OperationAborted) { return true; }
             return false;
         }
 
@@ -340,7 +341,7 @@ namespace Server
             }
             else if (sc.OnReadRaw)
             {
-                Action<int> Completed = Count =>
+                Action<int> CompletedInner = Count =>
                 {
                     if (Count == 0)
                     {
@@ -375,6 +376,26 @@ namespace Server
                     }
                     QueueCommand(SessionCommand.CreateReadRaw());
                 };
+                Action<int> Completed;
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    Completed = CompletedInner;
+                }
+                else
+                {
+                    Completed = Count =>
+                    {
+                        try
+                        {
+                            CompletedInner(Count);
+                        }
+                        catch (Exception ex)
+                        {
+                            OnCriticalError(ex, new StackTrace(true));
+                            StopAsync();
+                        }
+                    };
+                }
                 Action<SocketError> Faulted = se =>
                 {
                     if (!IsSocketErrorKnown(se))
