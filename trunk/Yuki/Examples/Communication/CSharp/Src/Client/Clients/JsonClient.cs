@@ -12,18 +12,18 @@ namespace Client
 {
     public sealed class JsonClient : IJsonSender, IDisposable
     {
-        private ClientImplementation ci;
+        private IClientImplementation<ClientContext> ci;
         public JsonClient<ClientContext> InnerClient { get; private set; }
         private ClientContext Context;
 
         private IPEndPoint RemoteEndPoint;
         private StreamedAsyncSocket s;
 
-        public JsonClient(IPEndPoint RemoteEndPoint)
+        public JsonClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci)
         {
             this.RemoteEndPoint = RemoteEndPoint;
             s = new StreamedAsyncSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
-            ci = new ClientImplementation();
+            this.ci = ci;
             InnerClient = new JsonClient<ClientContext>(this, ci);
             Context = new ClientContext();
             Context.DequeueCallback = InnerClient.DequeueCallback;

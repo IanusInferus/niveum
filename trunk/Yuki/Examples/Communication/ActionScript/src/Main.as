@@ -1,8 +1,10 @@
 package
 {
+    import context.ClientContext;
     import flash.display.Sprite;
     import flash.events.Event;
     import communication.*;
+    import clients.*;
 
     public class Main extends Sprite
     {
@@ -30,8 +32,34 @@ package
 
         public function MainInner():void
         {
+            EnableJsonClient();
+        }
+        
+        public function EnableBinaryClient():void
+        {
             var bc:BinaryClient;
-            var jc:JsonClient;
+        }
+
+        public function EnableJsonClient():void
+        {
+            var bindings:Vector.<Binding> = new Vector.<Binding>();
+            var binding:Binding = new Binding();
+            binding.host = "localhost";
+            binding.port = 8001;
+            bindings.push(binding);
+            var jsc:JsonSocketClient = new JsonSocketClient(bindings);
+            jsc.doConnect();
+            var jc:JsonClient = jsc.innerClient;
+            var req:SendMessageRequest = new SendMessageRequest();
+            req.content = "Hello.";
+            jc.sendMessage(req, function(r:SendMessageReply):void
+            {
+               var r:SendMessageReply;
+               if (r.onTooLong)
+               {
+                   trace("消息过长。");
+               }
+            });
         }
     }
 }

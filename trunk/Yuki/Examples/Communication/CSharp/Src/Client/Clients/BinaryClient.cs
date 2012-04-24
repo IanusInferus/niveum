@@ -15,18 +15,18 @@ namespace Client
 {
     public sealed class BinaryClient : IBinarySender, IDisposable
     {
-        private ClientImplementation ci;
+        private IClientImplementation<ClientContext> ci;
         public BinaryClient<ClientContext> InnerClient { get; private set; }
         private ClientContext Context;
 
         private IPEndPoint RemoteEndPoint;
         private StreamedAsyncSocket sock;
 
-        public BinaryClient(IPEndPoint RemoteEndPoint)
+        public BinaryClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci)
         {
             this.RemoteEndPoint = RemoteEndPoint;
             sock = new StreamedAsyncSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
-            ci = new ClientImplementation();
+            this.ci = ci;
             InnerClient = new BinaryClient<ClientContext>(this, ci);
             Context = new ClientContext();
             Context.DequeueCallback = InnerClient.DequeueCallback;
