@@ -91,7 +91,7 @@ namespace Client
         {
             if (ProtocolType == ApplicationProtocolType.Binary)
             {
-                using (var bc = new BinaryClient(RemoteEndPoint))
+                using (var bc = new BinaryClient(RemoteEndPoint, new ClientImplementation()))
                 {
                     bc.Connect();
                     Console.WriteLine("连接成功。");
@@ -113,7 +113,7 @@ namespace Client
             }
             else if (ProtocolType == ApplicationProtocolType.Json)
             {
-                using (var jc = new JsonClient(RemoteEndPoint))
+                using (var jc = new JsonClient(RemoteEndPoint, new ClientImplementation()))
                 {
                     jc.Connect();
                     Console.WriteLine("连接成功。");
