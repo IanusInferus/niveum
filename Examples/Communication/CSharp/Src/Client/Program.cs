@@ -1,4 +1,15 @@
-﻿using System;
+﻿//==========================================================================
+//
+//  File:        Program.cs
+//  Location:    Yuki.Examples <Visual C#>
+//  Description: 聊天客户端
+//  Version:     2012.04.24.
+//  Author:      F.R.C.
+//  Copyright(C) Public Domain
+//
+//==========================================================================
+
+using System;
 using System.Net;
 using System.Net.Sockets;
 using Firefly;
