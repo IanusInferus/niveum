@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0代码生成器
-//  Version:     2012.04.16.
+//  Version:     2012.04.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -27,9 +27,7 @@ namespace Yuki.ObjectSchema.ActionScript
     {
         public static FileResult[] CompileToActionScript(this Schema Schema, String PackageName)
         {
-            var s = Schema;
-            var h = s.Hash();
-            var w = new Common.CodeGenerator.Writer() { Schema = s, PackageName = PackageName, Hash = h };
+            var w = new Common.CodeGenerator.Writer(Schema, PackageName);
             var Files = w.GetFiles();
             return Files;
         }
@@ -44,13 +42,18 @@ namespace Yuki.ObjectSchema.ActionScript.Common
         {
             private static ObjectSchemaTemplateInfo TemplateInfo;
 
-            public Schema Schema;
-            public String PackageName;
-            public UInt64 Hash;
+            private Schema Schema;
+            private String PackageName;
 
             static Writer()
             {
                 TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.ActionScript);
+            }
+
+            public Writer(Schema Schema, String PackageName)
+            {
+                this.Schema = Schema;
+                this.PackageName = PackageName;
             }
 
             public void FillEnumSet()

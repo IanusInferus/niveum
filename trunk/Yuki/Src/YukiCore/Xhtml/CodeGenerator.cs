@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2012.04.12.
+//  Version:     2012.04.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -26,7 +26,7 @@ namespace Yuki.ObjectSchema.Xhtml
 
         public static FileResult[] CompileToXhtml(this Schema Schema, String Title, String CopyrightText)
         {
-            Writer w = new Writer() { Schema = Schema, Title = Title, CopyrightText = CopyrightText };
+            Writer w = new Writer(Schema, Title, CopyrightText);
             var Files = w.GetFiles();
             return Files;
         }
@@ -35,13 +35,20 @@ namespace Yuki.ObjectSchema.Xhtml
         {
             private static ObjectSchemaTemplateInfo TemplateInfo;
 
-            public Schema Schema;
-            public String Title;
-            public String CopyrightText;
+            private Schema Schema;
+            private String Title;
+            private String CopyrightText;
 
             static Writer()
             {
                 TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.Xhtml);
+            }
+
+            public Writer(Schema Schema, String Title, String CopyrightText)
+            {
+                this.Schema = Schema;
+                this.Title = Title;
+                this.CopyrightText = CopyrightText;
             }
 
             public class TypeLocationInfo
