@@ -1,3 +1,14 @@
+//==========================================================================
+//
+//  File:        Main.as
+//  Location:    Yuki.Examples <ActionScript>
+//  Description: 聊天客户端
+//  Version:     2012.04.24.
+//  Author:      F.R.C.
+//  Copyright(C) Public Domain
+//
+//==========================================================================
+
 package
 {
     import context.ClientContext;

@@ -1,10 +1,11 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cs
-//  Location:    TcpSendReceive <Visual C#>
+//  Location:    Yuki.Examples <Visual C#>
 //  Description: TCP发送接收器
-//  Version:     2011.07.11.
-//  Copyright(C) 上海幻达网络科技有限公司 2011
+//  Version:     2012.04.24.
+//  Author:      F.R.C.
+//  Copyright(C) Public Domain
 //
 //==========================================================================
 
