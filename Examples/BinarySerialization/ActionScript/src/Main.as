@@ -1,3 +1,14 @@
+//==========================================================================
+//
+//  File:        Main.as
+//  Location:    Yuki.Examples <ActionScript>
+//  Description: 数据转换工具
+//  Version:     2012.04.24.
+//  Author:      F.R.C.
+//  Copyright(C) Public Domain
+//
+//==========================================================================
+
 package
 {
     import flash.display.Sprite;
