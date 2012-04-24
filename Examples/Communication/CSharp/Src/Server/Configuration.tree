@@ -1,5 +1,5 @@
 ﻿Configuration
-    ProtocolType Json
+    ProtocolType Binary
     Bindings
         Binding
             IpAddress 0.0.0.0
