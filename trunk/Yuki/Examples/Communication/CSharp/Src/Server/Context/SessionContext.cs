@@ -4,6 +4,7 @@ using System.Linq;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Net;
 using Server.Algorithms;
 
 namespace Server
@@ -18,7 +19,7 @@ namespace Server
             if (Quit != null) { Quit(); }
         }
 
-        public String IpAddress = ""; //IP地址
+        public IPEndPoint RemoteEndPoint { get; set; }
 
         public Byte[] SessionToken = { };
         public String SessionTokenString { get { return Cryptography.BytesToHexString(SessionToken); } }

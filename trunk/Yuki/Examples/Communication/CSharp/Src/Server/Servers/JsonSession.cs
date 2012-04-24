@@ -46,7 +46,7 @@ namespace Server
 
             try
             {
-                Context.IpAddress = RemoteEndPoint.Address.ToString();
+                Context.RemoteEndPoint = RemoteEndPoint;
 
                 if (!Server.SessionMappings.TryAdd(Context, this))
                 {
@@ -292,8 +292,8 @@ namespace Server
             if (m.Success)
             {
                 var CommandName = m.Result("${CommandName}");
-                var Params = m.Result("${Params}") ?? "";
-                if (Params == "") { Params = "{}"; }
+                var Parameters = m.Result("${Params}") ?? "";
+                if (Parameters == "") { Parameters = "{}"; }
 
                 var sv = Server.InnerServer;
                 if (sv.HasCommand(CommandName))
@@ -306,14 +306,14 @@ namespace Server
                             {
                                 var sw = new Stopwatch();
                                 sw.Start();
-                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Params);
+                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
                                 sw.Stop();
                                 Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Message = String.Format("Time {0}ms", sw.ElapsedMilliseconds) });
                                 WriteLine(CommandName, s);
                             }
                             else
                             {
-                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Params);
+                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
                                 WriteLine(CommandName, s);
                             }
                         }
@@ -370,9 +370,9 @@ namespace Server
         }
 
         //线程安全
-        public void WriteLine(String CommandName, String Params)
+        public void WriteLine(String CommandName, String Parameters)
         {
-            WriteLine(String.Format(@"/svr {0} {1}", CommandName, Params));
+            WriteLine(String.Format(@"/svr {0} {1}", CommandName, Parameters));
         }
         //线程安全
         private void WriteLine(String CommandLine)

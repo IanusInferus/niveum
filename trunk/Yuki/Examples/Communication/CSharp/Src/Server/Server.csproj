@@ -45,10 +45,12 @@
   <ItemGroup>
     <Compile Include="Algorithms\Cryptography.cs" />
     <Compile Include="Configuration.cs" />
+    <Compile Include="Servers\BinaryServer.cs" />
+    <Compile Include="Servers\BinarySession.cs" />
     <Compile Include="Util\FileLogger.cs" />
     <Compile Include="Util\FileLoggerSync.cs" />
-    <Compile Include="JsonServer\JsonServer.cs" />
-    <Compile Include="JsonServer\JsonSession.cs" />
+    <Compile Include="Servers\JsonServer.cs" />
+    <Compile Include="Servers\JsonSession.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Util\SessionLogEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
