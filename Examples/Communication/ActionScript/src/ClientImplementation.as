@@ -1,20 +1,20 @@
-package
+﻿package
 {
-	import communication.*;
+    import communication.*;
     import context.*;
 
-	public class ClientImplementation implements IClientImplementation
-	{
+    public class ClientImplementation implements IClientImplementation
+    {
         private var c:ClientContext;
         
-		public function ClientImplementation(c:ClientContext) 
-		{
+        public function ClientImplementation(c:ClientContext) 
+        {
             this.c = c;
-		}
+        }
 
-		/** 错误 */
-		public function error(e:ErrorEvent):void
-		{
+        /** 错误 */
+        public function error(e:ErrorEvent):void
+        {
             var m:String = "调用'" + e.commandName + "'发生错误:" + e.message;
             trace(m);
             try
@@ -25,7 +25,7 @@ package
             {
                 trace(err);
             }
-		}
+        }
         
         /** 接收到消息 */
         public function messageReceived(e:MessageReceivedEvent):void
@@ -36,5 +36,5 @@ package
         public function messageReceivedAt1(e:MessageReceivedAt1Event):void
         {
         }
-	}
+    }
 }

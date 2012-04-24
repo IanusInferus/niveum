@@ -1,43 +1,43 @@
 ﻿package clients
 {
-	import flash.errors.*;
-	import flash.events.*;
-	import flash.net.Socket;
-	import flash.utils.ByteArray;
+    import flash.errors.*;
+    import flash.events.*;
+    import flash.net.Socket;
+    import flash.utils.ByteArray;
     import com.brooksandrus.utils.ISO8601Util;
     import communication.*;
     import context.*;
 
-	public class JsonSocketClient implements IJsonSender
+    public class JsonSocketClient implements IJsonSender
     {
         private var ci:IClientImplementation;
         private var innerClientValue:JsonClient;
         public function get innerClient():JsonClient { return innerClientValue; }
         private var c:ClientContext;
         public function get context():context.ClientContext { return c; }
-        
+
         private var bindings:Vector.<Binding>
         private var bindingInfos:Vector.<BindingInfo>
         private var index:int;
         private var onceConnected:Boolean = false;
-		private var readBuffer:ByteArray; //接收缓冲区
-		private var writeBuffer:ByteArray; //发送缓冲区
-        
+        private var readBuffer:ByteArray; //接收缓冲区
+        private var writeBuffer:ByteArray; //发送缓冲区
+
         public function get binding():Binding
         {
             return bindings[index];
         }
-        
+
         private function get socket():Socket
         {
             return bindingInfos[index].socket;
         }
-        
+
         public function get connected():Boolean
         {
             return bindingInfos[index].status == BindingInfo.RUNNING;
         }
-        
+
         public function close():void
         {
             if (bindingInfos[index].socket != null)
@@ -47,9 +47,9 @@
                 bindingInfos[index].status = BindingInfo.CLOSED;
             }
         }
-        
+
         /// handleResult : (commandName : String, params : String) -> unit
-		public function JsonSocketClient(bindings:Vector.<Binding>)
+        public function JsonSocketClient(bindings:Vector.<Binding>)
         {
             c = new ClientContext();
             ci = new ClientImplementation(c);
@@ -58,16 +58,16 @@
             {
                 throw new RangeError("bindings");
             }
-			this.bindings = bindings;
+            this.bindings = bindings;
             this.bindingInfos = new Vector.<BindingInfo>();
             for (var i:int = 0; i < bindings.length; i += 1)
             {
                 bindingInfos[i] = new BindingInfo();
             }
             c.dequeueCallback = innerClientValue.dequeueCallback;
-			readBuffer = new ByteArray();
-			writeBuffer = new ByteArray();
-		}
+            readBuffer = new ByteArray();
+            writeBuffer = new ByteArray();
+        }
 
         public function doConnect():void
         {
@@ -77,20 +77,20 @@
             var host:String = b.host;
             var port:int = b.port;
             var ts:String = iso.formatExtendedDateTime(new Date()) + " " + "连接到: host=" + host + " port=" + port;
-			trace(ts);
-            
+            trace(ts);
+
             var s:Socket = new Socket();
             bindingInfos[currentIndex].socket = s;
             bindingInfos[currentIndex].status = BindingInfo.INITIALIZED;
             s.connect(host, port);
-			s.addEventListener(Event.CLOSE, function(event:Event):void
+            s.addEventListener(Event.CLOSE, function(event:Event):void
             {
                 bindingInfos[currentIndex].socket = null;
                 bindingInfos[currentIndex].status = BindingInfo.CLOSED;
                 var ts:String = iso.formatExtendedDateTime(new Date()) + " 连接关闭: host=" + host + " port=" + port + " " + event;
                 trace(ts);
             });
-			s.addEventListener(Event.CONNECT, function(event:Event):void
+            s.addEventListener(Event.CONNECT, function(event:Event):void
             {
                 bindingInfos[currentIndex].status = BindingInfo.RUNNING;
                 onceConnected = true;
@@ -98,13 +98,13 @@
                 trace(ts);
                 flushRequest();
             });
-			s.addEventListener(IOErrorEvent.IO_ERROR, function(event:IOErrorEvent):void
+            s.addEventListener(IOErrorEvent.IO_ERROR, function(event:IOErrorEvent):void
             {
                 bindingInfos[currentIndex].socket = null;
                 bindingInfos[currentIndex].status = BindingInfo.CLOSED;
                 var ts:String = iso.formatExtendedDateTime(new Date()) + " 连接失败: host=" + host + " port=" + port + " " + event;
                 trace(ts);
-                
+
                 if (!onceConnected && (currentIndex == index))
                 {
                     if (index + 1 < bindings.length)
@@ -118,20 +118,20 @@
 
                     var ts2:String = iso.formatExtendedDateTime(new Date()) + " 选择地址: " + bindings[index].host;
                     //trace(ts2);
-                    
+
                     if (index != 0)
                     {
                         doConnect();
                     }
                 }
             });
-			s.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function(event:SecurityErrorEvent):void
+            s.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function(event:SecurityErrorEvent):void
             {
                 bindingInfos[currentIndex].socket = null;
                 bindingInfos[currentIndex].status = BindingInfo.CLOSED;
                 var ts:String = iso.formatExtendedDateTime(new Date()) + " 安全错误: host=" + host + " port=" + port + " " + event;
                 trace(ts);
-    
+
                 if (!onceConnected && (currentIndex == index))
                 {
                     if (index + 1 < bindings.length)
@@ -142,17 +142,17 @@
                     {
                         index = 0;
                     }
-        
+
                     var ts2:String = iso.formatExtendedDateTime(new Date()) + " 选择地址: " + bindings[index].host;
                     //trace(ts2);
-                    
+
                     if (index != 0)
                     {
                         doConnect();
                     }
                 }
             });
-			s.addEventListener(ProgressEvent.SOCKET_DATA, function(event:ProgressEvent):void
+            s.addEventListener(ProgressEvent.SOCKET_DATA, function(event:ProgressEvent):void
             {
                 //trace("接受服务器信息: " + event);
                 readResponse();
@@ -160,77 +160,77 @@
         }
 
         private var iso:ISO8601Util = new ISO8601Util();
-		public function sendChat(s:String):void
+        public function sendChat(s:String):void
         {
-			if (s.length == 0)
+            if (s.length == 0)
             {
-				return;
-			}
+                return;
+            }
 
-			if (!connected)
+            if (!connected)
             {
-				writeBuffer.writeUTFBytes(s);
+                writeBuffer.writeUTFBytes(s);
                 doConnect();
-				return;
-			}
-			
-			flushRequest();
-			
-			socket.writeUTFBytes(s);
-			socket.flush();
-		}
+                return;
+            }
 
-		public function send(commandName:String, params:String):void
+            flushRequest();
+
+            socket.writeUTFBytes(s);
+            socket.flush();
+        }
+
+        public function send(commandName:String, params:String):void
         {
             var ts:String = iso.formatExtendedDateTime(new Date()) + " /" + commandName;
-			//trace(ts);
-			sendChat("/" + commandName + " " + params + "\r\n");
-		}
+            //trace(ts);
+            sendChat("/" + commandName + " " + params + "\r\n");
+        }
 
-		private function parseServerData(data:String):void
+        private function parseServerData(data:String):void
         {
-			var arr:Array = data.split(" ", 3);
-			var cmd:String = arr[1];
-			try
+            var arr:Array = data.split(" ", 3);
+            var cmd:String = arr[1];
+            try
             {
                 var ts:String = iso.formatExtendedDateTime(new Date()) + " /svr " + cmd;
                 //trace(ts);
-				innerClientValue.handleResult(cmd, arr[2]);
-			}
-			catch (ex:Error)
+                innerClientValue.handleResult(cmd, arr[2]);
+            }
+            catch (ex:Error)
             {
-				trace("命令'" + cmd + "'出错 : " + ex.getStackTrace());
-			}
-		}
+                trace("命令'" + cmd + "'出错 : " + ex.getStackTrace());
+            }
+        }
 
-		private function readResponse():void
+        private function readResponse():void
         {
-			var bytesCount:uint = socket.bytesAvailable;
-			for (var k:int = 0; k < bytesCount; k += 1)
+            var bytesCount:uint = socket.bytesAvailable;
+            for (var k:int = 0; k < bytesCount; k += 1)
             {
-				var b:int = socket.readByte();
-				if (b == 0xD) { continue; } //0D CR
-				if (b == 0xA) //0A LF
+                var b:int = socket.readByte();
+                if (b == 0xD) { continue; } //0D CR
+                if (b == 0xA) //0A LF
                 {
-					var usableBytesCount:uint = readBuffer.position;
-					readBuffer.position = 0;
-					var s:String = readBuffer.readUTFBytes(usableBytesCount);
-					readBuffer.position = 0;
+                    var usableBytesCount:uint = readBuffer.position;
+                    readBuffer.position = 0;
+                    var s:String = readBuffer.readUTFBytes(usableBytesCount);
+                    readBuffer.position = 0;
                     parseServerData(s);
-					continue;
-				}
-				readBuffer.writeByte(b);
-			}
-		}
+                    continue;
+                }
+                readBuffer.writeByte(b);
+            }
+        }
 
-		private function flushRequest():void
+        private function flushRequest():void
         {
-			if (writeBuffer.length > 0)
-			{
-				socket.writeBytes(writeBuffer);
-				writeBuffer = new ByteArray();
-			}
-			socket.flush();
-		}
-	}
+            if (writeBuffer.length > 0)
+            {
+                socket.writeBytes(writeBuffer);
+                writeBuffer = new ByteArray();
+            }
+            socket.flush();
+        }
+    }
 }

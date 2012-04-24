@@ -1,4 +1,4 @@
-package clients 
+﻿package clients 
 {
     import flash.net.Socket;
     public class BindingInfo 
