@@ -1,9 +1,9 @@
-package clients 
+﻿package clients
 {
     import flash.errors.IllegalOperationError;
     import flash.utils.ByteArray;
     import communication.*;
-    public class BufferStateMachine 
+    public class BufferStateMachine
     {
         private var state:int;
         // 0 初始状态
