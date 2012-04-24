@@ -1,6 +1,6 @@
-package context 
+package context
 {
-    public class ClientContext 
+    public class ClientContext
     {
         /// String -> unit
         public var dequeueCallback:Function;
