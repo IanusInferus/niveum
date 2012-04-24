@@ -59,7 +59,7 @@ Yummy Ultimate Kata Infrastructure (YUKI类型框架库)
 VB.Net              √              Firefly库动态支持   ×              ×          ×
 C#                  √              Firefly库动态支持   √              √          √
 Java                √              √                  ×              ×          ×
-C++2011             √              √                  ×              ×          ×
+C++2011             √              √                  ×              √          ×
 ActionScript        √              √                  √              √          √
 Xhtml               √              无需                无需            无需        无需
 
@@ -100,10 +100,16 @@ http://download.microsoft.com/download/3/1/8/318161B8-9874-48E4-BB38-9EB82C5D635
 
 5 用户使用协议
 
+以下协议不针对示例(Examples文件夹)：
 本框架是免费自由软件，所有源代码和可执行程序按照BSD许可证授权，详见License.zh.txt。
 本框架的所有文档不按照BSD许可证授权，你可以不经修改的复制、传播这些文档，你还可以引用、翻译这些文档，其他一切权利保留。
 
+以下协议针对示例(Examples文件夹)：
+本框架的示例进入公有领域，可以随意修改使用。
+
 本框架所依赖的Firefly框架的使用协议请参见对应文档。
+
+本框架示例所依赖的Json.NET库的使用协议请参见对应文档。
 
 
 6 备注
