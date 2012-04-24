@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2012.04.21.
+//  Version:     2012.04.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,7 +21,7 @@ namespace Yuki.ObjectSchema.Cpp
     {
         public static String CompileToCpp(this Schema Schema, String NamespaceName)
         {
-            var w = new Common.CodeGenerator.Writer() { Schema = Schema, NamespaceName = NamespaceName };
+            var w = new Common.CodeGenerator.Writer(Schema, NamespaceName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -41,13 +41,19 @@ namespace Yuki.ObjectSchema.Cpp.Common
         {
             private static ObjectSchemaTemplateInfo TemplateInfo;
 
-            public Schema Schema;
-            public String NamespaceName;
+            private Schema Schema;
+            private String NamespaceName;
 
             static Writer()
             {
                 var b = Properties.Resources.Cpp;
                 TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(b);
+            }
+
+            public Writer(Schema Schema, String NamespaceName)
+            {
+                this.Schema = Schema;
+                this.NamespaceName = NamespaceName;
             }
 
             public String[] GetSchema()

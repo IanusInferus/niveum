@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java代码生成器
-//  Version:     2012.04.15.
+//  Version:     2012.04.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,7 +21,7 @@ namespace Yuki.ObjectSchema.Java
     {
         public static String CompileToJava(this Schema Schema, String ClassName, String PackageName)
         {
-            var w = new Common.CodeGenerator.Writer() { Schema = Schema, ClassName = ClassName, PackageName = PackageName };
+            var w = new Common.CodeGenerator.Writer(Schema, ClassName, PackageName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -40,25 +40,21 @@ namespace Yuki.ObjectSchema.Java.Common
         {
             private static ObjectSchemaTemplateInfo TemplateInfo;
 
-            private Schema SchemaValue;
-            public Schema Schema
-            {
-                get
-                {
-                    return SchemaValue;
-                }
-                set
-                {
-                    SchemaValue = value;
-                    EnumDict = Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).ToDictionary(c => c.VersionedName(), c => c.Enum);
-                }
-            }
-            public String ClassName;
-            public String PackageName;
+            private Schema Schema;
+            private String ClassName;
+            private String PackageName;
 
             static Writer()
             {
                 TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.Java);
+            }
+
+            public Writer(Schema Schema, String ClassName, String PackageName)
+            {
+                EnumDict = Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).ToDictionary(c => c.VersionedName(), c => c.Enum);
+                this.Schema = Schema;
+                this.ClassName = ClassName;
+                this.PackageName = PackageName;
             }
 
             public String[] GetSchema()
