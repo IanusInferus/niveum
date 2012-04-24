@@ -8,11 +8,11 @@
     import communication.*;
     import context.*;
 
-	public class JsonSocketClient implements IJsonSender
+	public class BinarySocketClient implements IBinarySender
     {
         private var ci:IClientImplementation;
-        private var innerClientValue:JsonClient;
-        public function get innerClient():JsonClient { return innerClientValue; }
+        private var innerClientValue:BinaryClient;
+        public function get innerClient():BinaryClient { return innerClientValue; }
         private var c:ClientContext;
         public function get context():context.ClientContext { return c; }
         
@@ -21,7 +21,9 @@
         private var index:int;
         private var onceConnected:Boolean = false;
 		private var readBuffer:ByteArray; //接收缓冲区
+        private var readBufferLength:int;
 		private var writeBuffer:ByteArray; //发送缓冲区
+        private var bsm:BufferStateMachine;
         
         public function get binding():Binding
         {
@@ -49,11 +51,11 @@
         }
         
         /// handleResult : (commandName : String, params : String) -> unit
-		public function JsonSocketClient(bindings:Vector.<Binding>)
+		public function BinarySocketClient(bindings:Vector.<Binding>)
         {
             c = new ClientContext();
             ci = new ClientImplementation(c);
-            this.innerClientValue = new JsonClient(this, ci);
+            this.innerClientValue = new BinaryClient(this, ci);
             if (bindings.length == 0)
             {
                 throw new RangeError("bindings");
@@ -66,7 +68,10 @@
             }
             c.dequeueCallback = innerClientValue.dequeueCallback;
 			readBuffer = new ByteArray();
+            readBuffer.length = 8 * 1024;
+            readBufferLength = 0;
 			writeBuffer = new ByteArray();
+            bsm = new BufferStateMachine();
 		}
 
         public function doConnect():void
@@ -160,67 +165,70 @@
         }
 
         private var iso:ISO8601Util = new ISO8601Util();
-		public function sendChat(s:String):void
+		public function sendChat(ba:ByteArray):void
         {
-			if (s.length == 0)
+			if (ba.length == 0)
             {
 				return;
 			}
 
 			if (!connected)
             {
-				writeBuffer.writeUTFBytes(s);
+				writeBuffer.writeBytes(ba, 0, ba.length);
                 doConnect();
 				return;
 			}
 			
 			flushRequest();
 			
-			socket.writeUTFBytes(s);
+			socket.writeBytes(ba, 0, ba.length);
 			socket.flush();
 		}
 
-		public function send(commandName:String, params:String):void
+		public function send(commandName:String, commandHash:uint, parameters:ByteArray):void
         {
             var ts:String = iso.formatExtendedDateTime(new Date()) + " /" + commandName;
 			//trace(ts);
-			sendChat("/" + commandName + " " + params + "\r\n");
-		}
-
-		private function parseServerData(data:String):void
-        {
-			var arr:Array = data.split(" ", 3);
-			var cmd:String = arr[1];
-			try
-            {
-                var ts:String = iso.formatExtendedDateTime(new Date()) + " /svr " + cmd;
-                //trace(ts);
-				innerClientValue.handleResult(cmd, arr[2]);
-			}
-			catch (ex:Error)
-            {
-				trace("命令'" + cmd + "'出错 : " + ex.getStackTrace());
-			}
+            var ba:ByteArray = new ByteArray();
+            BinaryTranslator.stringToBinary(ba, commandName);
+            BinaryTranslator.uint32ToBinary(ba, commandHash);
+            BinaryTranslator.int32ToBinary(ba, parameters.length);
+            ba.writeBytes(parameters);
+            sendChat(ba);
 		}
 
 		private function readResponse():void
         {
+            var firstPosition:int = 0;
 			var bytesCount:uint = socket.bytesAvailable;
-			for (var k:int = 0; k < bytesCount; k += 1)
+            socket.readBytes(readBuffer, readBufferLength, bytesCount);
+            readBufferLength += bytesCount;
+            while (true)
             {
-				var b:int = socket.readByte();
-				if (b == 0xD) { continue; } //0D CR
-				if (b == 0xA) //0A LF
+                var r:TryShiftResult = bsm.TryShift(readBuffer, firstPosition, readBufferLength - firstPosition);
+                if (r == null)
                 {
-					var usableBytesCount:uint = readBuffer.position;
-					readBuffer.position = 0;
-					var s:String = readBuffer.readUTFBytes(usableBytesCount);
-					readBuffer.position = 0;
-                    parseServerData(s);
-					continue;
-				}
-				readBuffer.writeByte(b);
-			}
+                    break;
+                }
+                firstPosition = r.position;
+                
+                if (r.command != null)
+                {
+                    var cmd:Command = r.command;
+                    innerClientValue.handleResult(cmd.commandName, cmd.commandHash, cmd.parameters);
+                }
+            }
+            if (firstPosition > 0)
+            {
+                var copyLength:int = readBufferLength - firstPosition;
+                var nba:ByteArray = new ByteArray();
+                nba.length = copyLength;
+                readBuffer.position = firstPosition;
+                readBuffer.readBytes(nba, 0, copyLength);
+                readBuffer.position = 0;
+                readBuffer.writeBytes(nba, 0, copyLength);
+                readBufferLength = copyLength;
+            }
 		}
 
 		private function flushRequest():void

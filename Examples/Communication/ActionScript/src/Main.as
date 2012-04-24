@@ -32,12 +32,29 @@ package
 
         public function MainInner():void
         {
-            EnableJsonClient();
+            EnableBinaryClient();
+            //EnableJsonClient();
         }
         
         public function EnableBinaryClient():void
         {
-            var bc:BinaryClient;
+            var bindings:Vector.<Binding> = new Vector.<Binding>();
+            var binding:Binding = new Binding();
+            binding.host = "localhost";
+            binding.port = 8001;
+            bindings.push(binding);
+            var bsc:BinarySocketClient = new BinarySocketClient(bindings);
+            bsc.doConnect();
+            var bc:BinaryClient = bsc.innerClient;
+            var req:SendMessageRequest = new SendMessageRequest();
+            req.content = "Hello.";
+            bc.sendMessage(req, function(r:SendMessageReply):void
+            {
+               if (r.onTooLong)
+               {
+                   trace("消息过长。");
+               }
+            });
         }
 
         public function EnableJsonClient():void
@@ -54,7 +71,6 @@ package
             req.content = "Hello.";
             jc.sendMessage(req, function(r:SendMessageReply):void
             {
-               var r:SendMessageReply;
                if (r.onTooLong)
                {
                    trace("消息过长。");
