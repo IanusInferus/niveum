@@ -227,12 +227,12 @@ ObjectSchemaTemplate
                         {
                             if (ClientCommandCallbacks.count(CommandName) > 0)
                             {
-                                ClientCommandCallbacks[CommandName]->push(std::pair(CommandHash, Callback));
+                                ClientCommandCallbacks[CommandName]->push(std::pair<uint32_t, CommandCallback>(CommandHash, Callback));
                             }
                             else
                             {
                                 auto q = std::make_shared<std::queue<std::pair<uint32_t, CommandCallback>>>();
-                                q->push(std::pair(CommandHash, Callback));
+                                q->push(std::pair<uint32_t, CommandCallback>(CommandHash, Callback));
                                 ClientCommandCallbacks[CommandName] = q;
                             }
                         }
