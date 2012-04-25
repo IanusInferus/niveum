@@ -150,6 +150,8 @@ ObjectSchemaTemplate
                     {
                     public:
                         virtual void Send(std::wstring CommandName, uint32_t CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters) = 0;
+
+                        virtual ~IBinarySender() {}
                     };
         Template
             Name BinaryClient
@@ -387,6 +389,8 @@ ObjectSchemaTemplate
                             }
                             return String(Chars.begin(), Chars.end());
                         }
+
+                        virtual ~IReadableStream() {}
                     };
 
                     class IWritableStream
@@ -484,10 +488,14 @@ ObjectSchemaTemplate
                                 WriteUInt16(static_cast<uint16_t>(v[k]));
                             }
                         }
+
+                        virtual ~IWritableStream() {}
                     };
 
                     class IReadableWritableStream : public IReadableStream, public IWritableStream
                     {
+                    public:
+                        virtual ~IReadableWritableStream() {}
                     };
 
                     class ByteArrayStream : public IReadableWritableStream /* final */
