@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2012.04.23.
+      Version:     2012.04.25.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -170,7 +170,7 @@ ObjectSchemaTemplate
                         typedef std::function<void(TContext &, std::shared_ptr<std::vector<uint8_t>>)> CommandCallback;
                         std::shared_ptr<IBinarySender> s;
                         std::shared_ptr<IClientImplementation<TContext>> i;
-                        std::unordered_map<std::pair<std::wstring, uint32_t>, std::shared_ptr<std::queue<CommandCallback>>, Hash> ClientCommandCallbacks;
+                        std::unordered_map<std::wstring, std::shared_ptr<std::queue<std::pair<uint32_t, CommandCallback>>>> ClientCommandCallbacks;
                         std::unordered_map<std::pair<std::wstring, uint32_t>, CommandCallback, Hash> ServerCommands;
 
                     public:
@@ -188,20 +188,25 @@ ObjectSchemaTemplate
 
                         void HandleResult(TContext &c, std::wstring CommandName, uint32_t CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters)
                         {
-                            auto p = std::pair<std::wstring, uint32_t>(CommandName, CommandHash);
-                            if (ClientCommandCallbacks.count(p) > 0)
+                            if (ClientCommandCallbacks.count(CommandName) > 0)
                             {
-                                auto q = ClientCommandCallbacks[p];
+                                auto q = ClientCommandCallbacks[CommandName];
                                 if (q->size() == 0)
                                 {
                                     throw logic_error(w2s(L"InvalidOperationException" + CommandName));
                                 }
-                                auto Callback = q->front();
+                                auto CallbackPair = q->front();
+                                if (std::get<0>(CallbackPair) != CommandHash)
+                                {
+                                    throw logic_error(w2s(L"InvalidOperationException" + CommandName));
+                                }
                                 q->pop();
+                                auto Callback = std::get<1>(CallbackPair);
                                 Callback(c, Parameters);
                                 return;
                             }
 
+                            auto p = std::pair<std::wstring, uint32_t>(CommandName, CommandHash);
                             if (ServerCommands.count(p) > 0)
                             {
                                 auto a = ServerCommands[p];
@@ -212,25 +217,23 @@ ObjectSchemaTemplate
                             throw logic_error(w2s(L"InvalidOperationException" + CommandName));
                         }
 
-                        void DequeueCallback(std::wstring CommandName, uint32_t CommandHash)
+                        void DequeueCallback(std::wstring CommandName)
                         {
-                            auto p = std::pair<std::wstring, uint32_t>(CommandName, CommandHash);
-                            ClientCommandCallbacks[p]->pop();
+                            ClientCommandCallbacks[CommandName]->pop();
                         }
 
                     private:
                         void AddCallback(std::wstring CommandName, uint32_t CommandHash, CommandCallback Callback)
                         {
-                            auto p = std::pair<std::wstring, uint32_t>(CommandName, CommandHash);
-                            if (ClientCommandCallbacks.count(p) > 0)
+                            if (ClientCommandCallbacks.count(CommandName) > 0)
                             {
-                                ClientCommandCallbacks[p]->push(Callback);
+                                ClientCommandCallbacks[CommandName]->push(std::pair(CommandHash, Callback));
                             }
                             else
                             {
-                                auto q = std::make_shared<std::queue<CommandCallback>>();
-                                q->push(Callback);
-                                ClientCommandCallbacks[p] = q;
+                                auto q = std::make_shared<std::queue<std::pair<uint32_t, CommandCallback>>>();
+                                q->push(std::pair(CommandHash, Callback));
+                                ClientCommandCallbacks[CommandName] = q;
                             }
                         }
 
