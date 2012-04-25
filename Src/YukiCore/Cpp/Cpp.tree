@@ -448,6 +448,8 @@ ObjectSchemaTemplate
                     {
                     public:
                         ${Commands}
+
+                        virtual ~IServerImplementation() {}
                     };
         Template
             Name IServerImplementation_ClientCommand
@@ -473,6 +475,8 @@ ObjectSchemaTemplate
                     {
                     public:
                         ${Commands}
+
+                        virtual ~IClientImplementation() {}
                     };
         Template
             Name IClientImplementation_ServerCommand
