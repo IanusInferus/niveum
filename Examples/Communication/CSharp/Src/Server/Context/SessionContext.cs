@@ -12,7 +12,7 @@ namespace Server
     public class SessionContext
     {
         //跨线程共享只读访问
-        
+
         public event Action Quit; //跨线程事件(订阅者需要保证线程安全)
         public void RaiseQuit()
         {
