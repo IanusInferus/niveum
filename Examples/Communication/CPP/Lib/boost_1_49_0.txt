@@ -1,0 +1,20 @@
+boost库引用
+
+请按以下地址下载boost 1.49.0库，并将其解压放在当前目录的boost目录，可以看到文件Lib/boost/bootstrap.bat。
+https://sourceforge.net/projects/boost/files/boost/1.49.0/boost_1_49_0.7z/download
+
+在Windows上
+机器上需要安装Visual C++ 2010。
+在命令行boost目录中分别运行
+bootstrap.bat
+bjam --with-system --with-thread --with-date_time --with-regex --with-serialization stage
+即配置好boost库。
+
+在Linux上
+机器上需要安装有gcc-c++。
+在终端中执行
+find . -type f -name '*.sh' -exec chmod +x {} \;
+使得所有的.sh文件可以执行，然后运行
+./bootstrap.sh
+./bjam --with-system --with-thread --with-date_time --with-regex --with-serialization stage
+即配置好boost库。

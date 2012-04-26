@@ -3,7 +3,7 @@
 //  File:        Streams.h
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 文件流
-//  Version:     2012.04.08.
+//  Version:     2012.04.26.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -49,7 +49,7 @@ namespace World
                 }
                 return b;
             }
-            vector<uint8_t> ReadBytes(size_t Size)
+            shared_ptr<vector<uint8_t>> ReadBytes(size_t Size)
             {
                 throw runtime_error("NotSupported");
             }
@@ -80,7 +80,7 @@ namespace World
                     throw runtime_error("IOException");
                 }
             }
-            virtual void WriteBytes(vector<uint8_t> l)
+            virtual void WriteBytes(shared_ptr<vector<uint8_t>> l)
             {
                 throw runtime_error("NotSupported");
             }
