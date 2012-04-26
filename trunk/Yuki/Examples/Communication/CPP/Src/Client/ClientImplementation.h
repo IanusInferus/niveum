@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Communication.h"
 #include "CommunicationBinary.h"
@@ -11,21 +11,21 @@ namespace Client
     class ClientImplementation : public Communication::IClientImplementation<ClientContext>
     {
     public:
-        /// <summary>´íÎó</summary>
+        /// <summary>é”™è¯¯</summary>
         virtual void Error(ClientContext &c, std::shared_ptr<Communication::ErrorEvent> e)
         {
             c.DequeueCallback(e->CommandName);
-            auto m = L"µ÷ÓÃ'" + e->CommandName + L"'·¢Éú´íÎó:" + e->Message;
+            auto m = L"è°ƒç”¨'" + e->CommandName + L"'å‘ç”Ÿé”™è¯¯:" + e->Message;
             wprintf(L"%ls\n", m.c_str());
         }
 
-        /// <summary>½ÓÊÕµ½ÏûÏ¢</summary>
+        /// <summary>æ¥æ”¶åˆ°æ¶ˆæ¯</summary>
         virtual void MessageReceived(ClientContext &c, std::shared_ptr<Communication::MessageReceivedEvent> e)
         {
             wprintf(L"%ls\n", e->Content.c_str());
         }
 
-        /// <summary>½ÓÊÕµ½ÏûÏ¢</summary>
+        /// <summary>æ¥æ”¶åˆ°æ¶ˆæ¯</summary>
         virtual void MessageReceivedAt1(ClientContext &c, std::shared_ptr<Communication::MessageReceivedAt1Event> e)
         {
         }

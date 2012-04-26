@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Communication.h"
 #include "CommunicationBinary.h"
@@ -92,11 +92,11 @@ namespace Client
         {
         private:
             int State;
-            // 0 ��ʼ״̬
-            // 1 �Ѷ�ȡNameLength
-            // 2 �Ѷ�ȡCommandHash
-            // 3 �Ѷ�ȡName
-            // 4 �Ѷ�ȡParametersLength
+            // 0 初始状态
+            // 1 已读取NameLength
+            // 2 已读取CommandHash
+            // 3 已读取Name
+            // 4 已读取ParametersLength
 
             int32_t CommandNameLength;
             std::wstring CommandName;
