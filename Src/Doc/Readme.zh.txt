@@ -112,7 +112,12 @@ http://download.microsoft.com/download/3/1/8/318161B8-9874-48E4-BB38-9EB82C5D635
 本框架示例所依赖的Json.NET库的使用协议请参见对应文档。
 
 
-6 备注
+6 相关软件
+
+本框架与Google Protocol Buffers和Facebook Thrift功能类似。
+
+
+7 备注
 
 如果发现了BUG，或者有什么意见或建议，请到以下网址与我联系。
 http://www.cnblogs.com/Rex/Contact.aspx?id=1
