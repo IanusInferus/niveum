@@ -14,8 +14,12 @@ namespace Server.Services
             {
                 return SendMessageReply.CreateTooLong();
             }
+            c.SendMessageCount += 1;
             foreach (var rc in ServerContext.GetSessions())
             {
+                rc.SessionLock.AcquireWriterLock(int.MaxValue);
+                rc.ReceivedMessageCount += 1;
+                rc.SessionLock.ReleaseWriterLock();
                 if (MessageReceived != null)
                 {
                     MessageReceived(rc, new MessageReceivedEvent { Content = r.Content });
