@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2012.04.26.
+      Version:     2012.04.27.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -53,7 +53,11 @@ ObjectSchemaTemplate
                     //Reference:
 
                     #include <cstdint>
+                    #include <cwchar>
+                    #include <climits>
+                    #include <cstdlib>
                     #include <string>
+                    #include <codecvt>
                     #include <vector>
                     #include <queue>
                     #include <unordered_set>
@@ -72,12 +76,12 @@ ObjectSchemaTemplate
                     private:
                         struct Hash
                         {
-                            size_t operator() (const std::pair<std::wstring, uint32_t> &p) const
+                            std::size_t operator() (const std::pair<std::wstring, std::uint32_t> &p) const
                             {
                                 return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);
                             }
                         };
-                        std::unordered_map<std::pair<std::wstring, uint32_t>, std::function<std::shared_ptr<std::vector<uint8_t>>(TContext &, std::shared_ptr<std::vector<uint8_t>>)>, Hash> ClientCommands;
+                        std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<std::shared_ptr<std::vector<std::uint8_t>>(TContext &, std::shared_ptr<std::vector<std::uint8_t>>)>, Hash> ClientCommands;
                         std::shared_ptr<IServerImplementation<TContext>> i;
 
                     public:
@@ -87,27 +91,27 @@ ObjectSchemaTemplate
                             ${Commands}
                         }
 
-                        uint64_t Hash()
+                        std::uint64_t Hash()
                         {
                             return 0x${Hash};
                         }
 
-                        Boolean HasCommand(std::wstring CommandName, uint32_t CommandHash)
+                        Boolean HasCommand(std::wstring CommandName, std::uint32_t CommandHash)
                         {
-                            return ClientCommands.count(std::pair<String, uint32_t>(CommandName, CommandHash)) > 0;
+                            return ClientCommands.count(std::pair<String, std::uint32_t>(CommandName, CommandHash)) > 0;
                         }
 
-                        std::shared_ptr<std::vector<uint8_t>> ExecuteCommand(TContext &c, std::wstring CommandName, uint32_t CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters)
+                        std::shared_ptr<std::vector<std::uint8_t>> ExecuteCommand(TContext &c, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
                         {
-                            auto cmd = ClientCommands[std::pair<std::wstring, uint32_t>(CommandName, CommandHash)];
+                            auto cmd = ClientCommands[std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash)];
                             return cmd(c, Parameters);
                         }
 
-                        /// (TContext &c, std::wstring CommandName, UInt32 CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters) -> void
-                        typedef std::function<void(TContext &, std::wstring, UInt32, std::shared_ptr<std::vector<uint8_t>>)> ServerEventDelegate;
+                        /// (TContext &c, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters) -> void
+                        typedef std::function<void(TContext &, std::wstring, std::uint32_t, std::shared_ptr<std::vector<std::uint8_t>>)> ServerEventDelegate;
                         ServerEventDelegate ServerEvent;
                     private:
-                        void OnServerEvent(TContext &c, std::wstring CommandName, uint32_t CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters)
+                        void OnServerEvent(TContext &c, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
                         {
                             if (ServerEvent != nullptr) { ServerEvent(c, CommandName, CommandHash, Parameters); }
                         }
@@ -117,7 +121,7 @@ ObjectSchemaTemplate
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ClientCommands[std::pair<std::wstring, uint32_t>(L"${CommandName}", 0x${CommandHash})] = [&](TContext &c, std::shared_ptr<std::vector<uint8_t>> p) -> std::shared_ptr<std::vector<uint8_t>>
+                    ClientCommands[std::pair<std::wstring, std::uint32_t>(L"${CommandName}", 0x${CommandHash})] = [&](TContext &c, std::shared_ptr<std::vector<std::uint8_t>> p) -> std::shared_ptr<std::vector<std::uint8_t>>
                     {
                         ByteArrayStream bas;
                         bas.WriteBytes(p);
@@ -149,7 +153,7 @@ ObjectSchemaTemplate
                     class IBinarySender
                     {
                     public:
-                        virtual void Send(std::wstring CommandName, uint32_t CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters) = 0;
+                        virtual void Send(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters) = 0;
 
                         virtual ~IBinarySender() {}
                     };
@@ -164,16 +168,26 @@ ObjectSchemaTemplate
                     private:
                         struct Hash
                         {
-                            size_t operator() (const std::pair<std::wstring, uint32_t> &p) const
+                            std::size_t operator() (const std::pair<std::wstring, std::uint32_t> &p) const
                             {
                                 return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);
                             }
                         };
-                        typedef std::function<void(TContext &, std::shared_ptr<std::vector<uint8_t>>)> CommandCallback;
+                        typedef std::function<void(TContext &, std::shared_ptr<std::vector<std::uint8_t>>)> CommandCallback;
                         std::shared_ptr<IBinarySender> s;
                         std::shared_ptr<IClientImplementation<TContext>> i;
-                        std::unordered_map<std::wstring, std::shared_ptr<std::queue<std::pair<uint32_t, CommandCallback>>>> ClientCommandCallbacks;
-                        std::unordered_map<std::pair<std::wstring, uint32_t>, CommandCallback, Hash> ServerCommands;
+                        std::unordered_map<std::wstring, std::shared_ptr<std::queue<std::pair<std::uint32_t, CommandCallback>>>> ClientCommandCallbacks;
+                        std::unordered_map<std::pair<std::wstring, std::uint32_t>, CommandCallback, Hash> ServerCommands;
+
+                    private:
+                        std::string w2s(std::wstring ws)
+                        {
+                            std::size_t n = std::wcstombs(NULL, ws.c_str(), INT_MAX);
+                            if ((int)(n) < 0) { throw std::logic_error("InvalidOperationException"); }
+                            std::string s(n, 0);
+                            std::wcstombs(&s[0], ws.c_str(), n);
+                            return s;
+                        }
 
                     public:
                         BinaryClient(std::shared_ptr<IBinarySender> s, std::shared_ptr<IClientImplementation<TContext>> ci)
@@ -183,24 +197,24 @@ ObjectSchemaTemplate
                             ${ServerCommands}
                         }
 
-                        uint64_t Hash()
+                        std::uint64_t Hash()
                         {
                             return 0x${Hash};
                         }
 
-                        void HandleResult(TContext &c, std::wstring CommandName, uint32_t CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters)
+                        void HandleResult(TContext &c, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
                         {
                             if (ClientCommandCallbacks.count(CommandName) > 0)
                             {
                                 auto q = ClientCommandCallbacks[CommandName];
                                 if (q->size() == 0)
                                 {
-                                    throw std::logic_error(w2s(L"InvalidOperationException" + CommandName));
+                                    throw std::logic_error("InvalidOperationException" + w2s(CommandName));
                                 }
                                 auto CallbackPair = q->front();
                                 if (std::get<0>(CallbackPair) != CommandHash)
                                 {
-                                    throw std::logic_error(w2s(L"InvalidOperationException" + CommandName));
+                                    throw std::logic_error("InvalidOperationException" + w2s(CommandName));
                                 }
                                 q->pop();
                                 auto Callback = std::get<1>(CallbackPair);
@@ -208,7 +222,7 @@ ObjectSchemaTemplate
                                 return;
                             }
 
-                            auto p = std::pair<std::wstring, uint32_t>(CommandName, CommandHash);
+                            auto p = std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash);
                             if (ServerCommands.count(p) > 0)
                             {
                                 auto a = ServerCommands[p];
@@ -216,7 +230,7 @@ ObjectSchemaTemplate
                                 return;
                             }
 
-                            throw std::logic_error(w2s(L"InvalidOperationException" + CommandName));
+                            throw std::logic_error("InvalidOperationException" + w2s(CommandName));
                         }
 
                         void DequeueCallback(std::wstring CommandName)
@@ -225,16 +239,16 @@ ObjectSchemaTemplate
                         }
 
                     private:
-                        void AddCallback(std::wstring CommandName, uint32_t CommandHash, CommandCallback Callback)
+                        void AddCallback(std::wstring CommandName, std::uint32_t CommandHash, CommandCallback Callback)
                         {
                             if (ClientCommandCallbacks.count(CommandName) > 0)
                             {
-                                ClientCommandCallbacks[CommandName]->push(std::pair<uint32_t, CommandCallback>(CommandHash, Callback));
+                                ClientCommandCallbacks[CommandName]->push(std::pair<std::uint32_t, CommandCallback>(CommandHash, Callback));
                             }
                             else
                             {
-                                auto q = std::make_shared<std::queue<std::pair<uint32_t, CommandCallback>>>();
-                                q->push(std::pair<uint32_t, CommandCallback>(CommandHash, Callback));
+                                auto q = std::make_shared<std::queue<std::pair<std::uint32_t, CommandCallback>>>();
+                                q->push(std::pair<std::uint32_t, CommandCallback>(CommandHash, Callback));
                                 ClientCommandCallbacks[CommandName] = q;
                             }
                         }
@@ -254,7 +268,7 @@ ObjectSchemaTemplate
                         BinaryTranslator::[[${Name}RequestToBinary]](bas, r);
                         bas.SetPosition(0);
                         auto Request = bas.ReadBytes(bas.GetLength());
-                        AddCallback(L"${CommandName}", 0x${CommandHash}, [=](TContext &c, std::shared_ptr<std::vector<uint8_t>> Parameters)
+                        AddCallback(L"${CommandName}", 0x${CommandHash}, [=](TContext &c, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
                         {
                             ByteArrayStream bas;
                             bas.WriteBytes(Parameters);
@@ -269,7 +283,7 @@ ObjectSchemaTemplate
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ServerCommands[std::pair<String, UInt32>(L"${CommandName}", 0x${CommandHash})] = [&](TContext &c, std::shared_ptr<std::vector<uint8_t>> Parameters)
+                    ServerCommands[std::pair<String, std::uint32_t>(L"${CommandName}", 0x${CommandHash})] = [&](TContext &c, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
                     {
                         ByteArrayStream bas;
                         bas.WriteBytes(Parameters);
@@ -284,8 +298,8 @@ ObjectSchemaTemplate
                     class IReadableStream
                     {
                     public:
-                        virtual uint8_t ReadByte() = 0;
-                        virtual std::shared_ptr<std::vector<uint8_t>> ReadBytes(size_t Size) = 0;
+                        virtual std::uint8_t ReadByte() = 0;
+                        virtual std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(std::size_t Size) = 0;
 
                         Unit ReadUnit()
                         {
@@ -296,98 +310,95 @@ ObjectSchemaTemplate
                             return ReadByte() != 0;
                         }
 
-                        uint8_t ReadUInt8()
+                        std::uint8_t ReadUInt8()
                         {
                             return ReadByte();
                         }
-                        uint16_t ReadUInt16()
+                        std::uint16_t ReadUInt16()
                         {
-                            uint16_t o;
-                            o = static_cast<uint16_t>(static_cast<uint16_t>(ReadByte()) & static_cast<uint16_t>(0xFF));
-                            o = static_cast<uint16_t>(o | ((static_cast<uint16_t>(ReadByte()) & 0xFF) << 8));
+                            std::uint16_t o;
+                            o = static_cast<std::uint16_t>(static_cast<std::uint16_t>(ReadByte()) & static_cast<std::uint16_t>(0xFF));
+                            o = static_cast<std::uint16_t>(o | ((static_cast<std::uint16_t>(ReadByte()) & 0xFF) << 8));
                             return o;
                         }
-                        uint32_t ReadUInt32()
+                        std::uint32_t ReadUInt32()
                         {
-                            uint32_t o;
-                            o = static_cast<uint32_t>(ReadByte()) & 0xFF;
-                            o = o | ((static_cast<uint32_t>(ReadByte()) & 0xFF) << 8);
-                            o = o | ((static_cast<uint32_t>(ReadByte()) & 0xFF) << 16);
-                            o = o | ((static_cast<uint32_t>(ReadByte()) & 0xFF) << 24);
+                            std::uint32_t o;
+                            o = static_cast<std::uint32_t>(ReadByte()) & 0xFF;
+                            o = o | ((static_cast<std::uint32_t>(ReadByte()) & 0xFF) << 8);
+                            o = o | ((static_cast<std::uint32_t>(ReadByte()) & 0xFF) << 16);
+                            o = o | ((static_cast<std::uint32_t>(ReadByte()) & 0xFF) << 24);
                             return o;
                         }
-                        uint64_t ReadUInt64()
+                        std::uint64_t ReadUInt64()
                         {
-                            uint64_t o;
-                            o = static_cast<uint64_t>(ReadByte()) & 0xFF;
-                            o = o | ((static_cast<uint64_t>(ReadByte()) & 0xFF) << 8);
-                            o = o | ((static_cast<uint64_t>(ReadByte()) & 0xFF) << 16);
-                            o = o | ((static_cast<uint64_t>(ReadByte()) & 0xFF) << 24);
-                            o = o | ((static_cast<uint64_t>(ReadByte()) & 0xFF) << 32);
-                            o = o | ((static_cast<uint64_t>(ReadByte()) & 0xFF) << 40);
-                            o = o | ((static_cast<uint64_t>(ReadByte()) & 0xFF) << 48);
-                            o = o | ((static_cast<uint64_t>(ReadByte()) & 0xFF) << 56);
+                            std::uint64_t o;
+                            o = static_cast<std::uint64_t>(ReadByte()) & 0xFF;
+                            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 8);
+                            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 16);
+                            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 24);
+                            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 32);
+                            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 40);
+                            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 48);
+                            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 56);
                             return o;
                         }
-                        int8_t ReadInt8()
+                        std::int8_t ReadInt8()
                         {
-                            return static_cast<int8_t>(ReadByte());
+                            return static_cast<std::int8_t>(ReadByte());
                         }
-                        int16_t ReadInt16()
+                        std::int16_t ReadInt16()
                         {
-                            int16_t o;
-                            o = static_cast<int16_t>(static_cast<int16_t>(ReadByte()) & static_cast<int16_t>(0xFF));
-                            o = static_cast<int16_t>(o | ((static_cast<int16_t>(ReadByte()) & 0xFF) << 8));
+                            std::int16_t o;
+                            o = static_cast<std::int16_t>(static_cast<std::int16_t>(ReadByte()) & static_cast<std::int16_t>(0xFF));
+                            o = static_cast<std::int16_t>(o | ((static_cast<std::int16_t>(ReadByte()) & 0xFF) << 8));
                             return o;
                         }
-                        int32_t ReadInt32()
+                        std::int32_t ReadInt32()
                         {
-                            int32_t o;
-                            o = static_cast<int32_t>(ReadByte()) & 0xFF;
-                            o = o | ((static_cast<int32_t>(ReadByte()) & 0xFF) << 8);
-                            o = o | ((static_cast<int32_t>(ReadByte()) & 0xFF) << 16);
-                            o = o | ((static_cast<int32_t>(ReadByte()) & 0xFF) << 24);
+                            std::int32_t o;
+                            o = static_cast<std::int32_t>(ReadByte()) & 0xFF;
+                            o = o | ((static_cast<std::int32_t>(ReadByte()) & 0xFF) << 8);
+                            o = o | ((static_cast<std::int32_t>(ReadByte()) & 0xFF) << 16);
+                            o = o | ((static_cast<std::int32_t>(ReadByte()) & 0xFF) << 24);
                             return o;
                         }
-                        int64_t ReadInt64()
+                        std::int64_t ReadInt64()
                         {
-                            int64_t o;
-                            o = static_cast<int64_t>(ReadByte()) & 0xFF;
-                            o = o | ((static_cast<int64_t>(ReadByte()) & 0xFF) << 8);
-                            o = o | ((static_cast<int64_t>(ReadByte()) & 0xFF) << 16);
-                            o = o | ((static_cast<int64_t>(ReadByte()) & 0xFF) << 24);
-                            o = o | ((static_cast<int64_t>(ReadByte()) & 0xFF) << 32);
-                            o = o | ((static_cast<int64_t>(ReadByte()) & 0xFF) << 40);
-                            o = o | ((static_cast<int64_t>(ReadByte()) & 0xFF) << 48);
-                            o = o | ((static_cast<int64_t>(ReadByte()) & 0xFF) << 56);
+                            std::int64_t o;
+                            o = static_cast<std::int64_t>(ReadByte()) & 0xFF;
+                            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 8);
+                            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 16);
+                            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 24);
+                            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 32);
+                            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 40);
+                            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 48);
+                            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 56);
                             return o;
                         }
 
                         float ReadFloat32()
                         {
-                            int32_t i = ReadInt32();
+                            std::int32_t i = ReadInt32();
                             return *reinterpret_cast<float *>(&i);
                         }
                         double ReadFloat64()
                         {
-                            int64_t i = ReadInt64();
+                            std::int64_t i = ReadInt64();
                             return *reinterpret_cast<double *>(&i);
                         }
 
                         String ReadString()
                         {
-                            int32_t Length = ReadInt32();
-                            int32_t n = Length / 2;
-                            std::vector<wchar_t> Chars;
+                            std::int32_t Length = ReadInt32();
+                            int n = (int)(Length);
+                            std::vector<std::uint8_t> Bytes;
                             for (int k = 0; k < n; k += 1)
                             {
-                                Chars.push_back(static_cast<wchar_t>(ReadUInt16()));
+                                Bytes.push_back(ReadByte());
                             }
-                            if ((Length & 1) != 0)
-                            {
-                                ReadByte();
-                            }
-                            return String(Chars.begin(), Chars.end());
+                            std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
+                            return conv.from_bytes(reinterpret_cast<const char *>(Bytes.data()), reinterpret_cast<const char *>(Bytes.data() + Bytes.size()));
                         }
 
                         virtual ~IReadableStream() {}
@@ -396,8 +407,8 @@ ObjectSchemaTemplate
                     class IWritableStream
                     {
                     public:
-                        virtual void WriteByte(uint8_t b) = 0;
-                        virtual void WriteBytes(std::shared_ptr<std::vector<uint8_t>> l) = 0;
+                        virtual void WriteByte(std::uint8_t b) = 0;
+                        virtual void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l) = 0;
 
                         void WriteUnit(Unit v)
                         {
@@ -414,78 +425,79 @@ ObjectSchemaTemplate
                             }
                         }
 
-                        void WriteUInt8(uint8_t v)
+                        void WriteUInt8(std::uint8_t v)
                         {
                             WriteByte(v);
                         }
-                        void WriteUInt16(uint16_t v)
+                        void WriteUInt16(std::uint16_t v)
                         {
-                            WriteByte(static_cast<uint8_t>(v & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 8) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
                         }
-                        void WriteUInt32(uint32_t v)
+                        void WriteUInt32(std::uint32_t v)
                         {
-                            WriteByte(static_cast<uint8_t>(v & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 8) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 16) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 24) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
                         }
-                        void WriteUInt64(uint64_t v)
+                        void WriteUInt64(std::uint64_t v)
                         {
-                            WriteByte(static_cast<uint8_t>(v & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 8) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 16) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 24) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 32) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 40) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 48) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 56) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 32) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 40) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 48) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 56) & 0xFF));
                         }
-                        void WriteInt8(int8_t v)
+                        void WriteInt8(std::int8_t v)
                         {
-                            WriteByte(static_cast<uint8_t>(v));
+                            WriteByte(static_cast<std::uint8_t>(v));
                         }
-                        void WriteInt16(int16_t v)
+                        void WriteInt16(std::int16_t v)
                         {
-                            WriteByte(static_cast<uint8_t>(v & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 8) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
                         }
-                        void WriteInt32(int32_t v)
+                        void WriteInt32(std::int32_t v)
                         {
-                            WriteByte(static_cast<uint8_t>(v & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 8) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 16) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 24) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
                         }
-                        void WriteInt64(int64_t v)
+                        void WriteInt64(std::int64_t v)
                         {
-                            WriteByte(static_cast<uint8_t>(v & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 8) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 16) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 24) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 32) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 40) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 48) & 0xFF));
-                            WriteByte(static_cast<uint8_t>((v >> 56) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 32) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 40) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 48) & 0xFF));
+                            WriteByte(static_cast<std::uint8_t>((v >> 56) & 0xFF));
                         }
 
                         void WriteFloat32(float v)
                         {
-                            WriteInt32(*reinterpret_cast<int32_t *>(&v));
+                            WriteInt32(*reinterpret_cast<std::int32_t *>(&v));
                         }
                         void WriteFloat64(double v)
                         {
-                            WriteInt64(*reinterpret_cast<int64_t *>(&v));
+                            WriteInt64(*reinterpret_cast<std::int64_t *>(&v));
                         }
 
                         void WriteString(String v)
                         {
-                            int32_t n = v.size();
-                            int32_t Length = n * 2;
-                            WriteInt32(Length);
+                            std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
+                            auto Bytes = conv.to_bytes(v);
+                            int n = (int)(Bytes.size());
+                            WriteInt32((std::int32_t)(n));
                             for (int k = 0; k < n; k += 1)
                             {
-                                WriteUInt16(static_cast<uint16_t>(v[k]));
+                                WriteByte(static_cast<std::uint8_t>(Bytes[k]));
                             }
                         }
 
@@ -501,37 +513,37 @@ ObjectSchemaTemplate
                     class ByteArrayStream : public IReadableWritableStream /* final */
                     {
                     private:
-                        std::vector<uint8_t> Buffer;
-                        size_t Position;
+                        std::vector<std::uint8_t> Buffer;
+                        std::size_t Position;
                     public:
                         ByteArrayStream() : Position(0)
                         {
                         }
 
-                        uint8_t ReadByte()
+                        std::uint8_t ReadByte()
                         {
                             if (Position + 1 > Buffer.size()) { throw std::out_of_range(""); }
-                            uint8_t b = Buffer[Position];
+                            std::uint8_t b = Buffer[Position];
                             Position += 1;
                             return b;
                         }
-                        std::shared_ptr<std::vector<uint8_t>> ReadBytes(size_t Size)
+                        std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(std::size_t Size)
                         {
                             if (Position + Size > Buffer.size()) { throw std::out_of_range(""); }
-                            auto l = std::make_shared<std::vector<uint8_t>>();
+                            auto l = std::make_shared<std::vector<std::uint8_t>>();
                             l->resize(Size, 0);
                             std::copy(Buffer.data() + Position, Buffer.data() + Position + Size, l->data());
                             Position += Size;
                             return l;
                         }
 
-                        void WriteByte(uint8_t b)
+                        void WriteByte(std::uint8_t b)
                         {
                             if (Position + 1 > Buffer.size()) { Buffer.resize(Position + 1, 0); }
                             Buffer[Position] = b;
                             Position += 1;
                         }
-                        void WriteBytes(std::shared_ptr<std::vector<uint8_t>> l)
+                        void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l)
                         {
                             auto Size = l->size();
                             if (Position + Size > Buffer.size()) { Buffer.resize(Position + Size, 0); }
@@ -539,22 +551,22 @@ ObjectSchemaTemplate
                             Position += Size;
                         }
 
-                        size_t GetPosition()
+                        std::size_t GetPosition()
                         {
                             return Position;
                         }
 
-                        void SetPosition(size_t Position)
+                        void SetPosition(std::size_t Position)
                         {
                             this->Position = Position;
                         }
 
-                        size_t GetLength()
+                        std::size_t GetLength()
                         {
                             return Buffer.size();
                         }
 
-                        void SetLength(size_t Length)
+                        void SetLength(std::size_t Length)
                         {
                             Buffer.resize(Length, 0);
                         }
@@ -611,11 +623,11 @@ ObjectSchemaTemplate
                 $String
                     static Int IntFromBinary(IReadableStream &s)
                     {
-                        return s.ReadInt32();
+                        return (Int)(s.ReadInt32());
                     }
                     static void IntToBinary(IWritableStream &s, Int v)
                     {
-                        s.WriteInt32(v);
+                        s.WriteInt32((Int32)(v));
                     }
         Template
             Name BinaryTranslator_Primitive_Real
@@ -901,7 +913,7 @@ ObjectSchemaTemplate
                     static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
                         auto l = std::make_shared<[[${TypeString}]]>();
-                        int32_t Length = IntFromBinary(s);
+                        int Length = (int)(IntFromBinary(s));
                         for (int k = 0; k < Length; k += 1)
                         {
                             l->push_back([[${ElementTypeFriendlyName}FromBinary]](s));
@@ -910,8 +922,8 @@ ObjectSchemaTemplate
                     }
                     static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeString}]]> l)
                     {
-                        int32_t Length = l->size();
-                        IntToBinary(s, Length);
+                        int Length = (int)l->size();
+                        IntToBinary(s, (Int)(Length));
                         for (int k = 0; k < Length; k += 1)
                         {
                             [[${ElementTypeFriendlyName}ToBinary]](s, (*l)[k]);
@@ -925,7 +937,7 @@ ObjectSchemaTemplate
                     static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
                         auto l = std::make_shared<[[${TypeString}]]>();
-                        int32_t Length = IntFromBinary(s);
+                        int Length = (int)(IntFromBinary(s));
                         for (int k = 0; k < Length; k += 1)
                         {
                             l->insert([[${ElementTypeFriendlyName}FromBinary]](s));
@@ -934,8 +946,8 @@ ObjectSchemaTemplate
                     }
                     static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeString}]]> l)
                     {
-                        int32_t Length = l->size();
-                        IntToBinary(s, Length);
+                        int Length = (int)(l->size());
+                        IntToBinary(s, (Int)(Length));
                         for (auto i = l->begin(); i != l->end(); i.operator++())
                         {
                             [[${ElementTypeFriendlyName}ToBinary]](s, (*i));
@@ -949,7 +961,7 @@ ObjectSchemaTemplate
                     static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
                         auto l = std::make_shared<[[${TypeString}]]>();
-                        int32_t Length = IntFromBinary(s);
+                        int Length = (int)(IntFromBinary(s));
                         for (int k = 0; k < Length; k += 1)
                         {
                             auto Key = [[${KeyTypeFriendlyName}FromBinary]](s);
@@ -959,8 +971,8 @@ ObjectSchemaTemplate
                     }
                     static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeString}]]> l)
                     {
-                        int32_t Length = l->size();
-                        IntToBinary(s, Length);
+                        int Length = (int)(l->size());
+                        IntToBinary(s, (Int)(Length));
                         for (auto i = l->begin(); i != l->end(); i.operator++())
                         {
                             [[${KeyTypeFriendlyName}ToBinary]](s, std::get<0>(*i));
