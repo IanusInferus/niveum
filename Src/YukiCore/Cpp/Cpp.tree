@@ -4,7 +4,7 @@
       File:        Cpp.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++模板数据
-      Version:     2012.04.21.
+      Version:     2012.04.27.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -170,37 +170,37 @@ ObjectSchemaTemplate
             PlatformName std::wstring
         PrimitiveMapping
             Name Int
-            PlatformName int32_t
+            PlatformName std::int32_t
         PrimitiveMapping
             Name Real
             PlatformName double
         PrimitiveMapping
             Name Byte
-            PlatformName uint8_t
+            PlatformName std::uint8_t
         PrimitiveMapping
             Name UInt8
-            PlatformName uint8_t
+            PlatformName std::uint8_t
         PrimitiveMapping
             Name UInt16
-            PlatformName uint16_t
+            PlatformName std::uint16_t
         PrimitiveMapping
             Name UInt32
-            PlatformName uint32_t
+            PlatformName std::uint32_t
         PrimitiveMapping
             Name UInt64
-            PlatformName uint64_t
+            PlatformName std::uint64_t
         PrimitiveMapping
             Name Int8
-            PlatformName int8_t
+            PlatformName std::int8_t
         PrimitiveMapping
             Name Int16
-            PlatformName int16_t
+            PlatformName std::int16_t
         PrimitiveMapping
             Name Int32
-            PlatformName int32_t
+            PlatformName std::int32_t
         PrimitiveMapping
             Name Int64
-            PlatformName int64_t
+            PlatformName std::int64_t
         PrimitiveMapping
             Name Float32
             PlatformName float
