@@ -3,7 +3,7 @@
 //  File:        Utility.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 工具函数
-//  Version:     2012.04.26.
+//  Version:     2012.04.27.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -45,8 +45,8 @@ bool EqualIgnoreCase(shared_ptr<wstring> l, shared_ptr<wstring> r)
 
 shared_ptr<wstring> s2w(shared_ptr<string> s)
 {
-    int n = mbstowcs(NULL, s->c_str(), INT_MAX);
-    if (n <= 0) return nullptr;
+    int n = (int)mbstowcs(NULL, s->c_str(), INT_MAX);
+    if (n < 0) { throw logic_error("InvalidOperationException"); }
     auto ws = make_shared<wstring>(n, 0);
     mbstowcs(&(*ws)[0], s->c_str(), n);
     return ws;
@@ -54,8 +54,8 @@ shared_ptr<wstring> s2w(shared_ptr<string> s)
 
 shared_ptr<string> w2s(shared_ptr<wstring> ws)
 {
-    int n = wcstombs(NULL, ws->c_str(), INT_MAX);
-    if (n <= 0) return nullptr;
+    int n = (int)wcstombs(NULL, ws->c_str(), INT_MAX);
+    if (n < 0) { throw logic_error("InvalidOperationException"); }
     auto s = make_shared<string>(n, 0);
     wcstombs(&(*s)[0], ws->c_str(), n);
     return s;
