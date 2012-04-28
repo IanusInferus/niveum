@@ -8,9 +8,9 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include <boost/asio.hpp>
 #include <exception>
 #include <stdexcept>
+#include <boost/asio.hpp>
 
 namespace Client
 {
