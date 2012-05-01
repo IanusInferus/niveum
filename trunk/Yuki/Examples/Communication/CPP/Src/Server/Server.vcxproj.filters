@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Context">
+      <UniqueIdentifier>{7140a19f-1b31-420b-8fda-987e517422bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Servers">
+      <UniqueIdentifier>{4cc1e456-3f66-4cf1-bfe5-76d5916274bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Services">
+      <UniqueIdentifier>{7c7e2ead-57ce-4294-9e62-acd8cd8b9f58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Net">
+      <UniqueIdentifier>{53703e91-bd37-40c4-a4c0-604c00d77021}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BaseSystem">
+      <UniqueIdentifier>{b13b98e4-2307-4711-a503-7011a8ccc28a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Util">
+      <UniqueIdentifier>{c0b87016-8ebf-4a4d-8408-1ddc70c37728}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Context\ServerContext.h">
+      <Filter>Context</Filter>
+    </ClInclude>
+    <ClInclude Include="Context\SessionContext.h">
+      <Filter>Context</Filter>
+    </ClInclude>
+    <ClInclude Include="Communication.h" />
+    <ClInclude Include="CommunicationBinary.h" />
+    <ClInclude Include="Utility.h" />
+    <ClInclude Include="Servers\BinarySocketServer.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
+    <ClInclude Include="Servers\BinarySocketSession.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
+    <ClInclude Include="Services\ServerImplementation.h">
+      <Filter>Services</Filter>
+    </ClInclude>
+    <ClInclude Include="Net\TcpServer.h">
+      <Filter>Net</Filter>
+    </ClInclude>
+    <ClInclude Include="Net\TcpSession.h">
+      <Filter>Net</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\LockedVariable.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\AutoRelease.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\CancellationToken.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\AutoResetEvent.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\Optional.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Util\SessionLogEntry.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Program.cpp" />
+    <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="Services\Base.cpp">
+      <Filter>Services</Filter>
+    </ClCompile>
+    <ClCompile Include="Services\Message.cpp">
+      <Filter>Services</Filter>
+    </ClCompile>
+    <ClCompile Include="Servers\BinarySocketServer.cpp">
+      <Filter>Servers</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
