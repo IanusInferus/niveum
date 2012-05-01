@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 using Communication;
 using Communication.Json;
 
@@ -10,7 +11,13 @@ namespace Client
     {
         public void Error(ClientContext c, ErrorEvent e)
         {
-            c.DequeueCallback(e.CommandName);
+            try
+            {
+                c.DequeueCallback(e.CommandName);
+            }
+            catch (Exception)
+            {
+            }
             var m = "调用'" + e.CommandName + "'发生错误:" + e.Message;
             Console.WriteLine(m);
         }
@@ -23,6 +30,16 @@ namespace Client
         public void MessageReceivedAt1(ClientContext c, MessageReceivedAt1Event e)
         {
             throw new NotImplementedException();
+        }
+
+        public void TestMessageReceived(ClientContext c, TestMessageReceivedEvent e)
+        {
+            c.Sum += Int32.Parse(e.Message);
+            c.Num -= 1;
+            if (c.Num == 0)
+            {
+                c.Completed();
+            }
         }
     }
 }

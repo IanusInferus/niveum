@@ -16,21 +16,19 @@ shared_ptr<SendMessageReply> ServerImplementation::SendMessage(SessionContext &c
         return SendMessageReply::CreateTooLong();
     }
     c.SendMessageCount += 1;
-    auto Sessions = sc->GetSessions();
+    auto Sessions = sc->Sessions();
     for (int k = 0; k < (int)(Sessions->size()); k += 1)
     {
         auto rc = (*Sessions)[k];
         {
-            {
-                boost::unique_lock<boost::shared_mutex> WriterLock(rc->SessionLock);
-                rc->ReceivedMessageCount += 1;
-            }
-            if (MessageReceived != nullptr)
-            {
-                auto e = make_shared<MessageReceivedEvent>();
-                e->Content = r->Content;
-                MessageReceived(*rc, e);
-            }
+            boost::unique_lock<boost::shared_mutex> WriterLock(rc->SessionLock);
+            rc->ReceivedMessageCount += 1;
+        }
+        if (MessageReceived != nullptr)
+        {
+            auto e = make_shared<MessageReceivedEvent>();
+            e->Content = r->Content;
+            MessageReceived(*rc, e);
         }
     }
     return SendMessageReply::CreateSuccess();

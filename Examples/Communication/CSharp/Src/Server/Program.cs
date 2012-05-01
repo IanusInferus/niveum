@@ -120,7 +120,7 @@ namespace Server
 
             if (c.ProtocolType == ProtocolType.Binary)
             {
-                using (var Server = new BinaryServer())
+                using (var Server = new BinarySocketServer())
                 {
                     Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
                     Server.SessionIdleTimeout = c.SessionIdleTimeout;
@@ -152,7 +152,7 @@ namespace Server
             }
             else if (c.ProtocolType == ProtocolType.Json)
             {
-                using (var Server = new JsonServer())
+                using (var Server = new JsonSocketServer())
                 {
                     Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
                     Server.SessionIdleTimeout = c.SessionIdleTimeout;

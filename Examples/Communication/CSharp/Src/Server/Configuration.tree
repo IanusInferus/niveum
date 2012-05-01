@@ -12,7 +12,7 @@
     EnableLogSystem True
     EnableLogConsole True
     SessionIdleTimeout 600
-    MaxConnections 1000
-    MaxConnectionsPerIP 10
+    MaxConnections 32768
+    MaxConnectionsPerIP 32768
     MaxBadCommands 8
     ClientDebug True
