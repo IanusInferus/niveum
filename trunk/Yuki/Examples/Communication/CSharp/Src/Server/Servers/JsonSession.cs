@@ -31,10 +31,8 @@ namespace Server
             Context.Quit += StopAsync;
         }
 
-        public override void Start()
+        protected override void StartInner()
         {
-            base.Start();
-
             IsRunningValue.Update
             (
                 b =>
@@ -52,8 +50,6 @@ namespace Server
                 {
                     throw new InvalidOperationException();
                 }
-
-                base.Start();
 
                 SessionTask.DoAction(t => t.Start());
 
@@ -321,25 +317,19 @@ namespace Server
                 {
                     Action a = () =>
                     {
-                        try
+                        if (Server.EnableLogPerformance)
                         {
-                            if (Server.EnableLogPerformance)
-                            {
-                                var sw = new Stopwatch();
-                                sw.Start();
-                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
-                                sw.Stop();
-                                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Message = String.Format("Time {0}ms", sw.ElapsedMilliseconds) });
-                                WriteLine(CommandName, s);
-                            }
-                            else
-                            {
-                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
-                                WriteLine(CommandName, s);
-                            }
+                            var sw = new Stopwatch();
+                            sw.Start();
+                            var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
+                            sw.Stop();
+                            Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Message = String.Format("Time {0}ms", sw.ElapsedMilliseconds) });
+                            WriteLine(CommandName, s);
                         }
-                        catch (QuitException)
+                        else
                         {
+                            var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
+                            WriteLine(CommandName, s);
                         }
                     };
 
@@ -466,7 +456,7 @@ namespace Server
             );
             Server.NotifySessionQuit(this);
         }
-        public override void Stop()
+        protected override void StopInner()
         {
             if (Server != null)
             {
@@ -503,7 +493,6 @@ namespace Server
                     return null;
                 }
             );
-            base.Stop();
         }
     }
 }

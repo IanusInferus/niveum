@@ -20,12 +20,22 @@ namespace Communication.Net
         {
         }
 
-        public virtual void Start()
+        protected virtual void StartInner()
         {
         }
 
-        public virtual void Stop()
+        protected virtual void StopInner()
         {
+        }
+
+        public void Start()
+        {
+            StartInner();
+        }
+
+        public void Stop()
+        {
+            StopInner();
             StreamedAsyncSocket s = null;
             Socket.Update
             (

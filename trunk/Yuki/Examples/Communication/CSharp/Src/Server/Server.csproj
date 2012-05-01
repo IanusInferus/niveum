@@ -54,7 +54,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Util\SessionLogEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Util\Exceptions.cs" />
     <Compile Include="Context\ServerContext.cs" />
     <Compile Include="Services\ServerImplementation.cs" />
     <Compile Include="Context\SessionContext.cs" />

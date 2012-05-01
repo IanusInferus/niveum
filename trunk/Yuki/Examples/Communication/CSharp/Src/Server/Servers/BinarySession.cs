@@ -33,10 +33,8 @@ namespace Server
             Context.Quit += StopAsync;
         }
 
-        public override void Start()
+        protected override void StartInner()
         {
-            base.Start();
-
             IsRunningValue.Update
             (
                 b =>
@@ -54,8 +52,6 @@ namespace Server
                 {
                     throw new InvalidOperationException();
                 }
-
-                base.Start();
 
                 SessionTask.DoAction(t => t.Start());
 
@@ -349,7 +345,6 @@ namespace Server
                         return;
                     }
                     var FirstPosition = 0;
-                    var CheckPosition = BufferLength;
                     BufferLength += Count;
                     while (true)
                     {
@@ -434,25 +429,19 @@ namespace Server
             {
                 Action a = () =>
                 {
-                    try
+                    if (Server.EnableLogPerformance)
                     {
-                        if (Server.EnableLogPerformance)
-                        {
-                            var sw = new Stopwatch();
-                            sw.Start();
-                            var s = Server.InnerServer.ExecuteCommand(Context, CommandName, CommandHash, Parameters);
-                            sw.Stop();
-                            Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Message = String.Format("Time {0}ms", sw.ElapsedMilliseconds) });
-                            WriteCommand(CommandName, CommandHash, s);
-                        }
-                        else
-                        {
-                            var s = Server.InnerServer.ExecuteCommand(Context, CommandName, CommandHash, Parameters);
-                            WriteCommand(CommandName, CommandHash, s);
-                        }
+                        var sw = new Stopwatch();
+                        sw.Start();
+                        var s = Server.InnerServer.ExecuteCommand(Context, CommandName, CommandHash, Parameters);
+                        sw.Stop();
+                        Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Message = String.Format("Time {0}ms", sw.ElapsedMilliseconds) });
+                        WriteCommand(CommandName, CommandHash, s);
                     }
-                    catch (QuitException)
+                    else
                     {
+                        var s = Server.InnerServer.ExecuteCommand(Context, CommandName, CommandHash, Parameters);
+                        WriteCommand(CommandName, CommandHash, s);
                     }
                 };
 
@@ -506,14 +495,14 @@ namespace Server
             if (Server.ClientDebug)
             {
                 Server.RaiseError(Context, CommandName, Info);
-                if (Server.EnableLogUnknownError)
-                {
-                    Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Unk", Message = Info });
-                }
             }
             else
             {
                 Server.RaiseError(Context, CommandName, "Internal server error.");
+            }
+            if (Server.EnableLogUnknownError)
+            {
+                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Unk", Message = Info });
             }
         }
 
@@ -543,20 +532,11 @@ namespace Server
             {
                 Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExit" });
             }
-            IsRunningValue.Update
-            (
-                b =>
-                {
-                    if (b)
-                    {
-                        PushCommand(SessionCommand.CreateQuit());
-                    }
-                    return false;
-                }
-            );
+            PushCommand(SessionCommand.CreateQuit());
+            IsRunningValue.Update(b => false);
             Server.NotifySessionQuit(this);
         }
-        public override void Stop()
+        protected override void StopInner()
         {
             if (Server != null)
             {
@@ -564,17 +544,8 @@ namespace Server
                 Server.SessionMappings.TryRemove(Context, out v);
             }
 
-            IsRunningValue.Update
-            (
-                b =>
-                {
-                    if (b)
-                    {
-                        PushCommand(SessionCommand.CreateQuit());
-                    }
-                    return false;
-                }
-            );
+            PushCommand(SessionCommand.CreateQuit());
+            IsRunningValue.Update(b => false);
 
             while (NumSessionCommand.Check(n => n != 0))
             {
@@ -593,7 +564,6 @@ namespace Server
                     return null;
                 }
             );
-            base.Stop();
         }
     }
 }
