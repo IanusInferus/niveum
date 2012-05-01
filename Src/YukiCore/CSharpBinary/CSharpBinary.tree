@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板数据
-      Version:     2012.04.23.
+      Version:     2012.05.01.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -130,7 +130,7 @@ ObjectSchemaTemplate
             //Parameters: ${Hash}, ${ClientCommands}, ${ServerCommands}
             Value
                 $String
-                    public sealed class BinaryClient<TContext>
+                    public sealed class BinaryClient<TContext> : IClient<TContext>
                     {
                         private IBinarySender s;
                         private IClientImplementation<TContext> i;
