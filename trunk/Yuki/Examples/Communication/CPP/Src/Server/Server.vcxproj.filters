@@ -76,5 +76,8 @@
     <ClCompile Include="Servers\BinarySocketServer.cpp">
       <Filter>Servers</Filter>
     </ClCompile>
+    <ClCompile Include="Services\TestPerformance.cpp">
+      <Filter>Services</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

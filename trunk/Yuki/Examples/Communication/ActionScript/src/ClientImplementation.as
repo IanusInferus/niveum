@@ -36,5 +36,9 @@
         public function messageReceivedAt1(e:MessageReceivedAt1Event):void
         {
         }
+        /** 接到群发消息 */
+        public function testMessageReceived(e:TestMessageReceivedEvent):void
+        {
+        }
     }
 }

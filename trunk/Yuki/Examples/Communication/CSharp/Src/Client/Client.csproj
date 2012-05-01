@@ -43,9 +43,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientImplementation.cs" />
-    <Compile Include="Clients\BinaryClient.cs" />
-    <Compile Include="Clients\JsonClient.cs" />
+    <Compile Include="Clients\BinarySocketClient.cs" />
+    <Compile Include="Clients\JsonSocketClient.cs" />
     <Compile Include="Context\ClientContext.cs" />
+    <Compile Include="PerformanceTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2012.04.24.
+//  Version:     2012.05.02.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -51,6 +51,7 @@ namespace Client
 
             var CmdLine = CommandLine.GetCmdLine();
 
+            var Automatic = false;
             foreach (var opt in CmdLine.Options)
             {
                 if ((opt.Name.ToLower() == "?") || (opt.Name.ToLower() == "help"))
@@ -58,25 +59,43 @@ namespace Client
                     DisplayInfo();
                     return 0;
                 }
+                else if (opt.Name.ToLower() == "auto")
+                {
+                    Automatic = true;
+                }
             }
 
             var argv = CmdLine.Arguments;
+            IPEndPoint RemoteEndPoint;
+            ApplicationProtocolType ProtocolType;
             if (argv.Length == 3)
             {
-                Run(new IPEndPoint(IPAddress.Parse(argv[1]), int.Parse(argv[2])), (ApplicationProtocolType)Enum.Parse(typeof(ApplicationProtocolType), argv[0], true));
+                RemoteEndPoint = new IPEndPoint(IPAddress.Parse(argv[1]), int.Parse(argv[2]));
+                ProtocolType = (ApplicationProtocolType)Enum.Parse(typeof(ApplicationProtocolType), argv[0], true);
             }
             else if (argv.Length == 1)
             {
-                Run(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001), (ApplicationProtocolType)Enum.Parse(typeof(ApplicationProtocolType), argv[0], true));
+                RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
+                ProtocolType = (ApplicationProtocolType)Enum.Parse(typeof(ApplicationProtocolType), argv[0], true);
             }
             else if (argv.Length == 0)
             {
-                Run(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001), ApplicationProtocolType.Binary);
+                RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
+                ProtocolType = ApplicationProtocolType.Binary;
             }
             else
             {
                 DisplayInfo();
                 return -1;
+            }
+
+            if (Automatic)
+            {
+                PerformanceTest.DoTest(RemoteEndPoint, ProtocolType);
+            }
+            else
+            {
+                Run(RemoteEndPoint, ProtocolType);
             }
 
             return 0;
@@ -92,61 +111,56 @@ namespace Client
         public static void DisplayInfo()
         {
             Console.WriteLine(@"用法:");
-            Console.WriteLine(@"Client [<Protocol> [<IpAddress> <Port>]]");
+            Console.WriteLine(@"Client [<Protocol> [<IpAddress> <Port>]] [/auto]");
             Console.WriteLine(@"Protocol 通讯协议，可为Binary或Json，默认为Binary");
             Console.WriteLine(@"IpAddress 服务器IP地址，默认为127.0.0.1");
             Console.WriteLine(@"Port 服务器端口，默认为8001");
+            Console.WriteLine(@"/auto 自动化性能测试");
         }
 
         public static void Run(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType)
         {
             if (ProtocolType == ApplicationProtocolType.Binary)
             {
-                using (var bc = new BinaryClient(RemoteEndPoint, new ClientImplementation()))
+                using (var bc = new BinarySocketClient(RemoteEndPoint, new ClientImplementation()))
                 {
                     bc.Connect();
                     Console.WriteLine("连接成功。");
                     bc.Receive(se => Console.WriteLine((new SocketException((int)se)).Message));
-                    while (true)
-                    {
-                        var Line = Console.ReadLine();
-                        if (Line == "exit") { break; }
-                        bc.InnerClient.SendMessage(new SendMessageRequest { Content = Line }, (c, r) =>
-                        {
-                            if (r.OnTooLong)
-                            {
-                                Console.WriteLine("消息过长。");
-                            }
-                        });
-                    }
+                    ReadLineAndSendLoop(bc.InnerClient);
                     bc.Close();
                 }
             }
             else if (ProtocolType == ApplicationProtocolType.Json)
             {
-                using (var jc = new JsonClient(RemoteEndPoint, new ClientImplementation()))
+                using (var jc = new JsonSocketClient(RemoteEndPoint, new ClientImplementation()))
                 {
                     jc.Connect();
                     Console.WriteLine("连接成功。");
                     jc.Receive(se => Console.WriteLine((new SocketException((int)se)).Message));
-                    while (true)
-                    {
-                        var Line = Console.ReadLine();
-                        if (Line == "exit") { break; }
-                        jc.InnerClient.SendMessage(new SendMessageRequest { Content = Line }, (c, r) =>
-                        {
-                            if (r.OnTooLong)
-                            {
-                                Console.WriteLine("消息过长。");
-                            }
-                        });
-                    }
+                    ReadLineAndSendLoop(jc.InnerClient);
                     jc.Close();
                 }
             }
             else
             {
                 Console.WriteLine("协议不能识别：" + ProtocolType.ToString());
+            }
+        }
+
+        public static void ReadLineAndSendLoop(IClient<ClientContext> InnerClient)
+        {
+            while (true)
+            {
+                var Line = Console.ReadLine();
+                if (Line == "exit") { break; }
+                InnerClient.SendMessage(new SendMessageRequest { Content = Line }, (c, r) =>
+                {
+                    if (r.OnTooLong)
+                    {
+                        Console.WriteLine("消息过长。");
+                    }
+                });
             }
         }
     }

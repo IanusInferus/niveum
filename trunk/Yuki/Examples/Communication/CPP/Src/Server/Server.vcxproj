@@ -33,6 +33,7 @@
     <ClCompile Include="Servers\BinarySocketServer.cpp" />
     <ClCompile Include="Services\Base.cpp" />
     <ClCompile Include="Services\Message.cpp" />
+    <ClCompile Include="Services\TestPerformance.cpp" />
     <ClCompile Include="Utility.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

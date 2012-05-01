@@ -15,7 +15,7 @@ namespace Server
     /// <summary>
     /// 本类的所有非继承的公共成员均是线程安全的。
     /// </summary>
-    public class BinaryServer : TcpServer<BinaryServer, BinarySession>
+    public class BinarySocketServer : TcpServer<BinarySocketServer, BinarySocketSession>
     {
         private ServerImplementation si;
         private JsonLogAspectWrapper<SessionContext> law;
@@ -138,9 +138,9 @@ namespace Server
             }
         }
 
-        public ConcurrentDictionary<SessionContext, BinarySession> SessionMappings = new ConcurrentDictionary<SessionContext, BinarySession>();
+        public ConcurrentDictionary<SessionContext, BinarySocketSession> SessionMappings = new ConcurrentDictionary<SessionContext, BinarySocketSession>();
 
-        public BinaryServer()
+        public BinarySocketServer()
         {
             ServerContext = new ServerContext();
             ServerContext.GetSessions = () => SessionMappings.Keys;
@@ -186,7 +186,7 @@ namespace Server
 
         private void OnServerEvent(SessionContext c, String CommandName, UInt32 CommandHash, Byte[] Parameters)
         {
-            BinarySession Session = null;
+            BinarySocketSession Session = null;
             SessionMappings.TryGetValue(c, out Session);
             if (Session != null)
             {
@@ -203,14 +203,14 @@ namespace Server
             }
         }
 
-        private void OnMaxConnectionsExceeded(BinarySession s)
+        private void OnMaxConnectionsExceeded(BinarySocketSession s)
         {
             if (s != null && s.IsRunning)
             {
                 s.RaiseError("", "Client host rejected: too many connections, please try again later.");
             }
         }
-        private void OnMaxConnectionsPerIPExceeded(BinarySession s)
+        private void OnMaxConnectionsPerIPExceeded(BinarySocketSession s)
         {
             if (s != null && s.IsRunning)
             {

@@ -14,7 +14,7 @@ namespace Server
     /// <summary>
     /// 本类的所有非继承的公共成员均是线程安全的。
     /// </summary>
-    public class JsonServer : TcpServer<JsonServer, JsonSession>
+    public class JsonSocketServer : TcpServer<JsonSocketServer, JsonSocketSession>
     {
         private ServerImplementation si;
         public JsonServer<SessionContext> InnerServer { get; private set; }
@@ -135,9 +135,9 @@ namespace Server
             }
         }
 
-        public ConcurrentDictionary<SessionContext, JsonSession> SessionMappings = new ConcurrentDictionary<SessionContext, JsonSession>();
+        public ConcurrentDictionary<SessionContext, JsonSocketSession> SessionMappings = new ConcurrentDictionary<SessionContext, JsonSocketSession>();
 
-        public JsonServer()
+        public JsonSocketServer()
         {
             ServerContext = new ServerContext();
             ServerContext.GetSessions = () => SessionMappings.Keys;
@@ -157,7 +157,7 @@ namespace Server
 
         private void OnServerEvent(SessionContext c, String CommandName, String Parameters)
         {
-            JsonSession Session = null;
+            JsonSocketSession Session = null;
             SessionMappings.TryGetValue(c, out Session);
             if (Session != null)
             {
@@ -174,14 +174,14 @@ namespace Server
             }
         }
 
-        private void OnMaxConnectionsExceeded(JsonSession s)
+        private void OnMaxConnectionsExceeded(JsonSocketSession s)
         {
             if (s != null && s.IsRunning)
             {
                 s.RaiseError("", "Client host rejected: too many connections, please try again later.");
             }
         }
-        private void OnMaxConnectionsPerIPExceeded(JsonSession s)
+        private void OnMaxConnectionsPerIPExceeded(JsonSocketSession s)
         {
             if (s != null && s.IsRunning)
             {
