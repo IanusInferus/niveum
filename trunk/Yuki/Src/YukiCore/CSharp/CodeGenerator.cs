@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2012.04.24.
+//  Version:     2012.05.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -406,6 +406,22 @@ namespace Yuki.ObjectSchema.CSharp.Common
                 }
                 return l.ToArray();
             }
+            public String[] GetIClient(CommandDef[] Commands)
+            {
+                return GetTemplate("IClient").Substitute("Commands", GetIClientCommands(Commands));
+            }
+            public String[] GetIClientCommands(CommandDef[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c._Tag == CommandDefTag.Client && c.Client.Version == "")
+                    {
+                        l.AddRange(GetTemplate("IClient_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
+                    }
+                }
+                return l.ToArray();
+            }
 
             public String[] GetComplexTypes(Schema Schema)
             {
@@ -475,6 +491,8 @@ namespace Yuki.ObjectSchema.CSharp.Common
                     l.AddRange(GetIServerImplementation(ca));
                     l.Add("");
                     l.AddRange(GetIClientImplementation(ca));
+                    l.Add("");
+                    l.AddRange(GetIClient(ca));
                     l.Add("");
                 }
 

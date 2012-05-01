@@ -4,7 +4,7 @@
       File:        CSharp.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#模板数据
-      Version:     2012.04.15.
+      Version:     2012.05.01.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -466,3 +466,22 @@ ObjectSchemaTemplate
                 $String
                     ${XmlComment}
                     void [[${Name}]](TContext c, [[${Name}Event]] e);
+        Template
+            Name IClient
+            //Parameters: ${Hash}, ${Commands}
+            Value
+                $String
+                    public interface IClient<TContext>
+                    {
+                        UInt64 Hash { get; }
+                        void DequeueCallback(String CommandName);
+
+                        ${Commands}
+                    }
+        Template
+            Name IClient_ClientCommand
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    void [[${Name}]]([[${Name}Request]] r, Action<TContext, [[${Name}Reply]]> Callback);
