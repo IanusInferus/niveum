@@ -19,9 +19,9 @@ namespace Server
         private ServerImplementation si;
         public JsonServer<SessionContext> InnerServer { get; private set; }
         public ServerContext ServerContext { get; private set; }
-        public int MaxBadCommands { get; set; }
-        public Boolean ClientDebug { get; set; }
 
+        private int MaxBadCommandsValue = 8;
+        private Boolean ClientDebugValue = false;
         private Boolean EnableLogNormalInValue = true;
         private Boolean EnableLogNormalOutValue = true;
         private Boolean EnableLogUnknownErrorValue = true;
@@ -29,6 +29,33 @@ namespace Server
         private Boolean EnableLogPerformanceValue = true;
         private Boolean EnableLogSystemValue = true;
 
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public int MaxBadCommands
+        {
+            get
+            {
+                return MaxBadCommandsValue;
+            }
+            set
+            {
+                if (IsRunning) { throw new InvalidOperationException(); }
+                MaxBadCommandsValue = value;
+            }
+        }
+
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public Boolean ClientDebug
+        {
+            get
+            {
+                return ClientDebugValue;
+            }
+            set
+            {
+                if (IsRunning) { throw new InvalidOperationException(); }
+                ClientDebugValue = value;
+            }
+        }
         /// <summary>只能在启动前修改，以保证线程安全</summary>
         public Boolean EnableLogNormalIn
         {
