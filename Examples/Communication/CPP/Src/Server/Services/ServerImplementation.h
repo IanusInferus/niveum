@@ -15,6 +15,7 @@ namespace Server
     namespace _Impl
     {
         using namespace Communication;
+        typedef SessionContext TContext;
 
         /// <summary>
         /// 本类的所有公共成员均是线程安全的。
@@ -41,13 +42,21 @@ namespace Server
             }
 
             /// <summary>服务器时间</summary>
-            std::shared_ptr<ServerTimeReply> ServerTime(SessionContext &c, std::shared_ptr<ServerTimeRequest> r);
+            std::shared_ptr<ServerTimeReply> ServerTime(TContext &c, std::shared_ptr<ServerTimeRequest> r);
             /// <summary>退出</summary>
-            std::shared_ptr<QuitReply> Quit(SessionContext &c, std::shared_ptr<QuitRequest> r);
+            std::shared_ptr<QuitReply> Quit(TContext &c, std::shared_ptr<QuitRequest> r);
             /// <summary>发送消息</summary>
-            std::shared_ptr<SendMessageReply> SendMessage(SessionContext &c, std::shared_ptr<SendMessageRequest> r);
+            std::shared_ptr<SendMessageReply> SendMessage(TContext &c, std::shared_ptr<SendMessageRequest> r);
             /// <summary>发送消息</summary>
-            std::shared_ptr<SendMessageAt1Reply> SendMessageAt1(SessionContext &c, std::shared_ptr<SendMessageAt1Request> r);
+            std::shared_ptr<SendMessageAt1Reply> SendMessageAt1(TContext &c, std::shared_ptr<SendMessageAt1Request> r);
+            /// <summary>加法</summary>
+            std::shared_ptr<TestAddReply> TestAdd(TContext &c, std::shared_ptr<TestAddRequest> r);
+            /// <summary>两百万次浮点乘法</summary>
+            std::shared_ptr<TestMultiplyReply> TestMultiply(TContext &c, std::shared_ptr<TestMultiplyRequest> r);
+            /// <summary>文本原样返回</summary>
+            std::shared_ptr<TestTextReply> TestText(TContext &c, std::shared_ptr<TestTextRequest> r);
+            /// <summary>群发消息</summary>
+            std::shared_ptr<TestMessageReply> TestMessage(TContext &c, std::shared_ptr<TestMessageRequest> r);
         };
     }
     typedef _Impl::ServerImplementation ServerImplementation;

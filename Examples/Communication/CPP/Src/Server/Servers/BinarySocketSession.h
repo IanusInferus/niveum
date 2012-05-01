@@ -27,10 +27,11 @@ namespace Server
     class BinarySocketSession : public Communication::Net::TcpSession<BinarySocketServer, BinarySocketSession>
     {
     private:
-        std::shared_ptr<SessionContext> Context;
         int NumBadCommands;
 
     public:
+        std::shared_ptr<SessionContext> Context;
+
         BinarySocketSession(boost::asio::io_service &IoService)
             : Communication::Net::TcpSession<BinarySocketServer, BinarySocketSession>(IoService),
               Context(std::make_shared<SessionContext>()),

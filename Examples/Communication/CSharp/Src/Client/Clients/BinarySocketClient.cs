@@ -13,16 +13,16 @@ using Communication.Binary;
 
 namespace Client
 {
-    public sealed class BinaryClient : IBinarySender, IDisposable
+    public sealed class BinarySocketClient : IBinarySender, IDisposable
     {
         private IClientImplementation<ClientContext> ci;
         public BinaryClient<ClientContext> InnerClient { get; private set; }
-        private ClientContext Context;
+        public ClientContext Context { get; private set; }
 
         private IPEndPoint RemoteEndPoint;
         private StreamedAsyncSocket sock;
 
-        public BinaryClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci)
+        public BinarySocketClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci)
         {
             this.RemoteEndPoint = RemoteEndPoint;
             sock = new StreamedAsyncSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));

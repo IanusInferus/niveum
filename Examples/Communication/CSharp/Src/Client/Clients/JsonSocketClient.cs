@@ -10,16 +10,16 @@ using Communication.Json;
 
 namespace Client
 {
-    public sealed class JsonClient : IJsonSender, IDisposable
+    public sealed class JsonSocketClient : IJsonSender, IDisposable
     {
         private IClientImplementation<ClientContext> ci;
         public JsonClient<ClientContext> InnerClient { get; private set; }
-        private ClientContext Context;
+        public ClientContext Context { get; private set; }
 
         private IPEndPoint RemoteEndPoint;
         private StreamedAsyncSocket s;
 
-        public JsonClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci)
+        public JsonSocketClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci)
         {
             this.RemoteEndPoint = RemoteEndPoint;
             s = new StreamedAsyncSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
