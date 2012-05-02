@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板数据
-      Version:     2012.05.01.
+      Version:     2012.05.02.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -58,6 +58,7 @@ ObjectSchemaTemplate
 
                     using System;
                     using System.Collections.Generic;
+                    using System.Threading;
                     using Firefly;
                     using Firefly.Streaming;
                     using Firefly.Mapping;
@@ -71,7 +72,6 @@ ObjectSchemaTemplate
                     public sealed class BinaryServer<TContext>
                     {
                         private Dictionary<KeyValuePair<String, UInt32>, Func<TContext, Byte[], Byte[]>> ClientCommands;
-                        private BinaryTranslator bt = new BinaryTranslator();
 
                         public BinaryServer(IServerImplementation<TContext> i)
                         {
@@ -110,13 +110,13 @@ ObjectSchemaTemplate
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (c, p) => bt.Serialize(i.[[${Name}]](c, bt.Deserialize<[[${Name}Request]]>(p))));
+                    ClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (c, p) => BinaryTranslator.Serialize(i.[[${Name}]](c, BinaryTranslator.Deserialize<[[${Name}Request]]>(p))));
         Template
             Name BinaryServer_ServerCommand
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    i.${Name} += (c, e) => OnServerEvent(c, @"${CommandName}", 0x${CommandHash}, bt.Serialize(e));
+                    i.${Name} += (c, e) => OnServerEvent(c, @"${CommandName}", 0x${CommandHash}, BinaryTranslator.Serialize(e));
         Template
             Name IBinarySender
             Value
@@ -136,7 +136,6 @@ ObjectSchemaTemplate
                         private IClientImplementation<TContext> i;
                         private Dictionary<String, Queue<KeyValuePair<UInt32, Action<TContext, Byte[]>>>> ClientCommandCallbacks;
                         private Dictionary<KeyValuePair<String, UInt32>, Action<TContext, Byte[]>> ServerCommands;
-                        private BinaryTranslator bt = new BinaryTranslator();
 
                         public BinaryClient(IBinarySender s, IClientImplementation<TContext> i)
                         {
@@ -215,8 +214,8 @@ ObjectSchemaTemplate
                     ${XmlComment}
                     public void [[${Name}]]([[${Name}Request]] r, Action<TContext, [[${Name}Reply]]> Callback)
                     {
-                        var Request = bt.Serialize(r);
-                        AddCallback(@"${CommandName}", 0x${CommandHash}, (c, Parameters) => Callback(c, bt.Deserialize<[[${Name}Reply]]>(Parameters)));
+                        var Request = BinaryTranslator.Serialize(r);
+                        AddCallback(@"${CommandName}", 0x${CommandHash}, (c, Parameters) => Callback(c, BinaryTranslator.Deserialize<[[${Name}Reply]]>(Parameters)));
                         s.Send(@"${CommandName}", 0x${CommandHash}, Request);
                     }
         Template
@@ -224,41 +223,41 @@ ObjectSchemaTemplate
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ServerCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (c, Parameters) => i.[[${Name}]](c, bt.Deserialize<[[${Name}Event]]>(Parameters)));
+                    ServerCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (c, Parameters) => i.[[${Name}]](c, BinaryTranslator.Deserialize<[[${Name}Event]]>(Parameters)));
         Template
             Name BinaryTranslator
             //Parameters: ${Serializers}
             Value
                 $String
-                    public class BinaryTranslator
+                    public static class BinaryTranslator
                     {
-                        private BinarySerializer bs;
+                        private static ThreadLocal<BinarySerializer> bs = new ThreadLocal<BinarySerializer>
+                        (
+                            () =>
+                            {
+                                var s = new BinarySerializer();
+                                var st = new StringTranslator();
+                                s.PutReaderTranslator(st);
+                                s.PutWriterTranslator(st);
+                                s.PutCounterTranslator(st);
+                                return s;
+                            }
+                        );
 
-                        public BinaryTranslator()
-                        {
-                            bs = new BinarySerializer();
-                            var st = new StringTranslator();
-                            bs.PutReaderTranslator(st);
-                            bs.PutWriterTranslator(st);
-                            bs.PutCounterTranslator(st);
-                        }
-
-                        public Byte[] Serialize<T>(T Value)
+                        public static Byte[] Serialize<T>(T Value)
                         {
                             using (var s = Streams.CreateMemoryStream())
                             {
-                                bs.Write<T>(Value, s);
+                                bs.Value.Write<T>(Value, s);
                                 s.Position = 0;
                                 return s.Read((int)(s.Length));
                             }
                         }
-                        public T Deserialize<T>(Byte[] Bytes)
+                        public static T Deserialize<T>(Byte[] Bytes)
                         {
-                            using (var s = Streams.CreateMemoryStream())
+                            using (var s = new ByteArrayStream(Bytes))
                             {
-                                s.Write(Bytes);
-                                s.Position = 0;
-                                return bs.Read<T>(s);
+                                return bs.Value.Read<T>(s);
                             }
                         }
 
