@@ -101,6 +101,8 @@ namespace Server
             public Boolean OnQuit { get { return _Tag == SessionCommandTag.Quit; } }
         }
 
+        private AutoResetEvent NumAsyncOperationUpdated = new AutoResetEvent(false);
+        private LockedVariable<int> NumAsyncOperation = new LockedVariable<int>(0);
         private AutoResetEvent NumSessionCommandUpdated = new AutoResetEvent(false);
         private LockedVariable<int> NumSessionCommand = new LockedVariable<int>(0);
         private LockedVariable<Task> SessionTask = new LockedVariable<Task>(new Task(() => { }));
@@ -113,12 +115,60 @@ namespace Server
             }
         }
 
+        private bool TryLockAsyncOperation()
+        {
+            bool Done = false;
+            IsRunningValue.DoAction
+            (
+                b =>
+                {
+                    if (b)
+                    {
+                        NumAsyncOperation.Update(n => n + 1);
+                        NumAsyncOperationUpdated.Set();
+                        Done = true;
+                    }
+                }
+            );
+            return Done;
+        }
+        void LockAsyncOperation()
+        {
+            NumAsyncOperation.Update(n => n + 1);
+            NumAsyncOperationUpdated.Set();
+        }
+        void ReleaseAsyncOperation()
+        {
+            NumAsyncOperation.Update(n => n - 1);
+            NumAsyncOperationUpdated.Set();
+        }
+
+        private bool TryLockSessionCommand()
+        {
+            bool Done = false;
+            IsRunningValue.DoAction
+            (
+                b =>
+                {
+                    if (b)
+                    {
+                        NumSessionCommand.Update(n => n + 1);
+                        NumSessionCommandUpdated.Set();
+                        Done = true;
+                    }
+                }
+            );
+            return Done;
+        }
+        void ReleaseSessionCommand()
+        {
+            NumSessionCommand.Update(n => n - 1);
+            NumSessionCommandUpdated.Set();
+        }
+        
         private void PushCommand(SessionCommand sc, TaskContinuationOptions? ContinuationOptions = null)
         {
-            if (!IsRunning) { return; }
-
-            NumSessionCommand.Update(n => n + 1);
-            NumSessionCommandUpdated.Set();
+            if (!TryLockSessionCommand()) { return; }
 
             Action a;
             if (System.Diagnostics.Debugger.IsAttached)
@@ -161,8 +211,7 @@ namespace Server
                     (
                         tt =>
                         {
-                            NumSessionCommand.Update(n => n - 1);
-                            NumSessionCommandUpdated.Set();
+                            ReleaseSessionCommand();
                         }
                     );
                     return nt;
@@ -326,13 +375,21 @@ namespace Server
                     s.Position = 0;
                     Bytes = s.Read((int)(s.Length));
                 }
-                SendAsync(Bytes, 0, Bytes.Length, () => { }, se =>
+                LockAsyncOperation();
+                SendAsync(Bytes, 0, Bytes.Length, () => { ReleaseAsyncOperation(); }, se =>
                 {
-                    if (!IsSocketErrorKnown(se))
+                    try
                     {
-                        OnCriticalError((new SocketException((int)se)), new StackTrace(true));
+                        if (!IsSocketErrorKnown(se))
+                        {
+                            OnCriticalError((new SocketException((int)se)), new StackTrace(true));
+                        }
+                        StopAsync();
                     }
-                    StopAsync();
+                    finally
+                    {
+                        ReleaseAsyncOperation();
+                    }
                 });
             }
             else if (sc.OnReadRaw)
@@ -374,7 +431,17 @@ namespace Server
                 Action<int> Completed;
                 if (System.Diagnostics.Debugger.IsAttached)
                 {
-                    Completed = CompletedInner;
+                    Completed = Count =>
+                    {
+                        try
+                        {
+                            CompletedInner(Count);
+                        }
+                        finally
+                        {
+                            ReleaseAsyncOperation();
+                        }
+                    };
                 }
                 else
                 {
@@ -389,17 +456,28 @@ namespace Server
                             OnCriticalError(ex, new StackTrace(true));
                             StopAsync();
                         }
+                        finally
+                        {
+                            ReleaseAsyncOperation();
+                        }
                     };
                 }
                 Action<SocketError> Faulted = se =>
                 {
-                    if (!IsSocketErrorKnown(se))
+                    try
                     {
-                        OnCriticalError((new SocketException((int)se)), new StackTrace(true));
+                        if (!IsSocketErrorKnown(se))
+                        {
+                            OnCriticalError((new SocketException((int)se)), new StackTrace(true));
+                        }
+                        StopAsync();
                     }
-                    StopAsync();
+                    finally
+                    {
+                        ReleaseAsyncOperation();
+                    }
                 };
-
+                if (!TryLockAsyncOperation()) { return true; }
                 ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
             }
             else if (sc.OnQuit)
@@ -523,6 +601,12 @@ namespace Server
         //线程安全
         private void StopAsync()
         {
+            if (Server != null)
+            {
+                BinarySocketSession v = null;
+                Server.SessionMappings.TryRemove(Context, out v);
+            }
+
             var ss = GetSocket();
             if (ss != null)
             {
@@ -550,6 +634,10 @@ namespace Server
             while (NumSessionCommand.Check(n => n != 0))
             {
                 NumSessionCommandUpdated.WaitOne();
+            }
+            while (NumAsyncOperation.Check(n => n != 0))
+            {
+                NumAsyncOperationUpdated.WaitOne();
             }
             SessionTask.Update
             (
