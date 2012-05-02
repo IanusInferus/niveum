@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 
@@ -36,7 +37,7 @@ namespace Communication.Net
             bool willRaiseEvent = InnerSocket.ConnectAsync(socketEventArg);
             if (!willRaiseEvent)
             {
-                a(socketEventArg);
+                ThreadPool.QueueUserWorkItem(o => a(o as SocketAsyncEventArgs), socketEventArg);
             }
         }
 
@@ -70,7 +71,7 @@ namespace Communication.Net
             bool willRaiseEvent = InnerSocket.AcceptAsync(socketEventArg);
             if (!willRaiseEvent)
             {
-                a(socketEventArg);
+                ThreadPool.QueueUserWorkItem(o => a(o as SocketAsyncEventArgs), socketEventArg);
             }
         }
 
@@ -94,7 +95,7 @@ namespace Communication.Net
             bool willRaiseEvent = InnerSocket.DisconnectAsync(socketEventArg);
             if (!willRaiseEvent)
             {
-                a(socketEventArg);
+                ThreadPool.QueueUserWorkItem(o => a(o as SocketAsyncEventArgs), socketEventArg);
             }
         }
 
@@ -119,7 +120,7 @@ namespace Communication.Net
             bool willRaiseEvent = InnerSocket.SendAsync(socketEventArg);
             if (!willRaiseEvent)
             {
-                a(socketEventArg);
+                ThreadPool.QueueUserWorkItem(o => a(o as SocketAsyncEventArgs), socketEventArg);
             }
         }
 
@@ -144,7 +145,7 @@ namespace Communication.Net
             bool willRaiseEvent = InnerSocket.ReceiveAsync(socketEventArg);
             if (!willRaiseEvent)
             {
-                a(socketEventArg);
+                ThreadPool.QueueUserWorkItem(o => a(o as SocketAsyncEventArgs), socketEventArg);
             }
         }
 
