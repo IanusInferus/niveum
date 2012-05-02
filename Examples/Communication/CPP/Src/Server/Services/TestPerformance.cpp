@@ -1,4 +1,4 @@
-#include "Services/ServerImplementation.h"
+ï»¿#include "Services/ServerImplementation.h"
 
 #include <memory>
 #include <string>
@@ -8,13 +8,13 @@ using namespace std;
 using namespace Communication;
 using namespace Server;
 
-/// <summary>¼Ó·¨</summary>
+/// <summary>åŠ æ³•</summary>
 std::shared_ptr<TestAddReply> ServerImplementation::TestAdd(SessionContext &c, std::shared_ptr<TestAddRequest> r)
 {
     return TestAddReply::CreateResult(r->Left + r->Right);
 }
 
-/// <summary>Á½°ÙÍò´Î¸¡µã³Ë·¨</summary>
+/// <summary>ä¸¤ç™¾ä¸‡æ¬¡æµ®ç‚¹ä¹˜æ³•</summary>
 std::shared_ptr<TestMultiplyReply> ServerImplementation::TestMultiply(SessionContext &c, std::shared_ptr<TestMultiplyRequest> r)
 {
     auto v = r->Operand;
@@ -26,22 +26,27 @@ std::shared_ptr<TestMultiplyReply> ServerImplementation::TestMultiply(SessionCon
     return TestMultiplyReply::CreateResult(o);
 }
 
-/// <summary>ÎÄ±¾Ô­Ñù·µ»Ø</summary>
+/// <summary>æ–‡æœ¬åŸæ ·è¿”å›</summary>
 std::shared_ptr<TestTextReply> ServerImplementation::TestText(SessionContext &c, std::shared_ptr<TestTextRequest> r)
 {
     return TestTextReply::CreateResult(r->Text);
 }
 
-/// <summary>Èº·¢ÏûÏ¢</summary>
+/// <summary>ç¾¤å‘æ¶ˆæ¯</summary>
 std::shared_ptr<TestMessageReply> ServerImplementation::TestMessage(SessionContext &c, std::shared_ptr<TestMessageRequest> r)
 {
     auto m = make_shared<TestMessageReceivedEvent>();
     m->Message = r->Message;
+    c.SendMessageCount += 1;
     auto Sessions = sc->Sessions();
     for (int k = 0; k < (int)(Sessions->size()); k += 1)
     {
         auto rc = (*Sessions)[k];
         if (rc == c.shared_from_this()) { continue; }
+        {
+            boost::unique_lock<boost::shared_mutex> WriterLock(rc->SessionLock);
+            rc->ReceivedMessageCount += 1;
+        }
         if (TestMessageReceived != nullptr)
         {
             TestMessageReceived(*rc, m);

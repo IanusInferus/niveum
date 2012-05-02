@@ -63,6 +63,12 @@
     <ClInclude Include="Util\SessionLogEntry.h">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="BaseSystem\ThreadLocalVariable.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Util\ConsoleLogger.h">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />

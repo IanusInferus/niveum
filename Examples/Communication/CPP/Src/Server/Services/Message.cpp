@@ -1,4 +1,4 @@
-#include "Services/ServerImplementation.h"
+ï»¿#include "Services/ServerImplementation.h"
 
 #include <memory>
 #include <string>
@@ -8,7 +8,7 @@ using namespace std;
 using namespace Communication;
 using namespace Server;
 
-/// <summary>·¢ËÍÏûÏ¢</summary>
+/// <summary>å‘é€æ¶ˆæ¯</summary>
 shared_ptr<SendMessageReply> ServerImplementation::SendMessage(SessionContext &c, shared_ptr<SendMessageRequest> r)
 {
     if (r->Content.size() > 256)
@@ -34,7 +34,7 @@ shared_ptr<SendMessageReply> ServerImplementation::SendMessage(SessionContext &c
     return SendMessageReply::CreateSuccess();
 }
 
-/// <summary>·¢ËÍÏûÏ¢</summary>
+/// <summary>å‘é€æ¶ˆæ¯</summary>
 shared_ptr<SendMessageAt1Reply> ServerImplementation::SendMessageAt1(SessionContext &c, shared_ptr<SendMessageAt1Request> r)
 {
     if (MessageReceivedAt1 != nullptr)

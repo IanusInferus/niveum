@@ -16,6 +16,7 @@
     <ClInclude Include="BaseSystem\CancellationToken.h" />
     <ClInclude Include="BaseSystem\LockedVariable.h" />
     <ClInclude Include="BaseSystem\Optional.h" />
+    <ClInclude Include="BaseSystem\ThreadLocalVariable.h" />
     <ClInclude Include="Communication.h" />
     <ClInclude Include="CommunicationBinary.h" />
     <ClInclude Include="Context\ServerContext.h" />
@@ -26,6 +27,7 @@
     <ClInclude Include="Servers\BinarySocketSession.h" />
     <ClInclude Include="Services\ServerImplementation.h" />
     <ClInclude Include="Utility.h" />
+    <ClInclude Include="Util\ConsoleLogger.h" />
     <ClInclude Include="Util\SessionLogEntry.h" />
   </ItemGroup>
   <ItemGroup>

@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2012.05.01.
+//  Version:     2012.05.02.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -14,6 +14,7 @@
 #include "CommunicationBinary.h"
 #include "BaseSystem/AutoResetEvent.h"
 #include "BaseSystem/Optional.h"
+#include "Util/ConsoleLogger.h"
 #include "Services/ServerImplementation.h"
 #include "Servers/BinarySocketSession.h"
 #include "Servers/BinarySocketServer.h"
@@ -22,7 +23,8 @@
 #include <string>
 #include <exception>
 #include <stdexcept>
-#include <iostream>
+#include <cstdio>
+#include <clocale>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 #include <boost/format.hpp>
@@ -57,16 +59,16 @@ namespace Server
 
         static void DisplayTitle()
         {
-            wprintf(L"%ls\n", L"聊天服务器");
-            wprintf(L"%ls\n", L"Author:      F.R.C.");
-            wprintf(L"%ls\n", L"Copyright(C) Public Domain");
+            std::wprintf(L"%ls\n", L"聊天服务器");
+            std::wprintf(L"%ls\n", L"Author:      F.R.C.");
+            std::wprintf(L"%ls\n", L"Copyright(C) Public Domain");
         }
 
         static void DisplayInfo()
         {
-            wprintf(L"%ls\n", L"用法:");
-            wprintf(L"%ls\n", L"Server [<Port>]");
-            wprintf(L"%ls\n", L"Port 服务器端口，默认为8001");
+            std::wprintf(L"%ls\n", L"用法:");
+            std::wprintf(L"%ls\n", L"Server [<Port>]");
+            std::wprintf(L"%ls\n", L"Port 服务器端口，默认为8001");
         }
 
         static void Run(std::uint16_t Port)
@@ -76,6 +78,8 @@ namespace Server
             int ProcessorCount = (int)(boost::thread::hardware_concurrency());
 
             auto IoService = std::make_shared<boost::asio::io_service>(ProcessorCount);
+
+            ConsoleLogger cl;
 
             boost::asio::signal_set Signals(*IoService, SIGINT, SIGTERM);
             Signals.async_wait([=](const boost::system::error_code& error, int signal_number)
@@ -97,7 +101,10 @@ namespace Server
             Server->SetMaxBadCommands(8);
             Server->SetClientDebug(true);
 
-            Server->SessionLog = [=](std::shared_ptr<SessionLogEntry> e) { ConsoleLog(e); };
+            Server->SessionLog = [&](std::shared_ptr<SessionLogEntry> e)
+            {
+                cl.Log(e);
+            };
 
             Server->Start();
 
@@ -123,18 +130,12 @@ namespace Server
                 t->join();
             }
         }
-
-        static void ConsoleLog(std::shared_ptr<SessionLogEntry> e)
-        {
-            auto Line = L"\"" + boost::posix_time::to_iso_extended_wstring(e->Time) + L"Z" + L"\"" + L"\t" + L"\"" + e->Type + L"\"" + L"\t" + L"\"" + e->Message + L"\"";
-            wprintf(L"%ls\n", Line.c_str());
-        }
     };
 }
 
 int main(int argc, char **argv)
 {
-    setlocale(LC_ALL, "");
+    std::setlocale(LC_ALL, "");
 
     try
     {
@@ -142,7 +143,7 @@ int main(int argc, char **argv)
     }
     catch (std::exception &ex)
     {
-        printf("Error:\n%s\n", ex.what());
+        std::printf("Error:\n%s\n", ex.what());
         return -1;
     }
 }

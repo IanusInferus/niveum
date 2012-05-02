@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "BaseSystem/LockedVariable.h"
 #include "BaseSystem/Optional.h"
@@ -35,7 +35,7 @@ namespace Communication
             };
             Communication::BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<SendAsyncParameters>>>> SendQueue;
         public:
-            std::shared_ptr<TServer> Server; //Ñ­»·ÒýÓÃ
+            std::shared_ptr<TServer> Server; //å¾ªçŽ¯å¼•ç”¨
             std::function<void(std::shared_ptr<TSession>)> NotifySessionQuit;
             boost::asio::ip::tcp::endpoint RemoteEndPoint;
             std::shared_ptr<Communication::BaseSystem::Optional<int>> IdleTimeout;
