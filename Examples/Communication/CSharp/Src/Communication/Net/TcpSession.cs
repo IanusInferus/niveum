@@ -93,30 +93,26 @@ namespace Communication.Net
 
         protected void SendAsync(Byte[] Bytes, int Offset, int Count, Action Completed, Action<SocketError> Faulted)
         {
-            StreamedAsyncSocket s = null;
             Socket.DoAction
             (
                 ss =>
                 {
-                    s = ss;
+                    if (ss == null) { return; }
+                    ss.SendAsync(Bytes, 0, Bytes.Length, Completed, Faulted);
                 }
             );
-            if (s == null) { return; }
-            s.SendAsync(Bytes, 0, Bytes.Length, Completed, Faulted);
         }
 
         protected void ReceiveAsync(Byte[] ReceiveBuffer, int Offset, int Count, Action<int> Completed, Action<SocketError> Faulted)
         {
-            StreamedAsyncSocket s = null;
             Socket.DoAction
             (
                 ss =>
                 {
-                    s = ss;
+                    if (ss == null) { return; }
+                    ss.ReceiveAsync(ReceiveBuffer, Offset, Count, Completed, Faulted);
                 }
             );
-            if (s == null) { return; }
-            s.ReceiveAsync(ReceiveBuffer, Offset, Count, Completed, Faulted);
         }
 
         public void Dispose()
