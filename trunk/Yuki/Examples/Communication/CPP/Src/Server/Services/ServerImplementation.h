@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Communication.h"
 #include "CommunicationBinary.h"
@@ -18,7 +18,7 @@ namespace Server
         typedef SessionContext TContext;
 
         /// <summary>
-        /// ±¾ÀàµÄËùÓĞ¹«¹²³ÉÔ±¾ùÊÇÏß³Ì°²È«µÄ¡£
+        /// æœ¬ç±»çš„æ‰€æœ‰å…¬å…±æˆå‘˜å‡æ˜¯çº¿ç¨‹å®‰å…¨çš„ã€‚
         /// </summary>
         class ServerImplementation : public IServerImplementation<SessionContext>
         {
@@ -41,21 +41,21 @@ namespace Server
                 }
             }
 
-            /// <summary>·şÎñÆ÷Ê±¼ä</summary>
+            /// <summary>æœåŠ¡å™¨æ—¶é—´</summary>
             std::shared_ptr<ServerTimeReply> ServerTime(TContext &c, std::shared_ptr<ServerTimeRequest> r);
-            /// <summary>ÍË³ö</summary>
+            /// <summary>é€€å‡º</summary>
             std::shared_ptr<QuitReply> Quit(TContext &c, std::shared_ptr<QuitRequest> r);
-            /// <summary>·¢ËÍÏûÏ¢</summary>
+            /// <summary>å‘é€æ¶ˆæ¯</summary>
             std::shared_ptr<SendMessageReply> SendMessage(TContext &c, std::shared_ptr<SendMessageRequest> r);
-            /// <summary>·¢ËÍÏûÏ¢</summary>
+            /// <summary>å‘é€æ¶ˆæ¯</summary>
             std::shared_ptr<SendMessageAt1Reply> SendMessageAt1(TContext &c, std::shared_ptr<SendMessageAt1Request> r);
-            /// <summary>¼Ó·¨</summary>
+            /// <summary>åŠ æ³•</summary>
             std::shared_ptr<TestAddReply> TestAdd(TContext &c, std::shared_ptr<TestAddRequest> r);
-            /// <summary>Á½°ÙÍò´Î¸¡µã³Ë·¨</summary>
+            /// <summary>ä¸¤ç™¾ä¸‡æ¬¡æµ®ç‚¹ä¹˜æ³•</summary>
             std::shared_ptr<TestMultiplyReply> TestMultiply(TContext &c, std::shared_ptr<TestMultiplyRequest> r);
-            /// <summary>ÎÄ±¾Ô­Ñù·µ»Ø</summary>
+            /// <summary>æ–‡æœ¬åŸæ ·è¿”å›</summary>
             std::shared_ptr<TestTextReply> TestText(TContext &c, std::shared_ptr<TestTextRequest> r);
-            /// <summary>Èº·¢ÏûÏ¢</summary>
+            /// <summary>ç¾¤å‘æ¶ˆæ¯</summary>
             std::shared_ptr<TestMessageReply> TestMessage(TContext &c, std::shared_ptr<TestMessageRequest> r);
         };
     }

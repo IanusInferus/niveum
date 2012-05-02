@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2012.04.26.
+//  Version:     2012.05.02.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -18,7 +18,8 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
-#include <iostream>
+#include <cstdio>
+#include <clocale>
 #include <boost/asio.hpp>
 #include <boost/thread/thread.hpp>
 
@@ -53,18 +54,18 @@ namespace Client
 
         static void DisplayTitle()
         {
-            wprintf(L"%ls\n", L"聊天客户端");
-            wprintf(L"%ls\n", L"Author:      F.R.C.");
-            wprintf(L"%ls\n", L"Copyright(C) Public Domain");
+            std::wprintf(L"%ls\n", L"聊天客户端");
+            std::wprintf(L"%ls\n", L"Author:      F.R.C.");
+            std::wprintf(L"%ls\n", L"Copyright(C) Public Domain");
         }
 
         static void DisplayInfo()
         {
-            wprintf(L"%ls\n", L"用法:");
-            wprintf(L"%ls\n", L"Client [<IpAddress> <Port>]");
-            wprintf(L"%ls\n", L"复制二进制数据");
-            wprintf(L"%ls\n", L"IpAddress 服务器IP地址，默认为127.0.0.1");
-            wprintf(L"%ls\n", L"Port 服务器端口，默认为8001");
+            std::wprintf(L"%ls\n", L"用法:");
+            std::wprintf(L"%ls\n", L"Client [<IpAddress> <Port>]");
+            std::wprintf(L"%ls\n", L"复制二进制数据");
+            std::wprintf(L"%ls\n", L"IpAddress 服务器IP地址，默认为127.0.0.1");
+            std::wprintf(L"%ls\n", L"Port 服务器端口，默认为8001");
         }
 
         static void Run(boost::asio::ip::tcp::endpoint RemoteEndPoint)
@@ -73,7 +74,7 @@ namespace Client
             auto ci = std::make_shared<ClientImplementation>();
             auto bsc = std::make_shared<BinarySocketClient>(IoService, RemoteEndPoint, ci);
             bsc->Connect();
-            wprintf(L"%ls\n", L"连接成功。");
+            std::wprintf(L"%ls\n", L"连接成功。");
             bsc->Receive([](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
             
             boost::thread t([&]() { IoService.run(); });
@@ -89,7 +90,7 @@ namespace Client
                 {
                     if (r->OnTooLong())
                     {
-                        wprintf(L"%ls\n", L"消息过长。");
+                        std::wprintf(L"%ls\n", L"消息过长。");
                     }
                 });
             }
@@ -102,7 +103,7 @@ namespace Client
 
 int main(int argc, char **argv)
 {
-    setlocale(LC_ALL, "");
+    std::setlocale(LC_ALL, "");
 
     try
     {
@@ -110,7 +111,7 @@ int main(int argc, char **argv)
     }
     catch (std::exception &ex)
     {
-        printf("Error:\n%s\n", ex.what());
+        std::printf("Error:\n%s\n", ex.what());
         return -1;
     }
 }

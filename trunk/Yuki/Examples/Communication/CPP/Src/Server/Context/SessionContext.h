@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <memory>
 #include <cstdint>
@@ -14,9 +14,9 @@ namespace Server
     class SessionContext : public std::enable_shared_from_this<SessionContext>
     {
     public:
-        //¿çÏß³Ì¹²ÏíÖ»¶Á·ÃÎÊ
+        //è·¨çº¿ç¨‹å…±äº«åªè¯»è®¿é—®
 
-        std::function<void()> Quit; //¿çÏß³ÌÊÂ¼ş(¶©ÔÄÕßĞèÒª±£Ö¤Ïß³Ì°²È«)
+        std::function<void()> Quit; //è·¨çº¿ç¨‹äº‹ä»¶(è®¢é˜…è€…éœ€è¦ä¿è¯çº¿ç¨‹å®‰å…¨)
         void RaiseQuit()
         {
             if (Quit != nullptr) { Quit(); }
@@ -36,19 +36,19 @@ namespace Server
             return s;
         }
 
-        //¿çÏß³Ì¹²Ïí¶ÁĞ´·ÃÎÊ±äÁ¿Ëø
+        //è·¨çº¿ç¨‹å…±äº«è¯»å†™è®¿é—®å˜é‡é”
         //#include <boost/thread/locks.hpp>
-        //Ğ´Ê±ÏÈ¶¨Òåboost::unique_lock<boost::shared_mutex> WriterLock(SessionLock);
-        //¶ÁÊ±ÏÈ¶¨Òåboost::shared_lock<boost::shared_mutex> ReaderLock(SessionLock);
+        //å†™æ—¶å…ˆå®šä¹‰boost::unique_lock<boost::shared_mutex> WriterLock(SessionLock);
+        //è¯»æ—¶å…ˆå®šä¹‰boost::shared_lock<boost::shared_mutex> ReaderLock(SessionLock);
         boost::shared_mutex SessionLock;
 
 
-        //¿çÏß³Ì¹²Ïí¶ÁĞ´·ÃÎÊ£¬¶ÁĞ´±ØĞëÍ¨¹ıSessionLock
+        //è·¨çº¿ç¨‹å…±äº«è¯»å†™è®¿é—®ï¼Œè¯»å†™å¿…é¡»é€šè¿‡SessionLock
 
-        int ReceivedMessageCount; //¿çÏß³Ì±äÁ¿
+        int ReceivedMessageCount; //è·¨çº¿ç¨‹å˜é‡
 
 
-        //µ¥Ïß³Ì·ÃÎÊ
+        //å•çº¿ç¨‹è®¿é—®
 
         int SendMessageCount;
 

@@ -1,4 +1,4 @@
-#include "Services/ServerImplementation.h"
+ï»¿#include "Services/ServerImplementation.h"
 
 #include <memory>
 #include <string>
@@ -9,7 +9,7 @@ using namespace boost::posix_time;
 using namespace Communication;
 using namespace Server;
 
-/// <summary>·şÎñÆ÷Ê±¼ä</summary>
+/// <summary>æœåŠ¡å™¨æ—¶é—´</summary>
 shared_ptr<ServerTimeReply> ServerImplementation::ServerTime(SessionContext &c, shared_ptr<ServerTimeRequest> r)
 {
     ptime now = second_clock::universal_time();
@@ -17,7 +17,7 @@ shared_ptr<ServerTimeReply> ServerImplementation::ServerTime(SessionContext &c, 
     return ServerTimeReply::CreateSuccess(s);
 }
 
-/// <summary>ÍË³ö</summary>
+/// <summary>é€€å‡º</summary>
 shared_ptr<QuitReply> ServerImplementation::Quit(SessionContext &c, shared_ptr<QuitRequest> r)
 {
     c.RaiseQuit();
