@@ -231,7 +231,9 @@ namespace Communication
                         auto bi = std::make_shared<BindingInfo>(IoService);
                         try
                         {
-                            bi->Acceptor = std::make_shared<boost::asio::ip::tcp::acceptor>(IoService, Binding);
+                            auto Acceptor = std::make_shared<boost::asio::ip::tcp::acceptor>(IoService, Binding);
+                            bi->Acceptor = Acceptor;
+                            Acceptor->listen();
                         }
                         catch (std::exception &ex)
                         {

@@ -34,8 +34,12 @@ namespace Server
 
         BinarySocketSession(boost::asio::io_service &IoService)
             : Communication::Net::TcpSession<BinarySocketServer, BinarySocketSession>(IoService),
+              NumBadCommands(0),
               Context(std::make_shared<SessionContext>()),
-              NumSessionCommand(0),
+              NumAsyncOperationUpdated(std::make_shared<Communication::BaseSystem::AutoResetEvent>()),
+              NumAsyncOperation(std::make_shared<Communication::BaseSystem::LockedVariable<int>>(0)),
+              NumSessionCommandUpdated(std::make_shared<Communication::BaseSystem::AutoResetEvent>()),
+              NumSessionCommand(std::make_shared<Communication::BaseSystem::LockedVariable<int>>(0)),
               IsRunningValue(false),
               Buffer(std::make_shared<std::vector<uint8_t>>()),
               BufferLength(0),
@@ -153,10 +157,68 @@ namespace Server
             Boolean OnQuit() { return _Tag == SessionCommandTag_Quit; }
         };
 
-        Communication::BaseSystem::AutoResetEvent NumSessionCommandUpdated;
-        Communication::BaseSystem::LockedVariable<int> NumSessionCommand;
+        std::shared_ptr<Communication::BaseSystem::AutoResetEvent> NumAsyncOperationUpdated;
+        std::shared_ptr<Communication::BaseSystem::LockedVariable<int>> NumAsyncOperation;
+        std::shared_ptr<Communication::BaseSystem::AutoResetEvent> NumSessionCommandUpdated;
+        std::shared_ptr<Communication::BaseSystem::LockedVariable<int>> NumSessionCommand;
         Communication::BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<SessionCommand>>>> CommandQueue;
         Communication::BaseSystem::LockedVariable<bool> IsRunningValue;
+
+        bool TryLockAsyncOperation()
+        {
+            bool Done = IsRunningValue.Check<bool>([=](const bool &b) -> bool
+            {
+                if (b)
+                {
+                    NumAsyncOperation->Update([](const int &n) { return n + 1; });
+                    NumAsyncOperationUpdated->Set();
+                    return true;
+                }
+                return false;
+            });
+            return Done;
+        }
+        void LockAsyncOperation()
+        {
+            NumAsyncOperation->Update([](const int &n) { return n + 1; });
+            NumAsyncOperationUpdated->Set();
+        }
+        int ReleaseAsyncOperation()
+        {
+            int nValue = 0;
+            NumAsyncOperation->Update([&](const int &n) -> int
+            {
+                nValue = n - 1;
+                NumAsyncOperationUpdated->Set();
+                return n - 1;
+            });
+            return nValue;
+        }
+        bool TryLockSessionCommand()
+        {
+            bool Done = IsRunningValue.Check<bool>([=](const bool &b) -> bool
+            {
+                if (b)
+                {
+                    NumSessionCommand->Update([](const int &n) { return n + 1; });
+                    NumSessionCommandUpdated->Set();
+                    return true;
+                }
+                return false;
+            });
+            return Done;
+        }
+        int ReleaseSessionCommand()
+        {
+            int nValue = 0;
+            NumSessionCommand->Update([&](const int &n) -> int
+            {
+                nValue = n - 1;
+                NumSessionCommandUpdated->Set();
+                return n - 1;
+            });
+            return nValue;
+        }
 
         void DoCommandAsync()
         {
@@ -181,14 +243,7 @@ namespace Server
                     OnCriticalError(ex);
                     StopAsync();
                 }
-                int nValue = 0;
-                NumSessionCommand.Update([&](const int &n) -> int
-                {
-                    nValue = n - 1;
-                    return n - 1;
-                });
-                NumSessionCommandUpdated.Set();
-                if (nValue > 0)
+                if (ReleaseSessionCommand() > 0)
                 {
                     DoCommandAsync();
                 }
@@ -198,10 +253,7 @@ namespace Server
 
         void PushCommand(std::shared_ptr<SessionCommand> sc)
         {
-            if (!IsRunning()) { return; }
-
-            NumSessionCommand.Update([](const int &n) { return n + 1; });
-            NumSessionCommandUpdated.Set();
+            if (!TryLockSessionCommand()) { return; }
 
             CommandQueue.DoAction([&](std::shared_ptr<std::queue<std::shared_ptr<SessionCommand>>> &q)
             {
@@ -395,13 +447,15 @@ namespace Server
                 s.WriteBytes(cmd->Parameters);
                 s.SetPosition(0);
                 auto Bytes = s.ReadBytes(s.GetLength());
-                SendAsync(Bytes, 0, Bytes->size(), []() {}, [=](const boost::system::error_code &se)
+                LockAsyncOperation();
+                SendAsync(Bytes, 0, Bytes->size(), [=]() { ReleaseAsyncOperation(); }, [=](const boost::system::error_code &se)
                 {
                     if (!IsSocketErrorKnown(se))
                     {
                         OnCriticalError(std::logic_error(se.message()));
                     }
                     StopAsync();
+                    ReleaseAsyncOperation();
                 });
             }
             else if (sc->OnReadRaw())
@@ -417,6 +471,7 @@ namespace Server
                         OnCriticalError(ex);
                         StopAsync();
                     }
+                    ReleaseAsyncOperation();
                 };
                 auto Faulted = [=](const boost::system::error_code &se)
                 {
@@ -425,8 +480,9 @@ namespace Server
                         OnCriticalError(std::logic_error(se.message()));
                     }
                     StopAsync();
+                    ReleaseAsyncOperation();
                 };
-                
+                if (!TryLockAsyncOperation()) { return true; }
                 ReceiveAsync(Buffer, BufferLength, Buffer->size() - BufferLength, Completed, Faulted);
             }
             else if (sc->OnQuit())
@@ -645,9 +701,13 @@ namespace Server
             PushCommand(SessionCommand::CreateQuit());
             IsRunningValue.Update([=](bool b) { return false; });
 
-            while (NumSessionCommand.Check<bool>([](const int &n) { return n != 0; }))
+            while (NumSessionCommand->Check<bool>([](const int &n) { return n != 0; }))
             {
-                NumSessionCommandUpdated.WaitOne();
+                NumSessionCommandUpdated->WaitOne();
+            }
+            while (NumAsyncOperation->Check<bool>([](const int &n) { return n != 0; }))
+            {
+                NumAsyncOperationUpdated->WaitOne();
             }
 
             Buffer = nullptr;

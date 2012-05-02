@@ -94,9 +94,8 @@ namespace Server
             auto Server = std::make_shared<BinarySocketServer>(*IoService);
             auto Bindings = std::make_shared<std::vector<boost::asio::ip::tcp::endpoint>>();
             Bindings->push_back(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), Port));
-            Bindings->push_back(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), Port));
             Server->SetBindings(Bindings);
-            Server->SetSessionIdleTimeout(Communication::BaseSystem::Optional<int>::CreateHasValue(10 * 1000));
+            Server->SetSessionIdleTimeout(Communication::BaseSystem::Optional<int>::CreateHasValue(600 * 1000));
 
             Server->SetMaxBadCommands(8);
             Server->SetClientDebug(true);
