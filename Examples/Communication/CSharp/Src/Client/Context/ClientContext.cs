@@ -6,6 +6,8 @@ namespace Client
     {
         public Action<String> DequeueCallback;
 
+        public Object Lockee = new Object();
+
         public int NumOnline;
         public int Num;
         public Action Completed;

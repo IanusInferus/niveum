@@ -240,7 +240,7 @@ namespace Server
                 }
                 else if (State == 2)
                 {
-                    if (Length >= CommandHash)
+                    if (Length >= 4)
                     {
                         using (var s = new ByteArrayStream(Buffer, Position, Length))
                         {

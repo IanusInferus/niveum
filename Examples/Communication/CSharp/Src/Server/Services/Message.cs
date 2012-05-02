@@ -18,8 +18,14 @@ namespace Server.Services
             foreach (var rc in ServerContext.GetSessions())
             {
                 rc.SessionLock.AcquireWriterLock(int.MaxValue);
-                rc.ReceivedMessageCount += 1;
-                rc.SessionLock.ReleaseWriterLock();
+                try
+                {
+                    rc.ReceivedMessageCount += 1;
+                }
+                finally
+                {
+                    rc.SessionLock.ReleaseWriterLock();
+                }
                 if (MessageReceived != null)
                 {
                     MessageReceived(rc, new MessageReceivedEvent { Content = r.Content });

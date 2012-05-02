@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using Communication;
 using Communication.BaseSystem;
 using Communication.Net;
@@ -16,8 +17,13 @@ namespace Server
     /// </summary>
     public class JsonSocketServer : TcpServer<JsonSocketServer, JsonSocketSession>
     {
-        private ServerImplementation si;
-        public JsonServer<SessionContext> InnerServer { get; private set; }
+        private class WorkPart
+        {
+            public ServerImplementation si;
+            public JsonServer<SessionContext> js;
+        }
+        private ThreadLocal<WorkPart> WorkPartInstance;
+        public JsonServer<SessionContext> InnerServer { get { return WorkPartInstance.Value.js; } }
         public ServerContext ServerContext { get; private set; }
 
         private int MaxBadCommandsValue = 8;
@@ -141,9 +147,17 @@ namespace Server
         {
             ServerContext = new ServerContext();
             ServerContext.GetSessions = () => SessionMappings.Keys;
-            si = new ServerImplementation(ServerContext);
-            InnerServer = new JsonServer<SessionContext>(si);
-            InnerServer.ServerEvent += OnServerEvent;
+
+            WorkPartInstance = new ThreadLocal<WorkPart>
+            (
+                () =>
+                {
+                    var si = new ServerImplementation(ServerContext);
+                    var srv = new JsonServer<SessionContext>(si);
+                    srv.ServerEvent += OnServerEvent;
+                    return new WorkPart { si = si, js = srv };
+                }
+            );
             ServerContext.SchemaHash = InnerServer.Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture);
 
             base.MaxConnectionsExceeded += OnMaxConnectionsExceeded;
@@ -152,7 +166,7 @@ namespace Server
 
         public void RaiseError(SessionContext c, String CommandName, String Message)
         {
-            si.RaiseError(c, CommandName, Message);
+            WorkPartInstance.Value.si.RaiseError(c, CommandName, Message);
         }
 
         private void OnServerEvent(SessionContext c, String CommandName, String Parameters)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using Communication;
 using Communication.BaseSystem;
 using Communication.Net;
@@ -17,9 +18,13 @@ namespace Server
     /// </summary>
     public class BinarySocketServer : TcpServer<BinarySocketServer, BinarySocketSession>
     {
-        private ServerImplementation si;
-        private JsonLogAspectWrapper<SessionContext> law;
-        public BinaryServer<SessionContext> InnerServer { get; private set; }
+        private class WorkPart
+        {
+            public ServerImplementation si;
+            public BinaryServer<SessionContext> bs;
+        }
+        private ThreadLocal<WorkPart> WorkPartInstance;
+        public BinaryServer<SessionContext> InnerServer { get { return WorkPartInstance.Value.bs; } }
         public ServerContext ServerContext { get; private set; }
 
         private int MaxBadCommandsValue = 8;
@@ -144,35 +149,44 @@ namespace Server
         {
             ServerContext = new ServerContext();
             ServerContext.GetSessions = () => SessionMappings.Keys;
-            si = new ServerImplementation(ServerContext);
-            law = new JsonLogAspectWrapper<SessionContext>(si);
-            law.ClientCommandIn += (c, CommandName, Parameters) =>
-            {
-                if (EnableLogNormalIn)
-                {
-                    var CommandLine = String.Format(@"/{0} {1}", CommandName, Parameters);
-                    RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "In", Message = CommandLine });
-                }
-            };
-            law.ClientCommandOut += (c, CommandName, Parameters) =>
-            {
-                if (EnableLogNormalOut)
-                {
-                    var CommandLine = String.Format(@"/svr {0} {1}", CommandName, Parameters);
-                    RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
-                }
-            };
-            law.ServerCommand += (c, CommandName, Parameters) =>
-            {
-                if (EnableLogNormalOut)
-                {
-                    var CommandLine = String.Format(@"/svr {0} {1}", CommandName, Parameters);
-                    RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
-                }
-            };
 
-            InnerServer = new BinaryServer<SessionContext>(law);
-            InnerServer.ServerEvent += OnServerEvent;
+            WorkPartInstance = new ThreadLocal<WorkPart>
+            (
+                () =>
+                {
+                    var si = new ServerImplementation(ServerContext);
+                    var law = new JsonLogAspectWrapper<SessionContext>(si);
+                    law.ClientCommandIn += (c, CommandName, Parameters) =>
+                    {
+                        if (EnableLogNormalIn)
+                        {
+                            var CommandLine = String.Format(@"/{0} {1}", CommandName, Parameters);
+                            RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "In", Message = CommandLine });
+                        }
+                    };
+                    law.ClientCommandOut += (c, CommandName, Parameters) =>
+                    {
+                        if (EnableLogNormalOut)
+                        {
+                            var CommandLine = String.Format(@"/svr {0} {1}", CommandName, Parameters);
+                            RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
+                        }
+                    };
+                    law.ServerCommand += (c, CommandName, Parameters) =>
+                    {
+                        if (EnableLogNormalOut)
+                        {
+                            var CommandLine = String.Format(@"/svr {0} {1}", CommandName, Parameters);
+                            RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
+                        }
+                    };
+
+                    var srv = new BinaryServer<SessionContext>(law);
+                    srv.ServerEvent += OnServerEvent;
+                    return new WorkPart { si = si, bs = srv };
+                }
+            );
+
             ServerContext.SchemaHash = InnerServer.Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture);
 
             base.MaxConnectionsExceeded += OnMaxConnectionsExceeded;
@@ -181,7 +195,7 @@ namespace Server
 
         public void RaiseError(SessionContext c, String CommandName, String Message)
         {
-            si.RaiseError(c, CommandName, Message);
+            WorkPartInstance.Value.si.RaiseError(c, CommandName, Message);
         }
 
         private void OnServerEvent(SessionContext c, String CommandName, UInt32 CommandHash, Byte[] Parameters)

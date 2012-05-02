@@ -10,6 +10,13 @@ namespace Communication.BaseSystem
             if (DateTimeUtc.Kind != DateTimeKind.Utc) { throw new ArgumentException(); }
             return DateTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
         }
+        public static String DateTimeUtcWithMillisecondsToLocalTimeString(this DateTime DateTimeUtc)
+        {
+            if (DateTimeUtc.Kind != DateTimeKind.Utc) { throw new ArgumentException(); }
+            var LocalTime = DateTimeUtc.ToLocalTime();
+            var TimeOffset = LocalTime - DateTimeUtc;
+            return LocalTime.ToString("yyyy-MM-dd HH:mm:ss.fff" + String.Format(" (UTC+{0})", TimeOffset.TotalHours));
+        }
         public static DateTime StringToDateTimeUtc(this String s)
         {
             return DateTime.ParseExact(s, "yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);

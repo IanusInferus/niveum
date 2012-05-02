@@ -33,12 +33,22 @@ namespace Server.Services
         {
             var Sessions = ServerContext.Sessions;
             var m = new TestMessageReceivedEvent { Message = r.Message };
-            foreach (var psc in Sessions)
+            c.SendMessageCount += 1;
+            foreach (var rc in Sessions)
             {
-                if (psc == c) { continue; }
+                if (rc == c) { continue; }
+                rc.SessionLock.AcquireWriterLock(int.MaxValue);
+                try
+                {
+                    rc.ReceivedMessageCount += 1;
+                }
+                finally
+                {
+                    rc.SessionLock.ReleaseWriterLock();
+                }
                 if (TestMessageReceived != null)
                 {
-                    TestMessageReceived(psc, m);
+                    TestMessageReceived(rc, m);
                 }
             }
             return TestMessageReply.CreateSuccess(Sessions.Count);
