@@ -150,7 +150,10 @@ namespace Communication
                     {
                         if (error == boost::system::errc::success)
                         {
-                            Stop();
+                            if (NotifySessionQuit != nullptr)
+                            {
+                                NotifySessionQuit(this->shared_from_this());
+                            }
                         }
                     });
                     auto WriteHandler = [=](const boost::system::error_code &se, size_t Count)
@@ -229,7 +232,10 @@ namespace Communication
                     {
                         if (error == boost::system::errc::success)
                         {
-                            Stop();
+                            if (NotifySessionQuit != nullptr)
+                            {
+                                NotifySessionQuit(this->shared_from_this());
+                            }
                         }
                     });
                     auto ReadHandler = [=](const boost::system::error_code &se, size_t Count)
