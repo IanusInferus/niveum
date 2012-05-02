@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <functional>
 #include <boost/thread.hpp>
@@ -9,12 +9,12 @@ namespace Communication
     {
         enum OptionalTag
         {
-            /// <summary>Ã»ÓĞÖµ</summary>
+            /// <summary>æ²¡æœ‰å€¼</summary>
             OptionalTag_NotHasValue = 0,
-            /// <summary>ÓĞÖµ</summary>
+            /// <summary>æœ‰å€¼</summary>
             OptionalTag_HasValue = 1
         };
-        /// <summary>¿ÉÑ¡ÀàĞÍ</summary>
+        /// <summary>å¯é€‰ç±»å‹</summary>
         /* TaggedUnion */
         template<typename T>
         class Optional /* final */
@@ -22,12 +22,12 @@ namespace Communication
         public:
             /* Tag */ OptionalTag _Tag;
         
-            /// <summary>Ã»ÓĞÖµ</summary>
+            /// <summary>æ²¡æœ‰å€¼</summary>
             Unit NotHasValue;
-            /// <summary>ÓĞÖµ</summary>
+            /// <summary>æœ‰å€¼</summary>
             T HasValue;
         
-            /// <summary>Ã»ÓĞÖµ</summary>
+            /// <summary>æ²¡æœ‰å€¼</summary>
             static std::shared_ptr<Optional<T>> CreateNotHasValue()
             {
                 auto r = std::make_shared<Optional<T>>();
@@ -35,7 +35,7 @@ namespace Communication
                 r->NotHasValue = Unit();
                 return r;
             }
-            /// <summary>ÓĞÖµ</summary>
+            /// <summary>æœ‰å€¼</summary>
             static std::shared_ptr<Optional<T>> CreateHasValue(T Value)
             {
                 auto r = std::make_shared<Optional<T>>();
@@ -44,12 +44,12 @@ namespace Communication
                 return r;
             }
         
-            /// <summary>Ã»ÓĞÖµ</summary>
+            /// <summary>æ²¡æœ‰å€¼</summary>
             Boolean OnNotHasValue()
             {
                 return _Tag == OptionalTag_NotHasValue;
             }
-            /// <summary>ÓĞÖµ</summary>
+            /// <summary>æœ‰å€¼</summary>
             Boolean OnHasValue()
             {
                 return _Tag == OptionalTag_HasValue;

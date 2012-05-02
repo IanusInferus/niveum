@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Utility.h"
 #include "Communication.h"
@@ -181,9 +181,17 @@ namespace Server
                     OnCriticalError(ex);
                     StopAsync();
                 }
-                NumSessionCommand.Update([](const int &n) { return n - 1; });
+                int nValue = 0;
+                NumSessionCommand.Update([&](const int &n) -> int
+                {
+                    nValue = n - 1;
+                    return n - 1;
+                });
                 NumSessionCommandUpdated.Set();
-                DoCommandAsync();
+                if (nValue > 0)
+                {
+                    DoCommandAsync();
+                }
             };
             IoService.post(a);
         }
@@ -228,11 +236,11 @@ namespace Server
         {
         private:
             int State;
-            // 0 ��ʼ״̬
-            // 1 �Ѷ�ȡNameLength
-            // 2 �Ѷ�ȡCommandHash
-            // 3 �Ѷ�ȡName
-            // 4 �Ѷ�ȡParametersLength
+            // 0 初始状态
+            // 1 已读取NameLength
+            // 2 已读取CommandHash
+            // 3 已读取Name
+            // 4 已读取ParametersLength
 
             int32_t CommandNameLength;
             std::wstring CommandName;
@@ -476,7 +484,7 @@ namespace Server
                 e->Token = Context->GetSessionTokenString();
                 e->Time = boost::posix_time::second_clock::universal_time();
                 e->Type = L"In";
-                e->Message = cmd->CommandName;
+                e->Message = L"/" + cmd->CommandName + L" {...}";
                 Server->RaiseSessionLog(e);
             }
             if (Server->GetMaxBadCommands() != 0 && (NumBadCommands > Server->GetMaxBadCommands()))
@@ -488,7 +496,7 @@ namespace Server
             auto CommandHash = cmd->CommandHash;
             auto Parameters = cmd->Parameters;
 
-            auto sv = Server->InnerServer;
+            auto sv = Server->InnerServer();
             if (sv->HasCommand(CommandName, CommandHash))
             {
                 auto a = [=]()
@@ -529,7 +537,7 @@ namespace Server
             return IsRunningValue.Check<bool>([](const bool &s) { return s; });
         }
 
-        //�̰߳�ȫ
+        //线程安全
         void WriteCommand(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
         {
             if (Server->GetEnableLogNormalIn())
@@ -539,7 +547,7 @@ namespace Server
                 e->Token = Context->GetSessionTokenString();
                 e->Time = boost::posix_time::second_clock::universal_time();
                 e->Type = L"Out";
-                e->Message = CommandName;
+                e->Message = L"/svr " + CommandName + L" {...}";
                 Server->RaiseSessionLog(e);
             }
             auto cmd = std::make_shared<Command>();
@@ -548,12 +556,12 @@ namespace Server
             cmd->Parameters = Parameters;
             PushCommand(SessionCommand::CreateWrite(cmd));
         }
-        //�̰߳�ȫ
+        //线程安全
         void RaiseError(std::wstring CommandName, std::wstring Message)
         {
             Server->RaiseError(*Context, CommandName, Message);
         }
-        //�̰߳�ȫ
+        //线程安全
         void RaiseUnknownError(std::wstring CommandName, const std::exception &ex)
         {
             auto Info = s2w(ex.what());
@@ -578,7 +586,7 @@ namespace Server
         }
 
     private:
-        //�̰߳�ȫ
+        //线程安全
         void OnCriticalError(std::exception &ex)
         {
             if (Server->GetEnableLogCriticalError())

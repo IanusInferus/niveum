@@ -1,7 +1,8 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Communication.h"
 #include "CommunicationBinary.h"
+#include "BaseSystem/ThreadLocalVariable.h"
 #include "Net/TcpServer.h"
 #include "Net/TcpSession.h"
 #include "Util/SessionLogEntry.h"
@@ -25,9 +26,15 @@ namespace Server
     class BinarySocketServer : public Communication::Net::TcpServer<BinarySocketServer, BinarySocketSession>
     {
     private:
-        std::shared_ptr<ServerImplementation> si;
+        class WorkPart
+        {
+        public:
+            std::shared_ptr<ServerImplementation> si;
+            std::shared_ptr<Communication::Binary::BinaryServer<SessionContext>> bs;
+        };
+        std::shared_ptr<Communication::BaseSystem::ThreadLocalVariable<WorkPart>> WorkPartInstance;
     public:
-        std::shared_ptr<Communication::Binary::BinaryServer<SessionContext>> InnerServer;
+        std::shared_ptr<Communication::Binary::BinaryServer<SessionContext>> InnerServer() { return WorkPartInstance->Value().bs; }
         std::shared_ptr<ServerContext> sc;
 
     private:
@@ -45,7 +52,7 @@ namespace Server
         {
             return MaxBadCommandsValue;
         }
-        /// <summary>Ö»ÄÜÔÚÆô¶¯Ç°ĞŞ¸Ä£¬ÒÔ±£Ö¤Ïß³Ì°²È«</summary>
+        /// <summary>åªèƒ½åœ¨å¯åŠ¨å‰ä¿®æ”¹ï¼Œä»¥ä¿è¯çº¿ç¨‹å®‰å…¨</summary>
         void SetMaxBadCommands(int value)
         {
             if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
@@ -56,7 +63,7 @@ namespace Server
         {
             return ClientDebugValue;
         }
-        /// <summary>Ö»ÄÜÔÚÆô¶¯Ç°ĞŞ¸Ä£¬ÒÔ±£Ö¤Ïß³Ì°²È«</summary>
+        /// <summary>åªèƒ½åœ¨å¯åŠ¨å‰ä¿®æ”¹ï¼Œä»¥ä¿è¯çº¿ç¨‹å®‰å…¨</summary>
         void SetClientDebug(bool value)
         {
             if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
@@ -67,7 +74,7 @@ namespace Server
         {
             return EnableLogNormalInValue;
         }
-        /// <summary>Ö»ÄÜÔÚÆô¶¯Ç°ĞŞ¸Ä£¬ÒÔ±£Ö¤Ïß³Ì°²È«</summary>
+        /// <summary>åªèƒ½åœ¨å¯åŠ¨å‰ä¿®æ”¹ï¼Œä»¥ä¿è¯çº¿ç¨‹å®‰å…¨</summary>
         void SetEnableLogNormalIn(bool value)
         {
             if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
@@ -78,7 +85,7 @@ namespace Server
         {
             return EnableLogNormalOutValue;
         }
-        /// <summary>Ö»ÄÜÔÚÆô¶¯Ç°ĞŞ¸Ä£¬ÒÔ±£Ö¤Ïß³Ì°²È«</summary>
+        /// <summary>åªèƒ½åœ¨å¯åŠ¨å‰ä¿®æ”¹ï¼Œä»¥ä¿è¯çº¿ç¨‹å®‰å…¨</summary>
         void SetEnableLogNormalOut(bool value)
         {
             if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
@@ -89,7 +96,7 @@ namespace Server
         {
             return EnableLogUnknownErrorValue;
         }
-        /// <summary>Ö»ÄÜÔÚÆô¶¯Ç°ĞŞ¸Ä£¬ÒÔ±£Ö¤Ïß³Ì°²È«</summary>
+        /// <summary>åªèƒ½åœ¨å¯åŠ¨å‰ä¿®æ”¹ï¼Œä»¥ä¿è¯çº¿ç¨‹å®‰å…¨</summary>
         void SetEnableLogUnknownError(bool value)
         {
             if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
@@ -100,7 +107,7 @@ namespace Server
         {
             return EnableLogCriticalErrorValue;
         }
-        /// <summary>Ö»ÄÜÔÚÆô¶¯Ç°ĞŞ¸Ä£¬ÒÔ±£Ö¤Ïß³Ì°²È«</summary>
+        /// <summary>åªèƒ½åœ¨å¯åŠ¨å‰ä¿®æ”¹ï¼Œä»¥ä¿è¯çº¿ç¨‹å®‰å…¨</summary>
         void SetEnableLogCriticalError(bool value)
         {
             if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
@@ -111,7 +118,7 @@ namespace Server
         {
             return EnableLogPerformanceValue;
         }
-        /// <summary>Ö»ÄÜÔÚÆô¶¯Ç°ĞŞ¸Ä£¬ÒÔ±£Ö¤Ïß³Ì°²È«</summary>
+        /// <summary>åªèƒ½åœ¨å¯åŠ¨å‰ä¿®æ”¹ï¼Œä»¥ä¿è¯çº¿ç¨‹å®‰å…¨</summary>
         void SetEnableLogPerformance(bool value)
         {
             if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
@@ -122,7 +129,7 @@ namespace Server
         {
             return EnableLogSystemValue;
         }
-        /// <summary>Ö»ÄÜÔÚÆô¶¯Ç°ĞŞ¸Ä£¬ÒÔ±£Ö¤Ïß³Ì°²È«</summary>
+        /// <summary>åªèƒ½åœ¨å¯åŠ¨å‰ä¿®æ”¹ï¼Œä»¥ä¿è¯çº¿ç¨‹å®‰å…¨</summary>
         void SetEnableLogSystem(bool value)
         {
             if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
@@ -142,6 +149,7 @@ namespace Server
 
         BinarySocketServer(boost::asio::io_service &IoService)
             : Communication::Net::TcpServer<BinarySocketServer, BinarySocketSession>(IoService),
+              WorkPartInstance(nullptr),
               MaxBadCommandsValue(8),
               ClientDebugValue(false),
               EnableLogNormalInValue(true),
@@ -165,11 +173,23 @@ namespace Server
                     return l;
                 });
             };
-            si = std::make_shared<ServerImplementation>(sc);
 
-            InnerServer = std::make_shared<Communication::Binary::BinaryServer<SessionContext>>(si);
-            InnerServer->ServerEvent = [=](SessionContext &c, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters) { OnServerEvent(c, CommandName, CommandHash, Parameters); };
-            sc->SchemaHash = (boost::wformat(L"%16X") % InnerServer->Hash()).str();
+            auto OnServerEventHandler = [=](SessionContext &c, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters) { OnServerEvent(c, CommandName, CommandHash, Parameters); };
+
+            WorkPartInstance = std::make_shared<Communication::BaseSystem::ThreadLocalVariable<WorkPart>>([=]() -> WorkPart *
+            {
+                auto si = std::make_shared<ServerImplementation>(sc);
+
+                auto srv = std::make_shared<Communication::Binary::BinaryServer<SessionContext>>(si);
+                srv->ServerEvent = OnServerEventHandler;
+
+                auto i = new WorkPart();
+                i->si = si;
+                i->bs = srv;
+
+                return i;
+            });
+            sc->SchemaHash = (boost::wformat(L"%16X") % InnerServer()->Hash()).str();
 
             MaxConnectionsExceeded = [=](std::shared_ptr<BinarySocketSession> s) { OnMaxConnectionsExceeded(s); };
             MaxConnectionsPerIPExceeded = [=](std::shared_ptr<BinarySocketSession> s) { OnMaxConnectionsExceeded(s); };
@@ -177,7 +197,7 @@ namespace Server
 
         void RaiseError(SessionContext &c, std::wstring CommandName, std::wstring Message)
         {
-            si->RaiseError(c, CommandName, Message);
+            WorkPartInstance->Value().si->RaiseError(c, CommandName, Message);
         }
 
         std::function<void(std::shared_ptr<SessionLogEntry>)> SessionLog;
