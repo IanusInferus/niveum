@@ -36,39 +36,41 @@ namespace Communication.Net
         public void Stop()
         {
             StopInner();
-            StreamedAsyncSocket s = null;
+            Boolean Done = false;
             Socket.Update
             (
-                ss =>
+                s =>
                 {
-                    s = ss;
+                    if (s != null)
+                    {
+                        try
+                        {
+                            s.Shutdown(SocketShutdown.Both);
+                        }
+                        catch
+                        {
+                        }
+                        try
+                        {
+                            s.Close();
+                        }
+                        catch
+                        {
+                        }
+                        try
+                        {
+                            s.Dispose();
+                        }
+                        catch
+                        {
+                        }
+                        Done = true;
+                    }
                     return null;
                 }
             );
-
-            if (s != null)
+            if (Done)
             {
-                try
-                {
-                    s.Shutdown(SocketShutdown.Both);
-                }
-                catch
-                {
-                }
-                try
-                {
-                    s.Close();
-                }
-                catch
-                {
-                }
-                try
-                {
-                    s.Dispose();
-                }
-                catch
-                {
-                }
                 Server.NotifySessionQuit((TSession)this);
             }
         }
