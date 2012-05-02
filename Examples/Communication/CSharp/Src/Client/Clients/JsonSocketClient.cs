@@ -113,16 +113,24 @@ namespace Client
                     }
                     BufferLength = CopyLength;
                 }
-                StreamedAsyncSocket sock = Socket.Check(ss => ss); ;
-                if (sock == null) { return; }
-                sock.ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
+                Socket.DoAction
+                (
+                    sock =>
+                    {
+                        if (sock == null) { return; }
+                        sock.ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
+                    }
+                );
             };
 
-            {
-                StreamedAsyncSocket sock = Socket.Check(ss => ss); ;
-                if (sock == null) { return; }
-                sock.ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
-            }
+            Socket.DoAction
+            (
+                sock =>
+                {
+                    if (sock == null) { return; }
+                    sock.ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
+                }
+            );
         }
 
         public void Close()
