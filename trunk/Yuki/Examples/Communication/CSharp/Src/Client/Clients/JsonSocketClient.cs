@@ -5,6 +5,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using Communication;
+using Communication.BaseSystem;
 using Communication.Net;
 using Communication.Json;
 
@@ -17,12 +18,12 @@ namespace Client
         public ClientContext Context { get; private set; }
 
         private IPEndPoint RemoteEndPoint;
-        private StreamedAsyncSocket s;
+        private LockedVariable<StreamedAsyncSocket> Socket = new LockedVariable<StreamedAsyncSocket>(null);
 
         public JsonSocketClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci)
         {
             this.RemoteEndPoint = RemoteEndPoint;
-            s = new StreamedAsyncSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
+            Socket = new LockedVariable<StreamedAsyncSocket>(new StreamedAsyncSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)));
             this.ci = ci;
             InnerClient = new JsonClient<ClientContext>(this, ci);
             Context = new ClientContext();
@@ -31,14 +32,14 @@ namespace Client
 
         public void Connect()
         {
-            s.InnerSocket.Connect(RemoteEndPoint);
+            Socket.DoAction(sock => sock.InnerSocket.Connect(RemoteEndPoint));
         }
 
         void IJsonSender.Send(String CommandName, String Parameters)
         {
             var Message = "/" + CommandName + " " + Parameters + "\r\n";
             var Bytes = Encoding.UTF8.GetBytes(Message);
-            s.InnerSocket.Send(Bytes);
+            Socket.DoAction(sock => sock.InnerSocket.Send(Bytes));
         }
 
         private Byte[] Buffer = new Byte[8 * 1024];
@@ -112,23 +113,66 @@ namespace Client
                     }
                     BufferLength = CopyLength;
                 }
-                if (s == null) { return; }
-                s.ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
+                StreamedAsyncSocket sock = Socket.Check(ss => ss); ;
+                if (sock == null) { return; }
+                sock.ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
             };
 
-            s.ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
+            {
+                StreamedAsyncSocket sock = Socket.Check(ss => ss); ;
+                if (sock == null) { return; }
+                sock.ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
+            }
         }
 
         public void Close()
         {
-            s.Shutdown(SocketShutdown.Both);
-            s.Close();
+            Socket.DoAction
+            (
+                sock =>
+                {
+                    sock.Shutdown(SocketShutdown.Both);
+                    sock.Close();
+                }
+            );
         }
 
         public void Dispose()
         {
-            s.Dispose();
-            s = null;
+            StreamedAsyncSocket s = null;
+            Socket.Update
+            (
+                ss =>
+                {
+                    s = ss;
+                    return null;
+                }
+            );
+
+            if (s != null)
+            {
+                try
+                {
+                    s.Shutdown(SocketShutdown.Both);
+                }
+                catch
+                {
+                }
+                try
+                {
+                    s.Close();
+                }
+                catch
+                {
+                }
+                try
+                {
+                    s.Dispose();
+                }
+                catch
+                {
+                }
+            }
         }
     }
 }

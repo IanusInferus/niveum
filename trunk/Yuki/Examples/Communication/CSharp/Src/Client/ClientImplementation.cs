@@ -34,9 +34,14 @@ namespace Client
 
         public void TestMessageReceived(ClientContext c, TestMessageReceivedEvent e)
         {
-            c.Sum += Int32.Parse(e.Message);
-            c.Num -= 1;
-            if (c.Num == 0)
+            var Done = false;
+            lock (c.Lockee)
+            {
+                c.Sum += Int32.Parse(e.Message);
+                c.Num -= 1;
+                Done = c.Num == 0;
+            }
+            if (Done)
             {
                 c.Completed();
             }

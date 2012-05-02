@@ -49,12 +49,15 @@ namespace Client
             });
         }
 
-        public static void TestMessage(int NumUser, int n, ClientContext cc, IClient<ClientContext> ic, Action Completed)
+        public static void TestMessageInitializeClientContext(int NumUser, int n, ClientContext cc, IClient<ClientContext> ic, Action Completed)
         {
-            var s = n.ToString();
             cc.NumOnline = NumUser;
             cc.Num = NumUser;
             cc.Completed = Completed;
+        }
+        public static void TestMessage(int NumUser, int n, ClientContext cc, IClient<ClientContext> ic, Action Completed)
+        {
+            var s = n.ToString();
 
             ic.TestMessage(new TestMessageRequest { Message = s }, (c, r) =>
             {
@@ -74,7 +77,7 @@ namespace Client
             Debug.Assert(Sum == PredicatedSum);
         }
 
-        public static void TestForNumUser(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IClient<ClientContext>, Action> Test, Action<ClientContext[]> FinalCheck = null)
+        public static void TestForNumUser(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IClient<ClientContext>, Action> Test, Action<int, int, ClientContext, IClient<ClientContext>, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
         {
             var tl = new List<Task>();
             var bcl = new List<BinarySocketClient>();
@@ -83,12 +86,20 @@ namespace Client
             var vConnected = new LockedVariable<int>(0);
             var vCompleted = new LockedVariable<int>(0);
             var Check = new AutoResetEvent(false);
+
+            Action Completed = () =>
+            {
+                vCompleted.Update(i => i + 1);
+                Check.Set();
+            };
+
             if (ProtocolType == ApplicationProtocolType.Binary)
             {
                 for (int k = 0; k < NumUser; k += 1)
                 {
                     var n = k;
                     var bc = new BinarySocketClient(RemoteEndPoint, new ClientImplementation());
+                    if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, bc.Context, bc.InnerClient, Completed); }
                     bc.Connect();
                     bc.Receive(se => Console.WriteLine((new SocketException((int)se)).Message));
                     bc.InnerClient.ServerTime(new ServerTimeRequest { }, (c, r) =>
@@ -100,11 +111,7 @@ namespace Client
                     (
                         () =>
                         {
-                            Test(NumUser, n, bc.Context, bc.InnerClient, () =>
-                            {
-                                vCompleted.Update(i => i + 1);
-                                Check.Set();
-                            });
+                            Test(NumUser, n, bc.Context, bc.InnerClient, Completed);
                         }
                     );
                     tl.Add(t);
@@ -118,6 +125,7 @@ namespace Client
                 {
                     var n = k;
                     var jc = new JsonSocketClient(RemoteEndPoint, new ClientImplementation());
+                    if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, jc.Context, jc.InnerClient, Completed); }
                     jc.Connect();
                     jc.Receive(se => Console.WriteLine((new SocketException((int)se)).Message));
                     jc.InnerClient.ServerTime(new ServerTimeRequest { }, (c, r) =>
@@ -129,11 +137,7 @@ namespace Client
                     (
                         () =>
                         {
-                            Test(NumUser, n, jc.Context, jc.InnerClient, () =>
-                            {
-                                vCompleted.Update(i => i + 1);
-                                Check.Set();
-                            });
+                            Test(NumUser, n, jc.Context, jc.InnerClient, Completed);
                         }
                     );
                     tl.Add(t);
@@ -193,33 +197,33 @@ namespace Client
 
         public static int DoTest(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType)
         {
-            //TestForNumUser(RemoteEndPoint, ProtocolType, 64, "", TestAdd);
-            //TestForNumUser(RemoteEndPoint, ProtocolType, 64, "", TestMultiply);
-            //TestForNumUser(RemoteEndPoint, ProtocolType, 64, "", TestText);
-            TestForNumUser(RemoteEndPoint, ProtocolType, 64, "", TestMessage, TestMessageFinalCheck);
-
+            TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestAdd", TestAdd);
+            TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMultiply", TestMultiply);
+            TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestText", TestText);
+            TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMessage", TestMessage, TestMessageInitializeClientContext, TestMessageFinalCheck);
+            
             Thread.Sleep(5000);
             for (int k = 0; k < 8; k += 1)
             {
                 TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestAdd", TestAdd);
             }
-
+            
             Thread.Sleep(5000);
-            for (int k = 0; k < 8; k += 1)
+            for (int k = 0; k < 7; k += 1)
             {
                 TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestMultiply", TestMultiply);
             }
-
+            
             Thread.Sleep(5000);
-            for (int k = 0; k < 8; k += 1)
+            for (int k = 0; k < 7; k += 1)
             {
                 TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestText", TestText);
             }
-
+            
             Thread.Sleep(5000);
             for (int k = 0; k < 6; k += 1)
             {
-                TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestMessage", TestMessage, TestMessageFinalCheck);
+                TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestMessage", TestMessage, TestMessageInitializeClientContext, TestMessageFinalCheck);
             }
 
             return 0;

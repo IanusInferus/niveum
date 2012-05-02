@@ -50,6 +50,7 @@
     <Compile Include="Servers\JsonSocketServer.cs" />
     <Compile Include="Servers\JsonSocketSession.cs" />
     <Compile Include="Services\TestPerformance.cs" />
+    <Compile Include="Util\ConsoleLogger.cs" />
     <Compile Include="Util\FileLogger.cs" />
     <Compile Include="Util\FileLoggerSync.cs" />
     <Compile Include="Program.cs" />
