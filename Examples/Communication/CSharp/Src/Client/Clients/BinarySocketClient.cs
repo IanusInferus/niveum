@@ -256,40 +256,37 @@ namespace Client
 
         public void Dispose()
         {
-            StreamedAsyncSocket s = null;
             Socket.Update
             (
-                ss =>
+                s =>
                 {
-                    s = ss;
+                    if (s != null)
+                    {
+                        try
+                        {
+                            s.Shutdown(SocketShutdown.Both);
+                        }
+                        catch
+                        {
+                        }
+                        try
+                        {
+                            s.Close();
+                        }
+                        catch
+                        {
+                        }
+                        try
+                        {
+                            s.Dispose();
+                        }
+                        catch
+                        {
+                        }
+                    }
                     return null;
                 }
             );
-
-            if (s != null)
-            {
-                try
-                {
-                    s.Shutdown(SocketShutdown.Both);
-                }
-                catch
-                {
-                }
-                try
-                {
-                    s.Close();
-                }
-                catch
-                {
-                }
-                try
-                {
-                    s.Dispose();
-                }
-                catch
-                {
-                }
-            }
         }
     }
 }
