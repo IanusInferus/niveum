@@ -122,77 +122,85 @@ namespace Server
             {
                 using (var Server = new BinarySocketServer())
                 {
-                    Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
-                    Server.SessionIdleTimeout = c.SessionIdleTimeout;
-                    Server.MaxConnections = c.MaxConnections;
-                    Server.MaxConnectionsPerIP = c.MaxConnectionsPerIP;
-                    Server.MaxBadCommands = c.MaxBadCommands;
-                    Server.ClientDebug = c.ClientDebug;
-                    Server.EnableLogNormalIn = c.EnableLogNormalIn;
-                    Server.EnableLogNormalOut = c.EnableLogNormalOut;
-                    Server.EnableLogUnknownError = c.EnableLogUnknownError;
-                    Server.EnableLogCriticalError = c.EnableLogCriticalError;
-                    Server.EnableLogPerformance = c.EnableLogPerformance;
-                    Server.EnableLogSystem = c.EnableLogSystem;
+                    using (var Logger = new ConsoleLogger())
+                    {
+                        if (c.EnableLogConsole)
+                        {
+                            Logger.Start
+                            (
+                                a => Server.SessionLog += a,
+                                a => Server.SessionLog -= a
+                            );
+                        }
 
-                    Server.SessionLog += ConsoleLog;
+                        Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
+                        Server.SessionIdleTimeout = c.SessionIdleTimeout;
+                        Server.MaxConnections = c.MaxConnections;
+                        Server.MaxConnectionsPerIP = c.MaxConnectionsPerIP;
+                        Server.MaxBadCommands = c.MaxBadCommands;
+                        Server.ClientDebug = c.ClientDebug;
+                        Server.EnableLogNormalIn = c.EnableLogNormalIn;
+                        Server.EnableLogNormalOut = c.EnableLogNormalOut;
+                        Server.EnableLogUnknownError = c.EnableLogUnknownError;
+                        Server.EnableLogCriticalError = c.EnableLogCriticalError;
+                        Server.EnableLogPerformance = c.EnableLogPerformance;
+                        Server.EnableLogSystem = c.EnableLogSystem;
 
-                    Server.Start();
+                        Server.Start();
 
-                    Console.WriteLine("服务器已启动。");
-                    Console.WriteLine("协议类型：" + c.ProtocolType.ToString());
-                    Console.WriteLine("服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
+                        Console.WriteLine("服务器已启动。");
+                        Console.WriteLine("协议类型：" + c.ProtocolType.ToString());
+                        Console.WriteLine("服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
 
-                    ExitEvent.WaitOne();
+                        ExitEvent.WaitOne();
 
-                    Server.Stop();
-
-                    Server.SessionLog -= ConsoleLog;
+                        Server.Stop();
+                    }
                 }
             }
             else if (c.ProtocolType == ProtocolType.Json)
             {
                 using (var Server = new JsonSocketServer())
                 {
-                    Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
-                    Server.SessionIdleTimeout = c.SessionIdleTimeout;
-                    Server.MaxConnections = c.MaxConnections;
-                    Server.MaxConnectionsPerIP = c.MaxConnectionsPerIP;
-                    Server.MaxBadCommands = c.MaxBadCommands;
-                    Server.ClientDebug = c.ClientDebug;
-                    Server.EnableLogNormalIn = c.EnableLogNormalIn;
-                    Server.EnableLogNormalOut = c.EnableLogNormalOut;
-                    Server.EnableLogUnknownError = c.EnableLogUnknownError;
-                    Server.EnableLogCriticalError = c.EnableLogCriticalError;
-                    Server.EnableLogPerformance = c.EnableLogPerformance;
-                    Server.EnableLogSystem = c.EnableLogSystem;
+                    using (var Logger = new ConsoleLogger())
+                    {
+                        if (c.EnableLogConsole)
+                        {
+                            Logger.Start
+                            (
+                                a => Server.SessionLog += a,
+                                a => Server.SessionLog -= a
+                            );
+                        }
 
-                    Server.SessionLog += ConsoleLog;
+                        Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
+                        Server.SessionIdleTimeout = c.SessionIdleTimeout;
+                        Server.MaxConnections = c.MaxConnections;
+                        Server.MaxConnectionsPerIP = c.MaxConnectionsPerIP;
+                        Server.MaxBadCommands = c.MaxBadCommands;
+                        Server.ClientDebug = c.ClientDebug;
+                        Server.EnableLogNormalIn = c.EnableLogNormalIn;
+                        Server.EnableLogNormalOut = c.EnableLogNormalOut;
+                        Server.EnableLogUnknownError = c.EnableLogUnknownError;
+                        Server.EnableLogCriticalError = c.EnableLogCriticalError;
+                        Server.EnableLogPerformance = c.EnableLogPerformance;
+                        Server.EnableLogSystem = c.EnableLogSystem;
 
-                    Server.Start();
+                        Server.Start();
 
-                    Console.WriteLine("服务器已启动。");
-                    Console.WriteLine("协议类型：" + c.ProtocolType.ToString());
-                    Console.WriteLine("服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
+                        Console.WriteLine("服务器已启动。");
+                        Console.WriteLine("协议类型：" + c.ProtocolType.ToString());
+                        Console.WriteLine("服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
 
-                    ExitEvent.WaitOne();
+                        ExitEvent.WaitOne();
 
-                    Server.Stop();
-
-                    Server.SessionLog -= ConsoleLog;
+                        Server.Stop();
+                    }
                 }
             }
             else
             {
                 throw new InvalidOperationException("未知协议类型：" + c.ProtocolType.ToString());
-            }
-        }
-
-        private static void ConsoleLog(SessionLogEntry e)
-        {
-            foreach (var Line in FileLoggerSync.GetLines(e))
-            {
-                Console.WriteLine(Line);
             }
         }
 

@@ -8,6 +8,7 @@ using Firefly;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
 using Communication;
+using Communication.BaseSystem;
 using Communication.Net;
 using Communication.Binary;
 
@@ -20,12 +21,12 @@ namespace Client
         public ClientContext Context { get; private set; }
 
         private IPEndPoint RemoteEndPoint;
-        private StreamedAsyncSocket sock;
+        private LockedVariable<StreamedAsyncSocket> Socket = new LockedVariable<StreamedAsyncSocket>(null);
 
         public BinarySocketClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci)
         {
             this.RemoteEndPoint = RemoteEndPoint;
-            sock = new StreamedAsyncSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
+            Socket = new LockedVariable<StreamedAsyncSocket>(new StreamedAsyncSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)));
             this.ci = ci;
             InnerClient = new BinaryClient<ClientContext>(this, ci);
             Context = new ClientContext();
@@ -34,7 +35,7 @@ namespace Client
 
         public void Connect()
         {
-            sock.InnerSocket.Connect(RemoteEndPoint);
+            Socket.DoAction(sock => sock.InnerSocket.Connect(RemoteEndPoint));
         }
 
         void IBinarySender.Send(String CommandName, UInt32 CommandHash, Byte[] Parameters)
@@ -51,7 +52,7 @@ namespace Client
                 s.Position = 0;
                 Bytes = s.Read((int)(s.Length));
             }
-            sock.InnerSocket.Send(Bytes);
+            Socket.DoAction(sock => sock.InnerSocket.Send(Bytes));
         }
 
         private class Command
@@ -119,7 +120,7 @@ namespace Client
                 }
                 else if (State == 2)
                 {
-                    if (Length >= CommandHash)
+                    if (Length >= 4)
                     {
                         using (var s = new ByteArrayStream(Buffer, Position, Length))
                         {
@@ -229,23 +230,66 @@ namespace Client
                     }
                     BufferLength = CopyLength;
                 }
+                StreamedAsyncSocket sock = Socket.Check(ss => ss); ;
                 if (sock == null) { return; }
                 sock.ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
             };
 
-            sock.ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
+            {
+                StreamedAsyncSocket sock = Socket.Check(ss => ss); ;
+                if (sock == null) { return; }
+                sock.ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
+            }
         }
 
         public void Close()
         {
-            sock.Shutdown(SocketShutdown.Both);
-            sock.Close();
+            Socket.DoAction
+            (
+                sock =>
+                {
+                    sock.Shutdown(SocketShutdown.Both);
+                    sock.Close();
+                }
+            );
         }
 
         public void Dispose()
         {
-            sock.Dispose();
-            sock = null;
+            StreamedAsyncSocket s = null;
+            Socket.Update
+            (
+                ss =>
+                {
+                    s = ss;
+                    return null;
+                }
+            );
+
+            if (s != null)
+            {
+                try
+                {
+                    s.Shutdown(SocketShutdown.Both);
+                }
+                catch
+                {
+                }
+                try
+                {
+                    s.Close();
+                }
+                catch
+                {
+                }
+                try
+                {
+                    s.Dispose();
+                }
+                catch
+                {
+                }
+            }
         }
     }
 }

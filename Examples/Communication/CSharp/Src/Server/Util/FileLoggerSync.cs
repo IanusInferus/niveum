@@ -6,6 +6,7 @@ using System.IO;
 using Firefly;
 using Firefly.TextEncoding;
 using Firefly.Texting;
+using Communication.BaseSystem;
 
 namespace Server
 {
@@ -50,11 +51,8 @@ namespace Server
 
         public static String[] GetLines(SessionLogEntry Entry)
         {
-            var LocalTime = Entry.Time.ToLocalTime();
-            var TimeOffset = LocalTime - Entry.Time;
-
-            var Time = LocalTime.ToString("yyyy-MM-dd HH:mm:ss.fff" + String.Format(" (UTC+{0})", TimeOffset.TotalHours));
-            var Start = String.Join("\t", new String[] { Time, Entry.Type }.Select(m => @"""" + m.Replace(@"""", @"""""") + @"""").ToArray());
+            var Time = Entry.Time.DateTimeUtcWithMillisecondsToString();
+            var Start = String.Join("\t", new String[] { Time, Entry.Token, Entry.Type }.Select(m => @"""" + m.Replace(@"""", @"""""") + @"""").ToArray());
             String[] Lines;
             if (!(Entry.Message.StartsWith(" ") || Entry.Message.Contains('\n')))
             {
