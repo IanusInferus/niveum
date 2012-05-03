@@ -2,6 +2,7 @@
 Examples:
 修正C++通讯示例中的线程同步问题。
 增加C++通讯示例性能测试报告。
+修正C++序列化示例的GCC-C++支持。
 Yuki.Core, Yuki.SchemaManipulator, Yuki.Relation, Yuki.RelationSchemaManipulator:
 分离出关系数据类型代码生成库和工具。
 
