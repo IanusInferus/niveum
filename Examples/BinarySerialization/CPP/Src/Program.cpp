@@ -3,14 +3,11 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 数据复制工具
-//  Version:     2012.04.08.
+//  Version:     2012.05.03.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
 //==========================================================================
-
-#pragma warning (disable : 4345)
-#pragma warning (disable : 4996)
 
 #include "Utility.h"
 #include "World.h"
