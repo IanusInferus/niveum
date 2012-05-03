@@ -73,7 +73,7 @@ namespace Client
         }
 
     private:
-        class Command
+        class CommandBody
         {
         public:
             std::wstring CommandName;
@@ -84,7 +84,7 @@ namespace Client
         class TryShiftResult
         {
         public:
-            std::shared_ptr<Command> Command;
+            std::shared_ptr<CommandBody> Command;
             int Position;
         };
 
@@ -200,7 +200,7 @@ namespace Client
                         {
                             (*Parameters)[k] = Buffer[Position + k];
                         }
-                        auto cmd = std::make_shared<Command>();
+                        auto cmd = std::make_shared<CommandBody>();
                         cmd->CommandName = CommandName;
                         cmd->CommandHash = CommandHash;
                         cmd->Parameters = Parameters;

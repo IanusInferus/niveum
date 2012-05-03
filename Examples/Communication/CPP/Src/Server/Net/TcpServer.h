@@ -330,33 +330,49 @@ namespace Communication
                         s->IdleTimeout = SessionIdleTimeoutValue;
                         s->SetSocket(Socket);
 
-                        if (MaxConnectionsValue->OnHasValue() && (Sessions.Check<int>([](std::shared_ptr<TSessionSet> ss) { return (int)(ss->size()); }) >= MaxConnectionsValue->HasValue))
+                        if (MaxConnectionsValue->OnHasValue())
                         {
-                            Communication::BaseSystem::AutoRelease Final([&]()
+                            int SessionCount = Sessions.Check<int>([=](std::shared_ptr<TSessionSet> ss) -> int
                             {
-                                s->Stop();
+                                return (int)(ss->size());
                             });
-                            s->Start();
-                            if (MaxConnectionsExceeded != nullptr)
+
+                            if (SessionCount >= MaxConnectionsValue->HasValue)
                             {
-                                MaxConnectionsExceeded(ts);
+                                Communication::BaseSystem::AutoRelease Final([&]()
+                                {
+                                    s->Stop();
+                                });
+                                s->Start();
+                                if (MaxConnectionsExceeded != nullptr)
+                                {
+                                    MaxConnectionsExceeded(ts);
+                                }
+                                continue;
                             }
-                            continue;
                         }
 
                         auto Address = s->RemoteEndPoint.address();
-                        if (MaxConnectionsPerIPValue->OnHasValue() && (IpSessions.Check<int>([&](std::shared_ptr<TIpAddressMap> iss) { return iss->count(Address) > 0 ? (*iss)[Address] : 0; }) >= MaxConnectionsPerIPValue->HasValue))
+                        if (MaxConnectionsPerIPValue->OnHasValue())
                         {
-                            Communication::BaseSystem::AutoRelease Final([&]()
+                            int IpSessionCount = IpSessions.Check<int>([=](std::shared_ptr<TIpAddressMap> iss) -> int
                             {
-                                s->Stop();
+                                return iss->count(Address) > 0 ? (*iss)[Address] : 0;
                             });
-                            s->Start();
-                            if (MaxConnectionsPerIPExceeded != nullptr)
+
+                            if (IpSessionCount >= MaxConnectionsPerIPValue->HasValue)
                             {
-                                MaxConnectionsPerIPExceeded(ts);
+                                Communication::BaseSystem::AutoRelease Final([&]()
+                                {
+                                    s->Stop();
+                                });
+                                s->Start();
+                                if (MaxConnectionsPerIPExceeded != nullptr)
+                                {
+                                    MaxConnectionsPerIPExceeded(ts);
+                                }
+                                continue;
                             }
-                            continue;
                         }
 
                         Sessions.DoAction([=](std::shared_ptr<TSessionSet> &ss)

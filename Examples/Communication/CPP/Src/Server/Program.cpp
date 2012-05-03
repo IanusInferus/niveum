@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2012.05.02.
+//  Version:     2012.05.04.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -30,7 +30,9 @@
 #include <boost/format.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#ifdef _MSC_VER
 #undef SendMessage
+#endif
 
 namespace Server
 {
@@ -77,7 +79,7 @@ namespace Server
 
             int ProcessorCount = (int)(boost::thread::hardware_concurrency());
 
-            std::wprintf(L"%ls\n", L"逻辑处理器数量: " + ToString(ProcessorCount));
+            std::wprintf(L"%ls\n", (L"逻辑处理器数量: " + ToString(ProcessorCount)).c_str());
 
             auto IoService = std::make_shared<boost::asio::io_service>(ProcessorCount * 2 + 1);
 
@@ -112,7 +114,7 @@ namespace Server
 
             std::wprintf(L"%ls\n", L"服务器已启动。");
             std::wprintf(L"%ls\n", L"协议类型: Binary");
-            std::wprintf(L"%ls\n", L"服务结点: " +  s2w(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port()));
+            std::wprintf(L"%ls\n", (L"服务结点: " +  s2w(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port())).c_str());
 
             std::vector<std::shared_ptr<boost::thread>> Threads;
             for (int i = 0; i < ProcessorCount; i += 1)

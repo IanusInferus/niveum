@@ -98,7 +98,7 @@ namespace Server
         }
 
     private:
-        class Command
+        class CommandBody
         {
         public:
             std::wstring CommandName;
@@ -117,19 +117,19 @@ namespace Server
         {
         public:
             SessionCommandTag _Tag;
-            std::shared_ptr<Command> Read;
-            std::shared_ptr<Command> Write;
+            std::shared_ptr<CommandBody> Read;
+            std::shared_ptr<CommandBody> Write;
             Unit ReadRaw;
             Unit Quit;
 
-            static std::shared_ptr<SessionCommand> CreateRead(std::shared_ptr<Command> Value)
+            static std::shared_ptr<SessionCommand> CreateRead(std::shared_ptr<CommandBody> Value)
             {
                 auto r = std::make_shared<SessionCommand>();
                 r->_Tag = SessionCommandTag_Read;
                 r->Read = Value;
                 return r;
             }
-            static std::shared_ptr<SessionCommand> CreateWrite(std::shared_ptr<Command> Value)
+            static std::shared_ptr<SessionCommand> CreateWrite(std::shared_ptr<CommandBody> Value)
             {
                 auto r = std::make_shared<SessionCommand>();
                 r->_Tag = SessionCommandTag_Write;
@@ -280,7 +280,7 @@ namespace Server
         class TryShiftResult
         {
         public:
-            std::shared_ptr<Command> Command;
+            std::shared_ptr<CommandBody> Command;
             int Position;
         };
 
@@ -396,7 +396,7 @@ namespace Server
                         {
                             (*Parameters)[k] = Buffer[Position + k];
                         }
-                        auto cmd = std::make_shared<Command>();
+                        auto cmd = std::make_shared<CommandBody>();
                         cmd->CommandName = CommandName;
                         cmd->CommandHash = CommandHash;
                         cmd->Parameters = Parameters;
@@ -531,7 +531,7 @@ namespace Server
             QueueCommand(SessionCommand::CreateReadRaw());
         };
 
-        void ReadCommand(std::shared_ptr<Command> cmd)
+        void ReadCommand(std::shared_ptr<CommandBody> cmd)
         {
             if (Server->GetEnableLogNormalIn())
             {
@@ -606,7 +606,7 @@ namespace Server
                 e->Message = L"/svr " + CommandName + L" {...}";
                 Server->RaiseSessionLog(e);
             }
-            auto cmd = std::make_shared<Command>();
+            auto cmd = std::make_shared<CommandBody>();
             cmd->CommandName = CommandName;
             cmd->CommandHash = CommandHash;
             cmd->Parameters = Parameters;
@@ -643,7 +643,7 @@ namespace Server
 
     private:
         //线程安全
-        void OnCriticalError(std::exception &ex)
+        void OnCriticalError(const std::exception &ex)
         {
             if (Server->GetEnableLogCriticalError())
             {
