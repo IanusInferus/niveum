@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2012.03.05.
+//  Version:     2012.05.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -249,9 +249,9 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"DataDir 数据目录，里面有若干tree数据文件。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
-            Console.WriteLine(@"DatabaseRegenerator /loadtype:..\..\Schema\Database /connect:""Data Source=.;Integrated Security=True"" /database:RobotSyoujyo /regen /import:..\..\Data /import:..\..\TestData");
-            Console.WriteLine(@"DatabaseRegenerator /loadtype:..\..\Schema\Database /createce:.\RobotSyoujyo.sdf,..\..\Data,..\..\TestData");
-            Console.WriteLine(@"DatabaseRegenerator /loadtype:..\..\Schema\Database /connect:""server=localhost;uid=root"" /database:RobotSyoujyo /regenmysql:..\..\Data,..\..\TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=.;Integrated Security=True"" /database:Example /regen /import:Data /import:TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /createce:.\Example.sdf,\Data,TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root"" /database:Example /regenmysql:Data,TestData");
         }
 
         public static void Regen(RelationSchema.Schema s, String ConnectionString, String DatabaseName)

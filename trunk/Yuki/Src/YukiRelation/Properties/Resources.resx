@@ -118,46 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="Cpp" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\cpp\cpp.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="CSharp" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\csharp\csharp.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="CSharpDatabase" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\csharpdatabase\csharpdatabase.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="SqlDatabase" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\sqldatabase\sqldatabase.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="Xhtml" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\xhtml\xhtml.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="CppBinary" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\cppbinary\cppbinary.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="Java" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\java\java.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="JavaBinary" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\javabinary\javabinary.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="VB" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\vb\vb.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="CSharpJson" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\csharpjson\csharpjson.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="CSharpBinary" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\csharpbinary\csharpbinary.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="ActionScript" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\actionscript\actionscript.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="ActionScriptJson" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\actionscriptjson\actionscriptjson.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="ActionScriptBinary" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\actionscriptbinary\actionscriptbinary.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

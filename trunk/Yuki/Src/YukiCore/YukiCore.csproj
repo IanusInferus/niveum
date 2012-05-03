@@ -8,7 +8,7 @@
     <ProjectGuid>{23021296-4E59-4532-9B5F-CB3CED3A978E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Yuki</RootNamespace>
+    <RootNamespace>Yuki.ObjectSchema</RootNamespace>
     <AssemblyName>Yuki.Core</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
@@ -65,8 +65,6 @@
     <Compile Include="ObjectSchema\TreeBinaryConverter.cs" />
     <Compile Include="ObjectSchema\TupleAndGenericTypeSpecFetcher.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaExtensions.cs" />
-    <Compile Include="SqlDatabase\CodeGenerator.cs" />
-    <Compile Include="RelationSchema\RelationSchemaTranslator.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaLoader.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaTemplate.cs" />
     <Compile Include="ObjectSchema\ObjectSchema.Designer.cs" />
@@ -76,9 +74,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="RelationSchema\RelationSchema.Designer.cs" />
-    <Compile Include="DbmlDatabase\CodeGenerator.cs" />
-    <Compile Include="CSharpDatabase\CodeGenerator.cs" />
     <Compile Include="VB\CodeGenerator.cs" />
     <Compile Include="Xhtml\CodeGenerator.cs" />
   </ItemGroup>
@@ -93,16 +88,13 @@
     <None Include="CSharp\CSharp.tree" />
     <None Include="JavaBinary\JavaBinary.tree" />
     <None Include="Java\Java.tree" />
-    <None Include="SqlDatabase\SqlDatabase.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
-    <None Include="RelationSchema\RelationSchema.tree" />
-    <None Include="CSharpDatabase\CSharpDatabase.tree" />
     <None Include="VB\VB.tree" />
     <None Include="Xhtml\Xhtml.tree" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -110,7 +102,6 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild">
     <Exec Command="&quot;Lib\Firefly\MetaSchemaManipulator.exe&quot; /t2cs:&quot;YukiCore\ObjectSchema\ObjectSchema.tree&quot;,&quot;YukiCore\ObjectSchema\ObjectSchema.Designer.cs&quot;,Yuki.ObjectSchema" WorkingDirectory="$(SolutionDir)" />
-    <Exec Command="&quot;Lib\Firefly\MetaSchemaManipulator.exe&quot; /t2cs:&quot;YukiCore\RelationSchema\RelationSchema.tree&quot;,&quot;YukiCore\RelationSchema\RelationSchema.Designer.cs&quot;,Yuki.RelationSchema" WorkingDirectory="$(SolutionDir)" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

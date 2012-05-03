@@ -33,9 +33,6 @@ using Yuki.ObjectSchema.ActionScript;
 using Yuki.ObjectSchema.ActionScriptBinary;
 using Yuki.ObjectSchema.ActionScriptJson;
 using Yuki.ObjectSchema.Xhtml;
-using Yuki.RelationSchema.SqlDatabase;
-using Yuki.RelationSchema.DbmlDatabase;
-using Yuki.RelationSchema.CSharpDatabase;
 
 namespace Yuki.SchemaManipulator
 {
@@ -366,45 +363,6 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2sqld")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 2)
-                    {
-                        ObjectSchemaToSqlDatabaseCode(args[0], args[1]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
-                else if (opt.Name.ToLower() == "t2dbml")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 5)
-                    {
-                        ObjectSchemaToDbmlDatabaseCode(args[0], args[1], args[2], args[3], args[4]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
-                else if (opt.Name.ToLower() == "t2csd")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 5)
-                    {
-                        ObjectSchemaToCSharpDatabaseCode(args[0], args[1], args[2], args[3], args[4]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
                 else
                 {
                     throw (new ArgumentException(opt.Name));
@@ -419,7 +377,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine("Yuki.SchemaManipulator，按BSD许可证分发");
             Console.WriteLine(@"F.R.C.");
             Console.WriteLine(@"");
-            Console.WriteLine(@"本工具用于从对象类型结构生成代码。目前只支持C#代码生成。");
+            Console.WriteLine(@"本工具用于从对象类型结构生成代码。");
             Console.WriteLine(@"");
             Console.WriteLine(@"用法:");
             Console.WriteLine(@"SchemaManipulator (/<Command>)*");
@@ -457,33 +415,23 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2asj:<AsCodeDir>,<PackageName>");
             Console.WriteLine(@"生成XHTML文档");
             Console.WriteLine(@"/t2xhtml:<XhtmlDir>,<Title>,<CopyrightText>");
-            Console.WriteLine(@"生成SQL数据库DROP和CREATE脚本");
-            Console.WriteLine(@"/t2sqld:<SqlCodePath>,<DatabaseName>");
-            Console.WriteLine(@"生成Dbml文件");
-            Console.WriteLine(@"/t2dbml:<DbmlCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
-            Console.WriteLine(@"生成C#数据库类型");
-            Console.WriteLine(@"/t2csd:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"ObjectSchemaDir|ObjectSchemaFile 对象类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"TreeFile Tree文件路径。");
             Console.WriteLine(@"BinaryFile 二进制文件路径。");
-            Console.WriteLine(@"CsCodePath C#代码文件路径。");
+            Console.WriteLine(@"MainType 主类型。");
             Console.WriteLine(@"NamespaceName C#文件中的命名空间名称。");
-            Console.WriteLine(@"AsCodeDir ActionScript代码文件夹路径。");
-            Console.WriteLine(@"PackageName ActionScript/Java文件中的包名。");
-            Console.WriteLine(@"UseTryWrapper 是否使用try包装构造函数。");
-            Console.WriteLine(@"SqlCodePath SQL代码文件路径。");
-            Console.WriteLine(@"DatabaseName 数据库名。");
-            Console.WriteLine(@"DbmlCodePath Dbml文件路径。");
-            Console.WriteLine(@"EntityNamespaceName 实体命名空间名称。");
-            Console.WriteLine(@"ContextNamespaceName 上下文命名空间名称。");
-            Console.WriteLine(@"ContextClassName 上下文类名称。");
-            Console.WriteLine(@"XhtmlDir XHTML文件夹路径。");
+            Console.WriteLine(@"PackageName Java/ActionScript文件中的包名。");
             Console.WriteLine(@"ClassName Java文件中的类名。");
+            Console.WriteLine(@"VbCodePath VB代码文件路径。");
+            Console.WriteLine(@"CsCodePath C#代码文件路径。");
+            Console.WriteLine(@"JavaCodePath Java代码文件路径。");
+            Console.WriteLine(@"AsCodeDir ActionScript代码文件夹路径。");
+            Console.WriteLine(@"XhtmlDir XHTML文件夹路径。");
             Console.WriteLine(@"Title 标题。");
             Console.WriteLine(@"CopyrightText 版权文本。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
-            Console.WriteLine(@"SchemaManipulator /loadtype:..\..\Schema\Communication /t2csc:..\..\GameServer\Src\Schema\Communication.cs,Yuki.Communication");
+            Console.WriteLine(@"SchemaManipulator /loadtype:Schema /t2cs:Src\Generated\Communication.cs,Communication");
         }
 
         private static ObjectSchemaLoader osl = new ObjectSchemaLoader();
@@ -786,70 +734,6 @@ namespace Yuki.SchemaManipulator
                 if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
                 Txt.WriteFile(Path, TextEncoding.UTF8, Compiled);
             }
-        }
-
-        public static void ObjectSchemaToSqlDatabaseCode(String SqlCodePath, String DatabaseName)
-        {
-            var ObjectSchema = Schema();
-            var Compiled = ObjectSchema.CompileToSqlDatabase(DatabaseName, true);
-            if (File.Exists(SqlCodePath))
-            {
-                var Original = Txt.ReadFile(SqlCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
-            if (!Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
-            Txt.WriteFile(SqlCodePath, Compiled);
-        }
-
-        public static void ObjectSchemaToDbmlDatabaseCode(String SqlCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
-        {
-            var ObjectSchema = Schema();
-            var CompiledX = ObjectSchema.CompileToDbmlDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
-            String Compiled = "";
-            using (var s = Streams.CreateMemoryStream())
-            {
-                using (var sw = Txt.CreateTextWriter(s.Partialize(0, Int64.MaxValue, 0).AsNewWriting(), TextEncoding.UTF8))
-                {
-                    XmlFile.WriteFile(sw, CompiledX);
-                }
-                s.Position = 0;
-                using (var sr = Txt.CreateTextReader(s.Partialize(0, s.Length).AsNewReading(), TextEncoding.UTF8))
-                {
-                    Compiled = Txt.ReadFile(sr);
-                }
-            }
-            if (File.Exists(SqlCodePath))
-            {
-                var Original = Txt.ReadFile(SqlCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
-            if (!Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
-            Txt.WriteFile(SqlCodePath, TextEncoding.UTF8, Compiled);
-        }
-
-        public static void ObjectSchemaToCSharpDatabaseCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
-        {
-            var ObjectSchema = Schema();
-            var Compiled = ObjectSchema.CompileToCSharpDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
-            if (File.Exists(CsCodePath))
-            {
-                var Original = Txt.ReadFile(CsCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(CsCodePath, Compiled);
         }
     }
 }
