@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#枚举数据库代码生成器
-//  Version:     2012.04.24.
+//  Version:     2012.05.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -47,7 +47,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
 
             static Writer()
             {
-                var OriginalTemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharp);
+                var OriginalTemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(OS.Properties.Resources.CSharp);
                 TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpDatabase);
                 TemplateInfo.Keywords = OriginalTemplateInfo.Keywords;
             }
