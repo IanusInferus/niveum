@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Yuki.Properties {
+namespace Yuki.RelationSchema.Properties {
     using System;
     
     
@@ -22,7 +22,7 @@ namespace Yuki.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,10 +36,10 @@ namespace Yuki.Properties {
         ///   返回此类使用的缓存的 ResourceManager 实例。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Yuki.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Yuki.RelationSchema.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -51,7 +51,7 @@ namespace Yuki.Properties {
         ///   重写当前线程的 CurrentUICulture 属性。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -60,100 +60,16 @@ namespace Yuki.Properties {
             }
         }
         
-        internal static byte[] ActionScript {
-            get {
-                object obj = ResourceManager.GetObject("ActionScript", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] ActionScriptBinary {
-            get {
-                object obj = ResourceManager.GetObject("ActionScriptBinary", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] ActionScriptJson {
-            get {
-                object obj = ResourceManager.GetObject("ActionScriptJson", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] Cpp {
-            get {
-                object obj = ResourceManager.GetObject("Cpp", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] CppBinary {
-            get {
-                object obj = ResourceManager.GetObject("CppBinary", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] CSharp {
-            get {
-                object obj = ResourceManager.GetObject("CSharp", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] CSharpBinary {
-            get {
-                object obj = ResourceManager.GetObject("CSharpBinary", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] CSharpDatabase {
+        public static byte[] CSharpDatabase {
             get {
                 object obj = ResourceManager.GetObject("CSharpDatabase", resourceCulture);
                 return ((byte[])(obj));
             }
         }
         
-        internal static byte[] CSharpJson {
-            get {
-                object obj = ResourceManager.GetObject("CSharpJson", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] Java {
-            get {
-                object obj = ResourceManager.GetObject("Java", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] JavaBinary {
-            get {
-                object obj = ResourceManager.GetObject("JavaBinary", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] SqlDatabase {
+        public static byte[] SqlDatabase {
             get {
                 object obj = ResourceManager.GetObject("SqlDatabase", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] VB {
-            get {
-                object obj = ResourceManager.GetObject("VB", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] Xhtml {
-            get {
-                object obj = ResourceManager.GetObject("Xhtml", resourceCulture);
                 return ((byte[])(obj));
             }
         }
