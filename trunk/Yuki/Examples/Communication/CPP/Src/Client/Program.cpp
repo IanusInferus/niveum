@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2012.05.02.
+//  Version:     2012.05.04.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -20,10 +20,13 @@
 #include <string>
 #include <cstdio>
 #include <clocale>
+#include <iostream>
 #include <boost/asio.hpp>
 #include <boost/thread/thread.hpp>
 
+#ifdef _MSC_VER
 #undef SendMessage
+#endif
 
 namespace Client
 {

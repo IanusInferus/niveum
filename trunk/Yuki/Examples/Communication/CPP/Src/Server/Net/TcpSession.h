@@ -2,6 +2,7 @@
 
 #include "BaseSystem/LockedVariable.h"
 #include "BaseSystem/Optional.h"
+#include "BaseSystem/AutoRelease.h"
 
 #include <memory>
 #include <cstdint>
@@ -200,7 +201,7 @@ namespace Communication
             void SendAsync(std::shared_ptr<std::vector<uint8_t>> Bytes, int Offset, int Count, std::function<void()> Completed, std::function<void(const boost::system::error_code &se)> Faulted)
             {
                 if ((Offset < 0) || (Count < 0) || (Offset + Count > (int)(Bytes->size()))) { throw std::out_of_range(""); }
-                SendQueue.DoAction([&](std::shared_ptr<std::queue<std::shared_ptr<SendAsyncParameters>>> &q)
+                SendQueue.DoAction([=](std::shared_ptr<std::queue<std::shared_ptr<SendAsyncParameters>>> &q)
                 {
                     auto p = std::make_shared<SendAsyncParameters>();
                     p->Bytes = Bytes;
