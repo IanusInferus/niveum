@@ -33,28 +33,62 @@ namespace Communication
             {
             private:
                 boost::asio::io_service &IoService;
+                std::shared_ptr<boost::thread> Task;
+                Communication::BaseSystem::LockedVariable<bool> IsExited;
 
             public:
+                std::shared_ptr<boost::asio::ip::tcp::acceptor> Acceptor;
+
                 BindingInfo(boost::asio::io_service &IoService)
-                    : IoService(IoService)
+                    : IoService(IoService),
+                      Task(nullptr),
+                      IsExited(false)
                 {
                 }
 
-                std::shared_ptr<boost::asio::ip::tcp::acceptor> Acceptor;
+                ~BindingInfo()
+                {
+                    IsExited.Update([](const bool &b) { return false; });
+                    if (Acceptor != nullptr)
+                    {
+                        Acceptor->close();
+                    }
+                    if (Task != nullptr)
+                    {
+                        Task->join();
+                        Task = nullptr;
+                    }
+                }
+
                 void StartAccept(std::function<void(std::shared_ptr<boost::asio::ip::tcp::socket>)> AcceptHandler)
                 {
-                    auto Socket = std::make_shared<boost::asio::ip::tcp::socket>(IoService);
-                    Acceptor->async_accept(*Socket, [=](const boost::system::error_code &se)
+                    if (Task != nullptr) { throw std::logic_error("ThreadStarted"); }
+
+                    Task = std::make_shared<boost::thread>([=]()
                     {
-                        if (se == boost::system::errc::success)
+                        while (true)
                         {
-                            AcceptHandler(Socket);
+                            if (IsExited.Check<bool>([](const bool &b) { return b; }))
+                            {
+                                return;
+                            }
+                            auto Socket = std::make_shared<boost::asio::ip::tcp::socket>(IoService);
+                            boost::system::error_code se;
+                            Acceptor->accept(*Socket, se);
+                            if (se == boost::system::errc::success)
+                            {
+                                AcceptHandler(Socket);
+                            }
+                            else if (se == boost::system::errc::interrupted)
+                            {
+                                return;
+                            }
+                            else
+                            {
+                                auto Message = "UnexpectedError: " + se.message();
+                                throw std::logic_error(Message);
+                            }
                         }
-                        else if (se == boost::system::errc::interrupted)
-                        {
-                            return;
-                        }
-                        StartAccept(AcceptHandler);
                     });
                 }
             };
