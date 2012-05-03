@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2012.05.01.
+//  Version:     2012.05.03.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -118,6 +118,8 @@ namespace Server
             ThreadPool.SetMinThreads(ProcessorCount + 1, ProcessorCount + 1);
             ThreadPool.SetMaxThreads(ProcessorCount * 2 + 1, ProcessorCount * 2 + 1);
 
+            Console.WriteLine(@"逻辑处理器数量: " + ProcessorCount.ToString());
+
             if (c.ProtocolType == ProtocolType.Binary)
             {
                 using (var Server = new BinarySocketServer())
@@ -148,9 +150,9 @@ namespace Server
 
                         Server.Start();
 
-                        Console.WriteLine("服务器已启动。");
-                        Console.WriteLine("协议类型：" + c.ProtocolType.ToString());
-                        Console.WriteLine("服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
+                        Console.WriteLine(@"服务器已启动。");
+                        Console.WriteLine(@"协议类型: " + c.ProtocolType.ToString());
+                        Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
 
                         ExitEvent.WaitOne();
 
@@ -188,9 +190,9 @@ namespace Server
 
                         Server.Start();
 
-                        Console.WriteLine("服务器已启动。");
-                        Console.WriteLine("协议类型：" + c.ProtocolType.ToString());
-                        Console.WriteLine("服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
+                        Console.WriteLine(@"服务器已启动。");
+                        Console.WriteLine(@"协议类型: " + c.ProtocolType.ToString());
+                        Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
 
                         ExitEvent.WaitOne();
 
@@ -200,7 +202,7 @@ namespace Server
             }
             else
             {
-                throw new InvalidOperationException("未知协议类型：" + c.ProtocolType.ToString());
+                throw new InvalidOperationException("未知协议类型: " + c.ProtocolType.ToString());
             }
         }
 
