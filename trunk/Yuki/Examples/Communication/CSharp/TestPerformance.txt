@@ -1,9 +1,10 @@
 C#通讯示例性能测试报告
 
 测试环境
-主板	Gigabyte G41M-ES2L				
-CPU	Intel Core2 Quad CPU  Q8300 @ 2.50GHz				
-内存	4GB				
+主板    Gigabyte G41M-ES2L
+CPU     Intel Core2 Quad CPU  Q8300 @ 2.50GHz
+内存    4GB
+系统    Windows 7
 
 测试方法
 本机同时运行服务器和测试程序

@@ -77,7 +77,9 @@ namespace Server
 
             int ProcessorCount = (int)(boost::thread::hardware_concurrency());
 
-            auto IoService = std::make_shared<boost::asio::io_service>(ProcessorCount);
+            std::wprintf(L"%ls\n", L"逻辑处理器数量: " + ToString(ProcessorCount));
+
+            auto IoService = std::make_shared<boost::asio::io_service>(ProcessorCount * 2 + 1);
 
             ConsoleLogger cl;
 
@@ -93,7 +95,8 @@ namespace Server
 
             auto Server = std::make_shared<BinarySocketServer>(*IoService);
             auto Bindings = std::make_shared<std::vector<boost::asio::ip::tcp::endpoint>>();
-            Bindings->push_back(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), Port));
+            auto LocalEndPoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), Port);
+            Bindings->push_back(LocalEndPoint);
             Server->SetBindings(Bindings);
             Server->SetSessionIdleTimeout(Communication::BaseSystem::Optional<int>::CreateHasValue(600 * 1000));
 
@@ -106,6 +109,10 @@ namespace Server
             };
 
             Server->Start();
+
+            std::wprintf(L"%ls\n", L"服务器已启动。");
+            std::wprintf(L"%ls\n", L"协议类型: Binary");
+            std::wprintf(L"%ls\n", L"服务结点: " +  s2w(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port()));
 
             std::vector<std::shared_ptr<boost::thread>> Threads;
             for (int i = 0; i < ProcessorCount; i += 1)

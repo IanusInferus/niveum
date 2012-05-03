@@ -1,0 +1,47 @@
+C++2011通讯示例性能测试报告
+
+测试环境
+主板    Gigabyte G41M-ES2L
+CPU     Intel Core2 Quad CPU  Q8300 @ 2.50GHz
+内存    4GB
+系统    Windows 7
+
+测试方法
+本机同时运行服务器和C#版测试程序
+Server
+Client <Protocol> /auto
+
+C++2011 Binary
+
+TestAdd: 64 Users, 125 ms
+TestMultiply: 64 Users, 141 ms
+TestText: 64 Users, 265 ms
+TestMessage: 64 Users, 6677 ms
+TestAdd: 1 Users, 0 ms
+TestAdd: 4 Users, 16 ms
+TestAdd: 16 Users, 16 ms
+TestAdd: 64 Users, 78 ms
+TestAdd: 256 Users, 328 ms
+TestAdd: 1024 Users, 1482 ms
+TestAdd: 4096 Users, 5990 ms
+TestAdd: 16384 Users, 27347 ms
+TestMultiply: 1 Users, 16 ms
+TestMultiply: 4 Users, 62 ms
+TestMultiply: 16 Users, 608 ms
+TestMultiply: 64 Users, 686 ms
+TestMultiply: 256 Users, 436 ms
+TestMultiply: 1024 Users, 1700 ms
+TestMultiply: 4096 Users, 6973 ms
+TestText: 1 Users, 32 ms
+TestText: 4 Users, 47 ms
+TestText: 16 Users, 125 ms
+TestText: 64 Users, 468 ms
+TestText: 256 Users, 1623 ms
+TestText: 1024 Users, 5725 ms
+TestText: 4096 Users, 28283 ms
+TestMessage: 1 Users, 32 ms
+TestMessage: 4 Users, 16 ms
+TestMessage: 16 Users, 374 ms
+TestMessage: 64 Users, 5600 ms
+TestMessage: 256 Users, 90808 ms
+
