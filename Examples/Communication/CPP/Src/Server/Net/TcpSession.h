@@ -2,7 +2,6 @@
 
 #include "BaseSystem/LockedVariable.h"
 #include "BaseSystem/Optional.h"
-#include "BaseSystem/AutoRelease.h"
 
 #include <memory>
 #include <cstdint>
@@ -15,14 +14,12 @@
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace Communication
 {
     namespace Net
     {
-        template <typename TSession>
-        class TcpSession : public std::enable_shared_from_this<TSession>
+        class TcpSession
         {
         protected:
             boost::asio::io_service &IoService;
@@ -31,7 +28,7 @@ namespace Communication
             class SendAsyncParameters;
             Communication::BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<SendAsyncParameters>>>> SendQueue;
         public:
-            std::function<void(std::shared_ptr<TSession>)> NotifySessionQuit;
+            std::function<void()> NotifySessionQuit;
             boost::asio::ip::tcp::endpoint RemoteEndPoint;
             std::shared_ptr<Communication::BaseSystem::Optional<int>> IdleTimeout;
 
@@ -54,9 +51,9 @@ namespace Communication
 
             virtual void StopInner();
 
-            void SendAsync(std::shared_ptr<std::vector<uint8_t>> Bytes, int Offset, int Count, std::function<void()> Completed, std::function<void(const boost::system::error_code &se)> Faulted);
+            void SendAsync(std::shared_ptr<std::vector<std::uint8_t>> Bytes, int Offset, int Count, std::function<void()> Completed, std::function<void(const boost::system::error_code &se)> Faulted);
 
-            void ReceiveAsync(std::shared_ptr<std::vector<uint8_t>> Bytes, int Offset, int Count, std::function<void(int)> Completed, std::function<void(const boost::system::error_code &se)> Faulted);
+            void ReceiveAsync(std::shared_ptr<std::vector<std::uint8_t>> Bytes, int Offset, int Count, std::function<void(int)> Completed, std::function<void(const boost::system::error_code &se)> Faulted);
         };
     }
 }

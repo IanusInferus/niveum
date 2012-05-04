@@ -9,8 +9,6 @@
 //
 //==========================================================================
 
-#include "Communication.h"
-#include "CommunicationBinary.h"
 #include "BaseSystem/AutoResetEvent.h"
 #include "BaseSystem/Optional.h"
 #include "Util/ConsoleLogger.h"

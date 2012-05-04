@@ -1,10 +1,7 @@
 ﻿#include "Servers/BinarySocketSession.h"
 #include "Servers/BinarySocketServer.h"
-#include "Net/TcpSessionImpl.h"
 
 #include "Utility.h"
-
-template class Communication::Net::TcpSession<Server::BinarySocketSession>;
 
 namespace Server
 {
@@ -211,7 +208,7 @@ namespace Server
     };
 
     BinarySocketSession::BinarySocketSession(boost::asio::io_service &IoService)
-        : Communication::Net::TcpSession<BinarySocketSession>(IoService),
+        : Communication::Net::TcpSession(IoService),
           NumBadCommands(0),
           Context(std::make_shared<SessionContext>()),
           NumAsyncOperationUpdated(std::make_shared<Communication::BaseSystem::AutoResetEvent>()),
@@ -646,7 +643,10 @@ namespace Server
         }
         PushCommand(SessionCommand::CreateQuit());
         IsRunningValue.Update([=](bool b) { return false; });
-        Server->NotifySessionQuit(this->shared_from_this());
+        if (NotifySessionQuit != nullptr)
+        {
+            NotifySessionQuit();
+        }
     }
 
     void BinarySocketSession::StopInner()
