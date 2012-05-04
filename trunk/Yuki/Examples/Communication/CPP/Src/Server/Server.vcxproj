@@ -21,10 +21,8 @@
     <ClInclude Include="CommunicationBinary.h" />
     <ClInclude Include="Context\ServerContext.h" />
     <ClInclude Include="Context\SessionContext.h" />
-    <ClInclude Include="Net\TcpServerDef.h" />
-    <ClInclude Include="Net\TcpServerImpl.h" />
-    <ClInclude Include="Net\TcpSessionDef.h" />
-    <ClInclude Include="Net\TcpSessionImpl.h" />
+    <ClInclude Include="Net\TcpServer.h" />
+    <ClInclude Include="Net\TcpSession.h" />
     <ClInclude Include="Servers\BinarySocketServer.h" />
     <ClInclude Include="Servers\BinarySocketSession.h" />
     <ClInclude Include="Services\ServerImplementation.h" />
@@ -33,6 +31,8 @@
     <ClInclude Include="Util\SessionLogEntry.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Net\TcpServer.cpp" />
+    <ClCompile Include="Net\TcpSession.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Servers\BinarySocketServer.cpp" />
     <ClCompile Include="Servers\BinarySocketSession.cpp" />

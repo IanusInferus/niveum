@@ -1,7 +1,7 @@
 # Makefile
 #
 
-CC =	g++-4.7
+CC =	g++-4.6
 PROG =	DataCopy
 
 .PHONY: all clean
@@ -16,7 +16,7 @@ $(PROG): Utility.o Program.o
 	chmod a+x $(PROG)
 
 %.o:%.cpp
-	$(CC) -std=c++11 -I../Lib_Gcc $(patsubst %.o,%.cpp,$@) -c -o $@
+	$(CC) -std=c++0x -I../Lib_Gcc $(patsubst %.o,%.cpp,$@) -c -o $@
 
 Program.cpp: Utility.h World.h WorldBinary.h Streams.h
 Utility.cpp: Utility.h

@@ -1,16 +1,13 @@
 ﻿#include "Servers/BinarySocketSession.h"
 #include "Servers/BinarySocketServer.h"
-#include "Net/TcpServerImpl.h"
 
 #include "Utility.h"
-
-template class Communication::Net::TcpServer<Server::BinarySocketServer, Server::BinarySocketSession>;
 
 namespace Server
 {
     std::shared_ptr<Communication::Binary::BinaryServer<SessionContext>> BinarySocketServer::InnerServer() { return WorkPartInstance->Value().bs; }
 
-    std::shared_ptr<BinarySocketSession> BinarySocketServer::CreateSession()
+    std::shared_ptr<Communication::Net::TcpSession> BinarySocketServer::CreateSession()
     {
         auto s = std::make_shared<BinarySocketSession>(IoService);
         s->Server = this->shared_from_this();
@@ -106,7 +103,7 @@ namespace Server
     }
 
     BinarySocketServer::BinarySocketServer(boost::asio::io_service &IoService)
-        : Communication::Net::TcpServer<BinarySocketServer, BinarySocketSession>(IoService),
+        : Communication::Net::TcpServer(IoService),
           WorkPartInstance(nullptr),
           MaxBadCommandsValue(8),
           ClientDebugValue(false),
@@ -149,8 +146,8 @@ namespace Server
         });
         sc->SchemaHash = (boost::wformat(L"%16X") % InnerServer()->Hash()).str();
 
-        MaxConnectionsExceeded = [=](std::shared_ptr<BinarySocketSession> s) { OnMaxConnectionsExceeded(s); };
-        MaxConnectionsPerIPExceeded = [=](std::shared_ptr<BinarySocketSession> s) { OnMaxConnectionsExceeded(s); };
+        MaxConnectionsExceeded = [=](std::shared_ptr<Communication::Net::TcpSession> s) { OnMaxConnectionsExceeded(std::static_pointer_cast<BinarySocketSession>(s)); };
+        MaxConnectionsPerIPExceeded = [=](std::shared_ptr<Communication::Net::TcpSession> s) { OnMaxConnectionsExceeded(std::static_pointer_cast<BinarySocketSession>(s)); };
     }
 
     void BinarySocketServer::RaiseError(SessionContext &c, std::wstring CommandName, std::wstring Message)

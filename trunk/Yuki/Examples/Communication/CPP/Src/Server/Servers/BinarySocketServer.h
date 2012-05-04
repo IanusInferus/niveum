@@ -3,8 +3,8 @@
 #include "Communication.h"
 #include "CommunicationBinary.h"
 #include "BaseSystem/ThreadLocalVariable.h"
-#include "Net/TcpSessionDef.h"
-#include "Net/TcpServerDef.h"
+#include "Net/TcpSession.h"
+#include "Net/TcpServer.h"
 #include "Util/SessionLogEntry.h"
 #include "Context/ServerContext.h"
 #include "Context/SessionContext.h"
@@ -26,7 +26,7 @@
 namespace Server
 {
     class BinarySocketSession;
-    class BinarySocketServer : public Communication::Net::TcpServer<BinarySocketServer, BinarySocketSession>
+    class BinarySocketServer : public Communication::Net::TcpServer, public std::enable_shared_from_this<BinarySocketServer>
     {
     private:
         class WorkPart
@@ -51,7 +51,7 @@ namespace Server
         bool EnableLogSystemValue;
         
     public:
-        std::shared_ptr<BinarySocketSession> CreateSession();
+        std::shared_ptr<Communication::Net::TcpSession> CreateSession();
 
         int GetMaxBadCommands() const;
         /// <summary>只能在启动前修改，以保证线程安全</summary>
