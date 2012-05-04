@@ -11,6 +11,9 @@
 #include <exception>
 #include <stdexcept>
 #include <boost/asio.hpp>
+#ifdef _MSC_VER
+#undef SendMessage
+#endif
 
 namespace Client
 {

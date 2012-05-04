@@ -22,11 +22,10 @@
 #include <clocale>
 #include <iostream>
 #include <boost/asio.hpp>
-#include <boost/thread/thread.hpp>
-
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
+#include <boost/thread/thread.hpp>
 
 namespace Client
 {

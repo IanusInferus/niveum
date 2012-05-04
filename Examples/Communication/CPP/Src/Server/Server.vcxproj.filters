@@ -39,12 +39,6 @@
     <ClInclude Include="Services\ServerImplementation.h">
       <Filter>Services</Filter>
     </ClInclude>
-    <ClInclude Include="Net\TcpServer.h">
-      <Filter>Net</Filter>
-    </ClInclude>
-    <ClInclude Include="Net\TcpSession.h">
-      <Filter>Net</Filter>
-    </ClInclude>
     <ClInclude Include="BaseSystem\LockedVariable.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
@@ -69,6 +63,18 @@
     <ClInclude Include="Util\ConsoleLogger.h">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="Net\TcpServerDef.h">
+      <Filter>Net</Filter>
+    </ClInclude>
+    <ClInclude Include="Net\TcpSessionDef.h">
+      <Filter>Net</Filter>
+    </ClInclude>
+    <ClInclude Include="Net\TcpServerImpl.h">
+      <Filter>Net</Filter>
+    </ClInclude>
+    <ClInclude Include="Net\TcpSessionImpl.h">
+      <Filter>Net</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
@@ -84,6 +90,9 @@
     </ClCompile>
     <ClCompile Include="Services\TestPerformance.cpp">
       <Filter>Services</Filter>
+    </ClCompile>
+    <ClCompile Include="Servers\BinarySocketSession.cpp">
+      <Filter>Servers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
