@@ -3,6 +3,12 @@
 #include <functional>
 #include <boost/thread.hpp>
 
+#ifndef _UNIT_TYPE_
+typedef struct {} Unit;
+#define _UNIT_TYPE_
+#endif
+typedef bool Boolean;
+
 namespace Communication
 {
     namespace BaseSystem

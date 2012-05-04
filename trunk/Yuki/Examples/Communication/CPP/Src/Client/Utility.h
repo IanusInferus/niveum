@@ -3,7 +3,7 @@
 //  File:        Utility.h
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 工具函数
-//  Version:     2012.04.26.
+//  Version:     2012.05.04.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -16,7 +16,6 @@
 #include <sstream>
 #include <exception>
 #include <stdexcept>
-#include <locale>
 
 #define PRIVATE static
 
