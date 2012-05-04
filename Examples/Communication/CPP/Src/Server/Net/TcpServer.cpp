@@ -1,36 +1,10 @@
-﻿#pragma once
-
-#include "BaseSystem/LockedVariable.h"
-#include "BaseSystem/CancellationToken.h"
-#include "BaseSystem/AutoResetEvent.h"
-#include "BaseSystem/Optional.h"
-#include "BaseSystem/AutoRelease.h"
-
-#include <memory>
-#include <cstdint>
-#include <vector>
-#include <queue>
-#include <unordered_set>
-#include <unordered_map>
-#include <string>
-#include <exception>
-#include <stdexcept>
-#include <functional>
-#ifdef __GNUC__
-#include <boost/functional/hash.hpp>
-#endif
-#include <boost/asio.hpp>
-#ifdef _MSC_VER
-#undef SendMessage
-#endif
-#include <boost/thread.hpp>
+﻿#include "Net/TcpServer.h"
 
 namespace Communication
 {
     namespace Net
     {
-        template <typename TServer, typename TSession>
-        class TcpServer<TServer, TSession>::BindingInfo
+        class TcpServer::BindingInfo
         {
         private:
             boost::asio::io_service &IoService;
@@ -94,8 +68,7 @@ namespace Communication
             }
         };
 
-        template <typename TServer, typename TSession>
-        TcpServer<TServer, TSession>::TcpServer(boost::asio::io_service &IoService)
+        TcpServer::TcpServer(boost::asio::io_service &IoService)
             : IoService(IoService),
             IsRunningValue(false),
             AcceptedSockets(std::make_shared<std::queue<std::shared_ptr<boost::asio::ip::tcp::socket>>>()),
@@ -109,25 +82,21 @@ namespace Communication
         {
         }
 
-        template <typename TServer, typename TSession>
-        TcpServer<TServer, TSession>::~TcpServer()
+        TcpServer::~TcpServer()
         {
             Stop();
         }
 
-        template <typename TServer, typename TSession>
-        bool TcpServer<TServer, TSession>::IsRunning()
+        bool TcpServer::IsRunning()
         {
             return IsRunningValue.Check<bool>([](const bool &s) { return s; });
         }
 
-        template <typename TServer, typename TSession>
-        std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> TcpServer<TServer, TSession>::GetBindings() const
+        std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> TcpServer::GetBindings() const
         {
             return BindingsValue;
         }
-        template <typename TServer, typename TSession>
-        void TcpServer<TServer, TSession>::SetBindings(std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> Bindings)
+        void TcpServer::SetBindings(std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> Bindings)
         {
             IsRunningValue.DoAction([&](bool &b)
             {
@@ -136,13 +105,11 @@ namespace Communication
             });
         }
 
-        template <typename TServer, typename TSession>
-        std::shared_ptr<Communication::BaseSystem::Optional<int>> TcpServer<TServer, TSession>::GetSessionIdleTimeout() const
+        std::shared_ptr<Communication::BaseSystem::Optional<int>> TcpServer::GetSessionIdleTimeout() const
         {
             return SessionIdleTimeoutValue;
         }
-        template <typename TServer, typename TSession>
-        void TcpServer<TServer, TSession>::SetSessionIdleTimeout(std::shared_ptr<Communication::BaseSystem::Optional<int>> ms)
+        void TcpServer::SetSessionIdleTimeout(std::shared_ptr<Communication::BaseSystem::Optional<int>> ms)
         {
             IsRunningValue.DoAction([&](bool &b)
             {
@@ -151,13 +118,11 @@ namespace Communication
             });
         }
 
-        template <typename TServer, typename TSession>
-        std::shared_ptr<Communication::BaseSystem::Optional<int>> TcpServer<TServer, TSession>::GetMaxConnections() const
+        std::shared_ptr<Communication::BaseSystem::Optional<int>> TcpServer::GetMaxConnections() const
         {
             return MaxConnectionsValue;
         }
-        template <typename TServer, typename TSession>
-        void TcpServer<TServer, TSession>::SetMaxConnections(std::shared_ptr<Communication::BaseSystem::Optional<int>> v)
+        void TcpServer::SetMaxConnections(std::shared_ptr<Communication::BaseSystem::Optional<int>> v)
         {
             IsRunningValue.DoAction([&](bool &b)
             {
@@ -166,13 +131,11 @@ namespace Communication
             });
         }
 
-        template <typename TServer, typename TSession>
-        std::shared_ptr<Communication::BaseSystem::Optional<int>> TcpServer<TServer, TSession>::GetMaxConnectionsPerIP() const
+        std::shared_ptr<Communication::BaseSystem::Optional<int>> TcpServer::GetMaxConnectionsPerIP() const
         {
             return MaxConnectionsPerIPValue;
         }
-        template <typename TServer, typename TSession>
-        void TcpServer<TServer, TSession>::SetMaxConnectionsPerIP(std::shared_ptr<Communication::BaseSystem::Optional<int>> v)
+        void TcpServer::SetMaxConnectionsPerIP(std::shared_ptr<Communication::BaseSystem::Optional<int>> v)
         {
             IsRunningValue.DoAction([&](bool &b)
             {
@@ -181,8 +144,7 @@ namespace Communication
             });
         }
 
-        template <typename TServer, typename TSession>
-        void TcpServer<TServer, TSession>::DoAccepting()
+        void TcpServer::DoAccepting()
         {
             while (true)
             {
@@ -204,16 +166,15 @@ namespace Communication
                         break;
                     }
 
-                    auto ts = CreateSession();
-                    auto s = static_cast<std::shared_ptr<TcpSession<TSession>>>(ts);
-                    s->NotifySessionQuit = [&](std::shared_ptr<TSession> s) { NotifySessionQuit(s); };
+                    auto s = CreateSession();
+                    s->NotifySessionQuit = [=]() { NotifySessionQuit(s); };
                     s->RemoteEndPoint = Socket->remote_endpoint();
                     s->IdleTimeout = SessionIdleTimeoutValue;
                     s->SetSocket(Socket);
 
                     if (MaxConnectionsValue->OnHasValue())
                     {
-                        int SessionCount = Sessions.template Check<int>([=](std::shared_ptr<TSessionSet> ss) -> int
+                        int SessionCount = Sessions.Check<int>([=](std::shared_ptr<TSessionSet> ss) -> int
                         {
                             return (int)(ss->size());
                         });
@@ -227,7 +188,7 @@ namespace Communication
                             s->Start();
                             if (MaxConnectionsExceeded != nullptr)
                             {
-                                MaxConnectionsExceeded(ts);
+                                MaxConnectionsExceeded(s);
                             }
                             continue;
                         }
@@ -236,7 +197,7 @@ namespace Communication
                     auto Address = s->RemoteEndPoint.address();
                     if (MaxConnectionsPerIPValue->OnHasValue())
                     {
-                        int IpSessionCount = IpSessions.template Check<int>([=](std::shared_ptr<TIpAddressMap> iss) -> int
+                        int IpSessionCount = IpSessions.Check<int>([=](std::shared_ptr<TIpAddressMap> iss) -> int
                         {
                             return iss->count(Address) > 0 ? (*iss)[Address] : 0;
                         });
@@ -250,7 +211,7 @@ namespace Communication
                             s->Start();
                             if (MaxConnectionsPerIPExceeded != nullptr)
                             {
-                                MaxConnectionsPerIPExceeded(ts);
+                                MaxConnectionsPerIPExceeded(s);
                             }
                             continue;
                         }
@@ -258,7 +219,7 @@ namespace Communication
 
                     Sessions.DoAction([=](std::shared_ptr<TSessionSet> &ss)
                     {
-                        ss->insert(ts);
+                        ss->insert(s);
                     });
                     IpSessions.DoAction([=](std::shared_ptr<TIpAddressMap> &iss)
                     {
@@ -277,8 +238,7 @@ namespace Communication
             }
         }
 
-        template <typename TServer, typename TSession>
-        void TcpServer<TServer, TSession>::DoPurifiering()
+        void TcpServer::DoPurifiering()
         {
             while (true)
             {
@@ -286,7 +246,7 @@ namespace Communication
                 PurifieringTaskNotifier.WaitOne();
                 while (true)
                 {
-                    std::shared_ptr<TSession> StoppingSession = nullptr;
+                    std::shared_ptr<TcpSession> StoppingSession = nullptr;
                     StoppingSessions.DoAction([&](std::shared_ptr<TSessionSet> &Sessions)
                     {
                         if (Sessions->size() > 0)
@@ -328,8 +288,7 @@ namespace Communication
             }
         }
 
-        template <typename TServer, typename TSession>
-        bool TcpServer<TServer, TSession>::DoStopping(bool b)
+        bool TcpServer::DoStopping(bool b)
         {
             if (!b) { return false; }
 
@@ -378,8 +337,7 @@ namespace Communication
             return false;
         }
 
-        template <typename TServer, typename TSession>
-        void TcpServer<TServer, TSession>::Stop()
+        void TcpServer::Stop()
         {
             IsRunningValue.Update([&](bool b) -> bool
             {
@@ -387,8 +345,7 @@ namespace Communication
             });
         }
 
-        template <typename TServer, typename TSession>
-        void TcpServer<TServer, TSession>::Start()
+        void TcpServer::Start()
         {
             bool Success = false;
             Communication::BaseSystem::AutoRelease ar([&]()

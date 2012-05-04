@@ -63,16 +63,10 @@
     <ClInclude Include="Util\ConsoleLogger.h">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="Net\TcpServerDef.h">
+    <ClInclude Include="Net\TcpServer.h">
       <Filter>Net</Filter>
     </ClInclude>
-    <ClInclude Include="Net\TcpSessionDef.h">
-      <Filter>Net</Filter>
-    </ClInclude>
-    <ClInclude Include="Net\TcpServerImpl.h">
-      <Filter>Net</Filter>
-    </ClInclude>
-    <ClInclude Include="Net\TcpSessionImpl.h">
+    <ClInclude Include="Net\TcpSession.h">
       <Filter>Net</Filter>
     </ClInclude>
   </ItemGroup>
@@ -93,6 +87,12 @@
     </ClCompile>
     <ClCompile Include="Servers\BinarySocketSession.cpp">
       <Filter>Servers</Filter>
+    </ClCompile>
+    <ClCompile Include="Net\TcpServer.cpp">
+      <Filter>Net</Filter>
+    </ClCompile>
+    <ClCompile Include="Net\TcpSession.cpp">
+      <Filter>Net</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "Net/TcpSessionDef.h"
+#include "Net/TcpSession.h"
 
 #include "BaseSystem/LockedVariable.h"
 #include "BaseSystem/CancellationToken.h"
@@ -31,8 +31,7 @@ namespace Communication
 {
     namespace Net
     {
-        template <typename TServer, typename TSession>
-        class TcpServer : public std::enable_shared_from_this<TServer>
+        class TcpServer
         {
         private:
             class BindingInfo;
@@ -48,7 +47,7 @@ namespace Communication
                     return (std::size_t)(p.get());
                 }
             };
-            typedef std::unordered_set<std::shared_ptr<TSession>, SharedPtrHash<TSession>> TSessionSet;
+            typedef std::unordered_set<std::shared_ptr<TcpSession>, SharedPtrHash<TcpSession>> TSessionSet;
             struct IpAddressHash
             {
                 std::size_t operator() (const boost::asio::ip::address &p) const
@@ -136,7 +135,7 @@ namespace Communication
 
             void Start();
 
-            virtual std::shared_ptr<TSession> CreateSession() = 0;
+            virtual std::shared_ptr<TcpSession> CreateSession() = 0;
 
         private:
             void DoAccepting();
@@ -148,7 +147,7 @@ namespace Communication
         public:
             void Stop();
 
-            void NotifySessionQuit(std::shared_ptr<TSession> s)
+            void NotifySessionQuit(std::shared_ptr<TcpSession> s)
             {
                 StoppingSessions.DoAction([&](std::shared_ptr<TSessionSet> &Sessions)
                 {
@@ -157,8 +156,8 @@ namespace Communication
                 PurifieringTaskNotifier.Set();
             }
 
-            std::function<void(std::shared_ptr<TSession>)> MaxConnectionsExceeded;
-            std::function<void(std::shared_ptr<TSession>)> MaxConnectionsPerIPExceeded;
+            std::function<void(std::shared_ptr<TcpSession>)> MaxConnectionsExceeded;
+            std::function<void(std::shared_ptr<TcpSession>)> MaxConnectionsPerIPExceeded;
         };
     }
 }

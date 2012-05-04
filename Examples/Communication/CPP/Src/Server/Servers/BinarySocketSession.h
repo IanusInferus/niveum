@@ -4,8 +4,8 @@
 #include "CommunicationBinary.h"
 #include "BaseSystem/LockedVariable.h"
 #include "BaseSystem/AutoResetEvent.h"
-#include "Net/TcpSessionDef.h"
-#include "Net/TcpServerDef.h"
+#include "Net/TcpSession.h"
+#include "Net/TcpServer.h"
 #include "Util/SessionLogEntry.h"
 #include "Context/ServerContext.h"
 
@@ -27,7 +27,7 @@
 namespace Server
 {
     class BinarySocketServer;
-    class BinarySocketSession : public Communication::Net::TcpSession<BinarySocketSession>
+    class BinarySocketSession : public Communication::Net::TcpSession, public std::enable_shared_from_this<BinarySocketSession>
     {
     private:
         int NumBadCommands;
