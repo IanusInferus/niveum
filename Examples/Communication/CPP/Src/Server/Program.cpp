@@ -9,7 +9,6 @@
 //
 //==========================================================================
 
-#include "Utility.h"
 #include "Communication.h"
 #include "CommunicationBinary.h"
 #include "BaseSystem/AutoResetEvent.h"
@@ -19,6 +18,8 @@
 #include "Servers/BinarySocketSession.h"
 #include "Servers/BinarySocketServer.h"
 
+#include "Utility.h"
+
 #include <vector>
 #include <string>
 #include <exception>
@@ -26,13 +27,12 @@
 #include <cstdio>
 #include <clocale>
 #include <boost/asio.hpp>
-#include <boost/thread.hpp>
-#include <boost/format.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
+#include <boost/thread.hpp>
+#include <boost/format.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace Server
 {

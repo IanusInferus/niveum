@@ -2,6 +2,9 @@
 
 #include <string>
 #include <boost/asio.hpp>
+#ifdef _MSC_VER
+#undef SendMessage
+#endif
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace Server

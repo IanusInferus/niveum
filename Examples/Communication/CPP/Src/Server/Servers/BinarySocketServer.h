@@ -3,8 +3,8 @@
 #include "Communication.h"
 #include "CommunicationBinary.h"
 #include "BaseSystem/ThreadLocalVariable.h"
-#include "Net/TcpServer.h"
-#include "Net/TcpSession.h"
+#include "Net/TcpSessionDef.h"
+#include "Net/TcpServerDef.h"
 #include "Util/SessionLogEntry.h"
 #include "Context/ServerContext.h"
 #include "Context/SessionContext.h"
@@ -18,6 +18,9 @@
 #include <exception>
 #include <stdexcept>
 #include <boost/asio.hpp>
+#ifdef _MSC_VER
+#undef SendMessage
+#endif
 #include <boost/format.hpp>
 
 namespace Server
@@ -34,7 +37,7 @@ namespace Server
         };
         std::shared_ptr<Communication::BaseSystem::ThreadLocalVariable<WorkPart>> WorkPartInstance;
     public:
-        std::shared_ptr<Communication::Binary::BinaryServer<SessionContext>> InnerServer() { return WorkPartInstance->Value().bs; }
+        std::shared_ptr<Communication::Binary::BinaryServer<SessionContext>> InnerServer();
         std::shared_ptr<ServerContext> sc;
 
     private:
@@ -48,93 +51,39 @@ namespace Server
         bool EnableLogSystemValue;
         
     public:
-        int GetMaxBadCommands() const
-        {
-            return MaxBadCommandsValue;
-        }
-        /// <summary>只能在启动前修改，以保证线程安全</summary>
-        void SetMaxBadCommands(int value)
-        {
-            if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
-            MaxBadCommandsValue = value;
-        }
+        std::shared_ptr<BinarySocketSession> CreateSession();
 
-        bool GetClientDebug() const
-        {
-            return ClientDebugValue;
-        }
+        int GetMaxBadCommands() const;
         /// <summary>只能在启动前修改，以保证线程安全</summary>
-        void SetClientDebug(bool value)
-        {
-            if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
-            ClientDebugValue = value;
-        }
+        void SetMaxBadCommands(int value);
 
-        bool GetEnableLogNormalIn() const
-        {
-            return EnableLogNormalInValue;
-        }
+        bool GetClientDebug() const;
         /// <summary>只能在启动前修改，以保证线程安全</summary>
-        void SetEnableLogNormalIn(bool value)
-        {
-            if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
-            EnableLogNormalInValue = value;
-        }
+        void SetClientDebug(bool value);
 
-        bool GetEnableLogNormalOut() const
-        {
-            return EnableLogNormalOutValue;
-        }
+        bool GetEnableLogNormalIn() const;
         /// <summary>只能在启动前修改，以保证线程安全</summary>
-        void SetEnableLogNormalOut(bool value)
-        {
-            if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
-            EnableLogNormalOutValue = value;
-        }
+        void SetEnableLogNormalIn(bool value);
 
-        bool GetEnableLogUnknownError() const
-        {
-            return EnableLogUnknownErrorValue;
-        }
+        bool GetEnableLogNormalOut() const;
         /// <summary>只能在启动前修改，以保证线程安全</summary>
-        void SetEnableLogUnknownError(bool value)
-        {
-            if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
-            EnableLogUnknownErrorValue = value;
-        }
+        void SetEnableLogNormalOut(bool value);
 
-        bool GetEnableLogCriticalError() const
-        {
-            return EnableLogCriticalErrorValue;
-        }
+        bool GetEnableLogUnknownError() const;
         /// <summary>只能在启动前修改，以保证线程安全</summary>
-        void SetEnableLogCriticalError(bool value)
-        {
-            if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
-            EnableLogCriticalErrorValue = value;
-        }
+        void SetEnableLogUnknownError(bool value);
 
-        bool GetEnableLogPerformance() const
-        {
-            return EnableLogPerformanceValue;
-        }
+        bool GetEnableLogCriticalError() const;
         /// <summary>只能在启动前修改，以保证线程安全</summary>
-        void SetEnableLogPerformance(bool value)
-        {
-            if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
-            EnableLogPerformanceValue = value;
-        }
+        void SetEnableLogCriticalError(bool value);
 
-        bool GetEnableLogSystem() const
-        {
-            return EnableLogSystemValue;
-        }
+        bool GetEnableLogPerformance() const;
         /// <summary>只能在启动前修改，以保证线程安全</summary>
-        void SetEnableLogSystem(bool value)
-        {
-            if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
-            EnableLogSystemValue = value;
-        }
+        void SetEnableLogPerformance(bool value);
+
+        bool GetEnableLogSystem() const;
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        void SetEnableLogSystem(bool value);
 
         template <typename T>
         struct SharedPtrHash
@@ -147,67 +96,12 @@ namespace Server
         typedef std::unordered_map<std::shared_ptr<SessionContext>, std::shared_ptr<BinarySocketSession>, SharedPtrHash<SessionContext>> TSessionMapping;
         Communication::BaseSystem::LockedVariable<std::shared_ptr<TSessionMapping>> SessionMappings;
 
-        BinarySocketServer(boost::asio::io_service &IoService)
-            : Communication::Net::TcpServer<BinarySocketServer, BinarySocketSession>(IoService),
-              WorkPartInstance(nullptr),
-              MaxBadCommandsValue(8),
-              ClientDebugValue(false),
-              EnableLogNormalInValue(true),
-              EnableLogNormalOutValue(true),
-              EnableLogUnknownErrorValue(true),
-              EnableLogCriticalErrorValue(true),
-              EnableLogPerformanceValue(true),
-              EnableLogSystemValue(true),
-              SessionMappings(std::make_shared<TSessionMapping>())
-        {
-            sc = std::make_shared<ServerContext>();
-            sc->GetSessions = [&]() -> std::shared_ptr<std::vector<std::shared_ptr<SessionContext>>>
-            {
-                return SessionMappings.Check<std::shared_ptr<std::vector<std::shared_ptr<SessionContext>>>>([&](const std::shared_ptr<TSessionMapping> &Mappings) -> std::shared_ptr<std::vector<std::shared_ptr<SessionContext>>>
-                {
-                    auto l = std::make_shared<std::vector<std::shared_ptr<SessionContext>>>();
-                    for (auto i = Mappings->begin(); i != Mappings->end(); i.operator ++())
-                    {
-                        l->push_back(std::get<0>(*i));
-                    }
-                    return l;
-                });
-            };
+        BinarySocketServer(boost::asio::io_service &IoService);
 
-            auto OnServerEventHandler = [=](SessionContext &c, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters) { OnServerEvent(c, CommandName, CommandHash, Parameters); };
-
-            WorkPartInstance = std::make_shared<Communication::BaseSystem::ThreadLocalVariable<WorkPart>>([=]() -> WorkPart *
-            {
-                auto si = std::make_shared<ServerImplementation>(sc);
-
-                auto srv = std::make_shared<Communication::Binary::BinaryServer<SessionContext>>(si);
-                srv->ServerEvent = OnServerEventHandler;
-
-                auto i = new WorkPart();
-                i->si = si;
-                i->bs = srv;
-
-                return i;
-            });
-            sc->SchemaHash = (boost::wformat(L"%16X") % InnerServer()->Hash()).str();
-
-            MaxConnectionsExceeded = [=](std::shared_ptr<BinarySocketSession> s) { OnMaxConnectionsExceeded(s); };
-            MaxConnectionsPerIPExceeded = [=](std::shared_ptr<BinarySocketSession> s) { OnMaxConnectionsExceeded(s); };
-        }
-
-        void RaiseError(SessionContext &c, std::wstring CommandName, std::wstring Message)
-        {
-            WorkPartInstance->Value().si->RaiseError(c, CommandName, Message);
-        }
+        void RaiseError(SessionContext &c, std::wstring CommandName, std::wstring Message);
 
         std::function<void(std::shared_ptr<SessionLogEntry>)> SessionLog;
-        void RaiseSessionLog(std::shared_ptr<SessionLogEntry> Entry)
-        {
-            if (SessionLog != nullptr)
-            {
-                SessionLog(Entry);
-            }
-        }
+        void RaiseSessionLog(std::shared_ptr<SessionLogEntry> Entry);
 
     private:
         void OnServerEvent(SessionContext &c, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters);

@@ -6,6 +6,9 @@
 #include <string>
 #include <functional>
 #include <boost/asio.hpp>
+#ifdef _MSC_VER
+#undef SendMessage
+#endif
 #include <boost/thread.hpp>
 #include <boost/format.hpp>
 
