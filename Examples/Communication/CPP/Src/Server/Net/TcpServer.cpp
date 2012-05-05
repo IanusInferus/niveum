@@ -1,5 +1,7 @@
 ﻿#include "Net/TcpServer.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 namespace Communication
 {
     namespace Net
@@ -8,31 +10,62 @@ namespace Communication
         {
         private:
             boost::asio::io_service &IoService;
+            boost::asio::ip::tcp::endpoint RemotePoint;
             std::shared_ptr<boost::thread> Task;
+            Communication::BaseSystem::LockedVariable<std::shared_ptr<boost::asio::ip::tcp::acceptor>> Acceptor;
             Communication::BaseSystem::LockedVariable<bool> IsExited;
 
         public:
-            std::shared_ptr<boost::asio::ip::tcp::acceptor> Acceptor;
-
             BindingInfo(boost::asio::io_service &IoService)
                 : IoService(IoService),
-                Task(nullptr),
-                IsExited(false)
+                  Task(nullptr),
+                  Acceptor(nullptr),
+                  IsExited(false)
             {
             }
 
             ~BindingInfo()
             {
                 IsExited.Update([](const bool &b) { return false; });
-                if (Acceptor != nullptr)
+                Acceptor.Update([](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) -> std::shared_ptr<boost::asio::ip::tcp::acceptor>
                 {
-                    Acceptor->close();
-                }
+                    if (a != nullptr)
+                    {
+                        try
+                        {
+                            a->close();
+                        }
+                        catch (std::exception &)
+                        {
+                        }
+                    }
+                    return nullptr;
+                });
                 if (Task != nullptr)
                 {
                     Task->join();
                     Task = nullptr;
                 }
+            }
+
+            void Listen(boost::asio::ip::tcp::endpoint RemotePoint)
+            {
+                this->RemotePoint = RemotePoint;
+                Acceptor.Update([=](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) -> std::shared_ptr<boost::asio::ip::tcp::acceptor>
+                {
+                    if (a != nullptr)
+                    {
+                        try
+                        {
+                            a->close();
+                        }
+                        catch (std::exception &)
+                        {
+                        }
+                    }
+                    auto b = std::make_shared<boost::asio::ip::tcp::acceptor>(IoService, RemotePoint);
+                    return b;
+                });
             }
 
             void StartAccept(std::function<void(std::shared_ptr<boost::asio::ip::tcp::socket>)> AcceptHandler)
@@ -49,19 +82,21 @@ namespace Communication
                         }
                         auto Socket = std::make_shared<boost::asio::ip::tcp::socket>(IoService);
                         boost::system::error_code se;
-                        Acceptor->accept(*Socket, se);
+                        Acceptor.Check<std::shared_ptr<boost::asio::ip::tcp::acceptor>>([](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) { return a; })->accept(*Socket, se);
                         if (se == boost::system::errc::success)
                         {
                             AcceptHandler(Socket);
                         }
-                        else if (se == boost::system::errc::interrupted)
-                        {
-                            return;
-                        }
                         else
                         {
-                            auto Message = "UnexpectedError: " + se.message();
-                            throw std::logic_error(Message);
+                            if (se == boost::system::errc::interrupted)
+                            {
+                                if (IsExited.Check<bool>([](const bool &b) { return b; }))
+                                {
+                                    return;
+                                }
+                            }
+                            Listen(RemotePoint);
                         }
                     }
                 });
@@ -292,11 +327,6 @@ namespace Communication
         {
             if (!b) { return false; }
 
-            for (int k = 0; k < (int)(BindingInfos.size()); k += 1)
-            {
-                auto bi = BindingInfos[k];
-                bi->Acceptor->close();
-            }
             BindingInfos.clear();
 
             if (AcceptingTask != nullptr)
@@ -384,9 +414,7 @@ namespace Communication
                     auto bi = std::make_shared<BindingInfo>(IoService);
                     try
                     {
-                        auto Acceptor = std::make_shared<boost::asio::ip::tcp::acceptor>(IoService, Binding);
-                        bi->Acceptor = Acceptor;
-                        Acceptor->listen();
+                        bi->Listen(Binding);
                     }
                     catch (std::exception &ex)
                     {
