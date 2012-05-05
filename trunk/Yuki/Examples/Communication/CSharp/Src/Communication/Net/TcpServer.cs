@@ -16,7 +16,7 @@ namespace Communication.Net
     {
         private class BindingInfo
         {
-            public Socket Socket;
+            public LockedVariable<Socket> Socket;
             public Task Task;
         }
 
@@ -30,6 +30,7 @@ namespace Communication.Net
         }
 
         private Dictionary<IPEndPoint, BindingInfo> BindingInfos = new Dictionary<IPEndPoint, BindingInfo>();
+        private CancellationTokenSource ListeningTaskTokenSource;
         private ConcurrentBag<Socket> AcceptedSockets = new ConcurrentBag<Socket>();
         private Task AcceptingTask;
         private CancellationTokenSource AcceptingTaskTokenSource;
@@ -140,6 +141,16 @@ namespace Communication.Net
                             throw new Exception("NoValidBinding");
                         }
 
+                        ListeningTaskTokenSource = new CancellationTokenSource();
+                        AcceptingTaskTokenSource = new CancellationTokenSource();
+                        AcceptingTaskNotifier = new AutoResetEvent(false);
+                        PurifieringTaskTokenSource = new CancellationTokenSource();
+                        PurifieringTaskNotifier = new AutoResetEvent(false);
+
+                        var ListeningTaskToken = ListeningTaskTokenSource.Token;
+                        var AcceptingTaskToken = AcceptingTaskTokenSource.Token;
+                        var PurifieringTaskToken = PurifieringTaskTokenSource.Token;
+
                         var Exceptions = new List<Exception>();
                         foreach (var Binding in BindingsValue)
                         {
@@ -156,6 +167,11 @@ namespace Communication.Net
                             }
                             Socket.Listen(MaxConnectionsValue.HasValue ? (MaxConnectionsValue.Value + 1) : 128);
 
+                            var BindingInfo = new BindingInfo
+                            {
+                                Socket = new LockedVariable<Socket>(Socket),
+                                Task = null
+                            };
                             var Task = new Task
                             (
                                 () =>
@@ -164,30 +180,56 @@ namespace Communication.Net
                                     {
                                         while (true)
                                         {
-                                            var a = Socket.Accept();
-                                            AcceptedSockets.Add(a);
-                                            AcceptingTaskNotifier.Set();
+                                            if (ListeningTaskToken.IsCancellationRequested) { return; }
+                                            try
+                                            {
+                                                var a = BindingInfo.Socket.Check(s => s).Accept();
+                                                AcceptedSockets.Add(a);
+                                                AcceptingTaskNotifier.Set();
+                                            }
+                                            catch (SocketException ex)
+                                            {
+                                                if (ex.SocketErrorCode == SocketError.Interrupted)
+                                                {
+                                                    if (ListeningTaskToken.IsCancellationRequested) { return; }
+                                                }
+
+                                                BindingInfo.Socket.Update
+                                                (
+                                                    OriginalSocket =>
+                                                    {
+                                                        try
+                                                        {
+                                                            OriginalSocket.Close();
+                                                        }
+                                                        catch (Exception)
+                                                        {
+                                                        }
+                                                        try
+                                                        {
+                                                            OriginalSocket.Dispose();
+                                                        }
+                                                        catch (Exception)
+                                                        {
+                                                        }
+                                                        var NewSocket = new Socket(Binding.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                                                        NewSocket.Bind(Binding);
+                                                        NewSocket.Listen(MaxConnectionsValue.HasValue ? (MaxConnectionsValue.Value + 1) : 128);
+                                                        Socket = NewSocket;
+                                                        return NewSocket;
+                                                    }
+                                                );
+                                            }
                                         }
                                     }
                                     catch (ObjectDisposedException)
                                     {
                                     }
-                                    catch (SocketException ex)
-                                    {
-                                        if (ex.SocketErrorCode != SocketError.Interrupted)
-                                        {
-                                            throw new AggregateException(ex);
-                                        }
-                                    }
                                 },
                                 TaskCreationOptions.LongRunning
                             );
 
-                            var BindingInfo = new BindingInfo
-                            {
-                                Socket = Socket,
-                                Task = Task
-                            };
+                            BindingInfo.Task = Task;
 
                             BindingInfos.Add(Binding, BindingInfo);
                         }
@@ -195,14 +237,6 @@ namespace Communication.Net
                         {
                             throw new AggregateException(Exceptions);
                         }
-
-                        AcceptingTaskTokenSource = new CancellationTokenSource();
-                        AcceptingTaskNotifier = new AutoResetEvent(false);
-                        PurifieringTaskTokenSource = new CancellationTokenSource();
-                        PurifieringTaskNotifier = new AutoResetEvent(false);
-
-                        var AcceptingTaskToken = AcceptingTaskTokenSource.Token;
-                        var PurifieringTaskToken = PurifieringTaskTokenSource.Token;
 
                         AcceptingTask = new Task
                         (
@@ -380,10 +414,32 @@ namespace Communication.Net
                 {
                     if (!b) { return false; }
 
+                    if (ListeningTaskTokenSource != null)
+                    {
+                        ListeningTaskTokenSource.Cancel();
+                    }
                     foreach (var BindingInfo in BindingInfos.Values)
                     {
-                        BindingInfo.Socket.Close();
-                        BindingInfo.Socket.Dispose();
+                        BindingInfo.Socket.DoAction
+                        (
+                            Socket =>
+                            {
+                                try
+                                {
+                                    Socket.Close();
+                                }
+                                catch (Exception)
+                                {
+                                }
+                                try
+                                {
+                                    Socket.Dispose();
+                                }
+                                catch (Exception)
+                                {
+                                }
+                            }
+                        );
                     }
                     foreach (var BindingInfo in BindingInfos.Values)
                     {
@@ -394,6 +450,10 @@ namespace Communication.Net
                         BindingInfo.Task.Dispose();
                     }
                     BindingInfos.Clear();
+                    if (ListeningTaskTokenSource != null)
+                    {
+                        ListeningTaskTokenSource = null;
+                    }
 
                     if (AcceptingTask != null)
                     {

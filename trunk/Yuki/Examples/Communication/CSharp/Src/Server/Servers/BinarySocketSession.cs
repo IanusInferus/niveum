@@ -610,7 +610,13 @@ namespace Server
             var ss = GetSocket();
             if (ss != null)
             {
-                ss.Shutdown(SocketShutdown.Receive);
+                try
+                {
+                    ss.Shutdown(SocketShutdown.Receive);
+                }
+                catch(Exception)
+                {
+                }
             }
             if (Server.EnableLogSystem)
             {
