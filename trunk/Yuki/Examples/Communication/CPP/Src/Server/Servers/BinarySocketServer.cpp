@@ -5,7 +5,7 @@
 
 namespace Server
 {
-    std::shared_ptr<Communication::Binary::BinaryServer<SessionContext>> BinarySocketServer::InnerServer() { return WorkPartInstance->Value().bs; }
+    std::shared_ptr<Communication::Binary::BinaryServer<SessionContext>> BinarySocketServer::InnerServer() { return WorkPartInstance->Value()->bs; }
 
     std::shared_ptr<Communication::Net::TcpSession> BinarySocketServer::CreateSession()
     {
@@ -131,14 +131,14 @@ namespace Server
 
         auto OnServerEventHandler = [=](SessionContext &c, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters) { OnServerEvent(c, CommandName, CommandHash, Parameters); };
 
-        WorkPartInstance = std::make_shared<Communication::BaseSystem::ThreadLocalVariable<WorkPart>>([=]() -> WorkPart *
+        WorkPartInstance = std::make_shared<Communication::BaseSystem::ThreadLocalVariable<WorkPart>>([=]() -> std::shared_ptr<WorkPart>
         {
             auto si = std::make_shared<ServerImplementation>(sc);
 
             auto srv = std::make_shared<Communication::Binary::BinaryServer<SessionContext>>(si);
             srv->ServerEvent = OnServerEventHandler;
 
-            auto i = new WorkPart();
+            auto i = std::make_shared<WorkPart>();
             i->si = si;
             i->bs = srv;
 
@@ -152,7 +152,7 @@ namespace Server
 
     void BinarySocketServer::RaiseError(SessionContext &c, std::wstring CommandName, std::wstring Message)
     {
-        WorkPartInstance->Value().si->RaiseError(c, CommandName, Message);
+        WorkPartInstance->Value()->si->RaiseError(c, CommandName, Message);
     }
 
     void BinarySocketServer::RaiseSessionLog(std::shared_ptr<SessionLogEntry> Entry)
