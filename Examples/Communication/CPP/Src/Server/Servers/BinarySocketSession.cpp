@@ -629,7 +629,13 @@ namespace Server
         auto ss = GetSocket();
         if (ss != nullptr)
         {
-            ss->shutdown(boost::asio::ip::tcp::socket::shutdown_receive);
+            try
+            {
+                ss->shutdown(boost::asio::ip::tcp::socket::shutdown_receive);
+            }
+            catch (std::exception &)
+            {
+            }
         }
         if (Server->GetEnableLogSystem())
         {
