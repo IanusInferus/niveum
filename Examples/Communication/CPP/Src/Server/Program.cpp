@@ -88,12 +88,17 @@ namespace Server
             {
                 if (error == boost::system::errc::success)
                 {
-                    IoService->stop();
                     ExitEvent->Set();
                 }
             });
 
             auto Server = std::make_shared<BinarySocketServer>(*IoService);
+
+            Server->Shutdown = [&]()
+            {
+                ExitEvent->Set();
+            };
+
             auto Bindings = std::make_shared<std::vector<boost::asio::ip::tcp::endpoint>>();
             auto LocalEndPoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), Port);
             Bindings->push_back(LocalEndPoint);
@@ -128,6 +133,8 @@ namespace Server
 
             Server->Stop();
 
+            IoService->stop();
+
             Server->SessionLog = nullptr;
 
             for (int i = 0; i < (int)(Threads.size()); i += 1)
@@ -135,6 +142,8 @@ namespace Server
                 auto t = Threads[i];
                 t->join();
             }
+
+            std::wprintf(L"%ls\n", L"服务器已关闭。");
         }
     };
 }

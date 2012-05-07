@@ -187,13 +187,9 @@ namespace Communication.Net
                                                 AcceptedSockets.Add(a);
                                                 AcceptingTaskNotifier.Set();
                                             }
-                                            catch (SocketException ex)
+                                            catch (SocketException)
                                             {
-                                                if (ex.SocketErrorCode == SocketError.Interrupted)
-                                                {
-                                                    if (ListeningTaskToken.IsCancellationRequested) { return; }
-                                                }
-
+                                                if (ListeningTaskToken.IsCancellationRequested) { return; }
                                                 BindingInfo.Socket.Update
                                                 (
                                                     OriginalSocket =>

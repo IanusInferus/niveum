@@ -36,6 +36,7 @@
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Servers\BinarySocketServer.cpp" />
     <ClCompile Include="Servers\BinarySocketSession.cpp" />
+    <ClCompile Include="Services\Admin.cpp" />
     <ClCompile Include="Services\Base.cpp" />
     <ClCompile Include="Services\Message.cpp" />
     <ClCompile Include="Services\TestPerformance.cpp" />
