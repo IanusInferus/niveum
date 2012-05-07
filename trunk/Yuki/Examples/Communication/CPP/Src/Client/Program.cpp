@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     }
     catch (std::exception &ex)
     {
-        std::printf("Error:\n%s\n", ex.what());
+        std::wprintf(L"Error:\n%ls\n", s2w(ex.what()).c_str());
         return -1;
     }
 }

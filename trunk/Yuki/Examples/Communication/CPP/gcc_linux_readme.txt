@@ -29,7 +29,10 @@ find . -type f -name '*.sh' -exec chmod +x {} \;
 
 进入Src\Server文件夹，运行
 cmake .
-生成Makefile
+生成调试版Makefile
+或者运行
+cmake -DCMAKE_BUILD_TYPE=Release .
+生成发布版Makefile
 然后运行
 make
 等待编译结束。
