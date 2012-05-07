@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2012.05.04.
+//  Version:     2012.05.07.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -80,17 +80,9 @@ namespace Server
             std::wprintf(L"%ls\n", (L"逻辑处理器数量: " + ToString(ProcessorCount)).c_str());
 
             auto IoService = std::make_shared<boost::asio::io_service>(ProcessorCount * 2 + 1);
+            boost::asio::io_service::work Work(*IoService);
 
             ConsoleLogger cl;
-
-            boost::asio::signal_set Signals(*IoService, SIGINT, SIGTERM);
-            Signals.async_wait([=](const boost::system::error_code& error, int signal_number)
-            {
-                if (error == boost::system::errc::success)
-                {
-                    ExitEvent->Set();
-                }
-            });
 
             auto Server = std::make_shared<BinarySocketServer>(*IoService);
 
@@ -158,7 +150,7 @@ int main(int argc, char **argv)
     }
     catch (std::exception &ex)
     {
-        std::printf("Error:\n%s\n", ex.what());
+        std::wprintf(L"Error:\n%ls\n", s2w(ex.what()).c_str());
         return -1;
     }
 }
