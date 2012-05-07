@@ -10,7 +10,7 @@ namespace Communication
         {
         private:
             boost::asio::io_service &IoService;
-            boost::asio::ip::tcp::endpoint RemotePoint;
+            boost::asio::ip::tcp::endpoint LocalEndPoint;
             std::shared_ptr<boost::thread> Task;
             Communication::BaseSystem::LockedVariable<std::shared_ptr<boost::asio::ip::tcp::acceptor>> Acceptor;
             Communication::BaseSystem::CancellationToken ListeningTaskToken;
@@ -26,10 +26,46 @@ namespace Communication
             ~BindingInfo()
             {
                 ListeningTaskToken.Cancel();
-                Acceptor.Update([](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) -> std::shared_ptr<boost::asio::ip::tcp::acceptor>
+                Acceptor.Update([&](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) -> std::shared_ptr<boost::asio::ip::tcp::acceptor>
                 {
                     if (a != nullptr)
                     {
+                        boost::asio::ip::tcp::endpoint LoopBackEndPoint;
+                        if (LocalEndPoint.protocol() == boost::asio::ip::tcp::v4())
+                        {
+                            LoopBackEndPoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::loopback(), LocalEndPoint.port());
+                        }
+                        else
+                        {
+                            LoopBackEndPoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v6::loopback(), LocalEndPoint.port());
+                        }
+                        try
+                        {
+                            auto Socket = std::make_shared<boost::asio::ip::tcp::socket>(IoService);
+                            try
+                            {
+                                Socket->connect(LoopBackEndPoint);
+                            }
+                            catch (std::exception &)
+                            {
+                            }
+                            try
+                            {
+                                Socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+                            }
+                            catch (std::exception &)
+                            {
+                            }
+                            Socket->close();
+                        }
+                        catch (std::exception &)
+                        {
+                        }
+                        if (Task != nullptr)
+                        {
+                            Task->join();
+                            Task = nullptr;
+                        }
                         try
                         {
                             a->close();
@@ -40,30 +76,16 @@ namespace Communication
                     }
                     return nullptr;
                 });
-                if (Task != nullptr)
-                {
-                    Task->join();
-                    Task = nullptr;
-                }
             }
 
-            void Listen(boost::asio::ip::tcp::endpoint RemotePoint)
+            void Listen(boost::asio::ip::tcp::endpoint LocalEndPoint)
             {
-                this->RemotePoint = RemotePoint;
+                if (Task != nullptr) { throw std::logic_error("ThreadStarted"); }
+
+                this->LocalEndPoint = LocalEndPoint;
                 Acceptor.Update([=](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) -> std::shared_ptr<boost::asio::ip::tcp::acceptor>
                 {
-                    if (a != nullptr)
-                    {
-                        try
-                        {
-                            a->close();
-                        }
-                        catch (std::exception &)
-                        {
-                        }
-                    }
-                    auto b = std::make_shared<boost::asio::ip::tcp::acceptor>(IoService, RemotePoint);
-                    return b;
+                    return std::make_shared<boost::asio::ip::tcp::acceptor>(IoService, LocalEndPoint);
                 });
             }
 
@@ -82,19 +104,41 @@ namespace Communication
                         auto Socket = std::make_shared<boost::asio::ip::tcp::socket>(IoService);
                         boost::system::error_code se;
                         Acceptor.Check<std::shared_ptr<boost::asio::ip::tcp::acceptor>>([](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) { return a; })->accept(*Socket, se);
+                        if (ListeningTaskToken.IsCancellationRequested())
+                        {
+                            Socket->close();
+                            return;
+                        }
                         if (se == boost::system::errc::success)
                         {
                             AcceptHandler(Socket);
                         }
                         else
                         {
-                            if (ListeningTaskToken.IsCancellationRequested())
-                            {
-                                return;
-                            }
-                            Listen(RemotePoint);
+                            Relisten(LocalEndPoint);
                         }
                     }
+                });
+            }
+
+        private:
+            void Relisten(boost::asio::ip::tcp::endpoint LocalEndPoint)
+            {
+                this->LocalEndPoint = LocalEndPoint;
+                Acceptor.Update([=](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) -> std::shared_ptr<boost::asio::ip::tcp::acceptor>
+                {
+                    if (a != nullptr)
+                    {
+                        try
+                        {
+                            a->close();
+                        }
+                        catch (std::exception &)
+                        {
+                        }
+                    }
+                    auto b = std::make_shared<boost::asio::ip::tcp::acceptor>(IoService, LocalEndPoint);
+                    return b;
                 });
             }
         };
@@ -424,7 +468,7 @@ namespace Communication
                 {
                     if (Exceptions->size() > 0)
                     {
-                        throw std::logic_error((*Exceptions)[0].what());
+                        throw std::logic_error((std::string("NoValidBinding: ") + std::string((*Exceptions)[0].what())));
                     }
                     else
                     {
