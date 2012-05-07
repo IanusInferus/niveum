@@ -13,20 +13,19 @@ namespace Communication
             boost::asio::ip::tcp::endpoint RemotePoint;
             std::shared_ptr<boost::thread> Task;
             Communication::BaseSystem::LockedVariable<std::shared_ptr<boost::asio::ip::tcp::acceptor>> Acceptor;
-            Communication::BaseSystem::LockedVariable<bool> IsExited;
+            Communication::BaseSystem::CancellationToken ListeningTaskToken;
 
         public:
             BindingInfo(boost::asio::io_service &IoService)
                 : IoService(IoService),
                   Task(nullptr),
-                  Acceptor(nullptr),
-                  IsExited(false)
+                  Acceptor(nullptr)
             {
             }
 
             ~BindingInfo()
             {
-                IsExited.Update([](const bool &b) { return false; });
+                ListeningTaskToken.Cancel();
                 Acceptor.Update([](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) -> std::shared_ptr<boost::asio::ip::tcp::acceptor>
                 {
                     if (a != nullptr)
@@ -76,7 +75,7 @@ namespace Communication
                 {
                     while (true)
                     {
-                        if (IsExited.Check<bool>([](const bool &b) { return b; }))
+                        if (ListeningTaskToken.IsCancellationRequested())
                         {
                             return;
                         }
@@ -89,12 +88,9 @@ namespace Communication
                         }
                         else
                         {
-                            if (se == boost::system::errc::interrupted)
+                            if (ListeningTaskToken.IsCancellationRequested())
                             {
-                                if (IsExited.Check<bool>([](const bool &b) { return b; }))
-                                {
-                                    return;
-                                }
+                                return;
                             }
                             Listen(RemotePoint);
                         }

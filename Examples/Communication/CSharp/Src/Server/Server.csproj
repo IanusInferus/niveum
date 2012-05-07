@@ -49,6 +49,7 @@
     <Compile Include="Servers\BinarySocketSession.cs" />
     <Compile Include="Servers\JsonSocketServer.cs" />
     <Compile Include="Servers\JsonSocketSession.cs" />
+    <Compile Include="Services\Admin.cs" />
     <Compile Include="Services\TestPerformance.cs" />
     <Compile Include="Util\ConsoleLogger.cs" />
     <Compile Include="Util\FileLogger.cs" />

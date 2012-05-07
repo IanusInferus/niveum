@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2012.05.04.
+//  Version:     2012.05.07.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -86,6 +86,17 @@ namespace Client
                 std::wstring Line;
                 std::getline(std::wcin, Line);
                 if (Line == L"exit") { break; }
+                if (Line == L"shutdown")
+                {
+                    bsc->InnerClient->Shutdown(std::make_shared<Communication::ShutdownRequest>(), [](ClientContext &c, std::shared_ptr<Communication::ShutdownReply> r)
+                    {
+                        if (r->OnSuccess())
+                        {
+                            std::wprintf(L"%ls\n", L"服务器关闭。");
+                        }
+                    });
+                    break;
+                }
                 auto Request = std::make_shared<Communication::SendMessageRequest>();
                 Request->Content = Line;
                 bsc->InnerClient->SendMessage(Request, [](ClientContext &c, std::shared_ptr<Communication::SendMessageReply> r)

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2012.05.03.
+//  Version:     2012.05.07.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -135,6 +135,11 @@ namespace Server
                             );
                         }
 
+                        Server.Shutdown += () =>
+                        {
+                            ExitEvent.Set();
+                        };
+
                         Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
                         Server.SessionIdleTimeout = c.SessionIdleTimeout;
                         Server.MaxConnections = c.MaxConnections;
@@ -157,6 +162,8 @@ namespace Server
                         ExitEvent.WaitOne();
 
                         Server.Stop();
+
+                        Console.WriteLine(@"服务器已关闭。");
                     }
                 }
             }
@@ -175,6 +182,11 @@ namespace Server
                             );
                         }
 
+                        Server.Shutdown += () =>
+                        {
+                            ExitEvent.Set();
+                        };
+
                         Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
                         Server.SessionIdleTimeout = c.SessionIdleTimeout;
                         Server.MaxConnections = c.MaxConnections;
@@ -197,6 +209,8 @@ namespace Server
                         ExitEvent.WaitOne();
 
                         Server.Stop();
+
+                        Console.WriteLine(@"服务器已关闭。");
                     }
                 }
             }

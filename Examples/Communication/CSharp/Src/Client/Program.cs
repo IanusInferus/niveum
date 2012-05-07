@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2012.05.02.
+//  Version:     2012.05.07.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -154,6 +154,17 @@ namespace Client
             {
                 var Line = Console.ReadLine();
                 if (Line == "exit") { break; }
+                if (Line == "shutdown")
+                {
+                    InnerClient.Shutdown(new ShutdownRequest(), (c, r) =>
+                    {
+                        if (r.OnSuccess)
+                        {
+                            Console.WriteLine("服务器关闭。");
+                        }
+                    });
+                    break;
+                }
                 InnerClient.SendMessage(new SendMessageRequest { Content = Line }, (c, r) =>
                 {
                     if (r.OnTooLong)

@@ -18,6 +18,8 @@ namespace Server
     /// </summary>
     public class BinarySocketServer : TcpServer<BinarySocketServer, BinarySocketSession>
     {
+        public Action Shutdown;
+
         private class WorkPart
         {
             public ServerImplementation si;
@@ -148,6 +150,13 @@ namespace Server
         public BinarySocketServer()
         {
             ServerContext = new ServerContext();
+            ServerContext.Shutdown += () =>
+            {
+                if (Shutdown != null)
+                {
+                    Shutdown();
+                }
+            };
             ServerContext.GetSessions = () => SessionMappings.Keys;
 
             WorkPartInstance = new ThreadLocal<WorkPart>

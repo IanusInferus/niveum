@@ -41,6 +41,8 @@ namespace Server
                 }
             }
 
+            /// <summary>关闭服务器</summary>
+            std::shared_ptr<ShutdownReply> Shutdown(TContext &c, std::shared_ptr<ShutdownRequest> r);
             /// <summary>服务器时间</summary>
             std::shared_ptr<ServerTimeReply> ServerTime(TContext &c, std::shared_ptr<ServerTimeRequest> r);
             /// <summary>退出</summary>
