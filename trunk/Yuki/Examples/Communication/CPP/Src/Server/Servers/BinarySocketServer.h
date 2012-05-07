@@ -28,6 +28,8 @@ namespace Server
     class BinarySocketSession;
     class BinarySocketServer : public Communication::Net::TcpServer, public std::enable_shared_from_this<BinarySocketServer>
     {
+    public:
+        std::function<void()> Shutdown;
     private:
         class WorkPart
         {

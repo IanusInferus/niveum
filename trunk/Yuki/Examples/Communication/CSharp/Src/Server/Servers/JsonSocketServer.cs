@@ -17,6 +17,8 @@ namespace Server
     /// </summary>
     public class JsonSocketServer : TcpServer<JsonSocketServer, JsonSocketSession>
     {
+        public Action Shutdown;
+
         private class WorkPart
         {
             public ServerImplementation si;
@@ -146,6 +148,13 @@ namespace Server
         public JsonSocketServer()
         {
             ServerContext = new ServerContext();
+            ServerContext.Shutdown += () =>
+            {
+                if (Shutdown != null)
+                {
+                    Shutdown();
+                }
+            };
             ServerContext.GetSessions = () => SessionMappings.Keys;
 
             WorkPartInstance = new ThreadLocal<WorkPart>

@@ -116,6 +116,13 @@ namespace Server
           SessionMappings(std::make_shared<TSessionMapping>())
     {
         sc = std::make_shared<ServerContext>();
+        sc->Shutdown = [=]()
+        {
+            if (this->Shutdown != nullptr)
+            {
+                this->Shutdown();
+            }
+        };
         sc->GetSessions = [&]() -> std::shared_ptr<std::vector<std::shared_ptr<SessionContext>>>
         {
             return SessionMappings.Check<std::shared_ptr<std::vector<std::shared_ptr<SessionContext>>>>([&](const std::shared_ptr<TSessionMapping> &Mappings) -> std::shared_ptr<std::vector<std::shared_ptr<SessionContext>>>

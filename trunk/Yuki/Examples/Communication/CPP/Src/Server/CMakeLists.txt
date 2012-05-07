@@ -12,5 +12,5 @@ include_directories("../../Lib_Gcc")
 include_directories(".")
 
 include_directories(${Boost_INCLUDE_DIRS})
-add_executable(Server Utility.cpp Program.cpp Net/TcpSession.cpp Net/TcpServer.cpp Servers/BinarySocketSession.cpp Servers/BinarySocketServer.cpp Services/Base.cpp Services/Message.cpp Services/TestPerformance.cpp)
+add_executable(Server Utility.cpp Program.cpp Net/TcpSession.cpp Net/TcpServer.cpp Servers/BinarySocketSession.cpp Servers/BinarySocketServer.cpp Services/Base.cpp Services/Message.cpp Services/TestPerformance.cpp Services/Admin.cpp)
 target_link_libraries(Server ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})

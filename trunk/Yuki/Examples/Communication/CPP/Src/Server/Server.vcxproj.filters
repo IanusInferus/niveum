@@ -94,5 +94,8 @@
     <ClCompile Include="Net\TcpSession.cpp">
       <Filter>Net</Filter>
     </ClCompile>
+    <ClCompile Include="Services\Admin.cpp">
+      <Filter>Services</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
