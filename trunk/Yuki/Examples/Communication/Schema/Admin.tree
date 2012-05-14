@@ -1,10 +1,10 @@
 ﻿$Comment
     ==========================================================================
 
-      File:        Base.tree
+      File:        Admin.tree
       Location:    Yuki.Examples <Tree>
-      Description: 基础
-      Version:     2012.05.07.
+      Description: 管理
+      Version:     2012.05.14.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
