@@ -2,9 +2,12 @@
 #include "Servers/BinarySocketServer.h"
 
 #include "Utility.h"
+#include "BaseSystem/ThreadLocalRandom.h"
 
 namespace Server
 {
+    PRIVATE Communication::BaseSystem::ThreadLocalRandom RNG;
+
     class BinarySocketSession::CommandBody
     {
     public:
@@ -221,12 +224,10 @@ namespace Server
           BufferLength(0),
           CommandQueue(std::make_shared<std::queue<std::shared_ptr<SessionCommand>>>())
     {
-        std::default_random_engine re;
-        std::uniform_int_distribution<std::uint8_t> uid(0, 255);
-        Context->SessionToken->push_back(uid(re));
-        Context->SessionToken->push_back(uid(re));
-        Context->SessionToken->push_back(uid(re));
-        Context->SessionToken->push_back(uid(re));
+        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
+        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
+        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
+        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
         Context->Quit = [=]() { StopAsync(); };
         Buffer->resize(8 * 1024, 0);
     }
