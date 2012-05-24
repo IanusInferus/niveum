@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2012.05.04.
+      Version:     2012.05.24.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -178,7 +178,7 @@ ObjectSchemaTemplate
                         std::string w2s(std::wstring ws)
                         {
                             std::size_t n = std::wcstombs(NULL, ws.c_str(), INT_MAX);
-                            if ((int)(n) < 0) { throw std::logic_error("InvalidOperationException"); }
+                            if (static_cast<int>(n) < 0) { throw std::logic_error("InvalidOperationException"); }
                             std::string s(n, 0);
                             std::wcstombs(&s[0], ws.c_str(), n);
                             return s;
@@ -386,7 +386,7 @@ ObjectSchemaTemplate
                         String ReadString()
                         {
                             std::int32_t Length = ReadInt32();
-                            int n = (int)(Length);
+                            int n = static_cast<int>(Length);
                             std::vector<std::uint8_t> Bytes;
                             for (int k = 0; k < n; k += 1)
                             {
@@ -488,7 +488,7 @@ ObjectSchemaTemplate
                         {
                             std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
                             auto Bytes = conv.to_bytes(v);
-                            int n = (int)(Bytes.size());
+                            int n = static_cast<int>(Bytes.size());
                             WriteInt32((std::int32_t)(n));
                             for (int k = 0; k < n; k += 1)
                             {
@@ -620,11 +620,11 @@ ObjectSchemaTemplate
                 $String
                     static Int IntFromBinary(IReadableStream &s)
                     {
-                        return (Int)(s.ReadInt32());
+                        return static_cast<Int>(s.ReadInt32());
                     }
                     static void IntToBinary(IWritableStream &s, Int v)
                     {
-                        s.WriteInt32((Int32)(v));
+                        s.WriteInt32(static_cast<Int32>(v));
                     }
         Template
             Name BinaryTranslator_Primitive_Real
@@ -869,7 +869,7 @@ ObjectSchemaTemplate
                 $String
                     static [[${Name}]] [[${Name}FromBinary]](IReadableStream &s)
                     {
-                        return ([[${Name}]])([[${UnderlyingTypeFriendlyName}FromBinary]](s));
+                        return static_cast<[[${Name}]]>([[${UnderlyingTypeFriendlyName}FromBinary]](s));
                     }
                     static void [[${Name}ToBinary]](IWritableStream &s, [[${Name}]] o)
                     {
@@ -910,7 +910,7 @@ ObjectSchemaTemplate
                     static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
                         auto l = std::make_shared<[[${TypeString}]]>();
-                        int Length = (int)(IntFromBinary(s));
+                        int Length = static_cast<int>(IntFromBinary(s));
                         for (int k = 0; k < Length; k += 1)
                         {
                             l->push_back([[${ElementTypeFriendlyName}FromBinary]](s));
@@ -919,8 +919,8 @@ ObjectSchemaTemplate
                     }
                     static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeString}]]> l)
                     {
-                        int Length = (int)l->size();
-                        IntToBinary(s, (Int)(Length));
+                        int Length = static_cast<int>(l->size());
+                        IntToBinary(s, static_cast<Int>(Length));
                         for (int k = 0; k < Length; k += 1)
                         {
                             [[${ElementTypeFriendlyName}ToBinary]](s, (*l)[k]);
@@ -934,7 +934,7 @@ ObjectSchemaTemplate
                     static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
                         auto l = std::make_shared<[[${TypeString}]]>();
-                        int Length = (int)(IntFromBinary(s));
+                        int Length = static_cast<int>(IntFromBinary(s));
                         for (int k = 0; k < Length; k += 1)
                         {
                             l->insert([[${ElementTypeFriendlyName}FromBinary]](s));
@@ -943,8 +943,8 @@ ObjectSchemaTemplate
                     }
                     static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeString}]]> l)
                     {
-                        int Length = (int)(l->size());
-                        IntToBinary(s, (Int)(Length));
+                        int Length = static_cast<int>(l->size());
+                        IntToBinary(s, static_cast<Int>(Length));
                         for (auto i = l->begin(); i != l->end(); i.operator++())
                         {
                             [[${ElementTypeFriendlyName}ToBinary]](s, (*i));
@@ -958,7 +958,7 @@ ObjectSchemaTemplate
                     static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
                         auto l = std::make_shared<[[${TypeString}]]>();
-                        int Length = (int)(IntFromBinary(s));
+                        int Length = static_cast<int>(IntFromBinary(s));
                         for (int k = 0; k < Length; k += 1)
                         {
                             auto Key = [[${KeyTypeFriendlyName}FromBinary]](s);
@@ -968,8 +968,8 @@ ObjectSchemaTemplate
                     }
                     static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeString}]]> l)
                     {
-                        int Length = (int)(l->size());
-                        IntToBinary(s, (Int)(Length));
+                        int Length = static_cast<int>(l->size());
+                        IntToBinary(s, static_cast<Int>(Length));
                         for (auto i = l->begin(); i != l->end(); i.operator++())
                         {
                             [[${KeyTypeFriendlyName}ToBinary]](s, std::get<0>(*i));
