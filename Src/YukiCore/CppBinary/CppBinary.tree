@@ -180,6 +180,7 @@ ObjectSchemaTemplate
                             std::size_t n = std::wcstombs(NULL, ws.c_str(), INT_MAX);
                             if (static_cast<int>(n) < 0) { throw std::logic_error("InvalidOperationException"); }
                             std::string s(n, 0);
+                            if (n == 0) { return s; }
                             std::wcstombs(&s[0], ws.c_str(), n);
                             return s;
                         }
