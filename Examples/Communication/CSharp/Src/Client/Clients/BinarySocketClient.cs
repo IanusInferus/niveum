@@ -38,6 +38,11 @@ namespace Client
             Socket.DoAction(sock => sock.InnerSocket.Connect(RemoteEndPoint));
         }
 
+        public Socket GetSocket()
+        {
+            return Socket.Check(ss => ss).Branch(ss => ss != null, ss => ss.InnerSocket, ss => null);
+        }
+
         void IBinarySender.Send(String CommandName, UInt32 CommandHash, Byte[] Parameters)
         {
             var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);

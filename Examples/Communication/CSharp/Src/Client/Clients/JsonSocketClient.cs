@@ -35,6 +35,11 @@ namespace Client
             Socket.DoAction(sock => sock.InnerSocket.Connect(RemoteEndPoint));
         }
 
+        public Socket GetSocket()
+        {
+            return Socket.Check(ss => ss).Branch(ss => ss != null, ss => ss.InnerSocket, ss => null);
+        }
+
         void IJsonSender.Send(String CommandName, String Parameters)
         {
             var Message = "/" + CommandName + " " + Parameters + "\r\n";

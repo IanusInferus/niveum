@@ -93,15 +93,34 @@ namespace Client
                 Check.Set();
             };
 
+            var vError = new LockedVariable<int>(0);
+
             if (ProtocolType == ApplicationProtocolType.Binary)
             {
                 for (int k = 0; k < NumUser; k += 1)
                 {
                     var n = k;
                     var bc = new BinarySocketClient(RemoteEndPoint, new ClientImplementation());
+                    var s = bc.GetSocket();
+                    s.SendTimeout = 2000;
+                    s.ReceiveTimeout = 2000;
                     if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, bc.Context, bc.InnerClient, Completed); }
                     bc.Connect();
-                    bc.Receive(se => Console.WriteLine((new SocketException((int)se)).Message));
+                    Action<SocketError> HandleError = se =>
+                    {
+                        int OldValue = 0;
+                        vError.Update(v =>
+                        {
+                            OldValue = v;
+                            return v + 1;
+                        });
+                        if (OldValue <= 10)
+                        {
+                            Console.WriteLine("{0}:{1}".Formats(n, (new SocketException((int)se)).Message));
+                        }
+                        Completed();
+                    };
+                    bc.Receive(HandleError);
                     bc.InnerClient.ServerTime(new ServerTimeRequest { }, (c, r) =>
                     {
                         vConnected.Update(i => i + 1);
@@ -125,9 +144,26 @@ namespace Client
                 {
                     var n = k;
                     var jc = new JsonSocketClient(RemoteEndPoint, new ClientImplementation());
+                    var s = jc.GetSocket();
+                    s.SendTimeout = 2000;
+                    s.ReceiveTimeout = 2000;
                     if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, jc.Context, jc.InnerClient, Completed); }
                     jc.Connect();
-                    jc.Receive(se => Console.WriteLine((new SocketException((int)se)).Message));
+                    Action<SocketError> HandleError = se =>
+                    {
+                        int OldValue = 0;
+                        vError.Update(v =>
+                        {
+                            OldValue = v;
+                            return v + 1;
+                        });
+                        if (OldValue <= 10)
+                        {
+                            Console.WriteLine("{0}:{1}".Formats(n, (new SocketException((int)se)).Message));
+                        }
+                        Completed();
+                    };
+                    jc.Receive(HandleError);
                     jc.InnerClient.ServerTime(new ServerTimeRequest { }, (c, r) =>
                     {
                         vConnected.Update(i => i + 1);
@@ -191,6 +227,11 @@ namespace Client
                 FinalCheck(ccl.ToArray());
             }
 
+            var NumError = vError.Check(v => v);
+            if (NumError > 0)
+            {
+                Console.WriteLine("{0}: {1} Errors", Title, NumError);
+            }
             if (Title == "") { return; }
             Console.WriteLine("{0}: {1} Users, {2} ms", Title, NumUser, TimeDiff);
         }
@@ -201,25 +242,25 @@ namespace Client
             TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMultiply", TestMultiply);
             TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestText", TestText);
             TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMessage", TestMessage, TestMessageInitializeClientContext, TestMessageFinalCheck);
-            
+
             Thread.Sleep(5000);
             for (int k = 0; k < 8; k += 1)
             {
                 TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestAdd", TestAdd);
             }
-            
+
             Thread.Sleep(5000);
             for (int k = 0; k < 7; k += 1)
             {
                 TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestMultiply", TestMultiply);
             }
-            
+
             Thread.Sleep(5000);
             for (int k = 0; k < 7; k += 1)
             {
                 TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestText", TestText);
             }
-            
+
             Thread.Sleep(5000);
             for (int k = 0; k < 6; k += 1)
             {

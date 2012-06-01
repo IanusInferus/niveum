@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -145,7 +144,7 @@ namespace Server
             }
         }
 
-        public ConcurrentDictionary<SessionContext, BinarySocketSession> SessionMappings = new ConcurrentDictionary<SessionContext, BinarySocketSession>();
+        public LockedVariable<Dictionary<SessionContext, BinarySocketSession>> SessionMappings = new LockedVariable<Dictionary<SessionContext, BinarySocketSession>>(new Dictionary<SessionContext, BinarySocketSession>());
 
         public BinarySocketServer()
         {
@@ -157,7 +156,7 @@ namespace Server
                     Shutdown();
                 }
             };
-            ServerContext.GetSessions = () => SessionMappings.Keys;
+            ServerContext.GetSessions = () => SessionMappings.Check(Mappings => Mappings.Keys.ToList());
 
             WorkPartInstance = new ThreadLocal<WorkPart>
             (
@@ -210,7 +209,13 @@ namespace Server
         private void OnServerEvent(SessionContext c, String CommandName, UInt32 CommandHash, Byte[] Parameters)
         {
             BinarySocketSession Session = null;
-            SessionMappings.TryGetValue(c, out Session);
+            SessionMappings.DoAction(Mappings =>
+            {
+                if (Mappings.ContainsKey(c))
+                {
+                    Session = Mappings[c];
+                }
+            });
             if (Session != null)
             {
                 Session.WriteCommand(CommandName, CommandHash, Parameters);
