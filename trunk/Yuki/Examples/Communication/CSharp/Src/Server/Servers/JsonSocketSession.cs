@@ -46,10 +46,10 @@ namespace Server
             {
                 Context.RemoteEndPoint = RemoteEndPoint;
 
-                if (!Server.SessionMappings.TryAdd(Context, this))
+                Server.SessionMappings.DoAction(Mappings =>
                 {
-                    throw new InvalidOperationException();
-                }
+                    Mappings.Add(Context, this);
+                });
 
                 SessionTask.DoAction(t => t.Start());
 
@@ -514,8 +514,13 @@ namespace Server
         {
             if (Server != null)
             {
-                JsonSocketSession v = null;
-                Server.SessionMappings.TryRemove(Context, out v);
+                Server.SessionMappings.DoAction(Mappings =>
+                {
+                    if (Mappings.ContainsKey(Context))
+                    {
+                        Mappings.Remove(Context);
+                    }
+                });
             }
 
             var ss = GetSocket();
@@ -550,8 +555,13 @@ namespace Server
         {
             if (Server != null)
             {
-                JsonSocketSession v = null;
-                Server.SessionMappings.TryRemove(Context, out v);
+                Server.SessionMappings.DoAction(Mappings =>
+                {
+                    if (Mappings.ContainsKey(Context))
+                    {
+                        Mappings.Remove(Context);
+                    }
+                });
             }
 
             IsRunningValue.Update
