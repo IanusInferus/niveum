@@ -20,7 +20,7 @@ namespace Client
         {
             ic.TestAdd(new TestAddRequest { Left = n - 1, Right = n + 1 }, (c, r) =>
             {
-                Debug.Assert(r.Result == 2 * n);
+                Trace.Assert(r.Result == 2 * n);
                 Completed();
             });
         }
@@ -32,7 +32,7 @@ namespace Client
 
             ic.TestMultiply(new TestMultiplyRequest { Operand = n }, (c, r) =>
             {
-                Debug.Assert(Math.Abs(r.Result - o) < 0.01);
+                Trace.Assert(Math.Abs(r.Result - o) < 0.01);
                 Completed();
             });
         }
@@ -44,7 +44,7 @@ namespace Client
 
             ic.TestText(new TestTextRequest { Text = s }, (c, r) =>
             {
-                Debug.Assert(String.Equals(r.Result, s));
+                Trace.Assert(String.Equals(r.Result, s));
                 Completed();
             });
         }
@@ -61,7 +61,7 @@ namespace Client
 
             ic.TestMessage(new TestMessageRequest { Message = s }, (c, r) =>
             {
-                Debug.Assert(r.Success == c.NumOnline);
+                Trace.Assert(r.Success == c.NumOnline);
                 c.Num -= 1;
                 if (c.Num == 0)
                 {
@@ -74,7 +74,7 @@ namespace Client
             var NumUser = ccl.Length;
             var PredicatedSum = (Int64)NumUser * (Int64)(NumUser - 1) * (Int64)(NumUser - 1) / (Int64)2;
             var Sum = ccl.Select(cc => cc.Sum).Sum();
-            Debug.Assert(Sum == PredicatedSum);
+            Trace.Assert(Sum == PredicatedSum);
         }
 
         public static void TestForNumUser(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IClient<ClientContext>, Action> Test, Action<int, int, ClientContext, IClient<ClientContext>, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
@@ -101,9 +101,6 @@ namespace Client
                 {
                     var n = k;
                     var bc = new BinarySocketClient(RemoteEndPoint, new ClientImplementation());
-                    var s = bc.GetSocket();
-                    s.SendTimeout = 2000;
-                    s.ReceiveTimeout = 2000;
                     if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, bc.Context, bc.InnerClient, Completed); }
                     bc.Connect();
                     Action<SocketError> HandleError = se =>
@@ -144,9 +141,6 @@ namespace Client
                 {
                     var n = k;
                     var jc = new JsonSocketClient(RemoteEndPoint, new ClientImplementation());
-                    var s = jc.GetSocket();
-                    s.SendTimeout = 2000;
-                    s.ReceiveTimeout = 2000;
                     if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, jc.Context, jc.InnerClient, Completed); }
                     jc.Connect();
                     Action<SocketError> HandleError = se =>
