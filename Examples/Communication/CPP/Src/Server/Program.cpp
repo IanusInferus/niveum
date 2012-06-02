@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2012.05.07.
+//  Version:     2012.06.02.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -41,13 +41,18 @@ namespace Server
         {
             DisplayTitle();
 
-            if (argc == 2)
+            if (argc == 3)
             {
-                Run(Parse<std::uint16_t>(s2w(argv[1])));
+
+                Run(Parse<std::uint16_t>(s2w(argv[1])), !EqualIgnoreCase(s2w(argv[2]), L"/nolog"));
+            }
+            else if (argc == 2)
+            {
+                Run(Parse<std::uint16_t>(s2w(argv[1])), true);
             }
             else if (argc == 1)
             {
-                Run(8001);
+                Run(8001, true);
             }
             else
             {
@@ -67,11 +72,12 @@ namespace Server
         static void DisplayInfo()
         {
             std::wprintf(L"%ls\n", L"用法:");
-            std::wprintf(L"%ls\n", L"Server [<Port>]");
+            std::wprintf(L"%ls\n", L"Server [<Port> [/nolog]]");
             std::wprintf(L"%ls\n", L"Port 服务器端口，默认为8001");
+            std::wprintf(L"%ls\n", L"/nolog 表示不显示日志");
         }
 
-        static void Run(std::uint16_t Port)
+        static void Run(std::uint16_t Port, bool EnableLogConsole)
         {
             auto ExitEvent = std::make_shared<Communication::BaseSystem::AutoResetEvent>();
 
@@ -100,10 +106,13 @@ namespace Server
             Server->SetMaxBadCommands(8);
             Server->SetClientDebug(true);
 
-            Server->SessionLog = [&](std::shared_ptr<SessionLogEntry> e)
+            if (EnableLogConsole)
             {
-                cl.Log(e);
-            };
+                Server->SessionLog = [&](std::shared_ptr<SessionLogEntry> e)
+                {
+                    cl.Log(e);
+                };
+            }
 
             Server->Start();
 
