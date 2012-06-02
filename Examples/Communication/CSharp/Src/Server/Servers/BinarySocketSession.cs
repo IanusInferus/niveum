@@ -228,6 +228,7 @@ namespace Server
             if (se == SocketError.ConnectionReset) { return true; }
             if (se == SocketError.Shutdown) { return true; }
             if (se == SocketError.OperationAborted) { return true; }
+            if (se == SocketError.Interrupted) { return true; }
             return false;
         }
 
