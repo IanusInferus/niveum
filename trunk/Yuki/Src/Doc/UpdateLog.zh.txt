@@ -1,4 +1,14 @@
-﻿2012.05.24
+﻿2012.06.02
+Examples:
+修正C#通讯示例与Mono的兼容性。
+C++通讯示例增加关闭命令行输出的选项。
+
+2012.06.01
+Examples:
+修正C#通讯示例因System.Collections.Concurrent.ConcurrentDictionary(TKey, TValue)的Mono实现bug导致的线程不安全问题(运行时收到SIGSEGV信号)。
+修改C#通讯示例在性能测试，无法连接上服务器时错误信息过多的问题。
+
+2012.05.24
 Yuki.Core, Examples:
 修正C++通讯及示例中一些写法问题。
 修正C++通讯及示例中字符串转换时当长度为0可能出现的问题。
