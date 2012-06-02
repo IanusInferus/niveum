@@ -258,14 +258,7 @@ namespace Client
 
         public void Close()
         {
-            Socket.DoAction
-            (
-                sock =>
-                {
-                    sock.Shutdown(SocketShutdown.Both);
-                    sock.Close();
-                }
-            );
+            Dispose();
         }
 
         public void Dispose()

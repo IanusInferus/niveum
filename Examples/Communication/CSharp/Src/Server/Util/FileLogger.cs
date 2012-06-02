@@ -37,9 +37,9 @@ namespace Server
 
         public void Stop()
         {
-            AsyncConsumer.Push(null);
             if (AsyncConsumer != null)
             {
+                AsyncConsumer.Push(null);
                 AsyncConsumer.Stop();
             }
             if (Unbind != null)
