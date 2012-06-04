@@ -1,0 +1,224 @@
+﻿主机到主机性能测试
+
+测试环境
+主板        ASUS MV2
+CPU         AMD Athlon(tm) 64 X2 Dual Core Processor 5400+
+内存        4GB
+主机系统    Windows 7 64 bit/OpenSUSE 64 bit 12.1
+测试方法    关闭命令行输出(C#的Configuration.tree中选项EnableLogConsole设为False，C++的命令行用./Server 8001 /nolog)
+
+
+C#/Binary/.Net 4.0/x64/Windows 7 64 bit
+
+TestAdd: 64 Users, 62 ms
+TestMultiply: 64 Users, 94 ms
+TestText: 64 Users, 172 ms
+TestMessage: 64 Users, 313 ms
+TestAdd: 1 Users, 0 ms
+TestAdd: 4 Users, 16 ms
+TestAdd: 16 Users, 0 ms
+TestAdd: 64 Users, 16 ms
+TestAdd: 256 Users, 47 ms
+TestAdd: 1024 Users, 203 ms
+TestAdd: 4096 Users, 1094 ms
+TestAdd: 16384 Users, 5094 ms
+TestMultiply: 1 Users, 32 ms
+TestMultiply: 4 Users, 15 ms
+TestMultiply: 16 Users, 16 ms
+TestMultiply: 64 Users, 62 ms
+TestMultiply: 256 Users, 234 ms
+TestMultiply: 1024 Users, 891 ms
+TestMultiply: 4096 Users, 3750 ms
+TestText: 1 Users, 31 ms
+TestText: 4 Users, 63 ms
+TestText: 16 Users, 31 ms
+TestText: 64 Users, 140 ms
+TestText: 256 Users, 375 ms
+TestText: 1024 Users, 1187 ms
+TestText: 4096 Users, 4828 ms
+TestMessage: 1 Users, 31 ms
+TestMessage: 4 Users, 0 ms
+TestMessage: 16 Users, 32 ms
+TestMessage: 64 Users, 266 ms
+TestMessage: 256 Users, 4672 ms
+TestMessage: 1024 Users, 74453 ms
+
+
+C#/JSON/.Net 4.0/x64/Windows 7 64 bit
+
+TestAdd: 64 Users, 78 ms
+TestMultiply: 64 Users, 172 ms
+TestText: 64 Users, 109 ms
+TestMessage: 64 Users, 250 ms
+TestAdd: 1 Users, 0 ms
+TestAdd: 4 Users, 0 ms
+TestAdd: 16 Users, 0 ms
+TestAdd: 64 Users, 16 ms
+TestAdd: 256 Users, 31 ms
+TestAdd: 1024 Users, 234 ms
+TestAdd: 4096 Users, 1812 ms
+TestAdd: 16384 Users, 4266 ms
+TestMultiply: 1 Users, 0 ms
+TestMultiply: 4 Users, 16 ms
+TestMultiply: 16 Users, 16 ms
+TestMultiply: 64 Users, 47 ms
+TestMultiply: 256 Users, 234 ms
+TestMultiply: 1024 Users, 938 ms
+TestMultiply: 4096 Users, 3719 ms
+TestText: 1 Users, 0 ms
+TestText: 4 Users, 15 ms
+TestText: 16 Users, 31 ms
+TestText: 64 Users, 78 ms
+TestText: 256 Users, 297 ms
+TestText: 1024 Users, 1500 ms
+TestText: 4096 Users, 15437 ms
+TestMessage: 1 Users, 16 ms
+TestMessage: 4 Users, 0 ms
+TestMessage: 16 Users, 47 ms
+TestMessage: 64 Users, 219 ms
+TestMessage: 256 Users, 5047 ms
+TestMessage: 1024 Users, 131532 ms
+
+
+C++2011/Binary/VC 10.0/x86/Windows 7 64 bit
+
+TestAdd: 64 Users, 63 ms
+TestMultiply: 64 Users, 109 ms
+TestText: 64 Users, 172 ms
+TestMessage: 64 Users, 2375 ms
+TestAdd: 1 Users, 15 ms
+TestAdd: 4 Users, 16 ms
+TestAdd: 16 Users, 16 ms
+TestAdd: 64 Users, 47 ms
+TestAdd: 256 Users, 172 ms
+TestAdd: 1024 Users, 656 ms
+TestAdd: 4096 Users, 2531 ms
+TestAdd: 16384 Users, 10828 ms
+TestMultiply: 1 Users, 32 ms
+TestMultiply: 4 Users, 15 ms
+TestMultiply: 16 Users, 32 ms
+TestMultiply: 64 Users, 78 ms
+TestMultiply: 256 Users, 328 ms
+TestMultiply: 1024 Users, 1375 ms
+TestMultiply: 4096 Users, 5922 ms
+TestText: 1 Users, 47 ms
+TestText: 4 Users, 16 ms
+TestText: 16 Users, 47 ms
+TestText: 64 Users, 125 ms
+TestText: 256 Users, 485 ms
+TestText: 1024 Users, 1796 ms
+TestText: 4096 Users, 7094 ms
+TestMessage: 1 Users, 15 ms
+TestMessage: 4 Users, 15 ms
+TestMessage: 16 Users, 156 ms
+TestMessage: 64 Users, 2375 ms
+TestMessage: 256 Users, 37765 ms
+TestMessage: 1024 Users, 613578 ms
+
+
+C#/Binary/Mono 2.10.6/x64/openSUSE 64 bit 12.1
+
+TestAdd: 64 Users, 33 ms
+TestMultiply: 64 Users, 444 ms
+TestText: 64 Users, 1091 ms
+TestMessage: 64 Users, 935 ms
+TestAdd: 1 Users, 500 ms
+TestAdd: 4 Users, 496 ms
+TestAdd: 16 Users, 10 ms
+TestAdd: 64 Users, 28 ms
+TestAdd: 256 Users, 113 ms
+TestAdd: 1024 Users, 1029 ms
+TestAdd: 4096 Users, 1631 ms
+TestAdd: 16384 Users, 5938 ms
+TestMultiply: 1 Users, 506 ms
+TestMultiply: 4 Users, 554 ms
+TestMultiply: 16 Users, 1094 ms
+TestMultiply: 64 Users, 334 ms
+TestMultiply: 256 Users, 982 ms
+TestMultiply: 1024 Users, 4066 ms
+TestMultiply: 4096 Users, 12693 ms
+TestText: 1 Users, 512 ms
+TestText: 4 Users, 518 ms
+TestText: 16 Users, 1285 ms
+TestText: 64 Users, 1075 ms
+TestText: 256 Users, 1072 ms
+TestText: 1024 Users, 1642 ms
+TestText: 4096 Users, 6729 ms
+TestMessage: 1 Users, 508 ms
+TestMessage: 4 Users, 1002 ms
+TestMessage: 16 Users, 540 ms
+TestMessage: 64 Users, 1325 ms
+TestMessage: 256 Users, 7148 ms
+TestMessage: 1024 Users, 188967 ms
+
+
+C#/Json/Mono 2.10.6/x64/openSUSE 64 bit 12.1
+
+TestAdd: 64 Users, 82 ms
+TestMultiply: 64 Users, 333 ms
+TestText: 64 Users, 179 ms
+TestMessage: 64 Users, 852 ms
+TestAdd: 1 Users, 501 ms
+TestAdd: 4 Users, 498 ms
+TestAdd: 16 Users, 512 ms
+TestAdd: 64 Users, 479 ms
+TestAdd: 256 Users, 95 ms
+TestAdd: 1024 Users, 357 ms
+TestAdd: 4096 Users, 1794 ms
+TestAdd: 16384 Users, 4846 ms
+TestMultiply: 1 Users, 513 ms
+TestMultiply: 4 Users, 560 ms
+TestMultiply: 16 Users, 1178 ms
+TestMultiply: 64 Users, 1330 ms
+TestMultiply: 256 Users, 2038 ms
+TestMultiply: 1024 Users, 3704 ms
+TestMultiply: 4096 Users, 13015 ms
+TestText: 1 Users, 1006 ms
+TestText: 4 Users, 514 ms
+TestText: 16 Users, 549 ms
+TestText: 64 Users, 601 ms
+TestText: 256 Users, 1062 ms
+TestText: 1024 Users, 1476 ms
+TestText: 4096 Users, 7002 ms
+TestMessage: 1 Users, 501 ms
+TestMessage: 4 Users, 1003 ms
+TestMessage: 16 Users, 558 ms
+TestMessage: 64 Users, 1300 ms
+TestMessage: 256 Users, 5838 ms
+TestMessage: 1024 Users, 133365 ms
+
+
+C++2011/Binary/GCC-C++ 4.6/x64/openSUSE 64 bit 12.1
+
+TestAdd: 64 Users, 20 ms
+TestMultiply: 64 Users, 152 ms
+TestText: 64 Users, 134 ms
+TestMessage: 64 Users, 137 ms
+TestAdd: 1 Users, 3 ms
+TestAdd: 4 Users, 5 ms
+TestAdd: 16 Users, 8 ms
+TestAdd: 64 Users, 6 ms
+TestAdd: 256 Users, 22 ms
+TestAdd: 1024 Users, 99 ms
+TestAdd: 4096 Users, 356 ms
+TestAdd: 16384 Users, 1438 ms
+TestMultiply: 1 Users, 9 ms
+TestMultiply: 4 Users, 17 ms
+TestMultiply: 16 Users, 38 ms
+TestMultiply: 64 Users, 148 ms
+TestMultiply: 256 Users, 619 ms
+TestMultiply: 1024 Users, 2437 ms
+TestMultiply: 4096 Users, 9986 ms
+TestText: 1 Users, 17 ms
+TestText: 4 Users, 11 ms
+TestText: 16 Users, 26 ms
+TestText: 64 Users, 74 ms
+TestText: 256 Users, 255 ms
+TestText: 1024 Users, 1037 ms
+TestText: 4096 Users, 4229 ms
+TestMessage: 1 Users, 8 ms
+TestMessage: 4 Users, 46 ms
+TestMessage: 16 Users, 45 ms
+TestMessage: 64 Users, 129 ms
+TestMessage: 256 Users, 1917 ms
+TestMessage: 1024 Users, 39436 ms
