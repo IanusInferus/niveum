@@ -22,11 +22,19 @@ namespace Client
 
         private IPEndPoint RemoteEndPoint;
         private LockedVariable<StreamedAsyncSocket> Socket = new LockedVariable<StreamedAsyncSocket>(null);
+        private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
+        public Boolean IsRunning
+        {
+            get
+            {
+                return IsRunningValue.Check(b => b);
+            }
+        }
 
         public BinarySocketClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci)
         {
             this.RemoteEndPoint = RemoteEndPoint;
-            Socket = new LockedVariable<StreamedAsyncSocket>(new StreamedAsyncSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)));
+            Socket = new LockedVariable<StreamedAsyncSocket>(new StreamedAsyncSocket(new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)));
             this.ci = ci;
             InnerClient = new BinaryClient<ClientContext>(this, ci);
             Context = new ClientContext();
@@ -36,6 +44,14 @@ namespace Client
         public void Connect()
         {
             Socket.DoAction(sock => sock.InnerSocket.Connect(RemoteEndPoint));
+            IsRunningValue.Update
+            (
+                b =>
+                {
+                    if (b) { throw new InvalidOperationException(); }
+                    return true;
+                }
+            );
         }
 
         public Socket GetSocket()
@@ -190,6 +206,7 @@ namespace Client
             if (se == SocketError.Shutdown) { return true; }
             if (se == SocketError.OperationAborted) { return true; }
             if (se == SocketError.Interrupted) { return true; }
+            if (se == SocketError.NotConnected) { return true; }
             return false;
         }
 
@@ -197,10 +214,8 @@ namespace Client
         {
             Action<SocketError> Faulted = se =>
             {
-                if (!IsSocketErrorKnown(se))
-                {
-                    UnknownFaulted(se);
-                }
+                if (!IsRunningValue.Check(b => b) && IsSocketErrorKnown(se)) { return; }
+                UnknownFaulted(se);
             };
 
             Action<int> Completed = null;
@@ -263,6 +278,7 @@ namespace Client
 
         public void Dispose()
         {
+            IsRunningValue.Update(b => false);
             Socket.Update
             (
                 s =>
@@ -272,6 +288,16 @@ namespace Client
                         try
                         {
                             s.Shutdown(SocketShutdown.Both);
+                        }
+                        catch
+                        {
+                        }
+                        try
+                        {
+                            if (s.InnerSocket.Connected)
+                            {
+                                s.InnerSocket.Disconnect(false);
+                            }
                         }
                         catch
                         {
