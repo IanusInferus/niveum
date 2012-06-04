@@ -238,7 +238,7 @@ namespace Client
             return false;
         }
 
-        void Completed(size_t Count, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+        void Completed(size_t Count, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
         {
             if (Count == 0)
             {
@@ -258,7 +258,7 @@ namespace Client
                 if (r->Command != nullptr)
                 {
                     auto cmd = r->Command;
-                    InnerClient->HandleResult(*Context, cmd->CommandName, cmd->CommandHash, cmd->Parameters);
+                    DoResultHandle([=]() { InnerClient->HandleResult(*Context, cmd->CommandName, cmd->CommandHash, cmd->Parameters); });
                 }
             }
             if (FirstPosition > 0)
@@ -270,17 +270,20 @@ namespace Client
                 }
                 BufferLength = CopyLength;
             }
-            Receive(UnknownFaulted);
+            Receive(DoResultHandle, UnknownFaulted);
         }
 
     public:
-        void Receive(std::function<void(const boost::system::error_code &)> UnknownFaulted)
+        /// <summary>接收消息</summary>
+        /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
+        /// <param name="UnknownFaulted">未知错误处理函数</param>
+        void Receive(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
         {
             auto ReadHandler = [=](const boost::system::error_code &se, size_t Count)
             {
                 if (se == boost::system::errc::success)
                 {
-                    Completed(Count, UnknownFaulted);
+                    Completed(Count, DoResultHandle, UnknownFaulted);
                 }
                 else
                 {

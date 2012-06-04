@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2012.05.07.
+//  Version:     2012.06.04.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -51,7 +51,9 @@ namespace Client
 
             var CmdLine = CommandLine.GetCmdLine();
 
-            var Automatic = false;
+            var UseLoadTest = false;
+            var UsePerformanceTest = false;
+            var UseStableTest = false;
             foreach (var opt in CmdLine.Options)
             {
                 if ((opt.Name.ToLower() == "?") || (opt.Name.ToLower() == "help"))
@@ -59,9 +61,17 @@ namespace Client
                     DisplayInfo();
                     return 0;
                 }
-                else if (opt.Name.ToLower() == "auto")
+                else if (opt.Name.ToLower() == "load")
                 {
-                    Automatic = true;
+                    UseLoadTest = true;
+                }
+                else if (opt.Name.ToLower() == "perf")
+                {
+                    UsePerformanceTest = true;
+                }
+                else if (opt.Name.ToLower() == "stable")
+                {
+                    UseStableTest = true;
                 }
             }
 
@@ -89,9 +99,17 @@ namespace Client
                 return -1;
             }
 
-            if (Automatic)
+            if (UseLoadTest)
+            {
+                LoadTest.DoTest(RemoteEndPoint, ProtocolType);
+            }
+            else if (UsePerformanceTest)
             {
                 PerformanceTest.DoTest(RemoteEndPoint, ProtocolType);
+            }
+            else if (UseStableTest)
+            {
+                StableTest.DoTest(RemoteEndPoint, ProtocolType);
             }
             else
             {
@@ -126,7 +144,7 @@ namespace Client
                 {
                     bc.Connect();
                     Console.WriteLine("连接成功。");
-                    bc.Receive(se => Console.WriteLine((new SocketException((int)se)).Message));
+                    bc.Receive(a => a(), se => Console.WriteLine((new SocketException((int)se)).Message));
                     ReadLineAndSendLoop(bc.InnerClient);
                     bc.Close();
                 }
@@ -137,7 +155,7 @@ namespace Client
                 {
                     jc.Connect();
                     Console.WriteLine("连接成功。");
-                    jc.Receive(se => Console.WriteLine((new SocketException((int)se)).Message));
+                    jc.Receive(a => a(), se => Console.WriteLine((new SocketException((int)se)).Message));
                     ReadLineAndSendLoop(jc.InnerClient);
                     jc.Close();
                 }

@@ -210,7 +210,10 @@ namespace Client
             return false;
         }
 
-        public void Receive(Action<SocketError> UnknownFaulted)
+        /// <summary>接收消息</summary>
+        /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
+        /// <param name="UnknownFaulted">未知错误处理函数</param>
+        public void Receive(Action<Action> DoResultHandle, Action<SocketError> UnknownFaulted)
         {
             Action<SocketError> Faulted = se =>
             {
@@ -239,7 +242,7 @@ namespace Client
                     if (r.Command != null)
                     {
                         var cmd = r.Command;
-                        InnerClient.HandleResult(Context, cmd.CommandName, cmd.CommandHash, cmd.Parameters);
+                        DoResultHandle(() => InnerClient.HandleResult(Context, cmd.CommandName, cmd.CommandHash, cmd.Parameters));
                     }
                 }
                 if (FirstPosition > 0)
