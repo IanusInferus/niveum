@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2012.05.07.
+//  Version:     2012.06.04.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -77,7 +77,7 @@ namespace Client
             auto bsc = std::make_shared<BinarySocketClient>(IoService, RemoteEndPoint, ci);
             bsc->Connect();
             std::wprintf(L"%ls\n", L"连接成功。");
-            bsc->Receive([](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
+            bsc->Receive([](std::function<void(void)> a) { a(); }, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
             
             boost::thread t([&]() { IoService.run(); });
 

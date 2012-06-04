@@ -1,0 +1,32 @@
+﻿主机到主机性能测试
+
+测试环境
+主板        ASUS MV2
+CPU         AMD Athlon(tm) 64 X2 Dual Core Processor 5400+
+内存        4GB
+主机系统    Windows 7 64 bit/OpenSUSE 64 bit 12.1
+测试方法    关闭命令行输出(C#的Configuration.tree中选项EnableLogConsole设为False，C++的命令行用./Server 8001 /nolog)
+
+
+C#/Binary/.Net 4.0/x64/Windows 7 64 bit
+
+
+
+C#/JSON/.Net 4.0/x64/Windows 7 64 bit
+
+
+
+C++2011/Binary/VC 10.0/x86/Windows 7 64 bit
+
+
+
+C#/Binary/Mono 2.10.6/x64/openSUSE 64 bit 12.1
+
+
+
+C#/Json/Mono 2.10.6/x64/openSUSE 64 bit 12.1
+
+
+
+C++2011/Binary/GCC-C++ 4.6/x64/openSUSE 64 bit 12.1
+

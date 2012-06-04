@@ -77,7 +77,10 @@ namespace Client
             return false;
         }
 
-        public void Receive(Action<SocketError> UnknownFaulted)
+        /// <summary>接收消息</summary>
+        /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
+        /// <param name="UnknownFaulted">未知错误处理函数</param>
+        public void Receive(Action<Action> DoResultHandle, Action<SocketError> UnknownFaulted)
         {
             Action<SocketError> Faulted = se =>
             {
@@ -115,7 +118,7 @@ namespace Client
                         var triple = Line.Split(new Char[] { ' ' }, 3);
                         if (triple.Length != 3) { throw new InvalidOperationException(); }
                         if (triple[0] != "/svr") { throw new InvalidOperationException(); }
-                        InnerClient.HandleResult(Context, triple[1], triple[2]);
+                        DoResultHandle(() => InnerClient.HandleResult(Context, triple[1], triple[2]));
 
                         FirstPosition = LineFeedPosition + 1;
                         CheckPosition = FirstPosition;
