@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2012.06.04.
+//  Version:     2012.06.05.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -129,11 +129,13 @@ namespace Client
         public static void DisplayInfo()
         {
             Console.WriteLine(@"用法:");
-            Console.WriteLine(@"Client [<Protocol> [<IpAddress> <Port>]] [/auto]");
+            Console.WriteLine(@"Client [<Protocol> [<IpAddress> <Port>]] [/load|/perf|/stable]");
             Console.WriteLine(@"Protocol 通讯协议，可为Binary或Json，默认为Binary");
             Console.WriteLine(@"IpAddress 服务器IP地址，默认为127.0.0.1");
             Console.WriteLine(@"Port 服务器端口，默认为8001");
-            Console.WriteLine(@"/auto 自动化性能测试");
+            Console.WriteLine(@"/load 自动化负载测试");
+            Console.WriteLine(@"/perf 自动化性能测试");
+            Console.WriteLine(@"/stable 自动化稳定性测试");
         }
 
         public static void Run(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType)
@@ -166,7 +168,7 @@ namespace Client
             }
         }
 
-        public static void ReadLineAndSendLoop(IClient<ClientContext> InnerClient)
+        public static void ReadLineAndSendLoop(IClient InnerClient)
         {
             while (true)
             {
@@ -174,7 +176,7 @@ namespace Client
                 if (Line == "exit") { break; }
                 if (Line == "shutdown")
                 {
-                    InnerClient.Shutdown(new ShutdownRequest(), (c, r) =>
+                    InnerClient.Shutdown(new ShutdownRequest(), r =>
                     {
                         if (r.OnSuccess)
                         {
@@ -183,7 +185,7 @@ namespace Client
                     });
                     break;
                 }
-                InnerClient.SendMessage(new SendMessageRequest { Content = Line }, (c, r) =>
+                InnerClient.SendMessage(new SendMessageRequest { Content = Line }, r =>
                 {
                     if (r.OnTooLong)
                     {
