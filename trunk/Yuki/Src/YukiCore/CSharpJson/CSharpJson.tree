@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2012.05.01.
+      Version:     2012.06.04.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -129,18 +129,18 @@ ObjectSchemaTemplate
             //Parameters: ${Hash}, ${ClientCommands}, ${ServerCommands}
             Value
                 $String
-                    public sealed class JsonClient<TContext> : IClient<TContext>
+                    public sealed class JsonClient<TContext> : IClient
                     {
                         private IJsonSender s;
                         private IClientImplementation<TContext> i;
-                        private Dictionary<String, Queue<Action<TContext, String>>> ClientCommandCallbacks;
+                        private Dictionary<String, Queue<Action<String>>> ClientCommandCallbacks;
                         private Dictionary<String, Action<TContext, String>> ServerCommands;
 
                         public JsonClient(IJsonSender s, IClientImplementation<TContext> i)
                         {
                             this.s = s;
                             this.i = i;
-                            ClientCommandCallbacks = new Dictionary<String, Queue<Action<TContext, String>>>(StringComparer.OrdinalIgnoreCase);
+                            ClientCommandCallbacks = new Dictionary<String, Queue<Action<String>>>(StringComparer.OrdinalIgnoreCase);
                             ServerCommands = new Dictionary<String, Action<TContext, String>>(StringComparer.OrdinalIgnoreCase);
                             ${ServerCommands}
                         }
@@ -163,7 +163,7 @@ ObjectSchemaTemplate
                                     throw new InvalidOperationException(CommandName);
                                 }
                                 var Callback = q.Dequeue();
-                                Callback(c, Parameters);
+                                Callback(Parameters);
                                 return;
                             }
 
@@ -177,7 +177,7 @@ ObjectSchemaTemplate
                             throw new InvalidOperationException(CommandName);
                         }
 
-                        private void AddCallback(String CommandName, Action<TContext, String> Callback)
+                        private void AddCallback(String CommandName, Action<String> Callback)
                         {
                             if (ClientCommandCallbacks.ContainsKey(CommandName))
                             {
@@ -185,7 +185,7 @@ ObjectSchemaTemplate
                             }
                             else
                             {
-                                var q = new Queue<Action<TContext, String>>();
+                                var q = new Queue<Action<String>>();
                                 q.Enqueue(Callback);
                                 ClientCommandCallbacks.Add(CommandName, q);
                             }
@@ -204,10 +204,10 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    public void [[${Name}]]([[${Name}Request]] r, Action<TContext, [[${Name}Reply]]> Callback)
+                    public void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback)
                     {
                         var Request = JsonTranslator.[[${Name}RequestToJson]](r).ToString(Formatting.None);
-                        AddCallback(@"${Name}", (c, Parameters) => Callback(c, JsonTranslator.[[${Name}ReplyFromJson]](JToken.Parse(Parameters))));
+                        AddCallback(@"${Name}", Parameters => Callback(JsonTranslator.[[${Name}ReplyFromJson]](JToken.Parse(Parameters))));
                         s.Send(@"${Name}", Request);
                     }
         Template
