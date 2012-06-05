@@ -16,54 +16,54 @@ namespace Client
 {
     class LoadTest
     {
-        public static void TestAdd(int NumUser, int n, ClientContext cc, IClient<ClientContext> ic, Action Completed)
+        public static void TestAdd(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
         {
-            ic.TestAdd(new TestAddRequest { Left = n - 1, Right = n + 1 }, (c, r) =>
+            ic.TestAdd(new TestAddRequest { Left = n - 1, Right = n + 1 }, r =>
             {
                 Trace.Assert(r.Result == 2 * n);
                 Completed();
             });
         }
 
-        public static void TestMultiply(int NumUser, int n, ClientContext cc, IClient<ClientContext> ic, Action Completed)
+        public static void TestMultiply(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
         {
             double v = n;
             var o = v * 1000001 * 0.5;
 
-            ic.TestMultiply(new TestMultiplyRequest { Operand = n }, (c, r) =>
+            ic.TestMultiply(new TestMultiplyRequest { Operand = n }, r =>
             {
                 Trace.Assert(Math.Abs(r.Result - o) < 0.01);
                 Completed();
             });
         }
 
-        public static void TestText(int NumUser, int n, ClientContext cc, IClient<ClientContext> ic, Action Completed)
+        public static void TestText(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
         {
             var ss = n.ToString();
             String s = String.Join("", Enumerable.Range(0, 10000 / ss.Length).Select(i => ss).ToArray()).Substring(0, 4096 - 256);
 
-            ic.TestText(new TestTextRequest { Text = s }, (c, r) =>
+            ic.TestText(new TestTextRequest { Text = s }, r =>
             {
                 Trace.Assert(String.Equals(r.Result, s));
                 Completed();
             });
         }
 
-        public static void TestMessageInitializeClientContext(int NumUser, int n, ClientContext cc, IClient<ClientContext> ic, Action Completed)
+        public static void TestMessageInitializeClientContext(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
         {
             cc.NumOnline = NumUser;
             cc.Num = NumUser;
             cc.Completed = Completed;
         }
-        public static void TestMessage(int NumUser, int n, ClientContext cc, IClient<ClientContext> ic, Action Completed)
+        public static void TestMessage(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
         {
             var s = n.ToString();
 
-            ic.TestMessage(new TestMessageRequest { Message = s }, (c, r) =>
+            ic.TestMessage(new TestMessageRequest { Message = s }, r =>
             {
-                Trace.Assert(r.Success == c.NumOnline);
-                c.Num -= 1;
-                if (c.Num == 0)
+                Trace.Assert(r.Success == cc.NumOnline);
+                cc.Num -= 1;
+                if (cc.Num == 0)
                 {
                     Completed();
                 }
@@ -77,7 +77,7 @@ namespace Client
             Trace.Assert(Sum == PredicatedSum);
         }
 
-        public static void TestForNumUser(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IClient<ClientContext>, Action> Test, Action<int, int, ClientContext, IClient<ClientContext>, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
+        public static void TestForNumUser(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IClient, Action> Test, Action<int, int, ClientContext, IClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
         {
             var tl = new List<Task>();
             var bcl = new List<BinarySocketClient>();
@@ -118,7 +118,7 @@ namespace Client
                         Completed();
                     };
                     bc.Receive(a => a(), HandleError);
-                    bc.InnerClient.ServerTime(new ServerTimeRequest { }, (c, r) =>
+                    bc.InnerClient.ServerTime(new ServerTimeRequest { }, r =>
                     {
                         vConnected.Update(i => i + 1);
                         Check.Set();
@@ -158,7 +158,7 @@ namespace Client
                         Completed();
                     };
                     jc.Receive(a => a(), HandleError);
-                    jc.InnerClient.ServerTime(new ServerTimeRequest { }, (c, r) =>
+                    jc.InnerClient.ServerTime(new ServerTimeRequest { }, r =>
                     {
                         vConnected.Update(i => i + 1);
                         Check.Set();

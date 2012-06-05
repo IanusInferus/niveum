@@ -88,7 +88,7 @@ namespace Client
                 if (Line == L"exit") { break; }
                 if (Line == L"shutdown")
                 {
-                    bsc->InnerClient->Shutdown(std::make_shared<Communication::ShutdownRequest>(), [](ClientContext &c, std::shared_ptr<Communication::ShutdownReply> r)
+                    bsc->InnerClient->Shutdown(std::make_shared<Communication::ShutdownRequest>(), [](std::shared_ptr<Communication::ShutdownReply> r)
                     {
                         if (r->OnSuccess())
                         {
@@ -99,7 +99,7 @@ namespace Client
                 }
                 auto Request = std::make_shared<Communication::SendMessageRequest>();
                 Request->Content = Line;
-                bsc->InnerClient->SendMessage(Request, [](ClientContext &c, std::shared_ptr<Communication::SendMessageReply> r)
+                bsc->InnerClient->SendMessage(Request, [](std::shared_ptr<Communication::SendMessageReply> r)
                 {
                     if (r->OnTooLong())
                     {
