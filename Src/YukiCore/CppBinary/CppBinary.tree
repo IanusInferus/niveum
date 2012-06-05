@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2012.05.24.
+      Version:     2012.06.04.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -168,11 +168,12 @@ ObjectSchemaTemplate
                                 return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);
                             }
                         };
-                        typedef std::function<void(TContext &, std::shared_ptr<std::vector<std::uint8_t>>)> CommandCallback;
+                        typedef std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> ClientCommandCallback;
+                        typedef std::function<void(TContext &, std::shared_ptr<std::vector<std::uint8_t>>)> ServerCommandCallback;
                         std::shared_ptr<IBinarySender> s;
                         std::shared_ptr<IClientImplementation<TContext>> i;
-                        std::unordered_map<std::wstring, std::shared_ptr<std::queue<std::pair<std::uint32_t, CommandCallback>>>> ClientCommandCallbacks;
-                        std::unordered_map<std::pair<std::wstring, std::uint32_t>, CommandCallback, Hash> ServerCommands;
+                        std::unordered_map<std::wstring, std::shared_ptr<std::queue<std::pair<std::uint32_t, ClientCommandCallback>>>> ClientCommandCallbacks;
+                        std::unordered_map<std::pair<std::wstring, std::uint32_t>, ServerCommandCallback, Hash> ServerCommands;
 
                     private:
                         std::string w2s(std::wstring ws)
@@ -214,7 +215,7 @@ ObjectSchemaTemplate
                                 }
                                 q->pop();
                                 auto Callback = std::get<1>(CallbackPair);
-                                Callback(c, Parameters);
+                                Callback(Parameters);
                                 return;
                             }
 
@@ -235,16 +236,16 @@ ObjectSchemaTemplate
                         }
 
                     private:
-                        void AddCallback(std::wstring CommandName, std::uint32_t CommandHash, CommandCallback Callback)
+                        void AddCallback(std::wstring CommandName, std::uint32_t CommandHash, ClientCommandCallback Callback)
                         {
                             if (ClientCommandCallbacks.count(CommandName) > 0)
                             {
-                                ClientCommandCallbacks[CommandName]->push(std::pair<std::uint32_t, CommandCallback>(CommandHash, Callback));
+                                ClientCommandCallbacks[CommandName]->push(std::pair<std::uint32_t, ClientCommandCallback>(CommandHash, Callback));
                             }
                             else
                             {
-                                auto q = std::make_shared<std::queue<std::pair<std::uint32_t, CommandCallback>>>();
-                                q->push(std::pair<std::uint32_t, CommandCallback>(CommandHash, Callback));
+                                auto q = std::make_shared<std::queue<std::pair<std::uint32_t, ClientCommandCallback>>>();
+                                q->push(std::pair<std::uint32_t, ClientCommandCallback>(CommandHash, Callback));
                                 ClientCommandCallbacks[CommandName] = q;
                             }
                         }
@@ -258,19 +259,19 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    void [[${Name}]](std::shared_ptr<[[${Name}Request]]> r, std::function<void(TContext &, std::shared_ptr<[[${Name}Reply]]>)> Callback)
+                    void [[${Name}]](std::shared_ptr<[[${Name}Request]]> r, std::function<void(std::shared_ptr<[[${Name}Reply]]>)> Callback)
                     {
                         ByteArrayStream bas;
                         BinaryTranslator::[[${Name}RequestToBinary]](bas, r);
                         bas.SetPosition(0);
                         auto Request = bas.ReadBytes(bas.GetLength());
-                        AddCallback(L"${CommandName}", 0x${CommandHash}, [=](TContext &c, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
+                        AddCallback(L"${CommandName}", 0x${CommandHash}, [=](std::shared_ptr<std::vector<std::uint8_t>> Parameters)
                         {
                             ByteArrayStream bas;
                             bas.WriteBytes(Parameters);
                             bas.SetPosition(0);
                             auto Reply = BinaryTranslator::[[${Name}ReplyFromBinary]](bas);
-                            Callback(c, Reply);
+                            Callback(Reply);
                         });
                         s->Send(L"${CommandName}", 0x${CommandHash}, Request);
                     }
