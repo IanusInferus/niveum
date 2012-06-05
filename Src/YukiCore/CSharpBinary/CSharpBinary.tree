@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板数据
-      Version:     2012.05.02.
+      Version:     2012.06.04.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -130,18 +130,18 @@ ObjectSchemaTemplate
             //Parameters: ${Hash}, ${ClientCommands}, ${ServerCommands}
             Value
                 $String
-                    public sealed class BinaryClient<TContext> : IClient<TContext>
+                    public sealed class BinaryClient<TContext> : IClient
                     {
                         private IBinarySender s;
                         private IClientImplementation<TContext> i;
-                        private Dictionary<String, Queue<KeyValuePair<UInt32, Action<TContext, Byte[]>>>> ClientCommandCallbacks;
+                        private Dictionary<String, Queue<KeyValuePair<UInt32, Action<Byte[]>>>> ClientCommandCallbacks;
                         private Dictionary<KeyValuePair<String, UInt32>, Action<TContext, Byte[]>> ServerCommands;
 
                         public BinaryClient(IBinarySender s, IClientImplementation<TContext> i)
                         {
                             this.s = s;
                             this.i = i;
-                            ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<TContext, Byte[]>>>>();
+                            ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<Byte[]>>>>();
                             ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<TContext, Byte[]>>();
                             ${ServerCommands}
                         }
@@ -170,7 +170,7 @@ ObjectSchemaTemplate
                                 }
                                 q.Dequeue();
                                 var Callback = CallbackPair.Value;
-                                Callback(c, Parameters);
+                                Callback(Parameters);
                                 return;
                             }
 
@@ -185,16 +185,16 @@ ObjectSchemaTemplate
                             throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8"));
                         }
 
-                        private void AddCallback(String CommandName, UInt32 CommandHash, Action<TContext, Byte[]> Callback)
+                        private void AddCallback(String CommandName, UInt32 CommandHash, Action<Byte[]> Callback)
                         {
                             if (ClientCommandCallbacks.ContainsKey(CommandName))
                             {
-                                ClientCommandCallbacks[CommandName].Enqueue(new KeyValuePair<UInt32, Action<TContext, Byte[]>>(CommandHash, Callback));
+                                ClientCommandCallbacks[CommandName].Enqueue(new KeyValuePair<UInt32, Action<Byte[]>>(CommandHash, Callback));
                             }
                             else
                             {
-                                var q = new Queue<KeyValuePair<UInt32, Action<TContext, Byte[]>>>();
-                                q.Enqueue(new KeyValuePair<UInt32, Action<TContext, Byte[]>>(CommandHash, Callback));
+                                var q = new Queue<KeyValuePair<UInt32, Action<Byte[]>>>();
+                                q.Enqueue(new KeyValuePair<UInt32, Action<Byte[]>>(CommandHash, Callback));
                                 ClientCommandCallbacks.Add(CommandName, q);
                             }
                         }
@@ -212,10 +212,10 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    public void [[${Name}]]([[${Name}Request]] r, Action<TContext, [[${Name}Reply]]> Callback)
+                    public void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback)
                     {
                         var Request = BinaryTranslator.Serialize(r);
-                        AddCallback(@"${CommandName}", 0x${CommandHash}, (c, Parameters) => Callback(c, BinaryTranslator.Deserialize<[[${Name}Reply]]>(Parameters)));
+                        AddCallback(@"${CommandName}", 0x${CommandHash}, Parameters => Callback(BinaryTranslator.Deserialize<[[${Name}Reply]]>(Parameters)));
                         s.Send(@"${CommandName}", 0x${CommandHash}, Request);
                     }
         Template
