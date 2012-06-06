@@ -10,170 +10,113 @@ CPU         AMD Athlon(tm) 64 X2 Dual Core Processor 5400+
 
 C#/Binary/.Net 4.0/x64/Windows 7 64 bit
 
-TestAdd: 1 Users, 8 Request/User, 78 ms
-TestMultiply: 1 Users, 8 Request/User, 78 ms
-TestText: 1 Users, 8 Request/User, 172 ms
-TestAdd: 4096 Users, 1 Request/User, 781 ms
-TestAdd: 4096 Users, 4 Request/User, 907 ms
-TestAdd: 4096 Users, 16 Request/User, 1421 ms
-TestAdd: 4096 Users, 64 Request/User, 1063 ms
-TestAdd: 4096 Users, 256 Request/User, 1015 ms
-TestAdd: 4096 Users, 1024 Request/User, 1203 ms
-TestAdd: 4096 Users, 4096 Request/User, 1453 ms
-TestAdd: 4096 Users, 16384 Request/User, 4000 ms
-TestMultiply: 4096 Users, 1 Request/User, 4094 ms
-TestMultiply: 4096 Users, 4 Request/User, 3906 ms
-TestMultiply: 4096 Users, 16 Request/User, 3860 ms
-TestMultiply: 4096 Users, 64 Request/User, 4110 ms
-TestMultiply: 4096 Users, 256 Request/User, 4172 ms
-TestMultiply: 4096 Users, 1024 Request/User, 5578 ms
-TestMultiply: 4096 Users, 4096 Request/User, 10344 ms
-TestText: 4096 Users, 1 Request/User, 6453 ms
-TestText: 4096 Users, 4 Request/User, 4407 ms
-TestText: 4096 Users, 16 Request/User, 4890 ms
-TestText: 4096 Users, 64 Request/User, 6282 ms
-TestText: 4096 Users, 256 Request/User, 9781 ms
-TestText: 4096 Users, 1024 Request/User, 7062 ms
-TestText: 4096 Users, 4096 Request/User, 45328 ms
+TestAdd: 1 Users, 8 Request/User, 31 ms
+TestMultiply: 1 Users, 8 Request/User, 47 ms
+TestText: 1 Users, 8 Request/User, 94 ms
+TestAdd: 4096 Users, 1 Request/User, 1734 ms
+TestAdd: 4096 Users, 4 Request/User, 4454 ms
+TestAdd: 4096 Users, 16 Request/User, 15453 ms
+TestAdd: 4096 Users, 64 Request/User, 60485 ms
+TestMultiply: 4096 Users, 1 Request/User, 8250 ms
+TestMultiply: 4096 Users, 4 Request/User, 19515 ms
+TestMultiply: 4096 Users, 16 Request/User, 65922 ms
+TestMultiply: 4096 Users, 64 Request/User, 260641 ms
+TestText: 4096 Users, 1 Request/User, 20922 ms
+TestText: 4096 Users, 4 Request/User, 23140 ms
+TestText: 4096 Users, 16 Request/User, 80750 ms
+TestText: 4096 Users, 64 Request/User, 307453 ms
 
 
 C#/JSON/.Net 4.0/x64/Windows 7 64 bit
 
-TestAdd: 1 Users, 8 Request/User, 62 ms
+TestAdd: 1 Users, 8 Request/User, 31 ms
 TestMultiply: 1 Users, 8 Request/User, 31 ms
-TestText: 1 Users, 8 Request/User, 63 ms
-TestAdd: 4096 Users, 1 Request/User, 844 ms
-TestAdd: 4096 Users, 4 Request/User, 781 ms
-TestAdd: 4096 Users, 16 Request/User, 890 ms
-TestAdd: 4096 Users, 64 Request/User, 1078 ms
-TestAdd: 4096 Users, 256 Request/User, 1797 ms
-TestAdd: 4096 Users, 1024 Request/User, 1844 ms
-TestAdd: 4096 Users, 4096 Request/User, 1859 ms
-TestAdd: 4096 Users, 16384 Request/User, 6938 ms
-TestMultiply: 4096 Users, 1 Request/User, 3875 ms
-TestMultiply: 4096 Users, 4 Request/User, 3812 ms
-TestMultiply: 4096 Users, 16 Request/User, 5219 ms
-TestMultiply: 4096 Users, 64 Request/User, 4219 ms
-TestMultiply: 4096 Users, 256 Request/User, 4234 ms
-TestMultiply: 4096 Users, 1024 Request/User, 5547 ms
-TestMultiply: 4096 Users, 4096 Request/User, 10562 ms
-TestText: 4096 Users, 1 Request/User, 8328 ms
-TestText: 4096 Users, 4 Request/User, 10906 ms
-TestText: 4096 Users, 16 Request/User, 15203 ms
-TestText: 4096 Users, 64 Request/User, 10281 ms
-TestText: 4096 Users, 256 Request/User, 19750 ms
-TestText: 4096 Users, 1024 Request/User, 5781 ms
-TestText: 4096 Users, 4096 Request/User, 40078 ms
+TestText: 1 Users, 8 Request/User, 47 ms
+TestAdd: 4096 Users, 1 Request/User, 1547 ms
+TestAdd: 4096 Users, 4 Request/User, 4360 ms
+TestAdd: 4096 Users, 16 Request/User, 20187 ms
+TestAdd: 4096 Users, 64 Request/User, 76281 ms
+TestMultiply: 4096 Users, 1 Request/User, 8687 ms
+TestMultiply: 4096 Users, 4 Request/User, 22734 ms
+TestMultiply: 4096 Users, 16 Request/User, 65016 ms
+TestMultiply: 4096 Users, 64 Request/User, 249468 ms
+TestText: 4096 Users, 1 Request/User, 22094 ms
+TestText: 4096 Users, 4 Request/User, 37531 ms
+TestText: 4096 Users, 16 Request/User, 156578 ms
+TestText: 4096 Users, 64 Request/User, 1430266 ms
 
 
 C++2011/Binary/VC 10.0/x86/Windows 7 64 bit
 
-TestAdd: 1 Users, 8 Request/User, 47 ms
+TestAdd: 1 Users, 8 Request/User, 31 ms
 TestMultiply: 1 Users, 8 Request/User, 47 ms
 TestText: 1 Users, 8 Request/User, 94 ms
-TestAdd: 4096 Users, 1 Request/User, 2641 ms
-TestAdd: 4096 Users, 4 Request/User, 2640 ms
-TestAdd: 4096 Users, 16 Request/User, 2563 ms
-TestAdd: 4096 Users, 64 Request/User, 2563 ms
-TestAdd: 4096 Users, 256 Request/User, 2672 ms
-TestAdd: 4096 Users, 1024 Request/User, 3188 ms
-TestAdd: 4096 Users, 4096 Request/User, 4922 ms
-TestAdd: 4096 Users, 16384 Request/User, 12109 ms
-TestMultiply: 4096 Users, 1 Request/User, 5453 ms
-TestMultiply: 4096 Users, 4 Request/User, 5360 ms
-TestMultiply: 4096 Users, 16 Request/User, 5375 ms
-TestMultiply: 4096 Users, 64 Request/User, 5500 ms
-TestMultiply: 4096 Users, 256 Request/User, 5797 ms
-TestMultiply: 4096 Users, 1024 Request/User, 6828 ms
-TestMultiply: 4096 Users, 4096 Request/User, 10641 ms
-TestText: 4096 Users, 1 Request/User, 17719 ms
-TestText: 4096 Users, 4 Request/User, 6859 ms
-TestText: 4096 Users, 16 Request/User, 6890 ms
-TestText: 4096 Users, 64 Request/User, 7266 ms
-TestText: 4096 Users, 256 Request/User, 7782 ms
-TestText: 4096 Users, 1024 Request/User, 11688 ms
-TestText: 4096 Users, 4096 Request/User, 15875 ms
+TestAdd: 4096 Users, 1 Request/User, 5187 ms
+TestAdd: 4096 Users, 4 Request/User, 12750 ms
+TestAdd: 4096 Users, 16 Request/User, 42953 ms
+TestAdd: 4096 Users, 64 Request/User, 163265 ms
+TestMultiply: 4096 Users, 1 Request/User, 10750 ms
+TestMultiply: 4096 Users, 4 Request/User, 26859 ms
+TestMultiply: 4096 Users, 16 Request/User, 91797 ms
+TestMultiply: 4096 Users, 64 Request/User, 352344 ms
+TestText: 4096 Users, 1 Request/User, 32125 ms
+TestText: 4096 Users, 4 Request/User, 34094 ms
+TestText: 4096 Users, 16 Request/User, 116422 ms
+TestText: 4096 Users, 64 Request/User, 444984 ms
 
 
 C#/Binary/Mono 2.10.6/x64/openSUSE 64 bit 12.1
 
-TestAdd: 1 Users, 8 Request/User, 24 ms
-TestMultiply: 1 Users, 8 Request/User, 54 ms
-TestText: 1 Users, 8 Request/User, 56 ms
-TestAdd: 4096 Users, 1 Request/User, 784 ms
-TestAdd: 4096 Users, 4 Request/User, 1085 ms
-TestAdd: 4096 Users, 16 Request/User, 1089 ms
-TestAdd: 4096 Users, 64 Request/User, 1118 ms
-TestAdd: 4096 Users, 256 Request/User, 1640 ms
-TestAdd: 4096 Users, 1024 Request/User, 3317 ms
-TestAdd: 4096 Users, 4096 Request/User, 3094 ms
-TestAdd: 4096 Users, 16384 Request/User, 4990 ms
-TestMultiply: 4096 Users, 1 Request/User, 11935 ms
-TestMultiply: 4096 Users, 4 Request/User, 12902 ms
-TestMultiply: 4096 Users, 16 Request/User, 11583 ms
-TestMultiply: 4096 Users, 64 Request/User, 13034 ms
-TestMultiply: 4096 Users, 256 Request/User, 14329 ms
-TestMultiply: 4096 Users, 1024 Request/User, 18242 ms
-TestMultiply: 4096 Users, 4096 Request/User, 35742 ms
-TestText: 4096 Users, 1 Request/User, 6891 ms
-TestText: 4096 Users, 4 Request/User, 6842 ms
-TestText: 4096 Users, 16 Request/User, 6953 ms
-unknown lag
+TestAdd: 1 Users, 8 Request/User, 29 ms
+TestMultiply: 1 Users, 8 Request/User, 62 ms
+TestText: 1 Users, 8 Request/User, 63 ms
+TestAdd: 4096 Users, 1 Request/User, 2612 ms
+TestAdd: 4096 Users, 4 Request/User, 5187 ms
+TestAdd: 4096 Users, 16 Request/User, 16000 ms
+TestAdd: 4096 Users, 64 Request/User, 73032 ms
+TestMultiply: 4096 Users, 1 Request/User, 22444 ms
+TestMultiply: 4096 Users, 4 Request/User, 56381 ms
+TestMultiply: 4096 Users, 16 Request/User, 198327 ms
+TestMultiply: 4096 Users, 64 Request/User, 760887 ms
+TestText: 4096 Users, 1 Request/User, 12264 ms
+TestText: 4096 Users, 4 Request/User, 34968 ms
+TestText: 4096 Users, 16 Request/User, 117602 ms
+TestText: 4096 Users, 64 Request/User, 547599 ms
 
 
 C#/Json/Mono 2.10.6/x64/openSUSE 64 bit 12.1
 
-TestAdd: 1 Users, 8 Request/User, 32 ms
-TestMultiply: 1 Users, 8 Request/User, 62 ms
-TestText: 1 Users, 8 Request/User, 49 ms
-TestAdd: 4096 Users, 1 Request/User, 1221 ms
-TestAdd: 4096 Users, 4 Request/User, 1635 ms
-TestAdd: 4096 Users, 16 Request/User, 2270 ms
-TestAdd: 4096 Users, 64 Request/User, 1846 ms
-TestAdd: 4096 Users, 256 Request/User, 1638 ms
-TestAdd: 4096 Users, 1024 Request/User, 1919 ms
-TestAdd: 4096 Users, 4096 Request/User, 2834 ms
-TestAdd: 4096 Users, 16384 Request/User, 6075 ms
-TestMultiply: 4096 Users, 1 Request/User, 12589 ms
-TestMultiply: 4096 Users, 4 Request/User, 12253 ms
-TestMultiply: 4096 Users, 16 Request/User, 12094 ms
-TestMultiply: 4096 Users, 64 Request/User, 13081 ms
-TestMultiply: 4096 Users, 256 Request/User, 13799 ms
-TestMultiply: 4096 Users, 1024 Request/User, 18440 ms
-TestMultiply: 4096 Users, 4096 Request/User, 36598 ms
-TestText: 4096 Users, 1 Request/User, 7639 ms
-TestText: 4096 Users, 4 Request/User, 7105 ms
-TestText: 4096 Users, 16 Request/User, 7119 ms
-TestText: 4096 Users, 64 Request/User, 7342 ms
-TestText: 4096 Users, 256 Request/User, 8026 ms
-TestText: 4096 Users, 1024 Request/User, 13812 ms
-TestText: 4096 Users, 4096 Request/User, 24980 ms
+TestAdd: 1 Users, 8 Request/User, 29 ms
+TestMultiply: 1 Users, 8 Request/User, 65 ms
+TestText: 1 Users, 8 Request/User, 51 ms
+TestAdd: 4096 Users, 1 Request/User, 3260 ms
+TestAdd: 4096 Users, 4 Request/User, 6264 ms
+TestAdd: 4096 Users, 16 Request/User, 22811 ms
+TestAdd: 4096 Users, 64 Request/User, 101340 ms
+TestMultiply: 4096 Users, 1 Request/User, 24890 ms
+TestMultiply: 4096 Users, 4 Request/User, 63872 ms
+TestMultiply: 4096 Users, 16 Request/User, 216856 ms
+TestMultiply: 4096 Users, 64 Request/User, 845793 ms
+TestText: 4096 Users, 1 Request/User, 16399 ms
+TestText: 4096 Users, 4 Request/User, 32538 ms
+TestText: 4096 Users, 16 Request/User, 119328 ms
+TestText: 4096 Users, 64 Request/User, 546758 ms
 
 
 C++2011/Binary/GCC-C++ 4.6/x64/openSUSE 64 bit 12.1
 
-TestAdd: 1 Users, 8 Request/User, 19 ms
-TestMultiply: 1 Users, 8 Request/User, 47 ms
-TestText: 1 Users, 8 Request/User, 49 ms
-TestAdd: 4096 Users, 1 Request/User, 365 ms
-TestAdd: 4096 Users, 4 Request/User, 365 ms
-TestAdd: 4096 Users, 16 Request/User, 361 ms
-TestAdd: 4096 Users, 64 Request/User, 366 ms
-TestAdd: 4096 Users, 256 Request/User, 348 ms
-TestAdd: 4096 Users, 1024 Request/User, 851 ms
-TestAdd: 4096 Users, 4096 Request/User, 626 ms
-TestAdd: 4096 Users, 16384 Request/User, 2046 ms
-TestMultiply: 4096 Users, 1 Request/User, 9929 ms
-TestMultiply: 4096 Users, 4 Request/User, 9663 ms
-TestMultiply: 4096 Users, 16 Request/User, 10011 ms
-TestMultiply: 4096 Users, 64 Request/User, 9823 ms
-TestMultiply: 4096 Users, 256 Request/User, 10610 ms
-TestMultiply: 4096 Users, 1024 Request/User, 14261 ms
-TestMultiply: 4096 Users, 4096 Request/User, 27707 ms
-TestText: 4096 Users, 1 Request/User, 4627 ms
-TestText: 4096 Users, 4 Request/User, 4557 ms
-TestText: 4096 Users, 16 Request/User, 4667 ms
-TestText: 4096 Users, 64 Request/User, 4605 ms
-TestText: 4096 Users, 256 Request/User, 4927 ms
-TestText: 4096 Users, 1024 Request/User, 6014 ms
-TestText: 4096 Users, 4096 Request/User, 10222 ms
+TestAdd: 1 Users, 8 Request/User, 18 ms
+TestMultiply: 1 Users, 8 Request/User, 46 ms
+TestText: 1 Users, 8 Request/User, 46 ms
+TestAdd: 4096 Users, 1 Request/User, 661 ms
+TestAdd: 4096 Users, 4 Request/User, 1585 ms
+TestAdd: 4096 Users, 16 Request/User, 5479 ms
+TestAdd: 4096 Users, 64 Request/User, 21293 ms
+TestMultiply: 4096 Users, 1 Request/User, 19573 ms
+TestMultiply: 4096 Users, 4 Request/User, 53208 ms
+TestMultiply: 4096 Users, 16 Request/User, 160174 ms
+TestMultiply: 4096 Users, 64 Request/User, 612865 ms
+TestText: 4096 Users, 1 Request/User, 9949 ms
+TestText: 4096 Users, 4 Request/User, 24451 ms
+TestText: 4096 Users, 16 Request/User, 84300 ms
+TestText: 4096 Users, 64 Request/User, 335908 ms

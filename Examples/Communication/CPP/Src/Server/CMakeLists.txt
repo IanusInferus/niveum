@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 if(EXISTS "../../Lib/boost")
     set(BOOST_ROOT "../../Lib/boost")
