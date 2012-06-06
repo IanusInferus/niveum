@@ -60,14 +60,14 @@ namespace Client
             var vCompleted = new LockedVariable<int>(0);
             var Check = new AutoResetEvent(false);
 
-            Action Completed = null;
-
             var vError = new LockedVariable<int>(0);
 
             if (ProtocolType == ApplicationProtocolType.Binary)
             {
                 for (int k = 0; k < NumUser; k += 1)
                 {
+                    Action Completed = null;
+
                     var n = k;
                     var Lockee = new Object();
                     var bc = new BinarySocketClient(RemoteEndPoint, new ClientImplementation());
@@ -141,6 +141,8 @@ namespace Client
             {
                 for (int k = 0; k < NumUser; k += 1)
                 {
+                    Action Completed = null;
+
                     var n = k;
                     var Lockee = new Object();
                     var jc = new JsonSocketClient(RemoteEndPoint, new ClientImplementation());
@@ -270,19 +272,19 @@ namespace Client
             TestForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestText", TestText);
 
             Thread.Sleep(5000);
-            for (int k = 0; k < 8; k += 1)
+            for (int k = 0; k < 4; k += 1)
             {
                 TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestAdd", TestAdd);
             }
 
             Thread.Sleep(5000);
-            for (int k = 0; k < 7; k += 1)
+            for (int k = 0; k < 4; k += 1)
             {
                 TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestMultiply", TestMultiply);
             }
 
             Thread.Sleep(5000);
-            for (int k = 0; k < 7; k += 1)
+            for (int k = 0; k < 4; k += 1)
             {
                 TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestText", TestText);
             }

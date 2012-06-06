@@ -40,7 +40,6 @@ namespace Client
 
         public void Connect()
         {
-            Socket.DoAction(sock => sock.InnerSocket.Connect(RemoteEndPoint));
             IsRunningValue.Update
             (
                 b =>
@@ -49,6 +48,7 @@ namespace Client
                     return true;
                 }
             );
+            Socket.DoAction(sock => sock.InnerSocket.Connect(RemoteEndPoint));
         }
 
         public Socket GetSocket()
