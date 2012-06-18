@@ -14,6 +14,28 @@ namespace Server
         return s;
     }
 
+    std::function<bool(std::shared_ptr<SessionContext>, std::wstring)> BinarySocketServer::GetCheckCommandAllowed() const
+    {
+        return CheckCommandAllowedValue;
+    }
+    /// <summary>只能在启动前修改，以保证线程安全</summary>
+    void BinarySocketServer::SetCheckCommandAllowed(std::function<bool(std::shared_ptr<SessionContext>, std::wstring)> value)
+    {
+        if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
+        CheckCommandAllowedValue = value;
+    }
+
+    std::function<void()> BinarySocketServer::GetShutdown() const
+    {
+        return ShutdownValue;
+    }
+    /// <summary>只能在启动前修改，以保证线程安全</summary>
+    void BinarySocketServer::SetShutdown(std::function<void()> value)
+    {
+        if (IsRunning()) { throw std::logic_error("InvalidOperationException"); }
+        ShutdownValue = value;
+    }
+
     int BinarySocketServer::GetMaxBadCommands() const
     {
         return MaxBadCommandsValue;
@@ -105,6 +127,8 @@ namespace Server
     BinarySocketServer::BinarySocketServer(boost::asio::io_service &IoService)
         : Communication::Net::TcpServer(IoService),
           WorkPartInstance(nullptr),
+          CheckCommandAllowedValue(nullptr),
+          ShutdownValue(nullptr),
           MaxBadCommandsValue(8),
           ClientDebugValue(false),
           EnableLogNormalInValue(true),
@@ -118,9 +142,9 @@ namespace Server
         sc = std::make_shared<ServerContext>();
         sc->Shutdown = [=]()
         {
-            if (this->Shutdown != nullptr)
+            if (this->ShutdownValue != nullptr)
             {
-                this->Shutdown();
+                this->ShutdownValue();
             }
         };
         sc->GetSessions = [&]() -> std::shared_ptr<std::vector<std::shared_ptr<SessionContext>>>

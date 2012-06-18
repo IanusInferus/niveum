@@ -392,7 +392,7 @@ namespace Server
                 if (Parameters == "") { Parameters = "{}"; }
 
                 var sv = Server.InnerServer;
-                if (sv.HasCommand(CommandName))
+                if (sv.HasCommand(CommandName) && (Server.CheckCommandAllowed != null ? Server.CheckCommandAllowed(Context, CommandName) : true))
                 {
                     Action a = () =>
                     {

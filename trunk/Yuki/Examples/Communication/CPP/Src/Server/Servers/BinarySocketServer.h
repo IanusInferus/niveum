@@ -28,8 +28,6 @@ namespace Server
     class BinarySocketSession;
     class BinarySocketServer : public Communication::Net::TcpServer, public std::enable_shared_from_this<BinarySocketServer>
     {
-    public:
-        std::function<void()> Shutdown;
     private:
         class WorkPart
         {
@@ -43,6 +41,8 @@ namespace Server
         std::shared_ptr<ServerContext> sc;
 
     private:
+        std::function<bool(std::shared_ptr<SessionContext>, std::wstring)> CheckCommandAllowedValue;
+        std::function<void()> ShutdownValue;
         int MaxBadCommandsValue;
         bool ClientDebugValue;
         bool EnableLogNormalInValue;
@@ -54,6 +54,14 @@ namespace Server
         
     public:
         std::shared_ptr<Communication::Net::TcpSession> CreateSession();
+
+        std::function<bool(std::shared_ptr<SessionContext>, std::wstring)> GetCheckCommandAllowed() const;
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        void SetCheckCommandAllowed(std::function<bool(std::shared_ptr<SessionContext>, std::wstring)> value);
+
+        std::function<void()> GetShutdown() const;
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        void SetShutdown(std::function<void()> value);
 
         int GetMaxBadCommands() const;
         /// <summary>只能在启动前修改，以保证线程安全</summary>

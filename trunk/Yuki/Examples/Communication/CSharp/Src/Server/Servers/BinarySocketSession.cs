@@ -504,7 +504,7 @@ namespace Server
             var Parameters = cmd.Parameters;
 
             var sv = Server.InnerServer;
-            if (sv.HasCommand(CommandName, CommandHash))
+            if (sv.HasCommand(CommandName, CommandHash) && (Server.CheckCommandAllowed != null ? Server.CheckCommandAllowed(Context, CommandName) : true))
             {
                 Action a = () =>
                 {
