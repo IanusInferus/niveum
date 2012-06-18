@@ -517,7 +517,7 @@ namespace Server
         auto Parameters = cmd->Parameters;
 
         auto sv = Server->InnerServer();
-        if (sv->HasCommand(CommandName, CommandHash))
+        if (sv->HasCommand(CommandName, CommandHash) && ((Server->GetCheckCommandAllowed() != nullptr) ? Server->GetCheckCommandAllowed()(Context, CommandName) : true))
         {
             auto a = [=]()
             {

@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2012.06.02.
+//  Version:     2012.06.18.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -92,10 +92,15 @@ namespace Server
 
             auto Server = std::make_shared<BinarySocketServer>(*IoService);
 
-            Server->Shutdown = [&]()
+            Server->SetCheckCommandAllowed([&](std::shared_ptr<SessionContext> sc, std::wstring CommandName)
+            {
+                return true;
+            });
+
+            Server->SetShutdown([&]()
             {
                 ExitEvent->Set();
-            };
+            });
 
             auto Bindings = std::make_shared<std::vector<boost::asio::ip::tcp::endpoint>>();
             auto LocalEndPoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), Port);

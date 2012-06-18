@@ -17,8 +17,6 @@ namespace Server
     /// </summary>
     public class BinarySocketServer : TcpServer<BinarySocketServer, BinarySocketSession>
     {
-        public Action Shutdown;
-
         private class WorkPart
         {
             public ServerImplementation si;
@@ -28,6 +26,9 @@ namespace Server
         public BinaryServer<SessionContext> InnerServer { get { return WorkPartInstance.Value.bs; } }
         public ServerContext ServerContext { get; private set; }
 
+        public delegate Boolean CheckCommandAllowedDelegate(SessionContext c, String CommandName);
+        private CheckCommandAllowedDelegate CheckCommandAllowedValue = null;
+        private Action ShutdownValue = null;
         private int MaxBadCommandsValue = 8;
         private Boolean ClientDebugValue = false;
         private Boolean EnableLogNormalInValue = true;
@@ -36,6 +37,34 @@ namespace Server
         private Boolean EnableLogCriticalErrorValue = true;
         private Boolean EnableLogPerformanceValue = true;
         private Boolean EnableLogSystemValue = true;
+
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public CheckCommandAllowedDelegate CheckCommandAllowed
+        {
+            get
+            {
+                return CheckCommandAllowedValue;
+            }
+            set
+            {
+                if (IsRunning) { throw new InvalidOperationException(); }
+                CheckCommandAllowedValue = value;
+            }
+        }
+
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public Action Shutdown
+        {
+            get
+            {
+                return ShutdownValue;
+            }
+            set
+            {
+                if (IsRunning) { throw new InvalidOperationException(); }
+                ShutdownValue = value;
+            }
+        }
 
         /// <summary>只能在启动前修改，以保证线程安全</summary>
         public int MaxBadCommands
@@ -151,9 +180,9 @@ namespace Server
             ServerContext = new ServerContext();
             ServerContext.Shutdown += () =>
             {
-                if (Shutdown != null)
+                if (ShutdownValue != null)
                 {
-                    Shutdown();
+                    ShutdownValue();
                 }
             };
             ServerContext.GetSessions = () => SessionMappings.Check(Mappings => Mappings.Keys.ToList());

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2012.05.07.
+//  Version:     2012.06.18.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -135,6 +135,11 @@ namespace Server
                             );
                         }
 
+                        Server.CheckCommandAllowed = (sc, CommandName) =>
+                        {
+                            return true;
+                        };
+
                         Server.Shutdown += () =>
                         {
                             ExitEvent.Set();
@@ -181,6 +186,11 @@ namespace Server
                                 a => Server.SessionLog -= a
                             );
                         }
+
+                        Server.CheckCommandAllowed = (sc, CommandName) =>
+                        {
+                            return true;
+                        };
 
                         Server.Shutdown += () =>
                         {
