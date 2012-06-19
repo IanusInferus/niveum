@@ -1,4 +1,8 @@
-﻿2012.06.18
+﻿2012.06.19
+Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
+增加PostgreSQL支持。
+
+2012.06.18
 Examples:
 修正C#和C++通讯示例，增加命令过滤函数。
 
