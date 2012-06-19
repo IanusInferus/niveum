@@ -121,7 +121,10 @@
   <data name="CSharpDatabase" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\csharpdatabase\csharpdatabase.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="SqlDatabase" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\sqldatabase\sqldatabase.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="PostgreSql" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\postgresql\postgresql.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="TSql" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\tsql\tsql.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

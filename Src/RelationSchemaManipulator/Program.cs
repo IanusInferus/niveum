@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.04.16.
+//  Version:     2012.06.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,7 +21,7 @@ using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Yuki.ObjectSchema;
 using OS = Yuki.ObjectSchema;
-using Yuki.RelationSchema.SqlDatabase;
+using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpDatabase;
 
@@ -140,7 +140,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2sqld")
+                else if (opt.Name.ToLower() == "t2tsql")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
@@ -203,8 +203,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/loadtype:<RelationSchemaDir|RelationSchemaFile>");
             Console.WriteLine(@"增加命名空间引用");
             Console.WriteLine(@"/import:<NamespaceName>");
-            Console.WriteLine(@"生成SQL数据库DROP和CREATE脚本");
-            Console.WriteLine(@"/t2sqld:<SqlCodePath>,<DatabaseName>");
+            Console.WriteLine(@"生成T-SQL(SQL Server)数据库DROP和CREATE脚本");
+            Console.WriteLine(@"/t2tsql:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成Dbml文件");
             Console.WriteLine(@"/t2dbml:<DbmlCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库类型");
@@ -239,7 +239,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToSqlDatabaseCode(String SqlCodePath, String DatabaseName)
         {
             var ObjectSchema = Schema();
-            var Compiled = ObjectSchema.CompileToSqlDatabase(DatabaseName, true);
+            var Compiled = ObjectSchema.CompileToTSql(DatabaseName, true);
             if (File.Exists(SqlCodePath))
             {
                 var Original = Txt.ReadFile(SqlCodePath);
