@@ -1,9 +1,9 @@
 ﻿//==========================================================================
 //
 //  File:        RelationSchemaTranslator.cs
-//  Location:    Yuki.Core <Visual C#>
+//  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2012.04.06.
+//  Version:     2012.06.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================

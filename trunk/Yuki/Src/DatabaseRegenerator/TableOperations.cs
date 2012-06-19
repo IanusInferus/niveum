@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2012.03.06.
+//  Version:     2012.06.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,22 +22,37 @@ using Firefly.Texting.TreeFormat.Semantics;
 using Yuki.ObjectSchema;
 using OS = Yuki.ObjectSchema;
 using Yuki.RelationSchema;
-using Yuki.RelationSchema.SqlDatabase;
+using Yuki.RelationSchema.TSql;
 
 namespace Yuki.DatabaseRegenerator
 {
+    public enum DatabaseType
+    {
+        SqlServer,
+        SqlServerCe,
+        MySql,
+        PostgreSQL
+    }
     public static class TableOperations
     {
-        public static void ImportTable(Dictionary<String, RelationSchema.Record> TableMetas, Dictionary<String, Dictionary<String, Int64>> EnumMetas, IDbConnection c, IDbTransaction b, KeyValuePair<string, List<Node>> t, Boolean IsMySql = false)
+        public static void ImportTable(Dictionary<String, RelationSchema.Record> TableMetas, Dictionary<String, Dictionary<String, Int64>> EnumMetas, IDbConnection c, IDbTransaction b, KeyValuePair<string, List<Node>> t, DatabaseType Type)
         {
             Func<String, String> Escape;
-            if (!IsMySql)
+            if (Type == DatabaseType.SqlServer || Type == DatabaseType.SqlServerCe)
             {
                 Escape = s => "[" + s + "]";
             }
-            else
+            else if (Type == DatabaseType.MySql)
             {
                 Escape = s => "`" + s + "`";
+            }
+            else if (Type == DatabaseType.PostgreSQL)
+            {
+                Escape = s => "\"" + s.ToLowerInvariant() + "\"";
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
 
             var CollectionName = t.Key;
@@ -46,7 +61,7 @@ namespace Yuki.DatabaseRegenerator
             var Values = t.Value;
             var Columns = Meta.Fields.Where(f => f.Attribute.OnColumn).ToArray();
 
-            if (!IsMySql)
+            if (Type == DatabaseType.SqlServer || Type == DatabaseType.SqlServerCe)
             {
                 if (Columns.Any(col => col.Attribute.Column.IsIdentity))
                 {
@@ -118,14 +133,30 @@ namespace Yuki.DatabaseRegenerator
                                 }
                                 else if (TypeName.Equals("Boolean", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Boolean);
-                                    if (f.Attribute.Column.IsNullable && cv == "-")
+                                    if (Type == DatabaseType.PostgreSQL)
                                     {
-                                        p.Value = DBNull.Value;
+                                        Object Value;
+                                        if (f.Attribute.Column.IsNullable && cv == "-")
+                                        {
+                                            Value = DBNull.Value;
+                                        }
+                                        else
+                                        {
+                                            Value = Boolean.Parse(cv);
+                                        }
+                                        var p = cmd.AddPostgreSqlBoolean(String.Format("@{0}", f.Name), Value);
                                     }
                                     else
                                     {
-                                        p.Value = Boolean.Parse(cv);
+                                        var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Boolean);
+                                        if (f.Attribute.Column.IsNullable && cv == "-")
+                                        {
+                                            p.Value = DBNull.Value;
+                                        }
+                                        else
+                                        {
+                                            p.Value = Boolean.Parse(cv);
+                                        }
                                     }
                                 }
                                 else if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
@@ -193,7 +224,7 @@ namespace Yuki.DatabaseRegenerator
             }
             finally
             {
-                if (!IsMySql)
+                if (Type == DatabaseType.SqlServer || Type == DatabaseType.SqlServerCe)
                 {
                     if (Columns.Any(col => col.Attribute.Column.IsIdentity))
                     {
@@ -213,6 +244,28 @@ namespace Yuki.DatabaseRegenerator
             p.ParameterName = parameterName;
             p.DbType = dbType;
             cmd.Parameters.Add(p);
+            return p;
+        }
+
+        private static IDataParameter AddPostgreSqlBoolean(this IDbCommand cmd, String parameterName, Object Value)
+        {
+            var a = System.Reflection.Assembly.GetAssembly(cmd.GetType());
+            var tp = a.GetType("Npgsql.NpgsqlParameter");
+            var tppt = tp.GetProperty("NpgsqlDbType");
+            var tt = a.GetType("NpgsqlTypes.NpgsqlDbType");
+            var dbType = System.Enum.Parse(tt, "Bit");
+
+            var p = cmd.CreateParameter();
+            p.ParameterName = parameterName;
+            tppt.SetValue(p, dbType, null);
+            cmd.Parameters.Add(p);
+
+            if (Value.GetType() == typeof(Boolean))
+            {
+                var tbs = a.GetType("NpgsqlTypes.BitString");
+                p.Value = Activator.CreateInstance(tbs, new Object[] { Value });
+            }
+
             return p;
         }
 

@@ -2,9 +2,9 @@
     ==========================================================================
     
       File:        RelationSchema.tree
-      Location:    Yuki.Core <Tree>
+      Location:    Yuki.Relation <Tree>
       Description: 关系元类型结构
-      Version:     2012.02.27.
+      Version:     2012.06.19.
       Copyright(C) F.R.C.
     
     ==========================================================================

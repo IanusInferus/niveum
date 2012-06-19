@@ -1,9 +1,9 @@
 ﻿//==========================================================================
 //
 //  File:        CodeGenerator.cs
-//  Location:    Yuki.Core <Visual C#>
-//  Description: 对象类型结构Sql数据库代码生成器
-//  Version:     2012.04.12.
+//  Location:    Yuki.Relation <Visual C#>
+//  Description: 对象类型结构PostgreSQL数据库代码生成器
+//  Version:     2012.06.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -16,19 +16,19 @@ using Firefly;
 using Firefly.TextEncoding;
 using OS = Yuki.ObjectSchema;
 
-namespace Yuki.RelationSchema.SqlDatabase
+namespace Yuki.RelationSchema.PostgreSql
 {
     public static class CodeGenerator
     {
-        public static String CompileToSqlDatabase(this Schema Schema, String DatabaseName, Boolean WithComment = false)
+        public static String CompileToPostgreSql(this Schema Schema, String DatabaseName, Boolean WithComment = false)
         {
             Writer w = new Writer() { Schema = Schema, DatabaseName = DatabaseName, WithComment = WithComment };
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
-        public static String CompileToSqlDatabase(this OS.Schema Schema, String DatabaseName, Boolean WithComment = false)
+        public static String CompileToPostgreSql(this OS.Schema Schema, String DatabaseName, Boolean WithComment = false)
         {
-            return CompileToSqlDatabase(RelationSchemaTranslator.Translate(Schema), DatabaseName, WithComment);
+            return CompileToPostgreSql(RelationSchemaTranslator.Translate(Schema), DatabaseName, WithComment);
         }
 
         private class Writer
@@ -42,7 +42,7 @@ namespace Yuki.RelationSchema.SqlDatabase
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.SqlDatabase);
+                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.PostgreSql);
             }
 
             private Dictionary<String, Primitive> Primitives;
@@ -220,16 +220,38 @@ namespace Yuki.RelationSchema.SqlDatabase
                 var Type = DbTypeName;
                 if (f.Attribute.Column.TypeParameters != "")
                 {
-                    Type = String.Format("{0}({1})", DbTypeName, f.Attribute.Column.TypeParameters);
+                    if (Type.Equals("varchar", StringComparison.OrdinalIgnoreCase) && f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Type = "text";
+                    }
+                    else if (Type.Equals("bytea", StringComparison.OrdinalIgnoreCase) && f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Type = "bytea";
+                    }
+                    else
+                    {
+                        Type = String.Format("{0}({1})", DbTypeName, f.Attribute.Column.TypeParameters);
+                    }
+                }
+                else
+                {
+                    if (Type.Equals("bit", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Type = "bit(1)";
+                    }
                 }
 
                 var l = new List<String>();
-                l.Add(String.Format("[{0}]", f.Name));
-                l.Add(Type);
+                l.Add(String.Format("\"{0}\"", f.Name.ToLowerInvariant()));
                 if (f.Attribute.Column.IsIdentity)
                 {
-                    l.Add("IDENTITY(1,1)");
+                    if (!Type.Equals("integer", StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new InvalidOperationException("IdentityTypeNotInt");
+                    }
+                    Type = "serial";
                 }
+                l.Add(Type);
                 if (f.Attribute.Column.IsNullable)
                 {
                     l.Add("NULL");
@@ -276,11 +298,11 @@ namespace Yuki.RelationSchema.SqlDatabase
 
             public String[] GetForeignColumns(String[] Columns)
             {
-                return JoinWithComma(Columns.Select(c => new String[] { String.Format("[{0}]", c) }).ToArray());
+                return JoinWithComma(Columns.Select(c => new String[] { String.Format("\"{0}\"", c.ToLowerInvariant()) }).ToArray());
             }
             public String[] GetColumns(KeyColumn[] Columns)
             {
-                return JoinWithComma(Columns.Select(c => new String[] { c.IsDescending ? String.Format("[{0}] DESC", c.Name) : String.Format("[{0}]", c.Name) }).ToArray());
+                return JoinWithComma(Columns.Select(c => new String[] { c.IsDescending ? String.Format("\"{0}\"", c.Name.ToLowerInvariant()) : String.Format("\"{0}\"", c.Name.ToLowerInvariant()) }).ToArray());
             }
 
             public String[] GetComments(Schema s, Boolean WithComment)
@@ -364,8 +386,8 @@ namespace Yuki.RelationSchema.SqlDatabase
         private static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
             var ParameterString = "${" + Parameter + "}";
-            var LowercaseParameterString = "${" + LowercaseCamelize(Parameter) + "}";
-            var LowercaseValue = LowercaseCamelize(Value);
+            var LowercaseParameterString = "${" + ToLowercase(Parameter) + "}";
+            var LowercaseValue = ToLowercase(Value);
 
             List<String> l = new List<String>();
             foreach (var Line in Lines)
@@ -386,20 +408,9 @@ namespace Yuki.RelationSchema.SqlDatabase
             }
             return l.ToArray();
         }
-        private static String LowercaseCamelize(String PascalName)
+        private static String ToLowercase(String PascalName)
         {
-            var l = new List<Char>();
-            foreach (var c in PascalName)
-            {
-                if (Char.IsLower(c))
-                {
-                    break;
-                }
-
-                l.Add(Char.ToLower(c));
-            }
-
-            return new String(l.ToArray()) + new String(PascalName.Skip(l.Count).ToArray());
+            return PascalName.ToLowerInvariant();
         }
         private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
         {
