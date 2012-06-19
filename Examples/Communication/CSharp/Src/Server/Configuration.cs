@@ -1,14 +1,4 @@
-﻿//==========================================================================
-//
-//  File:        Configuration.cs
-//  Location:    Server.GameServer <Visual C#>
-//  Description: 配置文件
-//  Version:     2012.02.20.
-//  Copyright(C) 上海幻达网络科技有限公司 2011-2012
-//
-//==========================================================================
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Server
