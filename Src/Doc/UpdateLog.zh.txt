@@ -1,4 +1,10 @@
-﻿2012.06.19
+﻿2012.06.20
+Yuki.DatabaseRegenerator:
+整理命令行。
+Examples:
+增加数据库示例。
+
+2012.06.19
 Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
 增加PostgreSQL支持。
 
