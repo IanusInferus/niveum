@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2012.06.19.
+//  Version:     2012.06.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -161,25 +161,12 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "regen")
+                else if (opt.Name.ToLower() == "regenmssql")
                 {
                     var args = opt.Arguments;
-                    if (args.Length == 0)
+                    if (args.Length >= 0)
                     {
-                        Regen(Schema(), ConnectionString, DatabaseName);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
-                else if (opt.Name.ToLower() == "import")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 1)
-                    {
-                        Import(Schema(), ConnectionString, DatabaseName, args[0]);
+                        RegenSqlServer(Schema(), ConnectionString, DatabaseName, args);
                     }
                     else
                     {
@@ -205,7 +192,7 @@ namespace Yuki.DatabaseRegenerator
                     var args = opt.Arguments;
                     if (args.Length >= 0)
                     {
-                        CreateMySql(Schema(), ConnectionString, DatabaseName, args);
+                        RegenMySql(Schema(), ConnectionString, DatabaseName, args);
                     }
                     else
                     {
@@ -218,7 +205,7 @@ namespace Yuki.DatabaseRegenerator
                     var args = opt.Arguments;
                     if (args.Length >= 0)
                     {
-                        CreatePostgreSQL(Schema(), ConnectionString, DatabaseName, args);
+                        RegenPostgreSQL(Schema(), ConnectionString, DatabaseName, args);
                     }
                     else
                     {
@@ -252,10 +239,8 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/connect:<ConnectionString>");
             Console.WriteLine(@"指定数据库名称");
             Console.WriteLine(@"/database:<DatabaseName>");
-            Console.WriteLine(@"重建数据库");
-            Console.WriteLine(@"/regen");
-            Console.WriteLine(@"导入数据");
-            Console.WriteLine(@"/import:<DataDir>");
+            Console.WriteLine(@"重建SQL Server数据库");
+            Console.WriteLine(@"/regenmssql:<DataDir>*");
             Console.WriteLine(@"创建SQL Server Compact Edition数据文件");
             Console.WriteLine(@"/createce:<SdfPath>(,<DataDir>)*");
             Console.WriteLine(@"重建MySQL数据库");
@@ -273,7 +258,7 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Server=localhost;User ID=postgres;Password=postgres;"" /database:Example /regenpgsql:Data,TestData");
         }
 
-        public static void Regen(RelationSchema.Schema s, String ConnectionString, String DatabaseName)
+        public static void RegenSqlServer(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
         {
             if (DatabaseName == "")
             {
@@ -302,78 +287,76 @@ namespace Yuki.DatabaseRegenerator
                     c.Close();
                 }
             }
-        }
 
-        public static void Import(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String DataDir)
-        {
-            if (DatabaseName == "")
+            foreach (var DataDir in DataDirs)
             {
-                throw new InvalidOperationException("数据库名称没有指定。");
-            }
+                var ImportTableMetas = TableOperations.GetImportTableMetas(s, DataDir);
+                var Tables = ImportTableMetas.Tables;
+                var TableMetas = ImportTableMetas.TableMetas;
+                var EnumMetas = ImportTableMetas.EnumMetas;
 
-            var ImportTableMetas = TableOperations.GetImportTableMetas(s, DataDir);
-            var Tables = ImportTableMetas.Tables;
-            var TableMetas = ImportTableMetas.TableMetas;
-            var EnumMetas = ImportTableMetas.EnumMetas;
-
-            var cf = GetConnectionFactory(DatabaseType.SqlServer);
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                c.ChangeDatabase(DatabaseName);
-                try
+                using (var c = cf(ConnectionString))
                 {
-                    using (var b = c.BeginTransaction())
+                    c.Open();
+                    c.ChangeDatabase(DatabaseName);
+                    try
                     {
-                        var Success = false;
-                        try
+                        using (var b = c.BeginTransaction())
                         {
-                            foreach (var t in TableMetas)
+                            var Success = false;
+                            try
                             {
-                                var CollectionName = t.Key;
-
+                                foreach (var t in TableMetas)
                                 {
-                                    IDbCommand cmd = c.CreateCommand();
-                                    cmd.Transaction = b;
-                                    cmd.CommandText = String.Format("ALTER TABLE [{0}] NOCHECK CONSTRAINT ALL", CollectionName);
-                                    cmd.CommandType = CommandType.Text;
-                                    cmd.ExecuteNonQuery();
-                                }
-                            }
-                            foreach (var t in Tables)
-                            {
-                                TableOperations.ImportTable(TableMetas, EnumMetas, c, b, t, DatabaseType.SqlServer);
-                            }
-                            foreach (var t in TableMetas)
-                            {
-                                var CollectionName = t.Key;
+                                    var CollectionName = t.Key;
 
+                                    {
+                                        IDbCommand cmd = c.CreateCommand();
+                                        cmd.Transaction = b;
+                                        cmd.CommandText = String.Format("ALTER TABLE [{0}] NOCHECK CONSTRAINT ALL", CollectionName);
+                                        cmd.CommandType = CommandType.Text;
+                                        cmd.ExecuteNonQuery();
+                                    }
+                                }
+                                foreach (var t in Tables)
                                 {
-                                    IDbCommand cmd = c.CreateCommand();
-                                    cmd.Transaction = b;
-                                    cmd.CommandText = String.Format("ALTER TABLE [{0}] WITH CHECK CHECK CONSTRAINT ALL", CollectionName);
-                                    cmd.CommandType = CommandType.Text;
-                                    cmd.ExecuteNonQuery();
+                                    TableOperations.ImportTable(TableMetas, EnumMetas, c, b, t, DatabaseType.SqlServer);
                                 }
-                            }
+                                foreach (var t in TableMetas)
+                                {
+                                    var CollectionName = t.Key;
 
-                            b.Commit();
-                            Success = true;
-                        }
-                        finally
-                        {
-                            if (!Success)
+                                    {
+                                        IDbCommand cmd = c.CreateCommand();
+                                        cmd.Transaction = b;
+                                        cmd.CommandText = String.Format("ALTER TABLE [{0}] WITH CHECK CHECK CONSTRAINT ALL", CollectionName);
+                                        cmd.CommandType = CommandType.Text;
+                                        cmd.ExecuteNonQuery();
+                                    }
+                                }
+
+                                b.Commit();
+                                Success = true;
+                            }
+                            finally
                             {
-                                b.Rollback();
+                                if (!Success)
+                                {
+                                    b.Rollback();
+                                }
                             }
                         }
                     }
-                }
-                finally
-                {
-                    c.Close();
+                    finally
+                    {
+                        c.Close();
+                    }
                 }
             }
+        }
+            
+        public static void Import(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String DataDir)
+        {
         }
 
         public static void CreateCe(RelationSchema.Schema s, String SdfPath, String[] DataDirs)
@@ -481,7 +464,7 @@ namespace Yuki.DatabaseRegenerator
             }
         }
 
-        public static void CreateMySql(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
+        public static void RegenMySql(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
         {
             var RegenSqls = Regex.Split(s.CompileToTSql(DatabaseName), @"\r\nGO(\r\n)+", RegexOptions.ExplicitCapture);
             RegenSqls = (new String[] { String.Format("DROP DATABASE IF EXISTS [{0}]", DatabaseName) }).Concat(RegenSqls.Skip(1)).ToArray();
@@ -577,7 +560,7 @@ namespace Yuki.DatabaseRegenerator
             }
         }
 
-        public static void CreatePostgreSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
+        public static void RegenPostgreSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
         {
             var GenSqls = s.CompileToPostgreSql(DatabaseName);
             var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
