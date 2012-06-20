@@ -47,6 +47,7 @@
     <Compile Include="Clients\JsonSocketClient.cs" />
     <Compile Include="Context\ClientContext.cs" />
     <Compile Include="LoadTest.cs" />
+    <Compile Include="PerformanceTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StableTest.cs" />
@@ -56,9 +57,6 @@
       <Project>{4EC01D0D-A0BD-4402-9338-F9962ADABAFE}</Project>
       <Name>Communication</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="PerformanceTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
