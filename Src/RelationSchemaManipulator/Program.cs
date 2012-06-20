@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.06.19.
+//  Version:     2012.06.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -145,7 +145,7 @@ namespace Yuki.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 2)
                     {
-                        ObjectSchemaToSqlDatabaseCode(args[0], args[1]);
+                        ObjectSchemaToTSqlCode(args[0], args[1]);
                     }
                     else
                     {
@@ -236,7 +236,7 @@ namespace Yuki.SchemaManipulator
             os = null;
         }
 
-        public static void ObjectSchemaToSqlDatabaseCode(String SqlCodePath, String DatabaseName)
+        public static void ObjectSchemaToTSqlCode(String SqlCodePath, String DatabaseName)
         {
             var ObjectSchema = Schema();
             var Compiled = ObjectSchema.CompileToTSql(DatabaseName, true);
