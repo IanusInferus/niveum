@@ -1,0 +1,15 @@
+﻿$Comment
+    ==========================================================================
+    
+      File:        User.tree
+      Location:    Yuki.Examples <Tree>
+      Description: 用户
+      Version:     2012.06.20.
+      Author:      F.R.C.
+      Copyright(C) Public Domain
+    
+    ==========================================================================
+
+#Record UserProfile                                 [CN:UserProfiles][UKC:Name]用户账号信息
+    Id                  Int                         [I]用户号
+    Name                String                      [P:32]用户名
