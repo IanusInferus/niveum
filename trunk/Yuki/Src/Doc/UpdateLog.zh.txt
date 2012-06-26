@@ -1,9 +1,12 @@
 ﻿2012.06.26
 Examples:
 修正文件编码问题。
+更新数据库示例中的数据定义和数据。
+修正通讯示例中的脚本错误。
 Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
 增加MySQL支持。
 整理代码。
+增加C#和C++简单数据库类型生成。
 
 2012.06.23
 Examples:

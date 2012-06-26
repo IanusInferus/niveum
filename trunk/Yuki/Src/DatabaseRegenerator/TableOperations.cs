@@ -35,7 +35,7 @@ namespace Yuki.DatabaseRegenerator
     }
     public static class TableOperations
     {
-        public static void ImportTable(Dictionary<String, RelationSchema.Record> TableMetas, Dictionary<String, Dictionary<String, Int64>> EnumMetas, IDbConnection c, IDbTransaction b, KeyValuePair<string, List<Node>> t, DatabaseType Type)
+        public static void ImportTable(Dictionary<String, RelationSchema.RecordDef> TableMetas, Dictionary<String, Dictionary<String, Int64>> EnumMetas, IDbConnection c, IDbTransaction b, KeyValuePair<string, List<Node>> t, DatabaseType Type)
         {
             Func<String, String> Escape;
             if (Type == DatabaseType.SqlServer || Type == DatabaseType.SqlServerCe)
@@ -272,7 +272,7 @@ namespace Yuki.DatabaseRegenerator
         public class ImportTableMetas
         {
             public Dictionary<String, List<Node>> Tables;
-            public Dictionary<String, RelationSchema.Record> TableMetas;
+            public Dictionary<String, RelationSchema.RecordDef> TableMetas;
             public Dictionary<String, Dictionary<String, Int64>> EnumMetas;
         }
 
@@ -294,7 +294,7 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
 
-            var TableMetas = new Dictionary<String, RelationSchema.Record>(StringComparer.OrdinalIgnoreCase);
+            var TableMetas = new Dictionary<String, RelationSchema.RecordDef>(StringComparer.OrdinalIgnoreCase);
             var EnumMetas = new Dictionary<String, Dictionary<String, Int64>>(StringComparer.OrdinalIgnoreCase);
             foreach (var t in s.TypeRefs.Concat(s.Types))
             {

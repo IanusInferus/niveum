@@ -4,7 +4,7 @@
       File:        RelationSchema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系元类型结构
-      Version:     2012.06.19.
+      Version:     2012.06.26.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -20,13 +20,13 @@ Schema
                 Alternatives
                     Alternative
                         Name Primitive
-                        Type ConceptRef Primitive
+                        Type ConceptRef PrimitiveDef
                     Alternative
                         Name Record
-                        Type ConceptRef Record
+                        Type ConceptRef RecordDef
                     Alternative
                         Name Enum
-                        Type ConceptRef Enum
+                        Type ConceptRef EnumDef
             Alias
                 Name TypeRef
                 Type ConceptRef StringLiteral
@@ -38,9 +38,9 @@ Schema
                         Type ConceptRef TypeRef
                     Alternative
                         Name List
-                        Type ConceptRef List
+                        Type ConceptRef ListDef
             Record
-                Name Primitive
+                Name PrimitiveDef
                 Fields
                     Field
                         Name Name
@@ -49,13 +49,13 @@ Schema
                         Name Description
                         Type ConceptRef StringLiteral
             Record
-                Name List
+                Name ListDef
                 Fields
                     Field
                         Name ElementType
                         Type ConceptRef TypeSpec
             Record
-                Name Field
+                Name VariableDef
                 Fields
                     Field
                         Name Name
@@ -124,7 +124,7 @@ Schema
                         Name IsClustered
                         Type ConceptRef BooleanLiteral
             Record
-                Name Record
+                Name RecordDef
                 Fields
                     Field
                         Name Name
@@ -134,7 +134,7 @@ Schema
                         Type ConceptRef StringLiteral
                     Field
                         Name Fields
-                        Type List ElementType ConceptRef Field
+                        Type List ElementType ConceptRef VariableDef
                     Field
                         Name Description
                         Type ConceptRef StringLiteral
@@ -148,7 +148,7 @@ Schema
                         Name NonUniqueKeys
                         Type List ElementType ConceptRef Key
             Record
-                Name Literal
+                Name LiteralDef
                 Fields
                     Field
                         Name Name
@@ -160,7 +160,7 @@ Schema
                         Name Description
                         Type ConceptRef StringLiteral
             Record
-                Name Enum
+                Name EnumDef
                 Fields
                     Field
                         Name Name
@@ -170,7 +170,7 @@ Schema
                         Type ConceptRef TypeSpec
                     Field
                         Name Literals
-                        Type List ElementType ConceptRef Literal
+                        Type List ElementType ConceptRef LiteralDef
                     Field
                         Name Description
                         Type ConceptRef StringLiteral
