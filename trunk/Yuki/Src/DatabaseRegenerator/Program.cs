@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2012.06.20.
+//  Version:     2012.06.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,6 +21,7 @@ using OS = Yuki.ObjectSchema;
 using Yuki.RelationSchema;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.PostgreSql;
+using Yuki.RelationSchema.MySql;
 
 namespace Yuki.DatabaseRegenerator
 {
@@ -187,12 +188,12 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "regenmysql")
+                else if (opt.Name.ToLower() == "regenpgsql")
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)
                     {
-                        RegenMySql(Schema(), ConnectionString, DatabaseName, args);
+                        RegenPostgreSQL(Schema(), ConnectionString, DatabaseName, args);
                     }
                     else
                     {
@@ -200,12 +201,12 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "regenpgsql")
+                else if (opt.Name.ToLower() == "regenmysql")
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)
                     {
-                        RegenPostgreSQL(Schema(), ConnectionString, DatabaseName, args);
+                        RegenMySql(Schema(), ConnectionString, DatabaseName, args);
                     }
                     else
                     {
@@ -243,10 +244,10 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/regenmssql:<DataDir>*");
             Console.WriteLine(@"创建SQL Server Compact Edition数据文件");
             Console.WriteLine(@"/createce:<SdfPath>(,<DataDir>)*");
-            Console.WriteLine(@"重建MySQL数据库");
-            Console.WriteLine(@"/regenmysql:<DataDir>*");
             Console.WriteLine(@"重建PostgreSQL数据库");
             Console.WriteLine(@"/regenpgsql:<DataDir>*");
+            Console.WriteLine(@"重建MySQL数据库");
+            Console.WriteLine(@"/regenmysql:<DataDir>*");
             Console.WriteLine(@"ObjectSchemaDir|ObjectSchemaFile 对象类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"ConnectionString 数据库连接字符串。");
             Console.WriteLine(@"DataDir 数据目录，里面有若干tree数据文件。");
@@ -254,8 +255,8 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"示例:");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=.;Integrated Security=True"" /database:Example /regen /import:Data /import:TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /createce:.\Example.sdf,\Data,TestData");
-            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root"" /database:Example /regenmysql:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Server=localhost;User ID=postgres;Password=postgres;"" /database:Example /regenpgsql:Data,TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root"" /database:Example /regenmysql:Data,TestData");
         }
 
         public static void RegenSqlServer(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
@@ -355,10 +356,6 @@ namespace Yuki.DatabaseRegenerator
             }
         }
             
-        public static void Import(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String DataDir)
-        {
-        }
-
         public static void CreateCe(RelationSchema.Schema s, String SdfPath, String[] DataDirs)
         {
             var ConnectionString = String.Format(@"Data Source={0}", SdfPath);
@@ -445,102 +442,6 @@ namespace Yuki.DatabaseRegenerator
             using (var c = cf(ConnectionString))
             {
                 c.Open();
-                try
-                {
-                    foreach (var Sql in Alters)
-                    {
-                        if (Sql == "") { continue; }
-
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
-                }
-            }
-        }
-
-        public static void RegenMySql(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
-        {
-            var RegenSqls = Regex.Split(s.CompileToTSql(DatabaseName), @"\r\nGO(\r\n)+", RegexOptions.ExplicitCapture);
-            RegenSqls = (new String[] { String.Format("DROP DATABASE IF EXISTS [{0}]", DatabaseName) }).Concat(RegenSqls.Skip(1)).ToArray();
-            RegenSqls = RegenSqls.Select(q => q.Replace("[dbo].", "").Replace("[", "`").Replace("]", "`").Replace("IDENTITY(1,1)", "AUTO_INCREMENT")).ToArray();
-            RegenSqls = RegenSqls.Select(q => q.Replace("(max)", "(1024)").Replace("nvarchar", "varchar").Replace(" CLUSTERED", "").Replace(" NONCLUSTERED", "")).ToArray();
-            var Creates = RegenSqls.Where(q => !q.StartsWith("ALTER")).ToArray();
-            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER")).ToArray();
-
-            var cf = GetConnectionFactory(DatabaseType.MySql);
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                try
-                {
-                    foreach (var Sql in Creates)
-                    {
-                        if (Sql == "") { continue; }
-
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
-                }
-            }
-
-            foreach (var DataDir in DataDirs)
-            {
-                var ImportTableMetas = TableOperations.GetImportTableMetas(s, DataDir);
-                var Tables = ImportTableMetas.Tables;
-                var TableMetas = ImportTableMetas.TableMetas;
-                var EnumMetas = ImportTableMetas.EnumMetas;
-
-                using (var c = cf(ConnectionString))
-                {
-                    c.Open();
-                    c.ChangeDatabase(DatabaseName);
-                    try
-                    {
-                        using (var b = c.BeginTransaction())
-                        {
-                            var Success = false;
-                            try
-                            {
-                                foreach (var t in Tables)
-                                {
-                                    TableOperations.ImportTable(TableMetas, EnumMetas, c, b, t, DatabaseType.MySql);
-                                }
-
-                                b.Commit();
-                                Success = true;
-                            }
-                            finally
-                            {
-                                if (!Success)
-                                {
-                                    b.Rollback();
-                                }
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        c.Close();
-                    }
-                }
-            }
-
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                c.ChangeDatabase(DatabaseName);
                 try
                 {
                     foreach (var Sql in Alters)
@@ -677,6 +578,100 @@ namespace Yuki.DatabaseRegenerator
             }
         }
 
+        public static void RegenMySql(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
+        {
+            var GenSqls = s.CompileToMySql(DatabaseName);
+            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
+            var Creates = RegenSqls.TakeWhile(q => !q.StartsWith("ALTER")).ToArray();
+            var Alters = RegenSqls.SkipWhile(q => !q.StartsWith("ALTER")).ToArray();
+
+            var cf = GetConnectionFactory(DatabaseType.MySql);
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                try
+                {
+                    foreach (var Sql in Creates)
+                    {
+                        if (Sql == "") { continue; }
+
+                        var cmd = c.CreateCommand();
+                        cmd.CommandText = Sql;
+                        cmd.CommandType = CommandType.Text;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                finally
+                {
+                    c.Close();
+                }
+            }
+
+            foreach (var DataDir in DataDirs)
+            {
+                var ImportTableMetas = TableOperations.GetImportTableMetas(s, DataDir);
+                var Tables = ImportTableMetas.Tables;
+                var TableMetas = ImportTableMetas.TableMetas;
+                var EnumMetas = ImportTableMetas.EnumMetas;
+
+                using (var c = cf(ConnectionString))
+                {
+                    c.Open();
+                    c.ChangeDatabase(DatabaseName);
+                    try
+                    {
+                        using (var b = c.BeginTransaction())
+                        {
+                            var Success = false;
+                            try
+                            {
+                                foreach (var t in Tables)
+                                {
+                                    TableOperations.ImportTable(TableMetas, EnumMetas, c, b, t, DatabaseType.MySql);
+                                }
+
+                                b.Commit();
+                                Success = true;
+                            }
+                            finally
+                            {
+                                if (!Success)
+                                {
+                                    b.Rollback();
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        c.Close();
+                    }
+                }
+            }
+
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName);
+                try
+                {
+                    foreach (var Sql in Alters)
+                    {
+                        if (Sql == "") { continue; }
+
+                        var cmd = c.CreateCommand();
+                        cmd.CommandText = Sql;
+                        cmd.CommandType = CommandType.Text;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                finally
+                {
+                    c.Close();
+                }
+            }
+        }
+
         private static Func<String, IDbConnection> GetConnectionFactory(DatabaseType Type)
         {
             if (Type == DatabaseType.SqlServer)
@@ -687,13 +682,13 @@ namespace Yuki.DatabaseRegenerator
             {
                 return GetConnectionFactorySqlServerCe();
             }
-            else if (Type == DatabaseType.MySql)
-            {
-                return GetConnectionFactoryMySql();
-            }
             else if (Type == DatabaseType.PostgreSQL)
             {
                 return GetConnectionFactoryPostgreSQL();
+            }
+            else if (Type == DatabaseType.MySql)
+            {
+                return GetConnectionFactoryMySql();
             }
             else
             {
@@ -709,18 +704,18 @@ namespace Yuki.DatabaseRegenerator
         {
             return ConnectionString => new System.Data.SqlServerCe.SqlCeConnection(ConnectionString);
         }
-        private static Func<String, IDbConnection> GetConnectionFactoryMySql()
-        {
-            var Path = FileNameHandling.GetPath(FileNameHandling.GetFileDirectory(Assembly.GetEntryAssembly().Location), "MySql.Data.dll");
-            var asm = Assembly.Load(AssemblyName.GetAssemblyName(Path));
-            var t = asm.GetType("MySql.Data.MySqlClient.MySqlConnection");
-            return ConnectionString => (IDbConnection)Activator.CreateInstance(t, ConnectionString);
-        }
         private static Func<String, IDbConnection> GetConnectionFactoryPostgreSQL()
         {
             var Path = FileNameHandling.GetPath(FileNameHandling.GetFileDirectory(Assembly.GetEntryAssembly().Location), "Npgsql.dll");
             var asm = Assembly.Load(AssemblyName.GetAssemblyName(Path));
             var t = asm.GetType("Npgsql.NpgsqlConnection");
+            return ConnectionString => (IDbConnection)Activator.CreateInstance(t, ConnectionString);
+        }
+        private static Func<String, IDbConnection> GetConnectionFactoryMySql()
+        {
+            var Path = FileNameHandling.GetPath(FileNameHandling.GetFileDirectory(Assembly.GetEntryAssembly().Location), "MySql.Data.dll");
+            var asm = Assembly.Load(AssemblyName.GetAssemblyName(Path));
+            var t = asm.GetType("MySql.Data.MySqlClient.MySqlConnection");
             return ConnectionString => (IDbConnection)Activator.CreateInstance(t, ConnectionString);
         }
     }

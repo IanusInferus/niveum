@@ -2,7 +2,7 @@
 //
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
-//  Description: 关系类型结构T-SQL(SQL Server)数据库代码生成器
+//  Description: 关系类型结构MySQL数据库代码生成器
 //  Version:     2012.06.26.
 //  Copyright(C) F.R.C.
 //
@@ -16,19 +16,19 @@ using Firefly;
 using Firefly.TextEncoding;
 using OS = Yuki.ObjectSchema;
 
-namespace Yuki.RelationSchema.TSql
+namespace Yuki.RelationSchema.MySql
 {
     public static class CodeGenerator
     {
-        public static String CompileToTSql(this Schema Schema, String DatabaseName, Boolean WithComment = false)
+        public static String CompileToMySql(this Schema Schema, String DatabaseName, Boolean WithComment = false)
         {
             Writer w = new Writer() { Schema = Schema, DatabaseName = DatabaseName, WithComment = WithComment };
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
-        public static String CompileToTSql(this OS.Schema Schema, String DatabaseName, Boolean WithComment = false)
+        public static String CompileToMySql(this OS.Schema Schema, String DatabaseName, Boolean WithComment = false)
         {
-            return CompileToTSql(RelationSchemaTranslator.Translate(Schema), DatabaseName, WithComment);
+            return CompileToMySql(RelationSchemaTranslator.Translate(Schema), DatabaseName, WithComment);
         }
 
         private class Writer
@@ -42,7 +42,7 @@ namespace Yuki.RelationSchema.TSql
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.TSql);
+                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.MySql);
             }
 
             private Dictionary<String, Primitive> Primitives;
@@ -220,26 +220,37 @@ namespace Yuki.RelationSchema.TSql
                 var Type = DbTypeName;
                 if (f.Attribute.Column.TypeParameters != "")
                 {
-                    Type = String.Format("{0}({1})", DbTypeName, f.Attribute.Column.TypeParameters);
+                    if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase) && f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Type = "text";
+                    }
+                    else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase) && f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Type = "blob";
+                    }
+                    else
+                    {
+                        Type = String.Format("{0}({1})", DbTypeName, f.Attribute.Column.TypeParameters);
+                    }
                 }
                 else
                 {
                     if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
                     {
-                        Type = String.Format("{0}(max)", DbTypeName);
+                        Type = "text";
                     }
                     else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase))
                     {
-                        Type = String.Format("{0}(max)", DbTypeName);
+                        Type = "blob";
                     }
                 }
 
                 var l = new List<String>();
-                l.Add(String.Format("[{0}]", f.Name));
+                l.Add(String.Format("`{0}`", f.Name));
                 l.Add(Type);
                 if (f.Attribute.Column.IsIdentity)
                 {
-                    l.Add("IDENTITY(1,1)");
+                    l.Add("AUTO_INCREMENT");
                 }
                 if (f.Attribute.Column.IsNullable)
                 {
@@ -287,11 +298,11 @@ namespace Yuki.RelationSchema.TSql
 
             public String[] GetForeignColumns(String[] Columns)
             {
-                return JoinWithComma(Columns.Select(c => new String[] { String.Format("[{0}]", c) }).ToArray());
+                return JoinWithComma(Columns.Select(c => new String[] { String.Format("`{0}`", c) }).ToArray());
             }
             public String[] GetColumns(KeyColumn[] Columns)
             {
-                return JoinWithComma(Columns.Select(c => new String[] { c.IsDescending ? String.Format("[{0}] DESC", c.Name) : String.Format("[{0}]", c.Name) }).ToArray());
+                return JoinWithComma(Columns.Select(c => new String[] { c.IsDescending ? String.Format("`{0}`", c.Name) : String.Format("`{0}`", c.Name) }).ToArray());
             }
 
             public String[] GetComments(Schema s, Boolean WithComment)
@@ -375,8 +386,8 @@ namespace Yuki.RelationSchema.TSql
         private static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
             var ParameterString = "${" + Parameter + "}";
-            var LowercaseParameterString = "${" + LowercaseCamelize(Parameter) + "}";
-            var LowercaseValue = LowercaseCamelize(Value);
+            var LowercaseParameterString = "${" + ToLowercase(Parameter) + "}";
+            var LowercaseValue = ToLowercase(Value);
 
             List<String> l = new List<String>();
             foreach (var Line in Lines)
@@ -397,20 +408,9 @@ namespace Yuki.RelationSchema.TSql
             }
             return l.ToArray();
         }
-        private static String LowercaseCamelize(String PascalName)
+        private static String ToLowercase(String PascalName)
         {
-            var l = new List<Char>();
-            foreach (var c in PascalName)
-            {
-                if (Char.IsLower(c))
-                {
-                    break;
-                }
-
-                l.Add(Char.ToLower(c));
-            }
-
-            return new String(l.ToArray()) + new String(PascalName.Skip(l.Count).ToArray());
+            return PascalName.ToLowerInvariant();
         }
         private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
         {

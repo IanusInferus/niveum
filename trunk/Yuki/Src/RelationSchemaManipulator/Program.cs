@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.06.20.
+//  Version:     2012.06.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,6 +22,8 @@ using Firefly.Texting.TreeFormat;
 using Yuki.ObjectSchema;
 using OS = Yuki.ObjectSchema;
 using Yuki.RelationSchema.TSql;
+using Yuki.RelationSchema.PostgreSql;
+using Yuki.RelationSchema.MySql;
 using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpDatabase;
 
@@ -153,6 +155,32 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2pgsql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        ObjectSchemaToPostgreSqlCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "t2mysql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        ObjectSchemaToMySqlCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (opt.Name.ToLower() == "t2dbml")
                 {
                     var args = opt.Arguments;
@@ -240,6 +268,40 @@ namespace Yuki.SchemaManipulator
         {
             var ObjectSchema = Schema();
             var Compiled = ObjectSchema.CompileToTSql(DatabaseName, true);
+            if (File.Exists(SqlCodePath))
+            {
+                var Original = Txt.ReadFile(SqlCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
+            if (!Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
+            Txt.WriteFile(SqlCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToPostgreSqlCode(String SqlCodePath, String DatabaseName)
+        {
+            var ObjectSchema = Schema();
+            var Compiled = ObjectSchema.CompileToPostgreSql(DatabaseName, true);
+            if (File.Exists(SqlCodePath))
+            {
+                var Original = Txt.ReadFile(SqlCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
+            if (!Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
+            Txt.WriteFile(SqlCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToMySqlCode(String SqlCodePath, String DatabaseName)
+        {
+            var ObjectSchema = Schema();
+            var Compiled = ObjectSchema.CompileToMySql(DatabaseName, true);
             if (File.Exists(SqlCodePath))
             {
                 var Original = Txt.ReadFile(SqlCodePath);

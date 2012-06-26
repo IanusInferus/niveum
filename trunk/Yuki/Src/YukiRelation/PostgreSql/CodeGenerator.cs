@@ -2,8 +2,8 @@
 //
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
-//  Description: 对象类型结构PostgreSQL数据库代码生成器
-//  Version:     2012.06.19.
+//  Description: 关系类型结构PostgreSQL数据库代码生成器
+//  Version:     2012.06.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -220,11 +220,11 @@ namespace Yuki.RelationSchema.PostgreSql
                 var Type = DbTypeName;
                 if (f.Attribute.Column.TypeParameters != "")
                 {
-                    if (Type.Equals("varchar", StringComparison.OrdinalIgnoreCase) && f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
+                    if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase) && f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
                     {
                         Type = "text";
                     }
-                    else if (Type.Equals("bytea", StringComparison.OrdinalIgnoreCase) && f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
+                    else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase) && f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
                     {
                         Type = "bytea";
                     }
@@ -235,9 +235,13 @@ namespace Yuki.RelationSchema.PostgreSql
                 }
                 else
                 {
-                    if (Type.Equals("bit", StringComparison.OrdinalIgnoreCase))
+                    if (TypeName.Equals("Boolean", StringComparison.OrdinalIgnoreCase))
                     {
                         Type = "bit(1)";
+                    }
+                    else if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Type = "text";
                     }
                 }
 
@@ -245,7 +249,7 @@ namespace Yuki.RelationSchema.PostgreSql
                 l.Add(String.Format("\"{0}\"", f.Name.ToLowerInvariant()));
                 if (f.Attribute.Column.IsIdentity)
                 {
-                    if (!Type.Equals("integer", StringComparison.OrdinalIgnoreCase))
+                    if (!TypeName.Equals("Int", StringComparison.OrdinalIgnoreCase))
                     {
                         throw new InvalidOperationException("IdentityTypeNotInt");
                     }

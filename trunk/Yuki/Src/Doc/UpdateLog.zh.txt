@@ -1,4 +1,15 @@
-﻿2012.06.20
+﻿2012.06.26
+Examples:
+修正文件编码问题。
+Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
+增加MySQL支持。
+整理代码。
+
+2012.06.23
+Examples:
+修改C++通讯示例，增加环境变量BOOST_ROOT支持。
+
+2012.06.20
 Yuki.DatabaseRegenerator:
 整理命令行。
 Examples:
