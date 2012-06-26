@@ -400,7 +400,7 @@ namespace Yuki.SchemaManipulator
             var ObjectSchema = Schema();
             var RelationSchema = RS.RelationSchemaTranslator.Translate(ObjectSchema);
             var PlainObjectSchema = RS.PlainObjectSchemaGenerator.Generate(RelationSchema);
-            var Compiled = ObjectSchema.CompileToCSharp(EntityNamespaceName);
+            var Compiled = PlainObjectSchema.CompileToCSharp(EntityNamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -419,7 +419,7 @@ namespace Yuki.SchemaManipulator
             var ObjectSchema = Schema();
             var RelationSchema = RS.RelationSchemaTranslator.Translate(ObjectSchema);
             var PlainObjectSchema = RS.PlainObjectSchemaGenerator.Generate(RelationSchema);
-            var Compiled = ObjectSchema.CompileToCpp(EntityNamespaceName);
+            var Compiled = PlainObjectSchema.CompileToCpp(EntityNamespaceName);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);
