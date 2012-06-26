@@ -1,20 +1,20 @@
-boost¿âÒıÓÃ
+ï»¿booståº“å¼•ç”¨
 
-Çë°´ÒÔÏÂµØÖ·ÏÂÔØboost 1.49.0¿â£¬²¢½«Æä½âÑ¹·ÅÔÚµ±Ç°Ä¿Â¼µÄboostÄ¿Â¼£¬¿ÉÒÔ¿´µ½ÎÄ¼şLib/boost/bootstrap.bat¡£
+è¯·æŒ‰ä»¥ä¸‹åœ°å€ä¸‹è½½boost 1.49.0åº“ï¼Œå¹¶å°†å…¶è§£å‹æ”¾åœ¨å½“å‰ç›®å½•çš„boostç›®å½•ï¼Œå¯ä»¥çœ‹åˆ°æ–‡ä»¶Lib/boost/bootstrap.batã€‚
 https://sourceforge.net/projects/boost/files/boost/1.49.0/boost_1_49_0.7z/download
 
-ÔÚWindowsÉÏ
-»úÆ÷ÉÏĞèÒª°²×°Visual C++ 2010¡£
-ÔÚÃüÁîĞĞboostÄ¿Â¼ÖĞ·Ö±ğÔËĞĞ
+åœ¨Windowsä¸Š
+æœºå™¨ä¸Šéœ€è¦å®‰è£…Visual C++ 2010ã€‚
+åœ¨å‘½ä»¤è¡Œboostç›®å½•ä¸­åˆ†åˆ«è¿è¡Œ
 bootstrap.bat
 bjam --with-system --with-thread --with-date_time --with-regex --with-serialization stage
-¼´ÅäÖÃºÃboost¿â¡£
+å³é…ç½®å¥½booståº“ã€‚
 
-ÔÚLinuxÉÏ
-»úÆ÷ÉÏĞèÒª°²×°ÓĞgcc-c++¡£
-ÔÚÖÕ¶ËÖĞÖ´ĞĞ
+åœ¨Linuxä¸Š
+æœºå™¨ä¸Šéœ€è¦å®‰è£…æœ‰gcc-c++ã€‚
+åœ¨ç»ˆç«¯ä¸­æ‰§è¡Œ
 find . -type f -name '*.sh' -exec chmod +x {} \;
-Ê¹µÃËùÓĞµÄ.shÎÄ¼ş¿ÉÒÔÖ´ĞĞ£¬È»ºóÔËĞĞ
+ä½¿å¾—æ‰€æœ‰çš„.shæ–‡ä»¶å¯ä»¥æ‰§è¡Œï¼Œç„¶åè¿è¡Œ
 ./bootstrap.sh
 ./bjam --with-system --with-thread --with-date_time --with-regex --with-serialization --toolset=gcc-4.6 stage
-¼´ÅäÖÃºÃboost¿â¡£
+å³é…ç½®å¥½booståº“ã€‚
