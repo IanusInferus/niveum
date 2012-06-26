@@ -1,4 +1,4 @@
-Èç¹ûÔÚWin7 x64ÉÏÆô¶¯»ºÂý£¬¿ÉÒÔÔÚ¹ÜÀíÔ±Ä£Ê½ÏÂÔËÐÐÒ»ÏÂÃüÁî¡£
+ï»¿å¦‚æžœåœ¨Win7 x64ä¸Šå¯åŠ¨ç¼“æ…¢ï¼Œå¯ä»¥åœ¨ç®¡ç†å‘˜æ¨¡å¼ä¸‹è¿è¡Œä¸€ä¸‹å‘½ä»¤ã€‚
 
 cd C:\Windows\Microsoft.NET\Framework64\v4.0.30319
 ngen update
