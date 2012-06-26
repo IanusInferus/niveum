@@ -1,7 +1,7 @@
 @PATH ..\..\Bin;%PATH%
 
 :: C#
-@if not exist CSharp\Src @md CSharp\Src
+@if not exist CSharp\Src\Communication\Generated @md CSharp\Src\Communication\Generated
 SchemaManipulator.exe /loadtype:Schema /t2cs:CSharp\Src\Communication\Generated\Communication.cs,Communication
 SchemaManipulator.exe /loadtype:Schema /t2csb:CSharp\Src\Communication\Generated\CommunicationBinary.cs,Communication.Binary
 SchemaManipulator.exe /loadtype:Schema /t2csj:CSharp\Src\Communication\Generated\CommunicationJson.cs,Communication.Json
