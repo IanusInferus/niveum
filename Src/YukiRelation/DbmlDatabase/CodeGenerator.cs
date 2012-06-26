@@ -2,8 +2,8 @@
 //
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
-//  Description: 对象类型结构Dbml数据库代码生成器
-//  Version:     2012.06.19.
+//  Description: 关系类型结构Dbml数据库代码生成器
+//  Version:     2012.06.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
