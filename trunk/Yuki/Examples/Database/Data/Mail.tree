@@ -3,7 +3,7 @@
     
       File:        Social.tree
       Description: 社交
-      Version:     2012.06.20.
+      Version:     2012.06.26.
       Copyright(C) 上海幻达网络科技有限公司 2011-2012
     
     ==========================================================================
@@ -53,6 +53,10 @@ MailTos
         18      01
         19      01
         20      01
+
+MailAttachments
+    $Table MailAttachment Id Name Content
+        01      Test.txt        "48 65 6C 6C 6F 2C 20 57 6F 72 6C 64 21"
 
 MailOwners
     $Table MailOwner Id OwnerId IsNew Time
