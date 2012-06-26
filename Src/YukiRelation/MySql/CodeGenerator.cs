@@ -45,9 +45,9 @@ namespace Yuki.RelationSchema.MySql
                 TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.MySql);
             }
 
-            private Dictionary<String, Primitive> Primitives;
-            private Dictionary<String, Enum> Enums;
-            private Dictionary<String, Record> Records;
+            private Dictionary<String, PrimitiveDef> Primitives;
+            private Dictionary<String, EnumDef> Enums;
+            private Dictionary<String, RecordDef> Records;
             public String[] GetSchema()
             {
                 Primitives = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive).Select(t => t.Primitive).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
@@ -116,7 +116,7 @@ namespace Yuki.RelationSchema.MySql
 
                                 if (f.Attribute.Navigation.IsReverse)
                                 {
-                                    Record ThisTable = null;
+                                    RecordDef ThisTable = null;
                                     if (f.Type.OnTypeRef)
                                     {
                                         ThisTable = Records[f.Type.TypeRef.Value];
@@ -154,7 +154,7 @@ namespace Yuki.RelationSchema.MySql
                 return l.ToArray();
             }
 
-            public String[] GetTable(Record r)
+            public String[] GetTable(RecordDef r)
             {
                 var FieldsAndKeys = new List<String[]>();
                 foreach (var f in r.Fields)
@@ -184,7 +184,7 @@ namespace Yuki.RelationSchema.MySql
                 return GetTemplate("Table").Substitute("Name", r.CollectionName).Substitute("FieldsAndKeys", JoinWithComma(FieldsAndKeys.ToArray())).Substitute("NonUniqueKeys", NonUniqueKeys.ToArray());
             }
 
-            public String[] GetColumnDef(Field f)
+            public String[] GetColumnDef(VariableDef f)
             {
                 if (!f.Type.OnTypeRef)
                 {
@@ -389,7 +389,7 @@ namespace Yuki.RelationSchema.MySql
             var LowercaseParameterString = "${" + ToLowercase(Parameter) + "}";
             var LowercaseValue = ToLowercase(Value);
 
-            List<String> l = new List<String>();
+            var l = new List<String>();
             foreach (var Line in Lines)
             {
                 var NewLine = Line;
@@ -414,7 +414,7 @@ namespace Yuki.RelationSchema.MySql
         }
         private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
         {
-            List<String> l = new List<String>();
+            var l = new List<String>();
             foreach (var Line in Lines)
             {
                 var ParameterString = "${" + Parameter + "}";

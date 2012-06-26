@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2012.06.19.
+//  Version:     2012.06.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -138,7 +138,7 @@ namespace Yuki.RelationSchema
             public OS.Schema Schema;
             private HashSet<String> OPrimitives = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
             private HashSet<String> OEnums = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
-            private Dictionary<String, RS.Record> Records = new Dictionary<String, RS.Record>();
+            private Dictionary<String, RS.RecordDef> Records = new Dictionary<String, RS.RecordDef>();
 
             public RS.Schema Analyze()
             {
@@ -200,7 +200,7 @@ namespace Yuki.RelationSchema
                                 if (!OPrimitives.Contains("Binary"))
                                 {
                                     OPrimitives.Add("Binary");
-                                    TypeRefs.Add(RS.TypeDef.CreatePrimitive(new Primitive { Name = "Binary", Description = "二进制数据" }));
+                                    TypeRefs.Add(RS.TypeDef.CreatePrimitive(new PrimitiveDef { Name = "Binary", Description = "二进制数据" }));
                                 }
                             }
                         }
@@ -222,7 +222,7 @@ namespace Yuki.RelationSchema
                                 if (!OPrimitives.Contains("Binary"))
                                 {
                                     OPrimitives.Add("Binary");
-                                    Types.Add(RS.TypeDef.CreatePrimitive(new Primitive { Name = "Binary", Description = "二进制数据" }));
+                                    Types.Add(RS.TypeDef.CreatePrimitive(new PrimitiveDef { Name = "Binary", Description = "二进制数据" }));
                                 }
                             }
                         }
@@ -271,18 +271,18 @@ namespace Yuki.RelationSchema
                 return new RS.Schema { Types = Types.ToArray(), TypeRefs = TypeRefs.ToArray(), Imports = Schema.Imports.ToArray() };
             }
 
-            private RS.Primitive TranslatePrimitive(OS.PrimitiveDef e)
+            private RS.PrimitiveDef TranslatePrimitive(OS.PrimitiveDef e)
             {
-                return new RS.Primitive { Name = e.Name, Description = e.Description };
+                return new RS.PrimitiveDef { Name = e.Name, Description = e.Description };
             }
 
-            private RS.Literal TranslateLiteral(OS.LiteralDef l)
+            private RS.LiteralDef TranslateLiteral(OS.LiteralDef l)
             {
-                return new RS.Literal { Name = l.Name, Value = l.Value, Description = l.Description };
+                return new RS.LiteralDef { Name = l.Name, Value = l.Value, Description = l.Description };
             }
-            private RS.Enum TranslateEnum(OS.EnumDef e)
+            private RS.EnumDef TranslateEnum(OS.EnumDef e)
             {
-                return new RS.Enum { Name = e.Name, UnderlyingType = TranslateTypeSpec(e.UnderlyingType), Literals = e.Literals.Select(l => TranslateLiteral(l)).ToArray(), Description = e.Description };
+                return new RS.EnumDef { Name = e.Name, UnderlyingType = TranslateTypeSpec(e.UnderlyingType), Literals = e.Literals.Select(l => TranslateLiteral(l)).ToArray(), Description = e.Description };
             }
 
             private RS.TypeSpec TranslateTypeSpec(OS.TypeSpec t)
@@ -301,7 +301,7 @@ namespace Yuki.RelationSchema
                             return RS.TypeSpec.CreateTypeRef(new RS.TypeRef { Value = "Binary" });
                         }
                     }
-                    return RS.TypeSpec.CreateList(new RS.List { ElementType = TranslateTypeSpec(t.GenericTypeSpec.GenericParameterValues.Single().TypeSpec) });
+                    return RS.TypeSpec.CreateList(new RS.ListDef { ElementType = TranslateTypeSpec(t.GenericTypeSpec.GenericParameterValues.Single().TypeSpec) });
                 }
                 else
                 {
@@ -309,7 +309,7 @@ namespace Yuki.RelationSchema
                 }
             }
 
-            private RS.Field TranslateField(OS.VariableDef f)
+            private RS.VariableDef TranslateField(OS.VariableDef f)
             {
                 var t = TranslateTypeSpec(f.Type);
                 var IsColumn = t.OnTypeRef && (OPrimitives.Contains(t.TypeRef.Value) || OEnums.Contains(t.TypeRef.Value));
@@ -393,9 +393,9 @@ namespace Yuki.RelationSchema
                     }
                 }
 
-                return new RS.Field { Name = f.Name, Type = t, Description = dc.Description, Attribute = fa };
+                return new RS.VariableDef { Name = f.Name, Type = t, Description = dc.Description, Attribute = fa };
             }
-            private RS.Record TranslateRecord(OS.RecordDef r)
+            private RS.RecordDef TranslateRecord(OS.RecordDef r)
             {
                 var dc = Decompose(r.Description);
                 var Fields = r.Fields.Select(f => TranslateField(f)).ToArray();
@@ -489,9 +489,9 @@ namespace Yuki.RelationSchema
                     }
                 }
 
-                return new RS.Record { Name = r.Name, CollectionName = CollectionName, Fields = Fields, PrimaryKey = PrimaryKey, UniqueKeys = UniqueKeys.ToArray(), NonUniqueKeys = NonUniqueKeys.ToArray(), Description = dc.Description };
+                return new RS.RecordDef { Name = r.Name, CollectionName = CollectionName, Fields = Fields, PrimaryKey = PrimaryKey, UniqueKeys = UniqueKeys.ToArray(), NonUniqueKeys = NonUniqueKeys.ToArray(), Description = dc.Description };
             }
-            private void FillRecordNavigations(RS.Record r)
+            private void FillRecordNavigations(RS.RecordDef r)
             {
                 //如果一个非简单类型属性(导航属性)没有标明外键或反外键，则
                 //    1)如果有<Name>Id的列，且该列为简单类型，类型表的主键列数量为1，则将该字段标明为[FK:<Name>Id=<Type/ElementType>.<PrimaryKey>]

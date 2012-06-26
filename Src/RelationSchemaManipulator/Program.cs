@@ -21,6 +21,9 @@ using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Yuki.ObjectSchema;
 using OS = Yuki.ObjectSchema;
+using RS = Yuki.RelationSchema;
+using Yuki.ObjectSchema.CSharp;
+using Yuki.ObjectSchema.Cpp;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
@@ -207,6 +210,32 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2csdp")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        ObjectSchemaToCSharpDatabasePlainCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "t2cppdp")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        ObjectSchemaToCppDatabasePlainCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else
                 {
                     throw (new ArgumentException(opt.Name));
@@ -237,6 +266,10 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2dbml:<DbmlCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库类型");
             Console.WriteLine(@"/t2csd:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
+            Console.WriteLine(@"生成C#数据库简单类型");
+            Console.WriteLine(@"/t2csdp:<CsCodePath>,<EntityNamespaceName>");
+            Console.WriteLine(@"生成C++数据库简单类型");
+            Console.WriteLine(@"/t2cppdp:<CsCodePath>,<EntityNamespaceName>");
             Console.WriteLine(@"RelationSchemaDir|RelationSchemaFile 关系类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"DatabaseName 数据库名。");
             Console.WriteLine(@"SqlCodePath SQL代码文件路径。");
@@ -360,6 +393,44 @@ namespace Yuki.SchemaManipulator
             var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToCSharpDatabasePlainCode(String CsCodePath, String EntityNamespaceName)
+        {
+            var ObjectSchema = Schema();
+            var RelationSchema = RS.RelationSchemaTranslator.Translate(ObjectSchema);
+            var PlainObjectSchema = RS.PlainObjectSchemaGenerator.Generate(RelationSchema);
+            var Compiled = ObjectSchema.CompileToCSharp(EntityNamespaceName);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToCppDatabasePlainCode(String CppCodePath, String EntityNamespaceName)
+        {
+            var ObjectSchema = Schema();
+            var RelationSchema = RS.RelationSchemaTranslator.Translate(ObjectSchema);
+            var PlainObjectSchema = RS.PlainObjectSchemaGenerator.Generate(RelationSchema);
+            var Compiled = ObjectSchema.CompileToCpp(EntityNamespaceName);
+            if (File.Exists(CppCodePath))
+            {
+                var Original = Txt.ReadFile(CppCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CppCodePath, Compiled);
         }
     }
 }

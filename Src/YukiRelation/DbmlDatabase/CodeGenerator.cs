@@ -68,9 +68,9 @@ namespace Yuki.RelationSchema.DbmlDatabase
             }
 
             private XNamespace ns = XNamespace.Get(@"http://schemas.microsoft.com/linqtosql/dbml/2007");
-            private Dictionary<String, Primitive> Primitives;
-            private Dictionary<String, Enum> Enums;
-            private Dictionary<String, Record> Records;
+            private Dictionary<String, PrimitiveDef> Primitives;
+            private Dictionary<String, EnumDef> Enums;
+            private Dictionary<String, RecordDef> Records;
             private Dictionary<ForeignKey, String> AssociationNames;
             public XElement GetSchema()
             {
@@ -100,7 +100,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                     {
                         if (f.Attribute.OnNavigation && f.Attribute.Navigation.IsReverse)
                         {
-                            Record ThisTable = null;
+                            RecordDef ThisTable = null;
                             if (f.Type.OnTypeRef)
                             {
                                 ThisTable = Records[f.Type.TypeRef.Value];
@@ -140,7 +140,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                 return x;
             }
 
-            private XElement GetTable(Record r)
+            private XElement GetTable(RecordDef r)
             {
                 var t = new XElement(ns + "Type");
                 t.SetAttributeValue("Name", r.Name);
@@ -156,7 +156,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                 return x;
             }
 
-            private XElement GetField(Record r, Field f)
+            private XElement GetField(RecordDef r, VariableDef f)
             {
                 if (f.Attribute.OnColumn)
                 {
@@ -191,7 +191,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                     var x = new XElement(ns + "Association");
                     if (na.IsReverse)
                     {
-                        Record ThisTable = null;
+                        RecordDef ThisTable = null;
                         if (f.Type.OnTypeRef)
                         {
                             ThisTable = Records[f.Type.TypeRef.Value];
