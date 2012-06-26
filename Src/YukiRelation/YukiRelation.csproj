@@ -51,6 +51,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MySql\CodeGenerator.cs" />
     <Compile Include="PostgreSql\CodeGenerator.cs" />
     <Compile Include="RelationSchema\RelationSchemaTranslator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -65,6 +66,7 @@
     <Compile Include="TSql\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="MySql\MySql.tree" />
     <None Include="PostgreSql\PostgreSql.tree" />
     <None Include="RelationSchema\RelationSchema.tree" />
     <None Include="CSharpDatabase\CSharpDatabase.tree" />

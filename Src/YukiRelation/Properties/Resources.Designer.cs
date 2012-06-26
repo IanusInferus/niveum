@@ -67,6 +67,13 @@ namespace Yuki.RelationSchema.Properties {
             }
         }
         
+        public static byte[] MySql {
+            get {
+                object obj = ResourceManager.GetObject("MySql", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
         public static byte[] PostgreSql {
             get {
                 object obj = ResourceManager.GetObject("PostgreSql", resourceCulture);

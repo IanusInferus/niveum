@@ -30,8 +30,8 @@ namespace Yuki.DatabaseRegenerator
     {
         SqlServer,
         SqlServerCe,
-        MySql,
-        PostgreSQL
+        PostgreSQL,
+        MySql
     }
     public static class TableOperations
     {
@@ -42,13 +42,13 @@ namespace Yuki.DatabaseRegenerator
             {
                 Escape = s => "[" + s + "]";
             }
-            else if (Type == DatabaseType.MySql)
-            {
-                Escape = s => "`" + s + "`";
-            }
             else if (Type == DatabaseType.PostgreSQL)
             {
                 Escape = s => "\"" + s.ToLowerInvariant() + "\"";
+            }
+            else if (Type == DatabaseType.MySql)
+            {
+                Escape = s => "`" + s + "`";
             }
             else
             {
