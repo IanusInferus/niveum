@@ -61,8 +61,8 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 this.ContextClassName = ContextClassName;
             }
 
-            private Dictionary<String, Enum> Enums;
-            private Dictionary<String, Record> Records;
+            private Dictionary<String, EnumDef> Enums;
+            private Dictionary<String, RecordDef> Records;
             public String[] GetSchema()
             {
                 Dbml = Schema.CompileToDbmlDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
@@ -83,7 +83,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
             }
             public String[] GetPrimitives()
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
 
                 foreach (var p in Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnPrimitive).Select(c => c.Primitive))
                 {
@@ -146,20 +146,20 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 }
             }
 
-            public String[] GetLiteral(Literal lrl)
+            public String[] GetLiteral(LiteralDef lrl)
             {
                 return GetTemplate("Literal").Substitute("Name", lrl.Name).Substitute("Value", lrl.Value.ToInvariantString()).Substitute("XmlComment", GetXmlComment(lrl.Description));
             }
-            public String[] GetLiterals(Literal[] Literals)
+            public String[] GetLiterals(LiteralDef[] Literals)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var lrl in Literals)
                 {
                     l.AddRange(GetLiteral(lrl));
                 }
                 return l.ToArray();
             }
-            public String[] GetEnum(Enum e)
+            public String[] GetEnum(EnumDef e)
             {
                 var Literals = GetLiterals(e.Literals);
                 return GetTemplate("Enum").Substitute("Name", e.Name).Substitute("UnderlyingType", GetEnumTypeString(e.UnderlyingType)).Substitute("Literals", Literals).Substitute("XmlComment", GetXmlComment(e.Description));
@@ -196,7 +196,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                     return false;
                 }
             }
-            public String GetStorageTypeString(Field f)
+            public String GetStorageTypeString(VariableDef f)
             {
                 var Type = f.Type;
 
@@ -255,7 +255,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                     throw new InvalidOperationException();
                 }
             }
-            public String GetPropertyTypeString(Field f)
+            public String GetPropertyTypeString(VariableDef f)
             {
                 var Type = f.Type;
 
@@ -315,7 +315,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 }
             }
 
-            public String[] GetStorageField(Field f)
+            public String[] GetStorageField(VariableDef f)
             {
                 var Type = f.Type;
                 var StorageType = GetStorageTypeString(f);
@@ -343,7 +343,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                     throw new InvalidOperationException();
                 }
             }
-            public String[] GetStorageFields(Record r)
+            public String[] GetStorageFields(RecordDef r)
             {
                 var l = new List<String>();
                 foreach (var f in r.Fields)
@@ -353,7 +353,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 return l.ToArray();
             }
 
-            public String GetColumnParameters(Record r, Field f)
+            public String GetColumnParameters(RecordDef r, VariableDef f)
             {
                 var c = Dbml.Elements().Where(x => x.Name.LocalName == "Table" && x.Attribute("Name") != null && x.Attribute("Name").Value == r.CollectionName).Single().Elements().Single().Elements().Where(x => x.Name.LocalName == "Column" && x.Attribute("Name") != null && x.Attribute("Name").Value == f.Name).Single();
                 var a = f.Attribute.Column;
@@ -383,7 +383,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 }
                 return String.Join(", ", l.ToArray());
             }
-            public String GetAssociationParameters(Record r, Field f)
+            public String GetAssociationParameters(RecordDef r, VariableDef f)
             {
                 var c = Dbml.Elements().Where(x => x.Name.LocalName == "Table" && x.Attribute("Name") != null && x.Attribute("Name").Value == r.CollectionName).Single().Elements().Single().Elements().Where(x => x.Name.LocalName == "Association" && x.Attribute("Member") != null && x.Attribute("Member").Value == f.Name).Single();
                 var a = f.Attribute.Navigation;
@@ -407,7 +407,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 }
                 return String.Join(", ", l.ToArray());
             }
-            public String[] GetProperty(Record r, Field f)
+            public String[] GetProperty(RecordDef r, VariableDef f)
             {
                 var Type = f.Type;
                 var PropertyType = GetPropertyTypeString(f);
@@ -424,7 +424,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                     var AssociationParameters = GetAssociationParameters(r, f);
                     if (!a.IsReverse)
                     {
-                        Func<Field, Boolean> IsOtherAssociation = of =>
+                        Func<VariableDef, Boolean> IsOtherAssociation = of =>
                         {
                             if (!of.Attribute.OnNavigation) { return false; }
                             if (!of.Attribute.Navigation.ThisKey.OrderBy(k => k, StringComparer.OrdinalIgnoreCase).SequenceEqual(a.OtherKey.OrderBy(k => k, StringComparer.OrdinalIgnoreCase), StringComparer.OrdinalIgnoreCase)) { return false; }
@@ -494,7 +494,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                     throw new InvalidOperationException();
                 }
             }
-            public String[] GetProperties(Record r)
+            public String[] GetProperties(RecordDef r)
             {
                 var l = new List<String>();
                 foreach (var f in r.Fields)
@@ -504,14 +504,14 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 return l.ToArray();
             }
 
-            public String[] GetTable(Record r)
+            public String[] GetTable(RecordDef r)
             {
                 var StorageFields = GetStorageFields(r);
                 var Properties = GetProperties(r);
                 return GetTemplate("Table").Substitute("RecordName", r.Name).Substitute("TableName", r.CollectionName).Substitute("StorageFields", StorageFields).Substitute("Properties", Properties).Substitute("XmlComment", GetXmlComment(r.Description));
             }
 
-            public String[] GetTableGetter(Record r)
+            public String[] GetTableGetter(RecordDef r)
             {
                 return GetTemplate("TableGetter").Substitute("RecordName", r.Name).Substitute("TableName", r.CollectionName).Substitute("XmlComment", GetXmlComment(r.Description));
             }
@@ -527,16 +527,16 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 return GetTemplate("Context").Substitute("DatabaseName", DatabaseName).Substitute("ContextClassName", ContextClassName).Substitute("TableGetters", TableGetters);
             }
 
-            public String[] GetStaticDataTableGetter(Record r)
+            public String[] GetStaticDataTableGetter(RecordDef r)
             {
                 return GetTemplate("StaticDataTableGetter").Substitute("RecordName", r.Name).Substitute("TableName", r.CollectionName).Substitute("XmlComment", GetXmlComment(r.Description));
             }
-            public String[] GetStaticDataLoadWith(Record r)
+            public String[] GetStaticDataLoadWith(RecordDef r)
             {
                 var LoadWiths = r.Fields.Where(f => f.Attribute.OnNavigation).SelectMany(f => GetTemplate("StaticDataLoadWith").Substitute("RecordName", r.Name).Substitute("AssociationFieldName", f.Name)).ToArray();
                 return LoadWiths;
             }
-            public String[] GetStaticDataTableSet(Record r)
+            public String[] GetStaticDataTableSet(RecordDef r)
             {
                 return GetTemplate("StaticDataTableSet").Substitute("TableName", r.CollectionName);
             }
@@ -548,7 +548,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 return GetTemplate("StaticDataContext").Substitute("ContextClassName", ContextClassName).Substitute("TableGetters", TableGetters).Substitute("StaticDataLoadWiths", StaticDataLoadWiths).Substitute("StaticDataTableSets", StaticDataTableSets);
             }
 
-            public String[] GetIReadonlyContextTableGetter(Record r)
+            public String[] GetIReadonlyContextTableGetter(RecordDef r)
             {
                 return GetTemplate("IReadonlyContextTableGetter").Substitute("RecordName", r.Name).Substitute("TableName", r.CollectionName).Substitute("XmlComment", GetXmlComment(r.Description));
             }
@@ -558,7 +558,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 return GetTemplate("IReadonlyContext").Substitute("TableGetters", TableGetters);
             }
 
-            public String GetKeyParameters(Record r, Key k)
+            public String GetKeyParameters(RecordDef r, Key k)
             {
                 var l = new List<String>();
                 foreach (var c in k.Columns)
@@ -568,7 +568,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 }
                 return String.Join(", ", l.ToArray());
             }
-            public String GetKeyWhereExpressions(Record r, Key k)
+            public String GetKeyWhereExpressions(RecordDef r, Key k)
             {
                 var l = new List<String>();
                 foreach (var c in k.Columns)
@@ -577,30 +577,30 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 }
                 return String.Join(".", l.ToArray());
             }
-            public String[] GetWhereKeyIs(Record r, Key k)
+            public String[] GetWhereKeyIs(RecordDef r, Key k)
             {
                 var KeyFriendlyName = String.Join("And", k.Columns.Select(c => c.Name).ToArray());
                 var KeyParameters = GetKeyParameters(r, k);
                 var KeyWhereExpressions = GetKeyWhereExpressions(r, k);
                 return GetTemplate("WhereKeyIs").Substitute("RecordName", r.Name).Substitute("KeyFriendlyName", KeyFriendlyName).Substitute("KeyParameters", KeyParameters).Substitute("KeyWhereExpressions", KeyWhereExpressions);
             }
-            public String[] GetByKey(Record r, Key k)
+            public String[] GetByKey(RecordDef r, Key k)
             {
                 var KeyFriendlyName = String.Join("And", k.Columns.Select(c => c.Name).ToArray());
                 var KeyParameters = GetKeyParameters(r, k);
                 var KeyWhereExpressions = GetKeyWhereExpressions(r, k);
                 return GetTemplate("ByKey").Substitute("RecordName", r.Name).Substitute("KeyFriendlyName", KeyFriendlyName).Substitute("KeyParameters", KeyParameters).Substitute("KeyWhereExpressions", KeyWhereExpressions);
             }
-            public String[] GetByKeyT(Record r, Key k)
+            public String[] GetByKeyT(RecordDef r, Key k)
             {
                 var KeyFriendlyName = String.Join("And", k.Columns.Select(c => c.Name).ToArray());
                 var KeyParameters = GetKeyParameters(r, k);
                 var KeyWhereExpressions = GetKeyWhereExpressions(r, k);
                 return GetTemplate("ByKeyT").Substitute("RecordName", r.Name).Substitute("KeyFriendlyName", KeyFriendlyName).Substitute("KeyParameters", KeyParameters).Substitute("KeyWhereExpressions", KeyWhereExpressions);
             }
-            public String[] GetMethods(Record[] Records)
+            public String[] GetMethods(RecordDef[] Records)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var r in Records)
                 {
                     var Keys = (new Key[] { r.PrimaryKey }).Concat(r.UniqueKeys).Concat(r.NonUniqueKeys);
@@ -652,7 +652,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
 
             public String[] GetEntityComplexTypes(Schema Schema)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
 
                 foreach (var c in Schema.Types)
                 {
@@ -678,7 +678,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
 
             public String[] GetContextComplexTypes(Schema Schema)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
 
                 l.AddRange(GetContext(Schema));
                 l.Add("");
@@ -729,7 +729,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
             var LowercaseParameterString = "${" + LowercaseCamelize(Parameter) + "}";
             var LowercaseValue = LowercaseCamelize(Value);
 
-            List<String> l = new List<String>();
+            var l = new List<String>();
             foreach (var Line in Lines)
             {
                 var NewLine = Line;
@@ -765,7 +765,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
         }
         private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
         {
-            List<String> l = new List<String>();
+            var l = new List<String>();
             foreach (var Line in Lines)
             {
                 var ParameterString = "${" + Parameter + "}";
