@@ -1,0 +1,19 @@
+﻿$Comment
+    ==========================================================================
+    
+      File:        Test.tree
+      Location:    Yuki.Examples <Tree>
+      Description: 测试
+      Version:     2012.06.26.
+      Author:      F.R.C.
+      Copyright(C) Public Domain
+    
+    ==========================================================================
+
+#Record TestRecord                                  [CN:TestRecords][PK:SessionIndex]测试记录
+    SessionIndex        Int                         测试Session索引
+    Value               Int                         测试数据
+
+#Record TestLockRecord                              [CN:TestLockRecords]测试锁记录
+    Id                  Int                         1
+    Value               Int                         测试数据
