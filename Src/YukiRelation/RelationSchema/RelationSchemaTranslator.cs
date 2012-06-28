@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2012.06.26.
+//  Version:     2012.06.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -233,7 +233,10 @@ namespace Yuki.RelationSchema
                 {
                     if (t.OnPrimitive)
                     {
-                        TypeRefs.Add(RS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)));
+                        if (t.Primitive.GenericParameters.Length == 0)
+                        {
+                            TypeRefs.Add(RS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)));
+                        }
                     }
                     else if (t.OnEnum)
                     {
@@ -245,7 +248,10 @@ namespace Yuki.RelationSchema
                 {
                     if (t.OnPrimitive)
                     {
-                        Types.Add(RS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)));
+                        if (t.Primitive.GenericParameters.Length == 0)
+                        {
+                            Types.Add(RS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)));
+                        }
                     }
                     else if (t.OnEnum)
                     {
