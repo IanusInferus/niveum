@@ -1,0 +1,65 @@
+﻿性能测试
+
+测试环境
+主板        ASUS MV2
+CPU         AMD Athlon(tm) 64 X2 Dual Core Processor 5400+
+内存        4GB
+主机系统    Windows 7 64 bit/OpenSUSE 64 bit 12.1
+
+
+C#/SQL Server/.Net 4.0/x64/Windows 7 64 bit
+
+TestSaveData: 1 Users, 8 Request/User, 94 ms
+TestLoadData: 1 Users, 8 Request/User, 31 ms
+TestSaveAndLoadData: 1 Users, 8 Request/User, 47 ms
+TestAddLockData: 1 Users, 8 Request/User, 31 ms
+TestSaveData: 4096 Users, 1 Request/User, 7969 ms
+TestSaveData: 4096 Users, 2 Request/User, 16953 ms
+TestSaveData: 4096 Users, 4 Request/User, 30797 ms
+TestSaveData: 4096 Users, 8 Request/User, 60437 ms
+TestLoadData: 4096 Users, 1 Request/User, 7594 ms
+TestLoadData: 4096 Users, 2 Request/User, 14656 ms
+TestLoadData: 4096 Users, 4 Request/User, 32016 ms
+TestLoadData: 4096 Users, 8 Request/User, 60734 ms
+TestSaveAndLoadData: 4096 Users, 1 Request/User, 15156 ms
+TestSaveAndLoadData: 4096 Users, 2 Request/User, 31204 ms
+TestSaveAndLoadData: 4096 Users, 4 Request/User, 60937 ms
+TestSaveAndLoadData: 4096 Users, 8 Request/User, 128594 ms
+TestAddLockData: 4096 Users, 1 Request/User, 11016 ms
+TestAddLockData: 4096 Users, 2 Request/User, 22672 ms
+TestAddLockData: 4096 Users, 4 Request/User, 49813 ms
+TestAddLockData: 4096 Users, 8 Request/User, 99328 ms
+
+
+C#/PostgreSQL/.Net 4.0/x64/Windows 7 64 bit
+
+TestSaveData: 1 Users, 8 Request/User, 625 ms
+TestLoadData: 1 Users, 8 Request/User, 32 ms
+TestSaveAndLoadData: 1 Users, 8 Request/User, 31 ms
+TestAddLockData: 1 Users, 8 Request/User, 31 ms
+TestSaveData: 4096 Users, 1 Request/User, 6938 ms
+TestSaveData: 4096 Users, 2 Request/User, 15406 ms
+TestSaveData: 4096 Users, 4 Request/User, 29516 ms
+TestSaveData: 4096 Users, 8 Request/User, 54000 ms
+TestLoadData: 4096 Users, 1 Request/User, 5968 ms
+TestLoadData: 4096 Users, 2 Request/User, 11610 ms
+TestLoadData: 4096 Users, 4 Request/User, 23343 ms
+TestLoadData: 4096 Users, 8 Request/User, 49407 ms
+TestSaveAndLoadData: 4096 Users, 1 Request/User, 13078 ms
+TestSaveAndLoadData: 4096 Users, 2 Request/User, 25797 ms
+TestSaveAndLoadData: 4096 Users, 4 Request/User, 50843 ms
+TestSaveAndLoadData: 4096 Users, 8 Request/User, 102188 ms
+TestAddLockData: 4096 Users, 1 Request/User, 7562 ms
+TestAddLockData: 4096 Users, 2 Request/User, 15422 ms
+TestAddLockData: 4096 Users, 4 Request/User, 30922 ms
+TestAddLockData: 4096 Users, 8 Request/User, 62484 ms
+
+
+C++2011/PostgreSQL/VC 10.0/x86/Windows 7 64 bit
+
+
+C#/PostgreSQL/Mono 2.10.6/x64/openSUSE 64 bit 12.1
+
+
+C++2011/PostgreSQL/GCC-C++ 4.6/x64/openSUSE 64 bit 12.1
+
