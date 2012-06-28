@@ -1,0 +1,97 @@
+﻿负载测试
+
+测试环境
+主板        ASUS MV2
+CPU         AMD Athlon(tm) 64 X2 Dual Core Processor 5400+
+内存        4GB
+主机系统    Windows 7 64 bit/OpenSUSE 64 bit 12.1
+
+
+C#/SQL Server/.Net 4.0/x64/Windows 7 64 bit
+
+TestSaveData: 64 Users, 219 ms
+TestLoadData: 64 Users, 140 ms
+TestSaveAndLoadData: 64 Users, 219 ms
+TestAddLockData: 64 Users, 171 ms
+TestSaveData: 1 Users, 0 ms
+TestSaveData: 4 Users, 31 ms
+TestSaveData: 16 Users, 32 ms
+TestSaveData: 64 Users, 125 ms
+TestSaveData: 256 Users, 500 ms
+TestSaveData: 1024 Users, 2000 ms
+TestSaveData: 4096 Users, 8296 ms
+TestSaveData: 16384 Users, 40282 ms
+TestLoadData: 1 Users, 15 ms
+TestLoadData: 4 Users, 16 ms
+TestLoadData: 16 Users, 47 ms
+TestLoadData: 64 Users, 156 ms
+TestLoadData: 256 Users, 531 ms
+TestLoadData: 1024 Users, 2422 ms
+TestLoadData: 4096 Users, 7485 ms
+TestLoadData: 16384 Users, 33437 ms
+TestSaveAndLoadData: 1 Users, 16 ms
+TestSaveAndLoadData: 4 Users, 15 ms
+TestSaveAndLoadData: 16 Users, 78 ms
+TestSaveAndLoadData: 64 Users, 250 ms
+TestSaveAndLoadData: 256 Users, 969 ms
+TestSaveAndLoadData: 1024 Users, 3860 ms
+TestSaveAndLoadData: 4096 Users, 15750 ms
+TestSaveAndLoadData: 16384 Users, 67109 ms
+TestAddLockData: 1 Users, 16 ms
+TestAddLockData: 4 Users, 47 ms
+TestAddLockData: 16 Users, 218 ms
+TestAddLockData: 64 Users, 844 ms
+TestAddLockData: 256 Users, 1438 ms
+TestAddLockData: 1024 Users, 4203 ms
+TestAddLockData: 4096 Users, 13547 ms
+TestAddLockData: 16384 Users, 53844 ms
+
+
+C#/PostgreSQL/.Net 4.0/x64/Windows 7 64 bit
+
+TestSaveData: 64 Users, 750 ms
+TestLoadData: 64 Users, 94 ms
+TestSaveAndLoadData: 64 Users, 203 ms
+TestAddLockData: 64 Users, 157 ms
+TestSaveData: 1 Users, 0 ms
+TestSaveData: 4 Users, 16 ms
+TestSaveData: 16 Users, 31 ms
+TestSaveData: 64 Users, 94 ms
+TestSaveData: 256 Users, 375 ms
+TestSaveData: 1024 Users, 1594 ms
+TestSaveData: 4096 Users, 8453 ms
+TestSaveData: 16384 Users, 28703 ms
+TestLoadData: 1 Users, 0 ms
+TestLoadData: 4 Users, 15 ms
+TestLoadData: 16 Users, 79 ms
+TestLoadData: 64 Users, 93 ms
+TestLoadData: 256 Users, 391 ms
+TestLoadData: 1024 Users, 1375 ms
+TestLoadData: 4096 Users, 5421 ms
+TestLoadData: 16384 Users, 22157 ms
+TestSaveAndLoadData: 1 Users, 15 ms
+TestSaveAndLoadData: 4 Users, 32 ms
+TestSaveAndLoadData: 16 Users, 93 ms
+TestSaveAndLoadData: 64 Users, 250 ms
+TestSaveAndLoadData: 256 Users, 782 ms
+TestSaveAndLoadData: 1024 Users, 2953 ms
+TestSaveAndLoadData: 4096 Users, 12234 ms
+TestSaveAndLoadData: 16384 Users, 50656 ms
+TestAddLockData: 1 Users, 16 ms
+TestAddLockData: 4 Users, 16 ms
+TestAddLockData: 16 Users, 234 ms
+TestAddLockData: 64 Users, 219 ms
+TestAddLockData: 256 Users, 547 ms
+TestAddLockData: 1024 Users, 2281 ms
+TestAddLockData: 4096 Users, 9266 ms
+TestAddLockData: 16384 Users, 33344 ms
+
+
+C++2011/PostgreSQL/VC 10.0/x86/Windows 7 64 bit
+
+
+C#/PostgreSQL/Mono 2.10.6/x64/openSUSE 64 bit 12.1
+
+
+C++2011/PostgreSQL/GCC-C++ 4.6/x64/openSUSE 64 bit 12.1
+

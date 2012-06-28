@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseMSSQL", "DatabaseMSSQL.csproj", "{1454125C-55C4-402F-98A4-9D3E338B040D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabasePostgreSQL", "DatabasePostgreSQL.csproj", "{52EEDD61-A8AF-45E5-91FB-6CDD28900D95}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1454125C-55C4-402F-98A4-9D3E338B040D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1454125C-55C4-402F-98A4-9D3E338B040D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1454125C-55C4-402F-98A4-9D3E338B040D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1454125C-55C4-402F-98A4-9D3E338B040D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52EEDD61-A8AF-45E5-91FB-6CDD28900D95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52EEDD61-A8AF-45E5-91FB-6CDD28900D95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52EEDD61-A8AF-45E5-91FB-6CDD28900D95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52EEDD61-A8AF-45E5-91FB-6CDD28900D95}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
