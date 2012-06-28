@@ -38,7 +38,7 @@
     <Reference Include="Firefly.Core">
       <HintPath>..\..\..\..\Bin\Firefly.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Npgsql, Version=2.0.11.92, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+    <Reference Include="Npgsql">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\Npgsql\Npgsql.dll</HintPath>
     </Reference>
