@@ -17,6 +17,11 @@ namespace Database.SqlServer
             Transaction = Connection.BeginTransaction();
         }
 
+        public static IDataAccess Create(String ConnectionString)
+        {
+            return new SqlServerDataAccess(ConnectionString);
+        }
+
         public void Dispose()
         {
             if (Transaction != null)
