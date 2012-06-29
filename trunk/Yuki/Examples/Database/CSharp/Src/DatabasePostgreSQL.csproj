@@ -56,8 +56,6 @@
     <Compile Include="PostgreSql\DataAccessImplementation.cs" />
     <Compile Include="PostgreSql\Test.cs" />
     <Compile Include="TestService.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="PerformanceTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

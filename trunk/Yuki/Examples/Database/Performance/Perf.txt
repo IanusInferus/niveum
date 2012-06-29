@@ -7,7 +7,7 @@ CPU         AMD Athlon(tm) 64 X2 Dual Core Processor 5400+
 主机系统    Windows 7 64 bit/OpenSUSE 64 bit 12.1
 
 
-C#/SQL Server/.Net 4.0/x64/Windows 7 64 bit
+C#/SQL Server 2008 R2/.Net 4.0/x64/Windows 7 64 bit
 
 TestSaveData: 1 Users, 8 Request/User, 94 ms
 TestLoadData: 1 Users, 8 Request/User, 31 ms
@@ -31,7 +31,7 @@ TestAddLockData: 4096 Users, 4 Request/User, 49813 ms
 TestAddLockData: 4096 Users, 8 Request/User, 99328 ms
 
 
-C#/PostgreSQL/.Net 4.0/x64/Windows 7 64 bit
+C#/PostgreSQL 9.1/.Net 4.0/x64/Windows 7 64 bit
 
 TestSaveData: 1 Users, 8 Request/User, 625 ms
 TestLoadData: 1 Users, 8 Request/User, 32 ms
@@ -55,11 +55,25 @@ TestAddLockData: 4096 Users, 4 Request/User, 30922 ms
 TestAddLockData: 4096 Users, 8 Request/User, 62484 ms
 
 
-C++2011/PostgreSQL/VC 10.0/x86/Windows 7 64 bit
+C#/PostgreSQL 9.1/Mono 2.10.6/x64/openSUSE 64 bit 12.1
 
-
-C#/PostgreSQL/Mono 2.10.6/x64/openSUSE 64 bit 12.1
-
-
-C++2011/PostgreSQL/GCC-C++ 4.6/x64/openSUSE 64 bit 12.1
-
+TestSaveData: 1 Users, 8 Request/User, 334 ms
+TestLoadData: 1 Users, 8 Request/User, 37 ms
+TestSaveAndLoadData: 1 Users, 8 Request/User, 58 ms
+TestAddLockData: 1 Users, 8 Request/User, 35 ms
+TestSaveData: 4096 Users, 1 Request/User, 7297 ms
+TestSaveData: 4096 Users, 2 Request/User, 14311 ms
+TestSaveData: 4096 Users, 4 Request/User, 28510 ms
+TestSaveData: 4096 Users, 8 Request/User, 57292 ms
+TestLoadData: 4096 Users, 1 Request/User, 6017 ms
+TestLoadData: 4096 Users, 2 Request/User, 11906 ms
+TestLoadData: 4096 Users, 4 Request/User, 23586 ms
+TestLoadData: 4096 Users, 8 Request/User, 50693 ms
+TestSaveAndLoadData: 4096 Users, 1 Request/User, 14848 ms
+TestSaveAndLoadData: 4096 Users, 2 Request/User, 28509 ms
+TestSaveAndLoadData: 4096 Users, 4 Request/User, 58076 ms
+TestSaveAndLoadData: 4096 Users, 8 Request/User, 113275 ms
+TestAddLockData: 4096 Users, 1 Request/User, 8440 ms
+TestAddLockData: 4096 Users, 2 Request/User, 16956 ms
+TestAddLockData: 4096 Users, 4 Request/User, 33779 ms
+TestAddLockData: 4096 Users, 8 Request/User, 66447 ms

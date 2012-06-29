@@ -18,6 +18,11 @@ namespace Database.PostgreSql
             Transaction = Connection.BeginTransaction();
         }
 
+        public static IDataAccess Create(String ConnectionString)
+        {
+            return new PostgreSqlDataAccess(ConnectionString);
+        }
+
         public void Dispose()
         {
             if (Transaction != null)
