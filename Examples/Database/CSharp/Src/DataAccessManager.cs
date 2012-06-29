@@ -23,17 +23,40 @@ namespace Database
         private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Mail";
         private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=mail;";
 
+        private static Type GetType(String FullName, Boolean ThrowOnError = false)
+        {
+            var Types = System.Reflection.Assembly.GetEntryAssembly().GetTypes().Where(t => t.FullName.Equals(FullName, StringComparison.Ordinal)).ToArray();
+            if (Types.Length == 0)
+            {
+                if (ThrowOnError)
+                {
+                    throw new TypeLoadException(FullName);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            return Types.Single();
+        }
+        private static Func<String, IDataAccess> GetConstructor(Type t)
+        {
+            var c = t.GetMethod("Create", (new Type[] { typeof(String) }));
+            var d = Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), c);
+            return (Func<String, IDataAccess>)(d);
+        }
+
         public static String GetConnectionStringExample()
         {
             {
-                var t = System.Type.GetType(SqlServerType);
+                var t = GetType(SqlServerType);
                 if (t != null)
                 {
                     return SqlServerConnectionString;
                 }
             }
             {
-                var t = System.Type.GetType(PostgreSqlType);
+                var t = GetType(PostgreSqlType);
                 if (t != null)
                 {
                     return PostgreSqlConnectionString;
@@ -46,12 +69,12 @@ namespace Database
         {
             if (Type == DatabaseType.SqlServer)
             {
-                var t = System.Type.GetType(SqlServerType, true);
+                var t = GetType(SqlServerType, true);
                 return SqlServerConnectionString;
             }
             else if (Type == DatabaseType.PostgreSQL)
             {
-                var t = System.Type.GetType(PostgreSqlType, true);
+                var t = GetType(PostgreSqlType, true);
                 return PostgreSqlConnectionString;
             }
             else
@@ -63,18 +86,20 @@ namespace Database
         public DataAccessManager(String ConnectionString)
         {
             {
-                var t = System.Type.GetType(SqlServerType);
+                var t = GetType(SqlServerType);
                 if (t != null)
                 {
-                    ConnectionFactory = () => (IDataAccess)(Activator.CreateInstance(t, new Object[] { ConnectionString }));
+                    var c = GetConstructor(t);
+                    ConnectionFactory = () => c(ConnectionString);
                     return;
                 }
             }
             {
-                var t = System.Type.GetType(PostgreSqlType);
+                var t = GetType(PostgreSqlType);
                 if (t != null)
                 {
-                    ConnectionFactory = () => (IDataAccess)(Activator.CreateInstance(t, new Object[] { ConnectionString }));
+                    var c = GetConstructor(t);
+                    ConnectionFactory = () => c(ConnectionString);
                     return;
                 }
             }
@@ -84,13 +109,15 @@ namespace Database
         {
             if (Type == DatabaseType.SqlServer)
             {
-                var t = System.Type.GetType(SqlServerType, true);
-                ConnectionFactory = () => (IDataAccess)(Activator.CreateInstance(t, new Object[] { ConnectionString }));
+                var t = GetType(SqlServerType, true);
+                var c = GetConstructor(t);
+                ConnectionFactory = () => c(ConnectionString);
             }
             else if (Type == DatabaseType.PostgreSQL)
             {
-                var t = System.Type.GetType(PostgreSqlType, true);
-                ConnectionFactory = () => (IDataAccess)(Activator.CreateInstance(t, new Object[] { ConnectionString }));
+                var t = GetType(PostgreSqlType, true);
+                var c = GetConstructor(t);
+                ConnectionFactory = () => c(ConnectionString);
             }
             else
             {

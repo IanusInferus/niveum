@@ -53,8 +53,6 @@
     <Compile Include="SqlServer\DataAccessImplementation.cs" />
     <Compile Include="SqlServer\Test.cs" />
     <Compile Include="TestService.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="PerformanceTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
