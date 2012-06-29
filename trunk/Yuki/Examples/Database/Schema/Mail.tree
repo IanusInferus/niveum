@@ -27,7 +27,7 @@
     //导航属性
     Mail                Mail                        [FK:Id=Id]邮件
 
-#Record MailAttachment                              "[CN:MailAttachments][PK:Id]邮件附件"
+#Record MailAttachment                              "[CN:MailAttachments][PK:Id, Name]邮件附件"
     Id                  Int                         邮件ID
     Name                String                      [P:256]名称
     Content             List<Byte>                  内容
