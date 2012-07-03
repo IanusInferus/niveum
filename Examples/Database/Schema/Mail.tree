@@ -4,7 +4,7 @@
       File:        Mail.tree
       Location:    Yuki.Examples <Tree>
       Description: 邮件
-      Version:     2012.06.26.
+      Version:     2012.07.03.
       Author:      F.R.C.
       Copyright(C) Public Domain
     
@@ -29,7 +29,7 @@
 
 #Record MailAttachment                              "[CN:MailAttachments][PK:Id, Name]邮件附件"
     Id                  Int                         邮件ID
-    Name                String                      [P:256]名称
+    Name                String                      [P:128]名称
     Content             List<Byte>                  内容
 
     //导航属性
