@@ -49,20 +49,20 @@ TestText: 4096 Users, 64 Request/User, 1430266 ms
 C++2011/Binary/VC 10.0/x86/Windows 7 64 bit
 
 TestAdd: 1 Users, 8 Request/User, 31 ms
-TestMultiply: 1 Users, 8 Request/User, 47 ms
-TestText: 1 Users, 8 Request/User, 94 ms
-TestAdd: 4096 Users, 1 Request/User, 5187 ms
-TestAdd: 4096 Users, 4 Request/User, 12750 ms
-TestAdd: 4096 Users, 16 Request/User, 42953 ms
-TestAdd: 4096 Users, 64 Request/User, 163265 ms
-TestMultiply: 4096 Users, 1 Request/User, 10750 ms
-TestMultiply: 4096 Users, 4 Request/User, 26859 ms
-TestMultiply: 4096 Users, 16 Request/User, 91797 ms
-TestMultiply: 4096 Users, 64 Request/User, 352344 ms
-TestText: 4096 Users, 1 Request/User, 32125 ms
-TestText: 4096 Users, 4 Request/User, 34094 ms
-TestText: 4096 Users, 16 Request/User, 116422 ms
-TestText: 4096 Users, 64 Request/User, 444984 ms
+TestMultiply: 1 Users, 8 Request/User, 32 ms
+TestText: 1 Users, 8 Request/User, 93 ms
+TestAdd: 4096 Users, 1 Request/User, 1204 ms
+TestAdd: 4096 Users, 4 Request/User, 2656 ms
+TestAdd: 4096 Users, 16 Request/User, 9735 ms
+TestAdd: 4096 Users, 64 Request/User, 60625 ms
+TestMultiply: 4096 Users, 1 Request/User, 7109 ms
+TestMultiply: 4096 Users, 4 Request/User, 19344 ms
+TestMultiply: 4096 Users, 16 Request/User, 63938 ms
+TestMultiply: 4096 Users, 64 Request/User, 235437 ms
+TestText: 4096 Users, 1 Request/User, 36844 ms
+TestText: 4096 Users, 4 Request/User, 64859 ms
+TestText: 4096 Users, 16 Request/User, 77688 ms
+TestText: 4096 Users, 64 Request/User, 295484 ms
 
 
 C#/Binary/Mono 2.10.6/x64/openSUSE 64 bit 12.1

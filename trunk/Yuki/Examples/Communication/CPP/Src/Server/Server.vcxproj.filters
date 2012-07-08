@@ -69,6 +69,7 @@
     <ClInclude Include="Net\TcpSession.h">
       <Filter>Net</Filter>
     </ClInclude>
+    <ClInclude Include="UtfEncoding.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />

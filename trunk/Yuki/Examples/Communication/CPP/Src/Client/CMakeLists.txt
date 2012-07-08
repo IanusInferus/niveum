@@ -8,6 +8,7 @@ set(CMAKE_CXX_COMPILER "g++-4.6")
 find_package(Boost 1.49.0 COMPONENTS system thread date_time regex serialization REQUIRED)
 find_package(Threads)
 add_definitions("-std=c++0x")
+include_directories("../../Lib/utf8")
 include_directories("../../Lib_Gcc")
 include_directories(".")
 

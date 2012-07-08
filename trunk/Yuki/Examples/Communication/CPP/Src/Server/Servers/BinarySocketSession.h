@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Communication.h"
+#include "UtfEncoding.h"
 #include "CommunicationBinary.h"
 #include "BaseSystem/LockedVariable.h"
 #include "BaseSystem/AutoResetEvent.h"
