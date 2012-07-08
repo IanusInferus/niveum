@@ -2,6 +2,7 @@
 Examples:
 修正通讯C++示例在VC上的性能问题。
 修改通讯C++示例的CMakeLists.txt文件。
+修正通讯C++示例超时时的Session退出没有显示的问题。
 
 2012.07.06
 Examples:
