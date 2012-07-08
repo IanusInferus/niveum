@@ -638,16 +638,6 @@ namespace Server
             {
             }
         }
-        if (Server->GetEnableLogSystem())
-        {
-            auto e = std::make_shared<SessionLogEntry>();
-            e->RemoteEndPoint = RemoteEndPoint;
-            e->Token = Context->GetSessionTokenString();
-            e->Time = boost::posix_time::second_clock::universal_time();
-            e->Type = L"Sys";
-            e->Message = L"SessionExit";
-            Server->RaiseSessionLog(e);
-        }
         PushCommand(SessionCommand::CreateQuit());
         IsRunningValue.Update([=](bool b) { return false; });
         if (NotifySessionQuit != nullptr)
@@ -660,6 +650,16 @@ namespace Server
     {
         if (Server != nullptr)
         {
+            if (Server->GetEnableLogSystem())
+            {
+                auto e = std::make_shared<SessionLogEntry>();
+                e->RemoteEndPoint = RemoteEndPoint;
+                e->Token = Context->GetSessionTokenString();
+                e->Time = boost::posix_time::second_clock::universal_time();
+                e->Type = L"Sys";
+                e->Message = L"SessionExit";
+                Server->RaiseSessionLog(e);
+            }
             Server->SessionMappings.DoAction([&](const std::shared_ptr<BinarySocketServer::TSessionMapping> &Mappings)
             {
                 if (Mappings->count(Context) > 0)
