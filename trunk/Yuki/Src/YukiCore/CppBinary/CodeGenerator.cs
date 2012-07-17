@@ -67,6 +67,8 @@ namespace Yuki.ObjectSchema.CppBinary
                     }
                 }
 
+                InnerWriter.FillEnumSet();
+
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes(Schema);
