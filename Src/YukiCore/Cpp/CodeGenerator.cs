@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2012.04.24.
+//  Version:     2012.07.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -56,6 +56,11 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 this.NamespaceName = NamespaceName;
             }
 
+            public void FillEnumSet()
+            {
+                EnumSet = new HashSet<String>(Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).Select(c => c.VersionedName()).Distinct());
+            }
+
             public String[] GetSchema()
             {
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
@@ -65,6 +70,8 @@ namespace Yuki.ObjectSchema.Cpp.Common
                         throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                     }
                 }
+
+                FillEnumSet();
 
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
@@ -125,6 +132,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 return GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
             }
 
+            private HashSet<String> EnumSet = new HashSet<String>();
             public String GetTypeString(TypeSpec Type, Boolean ForceAsValue = false)
             {
                 switch (Type._Tag)
@@ -141,6 +149,10 @@ namespace Yuki.ObjectSchema.Cpp.Common
                             {
                                 return Type.TypeRef.TypeFriendlyName();
                             }
+                        }
+                        else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
+                        {
+                            return Type.TypeRef.TypeFriendlyName();
                         }
                         if (ForceAsValue)
                         {
