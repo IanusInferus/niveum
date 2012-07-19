@@ -4,7 +4,7 @@
       File:        Xhtml.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构XHTML模板数据
-      Version:     2012.02.24.
+      Version:     2012.07.19.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -75,8 +75,8 @@ ObjectSchemaTemplate
                     
                 $End
         Template
-            Name Page
-            //Parameters: ${Name}, ${Title}, ${CopyrightText}, ${Content}, ${BackToMain}
+            Name PageWrapper
+            //Parameters: ${Content}
             Value
                 $String
                     <?xml version="1.0" encoding="utf-8"?>
@@ -91,22 +91,55 @@ ObjectSchemaTemplate
                     ==========================================================================
                     -->
                     <html xmlns="http://www.w3.org/1999/xhtml">
-                        <head>
-                            <title>${Name}-${Title}</title>
-                            <link rel="stylesheet" href="style.css" />
-                        </head>
-                        <body>
-                            <h2>${Title}</h2>
-                            ${BackToMain}
-                            <h1>${Name}</h1>
-                            <pre></pre>
-                            ${Content}
-                            <pre></pre>
-                            <pre>${CopyrightText}</pre>
-                        </body>
+                        ${Content}
                     </html>
 
                 $End
+        Template
+            Name PageContent
+            //Parameters: ${Name}, ${Title}, ${CopyrightText}, ${Content}, ${BackToMain}
+            Value
+                $String
+                    <head>
+                        <title>${Name}-${Title}</title>
+                        <link rel="stylesheet" href="style.css" />
+                    </head>
+                    <body>
+                        <h2>${Title}</h2>
+                        ${BackToMain}
+                        <h1>${Name}</h1>
+                        <pre></pre>
+                        ${Content}
+                        <pre></pre>
+                        <pre>${CopyrightText}</pre>
+                    </body>
+        Template
+            Name BarPageContent
+            //Parameters: ${Name}, ${Title}, ${Content}, ${BackToMain}
+            Value
+                $String
+                    <head>
+                        <title>${Name}-${Title}</title>
+                        <link rel="stylesheet" href="style.css" />
+                    </head>
+                    <body>
+                        <h2>${Title}</h2>
+                        ${BackToMain}
+                        ${Content}
+                    </body>
+        Template
+            Name IndexPageContent
+            //Parameters: ${Name}, ${Title}
+            Value
+                $String
+                    <head>
+                        <title>${Name}-${Title}</title>
+                        <link rel="stylesheet" href="style.css" />
+                    </head>
+                    <frameset cols="20%,80%" title="">
+                        <frame src="bar.html" name="barFrame" />
+                        <frame src="main.html" name="contentFrame" />
+                    </frameset>
         Template
             Name Ref
             //Parameters: ${Name}, ${Ref}
@@ -114,10 +147,33 @@ ObjectSchemaTemplate
                 $String
                     <a href="${Ref}">${Name}</a>
         Template
+            Name RefWithDescription
+            //Parameters: ${Name}, ${Ref}, ${Description}
+            Value
+                $String
+                    <a href="${Ref}" title="${Description}">${Name}</a>
+        Template
+            Name BarRef
+            //Parameters: ${Name}, ${Ref}
+            Value
+                $String
+                    <a href="${Ref}" target="contentFrame">${Name}</a>
+        Template
+            Name BarRefWithDescription
+            //Parameters: ${Name}, ${Ref}, ${Description}
+            Value
+                $String
+                    <a href="${Ref}" title="${Description}" target="contentFrame">${Name}</a>
+        Template
             Name BackToMain
             Value
                 $String
-                    <a href="index.html">返回首页</a>
+                    <a href="main.html">返回首页</a>
+        Template
+            Name BarBackToMain
+            Value
+                $String
+                    <a href="main.html" target="contentFrame">所有</a>
         Template
             Name Primitive
             //Parameters: ${Name}, ${MetaType}, ${GenericParameters}, ${Description}
@@ -204,17 +260,17 @@ ObjectSchemaTemplate
                     </tr>
         Template
             Name Brief
-            //Parameters: ${FilePath}, ${Commands}
+            //Parameters: ${FilePath}, ${Types}
             Value
                 $String
                     <h3>${FilePath}</h3>
                     <table>
-                        ${Commands}
+                        ${Types}
                     </table>
                     <pre></pre>
         Template
             Name TypeBrief
-            //Parameters: ${Name}, ${TypeSpec}, ${MetaType}, ${Description}
+            //Parameters: ${TypeSpec}, ${MetaType}, ${Description}
             Value
                 $String
                     <tr>
@@ -222,3 +278,16 @@ ObjectSchemaTemplate
                         <td>${MetaType}</td>
                         <td><pre>${Description}</pre></td>
                     </tr>
+        Template
+            Name BarBrief
+            //Parameters: ${FilePath}, ${Types}
+            Value
+                $String
+                    <h3>${FilePath}</h3>
+                    ${Types}
+        Template
+            Name BarTypeBrief
+            //Parameters: ${TypeSpec}
+            Value
+                $String
+                    <p>${TypeSpec}</p>

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2012.04.24.
+//  Version:     2012.07.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -51,18 +51,18 @@ namespace Yuki.ObjectSchema.Xhtml
                 this.CopyrightText = CopyrightText;
             }
 
-            public class TypeLocationInfo
+            public class TypeInfo
             {
-                public String Name;
+                public TypeDef Def;
                 public String FriendlyPath;
                 public String DocFilePath;
                 public String DocPath;
             }
-            private Dictionary<String, TypeLocationInfo> TypeLocations;
+            private Dictionary<String, TypeInfo> TypeInfoDict;
 
             public FileResult[] GetFiles()
             {
-                TypeLocations = new Dictionary<String, TypeLocationInfo>(StringComparer.OrdinalIgnoreCase);
+                TypeInfoDict = new Dictionary<String, TypeInfo>(StringComparer.OrdinalIgnoreCase);
 
                 String Root = "";
                 if (Schema.TypePaths.Length > 0)
@@ -83,29 +83,36 @@ namespace Yuki.ObjectSchema.Xhtml
                     Root = Schema.TypePaths.Select(tp => FileNameHandling.GetDirectoryPathWithTailingSeparator(FileNameHandling.GetFileDirectory(tp.Path))).Aggregate((a, b) => GetCommonHead(a, b));
                 }
 
+                var Map = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value);
                 foreach (var p in Schema.TypePaths)
                 {
                     var Path = FileNameHandling.GetRelativePath(p.Path, Root);
                     var PathWithoutExt = FileNameHandling.GetPath(FileNameHandling.GetFileDirectory(Path), FileNameHandling.GetMainFileName(Path));
                     var DocFilePath = PathWithoutExt.Replace(@"\", @"_").Replace(@"/", @"_").Replace(@".", "_").Replace(@":", @"_").Replace(@"#", @"_") + @".html";
-                    var tli = new TypeLocationInfo { Name = p.Name, FriendlyPath = PathWithoutExt.Replace(@"\", @"/"), DocFilePath = DocFilePath, DocPath = String.Format("{0}#{1}", DocFilePath, p.Name) };
-                    TypeLocations.Add(p.Name, tli);
+                    var tli = new TypeInfo { Def = Map[p.Name], FriendlyPath = PathWithoutExt.Replace(@"\", @"/"), DocFilePath = DocFilePath, DocPath = String.Format("{0}#{1}", DocFilePath, p.Name) };
+                    TypeInfoDict.Add(p.Name, tli);
                 }
 
                 var Types = Schema.GetMap();
-                var Files = Types.GroupBy(Type => CollectionOperations.CreatePair(TypeLocations[Type.Key].FriendlyPath, TypeLocations[Type.Key].DocFilePath), (Pair, gt) => new { FriendlyPath = Pair.Key, DocFilePath = Pair.Value, Types = gt.Select(t => t.Value).ToArray() }).ToArray();
+                var Files = Types.GroupBy(Type => CollectionOperations.CreatePair(TypeInfoDict[Type.Key].FriendlyPath, TypeInfoDict[Type.Key].DocFilePath), (Pair, gt) => new { FriendlyPath = Pair.Key, DocFilePath = Pair.Value, Types = gt.Select(t => t.Value).ToArray() }).ToArray();
 
                 List<FileResult> l = new List<FileResult>();
 
                 l.Add(new FileResult { Path = "style.css", Content = String.Join(ControlChars.CrLf, GetTemplate("Css")) });
 
-                var IndexPageContent = new List<String>();
+                var IndexPageCommandContent = new List<String>();
+                var IndexPageTypeContent = new List<String>();
+                var IndexBarCommandContent = new List<String>();
+                var IndexBarTypeContent = new List<String>();
 
                 foreach (var File in Files)
                 {
                     var Content = new List<String>();
 
-                    var Commands = new List<String>();
+                    var IndexPageCommandContentByFile = new List<String>();
+                    var IndexPageTypeContentByFile = new List<String>();
+                    var IndexBarCommandContentByFile = new List<String>();
+                    var IndexBarTypeContentByFile = new List<String>();
 
                     foreach (var c in File.Types)
                     {
@@ -113,29 +120,44 @@ namespace Yuki.ObjectSchema.Xhtml
                         {
                             var Lines = GetTemplate("Primitive").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "基元").Substitute("GenericParameters", GetGenericParameters(c.Primitive.GenericParameters)).Substitute("Description", GetEscaped(c.Primitive.Description));
                             Content.AddRange(Lines);
+
+                            IndexPageTypeContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "基元").Substitute("Description", GetEscaped(c.Description())));
+                            IndexBarTypeContentByFile.AddRange(GetTemplate("BarTypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), true, true)));
                         }
                         else if (c.OnAlias)
                         {
-                            var Lines = GetTemplate("Alias").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "别名").Substitute("GenericParameters", GetGenericParameters(c.Alias.GenericParameters)).Substitute("TypeSpec", GetTypeString(c.Alias.Type)).Substitute("Description", GetEscaped(c.Alias.Description));
+                            var Lines = GetTemplate("Alias").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "别名").Substitute("GenericParameters", GetGenericParameters(c.Alias.GenericParameters)).Substitute("TypeSpec", GetTypeString(c.Alias.Type, true)).Substitute("Description", GetEscaped(c.Alias.Description));
                             Content.AddRange(Lines);
+
+                            IndexPageTypeContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "别名").Substitute("Description", GetEscaped(c.Description())));
+                            IndexBarTypeContentByFile.AddRange(GetTemplate("BarTypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), true, true)));
                         }
                         else if (c.OnRecord)
                         {
                             var Fields = GetVariables(c.Record.Fields);
                             var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "记录").Substitute("GenericParameters", GetGenericParameters(c.Record.GenericParameters)).Substitute("Fields", Fields).Substitute("Description", GetEscaped(c.Record.Description));
                             Content.AddRange(Lines);
+
+                            IndexPageTypeContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "记录").Substitute("Description", GetEscaped(c.Description())));
+                            IndexBarTypeContentByFile.AddRange(GetTemplate("BarTypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), true, true)));
                         }
                         else if (c.OnTaggedUnion)
                         {
                             var Alternatives = GetVariables(c.TaggedUnion.Alternatives);
                             var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "标签联合").Substitute("GenericParameters", GetGenericParameters(c.TaggedUnion.GenericParameters)).Substitute("Fields", Alternatives).Substitute("Description", GetEscaped(c.TaggedUnion.Description));
                             Content.AddRange(Lines);
+
+                            IndexPageTypeContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "标签联合").Substitute("Description", GetEscaped(c.Description())));
+                            IndexBarTypeContentByFile.AddRange(GetTemplate("BarTypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), true, true)));
                         }
                         else if (c.OnEnum)
                         {
                             var Literals = c.Enum.Literals.SelectMany(f => GetTemplate("Literal").Substitute("Name", GetEscaped(f.Name)).Substitute("Value", GetEscaped(f.Value.ToInvariantString())).Substitute("Description", GetEscaped(f.Description))).ToArray();
                             var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "枚举").Substitute("GenericParameters", GetGenericParameters(new VariableDef[] { })).Substitute("Fields", Literals).Substitute("Description", GetEscaped(c.Enum.Description));
                             Content.AddRange(Lines);
+
+                            IndexPageTypeContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "枚举").Substitute("Description", GetEscaped(c.Description())));
+                            IndexBarTypeContentByFile.AddRange(GetTemplate("BarTypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), true, true)));
                         }
                         else if (c.OnClientCommand)
                         {
@@ -144,7 +166,8 @@ namespace Yuki.ObjectSchema.Xhtml
                             var Lines = GetTemplate("ClientCommand").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "客户端方法").Substitute("OutParameters", OutParameters).Substitute("InParameters", InParameters).Substitute("Description", GetEscaped(c.ClientCommand.Description));
                             Content.AddRange(Lines);
 
-                            Commands.AddRange(GetTemplate("TypeBrief").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("GenericParameters", GetGenericParameters(new VariableDef[] { })).Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.ClientCommand.Name, Version = c.Version() }))).Substitute("MetaType", "客户端方法").Substitute("Description", GetEscaped(c.ClientCommand.Description)));
+                            IndexPageCommandContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "客户端方法").Substitute("Description", GetEscaped(c.Description())));
+                            IndexBarCommandContentByFile.AddRange(GetTemplate("BarTypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), true, true)));
                         }
                         else if (c.OnServerCommand)
                         {
@@ -152,7 +175,8 @@ namespace Yuki.ObjectSchema.Xhtml
                             var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "服务端事件").Substitute("GenericParameters", GetGenericParameters(new VariableDef[] { })).Substitute("Fields", OutParameters).Substitute("Description", GetEscaped(c.ServerCommand.Description));
                             Content.AddRange(Lines);
 
-                            Commands.AddRange(GetTemplate("TypeBrief").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("GenericParameters", GetGenericParameters(new VariableDef[] { })).Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.ServerCommand.Name, Version = c.Version() }))).Substitute("MetaType", "服务端事件").Substitute("Description", GetEscaped(c.ServerCommand.Description)));
+                            IndexPageCommandContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "服务端事件").Substitute("Description", GetEscaped(c.Description())));
+                            IndexBarCommandContentByFile.AddRange(GetTemplate("BarTypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), true, true)));
                         }
                         else
                         {
@@ -163,28 +187,64 @@ namespace Yuki.ObjectSchema.Xhtml
                     var Page = GetPage(File.FriendlyPath, Content.ToArray(), true);
                     l.Add(new FileResult() { Path = File.DocFilePath, Content = String.Join("\r\n", Page) });
 
-                    if (Commands.Count != 0)
+                    if (IndexPageCommandContentByFile.Count != 0)
                     {
-                        IndexPageContent.AddRange(GetTemplate("Brief").Substitute("FilePath", GetEscaped(File.FriendlyPath)).Substitute("Commands", Commands.ToArray()));
+                        IndexPageCommandContent.AddRange(GetTemplate("Brief").Substitute("FilePath", GetEscaped(File.FriendlyPath)).Substitute("Types", IndexPageCommandContentByFile.ToArray()));
+                    }
+                    if (IndexPageTypeContentByFile.Count != 0)
+                    {
+                        IndexPageTypeContent.AddRange(GetTemplate("Brief").Substitute("FilePath", GetEscaped(File.FriendlyPath)).Substitute("Types", IndexPageTypeContentByFile.ToArray()));
+                    }
+                    if (IndexBarCommandContentByFile.Count != 0)
+                    {
+                        IndexBarCommandContent.AddRange(GetTemplate("BarBrief").Substitute("FilePath", GetEscaped(File.FriendlyPath)).Substitute("Types", IndexBarCommandContentByFile.ToArray()));
+                    }
+                    if (IndexBarTypeContentByFile.Count != 0)
+                    {
+                        IndexBarTypeContent.AddRange(GetTemplate("BarBrief").Substitute("FilePath", GetEscaped(File.FriendlyPath)).Substitute("Types", IndexBarTypeContentByFile.ToArray()));
                     }
                 }
 
-                l.Add(new FileResult { Path = "index.html", Content = String.Join(ControlChars.CrLf, GetPage("首页", IndexPageContent.ToArray(), false)) });
+                if (IndexPageCommandContent.Count > 0)
+                {
+                    l.Add(new FileResult { Path = "main.html", Content = String.Join(ControlChars.CrLf, GetPage("所有命令", IndexPageCommandContent.ToArray(), false)) });
+                    l.Add(new FileResult { Path = "bar.html", Content = String.Join(ControlChars.CrLf, GetBarPage("导航栏", IndexBarCommandContent.ToArray())) });
+                }
+                else
+                {
+                    l.Add(new FileResult { Path = "main.html", Content = String.Join(ControlChars.CrLf, GetPage("所有类型", IndexPageTypeContent.ToArray(), false)) });
+                    l.Add(new FileResult { Path = "bar.html", Content = String.Join(ControlChars.CrLf, GetBarPage("导航栏", IndexBarTypeContent.ToArray())) });
+                }
+                l.Add(new FileResult { Path = "index.html", Content = String.Join(ControlChars.CrLf, GetIndexPage("首页")) });
 
                 return l.ToArray();
             }
 
             public String[] GetPage(String Name, String[] Content, Boolean UseBackToMain)
             {
-                var Page = GetTemplate("Page").Substitute("Name", GetEscaped(Name)).Substitute("Title", GetEscaped(Title)).Substitute("CopyrightText", GetEscaped(CopyrightText)).Substitute("Content", Content);
+                var Page = GetTemplate("PageContent").Substitute("Name", GetEscaped(Name)).Substitute("Title", GetEscaped(Title)).Substitute("CopyrightText", GetEscaped(CopyrightText)).Substitute("Content", Content);
                 if (UseBackToMain)
                 {
-                    return Page.Substitute("BackToMain", GetTemplate("BackToMain"));
+                    return WrapPage(Page.Substitute("BackToMain", GetTemplate("BackToMain")));
                 }
                 else
                 {
-                    return Page.Substitute("BackToMain", new String[] { });
+                    return WrapPage(Page.Substitute("BackToMain", new String[] { }));
                 }
+            }
+            public String[] GetBarPage(String Name, String[] Content)
+            {
+                var Page = GetTemplate("BarPageContent").Substitute("Name", GetEscaped(Name)).Substitute("Title", GetEscaped(Title)).Substitute("Content", Content).Substitute("BackToMain", GetTemplate("BarTypeBrief").Substitute("TypeSpec", GetTemplate("BarBackToMain")));
+                return WrapPage(Page);
+            }
+            public String[] GetIndexPage(String Name)
+            {
+                var Page = GetTemplate("IndexPageContent").Substitute("Name", GetEscaped(Name)).Substitute("Title", GetEscaped(Title));
+                return WrapPage(Page);
+            }
+            public String[] WrapPage(String[] Content)
+            {
+                return GetTemplate("PageWrapper").Substitute("Content", Content);
             }
 
             public String[] GetVariables(VariableDef[] Fields)
@@ -193,7 +253,7 @@ namespace Yuki.ObjectSchema.Xhtml
                 {
                     return GetTemplate("EmptyVariable");
                 }
-                return Fields.SelectMany(f => GetTemplate("Variable").Substitute("Name", GetEscaped(f.Name)).Substitute("TypeSpec", GetTypeString(f.Type)).Substitute("Description", GetEscaped(f.Description))).ToArray();
+                return Fields.SelectMany(f => GetTemplate("Variable").Substitute("Name", GetEscaped(f.Name)).Substitute("TypeSpec", GetTypeString(f.Type, true)).Substitute("Description", GetEscaped(f.Description))).ToArray();
             }
             public String[] GetGenericParameters(VariableDef[] GenericParameters)
             {
@@ -201,7 +261,7 @@ namespace Yuki.ObjectSchema.Xhtml
                 {
                     return new String[] { };
                 }
-                return GetTemplate("GenericParameters").Substitute("GenericParameters", GenericParameters.SelectMany(f => GetTemplate("Variable").Substitute("Name", GetEscaped("'" + f.Name)).Substitute("TypeSpec", GetTypeString(f.Type)).Substitute("Description", GetEscaped(f.Description))).ToArray());
+                return GetTemplate("GenericParameters").Substitute("GenericParameters", GenericParameters.SelectMany(f => GetTemplate("Variable").Substitute("Name", GetEscaped("'" + f.Name)).Substitute("TypeSpec", GetTypeString(f.Type, true)).Substitute("Description", GetEscaped(f.Description))).ToArray());
             }
             public String[] GetLiterals(LiteralDef[] Literals)
             {
@@ -212,16 +272,44 @@ namespace Yuki.ObjectSchema.Xhtml
                 return Literals.SelectMany(f => GetTemplate("Literal").Substitute("Name", GetEscaped(f.Name)).Substitute("Value", GetEscaped(f.Value.ToInvariantString())).Substitute("Description", GetEscaped(f.Description))).ToArray();
             }
 
-            public String GetTypeString(TypeSpec Type)
+            public String GetTypeString(TypeSpec Type, Boolean WithDescription, Boolean IsInBar = false)
             {
                 switch (Type._Tag)
                 {
                     case TypeSpecTag.TypeRef:
                         {
                             var Name = Type.TypeRef.VersionedName();
-                            var tl = TypeLocations[Name];
-                            var Ref = tl.DocPath;
-                            return GetTemplate("Ref").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Single();
+                            if (TypeInfoDict.ContainsKey(Name))
+                            {
+                                var tl = TypeInfoDict[Name];
+                                var Ref = tl.DocPath;
+                                if (IsInBar)
+                                {
+                                    if (WithDescription)
+                                    {
+                                        return GetTemplate("BarRefWithDescription").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Substitute("Description", tl.Def.Description()).Single();
+                                    }
+                                    else
+                                    {
+                                        return GetTemplate("BarRef").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Single();
+                                    }
+                                }
+                                else
+                                {
+                                    if (WithDescription)
+                                    {
+                                        return GetTemplate("RefWithDescription").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Substitute("Description", tl.Def.Description()).Single();
+                                    }
+                                    else
+                                    {
+                                        return GetTemplate("Ref").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Single();
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                return GetEscaped(Name);
+                            }
                         }
                     case TypeSpecTag.GenericParameterRef:
                         {
@@ -229,17 +317,17 @@ namespace Yuki.ObjectSchema.Xhtml
                         }
                     case TypeSpecTag.Tuple:
                         {
-                            return GetEscaped("Tuple<") + String.Join(GetEscaped(", "), Type.Tuple.Types.Select(t => GetTypeString(t)).ToArray()) + GetEscaped(">");
+                            return GetEscaped("Tuple<") + String.Join(GetEscaped(", "), Type.Tuple.Types.Select(t => GetTypeString(t, WithDescription, IsInBar)).ToArray()) + GetEscaped(">");
                         }
                     case TypeSpecTag.GenericTypeSpec:
                         {
-                            return GetTypeString(Type.GenericTypeSpec.TypeSpec) + GetEscaped("<") + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(gpv => GetTypeString(gpv)).ToArray()) + GetEscaped(">");
+                            return GetTypeString(Type.GenericTypeSpec.TypeSpec, WithDescription, IsInBar) + GetEscaped("<") + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(gpv => GetTypeString(gpv, WithDescription, IsInBar)).ToArray()) + GetEscaped(">");
                         }
                     default:
                         throw new InvalidOperationException();
                 }
             }
-            public String GetTypeString(GenericParameterValue gpv)
+            public String GetTypeString(GenericParameterValue gpv, Boolean WithDescription, Boolean IsInBar)
             {
                 if (gpv.OnLiteral)
                 {
@@ -247,7 +335,7 @@ namespace Yuki.ObjectSchema.Xhtml
                 }
                 else if (gpv.OnTypeSpec)
                 {
-                    return GetTypeString(gpv.TypeSpec);
+                    return GetTypeString(gpv.TypeSpec, WithDescription, IsInBar);
                 }
                 else
                 {
