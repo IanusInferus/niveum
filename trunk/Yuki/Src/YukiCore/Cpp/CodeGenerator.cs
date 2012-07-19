@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2012.07.16.
+//  Version:     2012.07.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -233,7 +233,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 }
                 else if (t.OnEnum)
                 {
-                    MetaType = "enum";
+                    return new String[] { };
                 }
                 return GetTypePredefinition(Name, MetaType, GenericParameterLine);
             }
@@ -449,7 +449,24 @@ namespace Yuki.ObjectSchema.Cpp.Common
 
                 foreach (var c in Schema.Types)
                 {
+                    if (c.OnEnum)
+                    {
+                        l.AddRange(GetEnum(c.Enum));
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    l.Add("");
+                }
+
+                foreach (var c in Schema.Types)
+                {
                     if (c.OnPrimitive)
+                    {
+                        continue;
+                    }
+                    else if (c.OnEnum)
                     {
                         continue;
                     }
@@ -482,7 +499,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                     }
                     else if (c.OnEnum)
                     {
-                        l.AddRange(GetEnum(c.Enum));
+                        continue;
                     }
                     else if (c.OnClientCommand)
                     {
