@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.04.16.
+//  Version:     2012.07.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -491,6 +491,8 @@ namespace Yuki.SchemaManipulator
 
             var Data = TreeFile.ReadFile(TreePath);
             var b = tbc.TreeToBinary(t, Data);
+            var Dir = FileNameHandling.GetFileDirectory(BinaryPath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             using (var s = Streams.CreateWritable(BinaryPath))
             {
                 s.Write(b);
@@ -509,6 +511,8 @@ namespace Yuki.SchemaManipulator
                 Data = s.Read((int)(s.Length));
             }
             var x = tbc.BinaryToTree(t, Data);
+            var Dir = FileNameHandling.GetFileDirectory(TreePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             TreeFile.WriteFile(TreePath, x);
         }
 
