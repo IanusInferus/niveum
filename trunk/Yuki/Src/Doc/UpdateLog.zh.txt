@@ -1,4 +1,8 @@
-﻿2012.07.20
+﻿2012.07.23
+Yuki.Core:
+增加ObjectSchema的自定义预处理指令扩展功能。
+
+2012.07.20
 Yuki.SchemaManipulator:
 修正Tree文件和二进制文件互相转换时写入目录没有检查是否存在的问题。
 
