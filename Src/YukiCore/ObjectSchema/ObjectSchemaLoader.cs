@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2012.04.07.
+//  Version:     2012.07.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -29,6 +29,8 @@ namespace Yuki.ObjectSchema
         private List<Semantics.Node> Imports;
         private List<Semantics.Node> TypePaths;
         private Dictionary<Object, Syntax.FileTextRange> Positions;
+        private TreeFormatParseSetting tfpo = null;
+        private TreeFormatEvaluateSetting tfeo = null;
 
         public ObjectSchemaLoader()
         {
@@ -37,6 +39,17 @@ namespace Yuki.ObjectSchema
             Imports = new List<Semantics.Node>();
             TypePaths = new List<Semantics.Node>();
             Positions = new Dictionary<Object, Syntax.FileTextRange>();
+        }
+
+        public ObjectSchemaLoader(TreeFormatParseSetting OuterParsingSetting, TreeFormatEvaluateSetting OuterEvaluateSetting)
+        {
+            Types = new List<Semantics.Node>();
+            TypeRefs = new List<Semantics.Node>();
+            Imports = new List<Semantics.Node>();
+            TypePaths = new List<Semantics.Node>();
+            Positions = new Dictionary<Object, Syntax.FileTextRange>();
+            this.tfpo = OuterParsingSetting;
+            this.tfeo = OuterEvaluateSetting;
         }
 
         public Schema GetResult()
@@ -148,13 +161,36 @@ namespace Yuki.ObjectSchema
         }
         private void Load(String TreePath, StreamReader Reader, List<Semantics.Node> Types)
         {
-            var TableParameterFunctions = new HashSet<String>() { "Primitive", "Alias", "Record", "TaggedUnion", "Enum", "ClientCommand", "ServerCommand" };
-            var TableContentFunctions = new HashSet<String>() { "Primitive", "Alias", "Record", "TaggedUnion", "Enum", "ClientCommand", "ServerCommand" };
-            var ps = new TreeFormatParseSetting()
+            var Functions = new HashSet<String>() { "Primitive", "Alias", "Record", "TaggedUnion", "Enum", "ClientCommand", "ServerCommand" };
+            var TableParameterFunctions = Functions;
+            var TableContentFunctions = Functions;
+            TreeFormatParseSetting ps;
+            if (tfpo == null)
             {
-                IsTableParameterFunction = Name => TableParameterFunctions.Contains(Name),
-                IsTableContentFunction = Name => TableContentFunctions.Contains(Name)
-            };
+                ps = new TreeFormatParseSetting()
+                {
+                    IsTableParameterFunction = Name => TableParameterFunctions.Contains(Name),
+                    IsTableContentFunction = Name => TableContentFunctions.Contains(Name)
+                };
+            }
+            else
+            {
+                ps = new TreeFormatParseSetting()
+                {
+                    IsTableParameterFunction = Name =>
+                    {
+                        if (TableParameterFunctions.Contains(Name)) { return true; }
+                        return tfpo.IsTableParameterFunction(Name);
+                    },
+                    IsTableContentFunction = Name =>
+                    {
+                        if (TableContentFunctions.Contains(Name)) { return true; }
+                        return tfpo.IsTableContentFunction(Name);
+                    },
+                    IsTreeParameterFunction = tfpo.IsTreeParameterFunction,
+                    IsTreeContentFunction = tfpo.IsTreeContentFunction
+                };
+            }
             var es = new TreeFormatEvaluateSetting()
             {
                 FunctionCallEvaluator = (f, nm) =>
@@ -174,7 +210,7 @@ namespace Yuki.ObjectSchema
                     }
 
                     var ContentLines = new Syntax.FunctionCallTableLine[] { };
-                    if (f.Content.HasValue)
+                    if (Functions.Contains(f.Name.Text) && f.Content.HasValue)
                     {
                         var ContentValue = f.Content.Value;
                         if (ContentValue._Tag != Syntax.FunctionCallContentTag.TableContent) { throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -612,10 +648,15 @@ namespace Yuki.ObjectSchema
                             }
                         default:
                             {
+                                if (tfeo != null)
+                                {
+                                    return tfeo.FunctionCallEvaluator(f, nm);
+                                }
                                 throw new Syntax.InvalidEvaluationException("UnknownFunction", nm.GetFileRange(f), f);
                             }
-                    }
-                }
+                    }                     
+                },
+                TokenParameterEvaluator = tfeo != null ? tfeo.TokenParameterEvaluator : null
             };
 
             var t = TreeFile.ReadDirect(Reader, ps, es);
