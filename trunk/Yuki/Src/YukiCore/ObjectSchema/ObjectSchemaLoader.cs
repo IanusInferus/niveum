@@ -659,7 +659,7 @@ namespace Yuki.ObjectSchema
                 TokenParameterEvaluator = tfeo != null ? tfeo.TokenParameterEvaluator : null
             };
 
-            var t = TreeFile.ReadDirect(Reader, ps, es);
+            var t = TreeFile.ReadDirect(Reader, TreePath, ps, es);
             Types.AddRange(t.Value.Nodes);
             foreach (var p in t.Positions)
             {
