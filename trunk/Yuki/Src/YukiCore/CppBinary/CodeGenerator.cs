@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2012.04.24.
+//  Version:     2012.07.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -70,14 +70,26 @@ namespace Yuki.ObjectSchema.CppBinary
                 InnerWriter.FillEnumSet();
 
                 var Header = GetHeader();
+                var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
+                var Imports = Schema.Imports.Where(i => !IsInclude(i)).ToArray();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes(Schema);
                 var Contents = ComplexTypes;
-                foreach (var nn in NamespaceName.Split('.').Reverse())
+                if (NamespaceName != "")
                 {
-                    Contents = GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", Contents);
+                    foreach (var nn in NamespaceName.Split('.').Reverse())
+                    {
+                        Contents = GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", Contents);
+                    }
                 }
-                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("Contents", Contents));
+                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Imports", Imports).Substitute("Primitives", Primitives).Substitute("Contents", Contents));
+            }
+
+            public Boolean IsInclude(String s)
+            {
+                if (s.StartsWith("<") && s.EndsWith(">")) { return true; }
+                if (s.StartsWith(@"""") && s.EndsWith(@"""")) { return true; }
+                return false;
             }
 
             public String[] GetHeader()
