@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2012.07.23.
+//  Version:     2012.07.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Diagnostics;
 using Firefly;
 using Firefly.Mapping.XmlText;
 using Firefly.Texting;
@@ -156,7 +157,21 @@ namespace Yuki.ObjectSchema
         {
             using (var Reader = Txt.CreateTextReader(TreePath))
             {
-                Load(TreePath, Reader, Types);
+                if (Debugger.IsAttached)
+                {
+                    Load(TreePath, Reader, Types);
+                }
+                else
+                {
+                    try
+                    {
+                        Load(TreePath, Reader, Types);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = Opt<Syntax.TextRange>.Empty }, ex);
+                    }
+                }
             }
         }
         private void Load(String TreePath, StreamReader Reader, List<Semantics.Node> Types)
