@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.06.26.
+//  Version:     2012.07.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -398,8 +398,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCSharpDatabasePlainCode(String CsCodePath, String EntityNamespaceName)
         {
             var ObjectSchema = Schema();
-            var RelationSchema = RS.RelationSchemaTranslator.Translate(ObjectSchema);
-            var PlainObjectSchema = RS.PlainObjectSchemaGenerator.Generate(RelationSchema);
+            var PlainObjectSchema = RS.PlainObjectSchemaGenerator.TrimAsRelationSchema(ObjectSchema);
             var Compiled = PlainObjectSchema.CompileToCSharp(EntityNamespaceName);
             if (File.Exists(CsCodePath))
             {
@@ -417,8 +416,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCppDatabasePlainCode(String CppCodePath, String EntityNamespaceName)
         {
             var ObjectSchema = Schema();
-            var RelationSchema = RS.RelationSchemaTranslator.Translate(ObjectSchema);
-            var PlainObjectSchema = RS.PlainObjectSchemaGenerator.Generate(RelationSchema);
+            var PlainObjectSchema = RS.PlainObjectSchemaGenerator.TrimAsRelationSchema(ObjectSchema);
             var Compiled = PlainObjectSchema.CompileToCpp(EntityNamespaceName);
             if (File.Exists(CppCodePath))
             {
