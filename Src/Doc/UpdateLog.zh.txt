@@ -5,6 +5,8 @@ Yuki.Core:
 修正C++代码生成没有指定命名空间时，代码中仍然使用命名空间指令的问题。
 Yuki.Relation:
 修正生成简单Schema时没有转换Optional的问题。
+Yuki.Relation,Yuki.RelationSchemaManipulator:
+修正生成关系类型结构的简单类型时丢失Optional类型的问题。
 
 2012.07.24
 Yuki.Core:
