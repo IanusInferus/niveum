@@ -1,4 +1,8 @@
-﻿2012.07.24
+﻿2012.07.25
+Yuki.Core:
+修改ObjectSchemaLoader，使得在出现InvalidOperationException时可以报告文件位置。
+
+2012.07.24
 Yuki.Core:
 使用TreeFile的使用流但是提供路径的打开方法，以获得完整的错误信息。
 
