@@ -1,6 +1,8 @@
 ﻿2012.07.25
 Yuki.Core:
 修改ObjectSchemaLoader，使得在出现InvalidOperationException时可以报告文件位置。
+Yuki.Relation:
+修正生成简单Schema时没有转换Optional的问题。
 
 2012.07.24
 Yuki.Core:
