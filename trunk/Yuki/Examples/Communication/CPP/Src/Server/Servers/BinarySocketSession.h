@@ -53,6 +53,7 @@ namespace Server
         std::shared_ptr<Communication::BaseSystem::LockedVariable<int>> NumSessionCommand;
         Communication::BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<SessionCommand>>>> CommandQueue;
         Communication::BaseSystem::LockedVariable<bool> IsRunningValue;
+        Communication::BaseSystem::LockedVariable<bool> IsExitingValue;
 
         bool TryLockAsyncOperation();
         void LockAsyncOperation();

@@ -16,6 +16,14 @@ namespace Client
 {
     class LoadTest
     {
+        public static void TestQuit(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
+        {
+            ic.Quit(new QuitRequest{}, r =>
+            {
+                Completed();
+            });
+        }
+
         public static void TestAdd(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
         {
             ic.TestAdd(new TestAddRequest { Left = n - 1, Right = n + 1 }, r =>
@@ -232,10 +240,18 @@ namespace Client
 
         public static int DoTest(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType)
         {
+            TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestQuit", TestQuit);
             TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestAdd", TestAdd);
             TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMultiply", TestMultiply);
             TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestText", TestText);
+            Thread.Sleep(1000);
             TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMessage", TestMessage, TestMessageInitializeClientContext, TestMessageFinalCheck);
+
+            Thread.Sleep(5000);
+            for (int k = 0; k < 8; k += 1)
+            {
+                TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestQuit", TestQuit);
+            }
 
             Thread.Sleep(5000);
             for (int k = 0; k < 8; k += 1)
@@ -258,6 +274,7 @@ namespace Client
             Thread.Sleep(5000);
             for (int k = 0; k < 6; k += 1)
             {
+                Thread.Sleep(1000);
                 TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestMessage", TestMessage, TestMessageInitializeClientContext, TestMessageFinalCheck);
             }
 
