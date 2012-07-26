@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2012.07.19.
+//  Version:     2012.07.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -81,6 +81,10 @@ namespace Yuki.ObjectSchema.Xhtml
                         return new String(lc.ToArray());
                     };
                     Root = Schema.TypePaths.Select(tp => FileNameHandling.GetDirectoryPathWithTailingSeparator(FileNameHandling.GetFileDirectory(tp.Path))).Aggregate((a, b) => GetCommonHead(a, b));
+                    if (Root != FileNameHandling.GetDirectoryPathWithTailingSeparator(Root))
+                    {
+                        Root = FileNameHandling.GetFileDirectory(Root);
+                    }
                 }
 
                 var Map = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value);
