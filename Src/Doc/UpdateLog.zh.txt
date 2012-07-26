@@ -1,4 +1,8 @@
-﻿2012.07.25
+﻿2012.07.26
+Yuki.Core:
+修正XHTML代码生成中根路径计算错误的问题。
+
+2012.07.25
 Yuki.Core:
 修改ObjectSchemaLoader，使得在出现InvalidOperationException时可以报告文件位置。
 修改C++代码生成，增加对/import:"UtfEncoding.h"和/import:<UtfEncoding.h>指令的支持。
