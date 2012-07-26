@@ -208,6 +208,10 @@ namespace Yuki.ObjectSchema
             var m = new Marker { Types = Types };
             foreach (var t in TypeDefs)
             {
+                if (!(Types.ContainsKey(t.VersionedName()) && Types[t.VersionedName()] == t))
+                {
+                    throw new InvalidOperationException("TypeDefNotInSchema");
+                }
                 m.Mark(t);
             }
             foreach (var t in TypeSpecs)

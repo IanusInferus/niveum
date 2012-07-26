@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2012.04.24.
+//  Version:     2012.07.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -102,61 +102,61 @@ namespace Yuki.ObjectSchema.CSharpJson
                 return InnerWriter.GetXmlComment(Description);
             }
 
-            public String[] GetJsonServer(CommandDef[] Commands)
+            public String[] GetJsonServer(TypeDef[] Commands)
             {
                 return GetTemplate("JsonServer").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("Commands", GetJsonServerCommands(Commands));
             }
-            public String[] GetJsonServerCommands(CommandDef[] Commands)
+            public String[] GetJsonServerCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandDefTag.Client)
+                    if (c.OnClientCommand)
                     {
-                        l.AddRange(GetTemplate("JsonServer_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()));
+                        l.AddRange(GetTemplate("JsonServer_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()));
                     }
-                    else if (c._Tag == CommandDefTag.Server)
+                    else if (c.OnServerCommand)
                     {
-                        l.AddRange(GetTemplate("JsonServer_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()));
+                        l.AddRange(GetTemplate("JsonServer_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()));
                     }
                 }
                 return l.ToArray();
             }
 
-            public String[] GetJsonClient(CommandDef[] Commands)
+            public String[] GetJsonClient(TypeDef[] Commands)
             {
                 return GetTemplate("JsonClient").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommands", GetJsonClientClientCommands(Commands)).Substitute("ServerCommands", GetJsonClientServerCommands(Commands));
             }
-            public String[] GetJsonClientClientCommands(CommandDef[] Commands)
+            public String[] GetJsonClientClientCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandDefTag.Client)
+                    if (c.OnClientCommand)
                     {
-                        l.AddRange(GetTemplate("JsonClient_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
+                        l.AddRange(GetTemplate("JsonClient_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
                     }
                 }
                 return l.ToArray();
             }
-            public String[] GetJsonClientServerCommands(CommandDef[] Commands)
+            public String[] GetJsonClientServerCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandDefTag.Server)
+                    if (c.OnServerCommand)
                     {
-                        l.AddRange(GetTemplate("JsonClient_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()));
+                        l.AddRange(GetTemplate("JsonClient_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()));
                     }
                 }
                 return l.ToArray();
             }
 
-            public String[] GetJsonLogAspectWrapper(CommandDef[] Commands)
+            public String[] GetJsonLogAspectWrapper(TypeDef[] Commands)
             {
-                return GetTemplate("JsonLogAspectWrapper").Substitute("ServerCommandHooks", GetJsonLogAspectWrapperServerCommandHooks(Commands.Where(c => c.OnServer).Select(c => c.Server).ToArray())).Substitute("Commands", GetJsonLogAspectWrapperCommands(Commands));
+                return GetTemplate("JsonLogAspectWrapper").Substitute("ServerCommandHooks", GetJsonLogAspectWrapperServerCommandHooks(Commands.Where(c => c.OnServerCommand).ToArray())).Substitute("Commands", GetJsonLogAspectWrapperCommands(Commands));
             }
-            public String[] GetJsonLogAspectWrapperServerCommandHooks(ServerCommandDef[] ServerCommands)
+            public String[] GetJsonLogAspectWrapperServerCommandHooks(TypeDef[] ServerCommands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in ServerCommands)
@@ -165,18 +165,18 @@ namespace Yuki.ObjectSchema.CSharpJson
                 }
                 return l.ToArray();
             }
-            public String[] GetJsonLogAspectWrapperCommands(CommandDef[] Commands)
+            public String[] GetJsonLogAspectWrapperCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandDefTag.Client)
+                    if (c.OnClientCommand)
                     {
-                        l.AddRange(GetTemplate("JsonLogAspectWrapper_ClientCommandHook").Substitute("Name", c.Client.TypeFriendlyName()));
+                        l.AddRange(GetTemplate("JsonLogAspectWrapper_ClientCommandHook").Substitute("Name", c.ClientCommand.TypeFriendlyName()));
                     }
-                    else if (c._Tag == CommandDefTag.Server)
+                    else if (c.OnServerCommand)
                     {
-                        l.AddRange(GetTemplate("JsonLogAspectWrapper_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()));
+                        l.AddRange(GetTemplate("JsonLogAspectWrapper_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()));
                     }
                 }
                 return l.ToArray();
@@ -423,17 +423,17 @@ namespace Yuki.ObjectSchema.CSharpJson
             {
                 List<String> l = new List<String>();
 
-                List<CommandDef> cl = new List<CommandDef>();
+                List<TypeDef> cl = new List<TypeDef>();
 
                 foreach (var c in Schema.Types)
                 {
                     if (c.OnClientCommand && c.ClientCommand.Version == "")
                     {
-                        cl.Add(CommandDef.CreateClient(c.ClientCommand));
+                        cl.Add(c);
                     }
                     else if (c.OnServerCommand && c.ServerCommand.Version == "")
                     {
-                        cl.Add(CommandDef.CreateServer(c.ServerCommand));
+                        cl.Add(c);
                     }
                 }
 
@@ -449,7 +449,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                     l.Add("");
                 }
 
-                var oca = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Select(t => t.OnClientCommand ? CommandDef.CreateClient(t.ClientCommand) : CommandDef.CreateServer(t.ServerCommand)).ToArray();
+                var oca = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToArray();
                 if (oca.Length > 0)
                 {
                     l.AddRange(GetJsonLogAspectWrapper(oca));

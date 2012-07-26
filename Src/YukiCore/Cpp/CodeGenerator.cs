@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2012.07.25.
+//  Version:     2012.07.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -412,38 +412,38 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 }
             }
 
-            public String[] GetIServerImplementation(CommandDef[] Commands)
+            public String[] GetIServerImplementation(TypeDef[] Commands)
             {
                 return GetTemplate("IServerImplementation").Substitute("Commands", GetIServerImplementationCommands(Commands));
             }
-            public String[] GetIServerImplementationCommands(CommandDef[] Commands)
+            public String[] GetIServerImplementationCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandDefTag.Client)
+                    if (c.OnClientCommand)
                     {
-                        l.AddRange(GetTemplate("IServerImplementation_ClientCommand").Substitute("Name", c.Client.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
+                        l.AddRange(GetTemplate("IServerImplementation_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
                     }
-                    else if (c._Tag == CommandDefTag.Server)
+                    else if (c.OnServerCommand)
                     {
-                        l.AddRange(GetTemplate("IServerImplementation_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Server.Description)));
+                        l.AddRange(GetTemplate("IServerImplementation_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
                     }
                 }
                 return l.ToArray();
             }
-            public String[] GetIClientImplementation(CommandDef[] Commands)
+            public String[] GetIClientImplementation(TypeDef[] Commands)
             {
                 return GetTemplate("IClientImplementation").Substitute("Commands", GetIClientImplementationCommands(Commands));
             }
-            public String[] GetIClientImplementationCommands(CommandDef[] Commands)
+            public String[] GetIClientImplementationCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandDefTag.Server)
+                    if (c.OnServerCommand)
                     {
-                        l.AddRange(GetTemplate("IClientImplementation_ServerCommand").Substitute("Name", c.Server.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Server.Description)));
+                        l.AddRange(GetTemplate("IClientImplementation_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
                     }
                 }
                 return l.ToArray();
@@ -453,7 +453,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
             {
                 List<String> l = new List<String>();
 
-                List<CommandDef> cl = new List<CommandDef>();
+                List<TypeDef> cl = new List<TypeDef>();
 
                 var ltf = new TupleAndGenericTypeSpecFetcher();
                 ltf.PushTypeDefs(Schema.Types);
@@ -516,12 +516,12 @@ namespace Yuki.ObjectSchema.Cpp.Common
                     else if (c.OnClientCommand)
                     {
                         l.AddRange(GetClientCommand(c.ClientCommand));
-                        cl.Add(new CommandDef { _Tag = CommandDefTag.Client, Client = c.ClientCommand });
+                        cl.Add(c);
                     }
                     else if (c.OnServerCommand)
                     {
                         l.AddRange(GetServerCommand(c.ServerCommand));
-                        cl.Add(new CommandDef { _Tag = CommandDefTag.Server, Server = c.ServerCommand });
+                        cl.Add(c);
                     }
                     else
                     {
