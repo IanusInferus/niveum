@@ -315,6 +315,20 @@ ObjectSchemaTemplate
                         return new JValue(v);
                     }
         Template
+            Name JsonTranslator_Primitive_Byte
+            Value
+                $String
+                    public static Byte ByteFromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToByte(jv.Value);
+                    }
+                    public static JValue ByteToJson(Byte v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
             Name JsonTranslator_Primitive_Int
             Value
                 $String
