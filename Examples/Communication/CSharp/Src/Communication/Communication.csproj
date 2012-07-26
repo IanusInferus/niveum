@@ -36,7 +36,7 @@
       <HintPath>..\..\..\..\..\Bin\Firefly.Core.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\JsonNet\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\..\..\..\Bin\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

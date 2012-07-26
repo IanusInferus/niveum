@@ -5,8 +5,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{EED0E897-C1C0-48B8-8269-AD4B97C8E4F2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpSendReceive", "TcpSendReceive\TcpSendReceive.csproj", "{44BAA95D-E876-44F9-B6E0-C7B87D00869D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication", "Communication\Communication.csproj", "{4EC01D0D-A0BD-4402-9338-F9962ADABAFE}"
 EndProject
 Global
@@ -23,10 +21,6 @@ Global
 		{EED0E897-C1C0-48B8-8269-AD4B97C8E4F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EED0E897-C1C0-48B8-8269-AD4B97C8E4F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EED0E897-C1C0-48B8-8269-AD4B97C8E4F2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{44BAA95D-E876-44F9-B6E0-C7B87D00869D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{44BAA95D-E876-44F9-B6E0-C7B87D00869D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{44BAA95D-E876-44F9-B6E0-C7B87D00869D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{44BAA95D-E876-44F9-B6E0-C7B87D00869D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4EC01D0D-A0BD-4402-9338-F9962ADABAFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4EC01D0D-A0BD-4402-9338-F9962ADABAFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4EC01D0D-A0BD-4402-9338-F9962ADABAFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
