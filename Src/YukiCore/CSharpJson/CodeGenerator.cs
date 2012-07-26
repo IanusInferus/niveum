@@ -210,6 +210,9 @@ namespace Yuki.ObjectSchema.CSharpJson
                             case "String":
                                 l.AddRange(GetTemplate("JsonTranslator_Primitive_String"));
                                 break;
+                            case "Byte":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_Byte"));
+                                break;
                             case "Int":
                                 l.AddRange(GetTemplate("JsonTranslator_Primitive_Int"));
                                 break;
