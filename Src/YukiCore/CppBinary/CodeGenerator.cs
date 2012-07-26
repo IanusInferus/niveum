@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2012.07.25.
+//  Version:     2012.07.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -111,55 +111,55 @@ namespace Yuki.ObjectSchema.CppBinary
                 return InnerWriter.GetXmlComment(Description);
             }
 
-            public String[] GetBinaryServer(CommandDef[] Commands)
+            public String[] GetBinaryServer(TypeDef[] Commands)
             {
                 return GetTemplate("BinaryServer").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("Commands", GetBinaryServerCommands(Commands));
             }
-            public String[] GetBinaryServerCommands(CommandDef[] Commands)
+            public String[] GetBinaryServerCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandDefTag.Client)
+                    if (c.OnClientCommand)
                     {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { TypeDef.CreateClientCommand(c.Client) }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
-                        l.AddRange(GetTemplate("BinaryServer_ClientCommand").Substitute("CommandName", c.Client.Name.Escape()).Substitute("Name", c.Client.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        l.AddRange(GetTemplate("BinaryServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
-                    else if (c._Tag == CommandDefTag.Server)
+                    else if (c.OnServerCommand)
                     {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { TypeDef.CreateServerCommand(c.Server) }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
-                        l.AddRange(GetTemplate("BinaryServer_ServerCommand").Substitute("CommandName", c.Server.Name.Escape()).Substitute("Name", c.Server.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        l.AddRange(GetTemplate("BinaryServer_ServerCommand").Substitute("CommandName", c.ServerCommand.Name.Escape()).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
                 return l.ToArray();
             }
 
-            public String[] GetBinaryClient(CommandDef[] Commands)
+            public String[] GetBinaryClient(TypeDef[] Commands)
             {
                 return GetTemplate("BinaryClient").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommands", GetBinaryClientClientCommands(Commands)).Substitute("ServerCommands", GetBinaryClientServerCommands(Commands));
             }
-            public String[] GetBinaryClientClientCommands(CommandDef[] Commands)
+            public String[] GetBinaryClientClientCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandDefTag.Client)
+                    if (c.OnClientCommand)
                     {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { TypeDef.CreateClientCommand(c.Client) }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
-                        l.AddRange(GetTemplate("BinaryClient_ClientCommand").Substitute("CommandName", c.Client.Name.Escape()).Substitute("Name", c.Client.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("XmlComment", GetXmlComment(c.Client.Description)));
+                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        l.AddRange(GetTemplate("BinaryClient_ClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
                     }
                 }
                 return l.ToArray();
             }
-            public String[] GetBinaryClientServerCommands(CommandDef[] Commands)
+            public String[] GetBinaryClientServerCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c._Tag == CommandDefTag.Server)
+                    if (c.OnServerCommand)
                     {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { TypeDef.CreateServerCommand(c.Server) }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
-                        l.AddRange(GetTemplate("BinaryClient_ServerCommand").Substitute("CommandName", c.Server.Name.Escape()).Substitute("Name", c.Server.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        l.AddRange(GetTemplate("BinaryClient_ServerCommand").Substitute("CommandName", c.ServerCommand.Name.Escape()).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
                 return l.ToArray();
@@ -462,17 +462,17 @@ namespace Yuki.ObjectSchema.CppBinary
             {
                 List<String> l = new List<String>();
 
-                List<CommandDef> cl = new List<CommandDef>();
+                List<TypeDef> cl = new List<TypeDef>();
 
                 foreach (var c in Schema.Types)
                 {
                     if (c.OnClientCommand)
                     {
-                        cl.Add(CommandDef.CreateClient(c.ClientCommand));
+                        cl.Add(c);
                     }
                     else if (c.OnServerCommand)
                     {
-                        cl.Add(CommandDef.CreateServer(c.ServerCommand));
+                        cl.Add(c);
                     }
                 }
 

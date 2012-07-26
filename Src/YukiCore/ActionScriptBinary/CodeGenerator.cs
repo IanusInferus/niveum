@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0二进制通讯代码生成器
-//  Version:     2012.04.24.
+//  Version:     2012.07.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -67,8 +67,8 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
 
                 InnerWriter.FillEnumSet();
 
-                var ClientCommands = Schema.Types.Where(t => t.OnClientCommand).Select(t => t.ClientCommand).Where(c => c.Version == "").ToArray();
-                var ServerCommands = Schema.Types.Where(t => t.OnServerCommand).Select(t => t.ServerCommand).Where(c => c.Version == "").ToArray();
+                var ClientCommands = Schema.Types.Where(t => t.OnClientCommand).Where(c => c.Version() == "").ToArray();
+                var ServerCommands = Schema.Types.Where(t => t.OnServerCommand).Where(c => c.Version() == "").ToArray();
                 if (ClientCommands.Length + ServerCommands.Length > 0)
                 {
                     l.Add(GetFile("IBinarySender", GetTemplate("IBinarySender")));
@@ -95,7 +95,7 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
                 return InnerWriter.GetXmlComment(Description);
             }
 
-            public String[] GetClient(ClientCommandDef[] ClientCommands, ServerCommandDef[] ServerCommands)
+            public String[] GetClient(TypeDef[] ClientCommands, TypeDef[] ServerCommands)
             {
                 var NumClientCommand = ClientCommands.Length;
                 var Client_ServerCommandHandles = GetClientServerCommandHandles(ServerCommands);
@@ -104,27 +104,27 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
                 var Client_ClientCommands = GetClientClientCommands(ClientCommands);
                 return GetTemplate("BinaryClient").Substitute("NumClientCommand", NumClientCommand.ToInvariantString()).Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("Client_ServerCommandHandles", Client_ServerCommandHandles).Substitute("Client_ClientCommandHandles", Client_ClientCommandHandles).Substitute("Client_ClientCommandDeques", Client_ClientCommandDeques).Substitute("Client_ClientCommands", Client_ClientCommands);
             }
-            public String[] GetClientServerCommandHandles(ServerCommandDef[] ServerCommands)
+            public String[] GetClientServerCommandHandles(TypeDef[] ServerCommands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in ServerCommands)
                 {
-                    var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { TypeDef.CreateServerCommand(c) }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                    var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                     l.AddRange(GetTemplate("BinaryClient_ServerCommandHandle").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                 }
                 return l.ToArray();
             }
-            public String[] GetClientClientCommandHandles(ClientCommandDef[] ClientCommands)
+            public String[] GetClientClientCommandHandles(TypeDef[] ClientCommands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in ClientCommands)
                 {
-                    var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { TypeDef.CreateClientCommand(c) }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                    var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                     l.AddRange(GetTemplate("BinaryClient_ClientCommandHandle").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                 }
                 return l.ToArray();
             }
-            public String[] GetClientClientCommandDeques(ClientCommandDef[] ClientCommands)
+            public String[] GetClientClientCommandDeques(TypeDef[] ClientCommands)
             {
                 List<String> l = new List<String>();
                 var k = 0;
@@ -135,14 +135,14 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
                 }
                 return l.ToArray();
             }
-            public String[] GetClientClientCommands(ClientCommandDef[] ClientCommands)
+            public String[] GetClientClientCommands(TypeDef[] ClientCommands)
             {
                 List<String> l = new List<String>();
                 var k = 0;
                 foreach (var c in ClientCommands)
                 {
-                    var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { TypeDef.CreateClientCommand(c) }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
-                    l.AddRange(GetTemplate("BinaryClient_ClientCommand").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommandIndex", k.ToInvariantString()).Substitute("XmlComment", GetXmlComment(c.Description)));
+                    var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                    l.AddRange(GetTemplate("BinaryClient_ClientCommand").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommandIndex", k.ToInvariantString()).Substitute("XmlComment", GetXmlComment(c.Description())));
                     k += 1;
                 }
                 return l.ToArray();

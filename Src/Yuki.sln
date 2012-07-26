@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YukiRelation", "YukiRelatio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RelationSchemaManipulator", "RelationSchemaManipulator\RelationSchemaManipulator.csproj", "{C608D189-D985-4CFB-9B8D-E44804C3416F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpSendReceive", "TcpSendReceive\TcpSendReceive.csproj", "{44BAA95D-E876-44F9-B6E0-C7B87D00869D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{C608D189-D985-4CFB-9B8D-E44804C3416F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C608D189-D985-4CFB-9B8D-E44804C3416F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C608D189-D985-4CFB-9B8D-E44804C3416F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44BAA95D-E876-44F9-B6E0-C7B87D00869D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44BAA95D-E876-44F9-B6E0-C7B87D00869D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44BAA95D-E876-44F9-B6E0-C7B87D00869D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44BAA95D-E876-44F9-B6E0-C7B87D00869D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
