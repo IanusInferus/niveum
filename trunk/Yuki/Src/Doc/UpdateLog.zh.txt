@@ -1,6 +1,12 @@
 ﻿2012.07.26
 Yuki.Core:
 修正XHTML代码生成中根路径计算错误的问题。
+去除CommandDef类型。
+修正所有的通讯命令Hash计算没有计算命令本身的问题。
+Yuki.TcpSendReceive:
+将TcpSendReceive工具加入到正式代码，并增加使用通讯Schema和二进制服务器进行Json格式交互的功能。
+Examples:
+修正通讯示例使用退出命令是没有回显的问题。
 
 2012.07.25
 Yuki.Core:
