@@ -606,7 +606,6 @@ namespace TcpSendReceive
         {
             if (osa != null) { return osa; }
             var s = Schema();
-            var ts = new Schema { Types = s.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToArray(), TypeRefs = s.TypeRefs.Concat(s.Types.Where(t => !(t.OnClientCommand || t.OnServerCommand))).ToArray(), Imports = s.Imports, TypePaths = s.TypePaths };
             var Codes = new String[] { s.CompileToCSharp(), s.CompileToCSharpBinary(), s.CompileToCSharpJson() };
 
             var cp = new CompilerParameters();
