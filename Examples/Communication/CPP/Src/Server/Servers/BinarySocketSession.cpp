@@ -219,6 +219,7 @@ namespace Server
           NumSessionCommandUpdated(std::make_shared<Communication::BaseSystem::AutoResetEvent>()),
           NumSessionCommand(std::make_shared<Communication::BaseSystem::LockedVariable<int>>(0)),
           IsRunningValue(false),
+          IsExitingValue(false),
           bsm(std::make_shared<BufferStateMachine>()),
           Buffer(std::make_shared<std::vector<uint8_t>>()),
           BufferLength(0),
@@ -333,6 +334,7 @@ namespace Server
                 StopAsync();
                 ReleaseAsyncOperation();
             };
+            if (IsExitingValue.Check<bool>([](const bool &s) { return s; })) { return true; }
             if (!TryLockAsyncOperation()) { return true; }
             ReceiveAsync(Buffer, BufferLength, Buffer->size() - BufferLength, Completed, Faulted);
         }
@@ -626,7 +628,15 @@ namespace Server
 
     void BinarySocketSession::StopAsync()
     {
-        if (!IsRunning()) { return; }
+        bool Done;
+        IsExitingValue.Update([&](bool b) -> bool
+        {
+            Done = b;
+            return true;
+        });
+
+        if (Done) { return; }
+
         auto ss = GetSocket();
         if (ss != nullptr)
         {
@@ -639,7 +649,6 @@ namespace Server
             }
         }
         PushCommand(SessionCommand::CreateQuit());
-        IsRunningValue.Update([=](bool b) { return false; });
         if (NotifySessionQuit != nullptr)
         {
             NotifySessionQuit();
@@ -648,6 +657,8 @@ namespace Server
 
     void BinarySocketSession::StopInner()
     {
+        IsExitingValue.Update([](bool b) { return true; });
+
         if (Server != nullptr)
         {
             if (Server->GetEnableLogSystem())
@@ -670,8 +681,8 @@ namespace Server
         }
 
         PushCommand(SessionCommand::CreateQuit());
-        IsRunningValue.Update([=](bool b) { return false; });
 
+        IsRunningValue.Update([=](bool b) { return false; });
         while (NumSessionCommand->Check<bool>([](const int &n) { return n != 0; }))
         {
             NumSessionCommandUpdated->WaitOne();
@@ -686,5 +697,6 @@ namespace Server
         {
             Server = nullptr;
         }
+        IsExitingValue.Update([=](bool b) { return false; });
     }
 }

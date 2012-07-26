@@ -107,6 +107,7 @@ namespace Server
         private LockedVariable<int> NumSessionCommand = new LockedVariable<int>(0);
         private LockedVariable<Task> SessionTask = new LockedVariable<Task>(new Task(() => { }));
         private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
+        private LockedVariable<Boolean> IsExitingValue = new LockedVariable<Boolean>(false);
         public Boolean IsRunning
         {
             get
@@ -478,6 +479,7 @@ namespace Server
                         ReleaseAsyncOperation();
                     }
                 };
+                if (IsExitingValue.Check(b => b)) { return true; }
                 if (!TryLockAsyncOperation()) { return true; }
                 ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
             }
@@ -602,6 +604,14 @@ namespace Server
         //线程安全
         private void StopAsync()
         {
+            bool Done = false;
+            IsExitingValue.Update(b =>
+            {
+                Done = b;
+                return true;
+            });
+            if (Done) { return; }
+
             if (Server != null)
             {
                 Server.SessionMappings.DoAction(Mappings =>
@@ -629,11 +639,12 @@ namespace Server
                 Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExit" });
             }
             PushCommand(SessionCommand.CreateQuit());
-            IsRunningValue.Update(b => false);
             Server.NotifySessionQuit(this);
         }
         protected override void StopInner()
         {
+            IsExitingValue.Update(b => true);
+
             if (Server != null)
             {
                 Server.SessionMappings.DoAction(Mappings =>
@@ -646,8 +657,8 @@ namespace Server
             }
 
             PushCommand(SessionCommand.CreateQuit());
-            IsRunningValue.Update(b => false);
 
+            IsRunningValue.Update(b => false);
             while (NumSessionCommand.Check(n => n != 0))
             {
                 NumSessionCommandUpdated.WaitOne();
@@ -656,6 +667,7 @@ namespace Server
             {
                 NumAsyncOperationUpdated.WaitOne();
             }
+
             SessionTask.Update
             (
                 t =>
@@ -669,6 +681,7 @@ namespace Server
                     return null;
                 }
             );
+            IsExitingValue.Update(b => false);
         }
     }
 }
