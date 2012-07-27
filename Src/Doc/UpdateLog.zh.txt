@@ -1,4 +1,8 @@
-﻿2012.07.26
+﻿2012.07.27
+Yuki.Core:
+修正ActionScript代码生成中，int32读取时符号扩展导致的问题。
+
+2012.07.26
 Yuki.Core:
 修正XHTML代码生成中根路径计算错误的问题。
 去除CommandDef类型。

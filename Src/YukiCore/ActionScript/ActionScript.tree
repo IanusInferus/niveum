@@ -4,7 +4,7 @@
       File:        ActionScript.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构ActionScript3.0模板数据
-      Version:     2012.07.23.
+      Version:     2012.07.27.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -427,8 +427,8 @@ ObjectSchemaTemplate
                         public static function int16FromBinary(ba:IDataInput):int
                         {
                             var o:uint;
-                            o = int8FromBinary(ba);
-                            o = (int8FromBinary(ba) << 8) | o;
+                            o = int8FromBinary(ba) & 0xFF;
+                            o = ((int8FromBinary(ba) & 0xFF) << 8) | o;
                             return o;
                         }
                         public static function int16ToBinary(ba:IDataOutput, v:int):void
@@ -440,10 +440,10 @@ ObjectSchemaTemplate
                         public static function int32FromBinary(ba:IDataInput):int
                         {
                             var o:int;
-                            o = int8FromBinary(ba);
-                            o = (int8FromBinary(ba) << 8) | o;
-                            o = (int8FromBinary(ba) << 16) | o;
-                            o = (int8FromBinary(ba) << 24) | o;
+                            o = int8FromBinary(ba) & 0xFF;
+                            o = ((int8FromBinary(ba) & 0xFF) << 8) | o;
+                            o = ((int8FromBinary(ba) & 0xFF) << 16) | o;
+                            o = ((int8FromBinary(ba) & 0xFF) << 24) | o;
                             return o;
                         }
                         public static function int32ToBinary(ba:IDataOutput, v:int):void
