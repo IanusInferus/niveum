@@ -1,4 +1,9 @@
-﻿2012.07.27
+﻿2012.07.30
+Yuki.TcpSendReceive:
+修正二进制连接时没有生成Schema时断开连接会生成Schema，导致断开速度慢的问题。
+去除无用的错误提示信息。
+
+2012.07.27
 Yuki.Core:
 修正ActionScript代码生成中，int32读取时符号扩展导致的问题。
 
