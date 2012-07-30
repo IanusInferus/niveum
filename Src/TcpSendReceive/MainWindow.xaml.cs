@@ -57,6 +57,7 @@ namespace TcpSendReceive
                 }));
                 Action<SocketError> Faulted = se => this.Dispatcher.BeginInvoke((Action)(() =>
                 {
+                    if (se == SocketError.OperationAborted) { return; }
                     MessageBox.Show(this, (new SocketException((int)se)).Message, "Error");
                     Button_Disconnect_Click(null, null);
                 }));
@@ -118,6 +119,7 @@ namespace TcpSendReceive
                 }));
                 Action<SocketError> Faulted = se => this.Dispatcher.BeginInvoke((Action)(() =>
                 {
+                    if (se == SocketError.OperationAborted) { return; }
                     MessageBox.Show(this, (new SocketException((int)se)).Message, "Error");
                     Button_Disconnect_Click(null, null);
                 }));
@@ -179,6 +181,7 @@ namespace TcpSendReceive
                 }));
                 Action<SocketError> Faulted = se => this.Dispatcher.BeginInvoke((Action)(() =>
                 {
+                    if (se == SocketError.NotConnected) { return; }
                     MessageBox.Show(this, (new SocketException((int)se)).Message, "Error");
                     Button_Disconnect_Click(null, null);
                 }));
@@ -459,9 +462,6 @@ namespace TcpSendReceive
             }
             else if (m == Mode.Binary)
             {
-                var Sche = Schema();
-                var a = SchemaAssembly();
-
                 AcceptBuffer.AddRange(l);
                 while (true)
                 {
@@ -472,6 +472,9 @@ namespace TcpSendReceive
                     }
                     FirstPosition = r.Position;
                     if (r.Command == null) { continue; }
+
+                    var Sche = Schema();
+                    var a = SchemaAssembly();
 
                     var CommandName = r.Command.CommandName;
                     var CommandDef = Sche.Types.Where(t => t.Name() == CommandName && t.Version() == "").Single();
@@ -527,6 +530,7 @@ namespace TcpSendReceive
             }));
             Action<SocketError> Faulted = se => this.Dispatcher.BeginInvoke((Action)(() =>
             {
+                if (se == SocketError.OperationAborted) { return; }
                 MessageBox.Show(this, (new SocketException((int)se)).Message, "Error");
                 Button_Disconnect_Click(null, null);
             }));
