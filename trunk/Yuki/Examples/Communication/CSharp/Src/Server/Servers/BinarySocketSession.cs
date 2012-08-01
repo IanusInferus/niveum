@@ -663,6 +663,24 @@ namespace Server
             {
                 NumSessionCommandUpdated.WaitOne();
             }
+            var ss = GetSocket();
+            if (ss != null)
+            {
+                try
+                {
+                    ss.Shutdown(SocketShutdown.Both);
+                }
+                catch(Exception)
+                {
+                }
+                try
+                {
+                    ss.Close();
+                }
+                catch
+                {
+                }
+            }
             while (NumAsyncOperation.Check(n => n != 0))
             {
                 NumAsyncOperationUpdated.WaitOne();
