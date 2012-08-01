@@ -687,6 +687,24 @@ namespace Server
         {
             NumSessionCommandUpdated->WaitOne();
         }
+        auto ss = GetSocket();
+        if (ss != nullptr)
+        {
+            try
+            {
+                ss->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+            }
+            catch (std::exception &)
+            {
+            }
+            try
+            {
+                ss->close();
+            }
+            catch (std::exception &)
+            {
+            }
+        }
         while (NumAsyncOperation->Check<bool>([](const int &n) { return n != 0; }))
         {
             NumAsyncOperationUpdated->WaitOne();
