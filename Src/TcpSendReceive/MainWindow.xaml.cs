@@ -59,7 +59,7 @@ namespace TcpSendReceive
                 {
                     if (se == SocketError.OperationAborted) { return; }
                     MessageBox.Show(this, (new SocketException((int)se)).Message, "Error");
-                    Button_Disconnect_Click(null, null);
+                    ForceDisconnect();
                 }));
                 sock.ConnectAsync(RemoteEndPoint, Completed, Faulted);
 
@@ -69,7 +69,7 @@ namespace TcpSendReceive
             {
                 if (!Success)
                 {
-                    Button_Disconnect_Click(null, null);
+                    ForceDisconnect();
                 }
             }
         }
@@ -121,7 +121,7 @@ namespace TcpSendReceive
                 {
                     if (se == SocketError.OperationAborted) { return; }
                     MessageBox.Show(this, (new SocketException((int)se)).Message, "Error");
-                    Button_Disconnect_Click(null, null);
+                    ForceDisconnect();
                 }));
                 sock.AcceptAsync(Completed, Faulted);
 
@@ -131,7 +131,7 @@ namespace TcpSendReceive
             {
                 if (!Success)
                 {
-                    Button_Disconnect_Click(null, null);
+                    ForceDisconnect();
                 }
             }
         }
@@ -183,11 +183,24 @@ namespace TcpSendReceive
                 {
                     if (se == SocketError.NotConnected) { return; }
                     MessageBox.Show(this, (new SocketException((int)se)).Message, "Error");
-                    Button_Disconnect_Click(null, null);
+                    ForceDisconnect();
                 }));
                 sock.DisconnectAsync(Completed, Faulted);
+                return;
             }
 
+            CloseSocket();
+
+            TextBox_Port.IsEnabled = true;
+            TextBox_IP.IsEnabled = true;
+            Button_Send.IsEnabled = false;
+            Button_Disconnect.IsEnabled = false;
+            Button_Listen.IsEnabled = true;
+            Button_Connect.IsEnabled = true;
+        }
+
+        private void ForceDisconnect()
+        {
             CloseSocket();
 
             TextBox_Port.IsEnabled = true;
@@ -257,7 +270,7 @@ namespace TcpSendReceive
             Action<SocketError> Faulted = se => this.Dispatcher.BeginInvoke((Action)(() =>
             {
                 MessageBox.Show(this, (new SocketException((int)se)).Message, "Error");
-                Button_Disconnect_Click(null, null);
+                ForceDisconnect();
             }));
             sock.SendAsync(SendBuffer, 0, SendBuffer.Length, Completed, Faulted);
         }
@@ -515,7 +528,7 @@ namespace TcpSendReceive
             if (!IsConnected)
             {
                 MessageBox.Show(this, (new SocketException((int)SocketError.ConnectionReset)).Message, "Error");
-                Button_Disconnect_Click(null, null);
+                ForceDisconnect();
                 return;
             }
 
@@ -532,15 +545,20 @@ namespace TcpSendReceive
             {
                 if (se == SocketError.OperationAborted) { return; }
                 MessageBox.Show(this, (new SocketException((int)se)).Message, "Error");
-                Button_Disconnect_Click(null, null);
+                ForceDisconnect();
             }));
             sock.ReceiveAsync(ReceiveBuffer, 0, ReceiveBuffer.Length, Completed, Faulted);
         }
 
-        private static String ConfigurationFilePath = Assembly.GetEntryAssembly().Location + ".ini";
+        private static String ConfigurationFilePath;
         private static Configuration c;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            ConfigurationFilePath = Path.Combine(Environment.CurrentDirectory, Assembly.GetEntryAssembly().GetName().Name + ".exe.ini");
+            if (!File.Exists(ConfigurationFilePath))
+            {
+                ConfigurationFilePath = Assembly.GetEntryAssembly().Location + ".ini";
+            }
             if (File.Exists(ConfigurationFilePath))
             {
                 var x = TreeFile.ReadFile(ConfigurationFilePath);
