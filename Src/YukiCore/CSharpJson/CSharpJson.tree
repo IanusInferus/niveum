@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2012.06.04.
+      Version:     2012.10.25.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -315,20 +315,6 @@ ObjectSchemaTemplate
                         return new JValue(v);
                     }
         Template
-            Name JsonTranslator_Primitive_Byte
-            Value
-                $String
-                    public static Byte ByteFromJson(JToken j)
-                    {
-                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
-                        var jv = j as JValue;
-                        return Convert.ToByte(jv.Value);
-                    }
-                    public static JValue ByteToJson(Byte v)
-                    {
-                        return new JValue(v);
-                    }
-        Template
             Name JsonTranslator_Primitive_Int
             Value
                 $String
@@ -353,6 +339,160 @@ ObjectSchemaTemplate
                         return Convert.ToDouble(jv.Value);
                     }
                     public static JValue RealToJson(Real v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
+            Name JsonTranslator_Primitive_Byte
+            Value
+                $String
+                    public static Byte ByteFromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToByte(jv.Value);
+                    }
+                    public static JValue ByteToJson(Byte v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
+            Name JsonTranslator_Primitive_UInt8
+            Value
+                $String
+                    public static UInt8 UInt8FromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToByte(jv.Value);
+                    }
+                    public static JValue UInt8ToJson(UInt8 v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
+            Name JsonTranslator_Primitive_UInt16
+            Value
+                $String
+                    public static UInt16 UInt16FromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToUInt16(jv.Value);
+                    }
+                    public static JValue UInt16ToJson(UInt16 v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
+            Name JsonTranslator_Primitive_UInt32
+            Value
+                $String
+                    public static UInt32 UInt32FromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToUInt32(jv.Value);
+                    }
+                    public static JValue UInt32ToJson(UInt32 v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
+            Name JsonTranslator_Primitive_UInt64
+            Value
+                $String
+                    public static UInt64 UInt64FromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToUInt64(jv.Value);
+                    }
+                    public static JValue UInt64ToJson(UInt64 v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
+            Name JsonTranslator_Primitive_Int8
+            Value
+                $String
+                    public static Int8 Int8FromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToSByte(jv.Value);
+                    }
+                    public static JValue Int8ToJson(Int8 v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
+            Name JsonTranslator_Primitive_Int16
+            Value
+                $String
+                    public static Int16 Int16FromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToInt16(jv.Value);
+                    }
+                    public static JValue Int16ToJson(Int16 v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
+            Name JsonTranslator_Primitive_Int32
+            Value
+                $String
+                    public static Int32 Int32FromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToInt32(jv.Value);
+                    }
+                    public static JValue Int32ToJson(Int32 v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
+            Name JsonTranslator_Primitive_Int64
+            Value
+                $String
+                    public static Int64 Int64FromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToInt64(jv.Value);
+                    }
+                    public static JValue Int64ToJson(Int64 v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
+            Name JsonTranslator_Primitive_Float32
+            Value
+                $String
+                    public static Float32 Float32FromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.Float) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToSingle(jv.Value);
+                    }
+                    public static JValue Float32ToJson(Float32 v)
+                    {
+                        return new JValue(v);
+                    }
+        Template
+            Name JsonTranslator_Primitive_Float64
+            Value
+                $String
+                    public static Float64 Float64FromJson(JToken j)
+                    {
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.Float) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        var jv = j as JValue;
+                        return Convert.ToDouble(jv.Value);
+                    }
+                    public static JValue Float64ToJson(Float64 v)
                     {
                         return new JValue(v);
                     }
