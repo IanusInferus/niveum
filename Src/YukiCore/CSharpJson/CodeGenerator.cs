@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2012.07.26.
+//  Version:     2012.10.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -36,7 +36,6 @@ namespace Yuki.ObjectSchema.CSharpJson
 
             private CSharp.Common.CodeGenerator.Writer InnerWriter;
 
-            private Schema OriginalSchema;
             private Schema Schema;
             private String NamespaceName;
             private UInt64 Hash;
@@ -51,10 +50,9 @@ namespace Yuki.ObjectSchema.CSharpJson
 
             public Writer(Schema Schema, String NamespaceName)
             {
-                this.OriginalSchema = Schema;
-                this.Schema = Schema.Reduce();
+                this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
-                this.Hash = this.Schema.Hash();
+                this.Hash = Schema.Hash();
             }
 
             public String[] GetSchema()
@@ -210,14 +208,44 @@ namespace Yuki.ObjectSchema.CSharpJson
                             case "String":
                                 l.AddRange(GetTemplate("JsonTranslator_Primitive_String"));
                                 break;
-                            case "Byte":
-                                l.AddRange(GetTemplate("JsonTranslator_Primitive_Byte"));
-                                break;
                             case "Int":
                                 l.AddRange(GetTemplate("JsonTranslator_Primitive_Int"));
                                 break;
                             case "Real":
                                 l.AddRange(GetTemplate("JsonTranslator_Primitive_Real"));
+                                break;
+                            case "Byte":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_Byte"));
+                                break;
+                            case "UInt8":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_UInt8"));
+                                break;
+                            case "UInt16":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_UInt16"));
+                                break;
+                            case "UInt32":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_UInt32"));
+                                break;
+                            case "UInt64":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_UInt64"));
+                                break;
+                            case "Int8":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_Int8"));
+                                break;
+                            case "Int16":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_Int16"));
+                                break;
+                            case "Int32":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_Int32"));
+                                break;
+                            case "Int64":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_Int64"));
+                                break;
+                            case "Float32":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_Float32"));
+                                break;
+                            case "Float64":
+                                l.AddRange(GetTemplate("JsonTranslator_Primitive_Float64"));
                                 break;
                             case "Type":
                                 l.AddRange(GetTemplate("JsonTranslator_Primitive_Type"));
