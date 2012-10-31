@@ -61,12 +61,7 @@ namespace Yuki.RelationSchema
                 if (OptionalUsed && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnTaggedUnion && t.TaggedUnion.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase)).Any())
                 {
                     var GenericParameters = new OS.VariableDef[] { new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" } };
-                    var Alternatives = new OS.VariableDef[]
-                    {
-                        new OS.VariableDef { Name = "NotHasValue", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Unit", Version = "" }), Description = "" },
-                        new OS.VariableDef { Name = "HasValue", Type = OS.TypeSpec.CreateGenericParameterRef(new OS.GenericParameterRef { Value = "T" }), Description = "" }
-                    };
-                    Types.Add(OS.TypeDef.CreateTaggedUnion(new OS.TaggedUnionDef { Name = "Optional", Version = "", GenericParameters = GenericParameters, Alternatives = Alternatives, Description = "" }));
+                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Optional", GenericParameters = GenericParameters, Description = "" }));
                 }
                 return new OS.Schema { Types = Types.ToArray(), TypeRefs = TypeRefs, Imports = Schema.Imports.ToArray(), TypePaths = new OS.TypePath[] { } };
             }
