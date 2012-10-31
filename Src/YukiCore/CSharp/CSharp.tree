@@ -1,12 +1,12 @@
 ﻿$Comment
     ==========================================================================
-    
+
       File:        CSharp.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#模板数据
-      Version:     2012.06.04.
+      Version:     2012.10.30.
       Copyright(C) F.R.C.
-    
+
     ==========================================================================
 
 ObjectSchemaTemplate
@@ -148,6 +148,9 @@ ObjectSchemaTemplate
             Name Type
             PlatformName System.Type
         PrimitiveMapping
+            Name Optional
+            PlatformName Optional
+        PrimitiveMapping
             Name List
             PlatformName System.Collections.Generic.List
         PrimitiveMapping
@@ -165,7 +168,7 @@ ObjectSchemaTemplate
                     ${Header}
                     using ${Imports};
                     ${Primitives}
-                    
+
                     namespace [[${NamespaceName}]]
                     {
                         ${ComplexTypes}
@@ -216,6 +219,91 @@ ObjectSchemaTemplate
 
                 $End
         Template
+            Name PredefinedType_Optional
+            //Parameters:
+            Value
+                $String
+                    public enum OptionalTag
+                    {
+                        NotHasValue = 0,
+                        HasValue = 1
+                    }
+                    [TaggedUnion]
+                    public struct Optional<T>
+                    {
+                        [Tag] public OptionalTag _Tag { get; set; }
+
+                        public Unit NotHasValue { get; set; }
+                        public T HasValue { get; set; }
+
+                        public static Optional<T> CreateNotHasValue() { return new Optional<T> { _Tag = OptionalTag.NotHasValue, NotHasValue = new Unit() }; }
+                        public static Optional<T> CreateHasValue(T Value) { return new Optional<T> { _Tag = OptionalTag.HasValue, HasValue = Value }; }
+
+                        public Boolean OnNotHasValue { get { return _Tag == OptionalTag.NotHasValue; } }
+                        public Boolean OnHasValue { get { return _Tag == OptionalTag.HasValue; } }
+
+                        public static Optional<T> Empty { get { return CreateNotHasValue(); } }
+                        public static implicit operator Optional<T>(T v) { return Optional<T>.CreateHasValue(v); }
+                        public static explicit operator T(Optional<T> v)
+                        {
+                            if (v.OnNotHasValue)
+                            {
+                                throw new InvalidOperationException();
+                            }
+                            return v.HasValue;
+                        }
+                        public static Boolean operator ==(Optional<T> Left, Optional<T> Right)
+                        {
+                            return Equals(Left, Right);
+                        }
+                        public static Boolean operator !=(Optional<T> Left, Optional<T> Right)
+                        {
+                            return !Equals(Left, Right);
+                        }
+                        public static Boolean operator ==(Optional<T>? Left, Optional<T>? Right)
+                        {
+                            return Equals(Left, Right);
+                        }
+                        public static Boolean operator !=(Optional<T>? Left, Optional<T>? Right)
+                        {
+                            return !Equals(Left, Right);
+                        }
+                        public override Boolean Equals(Object obj)
+                        {
+                            return Equals(this, obj);
+                        }
+                        public override Int32 GetHashCode()
+                        {
+                            if (OnNotHasValue) { return 0; }
+                            return HasValue.GetHashCode();
+                        }
+
+                        private static Boolean Equals(Optional<T> Left, Optional<T> Right)
+                        {
+                            if (Left.OnNotHasValue && Right.OnNotHasValue)
+                            {
+                                return true;
+                            }
+                            if (Left.OnNotHasValue || Right.OnNotHasValue)
+                            {
+                                return false;
+                            }
+                            return Left.HasValue.Equals(Right.HasValue);
+                        }
+                        private static Boolean Equals(Optional<T>? Left, Optional<T>? Right)
+                        {
+                            if ((!Left.HasValue || Left.Value.OnNotHasValue) && (!Right.HasValue || Right.Value.OnNotHasValue))
+                            {
+                                return true;
+                            }
+                            if (!Left.HasValue || Left.Value.OnNotHasValue || !Right.HasValue || Right.Value.OnNotHasValue)
+                            {
+                                return false;
+                            }
+                            return Equals(Left.Value, Right.Value);
+                        }
+                    }
+        Template
             Name Header
             //Parameters:
             Value
@@ -247,7 +335,7 @@ ObjectSchemaTemplate
                     public sealed class [[${Name}]]
                     {
                         public [[${Type}]] Value { get; set; }
-                        
+
                         public static implicit operator [[${Name}]]([[${Type}]] o)
                         {
                             return new [[${Name}]] {Value = o};

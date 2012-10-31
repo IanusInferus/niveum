@@ -4,7 +4,7 @@ $Comment
       File:        Java.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Java模板数据
-      Version:     2012.04.05.
+      Version:     2012.10.31.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -115,6 +115,9 @@ ObjectSchemaTemplate
         PrimitiveMapping
             Name Type
             PlatformName java.lang.reflect.Type
+        PrimitiveMapping
+            Name Optional
+            PlatformName Optional
         PrimitiveMapping
             Name List
             PlatformName java.util.ArrayList
