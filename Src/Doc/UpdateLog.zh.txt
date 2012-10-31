@@ -1,6 +1,7 @@
 ﻿2012.11.01
 Examples:
 增加C++ MySQL数据库示例。
+增加C++ MySQL数据库示例性能测试数据。
 修正C++项目，使其支持Visual Studio 2012工具链。
 *:
 改用Visual Studio 2012工具链。
