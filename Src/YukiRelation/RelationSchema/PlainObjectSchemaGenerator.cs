@@ -3,7 +3,7 @@
 //  File:        PlainObjectSchemaGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 简单对象类型结构生成器
-//  Version:     2012.07.25.
+//  Version:     2012.10.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -39,8 +39,8 @@ namespace Yuki.RelationSchema
 
             public OS.Schema Generate()
             {
-                var TypeRefs = Schema.TypeRefs.Select(t => TranslateTypeDef(t)).ToArray();
-                var Types = Schema.Types.Select(t => TranslateTypeDef(t)).ToList();
+                var TypeRefs = Schema.TypeRefs.Where(t => !(t.OnPrimitive && t.Primitive.Name == "Binary")).Select(t => TranslateTypeDef(t)).ToArray();
+                var Types = Schema.Types.Where(t => !(t.OnPrimitive && t.Primitive.Name == "Binary")).Select(t => TranslateTypeDef(t)).ToList();
                 if (UnitUsed && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Unit", StringComparison.OrdinalIgnoreCase)).Any())
                 {
                     Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Unit", GenericParameters = new OS.VariableDef[] { }, Description = "" }));
