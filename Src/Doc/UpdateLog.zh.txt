@@ -1,7 +1,16 @@
-﻿2012.10.31
+﻿2012.11.01
+Examples:
+增加C++ MySQL数据库示例。
+修正C++项目，使其支持Visual Studio 2012工具链。
+*:
+改用Visual Studio 2012工具链。
+
+2012.10.31
 Yuki.Core:
 增加对Optional类型的原生支持。
 修正对数据库代码生成的基元类型的支持。
+Examples:
+修正示例文件。
 
 2012.10.25
 Yuki.Core:
