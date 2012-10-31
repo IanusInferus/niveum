@@ -77,3 +77,51 @@ TestAddLockData: 4096 Users, 1 Request/User, 8440 ms
 TestAddLockData: 4096 Users, 2 Request/User, 16956 ms
 TestAddLockData: 4096 Users, 4 Request/User, 33779 ms
 TestAddLockData: 4096 Users, 8 Request/User, 66447 ms
+
+
+C++/MySQL 5.5/VC 10.0/x86/Windows 7 64 bit
+
+TestSaveData: 1 Users, 8 Request/User, 51 ms
+TestLoadData: 1 Users, 8 Request/User, 36 ms
+TestSaveAndLoadData: 1 Users, 8 Request/User, 58 ms
+TestAddLockData: 1 Users, 8 Request/User, 3027 ms
+TestSaveData: 4096 Users, 1 Request/User, 10385 ms
+TestSaveData: 4096 Users, 2 Request/User, 21220 ms
+TestSaveData: 4096 Users, 4 Request/User, 40921 ms
+TestSaveData: 4096 Users, 8 Request/User, 74555 ms
+TestLoadData: 4096 Users, 1 Request/User, 9924 ms
+TestLoadData: 4096 Users, 2 Request/User, 19814 ms
+TestLoadData: 4096 Users, 4 Request/User, 39443 ms
+TestLoadData: 4096 Users, 8 Request/User, 78934 ms
+TestSaveAndLoadData: 4096 Users, 1 Request/User, 19204 ms
+TestSaveAndLoadData: 4096 Users, 2 Request/User, 39010 ms
+TestSaveAndLoadData: 4096 Users, 4 Request/User, 76947 ms
+TestSaveAndLoadData: 4096 Users, 8 Request/User, 153980 ms
+TestAddLockData: 4096 Users, 1 Request/User, 95996 ms
+TestAddLockData: 4096 Users, 2 Request/User, 211927 ms
+TestAddLockData: 4096 Users, 4 Request/User, 394078 ms
+TestAddLockData: 4096 Users, 8 Request/User, 837221 ms
+
+
+C++/MySQL 5.5/GCC-C++ 4.6/x64/openSUSE 64 bit 12.1
+
+TestSaveData: 1 Users, 8 Request/User, 60 ms
+TestLoadData: 1 Users, 8 Request/User, 41 ms
+TestSaveAndLoadData: 1 Users, 8 Request/User, 33 ms
+TestAddLockData: 1 Users, 8 Request/User, 35 ms
+TestSaveData: 4096 Users, 1 Request/User, 7398 ms
+TestSaveData: 4096 Users, 2 Request/User, 13136 ms
+TestSaveData: 4096 Users, 4 Request/User, 24898 ms
+TestSaveData: 4096 Users, 8 Request/User, 49962 ms
+TestLoadData: 4096 Users, 1 Request/User, 6456 ms
+TestLoadData: 4096 Users, 2 Request/User, 12453 ms
+TestLoadData: 4096 Users, 4 Request/User, 24580 ms
+TestLoadData: 4096 Users, 8 Request/User, 48478 ms
+TestSaveAndLoadData: 4096 Users, 1 Request/User, 13727 ms
+TestSaveAndLoadData: 4096 Users, 2 Request/User, 24599 ms
+TestSaveAndLoadData: 4096 Users, 4 Request/User, 49426 ms
+TestSaveAndLoadData: 4096 Users, 8 Request/User, 99416 ms
+TestAddLockData: 4096 Users, 1 Request/User, 8073 ms
+TestAddLockData: 4096 Users, 2 Request/User, 15531 ms
+TestAddLockData: 4096 Users, 4 Request/User, 41251 ms
+TestAddLockData: 4096 Users, 8 Request/User, 68038 ms

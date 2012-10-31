@@ -125,3 +125,83 @@ TestAddLockData: 256 Users, 515 ms
 TestAddLockData: 1024 Users, 1923 ms
 TestAddLockData: 4096 Users, 8473 ms
 TestAddLockData: 16384 Users, 37726 ms
+
+
+C++/MySQL 5.5/VC 10.0/x86/Windows 7 64 bit
+
+TestSaveData: 64 Users, 177 ms
+TestLoadData: 64 Users, 158 ms
+TestSaveAndLoadData: 64 Users, 306 ms
+TestAddLockData: 64 Users, 1492 ms
+TestSaveData: 1 Users, 11 ms
+TestSaveData: 4 Users, 26 ms
+TestSaveData: 16 Users, 48 ms
+TestSaveData: 64 Users, 153 ms
+TestSaveData: 256 Users, 557 ms
+TestSaveData: 1024 Users, 2342 ms
+TestSaveData: 4096 Users, 8964 ms
+TestSaveData: 16384 Users, 36352 ms
+TestLoadData: 1 Users, 13 ms
+TestLoadData: 4 Users, 36 ms
+TestLoadData: 16 Users, 47 ms
+TestLoadData: 64 Users, 152 ms
+TestLoadData: 256 Users, 605 ms
+TestLoadData: 1024 Users, 2338 ms
+TestLoadData: 4096 Users, 9424 ms
+TestLoadData: 16384 Users, 37869 ms
+TestSaveAndLoadData: 1 Users, 7 ms
+TestSaveAndLoadData: 4 Users, 20 ms
+TestSaveAndLoadData: 16 Users, 74 ms
+TestSaveAndLoadData: 64 Users, 282 ms
+TestSaveAndLoadData: 256 Users, 1175 ms
+TestSaveAndLoadData: 1024 Users, 4548 ms
+TestSaveAndLoadData: 4096 Users, 18258 ms
+TestSaveAndLoadData: 16384 Users, 73104 ms
+TestAddLockData: 1 Users, 39 ms
+TestAddLockData: 4 Users, 100 ms
+TestAddLockData: 16 Users, 349 ms
+TestAddLockData: 64 Users, 1457 ms
+TestAddLockData: 256 Users, 6041 ms
+TestAddLockData: 1024 Users, 23501 ms
+TestAddLockData: 4096 Users, 95281 ms
+TestAddLockData: 16384 Users, 393355 ms
+
+
+C++/MySQL 5.5/GCC-C++ 4.6/x64/openSUSE 64 bit 12.1
+
+TestSaveData: 64 Users, 151 ms
+TestLoadData: 64 Users, 96 ms
+TestSaveAndLoadData: 64 Users, 189 ms
+TestAddLockData: 64 Users, 124 ms
+TestSaveData: 1 Users, 2 ms
+TestSaveData: 4 Users, 7 ms
+TestSaveData: 16 Users, 44 ms
+TestSaveData: 64 Users, 168 ms
+TestSaveData: 256 Users, 449 ms
+TestSaveData: 1024 Users, 1549 ms
+TestSaveData: 4096 Users, 6947 ms
+TestSaveData: 16384 Users, 26517 ms
+TestLoadData: 1 Users, 4 ms
+TestLoadData: 4 Users, 18 ms
+TestLoadData: 16 Users, 32 ms
+TestLoadData: 64 Users, 97 ms
+TestLoadData: 256 Users, 383 ms
+TestLoadData: 1024 Users, 1556 ms
+TestLoadData: 4096 Users, 6286 ms
+TestLoadData: 16384 Users, 25220 ms
+TestSaveAndLoadData: 1 Users, 12 ms
+TestSaveAndLoadData: 4 Users, 14 ms
+TestSaveAndLoadData: 16 Users, 54 ms
+TestSaveAndLoadData: 64 Users, 194 ms
+TestSaveAndLoadData: 256 Users, 764 ms
+TestSaveAndLoadData: 1024 Users, 3095 ms
+TestSaveAndLoadData: 4096 Users, 12437 ms
+TestSaveAndLoadData: 16384 Users, 50196 ms
+TestAddLockData: 1 Users, 2 ms
+TestAddLockData: 4 Users, 11 ms
+TestAddLockData: 16 Users, 45 ms
+TestAddLockData: 64 Users, 125 ms
+TestAddLockData: 256 Users, 507 ms
+TestAddLockData: 1024 Users, 1918 ms
+TestAddLockData: 4096 Users, 7731 ms
+TestAddLockData: 16384 Users, 32915 ms
