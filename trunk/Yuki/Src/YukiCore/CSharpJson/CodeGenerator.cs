@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2012.10.25.
+//  Version:     2012.10.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -300,7 +300,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 TaggedUnionDef GenericOptionalType = null;
                 if (GenericOptionalTypes.Length > 0)
                 {
-                    GenericOptionalType = GenericOptionalTypes.Single().TaggedUnion;
+                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new VariableDef[] { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new VariableDef[] { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
                     l.AddRange(GetTemplate("JsonTranslator_Enum").Substitute("Name", "OptionalTag"));
                     l.Add("");
                 }

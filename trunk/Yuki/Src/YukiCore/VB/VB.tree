@@ -1,12 +1,12 @@
 ﻿$Comment
     ==========================================================================
-    
+
       File:        VB.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构VB.Net模板数据
-      Version:     2012.04.15.
+      Version:     2012.10.30.
       Copyright(C) F.R.C.
-    
+
     ==========================================================================
 
 ObjectSchemaTemplate
@@ -217,6 +217,9 @@ ObjectSchemaTemplate
             Name Type
             PlatformName System.Type
         PrimitiveMapping
+            Name Optional
+            PlatformName Optional
+        PrimitiveMapping
             Name List
             PlatformName System.Collections.Generic.List
         PrimitiveMapping
@@ -283,6 +286,83 @@ ObjectSchemaTemplate
 
                 $End
         Template
+            Name PredefinedType_Optional
+            //Parameters:
+            Value
+                $String
+                    Public Enum OptionalTag
+                        NotHasValue = 0
+                        HasValue = 1
+                    End Enum
+                    <TaggedUnion>
+                    Public Structure [Optional](Of T)
+                        <Tag> Public Property _Tag As OptionalTag
+
+                        Public Property NotHasValue As Unit
+                        Public Property HasValue As T
+
+                        Public Shared Function CreateNotHasValue() As [Optional](Of T)
+                            Return New [Optional](Of T) With {._Tag = OptionalTag.NotHasValue, .NotHasValue = New Unit()}
+                        End Function
+                        Public Shared Function CreateHasValue(ByVal Value As T) As [Optional](Of T)
+                            Return New [Optional](Of T) With {._Tag = OptionalTag.HasValue, .HasValue = Value}
+                        End Function
+
+                        Public ReadOnly Property OnNotHasValue As Boolean
+                            Get
+                                Return _Tag = OptionalTag.NotHasValue
+                            End Get
+                        End Property
+                        Public ReadOnly Property OnHasValue As Boolean
+                            Get
+                                Return _Tag = OptionalTag.HasValue
+                            End Get
+                        End Property
+
+                        Public Shared ReadOnly Property Empty As [Optional](Of T)
+                            Get
+                                Return CreateNotHasValue()
+                            End Get
+                        End Property
+                        Public Shared Widening Operator CType(ByVal v As T) As [Optional](Of T)
+                            Return [Optional](Of T).CreateHasValue(v)
+                        End Operator
+                        Public Shared Narrowing Operator CType(ByVal v As [Optional](Of T)) As T
+                            If v.OnNotHasValue Then Throw New InvalidOperationException()
+                            Return v.HasValue
+                        End Operator
+                        Public Shared Operator =(ByVal Left As [Optional](Of T), ByVal Right As [Optional](Of T)) As Boolean
+                            Return Equals(Left, Right)
+                        End Operator
+                        Public Shared Operator <>(ByVal Left As [Optional](Of T), ByVal Right As [Optional](Of T)) As Boolean
+                            Return Not Equals(Left, Right)
+                        End Operator
+                        Public Shared Operator =(ByVal Left As [Optional](Of T)?, ByVal Right As [Optional](Of T)?) As Boolean
+                            Return Equals(Left, Right)
+                        End Operator
+                        Public Shared Operator <>(ByVal Left As [Optional](Of T)?, ByVal Right As [Optional](Of T)?) As Boolean
+                            Return Not Equals(Left, Right)
+                        End Operator
+                        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+                            Return Equals(Me, obj)
+                        End Function
+                        Public Overrides Function GetHashCode() As Int32
+                            If OnNotHasValue Then Return 0
+                            Return HasValue.GetHashCode()
+                        End Function
+
+                        Private Overloads Shared Function Equals(ByVal Left As [Optional](Of T), ByVal Right As [Optional](Of T)) As Boolean
+                            If Left.OnNotHasValue AndAlso Right.OnNotHasValue Then Return True
+                            If Left.OnNotHasValue OrElse Right.OnNotHasValue Then Return False
+                            Return Left.HasValue.Equals(Right.HasValue)
+                        End Function
+                        Private Overloads Shared Function Equals(ByVal Left As [Optional](Of T)?, ByVal Right As [Optional](Of T)?) As Boolean
+                            If (Not Left.HasValue OrElse Left.Value.OnNotHasValue) AndAlso (Not Right.HasValue OrElse Right.Value.OnNotHasValue) Then Return True
+                            If Not Left.HasValue OrElse Left.Value.OnNotHasValue OrElse Not Right.HasValue OrElse Right.Value.OnNotHasValue Then Return False
+                            Return Equals(Left.Value, Right.Value)
+                        End Function
+                    End Structure
+        Template
             Name Header
             //Parameters:
             Value
@@ -313,7 +393,7 @@ ObjectSchemaTemplate
                     <[Alias]()>
                     Public Class [[${Name}]]
                         Public Value As [[${Type}]]
-                        
+
                         Public Shared Widening Operator CType(ByVal o As [[${Type}]]) As [[${Name}]]
                             Return New [[${Name}]] With {.Value = o}
                         End Operator

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2012.07.26.
+//  Version:     2012.10.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -102,6 +102,10 @@ namespace Yuki.ObjectSchema.CSharp.Common
                         {
                             l.AddRange(GetPrimitive(Name, PlatformName));
                         }
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(p.Name);
                     }
                 }
                 return l.ToArray();
@@ -438,7 +442,14 @@ namespace Yuki.ObjectSchema.CSharp.Common
                 {
                     if (c.OnPrimitive)
                     {
-                        continue;
+                        if (c.Name() == "Optional")
+                        {
+                            l.AddRange(GetTemplate("PredefinedType_Optional"));
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
                     else if (c.OnAlias)
                     {

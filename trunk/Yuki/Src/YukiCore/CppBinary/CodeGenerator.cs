@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2012.07.26.
+//  Version:     2012.10.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -285,7 +285,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 TaggedUnionDef GenericOptionalType = null;
                 if (GenericOptionalTypes.Length > 0)
                 {
-                    GenericOptionalType = GenericOptionalTypes.Single().TaggedUnion;
+                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new VariableDef[] { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new VariableDef[] { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
                     l.AddRange(GetTemplate("BinaryTranslator_Enum").Substitute("Name", "OptionalTag").Substitute("UnderlyingTypeFriendlyName", "Int").Substitute("UnderlyingType", "Int"));
                     l.Add("");
                 }
@@ -447,6 +447,24 @@ namespace Yuki.ObjectSchema.CppBinary
                 }
                 return GetTemplate("BinaryTranslator_Map").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l, true)).Substitute("KeyTypeFriendlyName", gp[0].TypeSpec.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", gp[1].TypeSpec.TypeFriendlyName());
             }
+            public String[] GetBinaryTranslatorOptionalAlternativeFroms(String TaggedUnionName, VariableDef[] Alternatives)
+            {
+                List<String> l = new List<String>();
+                foreach (var a in Alternatives)
+                {
+                    l.AddRange(GetTemplate("BinaryTranslator_OptionalAlternativeFrom").Substitute("TaggedUnionName", TaggedUnionName).Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
+            public String[] GetBinaryTranslatorOptionalAlternativeTos(String TaggedUnionName, VariableDef[] Alternatives)
+            {
+                List<String> l = new List<String>();
+                foreach (var a in Alternatives)
+                {
+                    l.AddRange(GetTemplate("BinaryTranslator_OptionalAlternativeTo").Substitute("TaggedUnionName", TaggedUnionName).Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
             public String[] GetBinaryTranslatorOptional(TypeSpec o, TaggedUnionDef GenericOptionalType)
             {
                 var ElementType = o.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
@@ -455,7 +473,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 var TypeFriendlyName = o.TypeFriendlyName();
                 var TypeString = GetTypeString(o, true);
                 var Name = "Optional";
-                return GetTemplate("BinaryTranslator_Optional").Substitute("TypeFriendlyName", TypeFriendlyName).Substitute("TypeString", TypeString).Substitute("AlternativeFroms", GetBinaryTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetBinaryTranslatorAlternativeTos(Name, Alternatives));
+                return GetTemplate("BinaryTranslator_Optional").Substitute("TypeFriendlyName", TypeFriendlyName).Substitute("TypeString", TypeString).Substitute("AlternativeFroms", GetBinaryTranslatorOptionalAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetBinaryTranslatorOptionalAlternativeTos(Name, Alternatives));
             }
 
             public String[] GetComplexTypes(Schema Schema)

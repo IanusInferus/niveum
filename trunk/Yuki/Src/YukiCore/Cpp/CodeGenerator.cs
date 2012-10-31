@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2012.07.26.
+//  Version:     2012.10.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -116,6 +116,10 @@ namespace Yuki.ObjectSchema.Cpp.Common
 
                 var Types = new List<TypeDef>(Schema.TypeRefs.Concat(Schema.Types));
                 var Dict = Types.ToDictionary(t => t.VersionedName());
+                if (!Dict.ContainsKey("Unit"))
+                {
+                    Types.Add(TypeDef.CreatePrimitive(new PrimitiveDef { Name = "Unit", GenericParameters = new VariableDef[] { }, Description = "" }));
+                }
                 if (!Dict.ContainsKey("Boolean"))
                 {
                     Types.Add(TypeDef.CreatePrimitive(new PrimitiveDef { Name = "Boolean", GenericParameters = new VariableDef[] { }, Description = "" }));
@@ -130,6 +134,18 @@ namespace Yuki.ObjectSchema.Cpp.Common
                         {
                             l.AddRange(GetPrimitive(Name, PlatformName));
                         }
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(p.Name);
+                    }
+                }
+                if (Dict.ContainsKey("Optional"))
+                {
+                    var c = Dict["Optional"];
+                    if (c.Name() == "Optional")
+                    {
+                        l.AddRange(GetTemplate("PredefinedType_Optional"));
                     }
                 }
                 return l.ToArray();
@@ -187,6 +203,10 @@ namespace Yuki.ObjectSchema.Cpp.Common
                             {
                                 var TypeString = GetTypeString(Type.GenericTypeSpec.TypeSpec, true) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p.TypeSpec)).ToArray()) + ">";
                                 if (ForceAsValue)
+                                {
+                                    return TypeString;
+                                }
+                                if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
                                 {
                                     return TypeString;
                                 }
