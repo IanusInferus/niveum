@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="Utility.h" />
+    <ClInclude Include="DatabaseEntities.h" />
+    <ClInclude Include="DataAccessManager.h" />
+    <ClInclude Include="IDataAccess.h" />
+    <ClInclude Include="LoadTest.h" />
+    <ClInclude Include="PerformanceTest.h" />
+    <ClInclude Include="TestService.h" />
+    <ClInclude Include="ThreadLocalVariable.h" />
+    <ClInclude Include="MySql\DataAccessBase.h">
+      <Filter>MySql</Filter>
+    </ClInclude>
+    <ClInclude Include="MySql\DataAccessImplementation.h">
+      <Filter>MySql</Filter>
+    </ClInclude>
+    <ClInclude Include="LockedVariable.h" />
+    <ClInclude Include="AutoResetEvent.h" />
+    <ClInclude Include="UtfEncoding.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Program.cpp" />
+    <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="DataAccessManager.cpp" />
+    <ClCompile Include="MySql\DataAccessBase.cpp">
+      <Filter>MySql</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="MySql">
+      <UniqueIdentifier>{8a85fa27-8b5d-4a09-b465-048fe9039b52}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
