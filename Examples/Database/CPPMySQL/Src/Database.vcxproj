@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8B4159BB-F45B-407F-9CC5-52A4046ED57A}</ProjectGuid>
-    <RootNamespace>Client</RootNamespace>
+    <ProjectGuid>{B5902663-BC28-4F9E-B4C8-B350166A2654}</ProjectGuid>
+    <RootNamespace>Database</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -51,21 +51,31 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(SolutionDir)..\Lib\utf8;$(SolutionDir)..\Lib\boost;$(BOOST_ROOT);$(IncludePath)</IncludePath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);$(SolutionDir)..\Lib\boost\stage\lib;$(BOOST_ROOT)\stage\lib</LibraryPath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(SolutionDir)..\Lib\utf8;$(SolutionDir)..\Lib\boost;$(BOOST_ROOT);$(IncludePath)</IncludePath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);$(SolutionDir)..\Lib\boost\stage\lib;$(BOOST_ROOT)\stage\lib</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);..\Lib\utf8;$(BOOST_ROOT);$(MYSQL_CONNECTOR_C_ROOT)\include;$(MYSQL_CONNECTOR_CXX_ROOT);$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);$(BOOST_ROOT)\stage\lib;$(MYSQL_CONNECTOR_C_ROOT)\libmysql\Debug;$(MYSQL_CONNECTOR_CXX_ROOT)\driver\Debug</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);..\Lib\utf8;$(BOOST_ROOT);$(MYSQL_CONNECTOR_C_ROOT)\include;$(MYSQL_CONNECTOR_CXX_ROOT);$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);$(BOOST_ROOT)\stage\lib;$(MYSQL_CONNECTOR_C_ROOT)\libmysql\Release;$(MYSQL_CONNECTOR_CXX_ROOT)\driver\Release</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4345;4503;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_UNICODE;UNICODE;SOCI_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4251;4345;4503;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;mysqlcppconn.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>if exist "$(MYSQL_CONNECTOR_C_ROOT)\libmysql\$(Configuration)\libmysql.dll" copy /Y "$(MYSQL_CONNECTOR_C_ROOT)\libmysql\$(Configuration)\libmysql.dll" "$(OutDir)\"
+if exist "$(MYSQL_CONNECTOR_C_ROOT)\libmysql\$(Configuration)\libmysql.pdb" copy /Y "$(MYSQL_CONNECTOR_C_ROOT)\libmysql\$(Configuration)\libmysql.pdb" "$(OutDir)\"
+if exist "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.dll" copy /Y "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.dll" "$(OutDir)\"
+if exist "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.pdb" copy /Y "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.pdb" "$(OutDir)\"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -73,25 +83,42 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4345;4503;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_UNICODE;UNICODE;SOCI_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4251;4345;4503;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;mysqlcppconn.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>if exist "$(MYSQL_CONNECTOR_C_ROOT)\libmysql\$(Configuration)\libmysql.dll" copy /Y "$(MYSQL_CONNECTOR_C_ROOT)\libmysql\$(Configuration)\libmysql.dll" "$(OutDir)\"
+if exist "$(MYSQL_CONNECTOR_C_ROOT)\libmysql\$(Configuration)\libmysql.pdb" copy /Y "$(MYSQL_CONNECTOR_C_ROOT)\libmysql\$(Configuration)\libmysql.pdb" "$(OutDir)\"
+if exist "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.dll" copy /Y "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.dll" "$(OutDir)\"
+if exist "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.pdb" copy /Y "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.pdb" "$(OutDir)\"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AutoResetEvent.h" />
+    <ClInclude Include="DataAccessManager.h" />
+    <ClInclude Include="DatabaseEntities.h" />
+    <ClInclude Include="IDataAccess.h" />
+    <ClInclude Include="LoadTest.h" />
+    <ClInclude Include="LockedVariable.h" />
+    <ClInclude Include="MySql\DataAccessBase.h" />
+    <ClInclude Include="MySql\DataAccessImplementation.h" />
+    <ClInclude Include="PerformanceTest.h" />
+    <ClInclude Include="TestService.h" />
+    <ClInclude Include="ThreadLocalVariable.h" />
     <ClInclude Include="UtfEncoding.h" />
-    <ClInclude Include="ClientImplementation.h" />
-    <ClInclude Include="Clients\BinarySocketClient.h" />
-    <ClInclude Include="Communication.h" />
-    <ClInclude Include="CommunicationBinary.h" />
-    <ClInclude Include="Context\ClientContext.h" />
     <ClInclude Include="Utility.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DataAccessManager.cpp" />
+    <ClCompile Include="MySql\DataAccessBase.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Utility.cpp" />
   </ItemGroup>

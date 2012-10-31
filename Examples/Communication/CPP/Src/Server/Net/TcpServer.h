@@ -18,9 +18,7 @@
 #include <exception>
 #include <stdexcept>
 #include <functional>
-#ifdef __GNUC__
 #include <boost/functional/hash.hpp>
-#endif
 #include <boost/asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
@@ -52,7 +50,6 @@ namespace Communication
             {
                 std::size_t operator() (const boost::asio::ip::address &p) const
                 {
-#ifdef __GNUC__
                     if (p.is_v4())
                     {
                         auto Bytes = p.to_v4().to_bytes();
@@ -70,25 +67,6 @@ namespace Communication
                         auto s = p.to_string();
                         return boost::hash<decltype(s)>()(s);
                     }
-#else
-                    if (p.is_v4())
-                    {
-                        auto Bytes = p.to_v4().to_bytes();
-                        auto a = (uint8_t (*)[sizeof(Bytes)])(Bytes.data());
-                        return std::hash<decltype(*a)>()(*a);
-                    }
-                    else if (p.is_v6())
-                    {
-                        auto Bytes = p.to_v6().to_bytes();
-                        auto a = (uint8_t (*)[sizeof(Bytes)])(Bytes.data());
-                        return std::hash<decltype(*a)>()(*a);
-                    }
-                    else
-                    {
-                        auto s = p.to_string();
-                        return std::hash<decltype(s)>()(s);
-                    }
-#endif
                 }
             };
             typedef std::unordered_map<boost::asio::ip::address, int, IpAddressHash> TIpAddressMap;

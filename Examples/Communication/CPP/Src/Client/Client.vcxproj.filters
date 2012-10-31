@@ -11,7 +11,7 @@
     <ClInclude Include="Context\ClientContext.h">
       <Filter>Context</Filter>
     </ClInclude>
-    <ClInclude Include="..\Server\UtfEncoding.h" />
+    <ClInclude Include="UtfEncoding.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
