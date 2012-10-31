@@ -30,7 +30,7 @@ using Yuki.RelationSchema.MySql;
 using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpDatabase;
 
-namespace Yuki.SchemaManipulator
+namespace Yuki.RelationSchemaManipulator
 {
     public static class Program
     {

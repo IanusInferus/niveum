@@ -96,6 +96,9 @@ namespace Yuki.RelationSchema.CSharpDatabase
                             l.AddRange(GetPrimitive(Name, PlatformName));
                         }
                     }
+                    else if (p.Name == "Unit" || p.Name == "Type" || p.Name == "Byte")
+                    {
+                    }
                     else
                     {
                         throw new NotSupportedException(p.Name);
