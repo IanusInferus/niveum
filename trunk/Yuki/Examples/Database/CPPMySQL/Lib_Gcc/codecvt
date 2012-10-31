@@ -1,0 +1,26 @@
+#pragma once
+
+namespace std
+{
+    enum codecvt_mode
+    {
+        consume_header = 4,
+        generate_header = 2,
+        little_endian = 1
+    };
+
+    template<class _Elem, unsigned long _Mymax, codecvt_mode _Mymode>
+    class codecvt_utf8
+    {
+    };
+
+    template<class _Elem, unsigned long _Mymax, codecvt_mode _Mymode>
+    class codecvt_utf16
+    {
+    };
+
+    template<class _Codecvt, class _Elem>
+    class wstring_convert
+    {
+    };
+}
