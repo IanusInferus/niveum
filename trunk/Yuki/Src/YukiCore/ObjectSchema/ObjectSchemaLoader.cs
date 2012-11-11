@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2012.07.25.
+//  Version:     2012.11.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -30,8 +30,10 @@ namespace Yuki.ObjectSchema
         private List<Semantics.Node> Imports;
         private List<Semantics.Node> TypePaths;
         private Dictionary<Object, Syntax.FileTextRange> Positions;
+        private HashSet<String> Parsed;
         private TreeFormatParseSetting tfpo = null;
         private TreeFormatEvaluateSetting tfeo = null;
+        private XmlSerializer xs = new XmlSerializer();
 
         public ObjectSchemaLoader()
         {
@@ -40,6 +42,7 @@ namespace Yuki.ObjectSchema
             Imports = new List<Semantics.Node>();
             TypePaths = new List<Semantics.Node>();
             Positions = new Dictionary<Object, Syntax.FileTextRange>();
+            Parsed = new HashSet<String>();
         }
 
         public ObjectSchemaLoader(TreeFormatParseSetting OuterParsingSetting, TreeFormatEvaluateSetting OuterEvaluateSetting)
@@ -49,6 +52,7 @@ namespace Yuki.ObjectSchema
             Imports = new List<Semantics.Node>();
             TypePaths = new List<Semantics.Node>();
             Positions = new Dictionary<Object, Syntax.FileTextRange>();
+            Parsed = new HashSet<String>();
             this.tfpo = OuterParsingSetting;
             this.tfeo = OuterEvaluateSetting;
         }
@@ -58,11 +62,11 @@ namespace Yuki.ObjectSchema
             var TypesNode = MakeStemNode("Types", Types.Select(n => MakeStemNode("TypeDef", n)).ToArray());
             var TypeRefsNode = MakeStemNode("TypeRefs", TypeRefs.Select(n => MakeStemNode("TypeDef", n)).ToArray());
             var ImportsNode = MakeStemNode("Imports", Imports.ToArray());
-            var Schema = MakeStemNode("Schema", TypesNode, TypeRefsNode, ImportsNode, MakeStemNode("TypePaths", TypePaths.ToArray()));
+            var TypePathsNode = MakeStemNode("TypePaths", TypePaths.ToArray());
+            var Schema = MakeStemNode("Schema", TypesNode, TypeRefsNode, ImportsNode, TypePathsNode);
             var tfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { Schema } }, Positions = Positions };
 
             var x = XmlInterop.TreeToXml(tfr);
-            XmlSerializer xs = new XmlSerializer();
             var s = xs.Read<Schema>(x);
 
             s.VerifyDuplicatedNames();
@@ -71,6 +75,10 @@ namespace Yuki.ObjectSchema
 
             foreach (var t in s.TypeRefs.Concat(s.Types))
             {
+                if (Parsed.Contains(t.VersionedName()))
+                {
+                    continue;
+                }
                 switch (t._Tag)
                 {
                     case TypeDefTag.Primitive:
@@ -130,6 +138,64 @@ namespace Yuki.ObjectSchema
             var s = new Semantics.Stem { Name = Name, Children = Children };
             var n = new Semantics.Node { _Tag = Semantics.NodeTag.Stem, Stem = s };
             return n;
+        }
+
+        public void LoadSchema(String TreePath)
+        {
+            using (var Reader = Txt.CreateTextReader(TreePath))
+            {
+                if (Debugger.IsAttached)
+                {
+                    LoadSchema(TreePath, Reader);
+                }
+                else
+                {
+                    try
+                    {
+                        LoadSchema(TreePath, Reader);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = Opt<Syntax.TextRange>.Empty }, ex);
+                    }
+                }
+            }
+        }
+        private void LoadSchema(String TreePath, StreamReader Reader)
+        {
+            var t = TreeFile.ReadDirect(Reader, TreePath, new TreeFormatParseSetting(), new TreeFormatEvaluateSetting());
+            var SchemaContent = t.Value.Nodes.Single(n => n.OnStem && n.Stem.Name == "Schema").Stem.Children;
+            var TypesNodes = SchemaContent.Single(n => n.OnStem && n.Stem.Name == "Types").Stem.Children.Where(n => n.OnStem).SelectMany(n => n.Stem.Children);
+            var TypeRefsNodes = SchemaContent.Single(n => n.OnStem && n.Stem.Name == "TypeRefs").Stem.Children.Where(n => n.OnStem).SelectMany(n => n.Stem.Children);
+            Types.AddRange(TypesNodes);
+            TypeRefs.AddRange(TypeRefsNodes);
+            foreach (var n in TypesNodes.Concat(TypeRefsNodes))
+            {
+                if (!n.OnStem)
+                {
+                    throw new InvalidOperationException();
+                }
+                var NameNode = n.Stem.Children.Single(nc => nc.Stem.Name == "Name").Stem.Children.Single();
+                if (!NameNode.OnLeaf)
+                {
+                    throw new InvalidOperationException();
+                }
+                var Name = NameNode.Leaf;
+                var Version = "";
+                if (n.Stem.Children.Where(nc => nc.Stem.Name == "Version").Count() > 0)
+                {
+                    var VersionNode = n.Stem.Children.Single(nc => nc.Stem.Name == "Version").Stem.Children.Single();
+                    if (!VersionNode.OnLeaf)
+                    {
+                        throw new InvalidOperationException();
+                    }
+                    Version = VersionNode.Leaf;
+                }
+                var VersionedName = (new TypeRef { Name = Name, Version = Version }).VersionedName();
+                Parsed.Add(VersionedName);
+            }
+            Imports.AddRange(SchemaContent.Single(n => n.OnStem && n.Stem.Name == "Imports").Stem.Children);
+            TypePaths.AddRange(SchemaContent.Single(n => n.OnStem && n.Stem.Name == "TypePaths").Stem.Children);
         }
 
         public void AddImport(String Import)
@@ -669,7 +735,7 @@ namespace Yuki.ObjectSchema
                                 }
                                 throw new Syntax.InvalidEvaluationException("UnknownFunction", nm.GetFileRange(f), f);
                             }
-                    }                     
+                    }
                 },
                 TokenParameterEvaluator = tfeo != null ? tfeo.TokenParameterEvaluator : null
             };

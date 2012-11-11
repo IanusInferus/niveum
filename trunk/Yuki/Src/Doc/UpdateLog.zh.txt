@@ -1,4 +1,8 @@
-﻿2012.11.01
+﻿2012.11.11
+Yuki.Core, Yuki.SchemaManipulator:
+增加/load、/save选项，支持将整个Schema保存成文件和从文件加载。
+
+2012.11.01
 Examples:
 增加C++ MySQL数据库示例。
 增加C++ MySQL数据库示例性能测试数据。

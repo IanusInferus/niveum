@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.07.20.
+//  Version:     2012.11.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -15,6 +15,7 @@ using System.IO;
 using System.Reflection;
 using System.CodeDom.Compiler;
 using Firefly;
+using Firefly.Mapping.XmlText;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
 using Firefly.Texting;
@@ -77,12 +78,44 @@ namespace Yuki.SchemaManipulator
                 return 0;
             }
 
+            var xs = new XmlSerializer();
             foreach (var opt in CmdLine.Options)
             {
                 if ((opt.Name.ToLower() == "?") || (opt.Name.ToLower() == "help"))
                 {
                     DisplayInfo();
                     return 0;
+                }
+                else if (opt.Name.ToLower() == "load")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        var CookedObjectSchemaPath = args[0];
+                        InvalidateSchema();
+                        osl.LoadSchema(CookedObjectSchemaPath);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "save")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        var CookedObjectSchemaPath = args[0];
+                        var s = Schema();
+                        var x = xs.Write(s);
+                        TreeFile.WriteFile(CookedObjectSchemaPath, x);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
                 }
                 else if (opt.Name.ToLower() == "loadtyperef")
                 {
@@ -381,6 +414,10 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"");
             Console.WriteLine(@"用法:");
             Console.WriteLine(@"SchemaManipulator (/<Command>)*");
+            Console.WriteLine(@"装载类型定义和引用");
+            Console.WriteLine(@"/load:<CookedObjectSchemaFile>");
+            Console.WriteLine(@"保存类型定义和引用");
+            Console.WriteLine(@"/save:<CookedObjectSchemaFile>");
             Console.WriteLine(@"装载类型引用");
             Console.WriteLine(@"/loadtyperef:<ObjectSchemaDir|ObjectSchemaFile>");
             Console.WriteLine(@"装载类型定义");
@@ -415,6 +452,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2asj:<AsCodeDir>,<PackageName>");
             Console.WriteLine(@"生成XHTML文档");
             Console.WriteLine(@"/t2xhtml:<XhtmlDir>,<Title>,<CopyrightText>");
+            Console.WriteLine(@"CookedObjectSchemaFile 已编译过的对象类型结构Tree文件路径。");
             Console.WriteLine(@"ObjectSchemaDir|ObjectSchemaFile 对象类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"TreeFile Tree文件路径。");
             Console.WriteLine(@"BinaryFile 二进制文件路径。");
