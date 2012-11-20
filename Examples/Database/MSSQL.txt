@@ -1,0 +1,6 @@
+﻿SQL Server的连接字符串默认为Visual Studio 2012自带的LocalDB的连接字符串。
+Data Source=(LocalDB)\v11.0;Integrated Security=True
+它会自动在用户文件夹创建mdf和ldf文件。
+
+若使用SQL Server或者SQL Server Express的默认实例，需要将RegenerateDatabaseMSSQL.cmd中的连接字符串换为
+Data Source=.;Integrated Security=True

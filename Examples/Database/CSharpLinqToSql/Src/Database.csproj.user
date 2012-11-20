@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <StartArguments>"Data Source=.;Integrated Security=True;Database=Mail"</StartArguments>
+    <StartArguments>"Data Source=%28LocalDB%29\v11.0%3bIntegrated Security=True%3bDatabase=Mail"</StartArguments>
   </PropertyGroup>
 </Project>
