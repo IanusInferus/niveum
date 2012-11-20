@@ -3,7 +3,7 @@
 //  File:        PlainObjectSchemaGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 简单对象类型结构生成器
-//  Version:     2012.10.31.
+//  Version:     2012.11.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -123,6 +123,14 @@ namespace Yuki.RelationSchema
                         return OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = t.TypeRef.Value, Version = "" });
                     }
                 }
+                else if (t.OnOptional)
+                {
+                    UnitUsed = true;
+                    TypeUsed = true;
+                    OptionalUsed = true;
+                    var Underlying = TranslateTypeSpec(RS.TypeSpec.CreateTypeRef(t.Optional));
+                    return OS.TypeSpec.CreateGenericTypeSpec(new OS.GenericTypeSpec { TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Optional", Version = "" }), GenericParameterValues = new OS.GenericParameterValue[] { OS.GenericParameterValue.CreateTypeSpec(Underlying) } });
+                }
                 else
                 {
                     throw new InvalidOperationException();
@@ -131,16 +139,7 @@ namespace Yuki.RelationSchema
 
             private OS.VariableDef TranslateField(RS.VariableDef f)
             {
-                var fts = TranslateTypeSpec(f.Type);
-                if (f.Attribute.OnColumn && f.Attribute.Column.IsNullable)
-                {
-                    UnitUsed = true;
-                    TypeUsed = true;
-                    OptionalUsed = true;
-                    var ts = OS.TypeSpec.CreateGenericTypeSpec(new OS.GenericTypeSpec { TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Optional", Version = "" }), GenericParameterValues = new OS.GenericParameterValue[] { OS.GenericParameterValue.CreateTypeSpec(fts) } });
-                    return new OS.VariableDef { Name = f.Name, Type = ts, Description = f.Description };
-                }
-                return new OS.VariableDef { Name = f.Name, Type = fts, Description = f.Description };
+                return new OS.VariableDef { Name = f.Name, Type = TranslateTypeSpec(f.Type), Description = f.Description };
             }
             private OS.RecordDef TranslateRecord(RS.RecordDef r)
             {

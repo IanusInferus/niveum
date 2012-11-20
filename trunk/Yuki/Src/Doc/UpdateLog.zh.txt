@@ -1,4 +1,10 @@
-﻿2012.11.11
+﻿2012.11.20
+Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
+使用Optional类型替代Nullable的概念。
+Examples:
+修正Linq to SQL示例中没有考虑Email地址为空引用的问题。
+
+2012.11.11
 Yuki.Core, Yuki.SchemaManipulator:
 增加/load、/save选项，支持将整个Schema保存成文件和从文件加载。
 
