@@ -61,7 +61,7 @@ namespace Database
                         {
                             Id = m.Id,
                             Title = m.Title,
-                            From = new UserProfile { Id = From.Id, Name = From.Name, EmailAddress = From.EmailAddress },
+                            From = new UserProfile { Id = From.Id, Name = From.Name, EmailAddress = ValueOrDefault(From.EmailAddress) },
                             IsNew = mo.IsNew,
                             Time = m.Time
                         }
@@ -86,8 +86,8 @@ namespace Database
                 {
                     Id = m.Id,
                     Title = m.Title,
-                    From = new UserProfile { Id = From.Id, Name = From.Name, EmailAddress = From.EmailAddress },
-                    Tos = Tos.Select(t => new UserProfile { Id = t.Id, Name = t.Name, EmailAddress = t.EmailAddress }).ToList(),
+                    From = new UserProfile { Id = From.Id, Name = From.Name, EmailAddress = ValueOrDefault(From.EmailAddress) },
+                    Tos = Tos.Select(t => new UserProfile { Id = t.Id, Name = t.Name, EmailAddress = ValueOrDefault(t.EmailAddress) }).ToList(),
                     Time = m.Time,
                     Content = m.Content,
                     Attachments = Attachments
@@ -154,6 +154,18 @@ namespace Database
                 da.InsertManyMailOwner(m.ToIds.Select(mt => new DB.MailOwner { Id = Id, OwnerId = mt, IsNew = true, Time = Time }).ToList());
                 da.InsertManyMailAttachment(m.Attachments.Select(ma => new DB.MailAttachment { Id = Id, Name = ma.Name, Content = ma.Content.ToArray() }).ToList());
                 da.Complete();
+            }
+        }
+
+        private String ValueOrDefault(String s)
+        {
+            if (s != null)
+            {
+                return s;
+            }
+            else
+            {
+                return "";
             }
         }
     }
