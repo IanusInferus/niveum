@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构Dbml数据库代码生成器
-//  Version:     2012.06.26.
+//  Version:     2012.11.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -107,7 +107,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                             }
                             else if (f.Type.OnList)
                             {
-                                ThisTable = Records[f.Type.List.ElementType.TypeRef.Value];
+                                ThisTable = Records[f.Type.List.Value];
                             }
                             else
                             {
@@ -174,7 +174,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                     {
                         x.SetAttributeValue("IsDbGenerated", "true");
                     }
-                    if (ca.IsNullable)
+                    if (f.Type.OnOptional)
                     {
                         x.SetAttributeValue("CanBeNull", "true");
                     }
@@ -198,7 +198,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                         }
                         else if (f.Type.OnList)
                         {
-                            ThisTable = Records[f.Type.List.ElementType.TypeRef.Value];
+                            ThisTable = Records[f.Type.List.Value];
                         }
                         else
                         {
@@ -224,7 +224,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                     if (f.Type.OnList)
                     {
                         IsMultiple = true;
-                        Type = GetClrTypeString(f.Type.List.ElementType);
+                        Type = GetClrTypeString(TypeSpec.CreateTypeRef(f.Type.List));
                     }
                     else
                     {
@@ -242,7 +242,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                     {
                         x.SetAttributeValue("IsForeignKey", "true");
                     }
-                                        
+
                     return x;
                 }
                 else
@@ -253,35 +253,56 @@ namespace Yuki.RelationSchema.DbmlDatabase
 
             private String GetClrTypeString(TypeSpec Type)
             {
-                if (!Type.OnTypeRef)
+                String Name;
+                if (Type.OnTypeRef)
                 {
-                    throw new InvalidOperationException();
+                    Name = Type.TypeRef.Value;
                 }
-                if (Primitives.ContainsKey(Type.TypeRef.Value))
+                else if (Type.OnOptional)
                 {
-                    return ClrPrimitiveMappings[Type.TypeRef.Value];
+                    Name = Type.Optional.Value;
                 }
                 else
                 {
-                    return Type.TypeRef.Value;
+                    throw new InvalidOperationException();
+                }
+                if (Primitives.ContainsKey(Name))
+                {
+                    return ClrPrimitiveMappings[Name];
+                }
+                else
+                {
+                    return Name;
                 }
             }
 
             private String GetDbTypeString(TypeSpec Type, ColumnAttribute ca)
             {
-                if (!Type.OnTypeRef)
+                String Name;
+                Boolean IsNullable;
+                if (Type.OnTypeRef)
+                {
+                    Name = Type.TypeRef.Value;
+                    IsNullable = false;
+                }
+                else if (Type.OnOptional)
+                {
+                    Name = Type.Optional.Value;
+                    IsNullable = true;
+                }
+                else
                 {
                     throw new InvalidOperationException();
                 }
                 var l = new List<String>();
                 var TypeName = "";
-                if (Primitives.ContainsKey(Type.TypeRef.Value))
+                if (Primitives.ContainsKey(Name))
                 {
-                    TypeName = DbPrimitiveMappings[Type.TypeRef.Value];
+                    TypeName = DbPrimitiveMappings[Name];
                 }
-                else if (Enums.ContainsKey(Type.TypeRef.Value))
+                else if (Enums.ContainsKey(Name))
                 {
-                    TypeName = DbPrimitiveMappings[Enums[Type.TypeRef.Value].UnderlyingType.TypeRef.Value];
+                    TypeName = DbPrimitiveMappings[Enums[Name].UnderlyingType.TypeRef.Value];
                 }
                 else
                 {
@@ -295,7 +316,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                 {
                     l.Add(String.Format("{0}({1})", TypeName, ca.TypeParameters));
                 }
-                if (ca.IsNullable)
+                if (IsNullable)
                 {
                     l.Add("NULL");
                 }

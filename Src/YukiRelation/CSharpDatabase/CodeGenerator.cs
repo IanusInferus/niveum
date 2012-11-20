@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C#枚举数据库代码生成器
-//  Version:     2012.06.26.
+//  Version:     2012.11.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -114,7 +114,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                     case TypeSpecTag.TypeRef:
                         return Type.TypeRef.Value;
                     case TypeSpecTag.List:
-                        return "ListOf" + GetTypeFriendlyName(Type.List.ElementType);
+                        return "ListOf" + Type.List.Value;
                     default:
                         throw new InvalidOperationException();
                 }
@@ -209,15 +209,30 @@ namespace Yuki.RelationSchema.CSharpDatabase
 
                 if (f.Attribute.OnColumn)
                 {
-                    if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Value))
+                    String Name;
+                    Boolean IsNullable;
+                    if (Type.OnTypeRef)
                     {
-                        var Name = Type.TypeRef.Value;
-                        var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Value].PlatformName;
+                        Name = Type.TypeRef.Value;
+                        IsNullable = false;
+                    }
+                    else if (Type.OnOptional)
+                    {
+                        Name = Type.Optional.Value;
+                        IsNullable = true;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                    if (TemplateInfo.PrimitiveMappings.ContainsKey(Name))
+                    {
+                        var PlatformName = TemplateInfo.PrimitiveMappings[Name].PlatformName;
                         if (PlatformName.Contains("[") || PlatformName.Contains("]"))
                         {
                             Name = PlatformName;
                         }
-                        if (f.Attribute.Column.IsNullable && IsValueType(Type))
+                        if (IsNullable && IsValueType(Type))
                         {
                             return GetEscapedIdentifier(Name) + "?";
                         }
@@ -226,11 +241,11 @@ namespace Yuki.RelationSchema.CSharpDatabase
                             return Name;
                         }
                     }
-                    else if (Enums.ContainsKey(Type.TypeRef.Value))
+                    else if (Enums.ContainsKey(Name))
                     {
-                        if (f.Attribute.Column.IsNullable)
+                        if (IsNullable)
                         {
-                            return GetEscapedIdentifier(Type.TypeRef.Value) + "?";
+                            return GetEscapedIdentifier(Name) + "?";
                         }
                         else
                         {
@@ -250,7 +265,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                     }
                     else if (Type.OnList)
                     {
-                        return "System.Data.Linq.EntitySet<" + GetEscapedIdentifier(Type.List.ElementType.TypeRef.Value) + ">";
+                        return "System.Data.Linq.EntitySet<" + GetEscapedIdentifier(Type.List.Value) + ">";
                     }
                     else
                     {
@@ -268,15 +283,30 @@ namespace Yuki.RelationSchema.CSharpDatabase
 
                 if (f.Attribute.OnColumn)
                 {
-                    if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Value))
+                    String Name;
+                    Boolean IsNullable;
+                    if (Type.OnTypeRef)
                     {
-                        var Name = Type.TypeRef.Value;
-                        var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Value].PlatformName;
+                        Name = Type.TypeRef.Value;
+                        IsNullable = false;
+                    }
+                    else if (Type.OnOptional)
+                    {
+                        Name = Type.Optional.Value;
+                        IsNullable = true;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                    if (TemplateInfo.PrimitiveMappings.ContainsKey(Name))
+                    {
+                        var PlatformName = TemplateInfo.PrimitiveMappings[Name].PlatformName;
                         if (PlatformName.Contains("[") || PlatformName.Contains("]"))
                         {
                             Name = PlatformName;
                         }
-                        if (f.Attribute.Column.IsNullable && IsValueType(Type))
+                        if (IsNullable && IsValueType(Type))
                         {
                             return GetEscapedIdentifier(Name) + "?";
                         }
@@ -285,11 +315,11 @@ namespace Yuki.RelationSchema.CSharpDatabase
                             return Name;
                         }
                     }
-                    else if (Enums.ContainsKey(Type.TypeRef.Value))
+                    else if (Enums.ContainsKey(Name))
                     {
-                        if (f.Attribute.Column.IsNullable)
+                        if (IsNullable)
                         {
-                            return GetEscapedIdentifier(Type.TypeRef.Value) + "?";
+                            return GetEscapedIdentifier(Name) + "?";
                         }
                         else
                         {
@@ -309,7 +339,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                     }
                     else if (Type.OnList)
                     {
-                        return "System.Data.Linq.EntitySet<" + GetEscapedIdentifier(Type.List.ElementType.TypeRef.Value) + ">";
+                        return "System.Data.Linq.EntitySet<" + GetEscapedIdentifier(Type.List.Value) + ">";
                     }
                     else
                     {
@@ -380,7 +410,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 {
                     l.Add("IsDbGenerated = true");
                 }
-                if (a.IsNullable)
+                if (f.Type.OnOptional)
                 {
                     l.Add("CanBeNull = true");
                 }
@@ -444,7 +474,7 @@ namespace Yuki.RelationSchema.CSharpDatabase
                             }
                             else if (of.Type.OnList)
                             {
-                                if (of.Type.List.ElementType.TypeRef.Value != r.Name)
+                                if (of.Type.List.Value != r.Name)
                                 {
                                     return false;
                                 }
