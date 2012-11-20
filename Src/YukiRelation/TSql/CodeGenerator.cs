@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构T-SQL(SQL Server)数据库代码生成器
-//  Version:     2012.06.26.
+//  Version:     2012.11.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -123,7 +123,7 @@ namespace Yuki.RelationSchema.TSql
                                     }
                                     else if (f.Type.OnList)
                                     {
-                                        ThisTable = Records[f.Type.List.ElementType.TypeRef.Value];
+                                        ThisTable = Records[f.Type.List.Value];
                                     }
                                     else
                                     {
@@ -186,11 +186,22 @@ namespace Yuki.RelationSchema.TSql
 
             public String[] GetColumnDef(VariableDef f)
             {
-                if (!f.Type.OnTypeRef)
+                String TypeName;
+                Boolean IsNullable;
+                if (f.Type.OnTypeRef)
+                {
+                    TypeName = f.Type.TypeRef.Value;
+                    IsNullable = false;
+                }
+                else if (f.Type.OnOptional)
+                {
+                    TypeName = f.Type.Optional.Value;
+                    IsNullable = true;
+                }
+                else
                 {
                     throw new InvalidOperationException(String.Format("列必须是简单类型: {0}", f.Name));
                 }
-                var TypeName = f.Type.TypeRef.Value;
                 var DbTypeName = "";
                 if (Primitives.ContainsKey(TypeName))
                 {
@@ -241,7 +252,7 @@ namespace Yuki.RelationSchema.TSql
                 {
                     l.Add("IDENTITY(1,1)");
                 }
-                if (f.Attribute.Column.IsNullable)
+                if (IsNullable)
                 {
                     l.Add("NULL");
                 }

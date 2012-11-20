@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2012.06.28.
+//  Version:     2012.11.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -108,7 +108,7 @@ namespace Yuki.RelationSchema
                     }
                     else
                     {
-                        OtherRecordName = a.Type.List.ElementType.TypeRef.Value;
+                        OtherRecordName = a.Type.List.Value;
                     }
 
                     //FK和FNK只需要目标表上的键有索引，RFK和RFNK需要当前表和目标表的键都有索引
@@ -307,7 +307,7 @@ namespace Yuki.RelationSchema
                             return RS.TypeSpec.CreateTypeRef(new RS.TypeRef { Value = "Binary" });
                         }
                     }
-                    return RS.TypeSpec.CreateList(new RS.ListDef { ElementType = TranslateTypeSpec(t.GenericTypeSpec.GenericParameterValues.Single().TypeSpec) });
+                    return RS.TypeSpec.CreateList(TranslateTypeSpec(t.GenericTypeSpec.GenericParameterValues.Single().TypeSpec).TypeRef);
                 }
                 else
                 {
@@ -318,7 +318,23 @@ namespace Yuki.RelationSchema
             private RS.VariableDef TranslateField(OS.VariableDef f)
             {
                 var t = TranslateTypeSpec(f.Type);
-                var IsColumn = t.OnTypeRef && (OPrimitives.Contains(t.TypeRef.Value) || OEnums.Contains(t.TypeRef.Value));
+                var IsColumn = false;
+                if (t.OnTypeRef)
+                {
+                    var p = t.TypeRef.Value;
+                    if (OPrimitives.Contains(p) || OEnums.Contains(p))
+                    {
+                        IsColumn = true;
+                    }
+                }
+                else if (t.OnOptional)
+                {
+                    var p = t.Optional.Value;
+                    if (OPrimitives.Contains(p) || OEnums.Contains(p))
+                    {
+                        IsColumn = true;
+                    }
+                }
                 var dc = Decompose(f.Description);
                 RS.FieldAttribute fa = null;
 
@@ -349,7 +365,12 @@ namespace Yuki.RelationSchema
                         TypeParameters = "";
                     }
 
-                    fa = RS.FieldAttribute.CreateColumn(new RS.ColumnAttribute { IsIdentity = IsIdentity, IsNullable = IsNullable, TypeParameters = TypeParameters });
+                    if (IsNullable && !t.OnOptional)
+                    {
+                        t = RS.TypeSpec.CreateOptional(t.TypeRef);
+                    }
+
+                    fa = RS.FieldAttribute.CreateColumn(new RS.ColumnAttribute { IsIdentity = IsIdentity, TypeParameters = TypeParameters });
                 }
                 else
                 {
@@ -506,20 +527,24 @@ namespace Yuki.RelationSchema
                 {
                     if (f.Attribute.OnNavigation)
                     {
-                        var t = f.Type;
-                        if (t.OnList)
+                        String Name;
+                        if (f.Type.OnTypeRef)
                         {
-                            t = t.List.ElementType;
+                            Name = f.Type.TypeRef.Value;
                         }
-                        if (t.OnList)
+                        else if (f.Type.OnList)
                         {
-                            throw new InvalidOperationException(String.Format("导航属性的类型不能为多重List: {0}.{1}", r.Name, f.Name));
+                            Name = f.Type.List.Value;
                         }
-                        if (!Records.ContainsKey(t.TypeRef.Value))
+                        else
                         {
-                            throw new InvalidOperationException(String.Format("表'{2}'不存在: {0}.{1}", r.Name, f.Name, t.TypeRef.Value));
+                            throw new InvalidOperationException(String.Format("导航属性的类型错误: {0}.{1}", r.Name, f.Name));
                         }
-                        var TypeRecord = Records[t.TypeRef.Value];
+                        if (!Records.ContainsKey(Name))
+                        {
+                            throw new InvalidOperationException(String.Format("表'{2}'不存在: {0}.{1}", r.Name, f.Name, Name));
+                        }
+                        var TypeRecord = Records[Name];
 
                         if (f.Attribute.Navigation == null)
                         {

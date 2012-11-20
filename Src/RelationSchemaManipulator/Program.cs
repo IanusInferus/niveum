@@ -1,9 +1,9 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cs
-//  Location:    Yuki.SchemaManipulator <Visual C#>
+//  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.07.25.
+//  Version:     2012.11.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -310,7 +310,7 @@ namespace Yuki.RelationSchemaManipulator
                 }
             }
             var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
-            if (!Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
+            if (SqlCodeDir != "" && !Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
             Txt.WriteFile(SqlCodePath, Compiled);
         }
 
@@ -327,7 +327,7 @@ namespace Yuki.RelationSchemaManipulator
                 }
             }
             var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
-            if (!Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
+            if (SqlCodeDir != "" && !Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
             Txt.WriteFile(SqlCodePath, Compiled);
         }
 
@@ -344,7 +344,7 @@ namespace Yuki.RelationSchemaManipulator
                 }
             }
             var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
-            if (!Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
+            if (SqlCodeDir != "" && !Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
             Txt.WriteFile(SqlCodePath, Compiled);
         }
 
@@ -374,7 +374,7 @@ namespace Yuki.RelationSchemaManipulator
                 }
             }
             var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
-            if (!Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
+            if (SqlCodeDir != "" && !Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
             Txt.WriteFile(SqlCodePath, TextEncoding.UTF8, Compiled);
         }
 

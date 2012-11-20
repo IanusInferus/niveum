@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2012.06.19.
+//  Version:     2012.11.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -102,17 +102,28 @@ namespace Yuki.DatabaseRegenerator
                             }
 
                             var cv = cvs.Single().Stem.Children.Single().Leaf;
-                            if (!f.Type.OnTypeRef)
+                            String TypeName;
+                            Boolean IsNullable;
+                            if (f.Type.OnTypeRef)
+                            {
+                                TypeName = f.Type.TypeRef.Value;
+                                IsNullable = false;
+                            }
+                            else if (f.Type.OnOptional)
+                            {
+                                TypeName = f.Type.Optional.Value;
+                                IsNullable = true;
+                            }
+                            else
                             {
                                 throw new InvalidOperationException(String.Format("InvalidType: {0}.{1}", CollectionName, f.Name));
                             }
-                            var TypeName = f.Type.TypeRef.Value;
                             try
                             {
                                 if (EnumMetas.ContainsKey(TypeName))
                                 {
                                     var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Int64);
-                                    if (f.Attribute.Column.IsNullable && cv == "-")
+                                    if (IsNullable && cv == "-")
                                     {
                                         p.Value = DBNull.Value;
                                     }
@@ -136,7 +147,7 @@ namespace Yuki.DatabaseRegenerator
                                     if (Type == DatabaseType.PostgreSQL)
                                     {
                                         Object Value;
-                                        if (f.Attribute.Column.IsNullable && cv == "-")
+                                        if (IsNullable && cv == "-")
                                         {
                                             Value = DBNull.Value;
                                         }
@@ -149,7 +160,7 @@ namespace Yuki.DatabaseRegenerator
                                     else
                                     {
                                         var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Boolean);
-                                        if (f.Attribute.Column.IsNullable && cv == "-")
+                                        if (IsNullable && cv == "-")
                                         {
                                             p.Value = DBNull.Value;
                                         }
@@ -162,7 +173,7 @@ namespace Yuki.DatabaseRegenerator
                                 else if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var p = cmd.Add(String.Format("@{0}", f.Name), DbType.String);
-                                    if (f.Attribute.Column.IsNullable && cv == "-")
+                                    if (IsNullable && cv == "-")
                                     {
                                         p.Value = DBNull.Value;
                                     }
@@ -174,7 +185,7 @@ namespace Yuki.DatabaseRegenerator
                                 else if (TypeName.Equals("Int", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Int32);
-                                    if (f.Attribute.Column.IsNullable && cv == "-")
+                                    if (IsNullable && cv == "-")
                                     {
                                         p.Value = DBNull.Value;
                                     }
@@ -186,7 +197,7 @@ namespace Yuki.DatabaseRegenerator
                                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Single);
-                                    if (f.Attribute.Column.IsNullable && cv == "-")
+                                    if (IsNullable && cv == "-")
                                     {
                                         p.Value = DBNull.Value;
                                     }
@@ -198,7 +209,7 @@ namespace Yuki.DatabaseRegenerator
                                 else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Binary);
-                                    if (f.Attribute.Column.IsNullable && cv == "-")
+                                    if (IsNullable && cv == "-")
                                     {
                                         p.Value = DBNull.Value;
                                     }
