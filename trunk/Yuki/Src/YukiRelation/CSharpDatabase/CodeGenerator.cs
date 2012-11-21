@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C#枚举数据库代码生成器
-//  Version:     2012.11.20.
+//  Version:     2012.11.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -452,7 +452,19 @@ namespace Yuki.RelationSchema.CSharpDatabase
                 {
                     var ColumnParameters = GetColumnParameters(r, f);
                     var AssociationChecks = r.Fields.Where(rf => rf.Attribute.OnNavigation && !rf.Attribute.Navigation.IsReverse && rf.Attribute.Navigation.ThisKey.Contains(f.Name, StringComparer.OrdinalIgnoreCase)).Select(rf => GetTemplate("AssociationCheck").Substitute("AssociationName", rf.Name).Single()).ToArray();
-                    return GetTemplate("ColumnProperty").Substitute("Name", f.Name).Substitute("ColumnParameters", ColumnParameters).Substitute("PropertyType", PropertyType).Substitute("AssociationChecks", AssociationChecks).Substitute("XmlComment", GetXmlComment(f.Description));
+                    var d = f.Description;
+                    if (f.Type.OnOptional)
+                    {
+                        if (d == "")
+                        {
+                            d = "Optional";
+                        }
+                        else
+                        {
+                            d = "Optional\r\n" + d;
+                        }
+                    }
+                    return GetTemplate("ColumnProperty").Substitute("Name", f.Name).Substitute("ColumnParameters", ColumnParameters).Substitute("PropertyType", PropertyType).Substitute("AssociationChecks", AssociationChecks).Substitute("XmlComment", GetXmlComment(d));
                 }
                 else if (f.Attribute.OnNavigation)
                 {

@@ -369,7 +369,7 @@ ObjectSchemaTemplate
                             }
 
                         public:
-                            T ValueOrDefault(T Default)
+                            T ValueOrDefault(T Default) const
                             {
                                 if (OnHasValue())
                                 {
