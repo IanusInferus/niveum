@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.11.20.
+//  Version:     2012.11.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -264,7 +264,7 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2tsql:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成Dbml文件");
             Console.WriteLine(@"/t2dbml:<DbmlCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
-            Console.WriteLine(@"生成C#数据库类型");
+            Console.WriteLine(@"生成C#数据库Linq to SQL类型");
             Console.WriteLine(@"/t2csd:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库简单类型");
             Console.WriteLine(@"/t2csdp:<CsCodePath>,<EntityNamespaceName>");
