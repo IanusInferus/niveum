@@ -28,7 +28,8 @@ using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
 using Yuki.RelationSchema.DbmlDatabase;
-using Yuki.RelationSchema.CSharpDatabase;
+using Yuki.RelationSchema.CSharpLinqToSql;
+using Yuki.RelationSchema.CSharpLinqToEntities;
 
 namespace Yuki.RelationSchemaManipulator
 {
@@ -202,7 +203,20 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 5)
                     {
-                        ObjectSchemaToCSharpDatabaseCode(args[0], args[1], args[2], args[3], args[4]);
+                        ObjectSchemaToCSharpLinqToSqlCode(args[0], args[1], args[2], args[3], args[4]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "t2cse")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 5)
+                    {
+                        ObjectSchemaToCSharpLinqToEntitiesCode(args[0], args[1], args[2], args[3], args[4]);
                     }
                     else
                     {
@@ -266,6 +280,8 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2dbml:<DbmlCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库Linq to SQL类型");
             Console.WriteLine(@"/t2csd:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
+            Console.WriteLine(@"生成C#数据库Linq to Entities类型");
+            Console.WriteLine(@"/t2cse:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库简单类型");
             Console.WriteLine(@"/t2csdp:<CsCodePath>,<EntityNamespaceName>");
             Console.WriteLine(@"生成C++数据库简单类型");
@@ -378,10 +394,27 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(SqlCodePath, TextEncoding.UTF8, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpDatabaseCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
+        public static void ObjectSchemaToCSharpLinqToSqlCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
         {
             var ObjectSchema = Schema();
             var Compiled = ObjectSchema.CompileToCSharpDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToCSharpLinqToEntitiesCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
+        {
+            var ObjectSchema = Schema();
+            var Compiled = ObjectSchema.CompileToCSharpLinqToEntities(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
