@@ -19,6 +19,9 @@
 
     //导航属性
     From                UserProfile                 [FK:FromId=Id]来源用户
+    Tos                 List<MailTo>                [RFK:Id=Id]收件人
+    Attachments         List<MailAttachment>        [RFK:Id=Id]附件
+    Owners              List<MailOwner>             [RFK:Id=Id]邮件所有关系
 
 #Record MailTo                                      "[CN:MailTos][PK:Id, ToId][NKC:Id][NK:ToId]邮件收件人"
     Id                  Int                         邮件ID

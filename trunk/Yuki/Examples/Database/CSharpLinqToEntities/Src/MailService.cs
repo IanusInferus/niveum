@@ -61,7 +61,7 @@ namespace Database
                         {
                             Id = m.Id,
                             Title = m.Title,
-                            From = new UserProfile { Id = From.Id, Name = From.Name, EmailAddress = From.EmailAddress, Gender = (Gender)(From.Gender) },
+                            From = new UserProfile { Id = From.Id, Name = From.Name, EmailAddress = From.EmailAddress, Gender = (Gender_)(From.Gender) },
                             IsNew = mo.IsNew,
                             Time = m.Time
                         }
@@ -86,8 +86,8 @@ namespace Database
                 {
                     Id = m.Id,
                     Title = m.Title,
-                    From = new UserProfile { Id = From.Id, Name = From.Name, EmailAddress = From.EmailAddress, Gender = (Gender)(From.Gender) },
-                    Tos = Tos.Select(t => new UserProfile { Id = t.Id, Name = t.Name, EmailAddress = t.EmailAddress, Gender = (Gender)(From.Gender) }).ToList(),
+                    From = new UserProfile { Id = From.Id, Name = From.Name, EmailAddress = From.EmailAddress, Gender = (Gender_)(From.Gender) },
+                    Tos = Tos.Select(t => new UserProfile { Id = t.Id, Name = t.Name, EmailAddress = t.EmailAddress, Gender = (Gender_)(From.Gender) }).ToList(),
                     Time = m.Time,
                     Content = m.Content,
                     Attachments = Attachments
