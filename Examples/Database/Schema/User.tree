@@ -4,7 +4,7 @@
       File:        User.tree
       Location:    Yuki.Examples <Tree>
       Description: 用户
-      Version:     2012.06.28.
+      Version:     2012.11.21.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -14,3 +14,8 @@
     Id                  Int                         [I]用户号
     Name                String                      [P:32]用户名
     EmailAddress        String                      [N][P:32]邮件地址
+    Gender              Gender                      性别
+
+#Enum Gender
+    Male                0                           男
+    Female              1                           女
