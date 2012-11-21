@@ -4,6 +4,8 @@ Yuki.Core:
 Examples:
 二进制序列化示例中增加Optional的类型使用。
 数据库示例中增加枚举类型使用。
+Yuki.Relation:
+增加C# Linq to SQL代码生成中对Optional类型的注释提示。
 
 2012.11.20
 Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
