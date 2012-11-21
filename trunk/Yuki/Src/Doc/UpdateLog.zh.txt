@@ -1,4 +1,8 @@
-﻿2012.11.21
+﻿2012.11.22
+Yuki.Relation, Yuki.RelationSchemaManipulator, Examples:
+增加Linq to Entities的支持。
+
+2012.11.21
 Yuki.Core:
 增加VB、C#和C++的Optional取得值或默认值的功能。
 Examples:
