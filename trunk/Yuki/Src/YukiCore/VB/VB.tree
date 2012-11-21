@@ -4,7 +4,7 @@
       File:        VB.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构VB.Net模板数据
-      Version:     2012.10.30.
+      Version:     2012.11.21.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -360,6 +360,14 @@ ObjectSchemaTemplate
                             If (Not Left.HasValue OrElse Left.Value.OnNotHasValue) AndAlso (Not Right.HasValue OrElse Right.Value.OnNotHasValue) Then Return True
                             If Not Left.HasValue OrElse Left.Value.OnNotHasValue OrElse Not Right.HasValue OrElse Right.Value.OnNotHasValue Then Return False
                             Return Equals(Left.Value, Right.Value)
+                        End Function
+
+                        Public Function ValueOrDefault(ByVal [Default] As T) As T
+                            If OnHasValue Then
+                                Return HasValue
+                            Else
+                                Return [Default]
+                            End If
                         End Function
                     End Structure
         Template

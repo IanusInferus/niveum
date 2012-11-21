@@ -1,4 +1,11 @@
-﻿2012.11.20
+﻿2012.11.21
+Yuki.Core:
+增加VB、C#和C++的Optional取得值或默认值的功能。
+Examples:
+二进制序列化示例中增加Optional的类型使用。
+数据库示例中增加枚举类型使用。
+
+2012.11.20
 Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
 使用Optional类型替代Nullable的概念。
 Examples:
