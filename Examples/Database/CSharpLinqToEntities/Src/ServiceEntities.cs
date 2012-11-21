@@ -125,7 +125,7 @@ namespace Database.Entities
     }
 
     /// <summary>性别</summary>
-    public enum Gender : int
+    public enum Gender_ : int // Entity Framework 内部表示CLR类型时不带命名空间，会与其他类型混淆，导致出错。
     {
         /// <summary>男</summary>
         Male = 0,
@@ -143,7 +143,7 @@ namespace Database.Entities
         /// <summary>邮件地址</summary>
         public Optional<String> EmailAddress { get; set; }
         /// <summary>性别</summary>
-        public Gender Gender { get; set; }
+        public Gender_ Gender { get; set; }
     }
 
     /// <summary>邮件头</summary>
