@@ -21,9 +21,19 @@ namespace Database.Linq
             return dbr.UserProfiles.ById(Id);
         }
 
-        public UserProfile SelectOptionalUserProfileByName(string Name)
+        public Optional<UserProfile> SelectOptionalUserProfileByName(string Name)
         {
             var l = dbr.UserProfiles.WhereNameIs(Name).ToArray();
+            if (l.Length == 0)
+            {
+                return null;
+            }
+            return l.Single();
+        }
+
+        public Optional<DirectUserAuthentication> SelectOptionalDirectUserAuthenticationByName(String Name)
+        {
+            var l = dbr.DirectUserAuthentication.WhereNameIs(Name).ToArray();
             if (l.Length == 0)
             {
                 return null;
