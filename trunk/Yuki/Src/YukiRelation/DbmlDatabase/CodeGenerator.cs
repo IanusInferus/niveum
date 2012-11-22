@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构Dbml数据库代码生成器
-//  Version:     2012.11.20.
+//  Version:     2012.11.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -105,6 +105,10 @@ namespace Yuki.RelationSchema.DbmlDatabase
                             {
                                 ThisTable = Records[f.Type.TypeRef.Value];
                             }
+                            else if (f.Type.OnOptional)
+                            {
+                                ThisTable = Records[f.Type.Optional.Value];
+                            }
                             else if (f.Type.OnList)
                             {
                                 ThisTable = Records[f.Type.List.Value];
@@ -195,6 +199,10 @@ namespace Yuki.RelationSchema.DbmlDatabase
                         if (f.Type.OnTypeRef)
                         {
                             ThisTable = Records[f.Type.TypeRef.Value];
+                        }
+                        else if (f.Type.OnOptional)
+                        {
+                            ThisTable = Records[f.Type.Optional.Value];
                         }
                         else if (f.Type.OnList)
                         {

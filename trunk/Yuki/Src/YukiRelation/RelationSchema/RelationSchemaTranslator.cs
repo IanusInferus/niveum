@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2012.11.20.
+//  Version:     2012.11.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -35,9 +35,10 @@ namespace Yuki.RelationSchema
     //  RFK:<Columns>=<Columns>     ReverseForeignKey
     //  FNK:<Columns>=<Columns>     ForeignNonUniqueKey 即当前键可指向多种物体，没有外键约束
     //  RFNK:<Columns>=<Columns>    ReverseForeignNonUniqueKey 即目标键可指向多种物体，没有外键约束
+    //  N                           Nullable，不能和FK同时使用
     //  FK和FNK只需要目标表上的键有索引，RFK和RFNK需要当前表和目标表的键都有索引
     //
-    //标记可以叠加，如[CN:Users][PKC:Id1, Id2]
+    //标记可以叠加，如[CN:Users][PKC:Id1, Id2]，但FK、RFK、FNK、RFNK不能叠加
     //外键中可有多个键，例如[FK:Id1, Id2=Id1, Id2]
     //索引列上可以标注减号表示递减，比如[PKC:Id1, Id2-]
     //
@@ -106,9 +107,17 @@ namespace Yuki.RelationSchema
                     {
                         OtherRecordName = a.Type.TypeRef.Value;
                     }
-                    else
+                    else if (a.Type.OnOptional)
+                    {
+                        OtherRecordName = a.Type.Optional.Value;
+                    }
+                    else if (a.Type.OnList)
                     {
                         OtherRecordName = a.Type.List.Value;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
                     }
 
                     //FK和FNK只需要目标表上的键有索引，RFK和RFNK需要当前表和目标表的键都有索引
@@ -137,7 +146,7 @@ namespace Yuki.RelationSchema
         {
             public OS.Schema Schema;
             private HashSet<String> OPrimitives = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
-            private HashSet<String> OEnums = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+            private HashSet<String> OEntities = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
             private Dictionary<String, RS.RecordDef> Records = new Dictionary<String, RS.RecordDef>();
 
             public RS.Schema Analyze()
@@ -154,17 +163,6 @@ namespace Yuki.RelationSchema
                             OPrimitives.Add(t.Primitive.Name);
                         }
                     }
-                    else if (t.OnEnum)
-                    {
-                        if (!OEnums.Contains(t.Enum.Name))
-                        {
-                            OEnums.Add(t.Enum.Name);
-                        }
-                    }
-                    else
-                    {
-                        //throw new InvalidOperationException("引用的类型中有Primitive、Enum以外的类型声明。");
-                    }
                 }
 
                 foreach (var t in Schema.Types)
@@ -176,11 +174,11 @@ namespace Yuki.RelationSchema
                             OPrimitives.Add(t.Primitive.Name);
                         }
                     }
-                    else if (t.OnEnum)
+                    else if (t.OnRecord)
                     {
-                        if (!OEnums.Contains(t.Enum.Name))
+                        if (!OEntities.Contains(t.Record.Name))
                         {
-                            OEnums.Add(t.Enum.Name);
+                            OEntities.Add(t.Record.Name);
                         }
                     }
                 }
@@ -315,33 +313,34 @@ namespace Yuki.RelationSchema
                 }
             }
 
-            private RS.VariableDef TranslateField(OS.VariableDef f)
+            private RS.VariableDef TranslateField(OS.RecordDef r, OS.VariableDef f)
             {
                 var t = TranslateTypeSpec(f.Type);
                 var IsColumn = false;
                 if (t.OnTypeRef)
                 {
-                    var p = t.TypeRef.Value;
-                    if (OPrimitives.Contains(p) || OEnums.Contains(p))
-                    {
-                        IsColumn = true;
-                    }
+                    IsColumn = !OEntities.Contains(t.TypeRef.Value);
                 }
                 else if (t.OnOptional)
                 {
-                    var p = t.Optional.Value;
-                    if (OPrimitives.Contains(p) || OEnums.Contains(p))
-                    {
-                        IsColumn = true;
-                    }
+                    IsColumn = !OEntities.Contains(t.Optional.Value);
+                }
+                else if (t.OnList)
+                {
+                    IsColumn = !OEntities.Contains(t.List.Value);
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
                 var dc = Decompose(f.Description);
                 RS.FieldAttribute fa = null;
 
+                var IsNullable = false;
+
                 if (IsColumn)
                 {
                     var IsIdentity = false;
-                    var IsNullable = false;
                     String TypeParameters = null;
                     foreach (var a in dc.Attributes)
                     {
@@ -357,6 +356,10 @@ namespace Yuki.RelationSchema
                         {
                             TypeParameters = a.Parameters;
                         }
+                        else
+                        {
+                            throw new InvalidOperationException(String.Format("无法识别的标记'{2}': {0}.{1}", r.Name, f.Name, a.Name));
+                        }
                     }
 
                     //如果一个列上没有标记P，则自动添加[P:]
@@ -365,21 +368,21 @@ namespace Yuki.RelationSchema
                         TypeParameters = "";
                     }
 
-                    if (IsNullable && !t.OnOptional)
-                    {
-                        t = RS.TypeSpec.CreateOptional(t.TypeRef);
-                    }
-
                     fa = RS.FieldAttribute.CreateColumn(new RS.ColumnAttribute { IsIdentity = IsIdentity, TypeParameters = TypeParameters });
                 }
                 else
                 {
-                    if (dc.Attributes.Length > 1)
+                    if (dc.Attributes.Where(a => a.Name == "FK" || a.Name == "RFK" || a.Name == "FNK" || a.Name == "RFNK").Count() > 1)
                     {
-                        throw new InvalidOperationException(String.Format("映射数过多: {0}", f.Description));
+                        throw new InvalidOperationException(String.Format("FK、RFK、FNK、RFNK有重叠: {0}.{1}", r.Name, f.Name));
                     }
                     foreach (var a in dc.Attributes)
                     {
+                        if (a.Name == "N")
+                        {
+                            IsNullable = true;
+                            continue;
+                        }
                         var km = GetKeyMap(a.Parameters);
                         if (a.Name == "FK")
                         {
@@ -413,6 +416,10 @@ namespace Yuki.RelationSchema
                             var OtherKey = km.OtherKey;
                             fa = RS.FieldAttribute.CreateNavigation(new RS.NavigationAttribute { IsReverse = IsReverse, IsUnique = IsUnique, ThisKey = ThisKey, OtherKey = OtherKey });
                         }
+                        else
+                        {
+                            throw new InvalidOperationException(String.Format("无法识别的标记'{2}': {0}.{1}", r.Name, f.Name, a.Name));
+                        }
                     }
                     if (fa == null)
                     {
@@ -420,12 +427,17 @@ namespace Yuki.RelationSchema
                     }
                 }
 
+                if (IsNullable && !t.OnOptional)
+                {
+                    t = RS.TypeSpec.CreateOptional(t.TypeRef);
+                }
+
                 return new RS.VariableDef { Name = f.Name, Type = t, Description = dc.Description, Attribute = fa };
             }
             private RS.RecordDef TranslateRecord(OS.RecordDef r)
             {
                 var dc = Decompose(r.Description);
-                var Fields = r.Fields.Select(f => TranslateField(f)).ToArray();
+                var Fields = r.Fields.Select(f => TranslateField(r, f)).ToArray();
 
                 foreach (var f in Fields)
                 {
@@ -436,6 +448,11 @@ namespace Yuki.RelationSchema
                         {
                             throw new InvalidOperationException(String.Format("字符串没有标明长度，请添加[P:max]等: {0}.{1}", r.Name, f.Name));
                         }
+                    }
+                    if (f.Attribute.OnNavigation && !f.Attribute.Navigation.IsReverse && f.Attribute.Navigation.IsUnique && f.Type.OnOptional)
+                    {
+                        //如果N和FK同时使用，则报错
+                        throw new InvalidOperationException(String.Format("N与FK不能同时指定: {0}.{1}", r.Name, f.Name));
                     }
                 }
 
@@ -532,13 +549,17 @@ namespace Yuki.RelationSchema
                         {
                             Name = f.Type.TypeRef.Value;
                         }
+                        else if (f.Type.OnOptional)
+                        {
+                            Name = f.Type.Optional.Value;
+                        }
                         else if (f.Type.OnList)
                         {
                             Name = f.Type.List.Value;
                         }
                         else
                         {
-                            throw new InvalidOperationException(String.Format("导航属性的类型错误: {0}.{1}", r.Name, f.Name));
+                            throw new InvalidOperationException();
                         }
                         if (!Records.ContainsKey(Name))
                         {
