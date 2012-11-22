@@ -263,6 +263,10 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                     {
                         return Type.TypeRef.Value;
                     }
+                    else if (Type.OnOptional)
+                    {
+                        return Type.Optional.Value;
+                    }
                     else if (Type.OnList)
                     {
                         return "ICollection<" + GetEscapedIdentifier(Type.List.Value) + ">";

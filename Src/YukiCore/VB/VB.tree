@@ -4,7 +4,7 @@
       File:        VB.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构VB.Net模板数据
-      Version:     2012.11.21.
+      Version:     2012.11.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -325,7 +325,8 @@ ObjectSchemaTemplate
                             End Get
                         End Property
                         Public Shared Widening Operator CType(ByVal v As T) As [Optional](Of T)
-                            Return [Optional](Of T).CreateHasValue(v)
+                            If v Is Nothing Then Return CreateNotHasValue()
+                            Return CreateHasValue(v)
                         End Operator
                         Public Shared Narrowing Operator CType(ByVal v As [Optional](Of T)) As T
                             If v.OnNotHasValue Then Throw New InvalidOperationException()
