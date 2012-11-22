@@ -16,6 +16,11 @@
     EmailAddress        String                      [N][P:32]邮件地址
     Gender              Gender                      性别
 
+    DUA                 DirectUserAuthentication    [N][RFK:Name=Name]直接用户名验证
+
 #Enum Gender                                        性别
     Male                0                           男
     Female              1                           女
+
+#Record DirectUserAuthentication                    [CN:DirectUserAuthentication][PK:Name]直接用户名验证
+    Name                String                      [P:32]用户名

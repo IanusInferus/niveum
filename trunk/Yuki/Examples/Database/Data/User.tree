@@ -4,7 +4,7 @@
       File:        User.tree
       Location:    Yuki.Examples <Tree>
       Description: 用户
-      Version:     2012.11.21.
+      Version:     2012.11.22.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -16,3 +16,9 @@ UserProfiles
         02      li4         -                   女
         03      wang5       wang5@test.com      男
         04      zhao6       -                   女
+
+DirectUserAuthentication
+    $Table DirectUserAuthentication Name
+        zhang3
+        li4   
+        wang5 
