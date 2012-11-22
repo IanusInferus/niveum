@@ -48,12 +48,21 @@ namespace Database
 
             var CmdLine = CommandLine.GetCmdLine();
 
+            DatabaseType dt = DatabaseType.SqlServer;
             foreach (var opt in CmdLine.Options)
             {
                 if ((opt.Name.ToLower() == "?") || (opt.Name.ToLower() == "help"))
                 {
                     DisplayInfo();
                     return 0;
+                }
+                else if (opt.Name.ToLower() == "mssql")
+                {
+                    dt = DatabaseType.SqlServer;
+                }
+                else if (opt.Name.ToLower() == "mysql")
+                {
+                    dt = DatabaseType.MySQL;
                 }
             }
 
@@ -66,7 +75,7 @@ namespace Database
 
             var ConnectionString = argv[0];
 
-            var dam = new DataAccessManager(ConnectionString);
+            var dam = new DataAccessManager(dt, ConnectionString);
             s = new MailService(dam);
 
             Console.WriteLine("输入help获得命令列表。");
@@ -282,10 +291,11 @@ namespace Database
         public static void DisplayInfo()
         {
             Console.WriteLine(@"用法:");
-            Console.WriteLine(Assembly.GetEntryAssembly().GetName().Name + @" <ConnectionString>");
+            Console.WriteLine(Assembly.GetEntryAssembly().GetName().Name + @"/mssql|/mysql <ConnectionString>");
             Console.WriteLine(@"ConnectionString 数据库连接字符串");
             Console.WriteLine(@"示例:");
-            Console.WriteLine(Assembly.GetEntryAssembly().GetName().Name + @" """ + DataAccessManager.GetConnectionStringExample() + @"""");
+            Console.WriteLine(Assembly.GetEntryAssembly().GetName().Name + @" /mssql """ + DataAccessManager.GetConnectionStringExample(DatabaseType.SqlServer) + @"""");
+            Console.WriteLine(Assembly.GetEntryAssembly().GetName().Name + @" /mysql """ + DataAccessManager.GetConnectionStringExample(DatabaseType.MySQL) + @"""");
             Console.WriteLine(@"");
             DisplayHelp();
         }
