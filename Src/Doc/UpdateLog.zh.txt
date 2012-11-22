@@ -1,8 +1,11 @@
 ﻿2012.11.22
 Yuki.Relation, Yuki.RelationSchemaManipulator, Examples:
 增加Linq to Entities的支持。
+增加对关联的Optional支持。
 Examples:
 增加MySQL关于名称大小写兼容性的配置的提示。
+Yuki.Core:
+修正VB、C#代码对Optional从引用类型转换时没有检查Null的问题。
 
 2012.11.21
 Yuki.Core:

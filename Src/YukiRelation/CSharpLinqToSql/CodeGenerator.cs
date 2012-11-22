@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to SQL数据库代码生成器
-//  Version:     2012.11.21.
+//  Version:     2012.11.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -263,6 +263,10 @@ namespace Yuki.RelationSchema.CSharpLinqToSql
                     {
                         return "System.Data.Linq.EntityRef<" + GetEscapedIdentifier(Type.TypeRef.Value) + ">";
                     }
+                    else if (Type.OnOptional)
+                    {
+                        return "System.Data.Linq.EntityRef<" + GetEscapedIdentifier(Type.Optional.Value) + ">";
+                    }
                     else if (Type.OnList)
                     {
                         return "System.Data.Linq.EntitySet<" + GetEscapedIdentifier(Type.List.Value) + ">";
@@ -337,6 +341,10 @@ namespace Yuki.RelationSchema.CSharpLinqToSql
                     {
                         return Type.TypeRef.Value;
                     }
+                    else if (Type.OnOptional)
+                    {
+                        return Type.Optional.Value;
+                    }
                     else if (Type.OnList)
                     {
                         return "System.Data.Linq.EntitySet<" + GetEscapedIdentifier(Type.List.Value) + ">";
@@ -363,6 +371,10 @@ namespace Yuki.RelationSchema.CSharpLinqToSql
                 else if (f.Attribute.OnNavigation)
                 {
                     if (Type.OnTypeRef)
+                    {
+                        return GetTemplate("OneStorageField").Substitute("Name", f.Name).Substitute("StorageType", StorageType);
+                    }
+                    else if (Type.OnOptional)
                     {
                         return GetTemplate("OneStorageField").Substitute("Name", f.Name).Substitute("StorageType", StorageType);
                     }
@@ -484,6 +496,13 @@ namespace Yuki.RelationSchema.CSharpLinqToSql
                                     return false;
                                 }
                             }
+                            else if (Type.OnOptional)
+                            {
+                                if (of.Type.Optional.Value != r.Name)
+                                {
+                                    return false;
+                                }
+                            }
                             else if (of.Type.OnList)
                             {
                                 if (of.Type.List.Value != r.Name)
@@ -494,9 +513,21 @@ namespace Yuki.RelationSchema.CSharpLinqToSql
                             return true;
                         };
 
-                        if (f.Type.OnTypeRef)
+                        if (f.Type.OnTypeRef || f.Type.OnOptional)
                         {
-                            var Other = Records[f.Type.TypeRef.Value];
+                            RecordDef Other;
+                            if (f.Type.OnTypeRef)
+                            {
+                                Other = Records[f.Type.TypeRef.Value];
+                            }
+                            else if (f.Type.OnOptional)
+                            {
+                                Other = Records[f.Type.Optional.Value];
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException();
+                            }
                             var OtherAssociations = Other.Fields.Where(IsOtherAssociation).ToArray();
                             if (OtherAssociations.Length > 0)
                             {
@@ -505,7 +536,7 @@ namespace Yuki.RelationSchema.CSharpLinqToSql
                                 var KeyColumnAssignments = a.ThisKey.ZipStrict(a.OtherKey, (t, o) => GetTemplate("KeyColumnAssignment").Substitute("Name", t).Substitute("OtherMember", o).Single()).ToArray();
                                 var ThisKeyColumnsClear = a.ThisKey.Select(t => GetTemplate("KeyColumnAssignmentNull").Substitute("Name", t).Substitute("StorageType", GetStorageTypeString(r.Fields.Where(sf => sf.Name.Equals(t, StringComparison.OrdinalIgnoreCase)).Single())).Single()).ToArray();
 
-                                if (of.Type.OnTypeRef)
+                                if (of.Type.OnTypeRef || of.Type.OnOptional)
                                 {
                                     return GetTemplate("TwoWayForeignKeyOneAssociationProperty").Substitute("Name", f.Name).Substitute("AssociationParameters", AssociationParameters).Substitute("PropertyType", PropertyType).Substitute("KeyColumnAssignments", KeyColumnAssignments).Substitute("ThisKeyColumnsClear", ThisKeyColumnsClear).Substitute("OtherMember", of.Name).Substitute("XmlComment", GetXmlComment(f.Description));
                                 }
@@ -525,7 +556,7 @@ namespace Yuki.RelationSchema.CSharpLinqToSql
                         }
                     }
 
-                    if (Type.OnTypeRef)
+                    if (Type.OnTypeRef || Type.OnOptional)
                     {
                         return GetTemplate("OneAssociationProperty").Substitute("Name", f.Name).Substitute("AssociationParameters", AssociationParameters).Substitute("PropertyType", PropertyType).Substitute("XmlComment", GetXmlComment(f.Description));
                     }
