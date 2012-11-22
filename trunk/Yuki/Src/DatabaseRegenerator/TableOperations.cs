@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2012.11.20.
+//  Version:     2012.11.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -31,7 +31,7 @@ namespace Yuki.DatabaseRegenerator
         SqlServer,
         SqlServerCe,
         PostgreSQL,
-        MySql
+        MySQL
     }
     public static class TableOperations
     {
@@ -46,7 +46,7 @@ namespace Yuki.DatabaseRegenerator
             {
                 Escape = s => "\"" + s.ToLowerInvariant() + "\"";
             }
-            else if (Type == DatabaseType.MySql)
+            else if (Type == DatabaseType.MySQL)
             {
                 Escape = s => "`" + s + "`";
             }
