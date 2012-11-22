@@ -40,7 +40,7 @@
     </Reference>
     <Reference Include="Npgsql">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Lib\Npgsql\Npgsql.dll</HintPath>
+      <HintPath>..\..\..\..\Bin\Npgsql.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

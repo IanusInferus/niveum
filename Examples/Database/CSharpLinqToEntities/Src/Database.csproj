@@ -52,6 +52,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common.cs" />
     <Compile Include="DataAccessManager.cs" />
     <Compile Include="ServiceEntities.cs" />
     <Compile Include="IDataAccess.cs" />

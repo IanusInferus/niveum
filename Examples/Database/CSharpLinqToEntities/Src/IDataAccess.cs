@@ -16,7 +16,8 @@ namespace Database
         List<UserProfile> SelectAllUserProfileOrderById();
         int SelectCountUserProfileById(int Id);
         UserProfile SelectOneUserProfileById(int Id);
-        UserProfile SelectOptionalUserProfileByName(String Name);
+        Optional<UserProfile> SelectOptionalUserProfileByName(String Name);
+        Optional<DirectUserAuthentication> SelectOptionalDirectUserAuthenticationByName(String Name);
 
         Mail SelectOneMailById(int Id);
         List<MailTo> SelectManyMailToById(int Id);

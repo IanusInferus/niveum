@@ -30,7 +30,11 @@ namespace Database
             {
                 var u = da.SelectOptionalUserProfileByName(Name);
                 if (u == null) { return false; }
-                UserId = u.Id;
+
+                var dua = da.SelectOptionalDirectUserAuthenticationByName(u.HasValue.Name);
+                if (dua.OnNotHasValue) { return false; }
+
+                UserId = u.HasValue.Id;
                 return true;
             }
         }
@@ -135,7 +139,7 @@ namespace Database
             {
                 var u = da.SelectOptionalUserProfileByName(Name);
                 if (u == null) { return null; }
-                return u.Id;
+                return u.HasValue.Id;
             }
         }
 
