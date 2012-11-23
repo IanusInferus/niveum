@@ -4,13 +4,13 @@
       File:        User.tree
       Location:    Yuki.Examples <Tree>
       Description: 用户
-      Version:     2012.11.21.
+      Version:     2012.11.24.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
     ==========================================================================
 
-#Record UserProfile                                 [CN:UserProfiles][UKC:Name]用户账号信息
+#Entity UserProfile                                 [CN:UserProfiles][UKC:Name]用户账号信息
     Id                  Int                         [I]用户号
     Name                String                      [P:32]用户名
     EmailAddress        String                      [N][P:32]邮件地址
@@ -22,5 +22,5 @@
     Male                0                           男
     Female              1                           女
 
-#Record DirectUserAuthentication                    [CN:DirectUserAuthentication][PK:Name]直接用户名验证
+#Entity DirectUserAuthentication                    [CN:DirectUserAuthentication][PK:Name]直接用户名验证
     Name                String                      [P:32]用户名
