@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构Dbml数据库代码生成器
-//  Version:     2012.11.22.
+//  Version:     2012.11.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,10 +23,6 @@ namespace Yuki.RelationSchema.DbmlDatabase
             Writer w = new Writer(Schema, DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
             var a = w.GetSchema();
             return a;
-        }
-        public static XElement CompileToDbmlDatabase(this OS.Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
-        {
-            return CompileToDbmlDatabase(RelationSchemaTranslator.Translate(Schema), DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
         }
 
         private class Writer

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.11.11.
+//  Version:     2012.11.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -107,7 +107,7 @@ namespace Yuki.SchemaManipulator
                     if (args.Length == 1)
                     {
                         var CookedObjectSchemaPath = args[0];
-                        var s = Schema();
+                        var s = GetObjectSchema();
                         var x = xs.Write(s);
                         TreeFile.WriteFile(CookedObjectSchemaPath, x);
                     }
@@ -476,7 +476,7 @@ namespace Yuki.SchemaManipulator
         private static OS.Schema os = null;
         private static Assembly osa = null;
         private static TreeBinaryConverter tbc = null;
-        private static OS.Schema Schema()
+        private static OS.Schema GetObjectSchema()
         {
             if (os != null) { return os; }
             os = osl.GetResult();
@@ -486,7 +486,7 @@ namespace Yuki.SchemaManipulator
         private static Assembly SchemaAssembly()
         {
             if (osa != null) { return osa; }
-            var s = Schema();
+            var s = GetObjectSchema();
             var Code = s.CompileToCSharp();
 
             var cp = new CompilerParameters();
@@ -556,7 +556,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToVBCode(String VbCodePath, String NamespaceName)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToVB(NamespaceName);
             if (File.Exists(VbCodePath))
             {
@@ -573,7 +573,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCSharpCode(String CsCodePath, String NamespaceName)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCSharp(NamespaceName);
             if (File.Exists(CsCodePath))
             {
@@ -590,7 +590,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCSharpBinaryCode(String CsCodePath, String NamespaceName)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCSharpBinary(NamespaceName);
             if (File.Exists(CsCodePath))
             {
@@ -607,7 +607,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCSharpJsonCode(String CsCodePath, String NamespaceName)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCSharpJson(NamespaceName);
             if (File.Exists(CsCodePath))
             {
@@ -624,7 +624,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToJavaCode(String JavaCodePath, String ClassName, String PackageName)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToJava(ClassName, PackageName);
             if (File.Exists(JavaCodePath))
             {
@@ -641,7 +641,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToJavaBinaryCode(String JavaCodePath, String ClassName, String PackageName)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToJavaBinary(ClassName, PackageName);
             if (File.Exists(JavaCodePath))
             {
@@ -658,7 +658,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCppCode(String CppCodePath, String NamespaceName)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCpp(NamespaceName);
             if (File.Exists(CppCodePath))
             {
@@ -675,7 +675,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCppBinaryCode(String CppCodePath, String NamespaceName)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCppBinary(NamespaceName);
             if (File.Exists(CppCodePath))
             {
@@ -692,7 +692,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToActionScriptCode(String AsCodeDir, String PackageName)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var CompiledFiles = ObjectSchema.CompileToActionScript(PackageName);
             foreach (var f in CompiledFiles)
             {
@@ -714,7 +714,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToActionScriptBinaryCode(String AsCodeDir, String PackageName)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var CompiledFiles = ObjectSchema.CompileToActionScriptBinary(PackageName);
             foreach (var f in CompiledFiles)
             {
@@ -736,7 +736,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToActionScriptJsonCode(String AsCodeDir, String PackageName)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var CompiledFiles = ObjectSchema.CompileToActionScriptJson(PackageName);
             foreach (var f in CompiledFiles)
             {
@@ -758,7 +758,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToXhtml(String XhtmlDir, String Title, String CopyrightText)
         {
-            var ObjectSchema = Schema();
+            var ObjectSchema = GetObjectSchema();
             var CompiledFiles = ObjectSchema.CompileToXhtml(Title, CopyrightText);
             foreach (var f in CompiledFiles)
             {
