@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2012.11.22.
+//  Version:     2012.11.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -27,10 +27,6 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
             Writer w = new Writer(Schema, DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
-        }
-        public static String CompileToCSharpLinqToEntities(this OS.Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
-        {
-            return CompileToCSharpLinqToEntities(RelationSchemaTranslator.Translate(Schema), DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
         }
 
         private class Writer
@@ -284,12 +280,9 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
 
             public String GetColumnAttributes(RecordDef r, VariableDef f, int Index)
             {
-                //var c = Dbml.Elements().Where(x => x.Name.LocalName == "Table" && x.Attribute("Name") != null && x.Attribute("Name").Value == r.CollectionName).Single().Elements().Single().Elements().Where(x => x.Name.LocalName == "Column" && x.Attribute("Name") != null && x.Attribute("Name").Value == f.Name).Single();
                 var a = f.Attribute.Column;
                 var l = new List<String>();
                 l.Add(String.Format(@"Column(""{0}"", Order = {1})", f.Name, Index.ToInvariantString()));
-                //var DbTypeString = c.Attribute("DbType").Value;
-                //l.Add(String.Format(@"DbType = ""{0}""", DbTypeString));
                 if (r.PrimaryKey.Columns.Select(co => co.Name).Contains(f.Name, StringComparer.OrdinalIgnoreCase))
                 {
                     l.Add("Key");

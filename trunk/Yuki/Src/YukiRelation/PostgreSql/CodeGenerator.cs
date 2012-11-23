@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构PostgreSQL数据库代码生成器
-//  Version:     2012.11.22.
+//  Version:     2012.11.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -25,10 +25,6 @@ namespace Yuki.RelationSchema.PostgreSql
             Writer w = new Writer() { Schema = Schema, DatabaseName = DatabaseName, WithComment = WithComment };
             var a = w.GetSchema();
             return String.Join("\r\n", a);
-        }
-        public static String CompileToPostgreSql(this OS.Schema Schema, String DatabaseName, Boolean WithComment = false)
-        {
-            return CompileToPostgreSql(RelationSchemaTranslator.Translate(Schema), DatabaseName, WithComment);
         }
 
         private class Writer

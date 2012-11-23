@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to SQL数据库代码生成器
-//  Version:     2012.11.22.
+//  Version:     2012.11.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -27,10 +27,6 @@ namespace Yuki.RelationSchema.CSharpLinqToSql
             Writer w = new Writer(Schema, DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
-        }
-        public static String CompileToCSharpDatabase(this OS.Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
-        {
-            return CompileToCSharpLinqToSql(RelationSchemaTranslator.Translate(Schema), DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
         }
 
         private class Writer

@@ -4,7 +4,7 @@
       File:        RelationSchema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系元类型结构
-      Version:     2012.11.20.
+      Version:     2012.11.24.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -169,6 +169,15 @@ Schema
                         Name Description
                         Type ConceptRef StringLiteral
             Record
+                Name TypePath
+                Fields
+                    Field
+                        Name Name
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name Path
+                        Type ConceptRef StringLiteral
+            Record
                 Name Schema
                 Fields
                     Field
@@ -180,3 +189,6 @@ Schema
                     Field
                         Name Imports
                         Type List ElementType ConceptRef StringLiteral
+                    Field
+                        Name TypePaths
+                        Type List ElementType ConceptRef TypePath

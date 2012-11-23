@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2012.11.22.
+//  Version:     2012.11.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -64,15 +64,15 @@ namespace Yuki.DatabaseRegenerator
                 return 0;
             }
 
-            var osl = new ObjectSchemaLoader();
+            var rsl = new RelationSchemaLoader();
             RelationSchema.Schema rs = null;
             Func<RelationSchema.Schema> Schema = () =>
             {
                 if (rs == null)
                 {
-                    var s = osl.GetResult();
-                    s.Verify();
-                    rs = RelationSchemaTranslator.Translate(s);
+                    rs = rsl.GetResult();
+                    var os = PlainObjectSchemaGenerator.Generate(rs);
+                    os.Verify();
                 }
                 return rs;
             };
@@ -96,12 +96,12 @@ namespace Yuki.DatabaseRegenerator
                         {
                             foreach (var f in Directory.EnumerateFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories))
                             {
-                                osl.LoadTypeRef(f);
+                                rsl.LoadTypeRef(f);
                             }
                         }
                         else
                         {
-                            osl.LoadTypeRef(ObjectSchemaPath);
+                            rsl.LoadTypeRef(ObjectSchemaPath);
                         }
                         rs = null;
                     }
@@ -121,12 +121,12 @@ namespace Yuki.DatabaseRegenerator
                         {
                             foreach (var f in Directory.EnumerateFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories))
                             {
-                                osl.LoadType(f);
+                                rsl.LoadType(f);
                             }
                         }
                         else
                         {
-                            osl.LoadType(ObjectSchemaPath);
+                            rsl.LoadType(ObjectSchemaPath);
                         }
                         rs = null;
                     }
