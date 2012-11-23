@@ -4,13 +4,13 @@
       File:        Mail.tree
       Location:    Yuki.Examples <Tree>
       Description: 邮件
-      Version:     2012.07.03.
+      Version:     2012.11.24.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
     ==========================================================================
 
-#Record Mail                                        [CN:Mails]邮件
+#Entity Mail                                        [CN:Mails]邮件
     Id                  Int                         [I]邮件ID
     Title               String                      [P:64]标题
     FromId              Int                         发件用户ID
@@ -23,14 +23,14 @@
     Attachments         List<MailAttachment>        [RFK:Id=Id]附件
     Owners              List<MailOwner>             [RFK:Id=Id]邮件所有关系
 
-#Record MailTo                                      "[CN:MailTos][PK:Id, ToId][NKC:Id][NK:ToId]邮件收件人"
+#Entity MailTo                                      "[CN:MailTos][PK:Id, ToId][NKC:Id][NK:ToId]邮件收件人"
     Id                  Int                         邮件ID
     ToId                Int                         收件用户ID
 
     //导航属性
     Mail                Mail                        [FK:Id=Id]邮件
 
-#Record MailAttachment                              "[CN:MailAttachments][PK:Id, Name]邮件附件"
+#Entity MailAttachment                              "[CN:MailAttachments][PK:Id, Name]邮件附件"
     Id                  Int                         邮件ID
     Name                String                      [P:128]名称
     Content             List<Byte>                  内容
@@ -38,7 +38,7 @@
     //导航属性
     Mail                Mail                        [FK:Id=Id]邮件
 
-#Record MailOwner                                   "[CN:MailOwners][PK:Id, OwnerId][NKC:OwnerId, Time-][NK:Id]邮件所有关系"
+#Entity MailOwner                                   "[CN:MailOwners][PK:Id, OwnerId][NKC:OwnerId, Time-][NK:Id]邮件所有关系"
     Id                  Int                         邮件ID
     OwnerId             Int                         所有者用户ID
     IsNew               Boolean                     是否是新邮件
