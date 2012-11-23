@@ -1,4 +1,11 @@
-﻿2012.11.22
+﻿2012.11.24
+Yuki.Relation, Examples:
+增加RelationSchemaLoader。
+将关系Schema中的#Record预处理指令改为#Entity。
+Yuki.Core, Yuki.SchemaManipulator, Yuki.RelationSchemaManipulator:
+调整代码结构和命名。
+
+2012.11.22
 Yuki.Relation, Yuki.RelationSchemaManipulator, Examples:
 增加Linq to Entities的支持。
 增加对关联的Optional支持。

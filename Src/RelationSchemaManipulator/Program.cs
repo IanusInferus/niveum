@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.11.21.
+//  Version:     2012.11.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -92,13 +92,13 @@ namespace Yuki.RelationSchemaManipulator
                             foreach (var f in Directory.GetFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories).OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
                             {
                                 InvalidateSchema();
-                                osl.LoadTypeRef(f);
+                                rsl.LoadTypeRef(f);
                             }
                         }
                         else
                         {
                             InvalidateSchema();
-                            osl.LoadTypeRef(ObjectSchemaPath);
+                            rsl.LoadTypeRef(ObjectSchemaPath);
                         }
                     }
                     else
@@ -118,13 +118,13 @@ namespace Yuki.RelationSchemaManipulator
                             foreach (var f in Directory.GetFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories).OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
                             {
                                 InvalidateSchema();
-                                osl.LoadType(f);
+                                rsl.LoadType(f);
                             }
                         }
                         else
                         {
                             InvalidateSchema();
-                            osl.LoadType(ObjectSchemaPath);
+                            rsl.LoadType(ObjectSchemaPath);
                         }
                     }
                     else
@@ -138,7 +138,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        osl.AddImport(args[0]);
+                        rsl.AddImport(args[0]);
                     }
                     else
                     {
@@ -299,24 +299,35 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"RelationSchemaManipulator /loadtype:DatabaseSchema /t2csd:Src\Generated\Database.cs,Example,Example.Database,Example.Database.Context,DbRoot");
         }
 
-        private static ObjectSchemaLoader osl = new ObjectSchemaLoader();
+        private static RS.RelationSchemaLoader rsl = new RS.RelationSchemaLoader();
+        private static RS.Schema rs = null;
         private static OS.Schema os = null;
-        private static OS.Schema Schema()
+        private static RS.Schema GetRelationSchema()
+        {
+            if (rs != null) { return rs; }
+            rs = rsl.GetResult();
+            os = RS.PlainObjectSchemaGenerator.Generate(rs);
+            os.Verify();
+            return rs;
+        }
+        private static OS.Schema GetObjectSchema()
         {
             if (os != null) { return os; }
-            os = osl.GetResult();
+            rs = rsl.GetResult();
+            os = RS.PlainObjectSchemaGenerator.Generate(rs);
             os.Verify();
             return os;
         }
         private static void InvalidateSchema()
         {
+            rs = null;
             os = null;
         }
 
         public static void ObjectSchemaToTSqlCode(String SqlCodePath, String DatabaseName)
         {
-            var ObjectSchema = Schema();
-            var Compiled = ObjectSchema.CompileToTSql(DatabaseName, true);
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToTSql(DatabaseName, true);
             if (File.Exists(SqlCodePath))
             {
                 var Original = Txt.ReadFile(SqlCodePath);
@@ -332,8 +343,8 @@ namespace Yuki.RelationSchemaManipulator
 
         public static void ObjectSchemaToPostgreSqlCode(String SqlCodePath, String DatabaseName)
         {
-            var ObjectSchema = Schema();
-            var Compiled = ObjectSchema.CompileToPostgreSql(DatabaseName, true);
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToPostgreSql(DatabaseName, true);
             if (File.Exists(SqlCodePath))
             {
                 var Original = Txt.ReadFile(SqlCodePath);
@@ -349,8 +360,8 @@ namespace Yuki.RelationSchemaManipulator
 
         public static void ObjectSchemaToMySqlCode(String SqlCodePath, String DatabaseName)
         {
-            var ObjectSchema = Schema();
-            var Compiled = ObjectSchema.CompileToMySql(DatabaseName, true);
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToMySql(DatabaseName, true);
             if (File.Exists(SqlCodePath))
             {
                 var Original = Txt.ReadFile(SqlCodePath);
@@ -366,8 +377,8 @@ namespace Yuki.RelationSchemaManipulator
 
         public static void ObjectSchemaToDbmlDatabaseCode(String SqlCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
         {
-            var ObjectSchema = Schema();
-            var CompiledX = ObjectSchema.CompileToDbmlDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
+            var RelationSchema = GetRelationSchema();
+            var CompiledX = RelationSchema.CompileToDbmlDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
             String Compiled = "";
             using (var s = Streams.CreateMemoryStream())
             {
@@ -396,8 +407,8 @@ namespace Yuki.RelationSchemaManipulator
 
         public static void ObjectSchemaToCSharpLinqToSqlCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
         {
-            var ObjectSchema = Schema();
-            var Compiled = ObjectSchema.CompileToCSharpDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToCSharpLinqToSql(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -413,8 +424,8 @@ namespace Yuki.RelationSchemaManipulator
 
         public static void ObjectSchemaToCSharpLinqToEntitiesCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
         {
-            var ObjectSchema = Schema();
-            var Compiled = ObjectSchema.CompileToCSharpLinqToEntities(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToCSharpLinqToEntities(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -430,9 +441,8 @@ namespace Yuki.RelationSchemaManipulator
 
         public static void ObjectSchemaToCSharpDatabasePlainCode(String CsCodePath, String EntityNamespaceName)
         {
-            var ObjectSchema = Schema();
-            var PlainObjectSchema = RS.PlainObjectSchemaGenerator.TrimAsRelationSchema(ObjectSchema);
-            var Compiled = PlainObjectSchema.CompileToCSharp(EntityNamespaceName);
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToCSharp(EntityNamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -448,9 +458,8 @@ namespace Yuki.RelationSchemaManipulator
 
         public static void ObjectSchemaToCppDatabasePlainCode(String CppCodePath, String EntityNamespaceName)
         {
-            var ObjectSchema = Schema();
-            var PlainObjectSchema = RS.PlainObjectSchemaGenerator.TrimAsRelationSchema(ObjectSchema);
-            var Compiled = PlainObjectSchema.CompileToCpp(EntityNamespaceName);
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToCpp(EntityNamespaceName);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);

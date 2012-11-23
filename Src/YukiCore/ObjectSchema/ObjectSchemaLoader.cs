@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2012.11.11.
+//  Version:     2012.11.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -161,9 +161,13 @@ namespace Yuki.ObjectSchema
                 }
             }
         }
-        private void LoadSchema(String TreePath, StreamReader Reader)
+        public void LoadSchema(String TreePath, StreamReader Reader)
         {
             var t = TreeFile.ReadDirect(Reader, TreePath, new TreeFormatParseSetting(), new TreeFormatEvaluateSetting());
+            LoadSchema(t);
+        }
+        public void LoadSchema(TreeFormatResult t)
+        {
             var SchemaContent = t.Value.Nodes.Single(n => n.OnStem && n.Stem.Name == "Schema").Stem.Children;
             var TypesNodes = SchemaContent.Single(n => n.OnStem && n.Stem.Name == "Types").Stem.Children.Where(n => n.OnStem).SelectMany(n => n.Stem.Children);
             var TypeRefsNodes = SchemaContent.Single(n => n.OnStem && n.Stem.Name == "TypeRefs").Stem.Children.Where(n => n.OnStem).SelectMany(n => n.Stem.Children);
@@ -776,18 +780,6 @@ namespace Yuki.ObjectSchema
             return n.Leaf;
         }
 
-        private static Regex rVersion = new Regex(@"^(?<Name>.*?)\[(?<Version>.*?)\]$", RegexOptions.ExplicitCapture);
-        private static String GetVersion(ref String Name)
-        {
-            var m = rVersion.Match(Name);
-            if (m.Success)
-            {
-                Name = m.Result("${Name}");
-                return m.Result("${Version}");
-            }
-            return "";
-        }
-
         public static String GetTypeFriendlyNameFromVersionedName(String VersionedName)
         {
             var Name = VersionedName;
@@ -795,7 +787,6 @@ namespace Yuki.ObjectSchema
             return (new TypeRef { Name = Name, Version = Version }).TypeFriendlyName();
         }
 
-        private static Regex rErrorChars = new Regex(@"^(\s|\>)$", RegexOptions.ExplicitCapture);
         private Semantics.Node VirtualParseTypeSpec(Semantics.Node TypeNode, ISemanticsNodeMaker nm)
         {
             var TypeSpec = GetLeafNodeValue(TypeNode, nm, "InvalidTypeSpec");
@@ -806,7 +797,31 @@ namespace Yuki.ObjectSchema
             return MakeStemNode("TypeRef", MakeStemNode("Name", MakeLeafNode(TypeSpec)), MakeStemNode("Version", MakeLeafNode("")));
         }
 
-        private TypeSpec ParseTypeSpec(String TypeString, String TypeDefName, Dictionary<String, TypeDef> TypeMap, Dictionary<String, TypePath> TypePaths)
+        private static String GetVersion(ref String Name)
+        {
+            return ObjectSchemaLoaderFunctions.GetVersion(ref Name);
+        }
+        private static TypeSpec ParseTypeSpec(String TypeString, String TypeDefName, Dictionary<String, TypeDef> TypeMap, Dictionary<String, TypePath> TypePaths)
+        {
+            return ObjectSchemaLoaderFunctions.ParseTypeSpec(TypeString, TypeDefName, TypeMap, TypePaths);
+        }
+    }
+
+    public static class ObjectSchemaLoaderFunctions
+    {
+        private static Regex rVersion = new Regex(@"^(?<Name>.*?)\[(?<Version>.*?)\]$", RegexOptions.ExplicitCapture);
+        public static String GetVersion(ref String Name)
+        {
+            var m = rVersion.Match(Name);
+            if (m.Success)
+            {
+                Name = m.Result("${Name}");
+                return m.Result("${Version}");
+            }
+            return "";
+        }
+
+        public static TypeSpec ParseTypeSpec(String TypeString, String TypeDefName, Dictionary<String, TypeDef> TypeMap, Dictionary<String, TypePath> TypePaths)
         {
             var tsl = ParseTypeSpecLiteral(TypeString, c => new Syntax.InvalidTokenException(String.Format("InvalidChar: '{0}' in {1} at {2}", c, TypeDefName, TypePaths[TypeDefName].Path)));
             var TypeName = tsl.TypeName;
@@ -861,7 +876,7 @@ namespace Yuki.ObjectSchema
 
             return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = ts, GenericParameterValues = Parameters.ZipStrict(GenericParameters, (v, p) => ParseGenericParameterValue(v, p, TypeDefName, TypeMap, TypePaths)).ToArray() });
         }
-        private GenericParameterValue ParseGenericParameterValue(String GenericParameterValueString, VariableDef GenericParameter, String TypeDefName, Dictionary<String, TypeDef> TypeMap, Dictionary<String, TypePath> TypePaths)
+        public static GenericParameterValue ParseGenericParameterValue(String GenericParameterValueString, VariableDef GenericParameter, String TypeDefName, Dictionary<String, TypeDef> TypeMap, Dictionary<String, TypePath> TypePaths)
         {
             if (!GenericParameter.Type.OnTypeRef)
             {
@@ -877,12 +892,13 @@ namespace Yuki.ObjectSchema
             return GenericParameterValue.CreateTypeSpec(TypeSpec);
         }
 
+        private static Regex rErrorChars = new Regex(@"^(\s|\>)$", RegexOptions.ExplicitCapture);
         private class TypeSpecLiteral
         {
             public String TypeName;
             public String[] Parameters;
         }
-        private TypeSpecLiteral ParseTypeSpecLiteral(String TypeString, Func<String, Exception> InvalidCharExceptionGenerator)
+        private static TypeSpecLiteral ParseTypeSpecLiteral(String TypeString, Func<String, Exception> InvalidCharExceptionGenerator)
         {
             var TypeLine = TypeString.Trim(' ');
 
