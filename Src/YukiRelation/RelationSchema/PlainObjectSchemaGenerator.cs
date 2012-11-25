@@ -3,7 +3,7 @@
 //  File:        PlainObjectSchemaGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 简单对象类型结构生成器
-//  Version:     2012.11.20.
+//  Version:     2012.11.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -39,8 +39,8 @@ namespace Yuki.RelationSchema
 
             public OS.Schema Generate()
             {
-                var TypeRefs = Schema.TypeRefs.Where(t => !(t.OnPrimitive && t.Primitive.Name == "Binary")).Select(t => TranslateTypeDef(t)).ToArray();
-                var Types = Schema.Types.Where(t => !(t.OnPrimitive && t.Primitive.Name == "Binary")).Select(t => TranslateTypeDef(t)).ToList();
+                var TypeRefs = Schema.TypeRefs.Where(t => !(t.OnPrimitive && t.Primitive.Name == "Binary")).SelectMany(t => TranslateTypeDef(t)).ToArray();
+                var Types = Schema.Types.Where(t => !(t.OnPrimitive && t.Primitive.Name == "Binary")).SelectMany(t => TranslateTypeDef(t)).ToList();
                 if (UnitUsed && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Unit", StringComparison.OrdinalIgnoreCase)).Any())
                 {
                     Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Unit", GenericParameters = new OS.VariableDef[] { }, Description = "" }));
@@ -66,19 +66,23 @@ namespace Yuki.RelationSchema
                 return new OS.Schema { Types = Types.ToArray(), TypeRefs = TypeRefs, Imports = Schema.Imports.ToArray(), TypePaths = new OS.TypePath[] { } };
             }
 
-            private OS.TypeDef TranslateTypeDef(RS.TypeDef t)
+            private OS.TypeDef[] TranslateTypeDef(RS.TypeDef t)
             {
                 if (t.OnPrimitive)
                 {
-                    return OS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive));
+                    return new OS.TypeDef[] { OS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)) };
                 }
                 else if (t.OnRecord)
                 {
-                    return OS.TypeDef.CreateRecord(TranslateRecord(t.Record));
+                    return new OS.TypeDef[] { OS.TypeDef.CreateRecord(TranslateRecord(t.Record)) };
                 }
                 else if (t.OnEnum)
                 {
-                    return OS.TypeDef.CreateEnum(TranslateEnum(t.Enum));
+                    return new OS.TypeDef[] { OS.TypeDef.CreateEnum(TranslateEnum(t.Enum)) };
+                }
+                else if (t.OnQueryList)
+                {
+                    return new OS.TypeDef[] { };
                 }
                 else
                 {

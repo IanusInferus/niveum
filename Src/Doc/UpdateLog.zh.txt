@@ -1,4 +1,12 @@
-﻿2012.11.24
+﻿2012.11.25
+Yuki.Core:
+修正拼写。
+Yuki.Relation:
+增加对关系Schema中的Query类型的读取支持。
+Examples:
+增加数据库示例中的Query定义。
+
+2012.11.24
 Yuki.Relation, Examples:
 增加RelationSchemaLoader。
 将关系Schema中的#Record预处理指令改为#Entity。

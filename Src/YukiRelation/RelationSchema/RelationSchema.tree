@@ -4,7 +4,7 @@
       File:        RelationSchema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系元类型结构
-      Version:     2012.11.24.
+      Version:     2012.11.25.
       Copyright(C) F.R.C.
     
     ==========================================================================
@@ -27,6 +27,9 @@ Schema
                     Alternative
                         Name Enum
                         Type ConceptRef EnumDef
+                    Alternative
+                        Name QueryList
+                        Type ConceptRef QueryListDef
             Alias
                 Name TypeRef
                 Type ConceptRef StringLiteral
@@ -168,6 +171,72 @@ Schema
                     Field
                         Name Description
                         Type ConceptRef StringLiteral
+            TaggedUnion
+                Name Verb
+                Alternatives
+                    Alternative
+                        Name Select
+                        Type ConceptRef Unit
+                    Alternative
+                        Name Lock
+                        Type ConceptRef Unit
+                    Alternative
+                        Name Insert
+                        Type ConceptRef Unit
+                    Alternative
+                        Name Update
+                        Type ConceptRef Unit
+                    Alternative
+                        Name Upsert
+                        Type ConceptRef Unit
+                    Alternative
+                        Name Delete
+                        Type ConceptRef Unit
+            TaggedUnion
+                Name Numeral
+                Alternatives
+                    Alternative
+                        Name Optional
+                        Type ConceptRef Unit
+                    Alternative
+                        Name One
+                        Type ConceptRef Unit
+                    Alternative
+                        Name Many
+                        Type ConceptRef Unit
+                    Alternative
+                        Name All
+                        Type ConceptRef Unit
+                    Alternative
+                        Name Range
+                        Type ConceptRef Unit
+                    Alternative
+                        Name Count
+                        Type ConceptRef Unit
+            Record
+                Name QueryDef
+                Fields
+                    Field
+                        Name Verb
+                        Type ConceptRef Verb
+                    Field
+                        Name Numeral
+                        Type ConceptRef Numeral
+                    Field
+                        Name RecordName
+                        Type ConceptRef StringLiteral
+                    Field
+                        Name By
+                        Type List ElementType ConceptRef StringLiteral
+                    Field
+                        Name OrderBy
+                        Type List ElementType ConceptRef KeyColumn
+            Record
+                Name QueryListDef
+                Fields
+                    Field
+                        Name Queries
+                        Type List ElementType ConceptRef QueryDef
             Record
                 Name TypePath
                 Fields
