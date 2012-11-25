@@ -3,7 +3,7 @@
 //  File:        RelationSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构加载器
-//  Version:     2012.11.24.
+//  Version:     2012.11.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -24,6 +24,28 @@ using OS = Yuki.ObjectSchema;
 
 namespace Yuki.RelationSchema
 {
+    // 查询支持的语法如下
+    //
+    // {Select, Lock} Optional <RecordName> By <Index>
+    // {Select, Lock} One <RecordName> By <Index>
+    // {Select, Lock} Many <RecordName> By <Index>
+    // {Select, Lock} Many <RecordName> By <Index> OrderBy <Index>
+    // {Select, Lock} All <RecordName>
+    // {Select, Lock} All <RecordName> OrderBy <Index>
+    // {Select, Lock} Range <RecordName> OrderBy <Index>
+    // {Select, Lock} Range <RecordName> By <Index> OrderBy <Index>
+    // {Select, Lock} Count <RecordName>
+    // {Select, Lock} Count <RecordName> By <Index>
+    // 
+    // {Insert, Update, Upsert} {One, Many} <RecordName>
+    // 
+    // Delete {Optional, One, Many} <RecordName> By <Index>
+    // Delete All <RecordName>
+    // 
+    // <Index> ::=
+    //     | <ColumnName> "-"?
+    //     | <Index> "," <ColumnName> "-"?
+
     public sealed class RelationSchemaLoader
     {
         private List<Semantics.Node> Types;
@@ -60,12 +82,92 @@ namespace Yuki.RelationSchema
 
         public Schema GetResult()
         {
-            var TypesNode = MakeStemNode("Types", Types.Select(n => MakeStemNode("TypeDef", n)).ToArray());
-            var TypeRefsNode = MakeStemNode("TypeRefs", TypeRefs.Select(n => MakeStemNode("TypeDef", n)).ToArray());
+            var TypesQueryListsNode = MakeStemNode("Types", Types.Where(n => n.OnStem && n.Stem.Name == "QueryList").Select(n => MakeStemNode("TypeDef", n)).ToArray());
+            var TypeRefsQueryListsNode = MakeStemNode("TypeRefs", Types.Where(n => n.OnStem && n.Stem.Name == "QueryList").Select(n => MakeStemNode("TypeDef", n)).ToArray());
+            var RelationSchema = MakeStemNode("Schema", TypesQueryListsNode, TypeRefsQueryListsNode, MakeStemNode("Imports"), MakeStemNode("TypePaths"));
+            var rtfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { RelationSchema } }, Positions = Positions };
+            var rx = XmlInterop.TreeToXml(rtfr);
+            var rs = xs.Read<Schema>(rx);
+
+            foreach (var t in rs.TypeRefs.Concat(rs.Types))
+            {
+                if (t.OnQueryList)
+                {
+                    foreach (var q in t.QueryList.Queries)
+                    {
+                        //检查语法
+                        if (q.Verb.OnSelect || q.Verb.OnLock)
+                        {
+                            if (q.Numeral.OnOptional)
+                            {
+                                if (q.By.Length != 0 && q.OrderBy.Length == 0) { continue; }
+                            }
+                            if (q.Numeral.OnOne)
+                            {
+                                if (q.By.Length != 0 && q.OrderBy.Length == 0) { continue; }
+                            }
+                            if (q.Numeral.OnMany)
+                            {
+                                if (q.By.Length != 0) { continue; }
+                            }
+                            if (q.Numeral.OnAll)
+                            {
+                                if (q.By.Length == 0) { continue; }
+                            }
+                            if (q.Numeral.OnRange)
+                            {
+                                if (q.OrderBy.Length != 0) { continue; }
+                            }
+                            if (q.Numeral.OnCount)
+                            {
+                                if (q.OrderBy.Length == 0) { continue; }
+                            }
+                        }
+                        if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert)
+                        {
+                            if (q.Numeral.OnOne || q.Numeral.OnMany)
+                            {
+                                if (q.By.Length == 0 && q.OrderBy.Length == 0) { continue; }
+                            }
+                        }
+                        if (q.Verb.OnDelete)
+                        {
+                            if (q.Numeral.OnOptional || q.Numeral.OnOne || q.Numeral.OnMany)
+                            {
+                                if (q.By.Length != 0 && q.OrderBy.Length == 0) { continue; }
+                            }
+                            if (q.Numeral.OnAll)
+                            {
+                                if (q.By.Length == 0 && q.OrderBy.Length == 0) { continue; }
+                            }
+                        }
+
+                        var QueryStrings = new List<String>();
+                        QueryStrings.Add(q.Verb._Tag.ToString());
+                        QueryStrings.Add(q.Numeral._Tag.ToString());
+                        QueryStrings.Add(q.RecordName);
+                        if (q.By.Length != 0)
+                        {
+                            var ByString = "(" + String.Join(" ", q.By) + ")";
+                            QueryStrings.Add(ByString);
+                        }
+                        if (q.OrderBy.Length != 0)
+                        {
+                            var OrderByString = "(" + String.Join(" ", q.OrderBy.Select(c => c.IsDescending ? c.Name + "-" : c.Name).ToArray()) + ")";
+                            QueryStrings.Add(OrderByString);
+                        }
+                        var QueryLine = String.Join(" ", QueryStrings.ToArray());
+                        throw new InvalidOperationException("InvalidQuery: {0}".Formats(QueryLine));
+                    }
+                }
+            }
+
+            var TypesNode = MakeStemNode("Types", Types.Where(n => n.OnStem && n.Stem.Name != "QueryList").Select(n => MakeStemNode("TypeDef", n)).ToArray());
+            var TypeRefsNode = MakeStemNode("TypeRefs", TypeRefs.Where(n => n.OnStem && n.Stem.Name != "QueryList").Select(n => MakeStemNode("TypeDef", n)).ToArray());
             var ImportsNode = MakeStemNode("Imports", Imports.ToArray());
             var TypePathsNode = MakeStemNode("TypePaths", TypePaths.ToArray());
-            var Schema = MakeStemNode("Schema", TypesNode, TypeRefsNode, ImportsNode, TypePathsNode);
-            var tfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { Schema } }, Positions = Positions };
+            var ObjectSchema = MakeStemNode("Schema", TypesNode, TypeRefsNode, ImportsNode, TypePathsNode);
+            var tfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { ObjectSchema } }, Positions = Positions };
 
             var x = XmlInterop.TreeToXml(tfr);
             var os = xs.Read<OS.Schema>(x);
@@ -103,6 +205,8 @@ namespace Yuki.RelationSchema
             }
 
             var s = RelationSchemaTranslator.Translate(os);
+            s.Types = s.Types.Concat(rs.Types).ToArray();
+            s.TypeRefs = s.TypeRefs.Concat(rs.TypeRefs).ToArray();
             return s;
         }
         private Semantics.Node MakeLeafNode(String Value)
@@ -163,7 +267,7 @@ namespace Yuki.RelationSchema
         {
             var Functions = new HashSet<String>() { "Primitive", "Entity", "Enum", "Query" };
             var TableParameterFunctions = Functions;
-            var TableContentFunctions = Functions;
+            var TableContentFunctions = new HashSet<String>(Functions.Except(new List<String> { "Query" }));
             TreeFormatParseSetting ps;
             if (tfpo == null)
             {
@@ -191,226 +295,431 @@ namespace Yuki.RelationSchema
                     IsTreeContentFunction = tfpo.IsTreeContentFunction
                 };
             }
+            var pr = TreeFile.ReadRaw(Reader, TreePath, ps);
+            var Text = pr.Text;
+            var TokenParser = new TreeFormatTokenParser(Text, pr.Positions);
+
+            var Verbs = new HashSet<String> { "Select", "Lock", "Insert", "Update", "Upsert", "Delete" };
+            var Numerals = new HashSet<String> { "Optional", "One", "Many", "All", "Range", "Count" };
+            Func<int, Syntax.TextLine, ISemanticsNodeMaker, Semantics.Node[]> ParseQueryDefAsSemanticsNodes = (IndentLevel, Line, nm) =>
+            {
+                var l = new List<Semantics.Node>();
+                List<Semantics.Node> cl = null;
+                Syntax.TextPosition clStart = default(Syntax.TextPosition);
+                Syntax.TextPosition clEnd = default(Syntax.TextPosition);
+                if (Line.Text.Length < IndentLevel * 4)
+                {
+                    return new Semantics.Node[] { };
+                }
+                var LineRange = new Syntax.TextRange { Start = Text.Calc(Line.Range.Start, IndentLevel * 4), End = Line.Range.End };
+                var Range = LineRange;
+                while (true)
+                {
+                    var tpr = TokenParser.ReadToken(Range);
+                    if (!tpr.Token.HasValue)
+                    {
+                        break;
+                    }
+
+                    var v = tpr.Token.Value;
+                    if (v.OnSingleLineComment) { break; }
+                    if (v.OnLeftParentheses)
+                    {
+                        if (cl != null)
+                        {
+                            throw new Syntax.InvalidTokenException("DoubleLeftParentheses", new Syntax.FileTextRange { Text = Text, Range = Range }, "(");
+                        }
+                        cl = new List<Semantics.Node>();
+                        clStart = Range.Start;
+                        clEnd = Range.End;
+                    }
+                    else if (v.OnRightParentheses)
+                    {
+                        if (cl == null)
+                        {
+                            throw new Syntax.InvalidTokenException("DismatchedRightParentheses", new Syntax.FileTextRange { Text = Text, Range = Range }, ")");
+                        }
+                        if (cl.Count == 0)
+                        {
+                            throw new Syntax.InvalidTokenException("EmptyIndex", new Syntax.FileTextRange { Text = Text, Range = Range }, ")");
+                        }
+                        if (tpr.RemainingChars.HasValue)
+                        {
+                            clEnd = tpr.RemainingChars.Value.End;
+                        }
+                        l.Add(nm.MakeStemNode("", cl.ToArray(), new Syntax.TextRange { Start = clStart, End = clEnd }));
+                        cl = null;
+                        clStart = default(Syntax.TextPosition);
+                        clEnd = default(Syntax.TextPosition);
+                    }
+                    else if (v.OnSingleLineLiteral)
+                    {
+                        if (cl != null)
+                        {
+                            cl.Add(nm.MakeLeafNode(v.SingleLineLiteral, pr.Positions[v]));
+                        }
+                        else
+                        {
+                            l.Add(nm.MakeLeafNode(v.SingleLineLiteral, pr.Positions[v]));
+                        }
+                    }
+                    else
+                    {
+                        throw new Syntax.InvalidTokenException("UnknownToken", new Syntax.FileTextRange { Text = Text, Range = Range }, Text.GetTextInLine(Range));
+                    }
+
+                    if (!tpr.RemainingChars.HasValue)
+                    {
+                        break;
+                    }
+
+                    Range = tpr.RemainingChars.Value;
+                }
+                if (cl != null)
+                {
+                    throw new Syntax.InvalidTokenException("DismatchedRightParentheses", new Syntax.FileTextRange { Text = Text, Range = Range }, "");
+                }
+
+                if (l.Count == 0) { return new Semantics.Node[] { }; }
+
+                if (l.Count != 3 && l.Count != 5 && l.Count != 7)
+                {
+                    throw new Syntax.InvalidSyntaxException("InvalidQuery", new Syntax.FileTextRange { Text = Text, Range = LineRange });
+                }
+                var VerbName = GetLeafNodeValue(l[0], nm, "InvalidVerb");
+                if (!Verbs.Contains(VerbName)) { throw new Syntax.InvalidTokenException("InvalidVerb", nm.GetFileRange(l[0]), VerbName); }
+                var NumeralName = GetLeafNodeValue(l[1], nm, "InvalidNumeral");
+                if (!Numerals.Contains(NumeralName)) { throw new Syntax.InvalidTokenException("InvalidNumeral", nm.GetFileRange(l[1]), NumeralName); }
+                var RecordName = GetLeafNodeValue(l[2], nm, "InvalidRecordName");
+
+                var ByIndex = new String[] { };
+                var OrderByIndex = new String[] { };
+
+                if (l.Count >= 5)
+                {
+                    var ByOrOrderByName = GetLeafNodeValue(l[3], nm, "InvalidByOrOrderBy");
+                    if (ByOrOrderByName == "By")
+                    {
+                        if (l[4].OnLeaf)
+                        {
+                            ByIndex = new String[] { l[4].Leaf };
+                        }
+                        else if (l[4].OnStem)
+                        {
+                            ByIndex = l[4].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
+                        }
+                        else
+                        {
+                            throw new Syntax.InvalidSyntaxException("InvalidBy", nm.GetFileRange(l[4]));
+                        }
+                    }
+                    else if (ByOrOrderByName == "OrderBy")
+                    {
+                        if (l[4].OnLeaf)
+                        {
+                            OrderByIndex = new String[] { l[4].Leaf };
+                        }
+                        else if (l[4].OnStem)
+                        {
+                            OrderByIndex = l[4].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
+                        }
+                        else
+                        {
+                            throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[4]));
+                        }
+                    }
+                    else
+                    {
+                        throw new Syntax.InvalidSyntaxException("InvalidByOrOrderBy", nm.GetFileRange(l[4]));
+                    }
+                }
+                if (l.Count >= 7)
+                {
+                    if (OrderByIndex.Length != 0)
+                    {
+                        throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[5]));
+                    }
+                    var OrderByName = GetLeafNodeValue(l[5], nm, "InvalidOrderBy");
+                    if (OrderByName == "OrderBy")
+                    {
+                        if (l[6].OnLeaf)
+                        {
+                            OrderByIndex = new String[] { l[6].Leaf };
+                        }
+                        else if (l[6].OnStem)
+                        {
+                            OrderByIndex = l[6].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
+                        }
+                        else
+                        {
+                            throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[4]));
+                        }
+                    }
+                    else
+                    {
+                        throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[4]));
+                    }
+                }
+
+                var OrderByIndexColumns = OrderByIndex.Select(c => c.EndsWith("-") ? MakeStemNode("KeyColumn", MakeStemNode("Name", MakeLeafNode(c.Substring(0, c.Length - 1))), MakeStemNode("IsDescending", MakeLeafNode("True"))) : MakeStemNode("KeyColumn", MakeStemNode("Name", MakeLeafNode(c)), MakeStemNode("IsDescending", MakeLeafNode("False")))).ToArray();
+
+                return new Semantics.Node[]
+                {
+                    MakeStemNode("QueryDef",
+                        MakeStemNode("Verb", MakeStemNode(VerbName)),
+                        MakeStemNode("Numeral", MakeStemNode(NumeralName)),
+                        MakeStemNode("RecordName", MakeLeafNode(RecordName)),
+                        MakeStemNode("By", ByIndex.Select(c => MakeStemNode("StringLiteral", MakeLeafNode(c))).ToArray()),
+                        MakeStemNode("OrderBy", OrderByIndexColumns)
+                    )
+                };
+            };
+
             var es = new TreeFormatEvaluateSetting()
             {
                 FunctionCallEvaluator = (f, nm) =>
                 {
-                    if (f.Parameters.Length < 1 || f.Parameters.Length > 2) { throw new Syntax.InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
-
-                    var VersionedName = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
-                    var Name = VersionedName;
-                    var Version = GetVersion(ref Name);
-
-                    String Description = "";
-                    if (f.Parameters.Length >= 2)
+                    if (f.Parameters.Length == 0)
                     {
-                        var DescriptionParameter = f.Parameters[1];
-                        if (DescriptionParameter._Tag != Semantics.NodeTag.Leaf) { throw new Syntax.InvalidEvaluationException("InvalidDescription", nm.GetFileRange(DescriptionParameter), DescriptionParameter); }
-                        Description = DescriptionParameter.Leaf;
+                        if (f.Name.Text == "Query")
+                        {
+                            var Nodes = f.Content.Value.LineContent.Lines.SelectMany(Line => ParseQueryDefAsSemanticsNodes(f.Content.Value.LineContent.IndentLevel, Line, nm)).ToArray();
+                            return new Semantics.Node[]
+                            {
+                                MakeStemNode("QueryList",
+                                    MakeStemNode("Queries", Nodes)
+                                )
+                            };
+                        }
+                        else
+                        {
+                            if (tfeo != null)
+                            {
+                                return tfeo.FunctionCallEvaluator(f, nm);
+                            }
+                            throw new Syntax.InvalidEvaluationException("UnknownFunction", nm.GetFileRange(f), f);
+                        }
                     }
-
-                    var ContentLines = new Syntax.FunctionCallTableLine[] { };
-                    if (Functions.Contains(f.Name.Text) && f.Content.HasValue)
+                    else if (f.Parameters.Length == 1 || f.Parameters.Length == 2)
                     {
-                        var ContentValue = f.Content.Value;
-                        if (ContentValue._Tag != Syntax.FunctionCallContentTag.TableContent) { throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
-                        ContentLines = ContentValue.TableContent;
+                        var VersionedName = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
+                        var Name = VersionedName;
+                        var Version = GetVersion(ref Name);
+
+                        String Description = "";
+                        if (f.Parameters.Length >= 2)
+                        {
+                            var DescriptionParameter = f.Parameters[1];
+                            if (DescriptionParameter._Tag != Semantics.NodeTag.Leaf) { throw new Syntax.InvalidEvaluationException("InvalidDescription", nm.GetFileRange(DescriptionParameter), DescriptionParameter); }
+                            Description = DescriptionParameter.Leaf;
+                        }
+
+                        var ContentLines = new Syntax.FunctionCallTableLine[] { };
+                        if (Functions.Contains(f.Name.Text) && f.Content.HasValue)
+                        {
+                            var ContentValue = f.Content.Value;
+                            if (ContentValue._Tag != Syntax.FunctionCallContentTag.TableContent) { throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                            ContentLines = ContentValue.TableContent;
+                        }
+
+                        switch (f.Name.Text)
+                        {
+                            case "Primitive":
+                                {
+                                    if (Version != "") { throw new Syntax.InvalidEvaluationException("InvalidName", nm.GetFileRange(f.Parameters[0]), f.Parameters[0]); }
+
+                                    var GenericParameters = new List<Semantics.Node>();
+
+                                    foreach (var Line in ContentLines)
+                                    {
+                                        String cName = null;
+                                        Semantics.Node cType = null;
+                                        String cDescription = null;
+
+                                        if (Line.Nodes.Length == 2)
+                                        {
+                                            cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
+                                            cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
+                                            cDescription = "";
+                                        }
+                                        else if (Line.Nodes.Length == 3)
+                                        {
+                                            cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
+                                            cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
+                                            cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
+                                        }
+                                        else if (Line.Nodes.Length == 0)
+                                        {
+                                            continue;
+                                        }
+                                        else
+                                        {
+                                            throw new Syntax.InvalidEvaluationException("InvalidLineNodeCount", nm.GetFileRange(Line), Line);
+                                        }
+
+                                        if (cName.StartsWith("'"))
+                                        {
+                                            cName = new String(cName.Skip(1).ToArray());
+                                            GenericParameters.Add(MakeStemNode("Variable",
+                                                MakeStemNode("Name", MakeLeafNode(cName)),
+                                                MakeStemNode("Type", cType),
+                                                MakeStemNode("Description", MakeLeafNode(cDescription))
+                                            ));
+                                        }
+                                        else
+                                        {
+                                            throw new Syntax.InvalidEvaluationException("InvalidLine", nm.GetFileRange(Line), Line);
+                                        }
+                                    }
+
+                                    return new Semantics.Node[]
+                                    {
+                                        MakeStemNode("Primitive",
+                                            MakeStemNode("Name", MakeLeafNode(Name)),
+                                            MakeStemNode("GenericParameters", GenericParameters.ToArray()),
+                                            MakeStemNode("Description", MakeLeafNode(Description))
+                                        )
+                                    };
+                                }
+                            case "Entity":
+                                {
+                                    var GenericParameters = new List<Semantics.Node>();
+                                    var Fields = new List<Semantics.Node>();
+
+                                    foreach (var Line in ContentLines)
+                                    {
+                                        String cName = null;
+                                        Semantics.Node cType = null;
+                                        String cDescription = null;
+
+                                        if (Line.Nodes.Length == 2)
+                                        {
+                                            cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
+                                            cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
+                                            cDescription = "";
+                                        }
+                                        else if (Line.Nodes.Length == 3)
+                                        {
+                                            cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
+                                            cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
+                                            cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
+                                        }
+                                        else if (Line.Nodes.Length == 0)
+                                        {
+                                            continue;
+                                        }
+                                        else
+                                        {
+                                            throw new Syntax.InvalidEvaluationException("InvalidLineNodeCount", nm.GetFileRange(Line), Line);
+                                        }
+
+                                        if (cName.StartsWith("'"))
+                                        {
+                                            cName = new String(cName.Skip(1).ToArray());
+                                            GenericParameters.Add(MakeStemNode("Variable",
+                                                MakeStemNode("Name", MakeLeafNode(cName)),
+                                                MakeStemNode("Type", cType),
+                                                MakeStemNode("Description", MakeLeafNode(cDescription))
+                                            ));
+                                        }
+                                        else
+                                        {
+                                            Fields.Add(MakeStemNode("Variable",
+                                                MakeStemNode("Name", MakeLeafNode(cName)),
+                                                MakeStemNode("Type", cType),
+                                                MakeStemNode("Description", MakeLeafNode(cDescription))
+                                            ));
+                                        }
+                                    }
+
+                                    return new Semantics.Node[]
+                                    {
+                                        MakeStemNode("Record",
+                                            MakeStemNode("Name", MakeLeafNode(Name)),
+                                            MakeStemNode("Version", MakeLeafNode(Version)),
+                                            MakeStemNode("GenericParameters", GenericParameters.ToArray()),
+                                            MakeStemNode("Fields", Fields.ToArray()),
+                                            MakeStemNode("Description", MakeLeafNode(Description))
+                                        )
+                                    };
+                                }
+                            case "Enum":
+                                {
+                                    var Literals = new List<Semantics.Node>();
+
+                                    Int64 NextValue = 0;
+                                    foreach (var Line in ContentLines)
+                                    {
+                                        String cName = null;
+                                        Int64 cValue = NextValue;
+                                        String cDescription = null;
+
+                                        if (Line.Nodes.Length == 1)
+                                        {
+                                            cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
+                                            cValue = NextValue;
+                                            cDescription = "";
+                                        }
+                                        else if (Line.Nodes.Length == 2)
+                                        {
+                                            cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
+                                            cValue = NumericStrings.InvariantParseInt64(GetLeafNodeValue(Line.Nodes[1], nm, "InvalidLiteralValue"));
+                                            cDescription = "";
+                                        }
+                                        else if (Line.Nodes.Length == 3)
+                                        {
+                                            cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
+                                            cValue = NumericStrings.InvariantParseInt64(GetLeafNodeValue(Line.Nodes[1], nm, "InvalidLiteralValue"));
+                                            cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
+                                        }
+                                        else if (Line.Nodes.Length == 0)
+                                        {
+                                            continue;
+                                        }
+                                        else
+                                        {
+                                            throw new Syntax.InvalidEvaluationException("InvalidLineNodeCount", nm.GetFileRange(Line), Line);
+                                        }
+                                        NextValue = cValue + 1;
+
+                                        Literals.Add(MakeStemNode("Literal",
+                                            MakeStemNode("Name", MakeLeafNode(cName)),
+                                            MakeStemNode("Value", MakeLeafNode(cValue.ToInvariantString())),
+                                            MakeStemNode("Description", MakeLeafNode(cDescription))
+                                        ));
+                                    }
+
+                                    return new Semantics.Node[]
+                                    {
+                                        MakeStemNode("Enum",
+                                            MakeStemNode("Name", MakeLeafNode(Name)),
+                                            MakeStemNode("Version", MakeLeafNode(Version)),
+                                            MakeStemNode("UnderlyingType", BuildVirtualTypeSpec("Int")),
+                                            MakeStemNode("Literals", Literals.ToArray()),
+                                            MakeStemNode("Description", MakeLeafNode(Description))
+                                        )
+                                    };
+                                }
+                            default:
+                                {
+                                    if (tfeo != null)
+                                    {
+                                        return tfeo.FunctionCallEvaluator(f, nm);
+                                    }
+                                    throw new Syntax.InvalidEvaluationException("UnknownFunction", nm.GetFileRange(f), f);
+                                }
+                        }
                     }
-
-                    switch (f.Name.Text)
+                    else
                     {
-                        case "Primitive":
-                            {
-                                if (Version != "") { throw new Syntax.InvalidEvaluationException("InvalidName", nm.GetFileRange(f.Parameters[0]), f.Parameters[0]); }
-
-                                var GenericParameters = new List<Semantics.Node>();
-
-                                foreach (var Line in ContentLines)
-                                {
-                                    String cName = null;
-                                    Semantics.Node cType = null;
-                                    String cDescription = null;
-
-                                    if (Line.Nodes.Length == 2)
-                                    {
-                                        cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
-                                        cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
-                                        cDescription = "";
-                                    }
-                                    else if (Line.Nodes.Length == 3)
-                                    {
-                                        cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
-                                        cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
-                                        cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
-                                    }
-                                    else if (Line.Nodes.Length == 0)
-                                    {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        throw new Syntax.InvalidEvaluationException("InvalidLineNodeCount", nm.GetFileRange(Line), Line);
-                                    }
-
-                                    if (cName.StartsWith("'"))
-                                    {
-                                        cName = new String(cName.Skip(1).ToArray());
-                                        GenericParameters.Add(MakeStemNode("Variable",
-                                            MakeStemNode("Name", MakeLeafNode(cName)),
-                                            MakeStemNode("Type", cType),
-                                            MakeStemNode("Description", MakeLeafNode(cDescription))
-                                        ));
-                                    }
-                                    else
-                                    {
-                                        throw new Syntax.InvalidEvaluationException("InvalidLine", nm.GetFileRange(Line), Line);
-                                    }
-                                }
-
-                                return new Semantics.Node[] {
-                                    MakeStemNode("Primitive",
-                                        MakeStemNode("Name", MakeLeafNode(Name)),
-                                        MakeStemNode("GenericParameters", GenericParameters.ToArray()),
-                                        MakeStemNode("Description", MakeLeafNode(Description))
-                                    )
-                                };
-                            }
-                        case "Entity":
-                            {
-                                var GenericParameters = new List<Semantics.Node>();
-                                var Fields = new List<Semantics.Node>();
-
-                                foreach (var Line in ContentLines)
-                                {
-                                    String cName = null;
-                                    Semantics.Node cType = null;
-                                    String cDescription = null;
-
-                                    if (Line.Nodes.Length == 2)
-                                    {
-                                        cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
-                                        cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
-                                        cDescription = "";
-                                    }
-                                    else if (Line.Nodes.Length == 3)
-                                    {
-                                        cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
-                                        cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
-                                        cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
-                                    }
-                                    else if (Line.Nodes.Length == 0)
-                                    {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        throw new Syntax.InvalidEvaluationException("InvalidLineNodeCount", nm.GetFileRange(Line), Line);
-                                    }
-
-                                    if (cName.StartsWith("'"))
-                                    {
-                                        cName = new String(cName.Skip(1).ToArray());
-                                        GenericParameters.Add(MakeStemNode("Variable",
-                                            MakeStemNode("Name", MakeLeafNode(cName)),
-                                            MakeStemNode("Type", cType),
-                                            MakeStemNode("Description", MakeLeafNode(cDescription))
-                                        ));
-                                    }
-                                    else
-                                    {
-                                        Fields.Add(MakeStemNode("Variable",
-                                            MakeStemNode("Name", MakeLeafNode(cName)),
-                                            MakeStemNode("Type", cType),
-                                            MakeStemNode("Description", MakeLeafNode(cDescription))
-                                        ));
-                                    }
-                                }
-
-                                return new Semantics.Node[] {
-                                    MakeStemNode("Record",
-                                        MakeStemNode("Name", MakeLeafNode(Name)),
-                                        MakeStemNode("Version", MakeLeafNode(Version)),
-                                        MakeStemNode("GenericParameters", GenericParameters.ToArray()),
-                                        MakeStemNode("Fields", Fields.ToArray()),
-                                        MakeStemNode("Description", MakeLeafNode(Description))
-                                    )
-                                };
-                            }
-                        case "Enum":
-                            {
-                                var Literals = new List<Semantics.Node>();
-
-                                Int64 NextValue = 0;
-                                foreach (var Line in ContentLines)
-                                {
-                                    String cName = null;
-                                    Int64 cValue = NextValue;
-                                    String cDescription = null;
-
-                                    if (Line.Nodes.Length == 1)
-                                    {
-                                        cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
-                                        cValue = NextValue;
-                                        cDescription = "";
-                                    }
-                                    else if (Line.Nodes.Length == 2)
-                                    {
-                                        cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
-                                        cValue = NumericStrings.InvariantParseInt64(GetLeafNodeValue(Line.Nodes[1], nm, "InvalidLiteralValue"));
-                                        cDescription = "";
-                                    }
-                                    else if (Line.Nodes.Length == 3)
-                                    {
-                                        cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
-                                        cValue = NumericStrings.InvariantParseInt64(GetLeafNodeValue(Line.Nodes[1], nm, "InvalidLiteralValue"));
-                                        cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
-                                    }
-                                    else if (Line.Nodes.Length == 0)
-                                    {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        throw new Syntax.InvalidEvaluationException("InvalidLineNodeCount", nm.GetFileRange(Line), Line);
-                                    }
-                                    NextValue = cValue + 1;
-
-                                    Literals.Add(MakeStemNode("Literal",
-                                        MakeStemNode("Name", MakeLeafNode(cName)),
-                                        MakeStemNode("Value", MakeLeafNode(cValue.ToInvariantString())),
-                                        MakeStemNode("Description", MakeLeafNode(cDescription))
-                                    ));
-                                }
-
-                                return new Semantics.Node[] {
-                                    MakeStemNode("Enum",
-                                        MakeStemNode("Name", MakeLeafNode(Name)),
-                                        MakeStemNode("Version", MakeLeafNode(Version)),
-                                        MakeStemNode("UnderlyingType", BuildVirtualTypeSpec("Int")),
-                                        MakeStemNode("Literals", Literals.ToArray()),
-                                        MakeStemNode("Description", MakeLeafNode(Description))
-                                    )
-                                };
-                            }
-                        case "Query":
-                            {
-                                //TODO
-                                return new Semantics.Node[] { };
-                            }
-                        default:
-                            {
-                                if (tfeo != null)
-                                {
-                                    return tfeo.FunctionCallEvaluator(f, nm);
-                                }
-                                throw new Syntax.InvalidEvaluationException("UnknownFunction", nm.GetFileRange(f), f);
-                            }
+                        throw new Syntax.InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f);
                     }
                 },
                 TokenParameterEvaluator = tfeo != null ? tfeo.TokenParameterEvaluator : null
             };
 
-            var t = TreeFile.ReadDirect(Reader, TreePath, ps, es);
+            var tfe = new TreeFormatEvaluator(es, pr);
+            var t = tfe.Evaluate();
             Types.AddRange(t.Value.Nodes);
             foreach (var p in t.Positions)
             {
@@ -419,7 +728,9 @@ namespace Yuki.RelationSchema
             foreach (var n in t.Value.Nodes)
             {
                 var Type = n.Stem.Name;
-                var Name = n.Stem.Children.Single(c => c.Stem.Name == "Name").Stem.Children.Single().Leaf;
+                var Names = n.Stem.Children.Where(c => c.Stem.Name == "Name").ToArray();
+                if (Names.Length == 0) { continue; }
+                var Name = Names.Single().Stem.Children.Single().Leaf;
                 var Version = "";
                 if (n.Stem.Children.Where(c => c.Stem.Name == "Version").Any())
                 {
