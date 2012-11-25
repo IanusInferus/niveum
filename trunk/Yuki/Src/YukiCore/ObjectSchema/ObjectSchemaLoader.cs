@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2012.11.24.
+//  Version:     2012.11.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -352,7 +352,8 @@ namespace Yuki.ObjectSchema
                                     }
                                 }
 
-                                return new Semantics.Node[] {
+                                return new Semantics.Node[]
+                                {
                                     MakeStemNode("Primitive",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
                                         MakeStemNode("GenericParameters", GenericParameters.ToArray()),
@@ -421,7 +422,8 @@ namespace Yuki.ObjectSchema
                                     throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentLines), ContentLines);
                                 }
 
-                                return new Semantics.Node[] {
+                                return new Semantics.Node[]
+                                {
                                     MakeStemNode("Alias",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
                                         MakeStemNode("Version", MakeLeafNode(Version)),
@@ -482,7 +484,8 @@ namespace Yuki.ObjectSchema
                                     }
                                 }
 
-                                return new Semantics.Node[] {
+                                return new Semantics.Node[]
+                                {
                                     MakeStemNode("Record",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
                                         MakeStemNode("Version", MakeLeafNode(Version)),
@@ -543,7 +546,8 @@ namespace Yuki.ObjectSchema
                                     }
                                 }
 
-                                return new Semantics.Node[] {
+                                return new Semantics.Node[]
+                                {
                                     MakeStemNode("TaggedUnion",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
                                         MakeStemNode("Version", MakeLeafNode(Version)),
@@ -599,7 +603,8 @@ namespace Yuki.ObjectSchema
                                     ));
                                 }
 
-                                return new Semantics.Node[] {
+                                return new Semantics.Node[]
+                                {
                                     MakeStemNode("Enum",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
                                         MakeStemNode("Version", MakeLeafNode(Version)),
@@ -674,7 +679,8 @@ namespace Yuki.ObjectSchema
                                     }
                                 }
 
-                                return new Semantics.Node[] {
+                                return new Semantics.Node[]
+                                {
                                     MakeStemNode("ClientCommand",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
                                         MakeStemNode("Version", MakeLeafNode(Version)),
@@ -722,7 +728,8 @@ namespace Yuki.ObjectSchema
                                     ));
                                 }
 
-                                return new Semantics.Node[] {
+                                return new Semantics.Node[]
+                                {
                                     MakeStemNode("ServerCommand",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
                                         MakeStemNode("Version", MakeLeafNode(Version)),
