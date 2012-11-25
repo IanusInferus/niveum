@@ -46,3 +46,23 @@
 
     //导航属性
     Mail                Mail                        [FK:Id=Id]邮件
+
+#Query
+    Select One Mail By Id
+    Select Many MailTo By Id
+    Select One MailOwner By (Id OwnerId)
+    Select Count MailOwner By Id
+    Select Many MailOwner By Id
+    Select Count MailOwner By OwnerId
+    Select Range MailOwner By OwnerId OrderBy (OwnerId TimeDesc-)
+    Select Many MailAttachment By Id
+
+    Insert One Mail
+    Insert Many MailTo
+    Insert Many MailOwner
+    Insert Many MailAttachment
+    Update One MailOwner
+    Delete One Mail By Id
+    Delete Many MailTo By Id
+    Delete One MailOwner By (Id OwnerId)
+    Delete Many MailAttachment By Id
