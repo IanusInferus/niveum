@@ -24,3 +24,10 @@
 
 #Entity DirectUserAuthentication                    [CN:DirectUserAuthentication][PK:Name]直接用户名验证
     Name                String                      [P:32]用户名
+
+#Query
+    Select All UserProfile OrderBy Id
+    Select Count UserProfile By Id
+    Select One UserProfile By Id
+    Select Optional UserProfile By Name
+    Select Optional DirectUserAuthentication By Name
