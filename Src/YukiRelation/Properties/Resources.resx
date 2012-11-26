@@ -124,6 +124,9 @@
   <data name="CSharpLinqToSql" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\CSharpLinqToSql\CSharpLinqToSql.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="CSharpPlain" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\CSharpPlain\CSharpPlain.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="MySql" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\mysql\mysql.tree;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>

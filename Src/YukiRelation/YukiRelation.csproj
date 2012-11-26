@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CSharpLinqToEntities\CodeGenerator.cs" />
+    <Compile Include="CSharpPlain\CodeGenerator.cs" />
     <Compile Include="MySql\CodeGenerator.cs" />
     <Compile Include="PostgreSql\CodeGenerator.cs" />
     <Compile Include="RelationSchema\PlainObjectSchemaGenerator.cs" />
@@ -71,6 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CSharpLinqToEntities\CSharpLinqToEntities.tree" />
+    <None Include="CSharpPlain\CSharpPlain.tree" />
     <None Include="MySql\MySql.tree" />
     <None Include="PostgreSql\PostgreSql.tree" />
     <None Include="RelationSchema\RelationSchema.tree" />
