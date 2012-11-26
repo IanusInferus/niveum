@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#二进制通讯代码生成器
-//  Version:     2012.07.26.
+//  Version:     2012.11.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -221,10 +221,6 @@ namespace Yuki.ObjectSchema.CSharpBinary
         private static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
             return CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
-        }
-        private static String LowercaseCamelize(String PascalName)
-        {
-            return CSharp.Common.CodeGenerator.LowercaseCamelize(PascalName);
         }
         private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
         {

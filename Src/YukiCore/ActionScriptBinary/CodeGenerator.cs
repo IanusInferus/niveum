@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0二进制通讯代码生成器
-//  Version:     2012.07.26.
+//  Version:     2012.11.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -166,17 +166,9 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
             }
         }
 
-        private static String TypeFriendlyName(this TypeSpec Type)
-        {
-            return ActionScript.Common.CodeGenerator.TypeFriendlyName(Type);
-        }
         private static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
             return ActionScript.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
-        }
-        private static String LowercaseCamelize(String PascalName)
-        {
-            return ActionScript.Common.CodeGenerator.LowercaseCamelize(PascalName);
         }
         private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
         {

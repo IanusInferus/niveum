@@ -163,17 +163,9 @@ namespace Yuki.ObjectSchema.ActionScriptJson
             }
         }
 
-        private static String TypeFriendlyName(this TypeSpec Type)
-        {
-            return ActionScript.Common.CodeGenerator.TypeFriendlyName(Type);
-        }
         private static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
             return ActionScript.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
-        }
-        private static String LowercaseCamelize(String PascalName)
-        {
-            return ActionScript.Common.CodeGenerator.LowercaseCamelize(PascalName);
         }
         private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
         {
