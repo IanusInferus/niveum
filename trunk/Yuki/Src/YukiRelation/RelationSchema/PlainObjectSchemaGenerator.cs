@@ -3,7 +3,7 @@
 //  File:        PlainObjectSchemaGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 简单对象类型结构生成器
-//  Version:     2012.11.26.
+//  Version:     2012.11.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,7 +19,7 @@ namespace Yuki.RelationSchema
 {
     public static class PlainObjectSchemaGenerator
     {
-        public static OS.Schema Generate(RS.Schema Schema, Boolean ForcePrimitive = false)
+        public static OS.Schema Generate(RS.Schema Schema, Boolean ForcePrimitive = true)
         {
             var s = (new Generator { Schema = Schema, AdditionalTypeRefs = new OS.TypeDef[] { } }).Generate(ForcePrimitive);
             return s;
@@ -27,7 +27,7 @@ namespace Yuki.RelationSchema
         public static OS.Schema TrimAsRelationSchema(OS.Schema Schema)
         {
             var RelationSchema = RS.RelationSchemaTranslator.Translate(Schema);
-            var s = (new Generator { Schema = RelationSchema, AdditionalTypeRefs = Schema.TypeRefs }).Generate(false);
+            var s = (new Generator { Schema = RelationSchema, AdditionalTypeRefs = Schema.TypeRefs }).Generate(true);
             var PlainSchema = new OS.Schema { Types = s.Types, TypeRefs = Schema.TypeRefs, Imports = Schema.Imports, TypePaths = Schema.TypePaths };
             return s;
         }
