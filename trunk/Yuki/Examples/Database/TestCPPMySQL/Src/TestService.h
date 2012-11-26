@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <string>
+#include <stdexcept>
 
 namespace Database
 {
@@ -31,8 +32,15 @@ namespace Database
 		int LoadData(int SessionIndex)
 		{
 			auto da = dam.Create();
-			auto v = da->SelectOptionalTestRecord(SessionIndex);
-			return v->Value;
+			auto v = da->SelectOptionalTestRecordBySessionIndex(SessionIndex);
+            if (v.OnHasValue())
+            {
+                return v.HasValue->Value;
+            }
+            else
+            {
+                throw std::logic_error("InvalidOperationException");
+            }
 		}
 		
 		void SaveLockData(int Value)
@@ -48,7 +56,18 @@ namespace Database
 		void AddLockData(int Value)
 		{
 			auto da = dam.Create();
-			auto v = da->LockOptionalTestLockRecord();
+			auto ov = da->LockOptionalTestLockRecordById(1);
+            std::shared_ptr<TestLockRecord> v;
+            if (ov.OnHasValue())
+            {
+                v = ov.HasValue;
+            }
+            else
+            {
+                v = std::make_shared<TestLockRecord>();
+                v->Id = 1;
+                v->Value = 0;
+            }
 			v->Value += Value;
 			da->UpsertOneTestLockRecord(v);
 			da->Complete();
@@ -57,8 +76,17 @@ namespace Database
 		int LoadLockData()
 		{
 			auto da = dam.Create();
-			auto v = da->SelectOptionalTestLockRecord();
-			return v->Value;
+			auto ov = da->SelectOptionalTestLockRecordById(1);
+            std::shared_ptr<TestLockRecord> v;
+            if (ov.OnHasValue())
+            {
+                v = ov.HasValue;
+			    return v->Value;
+            }
+            else
+            {
+                throw std::logic_error("InvalidOperationException");
+            }
 		}
 	};
 }
