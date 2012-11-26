@@ -5,6 +5,8 @@ Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
 修改拼写。
 Examples:
 修改数据库示例中的一处拼写错误。
+Yuki.Core:
+修正C# JSON代码生成中的一处多余引用。
 
 2012.11.25
 Yuki.Core:
