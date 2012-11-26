@@ -30,6 +30,7 @@ using Yuki.RelationSchema.MySql;
 using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpLinqToSql;
 using Yuki.RelationSchema.CSharpLinqToEntities;
+using Yuki.RelationSchema.CSharpPlain;
 
 namespace Yuki.RelationSchemaManipulator
 {
@@ -441,8 +442,8 @@ namespace Yuki.RelationSchemaManipulator
 
         public static void ObjectSchemaToCSharpDatabasePlainCode(String CsCodePath, String EntityNamespaceName)
         {
-            var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharp(EntityNamespaceName);
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToCSharpPlain(EntityNamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
