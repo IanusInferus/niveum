@@ -4,7 +4,7 @@
       File:        Mail.tree
       Location:    Yuki.Examples <Tree>
       Description: 邮件
-      Version:     2012.11.24.
+      Version:     2012.11.26.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -54,7 +54,7 @@
     Select Count MailOwner By Id
     Select Many MailOwner By Id
     Select Count MailOwner By OwnerId
-    Select Range MailOwner By OwnerId OrderBy (OwnerId TimeDesc-)
+    Select Range MailOwner By OwnerId OrderBy (OwnerId Time-)
     Select Many MailAttachment By Id
 
     Insert One Mail
