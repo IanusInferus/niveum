@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构Dbml数据库代码生成器
-//  Version:     2012.11.24.
+//  Version:     2012.11.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -66,13 +66,13 @@ namespace Yuki.RelationSchema.DbmlDatabase
             private XNamespace ns = XNamespace.Get(@"http://schemas.microsoft.com/linqtosql/dbml/2007");
             private Dictionary<String, PrimitiveDef> Primitives;
             private Dictionary<String, EnumDef> Enums;
-            private Dictionary<String, RecordDef> Records;
+            private Dictionary<String, EntityDef> Records;
             private Dictionary<ForeignKey, String> AssociationNames;
             public XElement GetSchema()
             {
                 Primitives = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive).Select(t => t.Primitive).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
                 Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
-                Records = Schema.Types.Where(t => t.OnRecord).Select(t => t.Record).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
+                Records = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
 
                 AssociationNames = new Dictionary<ForeignKey, String>();
                 foreach (var r in Records.Values)
@@ -96,7 +96,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                     {
                         if (f.Attribute.OnNavigation && f.Attribute.Navigation.IsReverse)
                         {
-                            RecordDef ThisTable = null;
+                            EntityDef ThisTable = null;
                             if (f.Type.OnTypeRef)
                             {
                                 ThisTable = Records[f.Type.TypeRef.Value];
@@ -131,16 +131,16 @@ namespace Yuki.RelationSchema.DbmlDatabase
 
                 foreach (var t in Schema.Types)
                 {
-                    if (t.OnRecord)
+                    if (t.OnEntity)
                     {
-                        x.Add(GetTable(t.Record));
+                        x.Add(GetTable(t.Entity));
                     }
                 }
 
                 return x;
             }
 
-            private XElement GetTable(RecordDef r)
+            private XElement GetTable(EntityDef r)
             {
                 var t = new XElement(ns + "Type");
                 t.SetAttributeValue("Name", r.Name);
@@ -156,7 +156,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                 return x;
             }
 
-            private XElement GetField(RecordDef r, VariableDef f)
+            private XElement GetField(EntityDef r, VariableDef f)
             {
                 if (f.Attribute.OnColumn)
                 {
@@ -191,7 +191,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                     var x = new XElement(ns + "Association");
                     if (na.IsReverse)
                     {
-                        RecordDef ThisTable = null;
+                        EntityDef ThisTable = null;
                         if (f.Type.OnTypeRef)
                         {
                             ThisTable = Records[f.Type.TypeRef.Value];
