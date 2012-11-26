@@ -3,7 +3,7 @@
 //  File:        PlainObjectSchemaGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 简单对象类型结构生成器
-//  Version:     2012.11.25.
+//  Version:     2012.11.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -72,9 +72,9 @@ namespace Yuki.RelationSchema
                 {
                     return new OS.TypeDef[] { OS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)) };
                 }
-                else if (t.OnRecord)
+                else if (t.OnEntity)
                 {
-                    return new OS.TypeDef[] { OS.TypeDef.CreateRecord(TranslateRecord(t.Record)) };
+                    return new OS.TypeDef[] { OS.TypeDef.CreateRecord(TranslateRecord(t.Entity)) };
                 }
                 else if (t.OnEnum)
                 {
@@ -145,7 +145,7 @@ namespace Yuki.RelationSchema
             {
                 return new OS.VariableDef { Name = f.Name, Type = TranslateTypeSpec(f.Type), Description = f.Description };
             }
-            private OS.RecordDef TranslateRecord(RS.RecordDef r)
+            private OS.RecordDef TranslateRecord(RS.EntityDef r)
             {
                 var Fields = r.Fields.Where(f => f.Attribute.OnColumn).Select(f => TranslateField(f)).ToArray();
                 return new OS.RecordDef { Name = r.Name, Version = "", GenericParameters = new OS.VariableDef[] { }, Fields = Fields, Description = r.Description };

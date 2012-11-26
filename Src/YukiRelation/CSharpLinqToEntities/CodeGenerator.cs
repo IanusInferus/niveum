@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2012.11.24.
+//  Version:     2012.11.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -58,13 +58,13 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
             }
 
             private Dictionary<String, EnumDef> Enums;
-            private Dictionary<String, RecordDef> Records;
+            private Dictionary<String, EntityDef> Records;
             public String[] GetSchema()
             {
                 Dbml = Schema.CompileToDbmlDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
 
                 Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
-                Records = Schema.Types.Where(t => t.OnRecord).Select(t => t.Record).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
+                Records = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
 
                 var Primitives = GetPrimitives();
                 var EntityComplexTypes = GetEntityComplexTypes(Schema);
@@ -278,7 +278,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 }
             }
 
-            public String GetColumnAttributes(RecordDef r, VariableDef f, int Index)
+            public String GetColumnAttributes(EntityDef r, VariableDef f, int Index)
             {
                 var a = f.Attribute.Column;
                 var l = new List<String>();
@@ -297,7 +297,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 }
                 return String.Join(", ", l.ToArray());
             }
-            public String GetAssociationParameters(RecordDef r, VariableDef f)
+            public String GetAssociationParameters(EntityDef r, VariableDef f)
             {
                 var c = Dbml.Elements().Where(x => x.Name.LocalName == "Table" && x.Attribute("Name") != null && x.Attribute("Name").Value == r.CollectionName).Single().Elements().Single().Elements().Where(x => x.Name.LocalName == "Association" && x.Attribute("Member") != null && x.Attribute("Member").Value == f.Name).Single();
                 var a = f.Attribute.Navigation;
@@ -306,7 +306,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 l.Add(String.Format(@"Association(""{0}"", ""{1}"", ""{2}"", IsForeignKey = {3})", Name, String.Join(", ", a.ThisKey), String.Join(", ", a.OtherKey), !a.IsReverse ? "true" : "false"));
                 return String.Join(", ", l.ToArray());
             }
-            public String[] GetProperty(RecordDef r, VariableDef f, int Index)
+            public String[] GetProperty(EntityDef r, VariableDef f, int Index)
             {
                 var Type = f.Type;
                 var PropertyType = GetPropertyTypeString(f);
@@ -339,7 +339,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                     throw new InvalidOperationException();
                 }
             }
-            public String[] GetProperties(RecordDef r)
+            public String[] GetProperties(EntityDef r)
             {
                 var l = new List<String>();
                 int Index = 0;
@@ -351,13 +351,13 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 return l.ToArray();
             }
 
-            public String[] GetTable(RecordDef r)
+            public String[] GetTable(EntityDef r)
             {
                 var Properties = GetProperties(r);
                 return GetTemplate("Table").Substitute("RecordName", r.Name).Substitute("TableName", r.CollectionName).Substitute("Properties", Properties).Substitute("XmlComment", GetXmlComment(r.Description));
             }
 
-            public String[] GetTableGetter(RecordDef r)
+            public String[] GetTableGetter(EntityDef r)
             {
                 return GetTemplate("TableGetter").Substitute("RecordName", r.Name).Substitute("TableName", r.CollectionName).Substitute("XmlComment", GetXmlComment(r.Description));
             }
@@ -366,24 +366,24 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 var l = new List<String>();
                 foreach (var t in s.Types)
                 {
-                    if (!t.OnRecord) { continue; }
-                    l.AddRange(GetTableGetter(t.Record));
+                    if (!t.OnEntity) { continue; }
+                    l.AddRange(GetTableGetter(t.Entity));
                 }
                 var TableGetters = l.ToArray();
                 return GetTemplate("Context").Substitute("DatabaseName", DatabaseName).Substitute("ContextClassName", ContextClassName).Substitute("TableGetters", TableGetters);
             }
 
-            public String[] GetIReadonlyContextTableGetter(RecordDef r)
+            public String[] GetIReadonlyContextTableGetter(EntityDef r)
             {
                 return GetTemplate("IReadonlyContextTableGetter").Substitute("RecordName", r.Name).Substitute("TableName", r.CollectionName).Substitute("XmlComment", GetXmlComment(r.Description));
             }
             public String[] GetIReadonlyContext(Schema s)
             {
-                var TableGetters = s.Types.Where(t => t.OnRecord).SelectMany(t => GetIReadonlyContextTableGetter(t.Record)).ToArray();
+                var TableGetters = s.Types.Where(t => t.OnEntity).SelectMany(t => GetIReadonlyContextTableGetter(t.Entity)).ToArray();
                 return GetTemplate("IReadonlyContext").Substitute("TableGetters", TableGetters);
             }
 
-            public String GetKeyParameters(RecordDef r, Key k)
+            public String GetKeyParameters(EntityDef r, Key k)
             {
                 var l = new List<String>();
                 foreach (var c in k.Columns)
@@ -393,7 +393,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 }
                 return String.Join(", ", l.ToArray());
             }
-            public String GetKeyWhereExpressions(RecordDef r, Key k)
+            public String GetKeyWhereExpressions(EntityDef r, Key k)
             {
                 var l = new List<String>();
                 foreach (var c in k.Columns)
@@ -402,28 +402,28 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 }
                 return String.Join(".", l.ToArray());
             }
-            public String[] GetWhereKeyIs(RecordDef r, Key k)
+            public String[] GetWhereKeyIs(EntityDef r, Key k)
             {
                 var KeyFriendlyName = String.Join("And", k.Columns.Select(c => c.Name).ToArray());
                 var KeyParameters = GetKeyParameters(r, k);
                 var KeyWhereExpressions = GetKeyWhereExpressions(r, k);
                 return GetTemplate("WhereKeyIs").Substitute("RecordName", r.Name).Substitute("KeyFriendlyName", KeyFriendlyName).Substitute("KeyParameters", KeyParameters).Substitute("KeyWhereExpressions", KeyWhereExpressions);
             }
-            public String[] GetByKey(RecordDef r, Key k)
+            public String[] GetByKey(EntityDef r, Key k)
             {
                 var KeyFriendlyName = String.Join("And", k.Columns.Select(c => c.Name).ToArray());
                 var KeyParameters = GetKeyParameters(r, k);
                 var KeyWhereExpressions = GetKeyWhereExpressions(r, k);
                 return GetTemplate("ByKey").Substitute("RecordName", r.Name).Substitute("KeyFriendlyName", KeyFriendlyName).Substitute("KeyParameters", KeyParameters).Substitute("KeyWhereExpressions", KeyWhereExpressions);
             }
-            public String[] GetByKeyT(RecordDef r, Key k)
+            public String[] GetByKeyT(EntityDef r, Key k)
             {
                 var KeyFriendlyName = String.Join("And", k.Columns.Select(c => c.Name).ToArray());
                 var KeyParameters = GetKeyParameters(r, k);
                 var KeyWhereExpressions = GetKeyWhereExpressions(r, k);
                 return GetTemplate("ByKeyT").Substitute("RecordName", r.Name).Substitute("KeyFriendlyName", KeyFriendlyName).Substitute("KeyParameters", KeyParameters).Substitute("KeyWhereExpressions", KeyWhereExpressions);
             }
-            public String[] GetMethods(RecordDef[] Records)
+            public String[] GetMethods(EntityDef[] Records)
             {
                 var l = new List<String>();
                 foreach (var r in Records)
@@ -455,7 +455,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
             }
             public String[] GetDbExtensions(Schema Schema)
             {
-                return GetTemplate("DbExtensions").Substitute("Methods", GetMethods(Schema.Types.Where(t => t.OnRecord).Select(t => t.Record).ToArray()));
+                return GetTemplate("DbExtensions").Substitute("Methods", GetMethods(Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray()));
             }
 
             public String[] GetXmlComment(String Description)
@@ -486,9 +486,9 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                         l.AddRange(GetEnum(c.Enum));
                         l.Add("");
                     }
-                    else if (c.OnRecord)
+                    else if (c.OnEntity)
                     {
-                        l.AddRange(GetTable(c.Record));
+                        l.AddRange(GetTable(c.Entity));
                         l.Add("");
                     }
                 }

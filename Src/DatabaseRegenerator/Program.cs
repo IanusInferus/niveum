@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2012.11.24.
+//  Version:     2012.11.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -71,8 +71,7 @@ namespace Yuki.DatabaseRegenerator
                 if (rs == null)
                 {
                     rs = rsl.GetResult();
-                    var os = PlainObjectSchemaGenerator.Generate(rs);
-                    os.Verify();
+                    rs.Verify();
                 }
                 return rs;
             };
@@ -91,17 +90,17 @@ namespace Yuki.DatabaseRegenerator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        var ObjectSchemaPath = args[0];
-                        if (Directory.Exists(ObjectSchemaPath))
+                        var SchemaPath = args[0];
+                        if (Directory.Exists(SchemaPath))
                         {
-                            foreach (var f in Directory.EnumerateFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories))
+                            foreach (var f in Directory.EnumerateFiles(SchemaPath, "*.tree", SearchOption.AllDirectories))
                             {
                                 rsl.LoadTypeRef(f);
                             }
                         }
                         else
                         {
-                            rsl.LoadTypeRef(ObjectSchemaPath);
+                            rsl.LoadTypeRef(SchemaPath);
                         }
                         rs = null;
                     }
@@ -116,17 +115,17 @@ namespace Yuki.DatabaseRegenerator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        var ObjectSchemaPath = args[0];
-                        if (Directory.Exists(ObjectSchemaPath))
+                        var SchemaPath = args[0];
+                        if (Directory.Exists(SchemaPath))
                         {
-                            foreach (var f in Directory.EnumerateFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories))
+                            foreach (var f in Directory.EnumerateFiles(SchemaPath, "*.tree", SearchOption.AllDirectories))
                             {
                                 rsl.LoadType(f);
                             }
                         }
                         else
                         {
-                            rsl.LoadType(ObjectSchemaPath);
+                            rsl.LoadType(SchemaPath);
                         }
                         rs = null;
                     }

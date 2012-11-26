@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.11.24.
+//  Version:     2012.11.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,7 +19,7 @@ using Firefly.Streaming;
 using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
-using Yuki.ObjectSchema;
+using Yuki.RelationSchema;
 using OS = Yuki.ObjectSchema;
 using RS = Yuki.RelationSchema;
 using Yuki.ObjectSchema.CSharp;
@@ -86,10 +86,10 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        var ObjectSchemaPath = args[0];
-                        if (Directory.Exists(ObjectSchemaPath))
+                        var SchemaPath = args[0];
+                        if (Directory.Exists(SchemaPath))
                         {
-                            foreach (var f in Directory.GetFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories).OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
+                            foreach (var f in Directory.GetFiles(SchemaPath, "*.tree", SearchOption.AllDirectories).OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
                             {
                                 InvalidateSchema();
                                 rsl.LoadTypeRef(f);
@@ -98,7 +98,7 @@ namespace Yuki.RelationSchemaManipulator
                         else
                         {
                             InvalidateSchema();
-                            rsl.LoadTypeRef(ObjectSchemaPath);
+                            rsl.LoadTypeRef(SchemaPath);
                         }
                     }
                     else
@@ -112,10 +112,10 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        var ObjectSchemaPath = args[0];
-                        if (Directory.Exists(ObjectSchemaPath))
+                        var SchemaPath = args[0];
+                        if (Directory.Exists(SchemaPath))
                         {
-                            foreach (var f in Directory.GetFiles(ObjectSchemaPath, "*.tree", SearchOption.AllDirectories).OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
+                            foreach (var f in Directory.GetFiles(SchemaPath, "*.tree", SearchOption.AllDirectories).OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
                             {
                                 InvalidateSchema();
                                 rsl.LoadType(f);
@@ -124,7 +124,7 @@ namespace Yuki.RelationSchemaManipulator
                         else
                         {
                             InvalidateSchema();
-                            rsl.LoadType(ObjectSchemaPath);
+                            rsl.LoadType(SchemaPath);
                         }
                     }
                     else
@@ -306,16 +306,16 @@ namespace Yuki.RelationSchemaManipulator
         {
             if (rs != null) { return rs; }
             rs = rsl.GetResult();
+            rs.Verify();
             os = RS.PlainObjectSchemaGenerator.Generate(rs);
-            os.Verify();
             return rs;
         }
         private static OS.Schema GetObjectSchema()
         {
             if (os != null) { return os; }
             rs = rsl.GetResult();
+            rs.Verify();
             os = RS.PlainObjectSchemaGenerator.Generate(rs);
-            os.Verify();
             return os;
         }
         private static void InvalidateSchema()

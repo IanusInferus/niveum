@@ -1,4 +1,12 @@
-﻿2012.11.25
+﻿2012.11.26
+Yuki.Relation:
+增加对关系Schema的结构验证。
+Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
+修改拼写。
+Examples:
+修改数据库示例中的一处拼写错误。
+
+2012.11.25
 Yuki.Core:
 修正拼写。
 Yuki.Relation:

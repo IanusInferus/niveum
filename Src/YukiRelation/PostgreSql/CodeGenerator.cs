@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构PostgreSQL数据库代码生成器
-//  Version:     2012.11.24.
+//  Version:     2012.11.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -43,12 +43,12 @@ namespace Yuki.RelationSchema.PostgreSql
 
             private Dictionary<String, PrimitiveDef> Primitives;
             private Dictionary<String, EnumDef> Enums;
-            private Dictionary<String, RecordDef> Records;
+            private Dictionary<String, EntityDef> Records;
             public String[] GetSchema()
             {
                 Primitives = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive).Select(t => t.Primitive).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
                 Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
-                Records = Schema.Types.Where(t => t.OnRecord).Select(t => t.Record).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
+                Records = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
 
                 var Tables = GetTables(Schema);
                 var ForeignKeys = GetForeignKeys(Schema);
@@ -62,9 +62,9 @@ namespace Yuki.RelationSchema.PostgreSql
                 var l = new List<String>();
                 foreach (var t in s.Types)
                 {
-                    if (t.OnRecord)
+                    if (t.OnEntity)
                     {
-                        l.AddRange(GetTable(t.Record));
+                        l.AddRange(GetTable(t.Entity));
                     }
                 }
                 return l.ToArray();
@@ -102,9 +102,9 @@ namespace Yuki.RelationSchema.PostgreSql
                 var l = new List<String>();
                 foreach (var t in s.Types)
                 {
-                    if (t.OnRecord)
+                    if (t.OnEntity)
                     {
-                        foreach (var f in t.Record.Fields)
+                        foreach (var f in t.Entity.Fields)
                         {
                             if (f.Attribute.OnNavigation)
                             {
@@ -112,7 +112,7 @@ namespace Yuki.RelationSchema.PostgreSql
 
                                 if (f.Attribute.Navigation.IsReverse)
                                 {
-                                    RecordDef ThisTable = null;
+                                    EntityDef ThisTable = null;
                                     if (f.Type.OnTypeRef)
                                     {
                                         ThisTable = Records[f.Type.TypeRef.Value];
@@ -129,7 +129,7 @@ namespace Yuki.RelationSchema.PostgreSql
                                     {
                                         throw new InvalidOperationException();
                                     }
-                                    var fk = new ForeignKey { ThisTableName = ThisTable.CollectionName, ThisKeyColumns = f.Attribute.Navigation.OtherKey, OtherTableName = t.Record.CollectionName, OtherKeyColumns = f.Attribute.Navigation.ThisKey };
+                                    var fk = new ForeignKey { ThisTableName = ThisTable.CollectionName, ThisKeyColumns = f.Attribute.Navigation.OtherKey, OtherTableName = t.Entity.CollectionName, OtherKeyColumns = f.Attribute.Navigation.ThisKey };
                                     if (!h.Contains(fk))
                                     {
                                         var Name = String.Format("FK_{0}_{1}__{2}_{3}", fk.ThisTableName, String.Join("_", fk.ThisKeyColumns), fk.OtherTableName, String.Join("_", fk.OtherKeyColumns));
@@ -139,7 +139,7 @@ namespace Yuki.RelationSchema.PostgreSql
                                 }
                                 else
                                 {
-                                    var fk = new ForeignKey { ThisTableName = t.Record.CollectionName, ThisKeyColumns = f.Attribute.Navigation.ThisKey, OtherTableName = Records[f.Type.TypeRef.Value].CollectionName, OtherKeyColumns = f.Attribute.Navigation.OtherKey };
+                                    var fk = new ForeignKey { ThisTableName = t.Entity.CollectionName, ThisKeyColumns = f.Attribute.Navigation.ThisKey, OtherTableName = Records[f.Type.TypeRef.Value].CollectionName, OtherKeyColumns = f.Attribute.Navigation.OtherKey };
                                     if (!h.Contains(fk))
                                     {
                                         var Name = String.Format("FK_{0}_{1}__{2}_{3}", fk.ThisTableName, String.Join("_", fk.ThisKeyColumns), fk.OtherTableName, String.Join("_", fk.OtherKeyColumns));
@@ -154,7 +154,7 @@ namespace Yuki.RelationSchema.PostgreSql
                 return l.ToArray();
             }
 
-            public String[] GetTable(RecordDef r)
+            public String[] GetTable(EntityDef r)
             {
                 var FieldsAndKeys = new List<String[]>();
                 foreach (var f in r.Fields)
@@ -324,7 +324,7 @@ namespace Yuki.RelationSchema.PostgreSql
             {
                 if (!WithComment) { return new String[] { }; }
                 var l = new List<String>();
-                foreach (var t in s.Types.Where(Type => Type.OnRecord).Select(Type => Type.Record))
+                foreach (var t in s.Types.Where(Type => Type.OnEntity).Select(Type => Type.Entity))
                 {
                     l.AddRange(GetTemplate("TableComment").Substitute("Name", t.CollectionName).Substitute("Description", GetSqlStringLiteral(t.Description)));
                     foreach (var c in t.Fields.Where(Field => Field.Attribute.OnColumn))

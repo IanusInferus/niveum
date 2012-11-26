@@ -3,7 +3,7 @@
 //  File:        RelationSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构加载器
-//  Version:     2012.11.25.
+//  Version:     2012.11.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -24,28 +24,6 @@ using OS = Yuki.ObjectSchema;
 
 namespace Yuki.RelationSchema
 {
-    // 查询支持的语法如下
-    //
-    // {Select, Lock} Optional <RecordName> By <Index>
-    // {Select, Lock} One <RecordName> By <Index>
-    // {Select, Lock} Many <RecordName> By <Index>
-    // {Select, Lock} Many <RecordName> By <Index> OrderBy <Index>
-    // {Select, Lock} All <RecordName>
-    // {Select, Lock} All <RecordName> OrderBy <Index>
-    // {Select, Lock} Range <RecordName> OrderBy <Index>
-    // {Select, Lock} Range <RecordName> By <Index> OrderBy <Index>
-    // {Select, Lock} Count <RecordName>
-    // {Select, Lock} Count <RecordName> By <Index>
-    // 
-    // {Insert, Update, Upsert} {One, Many} <RecordName>
-    // 
-    // Delete {Optional, One, Many} <RecordName> By <Index>
-    // Delete All <RecordName>
-    // 
-    // <Index> ::=
-    //     | <ColumnName> "-"?
-    //     | <Index> "," <ColumnName> "-"?
-
     public sealed class RelationSchemaLoader
     {
         private List<Semantics.Node> Types;
@@ -88,79 +66,6 @@ namespace Yuki.RelationSchema
             var rtfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { RelationSchema } }, Positions = Positions };
             var rx = XmlInterop.TreeToXml(rtfr);
             var rs = xs.Read<Schema>(rx);
-
-            foreach (var t in rs.TypeRefs.Concat(rs.Types))
-            {
-                if (t.OnQueryList)
-                {
-                    foreach (var q in t.QueryList.Queries)
-                    {
-                        //检查语法
-                        if (q.Verb.OnSelect || q.Verb.OnLock)
-                        {
-                            if (q.Numeral.OnOptional)
-                            {
-                                if (q.By.Length != 0 && q.OrderBy.Length == 0) { continue; }
-                            }
-                            if (q.Numeral.OnOne)
-                            {
-                                if (q.By.Length != 0 && q.OrderBy.Length == 0) { continue; }
-                            }
-                            if (q.Numeral.OnMany)
-                            {
-                                if (q.By.Length != 0) { continue; }
-                            }
-                            if (q.Numeral.OnAll)
-                            {
-                                if (q.By.Length == 0) { continue; }
-                            }
-                            if (q.Numeral.OnRange)
-                            {
-                                if (q.OrderBy.Length != 0) { continue; }
-                            }
-                            if (q.Numeral.OnCount)
-                            {
-                                if (q.OrderBy.Length == 0) { continue; }
-                            }
-                        }
-                        if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert)
-                        {
-                            if (q.Numeral.OnOne || q.Numeral.OnMany)
-                            {
-                                if (q.By.Length == 0 && q.OrderBy.Length == 0) { continue; }
-                            }
-                        }
-                        if (q.Verb.OnDelete)
-                        {
-                            if (q.Numeral.OnOptional || q.Numeral.OnOne || q.Numeral.OnMany)
-                            {
-                                if (q.By.Length != 0 && q.OrderBy.Length == 0) { continue; }
-                            }
-                            if (q.Numeral.OnAll)
-                            {
-                                if (q.By.Length == 0 && q.OrderBy.Length == 0) { continue; }
-                            }
-                        }
-
-                        var QueryStrings = new List<String>();
-                        QueryStrings.Add(q.Verb._Tag.ToString());
-                        QueryStrings.Add(q.Numeral._Tag.ToString());
-                        QueryStrings.Add(q.RecordName);
-                        if (q.By.Length != 0)
-                        {
-                            var ByString = "(" + String.Join(" ", q.By) + ")";
-                            QueryStrings.Add(ByString);
-                        }
-                        if (q.OrderBy.Length != 0)
-                        {
-                            var OrderByString = "(" + String.Join(" ", q.OrderBy.Select(c => c.IsDescending ? c.Name + "-" : c.Name).ToArray()) + ")";
-                            QueryStrings.Add(OrderByString);
-                        }
-                        var QueryLine = String.Join(" ", QueryStrings.ToArray());
-                        throw new InvalidOperationException("InvalidQuery: {0}".Formats(QueryLine));
-                    }
-                }
-            }
 
             var TypesNode = MakeStemNode("Types", Types.Where(n => n.OnStem && n.Stem.Name != "QueryList").Select(n => MakeStemNode("TypeDef", n)).ToArray());
             var TypeRefsNode = MakeStemNode("TypeRefs", TypeRefs.Where(n => n.OnStem && n.Stem.Name != "QueryList").Select(n => MakeStemNode("TypeDef", n)).ToArray());
@@ -207,6 +112,9 @@ namespace Yuki.RelationSchema
             var s = RelationSchemaTranslator.Translate(os);
             s.Types = s.Types.Concat(rs.Types).ToArray();
             s.TypeRefs = s.TypeRefs.Concat(rs.TypeRefs).ToArray();
+
+            s.Verify();
+
             return s;
         }
         private Semantics.Node MakeLeafNode(String Value)
@@ -390,7 +298,7 @@ namespace Yuki.RelationSchema
                 if (!Verbs.Contains(VerbName)) { throw new Syntax.InvalidTokenException("InvalidVerb", nm.GetFileRange(l[0]), VerbName); }
                 var NumeralName = GetLeafNodeValue(l[1], nm, "InvalidNumeral");
                 if (!Numerals.Contains(NumeralName)) { throw new Syntax.InvalidTokenException("InvalidNumeral", nm.GetFileRange(l[1]), NumeralName); }
-                var RecordName = GetLeafNodeValue(l[2], nm, "InvalidRecordName");
+                var EntityName = GetLeafNodeValue(l[2], nm, "InvalidEntityName");
 
                 var ByIndex = new String[] { };
                 var OrderByIndex = new String[] { };
@@ -468,7 +376,7 @@ namespace Yuki.RelationSchema
                     MakeStemNode("QueryDef",
                         MakeStemNode("Verb", MakeStemNode(VerbName)),
                         MakeStemNode("Numeral", MakeStemNode(NumeralName)),
-                        MakeStemNode("RecordName", MakeLeafNode(RecordName)),
+                        MakeStemNode("EntityName", MakeLeafNode(EntityName)),
                         MakeStemNode("By", ByIndex.Select(c => MakeStemNode("StringLiteral", MakeLeafNode(c))).ToArray()),
                         MakeStemNode("OrderBy", OrderByIndexColumns)
                     )
