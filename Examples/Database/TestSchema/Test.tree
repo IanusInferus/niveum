@@ -4,7 +4,7 @@
       File:        Test.tree
       Location:    Yuki.Examples <Tree>
       Description: 测试
-      Version:     2012.11.24.
+      Version:     2012.11.27.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -17,3 +17,10 @@
 #Entity TestLockRecord                              [CN:TestLockRecords]测试锁记录
     Id                  Int                         1
     Value               Int                         测试数据
+
+#Query
+    Upsert One TestRecord
+    Select Optional TestRecord By SessionIndex
+    Upsert One TestLockRecord
+    Select Optional TestLockRecord By Id
+    Lock Optional TestLockRecord By Id
