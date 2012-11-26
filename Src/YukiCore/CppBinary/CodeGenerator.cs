@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2012.10.30.
+//  Version:     2012.11.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -541,10 +541,6 @@ namespace Yuki.ObjectSchema.CppBinary
         private static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
             return Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
-        }
-        private static String LowercaseCamelize(String PascalName)
-        {
-            return Cpp.Common.CodeGenerator.LowercaseCamelize(PascalName);
         }
         private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
         {
