@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2012.11.22.
+//  Version:     2012.11.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -35,7 +35,7 @@ namespace Yuki.DatabaseRegenerator
     }
     public static class TableOperations
     {
-        public static void ImportTable(Dictionary<String, RelationSchema.RecordDef> TableMetas, Dictionary<String, Dictionary<String, Int64>> EnumMetas, IDbConnection c, IDbTransaction b, KeyValuePair<string, List<Node>> t, DatabaseType Type)
+        public static void ImportTable(Dictionary<String, RelationSchema.EntityDef> TableMetas, Dictionary<String, Dictionary<String, Int64>> EnumMetas, IDbConnection c, IDbTransaction b, KeyValuePair<string, List<Node>> t, DatabaseType Type)
         {
             Func<String, String> Escape;
             if (Type == DatabaseType.SqlServer || Type == DatabaseType.SqlServerCe)
@@ -283,7 +283,7 @@ namespace Yuki.DatabaseRegenerator
         public class ImportTableMetas
         {
             public Dictionary<String, List<Node>> Tables;
-            public Dictionary<String, RelationSchema.RecordDef> TableMetas;
+            public Dictionary<String, RelationSchema.EntityDef> TableMetas;
             public Dictionary<String, Dictionary<String, Int64>> EnumMetas;
         }
 
@@ -305,7 +305,7 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
 
-            var TableMetas = new Dictionary<String, RelationSchema.RecordDef>(StringComparer.OrdinalIgnoreCase);
+            var TableMetas = new Dictionary<String, RelationSchema.EntityDef>(StringComparer.OrdinalIgnoreCase);
             var EnumMetas = new Dictionary<String, Dictionary<String, Int64>>(StringComparer.OrdinalIgnoreCase);
             foreach (var t in s.TypeRefs.Concat(s.Types))
             {
@@ -348,9 +348,9 @@ namespace Yuki.DatabaseRegenerator
             }
             foreach (var t in s.Types)
             {
-                if (t.OnRecord)
+                if (t.OnEntity)
                 {
-                    TableMetas.Add(t.Record.CollectionName, t.Record);
+                    TableMetas.Add(t.Entity.CollectionName, t.Entity);
                 }
             }
 

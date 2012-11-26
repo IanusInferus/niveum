@@ -55,91 +55,9 @@ namespace Yuki.RelationSchema
         public static RS.Schema Translate(OS.Schema Schema)
         {
             var s = (new Translator { Schema = Schema }).Analyze();
-            CheckForeignKeyIndex(s);
+            s.VerifyEntityKeys();
+            s.VerifyEntityForeignKeys();
             return s;
-        }
-
-        private class Index
-        {
-            public String[] Columns;
-
-            public override bool Equals(object obj)
-            {
-                var o = obj as Index;
-                if (o == null) { return false; }
-                if (Columns.Length != o.Columns.Length) { return false; }
-                if (Columns.Intersect(o.Columns, StringComparer.OrdinalIgnoreCase).Count() != Columns.Length) { return false; }
-                return true;
-            }
-
-            public override int GetHashCode()
-            {
-                Func<String, int> h = StringComparer.OrdinalIgnoreCase.GetHashCode;
-                return Columns.Select(k => h(k)).Aggregate((a, b) => a ^ b);
-            }
-        }
-        private static void CheckForeignKeyIndex(RS.Schema s)
-        {
-            var Records = s.Types.Where(r => r.OnRecord).Select(r => r.Record).ToArray();
-            var IndexDict = new Dictionary<String, HashSet<Index>>(StringComparer.OrdinalIgnoreCase);
-            foreach (var r in Records)
-            {
-                var h = new HashSet<Index>();
-                foreach (var k in (new Key[] { r.PrimaryKey }).Concat(r.UniqueKeys).Concat(r.NonUniqueKeys))
-                {
-                    for (int i = 1; i <= k.Columns.Length; i += 1)
-                    {
-                        var SubIndex = new Index { Columns = k.Columns.Take(i).Select(c => c.Name).ToArray() };
-                        if (!h.Contains(SubIndex))
-                        {
-                            h.Add(SubIndex);
-                        }
-                    }
-                }
-                IndexDict.Add(r.Name, h);
-            }
-            foreach (var r in Records)
-            {
-                foreach (var a in r.Fields.Where(f => f.Attribute.OnNavigation))
-                {
-                    String OtherRecordName;
-                    if (a.Type.OnTypeRef)
-                    {
-                        OtherRecordName = a.Type.TypeRef.Value;
-                    }
-                    else if (a.Type.OnOptional)
-                    {
-                        OtherRecordName = a.Type.Optional.Value;
-                    }
-                    else if (a.Type.OnList)
-                    {
-                        OtherRecordName = a.Type.List.Value;
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException();
-                    }
-
-                    //FK和FNK只需要目标表上的键有索引，RFK和RFNK需要当前表和目标表的键都有索引
-                    if (a.Attribute.Navigation.IsReverse)
-                    {
-                        var ThisIndex = new Index { Columns = a.Attribute.Navigation.ThisKey };
-                        var h = IndexDict[r.Name];
-                        if (!h.Contains(ThisIndex))
-                        {
-                            throw new InvalidOperationException(String.Format("ThisKeyIsNotIndex: {0}->{1} FK:{2}={3}", r.Name, OtherRecordName, String.Join(", ", a.Attribute.Navigation.ThisKey), String.Join(", ", a.Attribute.Navigation.OtherKey)));
-                        }
-                    }
-                    {
-                        var OtherIndex = new Index { Columns = a.Attribute.Navigation.OtherKey };
-                        var h = IndexDict[OtherRecordName];
-                        if (!h.Contains(OtherIndex))
-                        {
-                            throw new InvalidOperationException(String.Format("OtherKeyIsNotIndex: {0}->{1} FK:{2}={3}", r.Name, OtherRecordName, String.Join(", ", a.Attribute.Navigation.ThisKey), String.Join(", ", a.Attribute.Navigation.OtherKey)));
-                        }
-                    }
-                }
-            }
         }
 
         private class Translator
@@ -147,7 +65,7 @@ namespace Yuki.RelationSchema
             public OS.Schema Schema;
             private HashSet<String> OPrimitives = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
             private HashSet<String> OEntities = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
-            private Dictionary<String, RS.RecordDef> Records = new Dictionary<String, RS.RecordDef>();
+            private Dictionary<String, RS.EntityDef> Records = new Dictionary<String, RS.EntityDef>();
 
             public RS.Schema Analyze()
             {
@@ -259,7 +177,7 @@ namespace Yuki.RelationSchema
                     {
                         var r = TranslateRecord(t.Record);
                         Records.Add(r.Name, r);
-                        Types.Add(RS.TypeDef.CreateRecord(r));
+                        Types.Add(RS.TypeDef.CreateEntity(r));
                     }
                     else
                     {
@@ -272,7 +190,7 @@ namespace Yuki.RelationSchema
                     FillRecordNavigations(r);
                 }
 
-                return new RS.Schema { Types = Types.ToArray(), TypeRefs = TypeRefs.ToArray(), Imports = Schema.Imports.ToArray() };
+                return new RS.Schema { Types = Types.ToArray(), TypeRefs = TypeRefs.ToArray(), Imports = Schema.Imports.ToArray(), TypePaths = Schema.TypePaths.Select(tp => new RS.TypePath { Name = tp.Name, Path = tp.Path }).ToArray() };
             }
 
             private RS.PrimitiveDef TranslatePrimitive(OS.PrimitiveDef e)
@@ -434,7 +352,7 @@ namespace Yuki.RelationSchema
 
                 return new RS.VariableDef { Name = f.Name, Type = t, Description = dc.Description, Attribute = fa };
             }
-            private RS.RecordDef TranslateRecord(OS.RecordDef r)
+            private RS.EntityDef TranslateRecord(OS.RecordDef r)
             {
                 var dc = Decompose(r.Description);
                 var Fields = r.Fields.Select(f => TranslateField(r, f)).ToArray();
@@ -522,20 +440,9 @@ namespace Yuki.RelationSchema
                     PrimaryKey.IsClustered = true;
                 }
 
-                foreach (var k in (new RS.Key[] { PrimaryKey }).Concat(UniqueKeys).Concat(NonUniqueKeys))
-                {
-                    foreach (var c in k.Columns)
-                    {
-                        if (Fields.Where(f => f.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).Count() == 0)
-                        {
-                            throw new InvalidOperationException(String.Format("键中的字段不存在: {0}.{1}", r.Name, c.Name));
-                        }
-                    }
-                }
-
-                return new RS.RecordDef { Name = r.Name, CollectionName = CollectionName, Fields = Fields, PrimaryKey = PrimaryKey, UniqueKeys = UniqueKeys.ToArray(), NonUniqueKeys = NonUniqueKeys.ToArray(), Description = dc.Description };
+                return new RS.EntityDef { Name = r.Name, CollectionName = CollectionName, Fields = Fields, PrimaryKey = PrimaryKey, UniqueKeys = UniqueKeys.ToArray(), NonUniqueKeys = NonUniqueKeys.ToArray(), Description = dc.Description };
             }
-            private void FillRecordNavigations(RS.RecordDef r)
+            private void FillRecordNavigations(RS.EntityDef r)
             {
                 //如果一个非简单类型属性(导航属性)没有标明外键或反外键，则
                 //    1)如果有<Name>Id的列，且该列为简单类型，类型表的主键列数量为1，则将该字段标明为[FK:<Name>Id=<Type/ElementType>.<PrimaryKey>]

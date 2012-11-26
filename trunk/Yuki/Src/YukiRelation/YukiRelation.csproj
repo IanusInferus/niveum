@@ -55,6 +55,7 @@
     <Compile Include="MySql\CodeGenerator.cs" />
     <Compile Include="PostgreSql\CodeGenerator.cs" />
     <Compile Include="RelationSchema\PlainObjectSchemaGenerator.cs" />
+    <Compile Include="RelationSchema\RelationSchemaExtensions.cs" />
     <Compile Include="RelationSchema\RelationSchemaLoader.cs" />
     <Compile Include="RelationSchema\RelationSchemaTranslator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
