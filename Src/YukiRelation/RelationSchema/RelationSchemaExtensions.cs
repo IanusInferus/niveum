@@ -503,5 +503,27 @@ namespace Yuki.RelationSchema
             var QueryLine = String.Join(" ", QueryStrings.ToArray());
             return QueryLine;
         }
+
+        public static String FriendlyName(this QueryDef q)
+        {
+            var QueryStrings = new List<String>();
+            QueryStrings.Add(q.Verb._Tag.ToString());
+            QueryStrings.Add(q.Numeral._Tag.ToString());
+            QueryStrings.Add(q.EntityName);
+            if (q.By.Length != 0)
+            {
+                QueryStrings.Add("By");
+                var ByString = String.Join("And", q.By);
+                QueryStrings.Add(ByString);
+            }
+            if (q.OrderBy.Length != 0)
+            {
+                QueryStrings.Add("OrderBy");
+                var OrderByString = String.Join("And", q.OrderBy.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name).ToArray());
+                QueryStrings.Add(OrderByString);
+            }
+            var QueryLine = String.Join("", QueryStrings.ToArray());
+            return QueryLine;
+        }
     }
 }

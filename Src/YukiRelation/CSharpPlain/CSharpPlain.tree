@@ -1,0 +1,34 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        CSharpPlain.tree
+      Location:    Yuki.Relation <Tree>
+      Description: 关系类型结构C#简单类型代码模板数据
+      Version:     2012.11.26.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+ObjectSchemaTemplate
+    Keywords
+    $End
+    PrimitiveMappings
+    $End
+    Templates
+        Template
+            Name IRegularDataAccess
+            //Parameters: ${Queries}
+            Value
+                $String
+                    public interface IRegularDataAccess : IDisposable
+                    {
+                        void Complete();
+
+                        ${Queries}
+                    }
+        Template
+            Name QuerySignature
+            //Parameters: ${Name}, ${ParameterList}, ${Type}
+            Value
+                $String
+                    ${Type} [[${Name}]](${ParameterList});

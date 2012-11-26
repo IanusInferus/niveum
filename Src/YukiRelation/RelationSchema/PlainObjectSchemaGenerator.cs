@@ -19,15 +19,15 @@ namespace Yuki.RelationSchema
 {
     public static class PlainObjectSchemaGenerator
     {
-        public static OS.Schema Generate(RS.Schema Schema)
+        public static OS.Schema Generate(RS.Schema Schema, Boolean ForcePrimitive = false)
         {
-            var s = (new Generator { Schema = Schema, AdditionalTypeRefs = new OS.TypeDef[] { } }).Generate();
+            var s = (new Generator { Schema = Schema, AdditionalTypeRefs = new OS.TypeDef[] { } }).Generate(ForcePrimitive);
             return s;
         }
         public static OS.Schema TrimAsRelationSchema(OS.Schema Schema)
         {
             var RelationSchema = RS.RelationSchemaTranslator.Translate(Schema);
-            var s = (new Generator { Schema = RelationSchema, AdditionalTypeRefs = Schema.TypeRefs }).Generate();
+            var s = (new Generator { Schema = RelationSchema, AdditionalTypeRefs = Schema.TypeRefs }).Generate(false);
             var PlainSchema = new OS.Schema { Types = s.Types, TypeRefs = Schema.TypeRefs, Imports = Schema.Imports, TypePaths = Schema.TypePaths };
             return s;
         }
@@ -37,28 +37,32 @@ namespace Yuki.RelationSchema
             public RS.Schema Schema;
             public OS.TypeDef[] AdditionalTypeRefs;
 
-            public OS.Schema Generate()
+            public OS.Schema Generate(Boolean ForcePrimitive)
             {
                 var TypeRefs = Schema.TypeRefs.Where(t => !(t.OnPrimitive && t.Primitive.Name == "Binary")).SelectMany(t => TranslateTypeDef(t)).ToArray();
                 var Types = Schema.Types.Where(t => !(t.OnPrimitive && t.Primitive.Name == "Binary")).SelectMany(t => TranslateTypeDef(t)).ToList();
-                if (UnitUsed && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Unit", StringComparison.OrdinalIgnoreCase)).Any())
+                if ((ForcePrimitive || UnitUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Unit", StringComparison.OrdinalIgnoreCase)).Any())
                 {
                     Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Unit", GenericParameters = new OS.VariableDef[] { }, Description = "" }));
                 }
-                if (ByteUsed && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Byte", StringComparison.OrdinalIgnoreCase)).Any())
+                if ((ForcePrimitive || ByteUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Byte", StringComparison.OrdinalIgnoreCase)).Any())
                 {
                     Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Byte", GenericParameters = new OS.VariableDef[] { }, Description = "" }));
                 }
-                if (ListUsed && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("List", StringComparison.OrdinalIgnoreCase)).Any())
+                if (ForcePrimitive && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Int", StringComparison.OrdinalIgnoreCase)).Any())
+                {
+                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Int", GenericParameters = new OS.VariableDef[] { }, Description = "" }));
+                }
+                if ((ForcePrimitive || ListUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("List", StringComparison.OrdinalIgnoreCase)).Any())
                 {
                     var GenericParameter = new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" };
                     Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "List", GenericParameters = new OS.VariableDef[] { GenericParameter }, Description = "" }));
                 }
-                if (TypeUsed && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Type", StringComparison.OrdinalIgnoreCase)).Any())
+                if ((ForcePrimitive || TypeUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Type", StringComparison.OrdinalIgnoreCase)).Any())
                 {
                     Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Type", GenericParameters = new OS.VariableDef[] { }, Description = "" }));
                 }
-                if (OptionalUsed && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnTaggedUnion && t.TaggedUnion.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase)).Any())
+                if ((ForcePrimitive || OptionalUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnTaggedUnion && t.TaggedUnion.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase)).Any())
                 {
                     var GenericParameters = new OS.VariableDef[] { new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" } };
                     Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Optional", GenericParameters = GenericParameters, Description = "" }));

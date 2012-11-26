@@ -1,6 +1,7 @@
 ﻿2012.11.26
 Yuki.Relation:
 增加对关系Schema的结构验证。
+增加了关系Schema中的Query类型的接口代码生成功能。
 Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
 修改拼写。
 Examples:
