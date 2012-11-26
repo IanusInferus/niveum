@@ -76,7 +76,7 @@ namespace Database
             std::wprintf(L"%ls\n", L"/load 自动化负载测试");
             std::wprintf(L"%ls\n", L"/perf 自动化性能测试");
             std::wprintf(L"%ls\n", L"示例:");
-            std::wprintf(L"%ls\n", L"Database \"server=localhost;uid=root;pwd=password;database=mail;\" /load");
+            std::wprintf(L"%ls\n", L"Database \"server=localhost;uid=root;pwd=password;database=Test;\" /load");
         }
     };
 }

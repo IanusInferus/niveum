@@ -44,23 +44,24 @@ namespace Database
 				cmd->execute();
 			}
 
-			shared_ptr<TestRecord> SelectOptionalTestRecord(int SessionIndex)
+			virtual Optional<std::shared_ptr<TestRecord>> SelectOptionalTestRecordBySessionIndex(int SessionIndex)
 			{
 				auto cmd = CreateTextCommand(L"SELECT SessionIndex, Value FROM TestRecords WHERE SessionIndex = @SessionIndex");
 				Add(L"SessionIndex", SessionIndex);
-				shared_ptr<TestRecord> v = nullptr;
+				auto ov = Optional<std::shared_ptr<TestRecord>>::Empty();
 				auto rs = shared_ptr<ResultSet>(cmd->executeQuery());
 				if (rs->next())
 				{
-					v = make_shared<TestRecord>();
+					auto v = make_shared<TestRecord>();
 					v->SessionIndex = GetInt(rs, L"SessionIndex");
 					v->Value = GetInt(rs, L"Value");
+                    ov = Optional<std::shared_ptr<TestRecord>>::CreateHasValue(v);
 				}
 				if (rs->next())
 				{
 					throw logic_error("InvalidOperationException");
 				}
-				return v;
+				return ov;
 			}
 
 			void UpsertOneTestLockRecord(shared_ptr<TestLockRecord> v)
@@ -70,40 +71,44 @@ namespace Database
 				cmd->execute();
 			}
 
-			shared_ptr<TestLockRecord> SelectOptionalTestLockRecord()
+			Optional<std::shared_ptr<TestLockRecord>> SelectOptionalTestLockRecordById(int Id)
 			{
-				auto cmd = CreateTextCommand(L"SELECT Id, Value FROM TestLockRecords");
-				shared_ptr<TestLockRecord> v = nullptr;
+				auto cmd = CreateTextCommand(L"SELECT Id, Value FROM TestLockRecords WHERE Id = @Id");
+                Add(L"Id", Id);
+                auto ov = Optional<std::shared_ptr<TestLockRecord>>::Empty();
 				auto rs = shared_ptr<ResultSet>(cmd->executeQuery());
 				if (rs->next())
 				{
-					v = make_shared<TestLockRecord>();
+					auto v = make_shared<TestLockRecord>();
 					v->Id = GetInt(rs, L"Id");
 					v->Value = GetInt(rs, L"Value");
+                    ov = Optional<std::shared_ptr<TestLockRecord>>::CreateHasValue(v);
 				}
 				if (rs->next())
 				{
 					throw logic_error("InvalidOperationException");
 				}
-				return v;
+				return ov;
 			}
 
-			shared_ptr<TestLockRecord> LockOptionalTestLockRecord()
+			Optional<std::shared_ptr<TestLockRecord>> LockOptionalTestLockRecordById(int Id)
 			{
-				auto cmd = CreateTextCommand(L"SELECT Id, Value FROM TestLockRecords FOR UPDATE");
-				shared_ptr<TestLockRecord> v = nullptr;
+				auto cmd = CreateTextCommand(L"SELECT Id, Value FROM TestLockRecords WHERE Id = @Id FOR UPDATE");
+                Add(L"Id", Id);
+                auto ov = Optional<std::shared_ptr<TestLockRecord>>::Empty();
 				auto rs = shared_ptr<ResultSet>(cmd->executeQuery());
 				if (rs->next())
 				{
-					v = make_shared<TestLockRecord>();
+					auto v = make_shared<TestLockRecord>();
 					v->Id = GetInt(rs, L"Id");
 					v->Value = GetInt(rs, L"Value");
+                    ov = Optional<std::shared_ptr<TestLockRecord>>::CreateHasValue(v);
 				}
 				if (rs->next())
 				{
 					throw logic_error("InvalidOperationException");
 				}
-				return v;
+				return ov;
 			}
 		};
 	}

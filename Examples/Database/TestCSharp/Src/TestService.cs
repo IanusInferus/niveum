@@ -26,8 +26,15 @@ namespace Database
         {
             using (var da = dam.Create())
             {
-                var v = da.SelectOptionalTestRecord(SessionIndex);
-                return v.Value;
+                var v = da.SelectOptionalTestRecordBySessionIndex(SessionIndex);
+                if (v.OnHasValue)
+                {
+                    return v.HasValue.Value;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
             }
         }
 
@@ -44,7 +51,16 @@ namespace Database
         {
             using (var da = dam.Create())
             {
-                var v = da.LockOptionalTestLockRecord();
+                var ov = da.LockOptionalTestLockRecordById(1);
+                TestLockRecord v;
+                if (ov.OnHasValue)
+                {
+                    v = ov.HasValue;
+                }
+                else
+                {
+                    v = new DB.TestLockRecord { Id = 1, Value = 0 };
+                }
                 v.Value += Value;
                 da.UpsertOneTestLockRecord(v);
                 da.Complete();
@@ -55,8 +71,17 @@ namespace Database
         {
             using (var da = dam.Create())
             {
-                var v = da.SelectOptionalTestLockRecord();
-                return v.Value;
+                var ov = da.SelectOptionalTestLockRecordById(1);
+                TestLockRecord v;
+                if (ov.OnHasValue)
+                {
+                    v = ov.HasValue;
+                    return v.Value;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
             }
         }
     }
