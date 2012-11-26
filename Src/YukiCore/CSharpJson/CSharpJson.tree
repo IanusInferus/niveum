@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2012.10.25.
+      Version:     2012.11.26.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -55,12 +55,10 @@ ObjectSchemaTemplate
                     //==========================================================================
 
                     //Reference:
-                    //System.Runtime.Serialization.dll
                     //Newtonsoft.Json.dll
 
                     using System;
                     using System.Collections.Generic;
-                    using System.Runtime.Serialization;
                     using Newtonsoft.Json;
                     using Newtonsoft.Json.Linq;
         Template
