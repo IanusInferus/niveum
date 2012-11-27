@@ -46,9 +46,10 @@ INSERT INTO TestRecords (SessionIndex, Value) SELECT @SessionIndex, @Value WHERE
         {
             var cmd = CreateTextCommand();
             cmd.CommandText = @"
-UPDATE TestLockRecords SET Value = @Value WHERE Id = 1;
-INSERT INTO TestLockRecords (Id, Value) SELECT 1, @Value WHERE NOT EXISTS (SELECT 1 FROM TestLockRecords WHERE Id = 1)
+UPDATE TestLockRecords SET Value = @Value WHERE Id = @Id;
+INSERT INTO TestLockRecords (Id, Value) SELECT @Id, @Value WHERE NOT EXISTS (SELECT 1 FROM TestLockRecords WHERE Id = @Id)
 ";
+            Add(cmd, "Id", v.Id);
             Add(cmd, "Value", v.Value);
             cmd.ExecuteNonQuery();
         }

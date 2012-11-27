@@ -91,11 +91,10 @@ namespace Database.Linq
             return dbr.MailAttachments.WhereIdIs(Id).ToList();
         }
 
-        public int InsertOneMail(Mail v)
+        public void InsertOneMail(Mail v)
         {
             dbr.Mails.InsertOnSubmit(v);
             dbr.SubmitChanges();
-            return v.Id;
         }
 
         public void InsertManyMailTo(List<MailTo> l)
