@@ -153,7 +153,9 @@ namespace Database
                     if (da.SelectCountUserProfileById(mt) == 0) { throw new InvalidOperationException(); }
                 }
                 var Time = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
-                var Id = da.InsertOneMail(new DB.Mail { Title = m.Title, FromId = UserId, Time = Time, Content = m.Content });
+                var v = new DB.Mail { Title = m.Title, FromId = UserId, Time = Time, Content = m.Content };
+                da.InsertOneMail(v);
+                var Id = v.Id;
                 da.InsertManyMailTo(m.ToIds.Select(mt => new DB.MailTo { Id = Id, ToId = mt }).ToList());
                 da.InsertManyMailOwner(m.ToIds.Select(mt => new DB.MailOwner { Id = Id, OwnerId = mt, IsNew = true, Time = Time }).ToList());
                 da.InsertManyMailAttachment(m.Attachments.Select(ma => new DB.MailAttachment { Id = Id, Name = ma.Name, Content = ma.Content.ToArray() }).ToList());

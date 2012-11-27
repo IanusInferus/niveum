@@ -20,8 +20,10 @@ namespace Database
 
         private static readonly String SqlServerType = "Database.SqlServer.SqlServerDataAccess";
         private static readonly String PostgreSqlType = "Database.PostgreSql.PostgreSqlDataAccess";
+        private static readonly String MySqlType = "Database.MySql.MySqlDataAccess";
         private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Test";
         private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=test;";
+        private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Test;";
 
         private static Type GetType(String FullName, Boolean ThrowOnError = false)
         {
@@ -62,6 +64,13 @@ namespace Database
                     return PostgreSqlConnectionString;
                 }
             }
+            {
+                var t = GetType(MySqlType);
+                if (t != null)
+                {
+                    return MySqlConnectionString;
+                }
+            }
             throw new InvalidOperationException();
         }
 
@@ -76,6 +85,11 @@ namespace Database
             {
                 var t = GetType(PostgreSqlType, true);
                 return PostgreSqlConnectionString;
+            }
+            else if (Type == DatabaseType.MySQL)
+            {
+                var t = GetType(MySqlType, true);
+                return MySqlConnectionString;
             }
             else
             {
@@ -103,6 +117,15 @@ namespace Database
                     return;
                 }
             }
+            {
+                var t = GetType(MySqlType);
+                if (t != null)
+                {
+                    var c = GetConstructor(t);
+                    ConnectionFactory = () => c(ConnectionString);
+                    return;
+                }
+            }
             throw new InvalidOperationException();
         }
         public DataAccessManager(DatabaseType Type, String ConnectionString)
@@ -116,6 +139,12 @@ namespace Database
             else if (Type == DatabaseType.PostgreSQL)
             {
                 var t = GetType(PostgreSqlType, true);
+                var c = GetConstructor(t);
+                ConnectionFactory = () => c(ConnectionString);
+            }
+            else if (Type == DatabaseType.MySQL)
+            {
+                var t = GetType(MySqlType, true);
                 var c = GetConstructor(t);
                 ConnectionFactory = () => c(ConnectionString);
             }

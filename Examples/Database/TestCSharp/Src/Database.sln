@@ -1,9 +1,11 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseMSSQL", "DatabaseMSSQL.csproj", "{1454125C-55C4-402F-98A4-9D3E338B040D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabasePostgreSQL", "DatabasePostgreSQL.csproj", "{52EEDD61-A8AF-45E5-91FB-6CDD28900D95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseMySQL", "DatabaseMySQL.csproj", "{0A065F81-F62F-4F6D-8F99-3E9BBE19D857}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,6 +21,10 @@ Global
 		{52EEDD61-A8AF-45E5-91FB-6CDD28900D95}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52EEDD61-A8AF-45E5-91FB-6CDD28900D95}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52EEDD61-A8AF-45E5-91FB-6CDD28900D95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A065F81-F62F-4F6D-8F99-3E9BBE19D857}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A065F81-F62F-4F6D-8F99-3E9BBE19D857}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A065F81-F62F-4F6D-8F99-3E9BBE19D857}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A065F81-F62F-4F6D-8F99-3E9BBE19D857}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -2,17 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Database.SqlServer
+namespace Database.MySql
 {
-    public partial class SqlServerDataAccess : IDataAccess
+    public partial class MySqlDataAccess : IDataAccess
     {
         public void UpsertOneTestRecord(TestRecord v)
         {
             var cmd = CreateTextCommand();
-            cmd.CommandText = @"
-UPDATE TestRecords SET Value = @Value WHERE SessionIndex = @SessionIndex
-IF @@ROWCOUNT = 0 INSERT INTO TestRecords (SessionIndex, Value) VALUES (@SessionIndex, @Value)
-";
+            cmd.CommandText = @"INSERT INTO TestRecords (SessionIndex, Value) VALUES (@SessionIndex, @Value) ON DUPLICATE KEY UPDATE Value = @Value";
             Add(cmd, "SessionIndex", v.SessionIndex);
             Add(cmd, "Value", v.Value);
             cmd.ExecuteNonQuery();
@@ -45,10 +42,7 @@ IF @@ROWCOUNT = 0 INSERT INTO TestRecords (SessionIndex, Value) VALUES (@Session
         public void UpsertOneTestLockRecord(TestLockRecord v)
         {
             var cmd = CreateTextCommand();
-            cmd.CommandText = @"
-UPDATE TestLockRecords SET Value = @Value WHERE Id = 1
-IF @@ROWCOUNT = 0 INSERT INTO TestLockRecords (Id, Value) VALUES (@Id, @Value)
-";
+            cmd.CommandText = @"INSERT INTO TestLockRecords (Id, Value) VALUES (@Id, @Value) ON DUPLICATE KEY UPDATE Value = @Value";
             Add(cmd, "Id", v.Id);
             Add(cmd, "Value", v.Value);
             cmd.ExecuteNonQuery();
@@ -81,7 +75,7 @@ IF @@ROWCOUNT = 0 INSERT INTO TestLockRecords (Id, Value) VALUES (@Id, @Value)
         public Optional<TestLockRecord> LockOptionalTestLockRecordById(Int32 Id)
         {
             var cmd = CreateTextCommand();
-            cmd.CommandText = @"SELECT Id, Value FROM TestLockRecords WITH (UPDLOCK) WHERE Id = @Id";
+            cmd.CommandText = @"SELECT Id, Value FROM TestLockRecords WHERE Id = @Id FOR UPDATE";
             Add(cmd, "Id", Id);
             var v = Optional<TestLockRecord>.Empty;
             using (var dr = cmd.ExecuteReader())
