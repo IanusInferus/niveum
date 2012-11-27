@@ -30,7 +30,7 @@ namespace Database
         List<String> SelectManyMailAttachmentNameById(int Id);
         List<MailAttachment> SelectManyMailAttachmentById(int Id);
 
-        int InsertOneMail(Mail v);
+        void InsertOneMail(Mail v);
         void InsertManyMailTo(List<MailTo> l);
         void InsertManyMailOwner(List<MailOwner> l);
         void InsertManyMailAttachment(List<MailAttachment> l);
