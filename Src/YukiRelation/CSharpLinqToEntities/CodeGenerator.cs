@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2012.11.26.
+//  Version:     2012.11.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -92,7 +92,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                             l.AddRange(GetPrimitive(Name, PlatformName));
                         }
                     }
-                    else if (p.Name == "Unit" || p.Name == "Type" || p.Name == "Byte")
+                    else if (p.Name == "Unit" || p.Name == "Type" || p.Name == "Byte" || p.Name == "List" || p.Name == "Optional")
                     {
                     }
                     else

@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2012.11.26.
+//  Version:     2012.11.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -109,7 +109,7 @@ namespace Yuki.RelationSchema
             VerifyEntityKeys(s);
             VerifyEntityForeignKeys(s);
             VerifyQuerySyntax(s);
-            VerifyQueryKeys(s);
+            VerifyQuerySemantics(s);
         }
 
         public static void VerifyDuplicatedNames(this Schema s)
@@ -367,11 +367,14 @@ namespace Yuki.RelationSchema
             }
         }
 
+        // EntityName必须对应于Entity
+        // Upsert对应的Entity不得含有Identity列，不得有多个PrimaryKey或UniqueKey
         // By索引必须和Entity已经声明的Key一致但可以不用考虑列的顺序和每个列里数据的排列方法
         // OrderBy索引必须和Entity已经声明的Key一致
-        public static void VerifyQueryKeys(this Schema s)
+        public static void VerifyQuerySemantics(this Schema s)
         {
             var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
+            var EntityDict = Entities.ToDictionary(e => e.Name);
             var ByIndexDict = new Dictionary<String, HashSet<ByIndex>>(StringComparer.OrdinalIgnoreCase);
             var OrderByIndexDict = new Dictionary<String, HashSet<OrderByIndex>>(StringComparer.OrdinalIgnoreCase);
             foreach (var e in Entities)
@@ -412,10 +415,26 @@ namespace Yuki.RelationSchema
                 {
                     foreach (var q in t.QueryList.Queries)
                     {
-                        var bih = ByIndexDict[q.EntityName];
-                        var obih = OrderByIndexDict[q.EntityName];
+                        if (!EntityDict.ContainsKey(q.EntityName))
+                        {
+                            throw new InvalidOperationException(String.Format("EntityNameNotExist: '{0}' in {1}", q.EntityName, GetQueryLine(q)));
+                        }
+                        var e = EntityDict[q.EntityName];
+                        if (q.Verb.OnUpsert)
+                        {
+                            if (e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Any())
+                            {
+                                throw new InvalidOperationException(String.Format("UpsertNotValidOnEntityWithIdentityColumn: '{0}' in {1}", q.EntityName, GetQueryLine(q)));
+                            }
+                            if (e.UniqueKeys.Length != 0)
+                            {
+                                throw new InvalidOperationException(String.Format("UpsertNotValidOnEntityWithMultiplePrimaryKeyOrUniqueKey: '{0}' in {1}", q.EntityName, GetQueryLine(q)));
+                            }
+                        }
+
                         if (q.By.Length != 0)
                         {
+                            var bih = ByIndexDict[q.EntityName];
                             var bi = new ByIndex { Columns = q.By };
                             if (!bih.Contains(bi))
                             {
@@ -424,6 +443,7 @@ namespace Yuki.RelationSchema
                         }
                         if (q.OrderBy.Length != 0)
                         {
+                            var obih = OrderByIndexDict[q.EntityName];
                             var obi = new OrderByIndex { Columns = q.OrderBy };
                             if (!obih.Contains(obi))
                             {
