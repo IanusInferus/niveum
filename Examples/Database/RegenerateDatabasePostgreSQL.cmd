@@ -8,7 +8,7 @@
 
 @echo «Î ‰»Î√‹¬Î£∫
 @set /p pass=
-DatabaseRegenerator.exe /loadtype:MailSchema /connect:"Server=localhost;User ID=postgres;Password=%pass%;" /database:Mail /regenpgsql:MailData
-DatabaseRegenerator.exe /loadtype:TestSchema /connect:"Server=localhost;User ID=postgres;Password=%pass%;" /database:Test /regenpgsql:TestData
+DatabaseRegenerator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /connect:"Server=localhost;User ID=postgres;Password=%pass%;" /database:Mail /regenpgsql:MailData
+DatabaseRegenerator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /connect:"Server=localhost;User ID=postgres;Password=%pass%;" /database:Test /regenpgsql:TestData
 
 @pause
