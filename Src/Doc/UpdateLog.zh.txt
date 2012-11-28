@@ -4,9 +4,14 @@ Yuki.Core:
 Yuki.Relation, Yuki.RelationSchemaManipulator:
 增加C# MySQL Query类型代码自动生成。
 增加C# SQL Server Query类型代码自动生成。
+增加C# PostgreSQL Query类型代码自动生成。
 Examples:
 增加C# MySQL邮件数据库示例。
 增加C# SQL Server邮件数据库示例。
+修改C++ MySQL示例中的Optional读取函数的拼法。
+增加C# PostgreSQL邮件数据库示例。
+Yuki.DatabaseRegenerator:
+修正PostgreSQL导入时，自动生成Id的数据表强制导入Id后，再增加新数据会出现Id重复的问题。
 
 2012.11.27
 Yuki.Relation:
