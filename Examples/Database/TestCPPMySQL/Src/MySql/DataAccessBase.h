@@ -57,15 +57,15 @@ namespace Database
 
 			shared_ptr<vector<uint8_t>> GetBinary(shared_ptr<ResultSet> rs, wstring FieldName);
 
-			Optional<bool> GetBooleanNullable(shared_ptr<ResultSet> rs, wstring FieldName);
+			Optional<bool> GetOptionalOfBoolean(shared_ptr<ResultSet> rs, wstring FieldName);
 
-			Optional<wstring> GetStringNullable(shared_ptr<ResultSet> rs, wstring FieldName);
+			Optional<wstring> GetOptionalOfString(shared_ptr<ResultSet> rs, wstring FieldName);
 
-			Optional<int> GetIntNullable(shared_ptr<ResultSet> rs, wstring FieldName);
+			Optional<int> GetOptionalOfInt(shared_ptr<ResultSet> rs, wstring FieldName);
 
-			Optional<double> GetRealNullable(shared_ptr<ResultSet> rs, wstring FieldName);
+			Optional<double> GetOptionalOfReal(shared_ptr<ResultSet> rs, wstring FieldName);
 
-			Optional<shared_ptr<vector<uint8_t>>> GetBinaryNullable(shared_ptr<ResultSet> rs, wstring FieldName);
+			Optional<shared_ptr<vector<uint8_t>>> GetOptionalOfBinary(shared_ptr<ResultSet> rs, wstring FieldName);
 		};
 	}
 }
