@@ -103,6 +103,16 @@ namespace Yuki.RelationSchema.Properties {
         /// <summary>
         ///   查找 System.Byte[] 类型的本地化资源。
         /// </summary>
+        public static byte[] CSharpSqlServer {
+            get {
+                object obj = ResourceManager.GetObject("CSharpSqlServer", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Byte[] 类型的本地化资源。
+        /// </summary>
         public static byte[] MySql {
             get {
                 object obj = ResourceManager.GetObject("MySql", resourceCulture);

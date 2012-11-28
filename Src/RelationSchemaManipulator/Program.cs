@@ -31,6 +31,7 @@ using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpLinqToSql;
 using Yuki.RelationSchema.CSharpLinqToEntities;
 using Yuki.RelationSchema.CSharpPlain;
+using Yuki.RelationSchema.CSharpSqlServer;
 using Yuki.RelationSchema.CSharpMySql;
 
 namespace Yuki.RelationSchemaManipulator
@@ -153,7 +154,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 2)
                     {
-                        ObjectSchemaToTSqlCode(args[0], args[1]);
+                        RelationSchemaToTSqlCode(args[0], args[1]);
                     }
                     else
                     {
@@ -166,7 +167,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 2)
                     {
-                        ObjectSchemaToPostgreSqlCode(args[0], args[1]);
+                        RelationSchemaToPostgreSqlCode(args[0], args[1]);
                     }
                     else
                     {
@@ -179,7 +180,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 2)
                     {
-                        ObjectSchemaToMySqlCode(args[0], args[1]);
+                        RelationSchemaToMySqlCode(args[0], args[1]);
                     }
                     else
                     {
@@ -192,7 +193,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 5)
                     {
-                        ObjectSchemaToDbmlDatabaseCode(args[0], args[1], args[2], args[3], args[4]);
+                        RelationSchemaToDbmlDatabaseCode(args[0], args[1], args[2], args[3], args[4]);
                     }
                     else
                     {
@@ -205,7 +206,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 5)
                     {
-                        ObjectSchemaToCSharpLinqToSqlCode(args[0], args[1], args[2], args[3], args[4]);
+                        RelationSchemaToCSharpLinqToSqlCode(args[0], args[1], args[2], args[3], args[4]);
                     }
                     else
                     {
@@ -218,7 +219,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 5)
                     {
-                        ObjectSchemaToCSharpLinqToEntitiesCode(args[0], args[1], args[2], args[3], args[4]);
+                        RelationSchemaToCSharpLinqToEntitiesCode(args[0], args[1], args[2], args[3], args[4]);
                     }
                     else
                     {
@@ -231,7 +232,20 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 2)
                     {
-                        ObjectSchemaToCSharpDatabasePlainCode(args[0], args[1]);
+                        RelationSchemaToCSharpDatabasePlainCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "t2csmssql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 3)
+                    {
+                        RelationSchemaToCSharpSqlServerCode(args[0], args[1], args[2]);
                     }
                     else
                     {
@@ -244,7 +258,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 3)
                     {
-                        ObjectSchemaToCSharpMySqlCode(args[0], args[1], args[2]);
+                        RelationSchemaToCSharpMySqlCode(args[0], args[1], args[2]);
                     }
                     else
                     {
@@ -257,7 +271,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 2)
                     {
-                        ObjectSchemaToCppDatabasePlainCode(args[0], args[1]);
+                        RelationSchemaToCppDatabasePlainCode(args[0], args[1]);
                     }
                     else
                     {
@@ -299,7 +313,9 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2cse:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库简单类型");
             Console.WriteLine(@"/t2csdp:<CsCodePath>,<EntityNamespaceName>");
-            Console.WriteLine(@"生成C#数据库简单类型");
+            Console.WriteLine(@"生成C# SQL Server类型");
+            Console.WriteLine(@"/t2csmssql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
+            Console.WriteLine(@"生成C# MySQL类型");
             Console.WriteLine(@"/t2csmysql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C++数据库简单类型");
             Console.WriteLine(@"/t2cppdp:<CsCodePath>,<EntityNamespaceName>");
@@ -341,7 +357,7 @@ namespace Yuki.RelationSchemaManipulator
             os = null;
         }
 
-        public static void ObjectSchemaToTSqlCode(String SqlCodePath, String DatabaseName)
+        public static void RelationSchemaToTSqlCode(String SqlCodePath, String DatabaseName)
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToTSql(DatabaseName, true);
@@ -358,7 +374,7 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(SqlCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToPostgreSqlCode(String SqlCodePath, String DatabaseName)
+        public static void RelationSchemaToPostgreSqlCode(String SqlCodePath, String DatabaseName)
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToPostgreSql(DatabaseName, true);
@@ -375,7 +391,7 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(SqlCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToMySqlCode(String SqlCodePath, String DatabaseName)
+        public static void RelationSchemaToMySqlCode(String SqlCodePath, String DatabaseName)
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToMySql(DatabaseName, true);
@@ -392,7 +408,7 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(SqlCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToDbmlDatabaseCode(String SqlCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
+        public static void RelationSchemaToDbmlDatabaseCode(String SqlCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
         {
             var RelationSchema = GetRelationSchema();
             var CompiledX = RelationSchema.CompileToDbmlDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
@@ -422,7 +438,7 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(SqlCodePath, TextEncoding.UTF8, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpLinqToSqlCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
+        public static void RelationSchemaToCSharpLinqToSqlCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCSharpLinqToSql(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
@@ -439,7 +455,7 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpLinqToEntitiesCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
+        public static void RelationSchemaToCSharpLinqToEntitiesCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCSharpLinqToEntities(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
@@ -456,7 +472,7 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpDatabasePlainCode(String CsCodePath, String EntityNamespaceName)
+        public static void RelationSchemaToCSharpDatabasePlainCode(String CsCodePath, String EntityNamespaceName)
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCSharpPlain(EntityNamespaceName);
@@ -473,7 +489,24 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpMySqlCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        public static void RelationSchemaToCSharpSqlServerCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        {
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToCSharpSqlServer(EntityNamespaceName, ContextNamespaceName);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void RelationSchemaToCSharpMySqlCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCSharpMySql(EntityNamespaceName, ContextNamespaceName);
@@ -490,7 +523,7 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCppDatabasePlainCode(String CppCodePath, String EntityNamespaceName)
+        public static void RelationSchemaToCppDatabasePlainCode(String CppCodePath, String EntityNamespaceName)
         {
             var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCpp(EntityNamespaceName);
