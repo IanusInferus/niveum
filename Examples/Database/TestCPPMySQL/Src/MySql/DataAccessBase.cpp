@@ -262,35 +262,35 @@ namespace Database
 			return s;
 		}
 
-		Optional<bool> DataAccessBase::GetBooleanNullable(shared_ptr<ResultSet> rs, wstring FieldName)
+		Optional<bool> DataAccessBase::GetOptionalOfBoolean(shared_ptr<ResultSet> rs, wstring FieldName)
 		{
 			auto FieldNameS = ConvertToSQLString(FieldName);
 			if (rs->isNull(FieldNameS)) { return nullptr; }
 			return rs->getBoolean(FieldNameS);
 		}
 
-		Optional<wstring> DataAccessBase::GetStringNullable(shared_ptr<ResultSet> rs, wstring FieldName)
+		Optional<wstring> DataAccessBase::GetOptionalOfString(shared_ptr<ResultSet> rs, wstring FieldName)
 		{
 			auto FieldNameS = ConvertToSQLString(FieldName);
 			if (rs->isNull(FieldNameS)) { return nullptr; }
 			return ConvertToWString(rs->getString(FieldNameS));
 		}
 
-		Optional<int> DataAccessBase::GetIntNullable(shared_ptr<ResultSet> rs, wstring FieldName)
+		Optional<int> DataAccessBase::GetOptionalOfInt(shared_ptr<ResultSet> rs, wstring FieldName)
 		{
 			auto FieldNameS = ConvertToSQLString(FieldName);
 			if (rs->isNull(FieldNameS)) { return nullptr; }
 			return rs->getInt(FieldNameS);
 		}
 
-		Optional<double> DataAccessBase::GetRealNullable(shared_ptr<ResultSet> rs, wstring FieldName)
+		Optional<double> DataAccessBase::GetOptionalOfReal(shared_ptr<ResultSet> rs, wstring FieldName)
 		{
 			auto FieldNameS = ConvertToSQLString(FieldName);
 			if (rs->isNull(FieldNameS)) { return nullptr; }
 			return rs->getDouble(FieldNameS);
 		}
 
-		Optional<shared_ptr<vector<uint8_t>>> DataAccessBase::GetBinaryNullable(shared_ptr<ResultSet> rs, wstring FieldName)
+		Optional<shared_ptr<vector<uint8_t>>> DataAccessBase::GetOptionalOfBinary(shared_ptr<ResultSet> rs, wstring FieldName)
 		{
 			auto FieldNameS = ConvertToSQLString(FieldName);
 			if (rs->isNull(FieldNameS)) { return nullptr; }
