@@ -3,8 +3,10 @@ Yuki.Core:
 修正C#和VB.Net代码生成中的类型名称没有用标准名称的问题。
 Yuki.Relation, Yuki.RelationSchemaManipulator:
 增加C# MySQL Query类型代码自动生成。
+增加C# SQL Server Query类型代码自动生成。
 Examples:
 增加C# MySQL邮件数据库示例。
+增加C# SQL Server邮件数据库示例。
 
 2012.11.27
 Yuki.Relation:
