@@ -11,7 +11,7 @@
 
 @echo «Î ‰»Î√‹¬Î£∫
 @set /p pass=
-DatabaseRegenerator.exe /loadtype:MailSchema /connect:"server=localhost;uid=root;pwd=%pass%;" /database:Mail /regenmysql:MailData
-DatabaseRegenerator.exe /loadtype:TestSchema /connect:"server=localhost;uid=root;pwd=%pass%;" /database:Test /regenmysql:TestData
+DatabaseRegenerator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /connect:"server=localhost;uid=root;pwd=%pass%;" /database:Mail /regenmysql:MailData
+DatabaseRegenerator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /connect:"server=localhost;uid=root;pwd=%pass%;" /database:Test /regenmysql:TestData
 
 @pause
