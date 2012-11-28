@@ -232,6 +232,18 @@ namespace Yuki.DatabaseRegenerator
                         cmd.ExecuteNonQuery();
                     }
                 }
+                if (Type == DatabaseType.PostgreSQL)
+                {
+                    var IdentityColumns = Meta.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
+                    foreach (var ic in IdentityColumns)
+                    {
+                        IDbCommand cmd = c.CreateCommand();
+                        cmd.Transaction = b;
+                        cmd.CommandText = String.Format(@"SELECT setval(pg_get_serial_sequence('{0}', '{1}'), MAX({3})) FROM {2};", CollectionName.ToLowerInvariant(), ic.ToLowerInvariant(), Escape(CollectionName), Escape(ic));
+                        cmd.CommandType = CommandType.Text;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
             }
             finally
             {

@@ -32,6 +32,7 @@ using Yuki.RelationSchema.CSharpLinqToSql;
 using Yuki.RelationSchema.CSharpLinqToEntities;
 using Yuki.RelationSchema.CSharpPlain;
 using Yuki.RelationSchema.CSharpSqlServer;
+using Yuki.RelationSchema.CSharpPostgreSql;
 using Yuki.RelationSchema.CSharpMySql;
 
 namespace Yuki.RelationSchemaManipulator
@@ -253,6 +254,19 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2cspgsql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 3)
+                    {
+                        RelationSchemaToCSharpPostgreSqlCode(args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (opt.Name.ToLower() == "t2csmysql")
                 {
                     var args = opt.Arguments;
@@ -315,6 +329,8 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2csdp:<CsCodePath>,<EntityNamespaceName>");
             Console.WriteLine(@"生成C# SQL Server类型");
             Console.WriteLine(@"/t2csmssql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
+            Console.WriteLine(@"生成C# PostgreSQL类型");
+            Console.WriteLine(@"/t2cspgsql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# MySQL类型");
             Console.WriteLine(@"/t2csmysql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C++数据库简单类型");
@@ -493,6 +509,23 @@ namespace Yuki.RelationSchemaManipulator
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCSharpSqlServer(EntityNamespaceName, ContextNamespaceName);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void RelationSchemaToCSharpPostgreSqlCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        {
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToCSharpPostgreSql(EntityNamespaceName, ContextNamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
