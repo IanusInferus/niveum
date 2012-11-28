@@ -62,7 +62,7 @@ namespace Yuki.RelationSchema
                 {
                     Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Type", GenericParameters = new OS.VariableDef[] { }, Description = "" }));
                 }
-                if ((ForcePrimitive || OptionalUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnTaggedUnion && t.TaggedUnion.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase)).Any())
+                if ((ForcePrimitive || OptionalUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase)).Any())
                 {
                     var GenericParameters = new OS.VariableDef[] { new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" } };
                     Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Optional", GenericParameters = GenericParameters, Description = "" }));
@@ -96,7 +96,23 @@ namespace Yuki.RelationSchema
 
             private OS.PrimitiveDef TranslatePrimitive(RS.PrimitiveDef e)
             {
-                return new OS.PrimitiveDef { Name = e.Name, GenericParameters = new OS.VariableDef[] { }, Description = e.Description };
+                if (e.Name.Equals("List", StringComparison.OrdinalIgnoreCase))
+                {
+                    TypeUsed = true;
+                    var GenericParameter = new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" };
+                    return new OS.PrimitiveDef { Name = "List", GenericParameters = new OS.VariableDef[] { GenericParameter }, Description = "" };
+                }
+                else if (e.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase))
+                {
+                    UnitUsed = true;
+                    TypeUsed = true;
+                    var GenericParameters = new OS.VariableDef[] { new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" } };
+                    return new OS.PrimitiveDef { Name = "Optional", GenericParameters = GenericParameters, Description = "" };
+                }
+                else
+                {
+                    return new OS.PrimitiveDef { Name = e.Name, GenericParameters = new OS.VariableDef[] { }, Description = e.Description };
+                }
             }
 
             private OS.LiteralDef TranslateLiteral(RS.LiteralDef l)

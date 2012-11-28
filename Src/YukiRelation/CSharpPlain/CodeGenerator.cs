@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C#简单类型代码生成器
-//  Version:     2012.11.26.
+//  Version:     2012.11.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -52,14 +52,15 @@ namespace Yuki.RelationSchema.CSharpPlain
                 this.NamespaceName = NamespaceName;
                 InnerSchema = PlainObjectSchemaGenerator.Generate(Schema);
                 TypeDict = OS.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+                InnerWriter = new OS.CSharp.Common.CodeGenerator.Writer(InnerSchema, NamespaceName);
             }
 
             public String[] GetSchema()
             {
-                InnerWriter = new OS.CSharp.Common.CodeGenerator.Writer(InnerSchema, NamespaceName);
+                if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Int").Any()) { throw new InvalidOperationException("PrimitiveMissing: Int"); }
 
-                var Header = InnerWriter.GetHeader();
-                var Primitives = InnerWriter.GetPrimitives();
+                var Header = GetHeader();
+                var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes();
 
                 if (NamespaceName != "")
@@ -72,16 +73,22 @@ namespace Yuki.RelationSchema.CSharpPlain
                 }
             }
 
+            public String[] GetHeader()
+            {
+                return InnerWriter.GetHeader();
+            }
+
+            public String[] GetPrimitives()
+            {
+                return InnerWriter.GetPrimitives();
+            }
+
             public String GetTypeString(OS.TypeSpec Type)
             {
                 return InnerWriter.GetTypeString(Type);
             }
-            public String[] GetXmlComment(String Description)
-            {
-                return InnerWriter.GetXmlComment(Description);
-            }
 
-            public String[] GetQuerySignature(QueryDef q)
+            public String GetQuerySignature(QueryDef q)
             {
                 var or = TypeDict[q.EntityName].Record;
                 var Name = q.FriendlyName();
@@ -104,10 +111,10 @@ namespace Yuki.RelationSchema.CSharpPlain
                 pl.AddRange(q.By.Select(c => "{0} {1}".Formats(GetEscapedIdentifier(GetTypeString(or.Fields.Where(f => f.Name == c).Single().Type)), GetEscapedIdentifier(c))).ToArray());
                 if (q.Numeral.OnRange)
                 {
-                    pl.Add("Int Skip");
-                    pl.Add("Int Take");
+                    pl.Add("Int _Skip_");
+                    pl.Add("Int _Take_");
                 }
-                var ParameterList = String.Join(",", pl.ToArray());
+                var ParameterList = String.Join(", ", pl.ToArray());
                 String Type;
                 if (q.Verb.OnSelect || q.Verb.OnLock)
                 {
@@ -144,7 +151,7 @@ namespace Yuki.RelationSchema.CSharpPlain
                 {
                     Type = "void";
                 }
-                return GetTemplate("QuerySignature").Substitute("Name", Name).Substitute("ParameterList", ParameterList).Substitute("Type", Type);
+                return GetTemplate("QuerySignature").Substitute("Name", Name).Substitute("ParameterList", ParameterList).Substitute("Type", Type).Single();
             }
 
             public String[] GetComplexTypes()
@@ -156,7 +163,7 @@ namespace Yuki.RelationSchema.CSharpPlain
                 var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToArray();
                 if (Queries.Length > 0)
                 {
-                    l.AddRange(GetTemplate("IRegularDataAccess").Substitute("Queries", Queries.SelectMany(q => GetQuerySignature(q)).ToArray()));
+                    l.AddRange(GetTemplate("IDataAccess").Substitute("Queries", Queries.Select(q => GetQuerySignature(q) + ";").ToArray()));
                     l.Add("");
                 }
 
@@ -180,7 +187,7 @@ namespace Yuki.RelationSchema.CSharpPlain
             {
                 return InnerWriter.GetEscapedIdentifier(Identifier);
             }
-            private String[] EvaluateEscapedIdentifiers(String[] Lines)
+            public String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
                 return InnerWriter.EvaluateEscapedIdentifiers(Lines);
             }

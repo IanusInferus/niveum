@@ -1,8 +1,17 @@
-﻿2012.11.27
+﻿2012.11.28
+Yuki.Core:
+修正C#和VB.Net代码生成中的类型名称没有用标准名称的问题。
+Yuki.Relation, Yuki.RelationSchemaManipulator:
+增加C# MySQL Query类型代码自动生成。
+Examples:
+增加C# MySQL邮件数据库示例。
+
+2012.11.27
 Yuki.Relation:
 默认保留数据库代码生成中的没有使用的基元定义。
 Examples:
 分离数据库示例中的邮件数据库和性能测试数据库，修改文件夹命名。
+增加C#数据库示例中对MySQL的支持。
 
 2012.11.26
 Yuki.Relation:
