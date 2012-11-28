@@ -1,0 +1,9 @@
+﻿Npgsql引用
+
+请按以下地址下载Npgsql 2.0.11.93库，并将其解压到YUKI\Bin文件夹下。可以看到文件YUKI\Bin\Npgsql.dll。
+
+Windows
+http://pgfoundry.org/frs/download.php/3226/Npgsql2.0.11.93-bin-ms.net4.0.zip
+
+Mono
+http://pgfoundry.org/frs/download.php/3220/Npgsql2.0.11.93-bin-mono2.0.zip
