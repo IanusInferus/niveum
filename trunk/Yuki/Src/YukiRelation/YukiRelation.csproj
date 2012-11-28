@@ -54,6 +54,7 @@
     <Compile Include="CSharpLinqToEntities\CodeGenerator.cs" />
     <Compile Include="CSharpMySql\CodeGenerator.cs" />
     <Compile Include="CSharpPlain\CodeGenerator.cs" />
+    <Compile Include="CSharpPostgreSql\CodeGenerator.cs" />
     <Compile Include="CSharpSqlServer\CodeGenerator.cs" />
     <Compile Include="MySql\CodeGenerator.cs" />
     <Compile Include="PostgreSql\CodeGenerator.cs" />
@@ -76,6 +77,7 @@
     <None Include="CSharpLinqToEntities\CSharpLinqToEntities.tree" />
     <None Include="CSharpMySql\CSharpMySql.tree" />
     <None Include="CSharpPlain\CSharpPlain.tree" />
+    <None Include="CSharpPostgreSql\CSharpPostgreSql.tree" />
     <None Include="CSharpSqlServer\CSharpSqlServer.tree" />
     <None Include="MySql\MySql.tree" />
     <None Include="PostgreSql\PostgreSql.tree" />
