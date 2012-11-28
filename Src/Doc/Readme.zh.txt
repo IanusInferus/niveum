@@ -85,7 +85,10 @@ Xhtml               √              无需                无需            无需    
 枚举 Enum
 没有泛型参数，由若干标签名和对应的整数组成。
 
-这部分的代码生成主要是SQL的代码生成，目前只支持SQL Server。
+查询 Query
+表示Select、Lock、Insert、Update、Upsert、Delete等6种基本操作。
+
+这部分的代码生成主要是SQL的代码生成，目前支持SQL Server、PostgreSQL和MySQL。
 
 
 4 环境要求
