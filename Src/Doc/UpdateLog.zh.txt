@@ -1,4 +1,6 @@
-﻿2012.11.28
+﻿2012.11.28.0
+
+2012.11.28
 Yuki.Core:
 修正C#和VB.Net代码生成中的类型名称没有用标准名称的问题。
 Yuki.Relation, Yuki.RelationSchemaManipulator:
