@@ -2,7 +2,7 @@
 //
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
-//  Description: 关系类型结构C# MySQL代码生成器
+//  Description: 关系类型结构C# SQL Server代码生成器
 //  Version:     2012.11.28.
 //  Copyright(C) F.R.C.
 //
@@ -16,11 +16,11 @@ using Firefly.Mapping.MetaSchema;
 using Firefly.TextEncoding;
 using OS = Yuki.ObjectSchema;
 
-namespace Yuki.RelationSchema.CSharpMySql
+namespace Yuki.RelationSchema.CSharpSqlServer
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpMySql(this Schema Schema, String EntityNamespaceName, String ContextNamespaceName)
+        public static String CompileToCSharpSqlServer(this Schema Schema, String EntityNamespaceName, String ContextNamespaceName)
         {
             Writer w = new Writer(Schema, EntityNamespaceName, ContextNamespaceName);
             var a = w.GetSchema();
@@ -42,7 +42,7 @@ namespace Yuki.RelationSchema.CSharpMySql
             static Writer()
             {
                 var OriginalTemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpPlain);
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpMySql);
+                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpSqlServer);
                 TemplateInfo.Keywords = OriginalTemplateInfo.Keywords;
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
@@ -142,63 +142,71 @@ namespace Yuki.RelationSchema.CSharpMySql
                     }
                     else
                     {
-                        l.Add("SELECT " + String.Join(", ", e.Fields.Where(f => f.Attribute.OnColumn).Select(f => "`{0}`".Formats(f.Name))));
+                        l.Add("SELECT " + String.Join(", ", e.Fields.Where(f => f.Attribute.OnColumn).Select(f => "[{0}]".Formats(f.Name))));
                     }
-                    l.Add("FROM `{0}`".Formats(e.CollectionName));
+                    l.Add("FROM [{0}]".Formats(e.CollectionName));
+                    if (q.Verb.OnLock)
+                    {
+                        l.Add("WITH (UPDLOCK)");
+                    }
                     if (q.By.Length != 0)
                     {
-                        l.Add("WHERE " + String.Join(" AND ", q.By.Select(c => "`{0}` = @{0}".Formats(c))));
+                        l.Add("WHERE " + String.Join(" AND ", q.By.Select(c => "[{0}] = @{0}".Formats(c))));
                     }
                     if (q.OrderBy.Length != 0)
                     {
-                        l.Add("ORDER BY " + String.Join(", ", q.OrderBy.Select(c => (c.IsDescending ? "`{0}` DESC" : "`{0}`").Formats(c.Name))));
+                        l.Add("ORDER BY " + String.Join(", ", q.OrderBy.Select(c => (c.IsDescending ? "[{0}] DESC" : "[{0}]").Formats(c.Name))));
                     }
                     if (q.Numeral.OnRange)
                     {
-                        l.Add("LIMIT @_Skip_, @_Take_");
-                    }
-                    if (q.Verb.OnLock)
-                    {
-                        l.Add("FOR UPDATE");
+                        l.Add("OFFSET @_Skip_ ROWS FETCH NEXT @_Take_ ROWS ONLY");
                     }
                 }
                 else if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert)
                 {
                     if (q.Verb.OnInsert || q.Verb.OnUpsert)
                     {
-                        l.Add("INSERT");
-                        l.Add("INTO `{0}`".Formats(e.CollectionName));
+                        if (q.Verb.OnUpsert)
+                        {
+                            l.Add("UPDATE [{0}]".Formats(e.CollectionName));
+
+                            var NonPrimaryKeyColumns = e.Fields.Where(f => f.Attribute.OnColumn).Select(f => f.Name).Except(e.PrimaryKey.Columns.Select(c => c.Name), StringComparer.OrdinalIgnoreCase).ToArray();
+                            var PrimaryKeyColumns = e.PrimaryKey.Columns.Select(c => c.Name).ToArray();
+                            l.Add("SET {0}".Formats(String.Join(", ", NonPrimaryKeyColumns.Select(c => "[{0}] = @{0}".Formats(c)).ToArray())));
+                            l.Add("WHERE {0}".Formats(String.Join(" AND ", PrimaryKeyColumns.Select(c => "[{0}] = @{0}".Formats(c)).ToArray())));
+                            l.Add("IF @@ROWCOUNT = 0");
+                        }
 
                         var NonIdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && !f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
                         var IdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
-                        l.Add("({0}) VALUES ({1})".Formats(String.Join(", ", NonIdentityColumns.Select(c => "`{0}`".Formats(c)).ToArray()), String.Join(", ", NonIdentityColumns.Select(c => "@{0}".Formats(c)).ToArray())));
-                        if (q.Verb.OnUpsert)
-                        {
-                            var NonPrimaryKeyColumns = e.Fields.Where(f => f.Attribute.OnColumn).Select(f => f.Name).Except(e.PrimaryKey.Columns.Select(c => c.Name), StringComparer.OrdinalIgnoreCase).ToArray();
-                            l.Add("ON DUPLICATE KEY UPDATE {0}".Formats(String.Join(", ", NonIdentityColumns.Select(c => "`{0}` = @{0}".Formats(c)).ToArray())));
-                        }
+
+                        l.Add("INSERT");
+                        l.Add("INTO [{0}]".Formats(e.CollectionName));
+
+                        l.Add("({0})".Formats(String.Join(", ", NonIdentityColumns.Select(c => "[{0}]".Formats(c)).ToArray())));
                         if (IdentityColumns.Length != 0)
                         {
-                            return "{0}; SELECT LAST_INSERT_ID() AS `{1}`".Formats(String.Join(" ", l.ToArray()), IdentityColumns.Single());
+                            l.Add("OUTPUT INSERTED.[{0}]".Formats(IdentityColumns.Single()));
                         }
+                        l.Add("VALUES ({0})".Formats(String.Join(", ", NonIdentityColumns.Select(c => "@{0}".Formats(c)).ToArray())));
                     }
                     else if (q.Verb.OnUpdate)
                     {
-                        l.Add("UPDATE `{0}`".Formats(e.CollectionName));
+                        l.Add("UPDATE [{0}]".Formats(e.CollectionName));
 
                         var NonPrimaryKeyColumns = e.Fields.Where(f => f.Attribute.OnColumn).Select(f => f.Name).Except(e.PrimaryKey.Columns.Select(c => c.Name), StringComparer.OrdinalIgnoreCase).ToArray();
                         var PrimaryKeyColumns = e.PrimaryKey.Columns.Select(c => c.Name).ToArray();
-                        l.Add("SET {0}".Formats(String.Join(", ", NonPrimaryKeyColumns.Select(c => "`{0}` = @{0}".Formats(c)).ToArray())));
-                        l.Add("WHERE {0}".Formats(String.Join(" AND ", PrimaryKeyColumns.Select(c => "`{0}` = @{0}".Formats(c)).ToArray())));
+                        l.Add("SET {0}".Formats(String.Join(", ", NonPrimaryKeyColumns.Select(c => "[{0}] = @{0}".Formats(c)).ToArray())));
+                        l.Add("WHERE {0}".Formats(String.Join(" AND ", PrimaryKeyColumns.Select(c => "[{0}] = @{0}".Formats(c)).ToArray())));
                     }
                 }
                 else if (q.Verb.OnDelete)
                 {
                     l.Add("DELETE");
-                    l.Add("FROM `{0}`".Formats(e.CollectionName));
+                    l.Add("FROM [{0}]".Formats(e.CollectionName));
                     if (q.By.Length != 0)
                     {
-                        l.Add("WHERE " + String.Join(" AND ", q.By.Select(c => "`{0}` = @{0}".Formats(c))));
+                        l.Add("WHERE " + String.Join(" AND ", q.By.Select(c => "[{0}] = @{0}".Formats(c))));
                     }
                 }
                 else
