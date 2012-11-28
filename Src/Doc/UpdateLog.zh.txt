@@ -14,6 +14,8 @@ Examples:
 增加C# PostgreSQL邮件数据库示例。
 Yuki.DatabaseRegenerator:
 修正PostgreSQL导入时，自动生成Id的数据表强制导入Id后，再增加新数据会出现Id重复的问题。
+*:
+修正整数溢出标志不完全的问题。
 
 2012.11.27
 Yuki.Relation:
