@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2012.10.30.
+//  Version:     2012.11.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -155,10 +155,6 @@ namespace Yuki.ObjectSchema.CSharp.Common
                             if (PlatformName.StartsWith("System.Collections.Generic."))
                             {
                                 return new String(PlatformName.Skip("System.Collections.Generic.".Length).ToArray());
-                            }
-                            if (PlatformName.StartsWith("System."))
-                            {
-                                return new String(PlatformName.Skip("System.".Length).ToArray());
                             }
                         }
                         return Type.TypeRef.TypeFriendlyName();

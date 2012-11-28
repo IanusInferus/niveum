@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.11.26.
+//  Version:     2012.11.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -31,6 +31,7 @@ using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpLinqToSql;
 using Yuki.RelationSchema.CSharpLinqToEntities;
 using Yuki.RelationSchema.CSharpPlain;
+using Yuki.RelationSchema.CSharpMySql;
 
 namespace Yuki.RelationSchemaManipulator
 {
@@ -238,6 +239,19 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2csmysql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 3)
+                    {
+                        ObjectSchemaToCSharpMySqlCode(args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (opt.Name.ToLower() == "t2cppdp")
                 {
                     var args = opt.Arguments;
@@ -285,6 +299,8 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2cse:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库简单类型");
             Console.WriteLine(@"/t2csdp:<CsCodePath>,<EntityNamespaceName>");
+            Console.WriteLine(@"生成C#数据库简单类型");
+            Console.WriteLine(@"/t2csmysql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C++数据库简单类型");
             Console.WriteLine(@"/t2cppdp:<CsCodePath>,<EntityNamespaceName>");
             Console.WriteLine(@"RelationSchemaDir|RelationSchemaFile 关系类型结构Tree文件(夹)路径。");
@@ -444,6 +460,23 @@ namespace Yuki.RelationSchemaManipulator
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCSharpPlain(EntityNamespaceName);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToCSharpMySqlCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        {
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToCSharpMySql(EntityNamespaceName, ContextNamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
