@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using DB = Database;
+using DB = Database.Database;
 
 namespace Database
 {
@@ -52,7 +52,7 @@ namespace Database
             using (var da = dam.Create())
             {
                 var ov = da.LockOptionalTestLockRecordById(1);
-                TestLockRecord v;
+                DB.TestLockRecord v;
                 if (ov.OnHasValue)
                 {
                     v = ov.HasValue;
@@ -72,7 +72,7 @@ namespace Database
             using (var da = dam.Create())
             {
                 var ov = da.SelectOptionalTestLockRecordById(1);
-                TestLockRecord v;
+                DB.TestLockRecord v;
                 if (ov.OnHasValue)
                 {
                     v = ov.HasValue;

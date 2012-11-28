@@ -10,16 +10,19 @@ RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2
 @if not exist MailCSharpLinqToEntities\Src @md MailCSharpLinqToEntities\Src
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2cse:MailCSharpLinqToEntities\Src\DatabaseEntities.cs,Database,Database.Linq,Database.Linq,DbRoot
 
-:: C# MySQL
+:: C# MSSQL MySQL
 @if not exist MailCSharp\Src @md MailCSharp\Src
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csdp:MailCSharp\Src\Database.cs,Database.Database
-RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csmysql:MailCSharp\Src\MySqlDataAccess.cs,Database.Database,Database.MySql
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csmssql:MailCSharp\Src\SqlServer\SqlServerDataAccess.cs,Database.Database,Database.SqlServer
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csmysql:MailCSharp\Src\MySql\MySqlDataAccess.cs,Database.Database,Database.MySql
 
 :: Test
 
 :: C#
 @if not exist TestCSharp\Src @md TestCSharp\Src
-RelationSchemaManipulator.exe /loadtype:CommonSchema /loadtype:TestSchema /t2csdp:TestCSharp\Src\Database.cs,Database
+RelationSchemaManipulator.exe /loadtype:CommonSchema /loadtype:TestSchema /t2csdp:TestCSharp\Src\Database.cs,Database.Database
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2csmssql:TestCSharp\Src\SqlServer\SqlServerDataAccess.cs,Database.Database,Database.SqlServer
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2csmysql:TestCSharp\Src\MySql\MySqlDataAccess.cs,Database.Database,Database.MySql
 
 :: C++2011 MySQL
 @if not exist TestCPPMySQL\Src @md TestCPPMySQL\Src

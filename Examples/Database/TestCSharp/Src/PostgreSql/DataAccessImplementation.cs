@@ -4,6 +4,7 @@ using System.Linq;
 using System.Data;
 using Npgsql;
 using NpgsqlTypes;
+using Database.Database;
 
 namespace Database.PostgreSql
 {
