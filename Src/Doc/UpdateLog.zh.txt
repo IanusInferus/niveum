@@ -1,4 +1,8 @@
-﻿2012.11.28.0
+﻿2012.12.10
+Yuki.DatabaseRegenerator:
+移除对SQL Server CE的支持。
+
+2012.11.28.0
 
 2012.11.28
 Yuki.Core:
