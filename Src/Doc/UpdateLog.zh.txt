@@ -1,6 +1,8 @@
 ﻿2012.12.10
 Yuki.DatabaseRegenerator:
 移除对SQL Server CE的支持。
+Yuki.Core, Yuki.Relation:
+通过直接使用资源，绕过Mac上Mono无法读取间接程序集中的ResX资源的问题。
 
 2012.11.28.0
 
