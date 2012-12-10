@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2012.11.26.
+//  Version:     2012.12.10.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -29,7 +29,6 @@ namespace Yuki.DatabaseRegenerator
     public enum DatabaseType
     {
         SqlServer,
-        SqlServerCe,
         PostgreSQL,
         MySQL
     }
@@ -38,7 +37,7 @@ namespace Yuki.DatabaseRegenerator
         public static void ImportTable(Dictionary<String, RelationSchema.EntityDef> TableMetas, Dictionary<String, Dictionary<String, Int64>> EnumMetas, IDbConnection c, IDbTransaction b, KeyValuePair<string, List<Node>> t, DatabaseType Type)
         {
             Func<String, String> Escape;
-            if (Type == DatabaseType.SqlServer || Type == DatabaseType.SqlServerCe)
+            if (Type == DatabaseType.SqlServer)
             {
                 Escape = s => "[" + s + "]";
             }
@@ -61,7 +60,7 @@ namespace Yuki.DatabaseRegenerator
             var Values = t.Value;
             var Columns = Meta.Fields.Where(f => f.Attribute.OnColumn).ToArray();
 
-            if (Type == DatabaseType.SqlServer || Type == DatabaseType.SqlServerCe)
+            if (Type == DatabaseType.SqlServer)
             {
                 if (Columns.Any(col => col.Attribute.Column.IsIdentity))
                 {
@@ -247,7 +246,7 @@ namespace Yuki.DatabaseRegenerator
             }
             finally
             {
-                if (Type == DatabaseType.SqlServer || Type == DatabaseType.SqlServerCe)
+                if (Type == DatabaseType.SqlServer)
                 {
                     if (Columns.Any(col => col.Attribute.Column.IsIdentity))
                     {
