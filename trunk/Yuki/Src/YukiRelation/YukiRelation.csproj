@@ -64,34 +64,23 @@
     <Compile Include="RelationSchema\RelationSchemaLoader.cs" />
     <Compile Include="RelationSchema\RelationSchemaTranslator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="RelationSchema\RelationSchema.Designer.cs" />
     <Compile Include="DbmlDatabase\CodeGenerator.cs" />
     <Compile Include="CSharpLinqToSql\CodeGenerator.cs" />
+    <Compile Include="Properties\Resources.cs" />
     <Compile Include="TSql\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CSharpLinqToEntities\CSharpLinqToEntities.tree" />
-    <None Include="CSharpMySql\CSharpMySql.tree" />
-    <None Include="CSharpPlain\CSharpPlain.tree" />
-    <None Include="CSharpPostgreSql\CSharpPostgreSql.tree" />
-    <None Include="CSharpSqlServer\CSharpSqlServer.tree" />
-    <None Include="MySql\MySql.tree" />
-    <None Include="PostgreSql\PostgreSql.tree" />
+    <EmbeddedResource Include="CSharpLinqToEntities\CSharpLinqToEntities.tree" />
+    <EmbeddedResource Include="CSharpMySql\CSharpMySql.tree" />
+    <EmbeddedResource Include="CSharpPlain\CSharpPlain.tree" />
+    <EmbeddedResource Include="CSharpPostgreSql\CSharpPostgreSql.tree" />
+    <EmbeddedResource Include="CSharpSqlServer\CSharpSqlServer.tree" />
+    <EmbeddedResource Include="MySql\MySql.tree" />
+    <EmbeddedResource Include="PostgreSql\PostgreSql.tree" />
     <None Include="RelationSchema\RelationSchema.tree" />
-    <None Include="CSharpLinqToSql\CSharpLinqToSql.tree" />
-    <None Include="TSql\TSql.tree" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
+    <EmbeddedResource Include="CSharpLinqToSql\CSharpLinqToSql.tree" />
+    <EmbeddedResource Include="TSql\TSql.tree" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YukiCore\YukiCore.csproj">
