@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2012.11.26.
+//  Version:     2012.12.10.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -174,19 +174,6 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "createce")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length >= 1)
-                    {
-                        CreateCe(Schema(), args[0], args.Skip(1).ToArray());
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
                 else if (opt.Name.ToLower() == "regenpgsql")
                 {
                     var args = opt.Arguments;
@@ -241,8 +228,6 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/database:<DatabaseName>");
             Console.WriteLine(@"重建SQL Server数据库");
             Console.WriteLine(@"/regenmssql:<DataDir>*");
-            Console.WriteLine(@"创建SQL Server Compact Edition数据文件");
-            Console.WriteLine(@"/createce:<SdfPath>(,<DataDir>)*");
             Console.WriteLine(@"重建PostgreSQL数据库");
             Console.WriteLine(@"/regenpgsql:<DataDir>*");
             Console.WriteLine(@"重建MySQL数据库");
@@ -253,7 +238,6 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=.;Integrated Security=True"" /database:Example /regen /import:Data /import:TestData");
-            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /createce:.\Example.sdf,\Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Server=localhost;User ID=postgres;Password=postgres;"" /database:Example /regenpgsql:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root"" /database:Example /regenmysql:Data,TestData");
         }
@@ -355,111 +339,6 @@ namespace Yuki.DatabaseRegenerator
             }
         }
             
-        public static void CreateCe(RelationSchema.Schema s, String SdfPath, String[] DataDirs)
-        {
-            var ConnectionString = String.Format(@"Data Source={0}", SdfPath);
-
-            var RegenSqls = Regex.Split(s.CompileToTSql("Dummy"), @"\r\nGO(\r\n)+", RegexOptions.ExplicitCapture);
-            RegenSqls = RegenSqls.Where(q => !(q == "" || q.StartsWith("--") || q.StartsWith("CREATE DATABASE") || q.StartsWith("USE"))).ToArray();
-            RegenSqls = RegenSqls.Select(q => q.Replace("[dbo].", "").Replace("(max)", "(1024)").Replace(" CLUSTERED", "").Replace(" NONCLUSTERED", "").Replace(" DESC", "")).ToArray();
-            var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToArray();
-            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER")).ToArray();
-
-            if (File.Exists(SdfPath))
-            {
-                File.Delete(SdfPath);
-            }
-
-            using (var e = new System.Data.SqlServerCe.SqlCeEngine(ConnectionString))
-            {
-                e.CreateDatabase();
-            }
-
-            var cf = GetConnectionFactory(DatabaseType.SqlServerCe);
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                try
-                {
-                    foreach (var Sql in Creates)
-                    {
-                        if (Sql == "") { continue; }
-
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
-                }
-            }
-
-            foreach (var DataDir in DataDirs)
-            {
-                var ImportTableMetas = TableOperations.GetImportTableMetas(s, DataDir);
-                var Tables = ImportTableMetas.Tables;
-                var TableMetas = ImportTableMetas.TableMetas;
-                var EnumMetas = ImportTableMetas.EnumMetas;
-
-                using (var c = cf(ConnectionString))
-                {
-                    c.Open();
-                    try
-                    {
-                        using (var b = c.BeginTransaction())
-                        {
-                            var Success = false;
-                            try
-                            {
-                                foreach (var t in Tables)
-                                {
-                                    TableOperations.ImportTable(TableMetas, EnumMetas, c, b, t, DatabaseType.SqlServerCe);
-                                }
-
-                                b.Commit();
-                                Success = true;
-                            }
-                            finally
-                            {
-                                if (!Success)
-                                {
-                                    b.Rollback();
-                                }
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        c.Close();
-                    }
-                }
-            }
-
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                try
-                {
-                    foreach (var Sql in Alters)
-                    {
-                        if (Sql == "") { continue; }
-
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
-                }
-            }
-        }
-
         public static void RegenPostgreSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
         {
             var GenSqls = s.CompileToPostgreSql(DatabaseName);
@@ -677,10 +556,6 @@ namespace Yuki.DatabaseRegenerator
             {
                 return GetConnectionFactorySqlServer();
             }
-            else if (Type == DatabaseType.SqlServerCe)
-            {
-                return GetConnectionFactorySqlServerCe();
-            }
             else if (Type == DatabaseType.PostgreSQL)
             {
                 return GetConnectionFactoryPostgreSQL();
@@ -698,10 +573,6 @@ namespace Yuki.DatabaseRegenerator
         private static Func<String, IDbConnection> GetConnectionFactorySqlServer()
         {
             return ConnectionString => new System.Data.SqlClient.SqlConnection(ConnectionString);
-        }
-        private static Func<String, IDbConnection> GetConnectionFactorySqlServerCe()
-        {
-            return ConnectionString => new System.Data.SqlServerCe.SqlCeConnection(ConnectionString);
         }
         private static Func<String, IDbConnection> GetConnectionFactoryPostgreSQL()
         {
