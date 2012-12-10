@@ -68,36 +68,25 @@
     <Compile Include="ObjectSchema\ObjectSchemaLoader.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaTemplate.cs" />
     <Compile Include="ObjectSchema\ObjectSchema.Designer.cs" />
+    <Compile Include="Properties\Resources.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="VB\CodeGenerator.cs" />
     <Compile Include="Xhtml\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ActionScriptBinary\ActionScriptBinary.tree" />
-    <None Include="ActionScriptJson\ActionScriptJson.tree" />
-    <None Include="ActionScript\ActionScript.tree" />
-    <None Include="CppBinary\CppBinary.tree" />
-    <None Include="Cpp\Cpp.tree" />
-    <None Include="CSharpBinary\CSharpBinary.tree" />
-    <None Include="CSharpJson\CSharpJson.tree" />
-    <None Include="CSharp\CSharp.tree" />
-    <None Include="JavaBinary\JavaBinary.tree" />
-    <None Include="Java\Java.tree" />
+    <EmbeddedResource Include="ActionScriptBinary\ActionScriptBinary.tree" />
+    <EmbeddedResource Include="ActionScriptJson\ActionScriptJson.tree" />
+    <EmbeddedResource Include="ActionScript\ActionScript.tree" />
+    <EmbeddedResource Include="CppBinary\CppBinary.tree" />
+    <EmbeddedResource Include="Cpp\Cpp.tree" />
+    <EmbeddedResource Include="CSharpBinary\CSharpBinary.tree" />
+    <EmbeddedResource Include="CSharpJson\CSharpJson.tree" />
+    <EmbeddedResource Include="CSharp\CSharp.tree" />
+    <EmbeddedResource Include="JavaBinary\JavaBinary.tree" />
+    <EmbeddedResource Include="Java\Java.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
-    <None Include="VB\VB.tree" />
-    <None Include="Xhtml\Xhtml.tree" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
+    <EmbeddedResource Include="VB\VB.tree" />
+    <EmbeddedResource Include="Xhtml\Xhtml.tree" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild">
