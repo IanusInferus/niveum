@@ -1,4 +1,8 @@
-﻿2012.12.10
+﻿2012.12.12
+Yuki.Core:
+修改Json协议对TaggedUnion的处理，去除_tag字段。
+
+2012.12.10
 Yuki.DatabaseRegenerator:
 移除对SQL Server CE的支持。
 Yuki.Core, Yuki.Relation:

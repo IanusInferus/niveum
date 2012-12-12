@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2012.11.26.
+      Version:     2012.12.12.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -560,14 +560,13 @@ ObjectSchemaTemplate
                         if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
                         var jo = j as JObject;
                         var o = new [[${Name}]]();
-                        o._Tag = [[${Name}TagFromJson]](jo[@"_tag"]);
+                        var d = (IDictionary<string, JToken>)(jo);
                         ${AlternativeFroms}
                         throw new InvalidOperationException();
                     }
                     public static JObject [[${Name}ToJson]]([[${Name}]] o)
                     {
                         var jo = new JObject();
-                        jo.Add(@"_tag", [[${Name}TagToJson]](o._Tag));
                         ${AlternativeTos}
                         throw new InvalidOperationException();
                     }
@@ -576,8 +575,9 @@ ObjectSchemaTemplate
             //Parameters: ${TaggedUnionName}, ${Name}, ${TypeFriendlyName}
             Value
                 $String
-                    if (o._Tag == [[${TaggedUnionName}Tag.${Name}]])
+                    if (d.ContainsKey(@"${name}"))
                     {
+                        o._Tag = [[${TaggedUnionName}Tag.${Name}]];
                         o.[[${Name}]] = [[${TypeFriendlyName}FromJson]](jo[@"${name}"]);
                         return o;
                     }
