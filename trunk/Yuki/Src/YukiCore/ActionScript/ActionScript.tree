@@ -4,7 +4,7 @@
       File:        ActionScript.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构ActionScript3.0模板数据
-      Version:     2012.10.30.
+      Version:     2012.12.12.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -268,14 +268,12 @@ ObjectSchemaTemplate
                         public static function fromJson(jo:Object):[[${Name}]]
                         {
                             var o:[[${Name}]] = new [[${Name}]]();
-                            o._tag = JsonTranslator.[[${name}TagFromJson]](jo["_tag"]);
                             ${JsonAlternativeFroms}
                             throw new flash.errors.IllegalOperationError();
                         }
                         public static function toJson(o:[[${Name}]]):Object
                         {
                             var jo:Object = new Object();
-                            jo["_tag"] = JsonTranslator.[[${name}TagToJson]](o._tag);
                             ${JsonAlternativeTos}
                             throw new flash.errors.IllegalOperationError();
                         }
@@ -648,8 +646,9 @@ ObjectSchemaTemplate
             //Parameters: ${TaggedUnionName}, ${Name}, ${TypeFriendlyName}
             Value
                 $String
-                    if (o._tag == [[${TaggedUnionName}Tag.${NAME}]])
+                    if (jo.hasOwnProperty("${name}"))
                     {
+                        o._tag = [[${TaggedUnionName}Tag.${NAME}]];
                         o.[[${name}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](jo["${name}"]);
                         return o;
                     }
