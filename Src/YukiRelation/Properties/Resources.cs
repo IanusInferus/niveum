@@ -3,7 +3,7 @@
 //  File:        Resources.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 资源读取类
-//  Version:     2012.12.10.
+//  Version:     2012.12.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,7 +21,7 @@ namespace Yuki.RelationSchema.Properties
     {
         private static Byte[] GetResource(String Name)
         {
-            using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream(String.Format("Yuki.RelationSchema.{0}.{0}.tree", Name)).AsReadableSeekable())
+            using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream(String.Format("Yuki.RelationSchema.{0}.Schema.tree", Name)).AsReadableSeekable())
             {
                 return s.Read((int)(s.Length));
             }

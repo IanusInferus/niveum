@@ -86,7 +86,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                         Contents = GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", Contents);
                     }
                 }
-                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Imports", Imports).Substitute("Primitives", Primitives).Substitute("Contents", Contents));
+                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Imports", Imports).Substitute("Primitives", Primitives).Substitute("Contents", Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
             
             public Boolean IsInclude(String s)

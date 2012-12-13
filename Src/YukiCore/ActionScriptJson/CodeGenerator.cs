@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0 JSON通讯代码生成器
-//  Version:     2012.04.24.
+//  Version:     2012.12.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -80,7 +80,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
 
             public ActionScript.FileResult GetFile(String Path, String[] Type)
             {
-                var a = EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", PackageName).Substitute("Imports", Schema.Imports).Substitute("Type", Type));
+                var a = EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", PackageName).Substitute("Imports", Schema.Imports).Substitute("Type", Type)).Select(Line => Line.TrimEnd(' ')).ToArray();
 
                 return new ActionScript.FileResult() { Path = Path, Content = String.Join("\r\n", a) };
             }
