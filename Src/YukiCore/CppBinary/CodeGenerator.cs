@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2012.11.26.
+//  Version:     2012.12.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -82,7 +82,7 @@ namespace Yuki.ObjectSchema.CppBinary
                         Contents = GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", Contents);
                     }
                 }
-                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Imports", Imports).Substitute("Primitives", Primitives).Substitute("Contents", Contents));
+                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Imports", Imports).Substitute("Primitives", Primitives).Substitute("Contents", Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
 
             public Boolean IsInclude(String s)

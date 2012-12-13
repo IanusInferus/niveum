@@ -1,10 +1,10 @@
 ﻿$Comment
     ==========================================================================
 
-      File:        CSharpDatabase.tree
+      File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 对象类型结构C# Linq to Entities数据库模板数据
-      Version:     2012.11.21.
+      Version:     2012.12.13.
       Copyright(C) F.R.C.
 
     ==========================================================================

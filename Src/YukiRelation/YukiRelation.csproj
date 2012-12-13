@@ -71,16 +71,16 @@
     <Compile Include="TSql\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="CSharpLinqToEntities\CSharpLinqToEntities.tree" />
-    <EmbeddedResource Include="CSharpMySql\CSharpMySql.tree" />
-    <EmbeddedResource Include="CSharpPlain\CSharpPlain.tree" />
-    <EmbeddedResource Include="CSharpPostgreSql\CSharpPostgreSql.tree" />
-    <EmbeddedResource Include="CSharpSqlServer\CSharpSqlServer.tree" />
-    <EmbeddedResource Include="MySql\MySql.tree" />
-    <EmbeddedResource Include="PostgreSql\PostgreSql.tree" />
+    <EmbeddedResource Include="CSharpLinqToEntities\Schema.tree" />
+    <EmbeddedResource Include="CSharpMySql\Schema.tree" />
+    <EmbeddedResource Include="CSharpPlain\Schema.tree" />
+    <EmbeddedResource Include="CSharpPostgreSql\Schema.tree" />
+    <EmbeddedResource Include="CSharpSqlServer\Schema.tree" />
+    <EmbeddedResource Include="MySql\Schema.tree" />
+    <EmbeddedResource Include="PostgreSql\Schema.tree" />
     <None Include="RelationSchema\RelationSchema.tree" />
-    <EmbeddedResource Include="CSharpLinqToSql\CSharpLinqToSql.tree" />
-    <EmbeddedResource Include="TSql\TSql.tree" />
+    <EmbeddedResource Include="CSharpLinqToSql\Schema.tree" />
+    <EmbeddedResource Include="TSql\Schema.tree" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YukiCore\YukiCore.csproj">

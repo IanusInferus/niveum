@@ -1,10 +1,10 @@
 ﻿$Comment
     ==========================================================================
 
-      File:        CSharpSqlServer.tree
+      File:        Schema.tree
       Location:    Yuki.Relation <Tree>
-      Description: 关系类型结构C# SQL Server代码模板数据
-      Version:     2012.11.28.
+      Description: 关系类型结构C# MySQL代码模板数据
+      Version:     2012.12.13.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -59,27 +59,27 @@ ObjectSchemaTemplate
                     using System;
                     using System.Collections.Generic;
                     using System.Data;
-                    using System.Data.SqlClient;
+                    using MySql.Data.MySqlClient;
                     using ${EntityNamespaceName};
         Template
             Name DataAccessBase
             //Parameters:
             Value
                 $String
-                    public partial class SqlServerDataAccess : IDataAccess
+                    public partial class MySqlDataAccess : IDataAccess
                     {
-                        private SqlConnection Connection;
-                        private SqlTransaction Transaction;
-                        public SqlServerDataAccess(String ConnectionString)
+                        private MySqlConnection Connection;
+                        private MySqlTransaction Transaction;
+                        public MySqlDataAccess(String ConnectionString)
                         {
-                            Connection = new SqlConnection(ConnectionString);
+                            Connection = new MySqlConnection(ConnectionString);
                             Connection.Open();
                             Transaction = Connection.BeginTransaction();
                         }
 
                         public static IDataAccess Create(String ConnectionString)
                         {
-                            return new SqlServerDataAccess(ConnectionString);
+                            return new MySqlDataAccess(ConnectionString);
                         }
 
                         public void Dispose()
@@ -120,7 +120,7 @@ ObjectSchemaTemplate
                             }
                         }
 
-                        private SqlCommand CreateTextCommand()
+                        private MySqlCommand CreateTextCommand()
                         {
                             var cmd = Connection.CreateCommand();
                             cmd.Transaction = Transaction;
@@ -128,7 +128,7 @@ ObjectSchemaTemplate
                             return cmd;
                         }
 
-                        private static void Add(SqlCommand cmd, String ParameterName, Boolean? Value)
+                        private static void Add(MySqlCommand cmd, String ParameterName, Boolean? Value)
                         {
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
@@ -143,7 +143,7 @@ ObjectSchemaTemplate
                             }
                             cmd.Parameters.Add(p);
                         }
-                        private static void Add(SqlCommand cmd, String ParameterName, String Value)
+                        private static void Add(MySqlCommand cmd, String ParameterName, String Value)
                         {
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
@@ -158,7 +158,7 @@ ObjectSchemaTemplate
                             }
                             cmd.Parameters.Add(p);
                         }
-                        private static void Add(SqlCommand cmd, String ParameterName, int? Value)
+                        private static void Add(MySqlCommand cmd, String ParameterName, int? Value)
                         {
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
@@ -173,7 +173,7 @@ ObjectSchemaTemplate
                             }
                             cmd.Parameters.Add(p);
                         }
-                        private static void Add(SqlCommand cmd, String ParameterName, Double? Value)
+                        private static void Add(MySqlCommand cmd, String ParameterName, Double? Value)
                         {
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
@@ -188,7 +188,7 @@ ObjectSchemaTemplate
                             }
                             cmd.Parameters.Add(p);
                         }
-                        private static void Add(SqlCommand cmd, String ParameterName, List<Byte> Value)
+                        private static void Add(MySqlCommand cmd, String ParameterName, List<Byte> Value)
                         {
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
@@ -203,59 +203,59 @@ ObjectSchemaTemplate
                             }
                             cmd.Parameters.Add(p);
                         }
-                        private static Boolean GetBoolean(SqlDataReader dr, String FieldName)
+                        private static Boolean GetBoolean(MySqlDataReader dr, String FieldName)
                         {
                             return dr.GetBoolean(dr.GetOrdinal(FieldName));
                         }
-                        private static String GetString(SqlDataReader dr, String FieldName)
+                        private static String GetString(MySqlDataReader dr, String FieldName)
                         {
-                            var v = dr.GetSqlString(dr.GetOrdinal(FieldName));
-                            if (v.IsNull) { throw new InvalidOperationException(); }
-                            return v.Value;
+                            var v = dr.GetValue(dr.GetOrdinal(FieldName));
+                            if (v == DBNull.Value) { throw new InvalidOperationException(); }
+                            return (String)(v);
                         }
-                        private static int GetInt(SqlDataReader dr, String FieldName)
+                        private static int GetInt(MySqlDataReader dr, String FieldName)
                         {
                             return dr.GetInt32(dr.GetOrdinal(FieldName));
                         }
-                        private static Double GetReal(SqlDataReader dr, String FieldName)
+                        private static Double GetReal(MySqlDataReader dr, String FieldName)
                         {
                             return dr.GetFloat(dr.GetOrdinal(FieldName));
                         }
-                        private static List<Byte> GetBinary(SqlDataReader dr, String FieldName)
+                        private static List<Byte> GetBinary(MySqlDataReader dr, String FieldName)
                         {
-                            var v = dr.GetSqlBinary(dr.GetOrdinal(FieldName));
-                            if (v.IsNull) { throw new InvalidOperationException(); }
-                            return new List<Byte>(v.Value);
+                            var v = dr.GetValue(dr.GetOrdinal(FieldName));
+                            if (v == DBNull.Value) { throw new InvalidOperationException(); }
+                            return new List<Byte>((Byte[])(v));
                         }
-                        private static Optional<Boolean> GetOptionalOfBoolean(SqlDataReader dr, String FieldName)
+                        private static Optional<Boolean> GetOptionalOfBoolean(MySqlDataReader dr, String FieldName)
                         {
-                            var v = dr.GetSqlBoolean(dr.GetOrdinal(FieldName));
-                            if (v.IsNull) { return Optional<Boolean>.Empty; }
-                            return v.Value;
+                            var v = dr.GetValue(dr.GetOrdinal(FieldName));
+                            if (v == DBNull.Value) { return Optional<Boolean>.Empty; }
+                            return (Boolean)(v);
                         }
-                        private static Optional<String> GetOptionalOfString(SqlDataReader dr, String FieldName)
+                        private static Optional<String> GetOptionalOfString(MySqlDataReader dr, String FieldName)
                         {
-                            var v = dr.GetSqlString(dr.GetOrdinal(FieldName));
-                            if (v.IsNull) { return Optional<String>.Empty; }
-                            return v.Value;
+                            var v = dr.GetValue(dr.GetOrdinal(FieldName));
+                            if (v == DBNull.Value) { return Optional<String>.Empty; }
+                            return (String)(v);
                         }
-                        private static Optional<Int> GetOptionalOfInt(SqlDataReader dr, String FieldName)
+                        private static Optional<Int> GetOptionalOfInt(MySqlDataReader dr, String FieldName)
                         {
-                            var v = dr.GetSqlInt32(dr.GetOrdinal(FieldName));
-                            if (v.IsNull) { return Optional<Int>.Empty; }
-                            return v.Value;
+                            var v = dr.GetValue(dr.GetOrdinal(FieldName));
+                            if (v == DBNull.Value) { return Optional<Int>.Empty; }
+                            return (Int)(v);
                         }
-                        private static Optional<Real> GetOptionalOfReal(SqlDataReader dr, String FieldName)
+                        private static Optional<Real> GetOptionalOfReal(MySqlDataReader dr, String FieldName)
                         {
-                            var v = dr.GetSqlSingle(dr.GetOrdinal(FieldName));
-                            if (v.IsNull) { return Optional<Real>.Empty; }
-                            return (Real)(v.Value);
+                            var v = dr.GetValue(dr.GetOrdinal(FieldName));
+                            if (v == DBNull.Value) { return Optional<Real>.Empty; }
+                            return (Real)(Single)(v);
                         }
-                        private static Optional<List<Byte>> GetOptionalOfBinary(SqlDataReader dr, String FieldName)
+                        private static Optional<List<Byte>> GetOptionalOfBinary(MySqlDataReader dr, String FieldName)
                         {
-                            var v = dr.GetSqlBinary(dr.GetOrdinal(FieldName));
-                            if (v.IsNull) { return Optional<List<Byte>>.Empty; }
-                            return new List<Byte>(v.Value);
+                            var v = dr.GetValue(dr.GetOrdinal(FieldName));
+                            if (v == DBNull.Value) { return Optional<List<Byte>>.Empty; }
+                            return new List<Byte>((Byte[])(v));
                         }
                     }
         Template
@@ -263,7 +263,7 @@ ObjectSchemaTemplate
             //Parameters: ${EnumGets}
             Value
                 $String
-                    public partial class SqlServerDataAccess
+                    public partial class MySqlDataAccess
                     {
                         ${EnumGets}
                     }
@@ -272,11 +272,11 @@ ObjectSchemaTemplate
             //Parameters: ${EnumName}
             Value
                 $String
-                    private static [[${EnumName}]] [[Get${EnumName}]](SqlDataReader dr, String FieldName)
+                    private static [[${EnumName}]] [[Get${EnumName}]](MySqlDataReader dr, String FieldName)
                     {
                         return ([[${EnumName}]])(GetInt(dr, FieldName));
                     }
-                    private static Optional<[[${EnumName}]]> [[GetOptionalOf${EnumName}]](SqlDataReader dr, String FieldName)
+                    private static Optional<[[${EnumName}]]> [[GetOptionalOf${EnumName}]](MySqlDataReader dr, String FieldName)
                     {
                         var v = GetOptionalOfInt(dr, FieldName);
                         if (v.OnNotHasValue) { return Optional<[[${EnumName}]]>.Empty; }
@@ -287,7 +287,7 @@ ObjectSchemaTemplate
             //Parameters: ${Queries}
             Value
                 $String
-                    public partial class SqlServerDataAccess
+                    public partial class MySqlDataAccess
                     {
                         ${Queries}
                     }
