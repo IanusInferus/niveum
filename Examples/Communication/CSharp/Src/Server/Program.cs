@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2012.12.13.
+//  Version:     2012.12.14.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -120,113 +120,61 @@ namespace Server
 
             Console.WriteLine(@"逻辑处理器数量: " + ProcessorCount.ToString());
 
-            if (c.ProtocolType == ProtocolType.Binary)
-            {
-                using (var Server = new BinarySocketServer())
-                {
-                    using (var Logger = new ConsoleLogger())
-                    {
-                        if (c.EnableLogConsole)
-                        {
-                            Logger.Start
-                            (
-                                a => Server.SessionLog += a,
-                                a => Server.SessionLog -= a
-                            );
-                        }
-
-                        Server.CheckCommandAllowed = (sc, CommandName) =>
-                        {
-                            return true;
-                        };
-
-                        Server.Shutdown += () =>
-                        {
-                            ExitEvent.Set();
-                        };
-
-                        Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
-                        Server.SessionIdleTimeout = c.SessionIdleTimeout;
-                        Server.MaxConnections = c.MaxConnections;
-                        Server.MaxConnectionsPerIP = c.MaxConnectionsPerIP;
-                        Server.MaxBadCommands = c.MaxBadCommands;
-                        Server.ClientDebug = c.ClientDebug;
-                        Server.EnableLogNormalIn = c.EnableLogNormalIn;
-                        Server.EnableLogNormalOut = c.EnableLogNormalOut;
-                        Server.EnableLogUnknownError = c.EnableLogUnknownError;
-                        Server.EnableLogCriticalError = c.EnableLogCriticalError;
-                        Server.EnableLogPerformance = c.EnableLogPerformance;
-                        Server.EnableLogSystem = c.EnableLogSystem;
-
-                        Server.Start();
-
-                        Console.WriteLine(@"服务器已启动。");
-                        Console.WriteLine(@"协议类型: " + c.ProtocolType.ToString());
-                        Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
-
-                        ExitEvent.WaitOne();
-
-                        Server.Stop();
-
-                        Console.WriteLine(@"服务器已关闭。");
-                    }
-                }
-            }
-            else if (c.ProtocolType == ProtocolType.Json)
-            {
-                using (var Server = new JsonSocketServer())
-                {
-                    using (var Logger = new ConsoleLogger())
-                    {
-                        if (c.EnableLogConsole)
-                        {
-                            Logger.Start
-                            (
-                                a => Server.SessionLog += a,
-                                a => Server.SessionLog -= a
-                            );
-                        }
-
-                        Server.CheckCommandAllowed = (sc, CommandName) =>
-                        {
-                            return true;
-                        };
-
-                        Server.Shutdown += () =>
-                        {
-                            ExitEvent.Set();
-                        };
-
-                        Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
-                        Server.SessionIdleTimeout = c.SessionIdleTimeout;
-                        Server.MaxConnections = c.MaxConnections;
-                        Server.MaxConnectionsPerIP = c.MaxConnectionsPerIP;
-                        Server.MaxBadCommands = c.MaxBadCommands;
-                        Server.ClientDebug = c.ClientDebug;
-                        Server.EnableLogNormalIn = c.EnableLogNormalIn;
-                        Server.EnableLogNormalOut = c.EnableLogNormalOut;
-                        Server.EnableLogUnknownError = c.EnableLogUnknownError;
-                        Server.EnableLogCriticalError = c.EnableLogCriticalError;
-                        Server.EnableLogPerformance = c.EnableLogPerformance;
-                        Server.EnableLogSystem = c.EnableLogSystem;
-
-                        Server.Start();
-
-                        Console.WriteLine(@"服务器已启动。");
-                        Console.WriteLine(@"协议类型: " + c.ProtocolType.ToString());
-                        Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
-
-                        ExitEvent.WaitOne();
-
-                        Server.Stop();
-
-                        Console.WriteLine(@"服务器已关闭。");
-                    }
-                }
-            }
-            else
+            if (!(c.ProtocolType == ProtocolType.Binary || c.ProtocolType == ProtocolType.Json))
             {
                 throw new InvalidOperationException("未知协议类型: " + c.ProtocolType.ToString());
+            }
+
+            using (var Server = new ManagedTcpServer())
+            {
+                using (var Logger = new ConsoleLogger())
+                {
+                    if (c.EnableLogConsole)
+                    {
+                        Logger.Start
+                        (
+                            a => Server.SessionLog += a,
+                            a => Server.SessionLog -= a
+                        );
+                    }
+
+                    Server.ProtocolType = c.ProtocolType;
+
+                    Server.CheckCommandAllowed = (sc, CommandName) =>
+                    {
+                        return true;
+                    };
+
+                    Server.Shutdown += () =>
+                    {
+                        ExitEvent.Set();
+                    };
+
+                    Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
+                    Server.SessionIdleTimeout = c.SessionIdleTimeout;
+                    Server.MaxConnections = c.MaxConnections;
+                    Server.MaxConnectionsPerIP = c.MaxConnectionsPerIP;
+                    Server.MaxBadCommands = c.MaxBadCommands;
+                    Server.ClientDebug = c.ClientDebug;
+                    Server.EnableLogNormalIn = c.EnableLogNormalIn;
+                    Server.EnableLogNormalOut = c.EnableLogNormalOut;
+                    Server.EnableLogUnknownError = c.EnableLogUnknownError;
+                    Server.EnableLogCriticalError = c.EnableLogCriticalError;
+                    Server.EnableLogPerformance = c.EnableLogPerformance;
+                    Server.EnableLogSystem = c.EnableLogSystem;
+
+                    Server.Start();
+
+                    Console.WriteLine(@"服务器已启动。");
+                    Console.WriteLine(@"协议类型: " + c.ProtocolType.ToString());
+                    Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
+
+                    ExitEvent.WaitOne();
+
+                    Server.Stop();
+
+                    Console.WriteLine(@"服务器已关闭。");
+                }
             }
         }
 

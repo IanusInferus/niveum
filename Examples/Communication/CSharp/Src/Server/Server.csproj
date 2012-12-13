@@ -47,10 +47,11 @@
   <ItemGroup>
     <Compile Include="Algorithms\Cryptography.cs" />
     <Compile Include="Configuration.cs" />
-    <Compile Include="Servers\BinarySocketServer.cs" />
-    <Compile Include="Servers\BinarySocketSession.cs" />
-    <Compile Include="Servers\JsonSocketServer.cs" />
-    <Compile Include="Servers\JsonSocketSession.cs" />
+    <Compile Include="Servers\JsonLinePacketServer.cs" />
+    <Compile Include="Servers\ManagedTcpServer.cs" />
+    <Compile Include="Servers\ManagedTcpSession.cs" />
+    <Compile Include="Servers\BinaryCountPacketServer.cs" />
+    <Compile Include="Servers\Concept.cs" />
     <Compile Include="Services\Admin.cs" />
     <Compile Include="Services\TestPerformance.cs" />
     <Compile Include="Util\ConsoleLogger.cs" />

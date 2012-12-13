@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Net;
 using System.Net.Sockets;
 using Firefly;
+using Firefly.Streaming;
+using Firefly.TextEncoding;
 using Communication;
 using Communication.BaseSystem;
 using Communication.Net;
@@ -19,12 +18,12 @@ namespace Server
     /// <summary>
     /// 本类的所有非继承的公共成员均是线程安全的。
     /// </summary>
-    public class JsonSocketSession : TcpSession<JsonSocketServer, JsonSocketSession>
+    public class ManagedTcpSession : TcpSession<ManagedTcpServer, ManagedTcpSession>
     {
         private SessionContext Context;
         private int NumBadCommands = 0;
 
-        public JsonSocketSession()
+        public ManagedTcpSession()
         {
             Context = new SessionContext();
             Context.SessionToken = Cryptography.CreateRandom(4);
@@ -71,26 +70,22 @@ namespace Server
         {
             Read = 0,
             Write = 1,
-            ReadRaw = 2,
-            Quit = 3
+            ReadRaw = 2
         }
         private class SessionCommand
         {
             public SessionCommandTag _Tag;
-            public String Read;
-            public String Write;
+            public int Read;
+            public Byte[] Write;
             public Unit ReadRaw;
-            public Unit Quit;
 
-            public static SessionCommand CreateRead(String Value) { return new SessionCommand { _Tag = SessionCommandTag.Read, Read = Value }; }
-            public static SessionCommand CreateWrite(String Value) { return new SessionCommand { _Tag = SessionCommandTag.Write, Write = Value }; }
+            public static SessionCommand CreateRead(int Value) { return new SessionCommand { _Tag = SessionCommandTag.Read, Read = Value }; }
+            public static SessionCommand CreateWrite(Byte[] Value) { return new SessionCommand { _Tag = SessionCommandTag.Write, Write = Value }; }
             public static SessionCommand CreateReadRaw() { return new SessionCommand { _Tag = SessionCommandTag.ReadRaw, ReadRaw = new Unit() }; }
-            public static SessionCommand CreateQuit() { return new SessionCommand { _Tag = SessionCommandTag.Quit, Quit = new Unit() }; }
 
             public Boolean OnRead { get { return _Tag == SessionCommandTag.Read; } }
             public Boolean OnWrite { get { return _Tag == SessionCommandTag.Write; } }
             public Boolean OnReadRaw { get { return _Tag == SessionCommandTag.ReadRaw; } }
-            public Boolean OnQuit { get { return _Tag == SessionCommandTag.Quit; } }
         }
 
         private AutoResetEvent NumAsyncOperationUpdated = new AutoResetEvent(false);
@@ -108,52 +103,23 @@ namespace Server
             }
         }
 
-        private bool TryLockAsyncOperation()
-        {
-            bool Done = false;
-            IsRunningValue.DoAction
-            (
-                b =>
-                {
-                    if (b)
-                    {
-                        NumAsyncOperation.Update(n => n + 1);
-                        NumAsyncOperationUpdated.Set();
-                        Done = true;
-                    }
-                }
-            );
-            return Done;
-        }
-        void LockAsyncOperation()
+        private void LockAsyncOperation()
         {
             NumAsyncOperation.Update(n => n + 1);
             NumAsyncOperationUpdated.Set();
         }
-        void ReleaseAsyncOperation()
+        private void ReleaseAsyncOperation()
         {
             NumAsyncOperation.Update(n => n - 1);
             NumAsyncOperationUpdated.Set();
         }
 
-        private bool TryLockSessionCommand()
+        private void LockSessionCommand()
         {
-            bool Done = false;
-            IsRunningValue.DoAction
-            (
-                b =>
-                {
-                    if (b)
-                    {
-                        NumSessionCommand.Update(n => n + 1);
-                        NumSessionCommandUpdated.Set();
-                        Done = true;
-                    }
-                }
-            );
-            return Done;
+            NumSessionCommand.Update(n => n + 1);
+            NumSessionCommandUpdated.Set();
         }
-        void ReleaseSessionCommand()
+        private void ReleaseSessionCommand()
         {
             NumSessionCommand.Update(n => n - 1);
             NumSessionCommandUpdated.Set();
@@ -161,7 +127,7 @@ namespace Server
 
         private void PushCommand(SessionCommand sc, TaskContinuationOptions? ContinuationOptions = null)
         {
-            if (!TryLockSessionCommand()) { return; }
+            LockSessionCommand();
 
             Action a;
             if (System.Diagnostics.Debugger.IsAttached)
@@ -225,26 +191,42 @@ namespace Server
             return false;
         }
 
-        private Byte[] Buffer = new Byte[8 * 1024];
-        private int BufferLength = 0;
-        private Boolean MessageLoop(SessionCommand sc)
+        private void MessageLoop(SessionCommand sc)
         {
-            if (!IsRunningValue.Check(b => b))
-            {
-                if (!sc.OnWrite && !sc.OnQuit)
-                {
-                    return true;
-                }
-            }
-
             if (sc.OnRead)
             {
-                ReadLine(sc.Read);
+                var Count = sc.Read;
+                if (Count > 0)
+                {
+                    var r = Server.VirtualTransportServer.Handle(Context, Count);
+                    if (r.OnRead)
+                    {
+                    }
+                    else if (r.OnCommand || r.OnBadCommand || r.OnBadCommandLine)
+                    {
+                        ReadCommand(r);
+                        var RemainCount = Server.VirtualTransportServer.GetReadBuffer(Context).Count;
+                        if (RemainCount > 0)
+                        {
+                            PushCommand(SessionCommand.CreateRead(RemainCount));
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    QueueCommand(SessionCommand.CreateReadRaw());
+                }
+                else
+                {
+                    StopAsync();
+                }
             }
             else if (sc.OnWrite)
             {
-                var Line = sc.Write;
-                var Bytes = Encoding.UTF8.GetBytes(Line + "\r\n");
+                var Bytes = sc.Write;
                 LockAsyncOperation();
                 SendAsync(Bytes, 0, Bytes.Length, () => { ReleaseAsyncOperation(); }, se =>
                 {
@@ -264,52 +246,7 @@ namespace Server
             }
             else if (sc.OnReadRaw)
             {
-                Action<int> CompletedInner = Count =>
-                {
-                    if (Count == 0)
-                    {
-                        StopAsync();
-                        return;
-                    }
-                    var FirstPosition = 0;
-                    var CheckPosition = BufferLength;
-                    BufferLength += Count;
-                    while (true)
-                    {
-                        var LineFeedPosition = -1;
-                        for (int i = CheckPosition; i < BufferLength; i += 1)
-                        {
-                            Byte b = Buffer[i];
-                            if (b == '\n')
-                            {
-                                LineFeedPosition = i;
-                                break;
-                            }
-                        }
-                        if (LineFeedPosition >= 0)
-                        {
-                            var LineBytes = Buffer.Skip(FirstPosition).Take(LineFeedPosition - FirstPosition).Where(b => b != '\r').ToArray();
-                            var Line = Encoding.UTF8.GetString(LineBytes, 0, LineBytes.Length);
-                            PushCommand(SessionCommand.CreateRead(Line));
-                            FirstPosition = LineFeedPosition + 1;
-                            CheckPosition = FirstPosition;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                    if (FirstPosition > 0)
-                    {
-                        var CopyLength = BufferLength - FirstPosition;
-                        for (int i = 0; i < CopyLength; i += 1)
-                        {
-                            Buffer[i] = Buffer[FirstPosition + i];
-                        }
-                        BufferLength = CopyLength;
-                    }
-                    QueueCommand(SessionCommand.CreateReadRaw());
-                };
+                Action<int> CompletedInner = Count => PushCommand(SessionCommand.CreateRead(Count));
                 Action<int> Completed;
                 if (System.Diagnostics.Debugger.IsAttached)
                 {
@@ -359,124 +296,88 @@ namespace Server
                         ReleaseAsyncOperation();
                     }
                 };
-                if (IsExitingValue.Check(b => b)) { return true; }
-                if (!TryLockAsyncOperation()) { return true; }
-                ReceiveAsync(Buffer, BufferLength, Buffer.Length - BufferLength, Completed, Faulted);
-            }
-            else if (sc.OnQuit)
-            {
-                return false;
+                if (IsExitingValue.Check(b => b)) { return; }
+                LockAsyncOperation();
+                var Buffer = Server.VirtualTransportServer.GetReadBuffer(Context);
+                var BufferLength = Buffer.Offset + Buffer.Count;
+                ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
             }
             else
             {
                 throw new InvalidOperationException();
             }
-            return true;
         }
 
-        private static Regex r = new Regex(@"^/(?<Name>\S+)(\s+(?<Params>.*))?$", RegexOptions.ExplicitCapture); //Regex是线程安全的
-        private static Regex rName = new Regex(@"^(?<CommandName>.*?)@(?<CommandHash>.*)$", RegexOptions.ExplicitCapture); //Regex是线程安全的
-        private void ReadLine(String CommandLine)
+        private void ReadCommand(VirtualTransportHandleResult r)
         {
             if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
             {
                 return;
             }
 
-            var m = r.Match(CommandLine);
-            if (m.Success)
+            if (r.OnRead)
             {
-                var Name = m.Result("${Name}");
-                var mName = rName.Match(Name);
-                String CommandName = Name;
-                UInt32? CommandHash = null;
-                if (mName.Success)
-                {
-                    CommandName = mName.Result("${CommandName}");
-                    CommandHash = UInt32.Parse(mName.Result("${CommandHash}"), System.Globalization.NumberStyles.HexNumber);
-                }
-                var Parameters = m.Result("${Params}") ?? "";
-                if (Parameters == "") { Parameters = "{}"; }
+                throw new InvalidProgramException();
+            }
+            else if (r.OnCommand)
+            {
+                var CommandName = r.Command.CommandName;
 
-                var sv = Server.InnerServer;
-                if ((CommandHash.HasValue ? sv.HasCommand(CommandName, CommandHash.Value) : sv.HasCommand(CommandName)) && (Server.CheckCommandAllowed != null ? Server.CheckCommandAllowed(Context, CommandName) : true))
+                Action a = () =>
                 {
-                    Action a;
-                    if (CommandHash.HasValue)
+                    if (Server.EnableLogPerformance)
                     {
-                        a = () =>
-                        {
-                            if (Server.EnableLogPerformance)
-                            {
-                                var sw = new Stopwatch();
-                                sw.Start();
-                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, CommandHash.Value, Parameters);
-                                sw.Stop();
-                                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Message = String.Format("Time {0}ms", sw.ElapsedMilliseconds) });
-                                WriteLine(CommandName, CommandHash.Value, s);
-                            }
-                            else
-                            {
-                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, CommandHash.Value, Parameters);
-                                WriteLine(CommandName, CommandHash.Value, s);
-                            }
-                        };
+                        var sw = new Stopwatch();
+                        sw.Start();
+                        var s = r.Command.ExecuteCommand();
+                        sw.Stop();
+                        Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Message = String.Format("Time {0}ms", sw.ElapsedMilliseconds) });
+                        WriteCommand(r.Command.PackageOutput(s));
                     }
                     else
                     {
-                        a = () =>
-                        {
-                            if (Server.EnableLogPerformance)
-                            {
-                                var sw = new Stopwatch();
-                                sw.Start();
-                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
-                                sw.Stop();
-                                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Message = String.Format("Time {0}ms", sw.ElapsedMilliseconds) });
-                                WriteLine(CommandName, s);
-                            }
-                            else
-                            {
-                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
-                                WriteLine(CommandName, s);
-                            }
-                        };
+                        var s = r.Command.ExecuteCommand();
+                        WriteCommand(r.Command.PackageOutput(s));
                     }
+                };
 
-                    if (Debugger.IsAttached)
-                    {
-                        a();
-                    }
-                    else
-                    {
-                        try
-                        {
-                            a();
-                        }
-                        catch (Exception ex)
-                        {
-                            RaiseUnknownError(CommandName, ex, new StackTrace(true));
-                        }
-                    }
+                if (Debugger.IsAttached)
+                {
+                    a();
                 }
                 else
                 {
-                    NumBadCommands += 1;
-
-                    // Maximum allowed bad commands exceeded.
-                    if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
+                    try
                     {
-                        RaiseError(CommandName, "Too many bad commands, closing transmission channel.");
-                        StopAsync();
+                        a();
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        RaiseError(CommandName, "Not recognized.");
+                        RaiseUnknownError(CommandName, ex, new StackTrace(true));
                     }
                 }
             }
-            else
+            else if (r.OnBadCommand)
             {
+                var CommandName = r.BadCommand.CommandName;
+
+                NumBadCommands += 1;
+
+                // Maximum allowed bad commands exceeded.
+                if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
+                {
+                    RaiseError(CommandName, "Too many bad commands, closing transmission channel.");
+                    StopAsync();
+                }
+                else
+                {
+                    RaiseError(CommandName, "Not recognized.");
+                }
+            }
+            else if (r.OnBadCommandLine)
+            {
+                var CommandLine = r.BadCommandLine.CommandLine;
+
                 NumBadCommands += 1;
 
                 // Maximum allowed bad commands exceeded.
@@ -485,25 +386,21 @@ namespace Server
                     RaiseError(String.Format(@"""{0}""", CommandLine), "Too many bad commands, closing transmission channel.");
                     StopAsync();
                 }
-
-                RaiseError(String.Format(@"""{0}""", CommandLine), "Not recognized.");
+                else
+                {
+                    RaiseError(String.Format(@"""{0}""", CommandLine), "Not recognized.");
+                }
+            }
+            else
+            {
+                throw new InvalidProgramException();
             }
         }
 
         //线程安全
-        public void WriteLine(String CommandName, UInt32 CommandHash, String Parameters)
+        public void WriteCommand(Byte[] Bytes)
         {
-            WriteLine(String.Format(@"/svr {0} {1}", CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), Parameters));
-        }
-        //线程安全
-        public void WriteLine(String CommandName, String Parameters)
-        {
-            WriteLine(String.Format(@"/svr {0} {1}", CommandName, Parameters));
-        }
-        //线程安全
-        private void WriteLine(String CommandLine)
-        {
-            PushCommand(SessionCommand.CreateWrite(CommandLine));
+            PushCommand(SessionCommand.CreateWrite(Bytes));
         }
         //线程安全
         public void RaiseError(String CommandName, String Message)
@@ -517,14 +414,14 @@ namespace Server
             if (Server.ClientDebug)
             {
                 Server.RaiseError(Context, CommandName, Info);
-                if (Server.EnableLogUnknownError)
-                {
-                    Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Unk", Message = Info });
-                }
             }
             else
             {
                 Server.RaiseError(Context, CommandName, "Internal server error.");
+            }
+            if (Server.EnableLogUnknownError)
+            {
+                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Unk", Message = Info });
             }
         }
 
@@ -579,7 +476,6 @@ namespace Server
             {
                 Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExit" });
             }
-            PushCommand(SessionCommand.CreateQuit());
             Server.NotifySessionQuit(this);
         }
         protected override void StopInner()
@@ -597,30 +493,10 @@ namespace Server
                 });
             }
 
-            PushCommand(SessionCommand.CreateQuit());
-
             IsRunningValue.Update(b => false);
             while (NumSessionCommand.Check(n => n != 0))
             {
                 NumSessionCommandUpdated.WaitOne();
-            }
-            var ss = GetSocket();
-            if (ss != null)
-            {
-                try
-                {
-                    ss.Shutdown(SocketShutdown.Both);
-                }
-                catch (Exception)
-                {
-                }
-                try
-                {
-                    ss.Close();
-                }
-                catch
-                {
-                }
             }
             while (NumAsyncOperation.Check(n => n != 0))
             {
@@ -635,7 +511,6 @@ namespace Server
                     {
                         t.Wait();
                         t.Dispose();
-                        Buffer = null;
                     }
                     return null;
                 }

@@ -49,6 +49,7 @@
     <Compile Include="BaseSystem\LockedVariable.cs" />
     <Compile Include="BaseSystem\ThreadLocalRandom.cs" />
     <Compile Include="BaseSystem\Times.cs" />
+    <Compile Include="Generated\Common.cs" />
     <Compile Include="Generated\Communication.cs" />
     <Compile Include="Generated\CommunicationBinary.cs" />
     <Compile Include="Generated\CommunicationJson.cs" />

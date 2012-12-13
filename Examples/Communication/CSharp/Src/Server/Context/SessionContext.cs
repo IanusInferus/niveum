@@ -35,5 +35,31 @@ namespace Server
         //单线程访问
 
         public int SendMessageCount = 0;
+
+        public BinaryCountPacketContext BinaryCountPacketContext
+        {
+            get
+            {
+                if (bcpc == null)
+                {
+                    bcpc = new BinaryCountPacketContext();
+                }
+                return bcpc;
+            }
+        }
+        private BinaryCountPacketContext bcpc;
+
+        public JsonLinePacketContext JsonLinePacketContext
+        {
+            get
+            {
+                if (jlpc == null)
+                {
+                    jlpc = new JsonLinePacketContext();
+                }
+                return jlpc;
+            }
+        }
+        private JsonLinePacketContext jlpc;
     }
 }

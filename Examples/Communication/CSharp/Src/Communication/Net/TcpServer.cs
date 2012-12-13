@@ -234,6 +234,54 @@ namespace Communication.Net
                             throw new AggregateException(Exceptions);
                         }
 
+                        Func<TSession, Boolean> Purify = StoppingSession =>
+                        {
+                            var Removed = false;
+                            Sessions.DoAction
+                            (
+                                ss =>
+                                {
+                                    if (ss.Contains(StoppingSession))
+                                    {
+                                        ss.Remove(StoppingSession);
+                                        Removed = true;
+                                    }
+                                }
+                            );
+                            if (Removed)
+                            {
+                                var IpAddress = StoppingSession.RemoteEndPoint.Address;
+                                IpSessions.DoAction
+                                (
+                                    iss =>
+                                    {
+                                        if (iss.ContainsKey(IpAddress))
+                                        {
+                                            iss[IpAddress] -= 1;
+                                            if (iss[IpAddress] == 0)
+                                            {
+                                                iss.Remove(IpAddress);
+                                            }
+                                        }
+                                    }
+                                );
+                            }
+                            StoppingSession.Stop();
+                            StoppingSession.Dispose();
+                            return Removed;
+                        };
+
+                        Func<Boolean> PurifyOneInSession = () =>
+                        {
+                            TSession StoppingSession;
+                            while (StoppingSessions.TryTake(out StoppingSession))
+                            {
+                                var Removed = Purify(StoppingSession);
+                                if (Removed) { return true; }
+                            }
+                            return false;
+                        };
+
                         AcceptingTask = new Task
                         (
                             () =>
@@ -261,6 +309,10 @@ namespace Communication.Net
                                         }
                                         s.SetSocket(a);
 
+                                        if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
+                                        {
+                                            PurifyOneInSession();
+                                        }
                                         if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
                                         {
                                             try
@@ -328,6 +380,11 @@ namespace Communication.Net
                             TaskCreationOptions.LongRunning
                         );
 
+                        var NumBulk = 128;
+                        if (MaxConnectionsValue.HasValue)
+                        {
+                            NumBulk = Math.Max(Math.Min(NumBulk, MaxConnectionsValue.Value / 2), 1);
+                        }
                         PurifieringTask = new Task
                         (
                             () =>
@@ -337,28 +394,40 @@ namespace Communication.Net
                                     if (PurifieringTaskToken.IsCancellationRequested) { return; }
 
                                     PurifieringTaskNotifier.WaitOne();
-                                    TSession StoppingSession;
-                                    while (StoppingSessions.TryTake(out StoppingSession))
+
+                                    while (StoppingSessions.Any())
                                     {
-                                        var Removed = false;
+                                        var l = new List<TSession>();
+                                        var rl = new List<TSession>();
+
+                                        TSession StoppingSession;
+                                        while (StoppingSessions.TryTake(out StoppingSession) && l.Count < NumBulk)
+                                        {
+                                            l.Add(StoppingSession);
+                                        }
+
                                         Sessions.DoAction
                                         (
                                             ss =>
                                             {
-                                                if (ss.Contains(StoppingSession))
+                                                foreach (var s in l)
                                                 {
-                                                    ss.Remove(StoppingSession);
-                                                    Removed = true;
+                                                    if (ss.Contains(s))
+                                                    {
+                                                        ss.Remove(s);
+                                                        rl.Add(s);
+                                                    }
                                                 }
                                             }
                                         );
-                                        if (Removed)
-                                        {
-                                            var IpAddress = StoppingSession.RemoteEndPoint.Address;
-                                            IpSessions.DoAction
-                                            (
-                                                iss =>
+
+                                        IpSessions.DoAction
+                                        (
+                                            iss =>
+                                            {
+                                                foreach (var s in rl)
                                                 {
+                                                    var IpAddress = s.RemoteEndPoint.Address;
                                                     if (iss.ContainsKey(IpAddress))
                                                     {
                                                         iss[IpAddress] -= 1;
@@ -368,10 +437,14 @@ namespace Communication.Net
                                                         }
                                                     }
                                                 }
-                                            );
+                                            }
+                                        );
+
+                                        foreach (var s in l)
+                                        {
+                                            s.Stop();
+                                            s.Dispose();
                                         }
-                                        StoppingSession.Stop();
-                                        StoppingSession.Dispose();
                                     }
                                 }
                             },

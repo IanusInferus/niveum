@@ -14,17 +14,19 @@ namespace Server
     /// <summary>
     /// 本类的所有非继承的公共成员均是线程安全的。
     /// </summary>
-    public class JsonSocketServer : TcpServer<JsonSocketServer, JsonSocketSession>
+    public class ManagedTcpServer : TcpServer<ManagedTcpServer, ManagedTcpSession>
     {
         private class WorkPart
         {
             public ServerImplementation si;
-            public JsonServer<SessionContext> js;
+            public IVirtualTransportServer<SessionContext> vts;
         }
         private ThreadLocal<WorkPart> WorkPartInstance;
-        public JsonServer<SessionContext> InnerServer { get { return WorkPartInstance.Value.js; } }
+        public ServerImplementation ApplicationServer { get { return WorkPartInstance.Value.si; } }
+        public IVirtualTransportServer<SessionContext> VirtualTransportServer { get { return WorkPartInstance.Value.vts; } }
         public ServerContext ServerContext { get; private set; }
 
+        private ProtocolType ProtocolTypeValue = ProtocolType.Binary;
         public delegate Boolean CheckCommandAllowedDelegate(SessionContext c, String CommandName);
         private CheckCommandAllowedDelegate CheckCommandAllowedValue = null;
         private Action ShutdownValue = null;
@@ -36,6 +38,20 @@ namespace Server
         private Boolean EnableLogCriticalErrorValue = true;
         private Boolean EnableLogPerformanceValue = true;
         private Boolean EnableLogSystemValue = true;
+
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public ProtocolType ProtocolType
+        {
+            get
+            {
+                return ProtocolTypeValue;
+            }
+            set
+            {
+                if (IsRunning) { throw new InvalidOperationException(); }
+                ProtocolTypeValue = value;
+            }
+        }
 
         /// <summary>只能在启动前修改，以保证线程安全</summary>
         public CheckCommandAllowedDelegate CheckCommandAllowed
@@ -92,6 +108,7 @@ namespace Server
                 ClientDebugValue = value;
             }
         }
+
         /// <summary>只能在启动前修改，以保证线程安全</summary>
         public Boolean EnableLogNormalIn
         {
@@ -171,16 +188,16 @@ namespace Server
             }
         }
 
-        public LockedVariable<Dictionary<SessionContext, JsonSocketSession>> SessionMappings = new LockedVariable<Dictionary<SessionContext, JsonSocketSession>>(new Dictionary<SessionContext,JsonSocketSession>());
+        public LockedVariable<Dictionary<SessionContext, ManagedTcpSession>> SessionMappings = new LockedVariable<Dictionary<SessionContext, ManagedTcpSession>>(new Dictionary<SessionContext, ManagedTcpSession>());
 
-        public JsonSocketServer()
+        public ManagedTcpServer()
         {
             ServerContext = new ServerContext();
             ServerContext.Shutdown += () =>
             {
-                if (Shutdown != null)
+                if (ShutdownValue != null)
                 {
-                    Shutdown();
+                    ShutdownValue();
                 }
             };
             ServerContext.GetSessions = () => SessionMappings.Check(Mappings => Mappings.Keys.ToList());
@@ -216,12 +233,34 @@ namespace Server
                         }
                     };
 
-                    var srv = new JsonServer<SessionContext>(law);
-                    srv.ServerEvent += OnServerEvent;
-                    return new WorkPart { si = si, js = srv };
+                    IVirtualTransportServer<SessionContext> vts;
+                    if (ProtocolType == ProtocolType.Binary)
+                    {
+                        BinaryCountPacketServer<SessionContext>.CheckCommandAllowedDelegate cca = (c, CommandName) =>
+                        {
+                            if (this.CheckCommandAllowed == null) { return true; }
+                            return this.CheckCommandAllowed(c, CommandName);
+                        };
+                        vts = new BinaryCountPacketServer<SessionContext>(law, c => c.BinaryCountPacketContext, cca);
+                    }
+                    else if (ProtocolType == ProtocolType.Json)
+                    {
+                        JsonLinePacketServer<SessionContext>.CheckCommandAllowedDelegate cca = (c, CommandName) =>
+                        {
+                            if (this.CheckCommandAllowed == null) { return true; }
+                            return this.CheckCommandAllowed(c, CommandName);
+                        };
+                        vts = new JsonLinePacketServer<SessionContext>(law, c => c.JsonLinePacketContext, cca);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("未知协议类型: " + ProtocolType.ToString());
+                    }
+
+                    vts.ServerEvent += OnServerEvent;
+                    return new WorkPart { si = si, vts = vts };
                 }
             );
-            ServerContext.SchemaHash = InnerServer.Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture);
 
             base.MaxConnectionsExceeded += OnMaxConnectionsExceeded;
             base.MaxConnectionsPerIPExceeded += OnMaxConnectionsPerIPExceeded;
@@ -232,9 +271,9 @@ namespace Server
             WorkPartInstance.Value.si.RaiseError(c, CommandName, Message);
         }
 
-        private void OnServerEvent(SessionContext c, String CommandName, UInt32 CommandHash, String Parameters)
+        private void OnServerEvent(SessionContext c, Byte[] Bytes)
         {
-            JsonSocketSession Session = null;
+            ManagedTcpSession Session = null;
             SessionMappings.DoAction(Mappings =>
             {
                 if (Mappings.ContainsKey(c))
@@ -244,7 +283,7 @@ namespace Server
             });
             if (Session != null)
             {
-                Session.WriteLine(CommandName, CommandHash, Parameters);
+                Session.WriteCommand(Bytes);
             }
         }
 
@@ -257,14 +296,14 @@ namespace Server
             }
         }
 
-        private void OnMaxConnectionsExceeded(JsonSocketSession s)
+        private void OnMaxConnectionsExceeded(ManagedTcpSession s)
         {
             if (s != null && s.IsRunning)
             {
                 s.RaiseError("", "Client host rejected: too many connections, please try again later.");
             }
         }
-        private void OnMaxConnectionsPerIPExceeded(JsonSocketSession s)
+        private void OnMaxConnectionsPerIPExceeded(ManagedTcpSession s)
         {
             if (s != null && s.IsRunning)
             {
