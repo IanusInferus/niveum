@@ -17,6 +17,5 @@ namespace Server
 
         public Func<ICollection<SessionContext>> GetSessions;
         public ICollection<SessionContext> Sessions { get { return GetSessions(); } }
-        public String SchemaHash;
     }
 }
