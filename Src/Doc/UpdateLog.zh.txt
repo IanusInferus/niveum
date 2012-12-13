@@ -1,6 +1,10 @@
-﻿2012.12.12
+﻿2012.12.13
+Yuki.Core, Examples:
+修改C# JSON协议的代码生成，使其支持多版本调用。
+
+2012.12.12
 Yuki.Core:
-修改Json协议对TaggedUnion的处理，去除_tag字段。
+修改JSON协议对TaggedUnion的处理，去除_tag字段。
 
 2012.12.10
 Yuki.DatabaseRegenerator:

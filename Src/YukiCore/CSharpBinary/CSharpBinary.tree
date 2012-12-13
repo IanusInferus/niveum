@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板数据
-      Version:     2012.06.04.
+      Version:     2012.12.13.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -161,12 +161,12 @@ ObjectSchemaTemplate
                                 var q = ClientCommandCallbacks[CommandName];
                                 if (q.Count == 0)
                                 {
-                                    throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8"));
+                                    throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
                                 }
                                 var CallbackPair = q.Peek();
                                 if (CallbackPair.Key != CommandHash)
                                 {
-                                    throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8"));
+                                    throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
                                 }
                                 q.Dequeue();
                                 var Callback = CallbackPair.Value;
@@ -182,7 +182,7 @@ ObjectSchemaTemplate
                                 return;
                             }
 
-                            throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8"));
+                            throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
                         }
 
                         private void AddCallback(String CommandName, UInt32 CommandHash, Action<Byte[]> Callback)
