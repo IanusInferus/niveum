@@ -43,8 +43,8 @@ package
 
         public function MainInner():void
         {
-            EnableBinaryClient();
-            //EnableJsonClient();
+            //EnableBinaryClient();
+            EnableJsonClient();
         }
         
         public function EnableBinaryClient():void

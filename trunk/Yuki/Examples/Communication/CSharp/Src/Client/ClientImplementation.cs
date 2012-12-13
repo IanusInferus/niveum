@@ -29,7 +29,11 @@ namespace Client
 
         public void MessageReceivedAt1(ClientContext c, MessageReceivedAt1Event e)
         {
-            throw new NotImplementedException();
+            Console.WriteLine(e.Title);
+            foreach (var Line in e.Lines)
+            {
+                Console.WriteLine(Line);
+            }
         }
 
         public void TestMessageReceived(ClientContext c, TestMessageReceivedEvent e)

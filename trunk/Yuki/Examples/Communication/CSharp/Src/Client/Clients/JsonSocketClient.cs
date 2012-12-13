@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Net;
 using System.Net.Sockets;
 using Communication;
@@ -56,9 +57,9 @@ namespace Client
             return Socket.Check(ss => ss).Branch(ss => ss != null, ss => ss.InnerSocket, ss => null);
         }
 
-        void IJsonSender.Send(String CommandName, String Parameters)
+        void IJsonSender.Send(String CommandName, UInt32 CommandHash, String Parameters)
         {
-            var Message = "/" + CommandName + " " + Parameters + "\r\n";
+            var Message = "/" + CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture) + " " + Parameters + "\r\n";
             var Bytes = Encoding.UTF8.GetBytes(Message);
             Socket.DoAction(sock => sock.InnerSocket.Send(Bytes));
         }
@@ -77,6 +78,7 @@ namespace Client
             return false;
         }
 
+        private static Regex rName = new Regex(@"^(?<CommandName>.*?)@(?<CommandHash>.*)$", RegexOptions.ExplicitCapture); //Regex是线程安全的
         /// <summary>接收消息</summary>
         /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
         /// <param name="UnknownFaulted">未知错误处理函数</param>
@@ -118,7 +120,12 @@ namespace Client
                         var triple = Line.Split(new Char[] { ' ' }, 3);
                         if (triple.Length != 3) { throw new InvalidOperationException(); }
                         if (triple[0] != "/svr") { throw new InvalidOperationException(); }
-                        DoResultHandle(() => InnerClient.HandleResult(Context, triple[1], triple[2]));
+                        var m = rName.Match(triple[1]);
+                        if (!m.Success) { throw new InvalidOperationException(); }
+                        var CommandName = m.Result("${CommandName}");
+                        var CommandHash = UInt32.Parse(m.Result("${CommandHash}"), System.Globalization.NumberStyles.HexNumber);
+                        var Parameters = triple[2];
+                        DoResultHandle(() => InnerClient.HandleResult(Context, CommandName, CommandHash, Parameters));
 
                         FirstPosition = LineFeedPosition + 1;
                         CheckPosition = FirstPosition;

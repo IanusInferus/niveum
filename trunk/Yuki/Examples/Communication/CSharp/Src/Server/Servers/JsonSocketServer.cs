@@ -190,7 +190,33 @@ namespace Server
                 () =>
                 {
                     var si = new ServerImplementation(ServerContext);
-                    var srv = new JsonServer<SessionContext>(si);
+                    var law = new JsonLogAspectWrapper<SessionContext>(si);
+                    law.ClientCommandIn += (c, CommandName, Parameters) =>
+                    {
+                        if (EnableLogNormalIn)
+                        {
+                            var CommandLine = String.Format(@"{0} {1}", CommandName, Parameters);
+                            RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "In", Message = CommandLine });
+                        }
+                    };
+                    law.ClientCommandOut += (c, CommandName, Parameters) =>
+                    {
+                        if (EnableLogNormalOut)
+                        {
+                            var CommandLine = String.Format(@"svr {0} {1}", CommandName, Parameters);
+                            RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
+                        }
+                    };
+                    law.ServerCommand += (c, CommandName, Parameters) =>
+                    {
+                        if (EnableLogNormalOut)
+                        {
+                            var CommandLine = String.Format(@"svr {0} {1}", CommandName, Parameters);
+                            RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
+                        }
+                    };
+
+                    var srv = new JsonServer<SessionContext>(law);
                     srv.ServerEvent += OnServerEvent;
                     return new WorkPart { si = si, js = srv };
                 }
@@ -206,7 +232,7 @@ namespace Server
             WorkPartInstance.Value.si.RaiseError(c, CommandName, Message);
         }
 
-        private void OnServerEvent(SessionContext c, String CommandName, String Parameters)
+        private void OnServerEvent(SessionContext c, String CommandName, UInt32 CommandHash, String Parameters)
         {
             JsonSocketSession Session = null;
             SessionMappings.DoAction(Mappings =>
@@ -218,7 +244,7 @@ namespace Server
             });
             if (Session != null)
             {
-                Session.WriteLine(CommandName, Parameters);
+                Session.WriteLine(CommandName, CommandHash, Parameters);
             }
         }
 
