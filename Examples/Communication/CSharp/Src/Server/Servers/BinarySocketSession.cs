@@ -29,7 +29,7 @@ namespace Server
         public BinarySocketSession()
         {
             Context = new SessionContext();
-            Context.SessionToken = Cryptography.CreateRandom4();
+            Context.SessionToken = Cryptography.CreateRandom(4);
             Context.Quit += StopAsync;
         }
 

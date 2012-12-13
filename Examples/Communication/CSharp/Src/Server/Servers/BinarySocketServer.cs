@@ -197,7 +197,7 @@ namespace Server
                     {
                         if (EnableLogNormalIn)
                         {
-                            var CommandLine = String.Format(@"/{0} {1}", CommandName, Parameters);
+                            var CommandLine = String.Format(@"{0} {1}", CommandName, Parameters);
                             RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "In", Message = CommandLine });
                         }
                     };
@@ -205,7 +205,7 @@ namespace Server
                     {
                         if (EnableLogNormalOut)
                         {
-                            var CommandLine = String.Format(@"/svr {0} {1}", CommandName, Parameters);
+                            var CommandLine = String.Format(@"svr {0} {1}", CommandName, Parameters);
                             RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
                         }
                     };
@@ -213,7 +213,7 @@ namespace Server
                     {
                         if (EnableLogNormalOut)
                         {
-                            var CommandLine = String.Format(@"/svr {0} {1}", CommandName, Parameters);
+                            var CommandLine = String.Format(@"svr {0} {1}", CommandName, Parameters);
                             RaiseSessionLog(new SessionLogEntry { Token = c.SessionTokenString, RemoteEndPoint = c.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
                         }
                     };
