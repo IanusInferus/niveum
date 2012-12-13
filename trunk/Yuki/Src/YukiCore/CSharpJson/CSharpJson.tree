@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2012.12.12.
+      Version:     2012.12.13.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -68,11 +68,13 @@ ObjectSchemaTemplate
                 $String
                     public sealed class JsonServer<TContext>
                     {
-                        private Dictionary<String, Func<TContext, String, String>> ClientCommands;
+                        private Dictionary<String, Func<TContext, String, String>> ClientCommandsWithoutHash;
+                        private Dictionary<KeyValuePair<String, UInt32>, Func<TContext, String, String>> ClientCommands;
 
                         public JsonServer(IServerImplementation<TContext> i)
                         {
-                            ClientCommands = new Dictionary<String, Func<TContext, String, String>>(StringComparer.OrdinalIgnoreCase);
+                            ClientCommandsWithoutHash = new Dictionary<String, Func<TContext, String, String>>(StringComparer.OrdinalIgnoreCase);
+                            ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<TContext, String, String>>();
                             ${Commands}
                         }
 
@@ -86,41 +88,58 @@ ObjectSchemaTemplate
 
                         public Boolean HasCommand(String CommandName)
                         {
-                            return ClientCommands.ContainsKey(CommandName);
+                            return ClientCommandsWithoutHash.ContainsKey(CommandName);
+                        }
+
+                        public Boolean HasCommand(String CommandName, UInt32 CommandHash)
+                        {
+                            return ClientCommands.ContainsKey(new KeyValuePair<String, UInt32>(CommandName, CommandHash));
                         }
 
                         public String ExecuteCommand(TContext c, String CommandName, String Parameters)
                         {
-                            var cmd = ClientCommands[CommandName];
+                            var cmd = ClientCommandsWithoutHash[CommandName];
                             return cmd(c, Parameters);
                         }
 
-                        public delegate void ServerEventDelegate(TContext c, String CommandName, String Parameters);
-                        public event ServerEventDelegate ServerEvent;
-                        private void OnServerEvent(TContext c, String CommandName, String Parameters)
+                        public String ExecuteCommand(TContext c, String CommandName, UInt32 CommandHash, String Parameters)
                         {
-                            if (ServerEvent != null) { ServerEvent(c, CommandName, Parameters); }
+                            var cmd = ClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];
+                            return cmd(c, Parameters);
+                        }
+
+                        public delegate void ServerEventDelegate(TContext c, String CommandName, UInt32 CommandHash, String Parameters);
+                        public event ServerEventDelegate ServerEvent;
+                        private void OnServerEvent(TContext c, String CommandName, UInt32 CommandHash, String Parameters)
+                        {
+                            if (ServerEvent != null) { ServerEvent(c, CommandName, CommandHash, Parameters); }
                         }
                     }
         Template
-            Name JsonServer_ClientCommand
-            //Parameters: ${Name}
+            Name JsonServer_ClientCommandWithoutHash
+            //Parameters: ${CommandName}, ${Name}
             Value
                 $String
-                    ClientCommands.Add(@"${Name}", (c, p) => JsonTranslator.[[${Name}ReplyToJson]](i.[[${Name}]](c, JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
+                    ClientCommandsWithoutHash.Add(@"${CommandName}", (c, p) => JsonTranslator.[[${Name}ReplyToJson]](i.[[${Name}]](c, JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
+        Template
+            Name JsonServer_ClientCommand
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}
+            Value
+                $String
+                    ClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (c, p) => JsonTranslator.[[${Name}ReplyToJson]](i.[[${Name}]](c, JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
         Template
             Name JsonServer_ServerCommand
-            //Parameters: ${Name}
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    i.${Name} += (c, e) => OnServerEvent(c, @"${Name}", JsonTranslator.[[${Name}EventToJson]](e).ToString(Formatting.None));
+                    i.${Name} += (c, e) => OnServerEvent(c, @"${CommandName}", 0x${CommandHash}, JsonTranslator.[[${Name}EventToJson]](e).ToString(Formatting.None));
         Template
             Name IJsonSender
             Value
                 $String
                     public interface IJsonSender
                     {
-                        void Send(String CommandName, String Parameters);
+                        void Send(String CommandName, UInt32 CommandHash, String Parameters);
                     }
         Template
             Name JsonClient
@@ -131,15 +150,15 @@ ObjectSchemaTemplate
                     {
                         private IJsonSender s;
                         private IClientImplementation<TContext> i;
-                        private Dictionary<String, Queue<Action<String>>> ClientCommandCallbacks;
-                        private Dictionary<String, Action<TContext, String>> ServerCommands;
+                        private Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>> ClientCommandCallbacks;
+                        private Dictionary<KeyValuePair<String, UInt32>, Action<TContext, String>> ServerCommands;
 
                         public JsonClient(IJsonSender s, IClientImplementation<TContext> i)
                         {
                             this.s = s;
                             this.i = i;
-                            ClientCommandCallbacks = new Dictionary<String, Queue<Action<String>>>(StringComparer.OrdinalIgnoreCase);
-                            ServerCommands = new Dictionary<String, Action<TContext, String>>(StringComparer.OrdinalIgnoreCase);
+                            ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>>();
+                            ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<TContext, String>>();
                             ${ServerCommands}
                         }
 
@@ -151,40 +170,47 @@ ObjectSchemaTemplate
                             }
                         }
 
-                        public void HandleResult(TContext c, String CommandName, String Parameters)
+                        public void HandleResult(TContext c, String CommandName, UInt32 CommandHash, String Parameters)
                         {
                             if (ClientCommandCallbacks.ContainsKey(CommandName))
                             {
                                 var q = ClientCommandCallbacks[CommandName];
                                 if (q.Count == 0)
                                 {
-                                    throw new InvalidOperationException(CommandName);
+                                    throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
                                 }
-                                var Callback = q.Dequeue();
+                                var CallbackPair = q.Peek();
+                                if (CallbackPair.Key != CommandHash)
+                                {
+                                    throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
+                                }
+                                q.Dequeue();
+                                var Callback = CallbackPair.Value;
                                 Callback(Parameters);
                                 return;
                             }
 
-                            if (ServerCommands.ContainsKey(CommandName))
+                            var p = new KeyValuePair<String, UInt32>(CommandName, CommandHash);
+                            if (ServerCommands.ContainsKey(p))
                             {
-                                var a = ServerCommands[CommandName];
+                                var a = ServerCommands[p];
                                 a(c, Parameters);
                                 return;
                             }
 
-                            throw new InvalidOperationException(CommandName);
+                            throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
                         }
 
-                        private void AddCallback(String CommandName, Action<String> Callback)
+                        private void AddCallback(String CommandName, UInt32 CommandHash, Action<String> Callback)
                         {
                             if (ClientCommandCallbacks.ContainsKey(CommandName))
                             {
-                                ClientCommandCallbacks[CommandName].Enqueue(Callback);
+                                ClientCommandCallbacks[CommandName].Enqueue(new KeyValuePair<UInt32, Action<String>>(CommandHash, Callback));
                             }
                             else
                             {
-                                var q = new Queue<Action<String>>();
-                                q.Enqueue(Callback);
+                                var q = new Queue<KeyValuePair<UInt32, Action<String>>>();
+                                q.Enqueue(new KeyValuePair<UInt32, Action<String>>(CommandHash, Callback));
                                 ClientCommandCallbacks.Add(CommandName, q);
                             }
                         }
@@ -198,22 +224,22 @@ ObjectSchemaTemplate
                     }
         Template
             Name JsonClient_ClientCommand
-            //Parameters: ${Name}, ${XmlComment}
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
                     public void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback)
                     {
                         var Request = JsonTranslator.[[${Name}RequestToJson]](r).ToString(Formatting.None);
-                        AddCallback(@"${Name}", Parameters => Callback(JsonTranslator.[[${Name}ReplyFromJson]](JToken.Parse(Parameters))));
-                        s.Send(@"${Name}", Request);
+                        AddCallback(@"${CommandName}", 0x${CommandHash}, Parameters => Callback(JsonTranslator.[[${Name}ReplyFromJson]](JToken.Parse(Parameters))));
+                        s.Send(@"${CommandName}", 0x${CommandHash}, Request);
                     }
         Template
             Name JsonClient_ServerCommand
-            //Parameters: ${Name}
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ServerCommands.Add(@"${Name}", (c, Parameters) => i.[[${Name}]](c, JsonTranslator.[[${Name}EventFromJson]](JToken.Parse(Parameters))));
+                    ServerCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (c, Parameters) => i.[[${Name}]](c, JsonTranslator.[[${Name}EventFromJson]](JToken.Parse(Parameters))));
         Template
             Name JsonLogAspectWrapper
             //Parameters: ${ServerCommandHooks}, ${Commands}

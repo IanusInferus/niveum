@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2012.11.28.
+//  Version:     2012.12.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -415,7 +415,7 @@ namespace Yuki.ObjectSchema.CSharp.Common
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c.OnClientCommand && c.ClientCommand.Version == "")
+                    if (c.OnClientCommand)
                     {
                         l.AddRange(GetTemplate("IClient_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
                     }
