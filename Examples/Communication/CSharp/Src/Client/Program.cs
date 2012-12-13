@@ -3,13 +3,14 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2012.06.05.
+//  Version:     2012.12.13.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
 //==========================================================================
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Firefly;
@@ -51,6 +52,7 @@ namespace Client
 
             var CmdLine = CommandLine.GetCmdLine();
 
+            var UseOld = false;
             var UseLoadTest = false;
             var UsePerformanceTest = false;
             var UseStableTest = false;
@@ -60,6 +62,10 @@ namespace Client
                 {
                     DisplayInfo();
                     return 0;
+                }
+                else if (opt.Name.ToLower() == "old")
+                {
+                    UseOld = true;
                 }
                 else if (opt.Name.ToLower() == "load")
                 {
@@ -113,7 +119,7 @@ namespace Client
             }
             else
             {
-                Run(RemoteEndPoint, ProtocolType);
+                Run(RemoteEndPoint, ProtocolType, UseOld);
             }
 
             return 0;
@@ -129,16 +135,17 @@ namespace Client
         public static void DisplayInfo()
         {
             Console.WriteLine(@"用法:");
-            Console.WriteLine(@"Client [<Protocol> [<IpAddress> <Port>]] [/load|/perf|/stable]");
+            Console.WriteLine(@"Client [<Protocol> [<IpAddress> <Port>]] [/old|/load|/perf|/stable]");
             Console.WriteLine(@"Protocol 通讯协议，可为Binary或Json，默认为Binary");
             Console.WriteLine(@"IpAddress 服务器IP地址，默认为127.0.0.1");
             Console.WriteLine(@"Port 服务器端口，默认为8001");
+            Console.WriteLine(@"/old 使用老协议");
             Console.WriteLine(@"/load 自动化负载测试");
             Console.WriteLine(@"/perf 自动化性能测试");
             Console.WriteLine(@"/stable 自动化稳定性测试");
         }
 
-        public static void Run(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType)
+        public static void Run(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType, Boolean UseOld)
         {
             if (ProtocolType == ApplicationProtocolType.Binary)
             {
@@ -147,7 +154,7 @@ namespace Client
                     bc.Connect();
                     Console.WriteLine("连接成功。");
                     bc.Receive(a => a(), se => Console.WriteLine((new SocketException((int)se)).Message));
-                    ReadLineAndSendLoop(bc.InnerClient);
+                    ReadLineAndSendLoop(bc.InnerClient, UseOld);
                     bc.Close();
                 }
             }
@@ -158,7 +165,7 @@ namespace Client
                     jc.Connect();
                     Console.WriteLine("连接成功。");
                     jc.Receive(a => a(), se => Console.WriteLine((new SocketException((int)se)).Message));
-                    ReadLineAndSendLoop(jc.InnerClient);
+                    ReadLineAndSendLoop(jc.InnerClient, UseOld);
                     jc.Close();
                 }
             }
@@ -168,7 +175,7 @@ namespace Client
             }
         }
 
-        public static void ReadLineAndSendLoop(IClient InnerClient)
+        public static void ReadLineAndSendLoop(IClient InnerClient, Boolean UseOld)
         {
             while (true)
             {
@@ -185,13 +192,26 @@ namespace Client
                     });
                     break;
                 }
-                InnerClient.SendMessage(new SendMessageRequest { Content = Line }, r =>
+                if (UseOld)
                 {
-                    if (r.OnTooLong)
+                    InnerClient.SendMessageAt1(new SendMessageAt1Request { Title = "", Lines = new List<String> { Line } }, r =>
                     {
-                        Console.WriteLine("消息过长。");
-                    }
-                });
+                        if (r.OnTitleTooLong || r.OnLinesTooLong || r.OnLineTooLong)
+                        {
+                            Console.WriteLine("消息过长。");
+                        }
+                    });
+                }
+                else
+                {
+                    InnerClient.SendMessage(new SendMessageRequest { Content = Line }, r =>
+                    {
+                        if (r.OnTooLong)
+                        {
+                            Console.WriteLine("消息过长。");
+                        }
+                    });
+                }
             }
         }
     }

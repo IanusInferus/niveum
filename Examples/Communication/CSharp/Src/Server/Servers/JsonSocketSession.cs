@@ -27,7 +27,7 @@ namespace Server
         public JsonSocketSession()
         {
             Context = new SessionContext();
-            Context.SessionToken = Cryptography.CreateRandom4();
+            Context.SessionToken = Cryptography.CreateRandom(4);
             Context.Quit += StopAsync;
         }
 
@@ -374,13 +374,10 @@ namespace Server
             return true;
         }
 
-        private static Regex r = new Regex(@"^/(?<CommandName>\S+)(\s+(?<Params>.*))?$", RegexOptions.ExplicitCapture); //Regex是线程安全的
+        private static Regex r = new Regex(@"^/(?<Name>\S+)(\s+(?<Params>.*))?$", RegexOptions.ExplicitCapture); //Regex是线程安全的
+        private static Regex rName = new Regex(@"^(?<CommandName>.*?)@(?<CommandHash>.*)$", RegexOptions.ExplicitCapture); //Regex是线程安全的
         private void ReadLine(String CommandLine)
         {
-            if (Server.EnableLogNormalIn)
-            {
-                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "In", Message = CommandLine });
-            }
             if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
             {
                 return;
@@ -389,30 +386,62 @@ namespace Server
             var m = r.Match(CommandLine);
             if (m.Success)
             {
-                var CommandName = m.Result("${CommandName}");
+                var Name = m.Result("${Name}");
+                var mName = rName.Match(Name);
+                String CommandName = Name;
+                UInt32? CommandHash = null;
+                if (mName.Success)
+                {
+                    CommandName = mName.Result("${CommandName}");
+                    CommandHash = UInt32.Parse(mName.Result("${CommandHash}"), System.Globalization.NumberStyles.HexNumber);
+                }
                 var Parameters = m.Result("${Params}") ?? "";
                 if (Parameters == "") { Parameters = "{}"; }
 
                 var sv = Server.InnerServer;
-                if (sv.HasCommand(CommandName) && (Server.CheckCommandAllowed != null ? Server.CheckCommandAllowed(Context, CommandName) : true))
+                if ((CommandHash.HasValue ? sv.HasCommand(CommandName, CommandHash.Value) : sv.HasCommand(CommandName)) && (Server.CheckCommandAllowed != null ? Server.CheckCommandAllowed(Context, CommandName) : true))
                 {
-                    Action a = () =>
+                    Action a;
+                    if (CommandHash.HasValue)
                     {
-                        if (Server.EnableLogPerformance)
+                        a = () =>
                         {
-                            var sw = new Stopwatch();
-                            sw.Start();
-                            var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
-                            sw.Stop();
-                            Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Message = String.Format("Time {0}ms", sw.ElapsedMilliseconds) });
-                            WriteLine(CommandName, s);
-                        }
-                        else
+                            if (Server.EnableLogPerformance)
+                            {
+                                var sw = new Stopwatch();
+                                sw.Start();
+                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, CommandHash.Value, Parameters);
+                                sw.Stop();
+                                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Message = String.Format("Time {0}ms", sw.ElapsedMilliseconds) });
+                                WriteLine(CommandName, CommandHash.Value, s);
+                            }
+                            else
+                            {
+                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, CommandHash.Value, Parameters);
+                                WriteLine(CommandName, CommandHash.Value, s);
+                            }
+                        };
+                    }
+                    else
+                    {
+                        a = () =>
                         {
-                            var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
-                            WriteLine(CommandName, s);
-                        }
-                    };
+                            if (Server.EnableLogPerformance)
+                            {
+                                var sw = new Stopwatch();
+                                sw.Start();
+                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
+                                sw.Stop();
+                                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Message = String.Format("Time {0}ms", sw.ElapsedMilliseconds) });
+                                WriteLine(CommandName, s);
+                            }
+                            else
+                            {
+                                var s = Server.InnerServer.ExecuteCommand(Context, CommandName, Parameters);
+                                WriteLine(CommandName, s);
+                            }
+                        };
+                    }
 
                     if (Debugger.IsAttached)
                     {
@@ -462,6 +491,11 @@ namespace Server
         }
 
         //线程安全
+        public void WriteLine(String CommandName, UInt32 CommandHash, String Parameters)
+        {
+            WriteLine(String.Format(@"/svr {0} {1}", CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), Parameters));
+        }
+        //线程安全
         public void WriteLine(String CommandName, String Parameters)
         {
             WriteLine(String.Format(@"/svr {0} {1}", CommandName, Parameters));
@@ -469,10 +503,6 @@ namespace Server
         //线程安全
         private void WriteLine(String CommandLine)
         {
-            if (Server.EnableLogNormalOut)
-            {
-                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
-            }
             PushCommand(SessionCommand.CreateWrite(CommandLine));
         }
         //线程安全
@@ -581,7 +611,7 @@ namespace Server
                 {
                     ss.Shutdown(SocketShutdown.Both);
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                 }
                 try

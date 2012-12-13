@@ -9,12 +9,12 @@ namespace Server.Algorithms
 {
     public static class Cryptography
     {
-        public static Byte[] CreateRandom4()
+        private static RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
+        public static Byte[] CreateRandom(int Count)
         {
-            var Random4 = new Byte[4];
-            RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
-            rng.GetBytes(Random4);
-            return Random4;
+            var r = new Byte[Count];
+            rng.GetBytes(r);
+            return r;
         }
         public static Byte[] SHA1(Byte[] Bytes)
         {
