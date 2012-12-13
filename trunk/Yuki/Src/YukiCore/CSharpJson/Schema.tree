@@ -1,7 +1,7 @@
 ﻿$Comment
     ==========================================================================
 
-      File:        CSharpJson.tree
+      File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
       Version:     2012.12.13.

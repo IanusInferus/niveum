@@ -1,10 +1,10 @@
 ﻿$Comment
     ==========================================================================
 
-      File:        ActionScriptBinary.tree
+      File:        Schema.tree
       Location:    Yuki.Core <Tree>
-      Description: 对象类型结构ActionScript3.0二进制通讯模板数据
-      Version:     2012.04.23.
+      Description: 对象类型结构ActionScript3.0 JSON通讯模板数据
+      Version:     2012.12.13.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -35,6 +35,7 @@ ObjectSchemaTemplate
                         import flash.utils.IDataOutput;
                         import flash.utils.ByteArray;
                         import flash.utils.Endian;
+                        import com.utils.json.JSON;
                         import ${Imports};
 
                         ${Type}
@@ -42,25 +43,25 @@ ObjectSchemaTemplate
 
                 $End
         Template
-            Name IBinarySender
+            Name IJsonSender
             Value
                 $String
-                    public interface IBinarySender
+                    public interface IJsonSender
                     {
-                        function send(commandName:String, commandHash:uint, parameters:ByteArray):void;
+                        function send(commandName:String, parameters:String):void;
                     }
         Template
-            Name BinaryClient
+            Name JsonClient
             //Parameters: ${NumClientCommand}, ${Hash}, ${Client_ServerCommandHandles}, ${Client_ClientCommandHandles}, ${Client_ClientCommandDeques}, ${Client_ClientCommands}
             Value
                 $String
-                    public class BinaryClient
+                    public class JsonClient
                     {
-                        private var s:IBinarySender;
+                        private var s:IJsonSender;
                         private var ci:IClientImplementation;
                         private var requests:Vector.<Vector.<Function>>;
 
-                        public function BinaryClient(s:IBinarySender, ci:IClientImplementation)
+                        public function JsonClient(s:IJsonSender, ci:IClientImplementation)
                         {
                             this.s = s;
                             this.ci = ci;
@@ -76,7 +77,7 @@ ObjectSchemaTemplate
                             return "${Hash}";
                         }
 
-                        public function handleResult(commandName:String, commandHash:uint, parameters:ByteArray):void
+                        public function handleResult(commandName:String, parameters:String):void
                         {
                             switch (commandName)
                             {
@@ -109,29 +110,23 @@ ObjectSchemaTemplate
                         ${Client_ClientCommands}
                     }
         Template
-            Name BinaryClient_ServerCommandHandle
-            //Parameters: ${Name}, ${CommandHash}
+            Name JsonClient_ServerCommandHandle
+            //Parameters: ${Name}
             Value
                 $String
                     case "${Name}":
-                        if (commandHash == 0x${CommandHash})
-                        {
-                            ci.[[${name}]](BinaryTranslator.[[${name}EventFromBinary]](parameters));
-                            return;
-                        }
+                        ci.[[${name}]](JsonTranslator.[[${name}EventFromJson]](JSON.decode(parameters)));
+                        return;
         Template
-            Name BinaryClient_ClientCommandHandle
-            //Parameters: ${Name}, ${CommandHash}
+            Name JsonClient_ClientCommandHandle
+            //Parameters: ${Name}
             Value
                 $String
                     case "${Name}":
-                        if (commandHash == 0x${CommandHash})
-                        {
-                            callback(BinaryTranslator.[[${name}ReplyFromBinary]](parameters));
-                            return;
-                        }
+                        callback(JsonTranslator.[[${name}ReplyFromJson]](JSON.decode(parameters)));
+                        return;
         Template
-            Name BinaryClient_ClientCommandDeque
+            Name JsonClient_ClientCommandDeque
             //Parameters: ${Name}, ${ClientCommandIndex}
             Value
                 $String
@@ -139,17 +134,14 @@ ObjectSchemaTemplate
                         var [[r${ClientCommandIndex}]]:Vector.<Function> = requests[${ClientCommandIndex}];
                         return [[r${ClientCommandIndex}]].shift();
         Template
-            Name BinaryClient_ClientCommand
-            //Parameters: ${Name}, ${CommandHash}, ${ClientCommandIndex}, ${XmlComment}
+            Name JsonClient_ClientCommand
+            //Parameters: ${Name}, ${ClientCommandIndex}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
                     public function [[${name}]](r:[[${Name}Request]], callback:Function):void
                     {
                         var ra:Vector.<Function> = requests[${ClientCommandIndex}];
-                        var ba:ByteArray = new ByteArray();
-                        BinaryTranslator.[[${name}RequestToBinary]](ba, r);
-                        ba.position = 0;
-                        s.send("${Name}", 0x${CommandHash}, ba);
+                        s.send("${Name}", JSON.encode(JsonTranslator.[[${name}RequestToJson]](r)));
                         ra.push(callback);
                     }

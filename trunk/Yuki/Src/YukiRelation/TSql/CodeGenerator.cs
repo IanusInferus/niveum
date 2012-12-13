@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构T-SQL(SQL Server)数据库代码生成器
-//  Version:     2012.11.24.
+//  Version:     2012.12.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -54,7 +54,7 @@ namespace Yuki.RelationSchema.TSql
                 var ForeignKeys = GetForeignKeys(Schema);
                 var Comments = GetComments(Schema, WithComment);
 
-                return GetTemplate("Main").Substitute("DatabaseName", DatabaseName).Substitute("Tables", Tables).Substitute("ForeignKeys", ForeignKeys).Substitute("Comments", Comments);
+                return GetTemplate("Main").Substitute("DatabaseName", DatabaseName).Substitute("Tables", Tables).Substitute("ForeignKeys", ForeignKeys).Substitute("Comments", Comments).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
 
             public String[] GetTables(Schema s)

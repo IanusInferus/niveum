@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2012.11.27.
+//  Version:     2012.12.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -70,7 +70,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 var EntityComplexTypes = GetEntityComplexTypes(Schema);
                 var ContextComplexTypes = GetContextComplexTypes(Schema);
 
-                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("EntityNamespaceName", EntityNamespaceName).Substitute("ContextNamespaceName", ContextNamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("EntityComplexTypes", EntityComplexTypes).Substitute("ContextComplexTypes", ContextComplexTypes));
+                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("EntityNamespaceName", EntityNamespaceName).Substitute("ContextNamespaceName", ContextNamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("EntityComplexTypes", EntityComplexTypes).Substitute("ContextComplexTypes", ContextComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
 
             public String[] GetPrimitive(String Name, String PlatformName)

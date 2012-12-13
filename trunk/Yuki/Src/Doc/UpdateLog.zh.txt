@@ -1,6 +1,9 @@
 ﻿2012.12.13
 Yuki.Core, Examples:
 修改C# JSON协议的代码生成，使其支持多版本调用。
+Yuki.Core, Yuki.Relation:
+去除所有代码生成的行尾多余空格。
+统一tree文件名称。
 
 2012.12.12
 Yuki.Core:

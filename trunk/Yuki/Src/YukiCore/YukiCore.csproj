@@ -74,19 +74,19 @@
     <Compile Include="Xhtml\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ActionScriptBinary\ActionScriptBinary.tree" />
-    <EmbeddedResource Include="ActionScriptJson\ActionScriptJson.tree" />
-    <EmbeddedResource Include="ActionScript\ActionScript.tree" />
-    <EmbeddedResource Include="CppBinary\CppBinary.tree" />
-    <EmbeddedResource Include="Cpp\Cpp.tree" />
-    <EmbeddedResource Include="CSharpBinary\CSharpBinary.tree" />
-    <EmbeddedResource Include="CSharpJson\CSharpJson.tree" />
-    <EmbeddedResource Include="CSharp\CSharp.tree" />
-    <EmbeddedResource Include="JavaBinary\JavaBinary.tree" />
-    <EmbeddedResource Include="Java\Java.tree" />
+    <EmbeddedResource Include="ActionScriptBinary\Schema.tree" />
+    <EmbeddedResource Include="ActionScriptJson\Schema.tree" />
+    <EmbeddedResource Include="ActionScript\Schema.tree" />
+    <EmbeddedResource Include="CppBinary\Schema.tree" />
+    <EmbeddedResource Include="Cpp\Schema.tree" />
+    <EmbeddedResource Include="CSharpBinary\Schema.tree" />
+    <EmbeddedResource Include="CSharpJson\Schema.tree" />
+    <EmbeddedResource Include="CSharp\Schema.tree" />
+    <EmbeddedResource Include="JavaBinary\Schema.tree" />
+    <EmbeddedResource Include="Java\Schema.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
-    <EmbeddedResource Include="VB\VB.tree" />
-    <EmbeddedResource Include="Xhtml\Xhtml.tree" />
+    <EmbeddedResource Include="VB\Schema.tree" />
+    <EmbeddedResource Include="Xhtml\Schema.tree" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild">
