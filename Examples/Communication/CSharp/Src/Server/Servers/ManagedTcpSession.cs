@@ -45,10 +45,8 @@ namespace Server
             {
                 Context.RemoteEndPoint = RemoteEndPoint;
 
-                Server.SessionMappings.DoAction(Mappings =>
-                {
-                    Mappings.Add(Context, this);
-                });
+                Server.ServerContext.SessionSet.DoAction(ss => ss.Add(Context));
+                Server.SessionMappings.DoAction(Mappings => Mappings.Add(Context, this));
 
                 SessionTask.DoAction(t => t.Start());
 
@@ -489,6 +487,13 @@ namespace Server
                     if (Mappings.ContainsKey(Context))
                     {
                         Mappings.Remove(Context);
+                    }
+                });
+                Server.ServerContext.SessionSet.DoAction(ss =>
+                {
+                    if (ss.Contains(Context))
+                    {
+                        ss.Remove(Context);
                     }
                 });
             }

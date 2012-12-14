@@ -12,18 +12,12 @@ namespace Server
     public class ConsoleLogger : IDisposable
     {
         private AsyncConsumer<SessionLogEntry> AsyncConsumer = null;
-        private Action Unbind = null;
 
-        /// <param name="Path"></param>
-        /// <param name="Bind">需要是线程安全的</param>
-        /// <param name="Unbind">需要是线程安全的</param>
-        public void Start(Action<Action<SessionLogEntry>> Bind, Action<Action<SessionLogEntry>> Unbind)
+        public void Start()
         {
             if (AsyncConsumer != null) { throw new InvalidOperationException(); }
 
             AsyncConsumer = new AsyncConsumer<SessionLogEntry>();
-            Bind(AsyncConsumer.Push);
-            this.Unbind = () => Unbind(AsyncConsumer.Push);
             AsyncConsumer.Start
             (
                 e =>
@@ -38,20 +32,18 @@ namespace Server
             );
         }
 
+        /// <summary>只能在Start之后，Stop之前调用，线程安全</summary>
+        public void Push(SessionLogEntry e)
+        {
+            AsyncConsumer.Push(e);
+        }
+
         public void Stop()
         {
             if (AsyncConsumer != null)
             {
                 AsyncConsumer.Push(null);
                 AsyncConsumer.Stop();
-            }
-            if (Unbind != null)
-            {
-                Unbind();
-                Unbind = null;
-            }
-            if (AsyncConsumer != null)
-            {
                 AsyncConsumer.Dispose();
                 AsyncConsumer = null;
             }

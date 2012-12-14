@@ -1,18 +1,38 @@
 ﻿Configuration
-    ProtocolType Binary
-    Bindings
-        Binding
-            IpAddress 0.0.0.0
-            Port 8001
-    EnableLogNormalIn True
-    EnableLogNormalOut True
-    EnableLogUnknownError True
-    EnableLogCriticalError True
-    EnableLogPerformance True
-    EnableLogSystem True
-    EnableLogConsole True
-    SessionIdleTimeout 600
-    MaxConnections 32768
-    MaxConnectionsPerIP 32768
-    MaxBadCommands 8
-    ClientDebug True
+    Servers
+        VirtualServer
+            ProtocolType Binary
+            Bindings
+                Binding
+                    IpAddress 0.0.0.0
+                    Port 8001
+            EnableLogNormalIn True
+            EnableLogNormalOut True
+            EnableLogUnknownError True
+            EnableLogCriticalError True
+            EnableLogPerformance True
+            EnableLogSystem True
+            EnableLogConsole True
+            SessionIdleTimeout 600
+            MaxConnections 32768
+            MaxConnectionsPerIP 32768
+            MaxBadCommands 8
+            ClientDebug True
+        VirtualServer
+            ProtocolType Json
+            Bindings
+                Binding
+                    IpAddress 0.0.0.0
+                    Port 8002
+            EnableLogNormalIn True
+            EnableLogNormalOut True
+            EnableLogUnknownError True
+            EnableLogCriticalError True
+            EnableLogPerformance True
+            EnableLogSystem True
+            EnableLogConsole True
+            SessionIdleTimeout 600
+            MaxConnections 32768
+            MaxConnectionsPerIP 32768
+            MaxBadCommands 8
+            ClientDebug True

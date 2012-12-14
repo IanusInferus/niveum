@@ -15,7 +15,7 @@ namespace Server
         Json
     }
 
-    public class Configuration
+    public class VirtualServer
     {
         public ProtocolType ProtocolType;
         public Binding[] Bindings;
@@ -31,5 +31,10 @@ namespace Server
         public int MaxConnectionsPerIP;
         public int MaxBadCommands;
         public Boolean ClientDebug;
+    }
+
+    public class Configuration
+    {
+        public VirtualServer[] Servers;
     }
 }
