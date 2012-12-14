@@ -20,8 +20,7 @@ namespace Server
     {
         SessionCommandTag_Read = 0,
         SessionCommandTag_Write = 1,
-        SessionCommandTag_ReadRaw = 2,
-        SessionCommandTag_Quit = 3
+        SessionCommandTag_ReadRaw = 2
     };
     class BinarySocketSession::SessionCommand
     {
@@ -30,7 +29,6 @@ namespace Server
         std::shared_ptr<CommandBody> Read;
         std::shared_ptr<CommandBody> Write;
         Unit ReadRaw;
-        Unit Quit;
 
         static std::shared_ptr<SessionCommand> CreateRead(std::shared_ptr<CommandBody> Value)
         {
@@ -53,18 +51,10 @@ namespace Server
             r->ReadRaw = Unit();
             return r;
         }
-        static std::shared_ptr<SessionCommand> CreateQuit()
-        {
-            auto r = std::make_shared<SessionCommand>();
-            r->_Tag = SessionCommandTag_Quit;
-            r->Quit = Unit();
-            return r;
-        }
 
         Boolean OnRead() { return _Tag == SessionCommandTag_Read; }
         Boolean OnWrite() { return _Tag == SessionCommandTag_Write; }
         Boolean OnReadRaw() { return _Tag == SessionCommandTag_ReadRaw; }
-        Boolean OnQuit() { return _Tag == SessionCommandTag_Quit; }
     };
 
     class BinarySocketSession::TryShiftResult
@@ -275,16 +265,8 @@ namespace Server
         }
     }
 
-    bool BinarySocketSession::MessageLoop(std::shared_ptr<SessionCommand> sc)
+    void BinarySocketSession::MessageLoop(std::shared_ptr<SessionCommand> sc)
     {
-        if (!IsRunningValue.Check<bool>([](const bool &b) { return b; }))
-        {
-            if (!sc->OnWrite() && !sc->OnQuit())
-            {
-                return true;
-            }
-        }
-
         if (sc->OnRead())
         {
             ReadCommand(sc->Read);
@@ -334,35 +316,16 @@ namespace Server
                 StopAsync();
                 ReleaseAsyncOperation();
             };
-            if (IsExitingValue.Check<bool>([](const bool &s) { return s; })) { return true; }
-            if (!TryLockAsyncOperation()) { return true; }
+            if (IsExitingValue.Check<bool>([](const bool &s) { return s; })) { return; }
+            LockAsyncOperation();
             ReceiveAsync(Buffer, BufferLength, Buffer->size() - BufferLength, Completed, Faulted);
-        }
-        else if (sc->OnQuit())
-        {
-            return false;
         }
         else
         {
             throw std::logic_error("InvalidOperationException");
         }
-        return true;
     }
 
-    bool BinarySocketSession::TryLockAsyncOperation()
-    {
-        bool Done = IsRunningValue.Check<bool>([=](const bool &b) -> bool
-        {
-            if (b)
-            {
-                NumAsyncOperation->Update([](const int &n) { return n + 1; });
-                NumAsyncOperationUpdated->Set();
-                return true;
-            }
-            return false;
-        });
-        return Done;
-    }
     void BinarySocketSession::LockAsyncOperation()
     {
         NumAsyncOperation->Update([](const int &n) { return n + 1; });
@@ -379,19 +342,10 @@ namespace Server
         });
         return nValue;
     }
-    bool BinarySocketSession::TryLockSessionCommand()
+    void BinarySocketSession::LockSessionCommand()
     {
-        bool Done = IsRunningValue.Check<bool>([=](const bool &b) -> bool
-        {
-            if (b)
-            {
-                NumSessionCommand->Update([](const int &n) { return n + 1; });
-                NumSessionCommandUpdated->Set();
-                return true;
-            }
-            return false;
-        });
-        return Done;
+        NumSessionCommand->Update([](const int &n) { return n + 1; });
+        NumSessionCommandUpdated->Set();
     }
     int BinarySocketSession::ReleaseSessionCommand()
     {
@@ -438,7 +392,7 @@ namespace Server
 
     void BinarySocketSession::PushCommand(std::shared_ptr<SessionCommand> sc)
     {
-        if (!TryLockSessionCommand()) { return; }
+        LockSessionCommand();
 
         CommandQueue.DoAction([&](std::shared_ptr<std::queue<std::shared_ptr<SessionCommand>>> &q)
         {
@@ -648,7 +602,6 @@ namespace Server
             {
             }
         }
-        PushCommand(SessionCommand::CreateQuit());
         if (NotifySessionQuit != nullptr)
         {
             NotifySessionQuit();
@@ -680,8 +633,6 @@ namespace Server
             });
         }
 
-        PushCommand(SessionCommand::CreateQuit());
-
         IsRunningValue.Update([=](bool b) { return false; });
         while (NumSessionCommand->Check<bool>([](const int &n) { return n != 0; }))
         {
@@ -690,20 +641,8 @@ namespace Server
         auto ss = GetSocket();
         if (ss != nullptr)
         {
-            try
-            {
-                ss->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-            }
-            catch (std::exception &)
-            {
-            }
-            try
-            {
-                ss->close();
-            }
-            catch (std::exception &)
-            {
-            }
+            ss->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+            ss->close();
         }
         while (NumAsyncOperation->Check<bool>([](const int &n) { return n != 0; }))
         {
