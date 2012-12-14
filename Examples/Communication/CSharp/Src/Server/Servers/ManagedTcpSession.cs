@@ -4,6 +4,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net;
 using System.Net.Sockets;
 using Firefly;
 using Firefly.Streaming;
@@ -18,19 +19,113 @@ namespace Server
     /// <summary>
     /// 本类的所有非继承的公共成员均是线程安全的。
     /// </summary>
-    public class ManagedTcpSession : TcpSession<ManagedTcpServer, ManagedTcpSession>
+    public class ManagedTcpSession
     {
+        public ManagedTcpServer Server { get; set; }
+        private StreamedAsyncSocket Socket;
+        public IPEndPoint RemoteEndPoint { get; private set; }
+
         private SessionContext Context;
         private int NumBadCommands = 0;
+        private Boolean IsDisposed = false;
 
-        public ManagedTcpSession()
+        public ManagedTcpSession(StreamedAsyncSocket Socket, IPEndPoint RemoteEndPoint)
         {
+            this.Socket = Socket;
+            this.RemoteEndPoint = RemoteEndPoint;
+
             Context = new SessionContext();
             Context.SessionToken = Cryptography.CreateRandom(4);
             Context.Quit += StopAsync;
         }
 
-        protected override void StartInner()
+        public void Dispose()
+        {
+            if (IsDisposed) { return; }
+            IsDisposed = true;
+
+            IsExitingValue.Update(b => true);
+
+            if (Server != null)
+            {
+                Server.SessionMappings.DoAction(Mappings =>
+                {
+                    if (Mappings.ContainsKey(Context))
+                    {
+                        Mappings.Remove(Context);
+                    }
+                });
+                Server.ServerContext.SessionSet.DoAction(ss =>
+                {
+                    if (ss.Contains(Context))
+                    {
+                        ss.Remove(Context);
+                    }
+                });
+            }
+
+            IsRunningValue.Update(b => false);
+            while (NumSessionCommand.Check(n => n != 0))
+            {
+                NumSessionCommandUpdated.WaitOne();
+            }
+
+            SessionTask.Update
+            (
+                t =>
+                {
+                    if (t != null)
+                    {
+                        t.Wait();
+                        t.Dispose();
+                    }
+                    return null;
+                }
+            );
+
+            Socket.Shutdown(SocketShutdown.Both);
+            Socket.Dispose();
+
+            IsExitingValue.Update(b => false);
+        }
+
+        //线程安全
+        private void StopAsync()
+        {
+            bool Done = false;
+            IsExitingValue.Update(b =>
+            {
+                Done = b;
+                return true;
+            });
+            if (Done) { return; }
+
+            if (Server != null)
+            {
+                Server.SessionMappings.DoAction(Mappings =>
+                {
+                    if (Mappings.ContainsKey(Context))
+                    {
+                        Mappings.Remove(Context);
+                    }
+                });
+            }
+
+            try
+            {
+                Socket.Shutdown(SocketShutdown.Receive);
+            }
+            catch (Exception)
+            {
+            }
+            if (Server.EnableLogSystem)
+            {
+                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExit" });
+            }
+            Server.NotifySessionQuit(this);
+        }
+
+        public void Start()
         {
             IsRunningValue.Update
             (
@@ -86,8 +181,6 @@ namespace Server
             public Boolean OnReadRaw { get { return _Tag == SessionCommandTag.ReadRaw; } }
         }
 
-        private AutoResetEvent NumAsyncOperationUpdated = new AutoResetEvent(false);
-        private LockedVariable<int> NumAsyncOperation = new LockedVariable<int>(0);
         private AutoResetEvent NumSessionCommandUpdated = new AutoResetEvent(false);
         private LockedVariable<int> NumSessionCommand = new LockedVariable<int>(0);
         private LockedVariable<Task> SessionTask = new LockedVariable<Task>(new Task(() => { }));
@@ -99,17 +192,6 @@ namespace Server
             {
                 return IsRunningValue.Check(b => b);
             }
-        }
-
-        private void LockAsyncOperation()
-        {
-            NumAsyncOperation.Update(n => n + 1);
-            NumAsyncOperationUpdated.Set();
-        }
-        private void ReleaseAsyncOperation()
-        {
-            NumAsyncOperation.Update(n => n - 1);
-            NumAsyncOperationUpdated.Set();
         }
 
         private void LockSessionCommand()
@@ -218,21 +300,13 @@ namespace Server
             else if (sc.OnWrite)
             {
                 var Bytes = sc.Write;
-                LockAsyncOperation();
-                SendAsync(Bytes, 0, Bytes.Length, () => { ReleaseAsyncOperation(); }, se =>
+                Socket.SendAsync(Bytes, 0, Bytes.Length, () => { }, se =>
                 {
-                    try
+                    if (!IsSocketErrorKnown(se))
                     {
-                        if (!IsSocketErrorKnown(se))
-                        {
-                            OnCriticalError((new SocketException((int)se)), new StackTrace(true));
-                        }
-                        StopAsync();
+                        OnCriticalError((new SocketException((int)se)), new StackTrace(true));
                     }
-                    finally
-                    {
-                        ReleaseAsyncOperation();
-                    }
+                    StopAsync();
                 });
             }
             else if (sc.OnReadRaw)
@@ -249,17 +323,7 @@ namespace Server
                 Action<int> Completed;
                 if (System.Diagnostics.Debugger.IsAttached)
                 {
-                    Completed = Count =>
-                    {
-                        try
-                        {
-                            CompletedInner(Count);
-                        }
-                        finally
-                        {
-                            ReleaseAsyncOperation();
-                        }
-                    };
+                    Completed = Count => CompletedInner(Count);
                 }
                 else
                 {
@@ -274,32 +338,20 @@ namespace Server
                             OnCriticalError(ex, new StackTrace(true));
                             StopAsync();
                         }
-                        finally
-                        {
-                            ReleaseAsyncOperation();
-                        }
                     };
                 }
                 Action<SocketError> Faulted = se =>
                 {
-                    try
+                    if (!IsSocketErrorKnown(se))
                     {
-                        if (!IsSocketErrorKnown(se))
-                        {
-                            OnCriticalError((new SocketException((int)se)), new StackTrace(true));
-                        }
-                        StopAsync();
+                        OnCriticalError((new SocketException((int)se)), new StackTrace(true));
                     }
-                    finally
-                    {
-                        ReleaseAsyncOperation();
-                    }
+                    StopAsync();
                 };
                 if (IsExitingValue.Check(b => b)) { return; }
-                LockAsyncOperation();
                 var Buffer = Server.VirtualTransportServer.GetReadBuffer(Context);
                 var BufferLength = Buffer.Offset + Buffer.Count;
-                ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
+                Socket.ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
             }
             else
             {
@@ -436,92 +488,6 @@ namespace Server
 
         private void Logon()
         {
-        }
-
-        //线程安全
-        private void StopAsync()
-        {
-            bool Done = false;
-            IsExitingValue.Update(b =>
-            {
-                Done = b;
-                return true;
-            });
-            if (Done) { return; }
-
-            if (Server != null)
-            {
-                Server.SessionMappings.DoAction(Mappings =>
-                {
-                    if (Mappings.ContainsKey(Context))
-                    {
-                        Mappings.Remove(Context);
-                    }
-                });
-            }
-
-            var ss = GetSocket();
-            if (ss != null)
-            {
-                try
-                {
-                    ss.Shutdown(SocketShutdown.Receive);
-                }
-                catch (Exception)
-                {
-                }
-            }
-            if (Server.EnableLogSystem)
-            {
-                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExit" });
-            }
-            Server.NotifySessionQuit(this);
-        }
-        protected override void StopInner()
-        {
-            IsExitingValue.Update(b => true);
-
-            if (Server != null)
-            {
-                Server.SessionMappings.DoAction(Mappings =>
-                {
-                    if (Mappings.ContainsKey(Context))
-                    {
-                        Mappings.Remove(Context);
-                    }
-                });
-                Server.ServerContext.SessionSet.DoAction(ss =>
-                {
-                    if (ss.Contains(Context))
-                    {
-                        ss.Remove(Context);
-                    }
-                });
-            }
-
-            IsRunningValue.Update(b => false);
-            while (NumSessionCommand.Check(n => n != 0))
-            {
-                NumSessionCommandUpdated.WaitOne();
-            }
-            while (NumAsyncOperation.Check(n => n != 0))
-            {
-                NumAsyncOperationUpdated.WaitOne();
-            }
-
-            SessionTask.Update
-            (
-                t =>
-                {
-                    if (t != null)
-                    {
-                        t.Wait();
-                        t.Dispose();
-                    }
-                    return null;
-                }
-            );
-            IsExitingValue.Update(b => false);
         }
     }
 }
