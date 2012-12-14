@@ -55,10 +55,9 @@ namespace Server
         Communication::BaseSystem::LockedVariable<bool> IsRunningValue;
         Communication::BaseSystem::LockedVariable<bool> IsExitingValue;
 
-        bool TryLockAsyncOperation();
         void LockAsyncOperation();
         int ReleaseAsyncOperation();
-        bool TryLockSessionCommand();
+        void LockSessionCommand();
         int ReleaseSessionCommand();
 
         void DoCommandAsync();
@@ -70,7 +69,7 @@ namespace Server
         std::shared_ptr<BufferStateMachine> bsm;
         std::shared_ptr<std::vector<uint8_t>> Buffer;
         int BufferLength;
-        bool MessageLoop(std::shared_ptr<SessionCommand> sc);
+        void MessageLoop(std::shared_ptr<SessionCommand> sc);
 
         void CompletedInner(int Count);
 

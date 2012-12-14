@@ -256,6 +256,16 @@ namespace Communication
 
                         if (SessionCount >= MaxConnectionsValue->HasValue)
                         {
+                            PurifyOneInSession();
+                        }
+
+                        SessionCount = Sessions.Check<int>([=](std::shared_ptr<TSessionSet> ss) -> int
+                        {
+                            return (int)(ss->size());
+                        });
+
+                        if (SessionCount >= MaxConnectionsValue->HasValue)
+                        {
                             Communication::BaseSystem::AutoRelease Final([&]()
                             {
                                 s->Stop();
@@ -313,6 +323,59 @@ namespace Communication
             }
         }
 
+        bool TcpServer::Purify(std::shared_ptr<TcpSession> StoppingSession)
+        {
+            auto Removed = false;
+            Sessions.DoAction([&](std::shared_ptr<TSessionSet> &ss)
+            {
+                if (ss->count(StoppingSession) > 0)
+                {
+                    ss->erase(StoppingSession);
+                    Removed = true;
+                }
+            });
+            if (Removed)
+            {
+                IpSessions.DoAction([&](std::shared_ptr<TIpAddressMap> &iss)
+                {
+                    auto Address = StoppingSession->RemoteEndPoint.address();
+                    if (iss->count(Address) > 0)
+                    {
+                        (*iss)[Address] -= 1;
+                        if ((*iss)[Address] == 0)
+                        {
+                            iss->erase(Address);
+                        }
+                    }
+                });
+            }
+            StoppingSession->Stop();
+            return Removed;
+        }
+
+        bool TcpServer::PurifyOneInSession()
+        {
+            while (true)
+            {
+                std::shared_ptr<TcpSession> StoppingSession = nullptr;
+                StoppingSessions.DoAction([&](std::shared_ptr<TSessionSet> &Sessions)
+                {
+                    if (Sessions->size() > 0)
+                    {
+                        StoppingSession = *(Sessions->begin());
+                        Sessions->erase(StoppingSession);
+                    }
+                });
+                if (StoppingSession == nullptr)
+                {
+                    break;
+                }
+                auto Removed = Purify(StoppingSession);
+                if (Removed) { return true; }
+            }
+            return false;
+        }
+
         void TcpServer::DoPurifiering()
         {
             while (true)
@@ -334,31 +397,7 @@ namespace Communication
                     {
                         break;
                     }
-                    auto Removed = false;
-                    Sessions.DoAction([&](std::shared_ptr<TSessionSet> &ss)
-                    {
-                        if (ss->count(StoppingSession) > 0)
-                        {
-                            ss->erase(StoppingSession);
-                            Removed = true;
-                        }
-                    });
-                    if (Removed)
-                    {
-                        IpSessions.DoAction([&](std::shared_ptr<TIpAddressMap> &iss)
-                        {
-                            auto Address = StoppingSession->RemoteEndPoint.address();
-                            if (iss->count(Address) > 0)
-                            {
-                                (*iss)[Address] -= 1;
-                                if ((*iss)[Address] == 0)
-                                {
-                                    iss->erase(Address);
-                                }
-                            }
-                        });
-                    }
-                    StoppingSession->Stop();
+                    Purify(StoppingSession);
                 }
             }
         }

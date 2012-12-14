@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2012.07.08.
+//  Version:     2012.12.14.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -26,7 +26,7 @@
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/thread/thread.hpp>
+#include <boost/thread.hpp>
 
 namespace Client
 {
@@ -78,7 +78,14 @@ namespace Client
             auto bsc = std::make_shared<BinarySocketClient>(IoService, RemoteEndPoint, ci);
             bsc->Connect();
             std::wprintf(L"%ls\n", L"连接成功。");
-            bsc->Receive([](std::function<void(void)> a) { a(); }, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
+
+            boost::mutex Lockee;
+            auto DoHandle = [&](std::function<void(void)> a)
+            {
+                boost::unique_lock<boost::mutex> Lock(Lockee);
+                a();
+            };
+            bsc->Receive(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
             
             boost::thread t([&]() { IoService.run(); });
 
@@ -86,27 +93,31 @@ namespace Client
             {
                 std::wstring Line;
                 std::getline(std::wcin, Line);
-                if (Line == L"exit") { break; }
-                if (Line == L"shutdown")
+
                 {
-                    bsc->InnerClient->Shutdown(std::make_shared<Communication::ShutdownRequest>(), [](std::shared_ptr<Communication::ShutdownReply> r)
+                    boost::unique_lock<boost::mutex> Lock(Lockee);
+                    if (Line == L"exit") { break; }
+                    if (Line == L"shutdown")
                     {
-                        if (r->OnSuccess())
+                        bsc->InnerClient->Shutdown(std::make_shared<Communication::ShutdownRequest>(), [](std::shared_ptr<Communication::ShutdownReply> r)
                         {
-                            std::wprintf(L"%ls\n", L"服务器关闭。");
+                            if (r->OnSuccess())
+                            {
+                                std::wprintf(L"%ls\n", L"服务器关闭。");
+                            }
+                        });
+                        break;
+                    }
+                    auto Request = std::make_shared<Communication::SendMessageRequest>();
+                    Request->Content = Line;
+                    bsc->InnerClient->SendMessage(Request, [](std::shared_ptr<Communication::SendMessageReply> r)
+                    {
+                        if (r->OnTooLong())
+                        {
+                            std::wprintf(L"%ls\n", L"消息过长。");
                         }
                     });
-                    break;
                 }
-                auto Request = std::make_shared<Communication::SendMessageRequest>();
-                Request->Content = Line;
-                bsc->InnerClient->SendMessage(Request, [](std::shared_ptr<Communication::SendMessageReply> r)
-                {
-                    if (r->OnTooLong())
-                    {
-                        std::wprintf(L"%ls\n", L"消息过长。");
-                    }
-                });
             }
 
             bsc->Close();
