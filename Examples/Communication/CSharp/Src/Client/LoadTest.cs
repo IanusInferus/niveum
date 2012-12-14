@@ -18,7 +18,7 @@ namespace Client
     {
         public static void TestQuit(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
         {
-            ic.Quit(new QuitRequest{}, r =>
+            ic.Quit(new QuitRequest { }, r =>
             {
                 Completed();
             });
@@ -85,11 +85,10 @@ namespace Client
             Trace.Assert(Sum == PredicatedSum);
         }
 
-        public static void TestForNumUser(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IClient, Action> Test, Action<int, int, ClientContext, IClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
+        public static void TestForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IClient, Action> Test, Action<int, int, ClientContext, IClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
         {
             var tl = new List<Task>();
-            var bcl = new List<BinarySocketClient>();
-            var jcl = new List<JsonSocketClient>();
+            var bcl = new List<ManagedTcpClient>();
             var ccl = new List<ClientContext>();
             var vConnected = new LockedVariable<int>(0);
             var vCompleted = new LockedVariable<int>(0);
@@ -103,89 +102,59 @@ namespace Client
 
             var vError = new LockedVariable<int>(0);
 
-            if (ProtocolType == ApplicationProtocolType.Binary)
+            for (int k = 0; k < NumUser; k += 1)
             {
-                for (int k = 0; k < NumUser; k += 1)
+                var n = k;
+                var Lockee = new Object();
+                var bc = new ManagedTcpClient(RemoteEndPoint, new ClientImplementation(), ProtocolType);
+                if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, bc.Context, bc.InnerClient, Completed); }
+                bc.Connect();
+                Action<SocketError> HandleError = se =>
                 {
-                    var n = k;
-                    var bc = new BinarySocketClient(RemoteEndPoint, new ClientImplementation());
-                    if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, bc.Context, bc.InnerClient, Completed); }
-                    bc.Connect();
-                    Action<SocketError> HandleError = se =>
+                    int OldValue = 0;
+                    vError.Update(v =>
                     {
-                        int OldValue = 0;
-                        vError.Update(v =>
+                        OldValue = v;
+                        return v + 1;
+                    });
+                    if (OldValue <= 10)
+                    {
+                        Console.WriteLine("{0}:{1}".Formats(n, (new SocketException((int)se)).Message));
+                    }
+                    Completed();
+                };
+                bc.Receive
+                (
+                    a =>
+                    {
+                        lock (Lockee)
                         {
-                            OldValue = v;
-                            return v + 1;
-                        });
-                        if (OldValue <= 10)
-                        {
-                            Console.WriteLine("{0}:{1}".Formats(n, (new SocketException((int)se)).Message));
+                            a();
                         }
-                        Completed();
-                    };
-                    bc.Receive(a => a(), HandleError);
+                    },
+                    HandleError
+                );
+                lock (Lockee)
+                {
                     bc.InnerClient.ServerTime(new ServerTimeRequest { }, r =>
                     {
                         vConnected.Update(i => i + 1);
                         Check.Set();
                     });
-                    var t = new Task
-                    (
-                        () =>
+                }
+                var t = new Task
+                (
+                    () =>
+                    {
+                        lock (Lockee)
                         {
                             Test(NumUser, n, bc.Context, bc.InnerClient, Completed);
                         }
-                    );
-                    tl.Add(t);
-                    bcl.Add(bc);
-                    ccl.Add(bc.Context);
-                }
-            }
-            else if (ProtocolType == ApplicationProtocolType.Json)
-            {
-                for (int k = 0; k < NumUser; k += 1)
-                {
-                    var n = k;
-                    var jc = new JsonSocketClient(RemoteEndPoint, new ClientImplementation());
-                    if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, jc.Context, jc.InnerClient, Completed); }
-                    jc.Connect();
-                    Action<SocketError> HandleError = se =>
-                    {
-                        int OldValue = 0;
-                        vError.Update(v =>
-                        {
-                            OldValue = v;
-                            return v + 1;
-                        });
-                        if (OldValue <= 10)
-                        {
-                            Console.WriteLine("{0}:{1}".Formats(n, (new SocketException((int)se)).Message));
-                        }
-                        Completed();
-                    };
-                    jc.Receive(a => a(), HandleError);
-                    jc.InnerClient.ServerTime(new ServerTimeRequest { }, r =>
-                    {
-                        vConnected.Update(i => i + 1);
-                        Check.Set();
-                    });
-                    var t = new Task
-                    (
-                        () =>
-                        {
-                            Test(NumUser, n, jc.Context, jc.InnerClient, Completed);
-                        }
-                    );
-                    tl.Add(t);
-                    jcl.Add(jc);
-                    ccl.Add(jc.Context);
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException();
+                    }
+                );
+                tl.Add(t);
+                bcl.Add(bc);
+                ccl.Add(bc.Context);
             }
 
             while (vConnected.Check(i => i != NumUser))
@@ -218,11 +187,6 @@ namespace Client
                 bc.Close();
                 bc.Dispose();
             }
-            foreach (var jc in jcl)
-            {
-                jc.Close();
-                jc.Dispose();
-            }
 
             if (FinalCheck != null)
             {
@@ -238,7 +202,7 @@ namespace Client
             Console.WriteLine("{0}: {1} Users, {2} ms", Title, NumUser, TimeDiff);
         }
 
-        public static int DoTest(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType)
+        public static int DoTest(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
         {
             TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestQuit", TestQuit);
             TestForNumUser(RemoteEndPoint, ProtocolType, 64, "TestAdd", TestAdd);

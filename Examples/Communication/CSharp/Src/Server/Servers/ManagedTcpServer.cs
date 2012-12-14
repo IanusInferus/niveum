@@ -11,6 +11,12 @@ using Server.Services;
 
 namespace Server
 {
+    public enum SerializationProtocolType
+    {
+        Binary,
+        Json
+    }
+
     /// <summary>
     /// 本类的所有非继承的公共成员均是线程安全的。
     /// </summary>
@@ -26,7 +32,7 @@ namespace Server
         public IVirtualTransportServer<SessionContext> VirtualTransportServer { get { return WorkPartInstance.Value.vts; } }
         public ServerContext ServerContext { get; private set; }
 
-        private ProtocolType ProtocolTypeValue = ProtocolType.Binary;
+        private SerializationProtocolType ProtocolTypeValue = SerializationProtocolType.Binary;
         public delegate Boolean CheckCommandAllowedDelegate(SessionContext c, String CommandName);
         private CheckCommandAllowedDelegate CheckCommandAllowedValue = null;
         private int MaxBadCommandsValue = 8;
@@ -39,7 +45,7 @@ namespace Server
         private Boolean EnableLogSystemValue = true;
 
         /// <summary>只能在启动前修改，以保证线程安全</summary>
-        public ProtocolType ProtocolType
+        public SerializationProtocolType ProtocolType
         {
             get
             {
@@ -211,7 +217,7 @@ namespace Server
                     };
 
                     IVirtualTransportServer<SessionContext> vts;
-                    if (ProtocolType == ProtocolType.Binary)
+                    if (ProtocolType == SerializationProtocolType.Binary)
                     {
                         BinaryCountPacketServer<SessionContext>.CheckCommandAllowedDelegate cca = (c, CommandName) =>
                         {
@@ -220,7 +226,7 @@ namespace Server
                         };
                         vts = new BinaryCountPacketServer<SessionContext>(law, c => c.BinaryCountPacketContext, cca);
                     }
-                    else if (ProtocolType == ProtocolType.Json)
+                    else if (ProtocolType == SerializationProtocolType.Json)
                     {
                         JsonLinePacketServer<SessionContext>.CheckCommandAllowedDelegate cca = (c, CommandName) =>
                         {
@@ -231,7 +237,7 @@ namespace Server
                     }
                     else
                     {
-                        throw new InvalidOperationException("未知协议类型: " + ProtocolType.ToString());
+                        throw new InvalidOperationException("InvalidSerializationProtocol: " + ProtocolType.ToString());
                     }
 
                     vts.ServerEvent += OnServerEvent;

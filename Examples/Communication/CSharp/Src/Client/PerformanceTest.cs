@@ -49,12 +49,11 @@ namespace Client
             });
         }
 
-        public static void TestForNumUser(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType, int NumRequestPerUser, int NumUser, String Title, Action<int, int, ClientContext, IClient, Action> Test)
+        public static void TestForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumRequestPerUser, int NumUser, String Title, Action<int, int, ClientContext, IClient, Action> Test)
         {
             var tll = new Object();
             var tl = new List<Task>();
-            var bcl = new List<BinarySocketClient>();
-            var jcl = new List<JsonSocketClient>();
+            var bcl = new List<ManagedTcpClient>();
             var ccl = new List<ClientContext>();
             var vConnected = new LockedVariable<int>(0);
             var vCompleted = new LockedVariable<int>(0);
@@ -62,159 +61,80 @@ namespace Client
 
             var vError = new LockedVariable<int>(0);
 
-            if (ProtocolType == ApplicationProtocolType.Binary)
+            for (int k = 0; k < NumUser; k += 1)
             {
-                for (int k = 0; k < NumUser; k += 1)
-                {
-                    Action Completed = null;
+                Action Completed = null;
 
-                    var n = k;
-                    var Lockee = new Object();
-                    var bc = new BinarySocketClient(RemoteEndPoint, new ClientImplementation());
-                    bc.Connect();
-                    Action<SocketError> HandleError = se =>
+                var n = k;
+                var Lockee = new Object();
+                var bc = new ManagedTcpClient(RemoteEndPoint, new ClientImplementation(), ProtocolType);
+                bc.Connect();
+                Action<SocketError> HandleError = se =>
+                {
+                    int OldValue = 0;
+                    vError.Update(v =>
                     {
-                        int OldValue = 0;
-                        vError.Update(v =>
+                        OldValue = v;
+                        return v + 1;
+                    });
+                    if (OldValue <= 10)
+                    {
+                        Console.WriteLine("{0}:{1}".Formats(n, (new SocketException((int)se)).Message));
+                    }
+                    vCompleted.Update(i => i + 1);
+                    Check.Set();
+                };
+                bc.Receive
+                (
+                    a =>
+                    {
+                        lock (Lockee)
                         {
-                            OldValue = v;
-                            return v + 1;
-                        });
-                        if (OldValue <= 10)
-                        {
-                            Console.WriteLine("{0}:{1}".Formats(n, (new SocketException((int)se)).Message));
+                            a();
                         }
-                        vCompleted.Update(i => i + 1);
-                        Check.Set();
-                    };
-                    bc.Receive
-                    (
-                        a =>
-                        {
-                            lock (Lockee)
-                            {
-                                a();
-                            }
-                        },
-                        HandleError
-                    );
+                    },
+                    HandleError
+                );
+                lock (Lockee)
+                {
                     bc.InnerClient.ServerTime(new ServerTimeRequest { }, r =>
                     {
                         vConnected.Update(i => i + 1);
                         Check.Set();
                     });
-                    Action f = () =>
-                    {
-                        lock (Lockee)
-                        {
-                            Test(NumUser, n, bc.Context, bc.InnerClient, Completed);
-                        }
-                    };
-                    var t = new Task(f);
-                    lock (tll)
-                    {
-                        tl.Add(t);
-                    }
-                    bcl.Add(bc);
-                    ccl.Add(bc.Context);
-
-                    int RequestCount = NumRequestPerUser;
-                    Completed = () =>
-                    {
-                        if (RequestCount > 0)
-                        {
-                            RequestCount -= 1;
-                            var tt = new Task(f);
-                            lock (tll)
-                            {
-                                tl.Add(t);
-                            }
-                            tt.Start();
-                            return;
-                        }
-                        vCompleted.Update(i => i + 1);
-                        Check.Set();
-                    };
                 }
-            }
-            else if (ProtocolType == ApplicationProtocolType.Json)
-            {
-                for (int k = 0; k < NumUser; k += 1)
+                Action f = () =>
                 {
-                    Action Completed = null;
-
-                    var n = k;
-                    var Lockee = new Object();
-                    var jc = new JsonSocketClient(RemoteEndPoint, new ClientImplementation());
-                    jc.Connect();
-                    Action<SocketError> HandleError = se =>
+                    lock (Lockee)
                     {
-                        int OldValue = 0;
-                        vError.Update(v =>
-                        {
-                            OldValue = v;
-                            return v + 1;
-                        });
-                        if (OldValue <= 10)
-                        {
-                            Console.WriteLine("{0}:{1}".Formats(n, (new SocketException((int)se)).Message));
-                        }
-                        vCompleted.Update(i => i + 1);
-                        Check.Set();
-                    };
-                    jc.Receive
-                    (
-                        a =>
-                        {
-                            lock (Lockee)
-                            {
-                                a();
-                            }
-                        },
-                        HandleError
-                    );
-                    jc.InnerClient.ServerTime(new ServerTimeRequest { }, r =>
-                    {
-                        vConnected.Update(i => i + 1);
-                        Check.Set();
-                    });
-                    Action f = () =>
-                    {
-                        lock (Lockee)
-                        {
-                            Test(NumUser, n, jc.Context, jc.InnerClient, Completed);
-                        }
-                    };
-                    var t = new Task(f);
-                    lock (tll)
-                    {
-                        tl.Add(t);
+                        Test(NumUser, n, bc.Context, bc.InnerClient, Completed);
                     }
-                    jcl.Add(jc);
-                    ccl.Add(jc.Context);
-
-                    int RequestCount = NumRequestPerUser;
-                    Completed = () =>
-                    {
-                        if (RequestCount > 0)
-                        {
-                            RequestCount -= 1;
-                            var tt = new Task(f);
-                            lock (tll)
-                            {
-                                tl.Add(t);
-                            }
-                            tt.Start();
-                            return;
-                        }
-                        vCompleted.Update(i => i + 1);
-                        Check.Set();
-                    };
+                };
+                var t = new Task(f);
+                lock (tll)
+                {
+                    tl.Add(t);
                 }
-            }
-            else
-            {
-                throw new InvalidOperationException();
+                bcl.Add(bc);
+                ccl.Add(bc.Context);
+
+                int RequestCount = NumRequestPerUser;
+                Completed = () =>
+                {
+                    if (RequestCount > 0)
+                    {
+                        RequestCount -= 1;
+                        var tt = new Task(f);
+                        lock (tll)
+                        {
+                            tl.Add(t);
+                        }
+                        tt.Start();
+                        return;
+                    }
+                    vCompleted.Update(i => i + 1);
+                    Check.Set();
+                };
             }
 
             while (vConnected.Check(i => i != NumUser))
@@ -250,11 +170,6 @@ namespace Client
                 bc.Close();
                 bc.Dispose();
             }
-            foreach (var jc in jcl)
-            {
-                jc.Close();
-                jc.Dispose();
-            }
 
             var NumError = vError.Check(v => v);
             if (NumError > 0)
@@ -265,7 +180,7 @@ namespace Client
             Console.WriteLine("{0}: {1} Users, {2} Request/User, {3} ms", Title, NumUser, NumRequestPerUser, TimeDiff);
         }
 
-        public static int DoTest(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType)
+        public static int DoTest(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
         {
             TestForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestAdd", TestAdd);
             TestForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestMultiply", TestMultiply);
