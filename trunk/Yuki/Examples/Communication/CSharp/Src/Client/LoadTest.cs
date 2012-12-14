@@ -184,7 +184,6 @@ namespace Client
 
             foreach (var bc in bcl)
             {
-                bc.Close();
                 bc.Dispose();
             }
 

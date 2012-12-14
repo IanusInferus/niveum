@@ -160,7 +160,6 @@ namespace Client
                 };
                 bc.Receive(DoHandle, se => Console.WriteLine((new SocketException((int)se)).Message));
                 ReadLineAndSendLoop(bc.InnerClient, UseOld, Lockee);
-                bc.Close();
             }
         }
 

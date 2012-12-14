@@ -156,11 +156,6 @@ namespace Client
             }
         }
 
-        public void Close()
-        {
-            Dispose();
-        }
-
         public void Dispose()
         {
             IsRunningValue.Update(b => false);
@@ -183,13 +178,6 @@ namespace Client
                             {
                                 s.InnerSocket.Disconnect(false);
                             }
-                        }
-                        catch
-                        {
-                        }
-                        try
-                        {
-                            s.Close();
                         }
                         catch
                         {
