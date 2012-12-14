@@ -22,6 +22,7 @@ namespace Communication
             : IoService(IoService),
               Socket(nullptr),
               SendQueue(std::make_shared<std::queue<std::shared_ptr<SendAsyncParameters>>>()),
+              IsDisposed(false),
               IdleTimeout(Communication::BaseSystem::Optional<int>::CreateNotHasValue())
         {
         }
@@ -38,6 +39,9 @@ namespace Communication
 
         void TcpSession::Stop()
         {
+            if (IsDisposed) { return; }
+            IsDisposed = true;
+
             StopInner();
 
             std::shared_ptr<boost::asio::ip::tcp::socket> s = nullptr;
@@ -49,32 +53,9 @@ namespace Communication
 
             if (s != nullptr)
             {
-                try
-                {
-                    s->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-                }
-                catch (std::exception &)
-                {
-                }
-                try
-                {
-                    s->close();
-                }
-                catch (std::exception &)
-                {
-                }
-                try
-                {
-                    s = nullptr;
-                }
-                catch (std::exception &)
-                {
-                }
-            }
-            if (NotifySessionQuit != nullptr)
-            {
-                NotifySessionQuit();
-                NotifySessionQuit = nullptr;
+                s->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+                s->close();
+                s = nullptr;
             }
         }
 
