@@ -120,61 +120,144 @@ namespace Server
 
             Console.WriteLine(@"逻辑处理器数量: " + ProcessorCount.ToString());
 
-            if (!(c.ProtocolType == ProtocolType.Binary || c.ProtocolType == ProtocolType.Json))
+            using (var Logger = new ConsoleLogger())
             {
-                throw new InvalidOperationException("未知协议类型: " + c.ProtocolType.ToString());
-            }
-
-            using (var Server = new ManagedTcpServer())
-            {
-                using (var Logger = new ConsoleLogger())
+                var ServerContext = new ServerContext();
+                ServerContext.Shutdown += () =>
                 {
-                    if (c.EnableLogConsole)
+                    ExitEvent.Set();
+                };
+
+                Logger.Start();
+
+                var ServerDict = new Dictionary<VirtualServer, ManagedTcpServer>();
+
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    foreach (var s in c.Servers)
                     {
-                        Logger.Start
-                        (
-                            a => Server.SessionLog += a,
-                            a => Server.SessionLog -= a
-                        );
+                        ServerDict.Add(s, StartServer(s, ServerContext, Logger));
                     }
-
-                    Server.ProtocolType = c.ProtocolType;
-
-                    Server.CheckCommandAllowed = (sc, CommandName) =>
-                    {
-                        return true;
-                    };
-
-                    Server.Shutdown += () =>
-                    {
-                        ExitEvent.Set();
-                    };
-
-                    Server.Bindings = c.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
-                    Server.SessionIdleTimeout = c.SessionIdleTimeout;
-                    Server.MaxConnections = c.MaxConnections;
-                    Server.MaxConnectionsPerIP = c.MaxConnectionsPerIP;
-                    Server.MaxBadCommands = c.MaxBadCommands;
-                    Server.ClientDebug = c.ClientDebug;
-                    Server.EnableLogNormalIn = c.EnableLogNormalIn;
-                    Server.EnableLogNormalOut = c.EnableLogNormalOut;
-                    Server.EnableLogUnknownError = c.EnableLogUnknownError;
-                    Server.EnableLogCriticalError = c.EnableLogCriticalError;
-                    Server.EnableLogPerformance = c.EnableLogPerformance;
-                    Server.EnableLogSystem = c.EnableLogSystem;
-
-                    Server.Start();
-
-                    Console.WriteLine(@"服务器已启动。");
-                    Console.WriteLine(@"协议类型: " + c.ProtocolType.ToString());
-                    Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
 
                     ExitEvent.WaitOne();
 
-                    Server.Stop();
-
-                    Console.WriteLine(@"服务器已关闭。");
+                    foreach (var s in c.Servers)
+                    {
+                        if (ServerDict.ContainsKey(s))
+                        {
+                            var Server = ServerDict[s];
+                            StopServer(s, Server, Logger);
+                        }
+                    }
                 }
+                else
+                {
+                    foreach (var s in c.Servers)
+                    {
+                        try
+                        {
+                            ServerDict.Add(s, StartServer(s, ServerContext, Logger));
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
+                        }
+                    }
+
+                    ExitEvent.WaitOne();
+
+                    foreach (var s in c.Servers)
+                    {
+                        try
+                        {
+                            if (ServerDict.ContainsKey(s))
+                            {
+                                var Server = ServerDict[s];
+                                StopServer(s, Server, Logger);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
+                        }
+                    }
+                }
+
+                Logger.Stop();
+            }
+        }
+
+        private static ManagedTcpServer StartServer(VirtualServer s, ServerContext ServerContext, ConsoleLogger Logger)
+        {
+            if (!(s.ProtocolType == ProtocolType.Binary || s.ProtocolType == ProtocolType.Json))
+            {
+                throw new InvalidOperationException("未知协议类型: " + s.ProtocolType.ToString());
+            }
+
+            var Server = new ManagedTcpServer(ServerContext);
+            var Success = false;
+
+            try
+            {
+                if (s.EnableLogConsole)
+                {
+                    Server.SessionLog += Logger.Push;
+                }
+
+                Server.ProtocolType = s.ProtocolType;
+
+                Server.CheckCommandAllowed = (sc, CommandName) =>
+                {
+                    return true;
+                };
+
+                Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
+                Server.SessionIdleTimeout = s.SessionIdleTimeout;
+                Server.MaxConnections = s.MaxConnections;
+                Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
+                Server.MaxBadCommands = s.MaxBadCommands;
+                Server.ClientDebug = s.ClientDebug;
+                Server.EnableLogNormalIn = s.EnableLogNormalIn;
+                Server.EnableLogNormalOut = s.EnableLogNormalOut;
+                Server.EnableLogUnknownError = s.EnableLogUnknownError;
+                Server.EnableLogCriticalError = s.EnableLogCriticalError;
+                Server.EnableLogPerformance = s.EnableLogPerformance;
+                Server.EnableLogSystem = s.EnableLogSystem;
+
+                Server.Start();
+
+                Console.WriteLine(@"服务器已启动。");
+                Console.WriteLine(@"协议类型: " + s.ProtocolType.ToString());
+                Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
+
+                Success = true;
+            }
+            finally
+            {
+                if (!Success)
+                {
+                    Server.Dispose();
+                }
+            }
+
+            return Server;
+        }
+        private static void StopServer(VirtualServer s, ManagedTcpServer Server, ConsoleLogger Logger)
+        {
+            try
+            {
+                Server.Stop();
+
+                Console.WriteLine(@"服务器已关闭。");
+
+                if (s.EnableLogConsole)
+                {
+                    Server.SessionLog -= Logger.Push;
+                }
+            }
+            finally
+            {
+                Server.Dispose();
             }
         }
 
