@@ -29,7 +29,6 @@ namespace Server
         private ProtocolType ProtocolTypeValue = ProtocolType.Binary;
         public delegate Boolean CheckCommandAllowedDelegate(SessionContext c, String CommandName);
         private CheckCommandAllowedDelegate CheckCommandAllowedValue = null;
-        private Action ShutdownValue = null;
         private int MaxBadCommandsValue = 8;
         private Boolean ClientDebugValue = false;
         private Boolean EnableLogNormalInValue = true;
@@ -64,20 +63,6 @@ namespace Server
             {
                 if (IsRunning) { throw new InvalidOperationException(); }
                 CheckCommandAllowedValue = value;
-            }
-        }
-
-        /// <summary>只能在启动前修改，以保证线程安全</summary>
-        public Action Shutdown
-        {
-            get
-            {
-                return ShutdownValue;
-            }
-            set
-            {
-                if (IsRunning) { throw new InvalidOperationException(); }
-                ShutdownValue = value;
             }
         }
 
@@ -190,17 +175,9 @@ namespace Server
 
         public LockedVariable<Dictionary<SessionContext, ManagedTcpSession>> SessionMappings = new LockedVariable<Dictionary<SessionContext, ManagedTcpSession>>(new Dictionary<SessionContext, ManagedTcpSession>());
 
-        public ManagedTcpServer()
+        public ManagedTcpServer(ServerContext sc)
         {
-            ServerContext = new ServerContext();
-            ServerContext.Shutdown += () =>
-            {
-                if (ShutdownValue != null)
-                {
-                    ShutdownValue();
-                }
-            };
-            ServerContext.GetSessions = () => SessionMappings.Check(Mappings => Mappings.Keys.ToList());
+            ServerContext = sc;
 
             WorkPartInstance = new ThreadLocal<WorkPart>
             (

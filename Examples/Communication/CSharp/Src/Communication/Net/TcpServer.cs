@@ -380,11 +380,6 @@ namespace Communication.Net
                             TaskCreationOptions.LongRunning
                         );
 
-                        var NumBulk = 128;
-                        if (MaxConnectionsValue.HasValue)
-                        {
-                            NumBulk = Math.Max(Math.Min(NumBulk, MaxConnectionsValue.Value / 2), 1);
-                        }
                         PurifieringTask = new Task
                         (
                             () =>
@@ -395,56 +390,10 @@ namespace Communication.Net
 
                                     PurifieringTaskNotifier.WaitOne();
 
-                                    while (StoppingSessions.Any())
+                                    TSession StoppingSession;
+                                    while (StoppingSessions.TryTake(out StoppingSession))
                                     {
-                                        var l = new List<TSession>();
-                                        var rl = new List<TSession>();
-
-                                        TSession StoppingSession;
-                                        while (StoppingSessions.TryTake(out StoppingSession) && l.Count < NumBulk)
-                                        {
-                                            l.Add(StoppingSession);
-                                        }
-
-                                        Sessions.DoAction
-                                        (
-                                            ss =>
-                                            {
-                                                foreach (var s in l)
-                                                {
-                                                    if (ss.Contains(s))
-                                                    {
-                                                        ss.Remove(s);
-                                                        rl.Add(s);
-                                                    }
-                                                }
-                                            }
-                                        );
-
-                                        IpSessions.DoAction
-                                        (
-                                            iss =>
-                                            {
-                                                foreach (var s in rl)
-                                                {
-                                                    var IpAddress = s.RemoteEndPoint.Address;
-                                                    if (iss.ContainsKey(IpAddress))
-                                                    {
-                                                        iss[IpAddress] -= 1;
-                                                        if (iss[IpAddress] == 0)
-                                                        {
-                                                            iss.Remove(IpAddress);
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        );
-
-                                        foreach (var s in l)
-                                        {
-                                            s.Stop();
-                                            s.Dispose();
-                                        }
+                                        Purify(StoppingSession);
                                     }
                                 }
                             },

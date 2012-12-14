@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using Communication;
+using Communication.BaseSystem;
 
 namespace Server
 {
@@ -15,7 +17,7 @@ namespace Server
             if (Shutdown != null) { Shutdown(); }
         }
 
-        public Func<ICollection<SessionContext>> GetSessions;
-        public ICollection<SessionContext> Sessions { get { return GetSessions(); } }
+        public ICollection<SessionContext> Sessions { get { return SessionSet.Check(ss => ss.ToArray()); } }
+        public LockedVariable<HashSet<SessionContext>> SessionSet = new LockedVariable<HashSet<SessionContext>>(new HashSet<SessionContext>());
     }
 }
