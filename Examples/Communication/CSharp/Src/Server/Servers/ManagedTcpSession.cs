@@ -194,33 +194,26 @@ namespace Server
             if (sc.OnRead)
             {
                 var Count = sc.Read;
-                if (Count > 0)
+                var r = Server.VirtualTransportServer.Handle(Context, Count);
+                if (r.OnRead)
                 {
-                    var r = Server.VirtualTransportServer.Handle(Context, Count);
-                    if (r.OnRead)
+                }
+                else if (r.OnCommand || r.OnBadCommand || r.OnBadCommandLine)
+                {
+                    ReadCommand(r);
+                    var RemainCount = Server.VirtualTransportServer.GetReadBuffer(Context).Count;
+                    if (RemainCount > 0)
                     {
+                        PushCommand(SessionCommand.CreateRead(0));
+                        return;
                     }
-                    else if (r.OnCommand || r.OnBadCommand || r.OnBadCommandLine)
-                    {
-                        ReadCommand(r);
-                        var RemainCount = Server.VirtualTransportServer.GetReadBuffer(Context).Count;
-                        if (RemainCount > 0)
-                        {
-                            PushCommand(SessionCommand.CreateRead(RemainCount));
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException();
-                    }
-
-                    QueueCommand(SessionCommand.CreateReadRaw());
                 }
                 else
                 {
-                    StopAsync();
+                    throw new InvalidOperationException();
                 }
+
+                QueueCommand(SessionCommand.CreateReadRaw());
             }
             else if (sc.OnWrite)
             {
@@ -244,7 +237,15 @@ namespace Server
             }
             else if (sc.OnReadRaw)
             {
-                Action<int> CompletedInner = Count => PushCommand(SessionCommand.CreateRead(Count));
+                Action<int> CompletedInner = Count =>
+                {
+                    if (Count <= 0)
+                    {
+                        StopAsync();
+                        return;
+                    }
+                    PushCommand(SessionCommand.CreateRead(Count));
+                };
                 Action<int> Completed;
                 if (System.Diagnostics.Debugger.IsAttached)
                 {
@@ -306,7 +307,7 @@ namespace Server
             }
         }
 
-        private void ReadCommand(VirtualTransportHandleResult r)
+        private void ReadCommand(VirtualTransportServerHandleResult r)
         {
             if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
             {

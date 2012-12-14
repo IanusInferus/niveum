@@ -36,30 +36,30 @@ namespace Server
 
         public int SendMessageCount = 0;
 
-        public BinaryCountPacketContext BinaryCountPacketContext
+        public BinaryCountPacketServerContext BinaryCountPacketContext
         {
             get
             {
                 if (bcpc == null)
                 {
-                    bcpc = new BinaryCountPacketContext();
+                    bcpc = new BinaryCountPacketServerContext();
                 }
                 return bcpc;
             }
         }
-        private BinaryCountPacketContext bcpc;
+        private BinaryCountPacketServerContext bcpc;
 
-        public JsonLinePacketContext JsonLinePacketContext
+        public JsonLinePacketServerContext JsonLinePacketContext
         {
             get
             {
                 if (jlpc == null)
                 {
-                    jlpc = new JsonLinePacketContext();
+                    jlpc = new JsonLinePacketServerContext();
                 }
                 return jlpc;
             }
         }
-        private JsonLinePacketContext jlpc;
+        private JsonLinePacketServerContext jlpc;
     }
 }

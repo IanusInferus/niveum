@@ -5,11 +5,12 @@ using Firefly;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
 using Communication;
+using Communication.Net;
 using Communication.Binary;
 
-namespace Server
+namespace Client
 {
-    public class BinaryCountPacketServerContext
+    public class BinaryCountPacketClientContext
     {
         public ArraySegment<Byte> Buffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
 
@@ -26,59 +27,65 @@ namespace Server
         public Int32 ParametersLength = 0;
     }
 
-    public class BinaryCountPacketServer<TContext> : IVirtualTransportServer<TContext>
+    public class BinaryCountPacketClient<TContext> : IVirtualTransportClient
     {
-        public delegate Boolean CheckCommandAllowedDelegate(TContext c, String CommandName);
-
-        private BinaryServer<TContext> sv;
-        private Func<TContext, BinaryCountPacketServerContext> Acquire;
-        private CheckCommandAllowedDelegate CheckCommandAllowed;
-        public BinaryCountPacketServer(IServerImplementation<TContext> ApplicationServer, Func<TContext, BinaryCountPacketServerContext> Acquire, CheckCommandAllowedDelegate CheckCommandAllowed)
+        private class BinaySender : IBinarySender
         {
-            this.sv = new BinaryServer<TContext>(ApplicationServer);
-            this.Acquire = Acquire;
-            this.CheckCommandAllowed = CheckCommandAllowed;
-            this.sv.ServerEvent += (c, CommandName, CommandHash, Parameters) =>
+            public Action<Byte[]> SendBytes;
+
+            public void Send(String CommandName, UInt32 CommandHash, Byte[] Parameters)
             {
-                if (this.ServerEvent != null)
+                var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
+                Byte[] Bytes;
+                using (var s = Streams.CreateMemoryStream())
                 {
-                    var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
-                    Byte[] Bytes;
-                    using (var s = Streams.CreateMemoryStream())
-                    {
-                        s.WriteInt32(CommandNameBytes.Length);
-                        s.Write(CommandNameBytes);
-                        s.WriteUInt32(CommandHash);
-                        s.WriteInt32(Parameters.Length);
-                        s.Write(Parameters);
-                        s.Position = 0;
-                        Bytes = s.Read((int)(s.Length));
-                    }
-                    this.ServerEvent(c, Bytes);
+                    s.WriteInt32(CommandNameBytes.Length);
+                    s.Write(CommandNameBytes);
+                    s.WriteUInt32(CommandHash);
+                    s.WriteInt32(Parameters.Length);
+                    s.Write(Parameters);
+                    s.Position = 0;
+                    Bytes = s.Read((int)(s.Length));
                 }
-            };
+                SendBytes(Bytes);
+            }
         }
 
-        public ArraySegment<Byte> GetReadBuffer(TContext c)
+        private TContext c;
+        private BinaryClient<TContext> bc;
+        private BinaryCountPacketClientContext cc;
+        public BinaryCountPacketClient(TContext c, IClientImplementation<TContext> ApplicationClientImplementation, BinaryCountPacketClientContext cc)
         {
-            var bc = Acquire(c);
-            return bc.Buffer;
+            this.c = c;
+            this.bc = new BinaryClient<TContext>(new BinaySender { SendBytes = Bytes => { if (this.ClientMethod != null) { ClientMethod(Bytes); } } }, ApplicationClientImplementation);
+            this.cc = cc;
         }
 
-        public VirtualTransportServerHandleResult Handle(TContext c, int Count)
+        public IClient GetApplicationClient
         {
-            var bc = Acquire(c);
+            get
+            {
+                return bc;
+            }
+        }
 
-            var ret = VirtualTransportServerHandleResult.CreateContinue();
+        public ArraySegment<Byte> GetReadBuffer()
+        {
+            return cc.Buffer;
+        }
 
-            var Buffer = bc.Buffer.Array;
-            var FirstPosition = bc.Buffer.Offset;
-            var BufferLength = bc.Buffer.Offset + bc.Buffer.Count;
+        public VirtualTransportClientHandleResult Handle(int Count)
+        {
+            var ret = VirtualTransportClientHandleResult.CreateContinue();
+
+            var Buffer = cc.Buffer.Array;
+            var FirstPosition = cc.Buffer.Offset;
+            var BufferLength = cc.Buffer.Offset + cc.Buffer.Count;
             BufferLength += Count;
 
             while (true)
             {
-                var r = TryShift(bc, Buffer, FirstPosition, BufferLength - FirstPosition);
+                var r = TryShift(cc, Buffer, FirstPosition, BufferLength - FirstPosition);
                 if (r == null)
                 {
                     break;
@@ -90,34 +97,11 @@ namespace Server
                     var CommandName = r.Command.CommandName;
                     var CommandHash = r.Command.CommandHash;
                     var Parameters = r.Command.Parameters;
-                    if (sv.HasCommand(CommandName, CommandHash) && (CheckCommandAllowed != null ? CheckCommandAllowed(c, CommandName) : true))
+                    ret = VirtualTransportClientHandleResult.CreateCommand(new VirtualTransportClientHandleResultCommand
                     {
-                        ret = VirtualTransportServerHandleResult.CreateCommand(new VirtualTransportServerHandleResultCommand
-                        {
-                            CommandName = CommandName,
-                            ExecuteCommand = () => sv.ExecuteCommand(c, CommandName, CommandHash, Parameters),
-                            PackageOutput = OutputParameters =>
-                            {
-                                var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
-                                Byte[] Bytes;
-                                using (var s = Streams.CreateMemoryStream())
-                                {
-                                    s.WriteInt32(CommandNameBytes.Length);
-                                    s.Write(CommandNameBytes);
-                                    s.WriteUInt32(CommandHash);
-                                    s.WriteInt32(OutputParameters.Length);
-                                    s.Write(OutputParameters);
-                                    s.Position = 0;
-                                    Bytes = s.Read((int)(s.Length));
-                                }
-                                return Bytes;
-                            }
-                        });
-                    }
-                    else
-                    {
-                        ret = VirtualTransportServerHandleResult.CreateBadCommand(new VirtualTransportServerHandleResultBadCommand { CommandName = CommandName });
-                    }
+                        CommandName = CommandName,
+                        HandleResult = () => bc.HandleResult(c, CommandName, CommandHash, Parameters)
+                    });
                     break;
                 }
             }
@@ -134,18 +118,18 @@ namespace Server
             }
             if (FirstPosition >= BufferLength)
             {
-                bc.Buffer = new ArraySegment<Byte>(Buffer, 0, 0);
+                cc.Buffer = new ArraySegment<Byte>(Buffer, 0, 0);
             }
             else
             {
-                bc.Buffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
+                cc.Buffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
             }
 
             return ret;
         }
 
-        public UInt64 Hash { get { return sv.Hash; } }
-        public event Action<TContext, Byte[]> ServerEvent;
+        public UInt64 Hash { get { return bc.Hash; } }
+        public event Action<Byte[]> ClientMethod;
 
         private class Command
         {
@@ -159,7 +143,7 @@ namespace Server
             public int Position;
         }
 
-        private static TryShiftResult TryShift(BinaryCountPacketServerContext bc, Byte[] Buffer, int Position, int Length)
+        private static TryShiftResult TryShift(BinaryCountPacketClientContext bc, Byte[] Buffer, int Position, int Length)
         {
             if (bc.State == 0)
             {

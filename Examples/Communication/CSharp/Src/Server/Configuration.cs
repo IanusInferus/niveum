@@ -9,15 +9,9 @@ namespace Server
         public int Port;
     }
 
-    public enum ProtocolType
-    {
-        Binary,
-        Json
-    }
-
     public class VirtualServer
     {
-        public ProtocolType ProtocolType;
+        public SerializationProtocolType ProtocolType;
         public Binding[] Bindings;
         public Boolean EnableLogNormalIn;
         public Boolean EnableLogNormalOut;

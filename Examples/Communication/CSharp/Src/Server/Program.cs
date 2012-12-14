@@ -189,7 +189,7 @@ namespace Server
 
         private static ManagedTcpServer StartServer(VirtualServer s, ServerContext ServerContext, ConsoleLogger Logger)
         {
-            if (!(s.ProtocolType == ProtocolType.Binary || s.ProtocolType == ProtocolType.Json))
+            if (!(s.ProtocolType == SerializationProtocolType.Binary || s.ProtocolType == SerializationProtocolType.Json))
             {
                 throw new InvalidOperationException("未知协议类型: " + s.ProtocolType.ToString());
             }
