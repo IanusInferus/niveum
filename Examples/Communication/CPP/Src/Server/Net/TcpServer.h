@@ -118,6 +118,8 @@ namespace Communication
         private:
             void DoAccepting();
 
+            bool Purify(std::shared_ptr<TcpSession> StoppingSession);
+            bool PurifyOneInSession();
             void DoPurifiering();
 
             bool DoStopping(bool b);
