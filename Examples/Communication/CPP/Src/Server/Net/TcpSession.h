@@ -27,6 +27,7 @@ namespace Communication
             Communication::BaseSystem::LockedVariable<std::shared_ptr<boost::asio::ip::tcp::socket>> Socket;
             class SendAsyncParameters;
             Communication::BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<SendAsyncParameters>>>> SendQueue;
+            bool IsDisposed;
         public:
             std::function<void()> NotifySessionQuit;
             boost::asio::ip::tcp::endpoint RemoteEndPoint;
