@@ -54,8 +54,6 @@
     <Compile Include="Generated\CommunicationBinary.cs" />
     <Compile Include="Generated\CommunicationJson.cs" />
     <Compile Include="Net\StreamedAsyncSocket.cs" />
-    <Compile Include="Net\TcpServer.cs" />
-    <Compile Include="Net\TcpSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />
