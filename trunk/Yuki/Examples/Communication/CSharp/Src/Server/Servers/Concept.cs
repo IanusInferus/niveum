@@ -10,24 +10,24 @@ namespace Server
     // Physical Transport Layer: TCP
     // ...
 
-    public class VirtualTransportHandleResultCommand
+    public class VirtualTransportServerHandleResultCommand
     {
         public String CommandName;
         public Func<Byte[]> ExecuteCommand;
         public Func<Byte[], Byte[]> PackageOutput;
     }
 
-    public class VirtualTransportHandleResultBadCommand
+    public class VirtualTransportServerHandleResultBadCommand
     {
         public String CommandName;
     }
 
-    public class VirtualTransportHandleResultBadCommandLine
+    public class VirtualTransportServerHandleResultBadCommandLine
     {
         public String CommandLine;
     }
 
-    public enum VirtualTransportHandleResultTag
+    public enum VirtualTransportServerHandleResultTag
     {
         Continue = 0,
         Command = 1,
@@ -35,29 +35,29 @@ namespace Server
         BadCommandLine = 3
     }
     [TaggedUnion]
-    public class VirtualTransportHandleResult
+    public class VirtualTransportServerHandleResult
     {
-        public VirtualTransportHandleResultTag _Tag;
+        public VirtualTransportServerHandleResultTag _Tag;
         public Unit Continue;
-        public VirtualTransportHandleResultCommand Command;
-        public VirtualTransportHandleResultBadCommand BadCommand;
-        public VirtualTransportHandleResultBadCommandLine BadCommandLine;
+        public VirtualTransportServerHandleResultCommand Command;
+        public VirtualTransportServerHandleResultBadCommand BadCommand;
+        public VirtualTransportServerHandleResultBadCommandLine BadCommandLine;
 
-        public static VirtualTransportHandleResult CreateContinue() { return new VirtualTransportHandleResult { _Tag = VirtualTransportHandleResultTag.Continue, Continue = new Unit() }; }
-        public static VirtualTransportHandleResult CreateCommand(VirtualTransportHandleResultCommand Value) { return new VirtualTransportHandleResult { _Tag = VirtualTransportHandleResultTag.Command, Command = Value }; }
-        public static VirtualTransportHandleResult CreateBadCommand(VirtualTransportHandleResultBadCommand Value) { return new VirtualTransportHandleResult { _Tag = VirtualTransportHandleResultTag.BadCommand, BadCommand = Value }; }
-        public static VirtualTransportHandleResult CreateBadCommandLine(VirtualTransportHandleResultBadCommandLine Value) { return new VirtualTransportHandleResult { _Tag = VirtualTransportHandleResultTag.BadCommandLine, BadCommandLine = Value }; }
+        public static VirtualTransportServerHandleResult CreateContinue() { return new VirtualTransportServerHandleResult { _Tag = VirtualTransportServerHandleResultTag.Continue, Continue = new Unit() }; }
+        public static VirtualTransportServerHandleResult CreateCommand(VirtualTransportServerHandleResultCommand Value) { return new VirtualTransportServerHandleResult { _Tag = VirtualTransportServerHandleResultTag.Command, Command = Value }; }
+        public static VirtualTransportServerHandleResult CreateBadCommand(VirtualTransportServerHandleResultBadCommand Value) { return new VirtualTransportServerHandleResult { _Tag = VirtualTransportServerHandleResultTag.BadCommand, BadCommand = Value }; }
+        public static VirtualTransportServerHandleResult CreateBadCommandLine(VirtualTransportServerHandleResultBadCommandLine Value) { return new VirtualTransportServerHandleResult { _Tag = VirtualTransportServerHandleResultTag.BadCommandLine, BadCommandLine = Value }; }
 
-        public Boolean OnRead { get { return _Tag == VirtualTransportHandleResultTag.Continue; } }
-        public Boolean OnCommand { get { return _Tag == VirtualTransportHandleResultTag.Command; } }
-        public Boolean OnBadCommand { get { return _Tag == VirtualTransportHandleResultTag.BadCommand; } }
-        public Boolean OnBadCommandLine { get { return _Tag == VirtualTransportHandleResultTag.BadCommandLine; } }
+        public Boolean OnRead { get { return _Tag == VirtualTransportServerHandleResultTag.Continue; } }
+        public Boolean OnCommand { get { return _Tag == VirtualTransportServerHandleResultTag.Command; } }
+        public Boolean OnBadCommand { get { return _Tag == VirtualTransportServerHandleResultTag.BadCommand; } }
+        public Boolean OnBadCommandLine { get { return _Tag == VirtualTransportServerHandleResultTag.BadCommandLine; } }
     }
 
     public interface IVirtualTransportServer<TContext>
     {
         ArraySegment<Byte> GetReadBuffer(TContext c);
-        VirtualTransportHandleResult Handle(TContext c, int Count);
+        VirtualTransportServerHandleResult Handle(TContext c, int Count);
         UInt64 Hash { get; }
         event Action<TContext, Byte[]> ServerEvent;
     }

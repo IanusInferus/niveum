@@ -18,12 +18,6 @@ using Communication;
 
 namespace Client
 {
-    public enum ApplicationProtocolType
-    {
-        Binary,
-        Json
-    }
-
     public static class Program
     {
         public static int Main(String[] args)
@@ -83,21 +77,21 @@ namespace Client
 
             var argv = CmdLine.Arguments;
             IPEndPoint RemoteEndPoint;
-            ApplicationProtocolType ProtocolType;
+            SerializationProtocolType ProtocolType;
             if (argv.Length == 3)
             {
                 RemoteEndPoint = new IPEndPoint(IPAddress.Parse(argv[1]), int.Parse(argv[2]));
-                ProtocolType = (ApplicationProtocolType)Enum.Parse(typeof(ApplicationProtocolType), argv[0], true);
+                ProtocolType = (SerializationProtocolType)Enum.Parse(typeof(SerializationProtocolType), argv[0], true);
             }
             else if (argv.Length == 1)
             {
                 RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
-                ProtocolType = (ApplicationProtocolType)Enum.Parse(typeof(ApplicationProtocolType), argv[0], true);
+                ProtocolType = (SerializationProtocolType)Enum.Parse(typeof(SerializationProtocolType), argv[0], true);
             }
             else if (argv.Length == 0)
             {
                 RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
-                ProtocolType = ApplicationProtocolType.Binary;
+                ProtocolType = SerializationProtocolType.Binary;
             }
             else
             {
@@ -145,72 +139,70 @@ namespace Client
             Console.WriteLine(@"/stable 自动化稳定性测试");
         }
 
-        public static void Run(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType, Boolean UseOld)
+        public static void Run(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, Boolean UseOld)
         {
-            if (ProtocolType == ApplicationProtocolType.Binary)
-            {
-                using (var bc = new BinarySocketClient(RemoteEndPoint, new ClientImplementation()))
-                {
-                    bc.Connect();
-                    Console.WriteLine("连接成功。");
-                    bc.Receive(a => a(), se => Console.WriteLine((new SocketException((int)se)).Message));
-                    ReadLineAndSendLoop(bc.InnerClient, UseOld);
-                    bc.Close();
-                }
-            }
-            else if (ProtocolType == ApplicationProtocolType.Json)
-            {
-                using (var jc = new JsonSocketClient(RemoteEndPoint, new ClientImplementation()))
-                {
-                    jc.Connect();
-                    Console.WriteLine("连接成功。");
-                    jc.Receive(a => a(), se => Console.WriteLine((new SocketException((int)se)).Message));
-                    ReadLineAndSendLoop(jc.InnerClient, UseOld);
-                    jc.Close();
-                }
-            }
-            else
+            if (!(ProtocolType == SerializationProtocolType.Binary || ProtocolType == SerializationProtocolType.Json))
             {
                 Console.WriteLine("协议不能识别：" + ProtocolType.ToString());
             }
+            using (var bc = new ManagedTcpClient(RemoteEndPoint, new ClientImplementation(), ProtocolType))
+            {
+                bc.Connect();
+                Console.WriteLine("连接成功。");
+
+                var Lockee = new Object();
+                Action<Action> DoHandle = a =>
+                {
+                    lock (Lockee)
+                    {
+                        a();
+                    }
+                };
+                bc.Receive(DoHandle, se => Console.WriteLine((new SocketException((int)se)).Message));
+                ReadLineAndSendLoop(bc.InnerClient, UseOld, Lockee);
+                bc.Close();
+            }
         }
 
-        public static void ReadLineAndSendLoop(IClient InnerClient, Boolean UseOld)
+        public static void ReadLineAndSendLoop(IClient InnerClient, Boolean UseOld, Object Lockee)
         {
             while (true)
             {
                 var Line = Console.ReadLine();
-                if (Line == "exit") { break; }
-                if (Line == "shutdown")
+                lock (Lockee)
                 {
-                    InnerClient.Shutdown(new ShutdownRequest(), r =>
+                    if (Line == "exit") { break; }
+                    if (Line == "shutdown")
                     {
-                        if (r.OnSuccess)
+                        InnerClient.Shutdown(new ShutdownRequest(), r =>
                         {
-                            Console.WriteLine("服务器关闭。");
-                        }
-                    });
-                    break;
-                }
-                if (UseOld)
-                {
-                    InnerClient.SendMessageAt1(new SendMessageAt1Request { Title = "", Lines = new List<String> { Line } }, r =>
+                            if (r.OnSuccess)
+                            {
+                                Console.WriteLine("服务器关闭。");
+                            }
+                        });
+                        break;
+                    }
+                    if (UseOld)
                     {
-                        if (r.OnTitleTooLong || r.OnLinesTooLong || r.OnLineTooLong)
+                        InnerClient.SendMessageAt1(new SendMessageAt1Request { Title = "", Lines = new List<String> { Line } }, r =>
                         {
-                            Console.WriteLine("消息过长。");
-                        }
-                    });
-                }
-                else
-                {
-                    InnerClient.SendMessage(new SendMessageRequest { Content = Line }, r =>
+                            if (r.OnTitleTooLong || r.OnLinesTooLong || r.OnLineTooLong)
+                            {
+                                Console.WriteLine("消息过长。");
+                            }
+                        });
+                    }
+                    else
                     {
-                        if (r.OnTooLong)
+                        InnerClient.SendMessage(new SendMessageRequest { Content = Line }, r =>
                         {
-                            Console.WriteLine("消息过长。");
-                        }
-                    });
+                            if (r.OnTooLong)
+                            {
+                                Console.WriteLine("消息过长。");
+                            }
+                        });
+                    }
                 }
             }
         }

@@ -32,7 +32,7 @@ namespace Client
             Console.WriteLine("{0}: {1} Connections", Title, NumUser);
         }
 
-        public static int DoTest(IPEndPoint RemoteEndPoint, ApplicationProtocolType ProtocolType)
+        public static int DoTest(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
         {
             TestForNumUser(RemoteEndPoint, 4096, "TestHalfConnection");
 

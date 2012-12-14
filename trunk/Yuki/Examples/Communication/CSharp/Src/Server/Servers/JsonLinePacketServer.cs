@@ -10,7 +10,7 @@ using Communication.Json;
 
 namespace Server
 {
-    public class JsonLinePacketContext
+    public class JsonLinePacketServerContext
     {
         public ArraySegment<Byte> Buffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
     }
@@ -20,9 +20,9 @@ namespace Server
         public delegate Boolean CheckCommandAllowedDelegate(TContext c, String CommandName);
 
         private JsonServer<TContext> sv;
-        private Func<TContext, JsonLinePacketContext> Acquire;
+        private Func<TContext, JsonLinePacketServerContext> Acquire;
         private CheckCommandAllowedDelegate CheckCommandAllowed;
-        public JsonLinePacketServer(IServerImplementation<TContext> ApplicationServer, Func<TContext, JsonLinePacketContext> Acquire, CheckCommandAllowedDelegate CheckCommandAllowed)
+        public JsonLinePacketServer(IServerImplementation<TContext> ApplicationServer, Func<TContext, JsonLinePacketServerContext> Acquire, CheckCommandAllowedDelegate CheckCommandAllowed)
         {
             this.sv = new JsonServer<TContext>(ApplicationServer);
             this.Acquire = Acquire;
@@ -43,20 +43,16 @@ namespace Server
             return bc.Buffer;
         }
 
-        public VirtualTransportHandleResult Handle(TContext c, int Count)
+        public VirtualTransportServerHandleResult Handle(TContext c, int Count)
         {
             var bc = Acquire(c);
-            if (Count <= 0)
-            {
-                return VirtualTransportHandleResult.CreateContinue();
-            }
 
-            var ret = VirtualTransportHandleResult.CreateContinue();
+            var ret = VirtualTransportServerHandleResult.CreateContinue();
 
             var Buffer = bc.Buffer.Array;
             var FirstPosition = bc.Buffer.Offset;
             var BufferLength = bc.Buffer.Offset + bc.Buffer.Count;
-            var CheckPosition = BufferLength;
+            var CheckPosition = FirstPosition;
             BufferLength += Count;
 
             var LineFeedPosition = -1;
@@ -69,7 +65,7 @@ namespace Server
                     break;
                 }
             }
-            if (LineFeedPosition >= 0)
+            if (LineFeedPosition >= FirstPosition)
             {
                 var LineBytes = Buffer.Skip(FirstPosition).Take(LineFeedPosition - FirstPosition).Where(b => b != '\r').ToArray();
                 var Line = TextEncoding.UTF8.GetString(LineBytes, 0, LineBytes.Length);
@@ -83,7 +79,7 @@ namespace Server
                     {
                         if (CommandHash.OnHasValue)
                         {
-                            ret = VirtualTransportHandleResult.CreateCommand(new VirtualTransportHandleResultCommand
+                            ret = VirtualTransportServerHandleResult.CreateCommand(new VirtualTransportServerHandleResultCommand
                             {
                                 CommandName = CommandName,
                                 ExecuteCommand = () => TextEncoding.UTF8.GetBytes(sv.ExecuteCommand(c, CommandName, CommandHash.HasValue, Parameters)),
@@ -96,7 +92,7 @@ namespace Server
                         }
                         else
                         {
-                            ret = VirtualTransportHandleResult.CreateCommand(new VirtualTransportHandleResultCommand
+                            ret = VirtualTransportServerHandleResult.CreateCommand(new VirtualTransportServerHandleResultCommand
                             {
                                 CommandName = CommandName,
                                 ExecuteCommand = () => TextEncoding.UTF8.GetBytes(sv.ExecuteCommand(c, CommandName, Parameters)),
@@ -110,12 +106,12 @@ namespace Server
                     }
                     else
                     {
-                        ret = VirtualTransportHandleResult.CreateBadCommand(new VirtualTransportHandleResultBadCommand { CommandName = CommandName });
+                        ret = VirtualTransportServerHandleResult.CreateBadCommand(new VirtualTransportServerHandleResultBadCommand { CommandName = CommandName });
                     }
                 }
                 else if (cmd.OnNotHasValue)
                 {
-                    ret = VirtualTransportHandleResult.CreateBadCommandLine(new VirtualTransportHandleResultBadCommandLine { CommandLine = Line });
+                    ret = VirtualTransportServerHandleResult.CreateBadCommandLine(new VirtualTransportServerHandleResultBadCommandLine { CommandLine = Line });
                 }
                 else
                 {
