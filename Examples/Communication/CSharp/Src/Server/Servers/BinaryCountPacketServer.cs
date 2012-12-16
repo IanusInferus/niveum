@@ -26,7 +26,7 @@ namespace Server
         public Int32 ParametersLength = 0;
     }
 
-    public class BinaryCountPacketServer<TContext> : IVirtualTransportServer<TContext>
+    public class BinaryCountPacketServer<TContext> : ITcpVirtualTransportServer<TContext>
     {
         public delegate Boolean CheckCommandAllowedDelegate(TContext c, String CommandName);
 
@@ -65,11 +65,11 @@ namespace Server
             return bc.Buffer;
         }
 
-        public VirtualTransportServerHandleResult Handle(TContext c, int Count)
+        public TcpVirtualTransportServerHandleResult Handle(TContext c, int Count)
         {
             var bc = Acquire(c);
 
-            var ret = VirtualTransportServerHandleResult.CreateContinue();
+            var ret = TcpVirtualTransportServerHandleResult.CreateContinue();
 
             var Buffer = bc.Buffer.Array;
             var FirstPosition = bc.Buffer.Offset;
@@ -92,7 +92,7 @@ namespace Server
                     var Parameters = r.Command.Parameters;
                     if (sv.HasCommand(CommandName, CommandHash) && (CheckCommandAllowed != null ? CheckCommandAllowed(c, CommandName) : true))
                     {
-                        ret = VirtualTransportServerHandleResult.CreateCommand(new VirtualTransportServerHandleResultCommand
+                        ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
                         {
                             CommandName = CommandName,
                             ExecuteCommand = () => sv.ExecuteCommand(c, CommandName, CommandHash, Parameters),
@@ -116,7 +116,7 @@ namespace Server
                     }
                     else
                     {
-                        ret = VirtualTransportServerHandleResult.CreateBadCommand(new VirtualTransportServerHandleResultBadCommand { CommandName = CommandName });
+                        ret = TcpVirtualTransportServerHandleResult.CreateBadCommand(new TcpVirtualTransportServerHandleResultBadCommand { CommandName = CommandName });
                     }
                     break;
                 }

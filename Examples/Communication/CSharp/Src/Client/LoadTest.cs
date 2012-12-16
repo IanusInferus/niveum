@@ -88,7 +88,7 @@ namespace Client
         public static void TestForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IClient, Action> Test, Action<int, int, ClientContext, IClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
         {
             var tl = new List<Task>();
-            var bcl = new List<ManagedTcpClient>();
+            var bcl = new List<TcpClient>();
             var ccl = new List<ClientContext>();
             var vConnected = new LockedVariable<int>(0);
             var vCompleted = new LockedVariable<int>(0);
@@ -106,7 +106,7 @@ namespace Client
             {
                 var n = k;
                 var Lockee = new Object();
-                var bc = new ManagedTcpClient(RemoteEndPoint, new ClientImplementation(), ProtocolType);
+                var bc = new TcpClient(RemoteEndPoint, new ClientImplementation(), ProtocolType);
                 if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, bc.Context, bc.InnerClient, Completed); }
                 bc.Connect();
                 Action<SocketError> HandleError = se =>

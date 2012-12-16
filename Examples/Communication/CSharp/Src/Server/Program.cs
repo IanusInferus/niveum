@@ -130,7 +130,7 @@ namespace Server
 
                 Logger.Start();
 
-                var ServerDict = new Dictionary<VirtualServer, ManagedTcpServer>();
+                var ServerDict = new Dictionary<VirtualServerConfiguration, IServer>();
 
                 if (System.Diagnostics.Debugger.IsAttached)
                 {
@@ -187,77 +187,102 @@ namespace Server
             }
         }
 
-        private static ManagedTcpServer StartServer(VirtualServer s, ServerContext ServerContext, ConsoleLogger Logger)
+        private static IServer StartServer(VirtualServerConfiguration vsc, ServerContext ServerContext, ConsoleLogger Logger)
         {
-            if (!(s.ProtocolType == SerializationProtocolType.Binary || s.ProtocolType == SerializationProtocolType.Json))
+            if (vsc.OnTcp)
             {
-                throw new InvalidOperationException("未知协议类型: " + s.ProtocolType.ToString());
-            }
+                var s = vsc.Tcp;
 
-            var Server = new ManagedTcpServer(ServerContext);
-            var Success = false;
-
-            try
-            {
-                if (s.EnableLogConsole)
+                if (!(s.SerializationProtocolType == SerializationProtocolType.Binary || s.SerializationProtocolType == SerializationProtocolType.Json))
                 {
-                    Server.SessionLog += Logger.Push;
+                    throw new InvalidOperationException("未知协议类型: " + s.SerializationProtocolType.ToString());
                 }
 
-                Server.ProtocolType = s.ProtocolType;
+                var Server = new TcpServer(ServerContext);
+                var Success = false;
 
-                Server.CheckCommandAllowed = (sc, CommandName) =>
+                try
                 {
-                    return true;
-                };
+                    if (s.EnableLogConsole)
+                    {
+                        Server.SessionLog += Logger.Push;
+                    }
 
-                Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
-                Server.SessionIdleTimeout = s.SessionIdleTimeout;
-                Server.MaxConnections = s.MaxConnections;
-                Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
-                Server.MaxBadCommands = s.MaxBadCommands;
-                Server.ClientDebug = s.ClientDebug;
-                Server.EnableLogNormalIn = s.EnableLogNormalIn;
-                Server.EnableLogNormalOut = s.EnableLogNormalOut;
-                Server.EnableLogUnknownError = s.EnableLogUnknownError;
-                Server.EnableLogCriticalError = s.EnableLogCriticalError;
-                Server.EnableLogPerformance = s.EnableLogPerformance;
-                Server.EnableLogSystem = s.EnableLogSystem;
+                    Server.SerializationProtocolType = s.SerializationProtocolType;
 
-                Server.Start();
+                    Server.CheckCommandAllowed = (sc, CommandName) =>
+                    {
+                        return true;
+                    };
 
-                Console.WriteLine(@"服务器已启动。");
-                Console.WriteLine(@"协议类型: " + s.ProtocolType.ToString());
-                Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
+                    Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
+                    Server.SessionIdleTimeout = s.SessionIdleTimeout;
+                    Server.MaxConnections = s.MaxConnections;
+                    Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
+                    Server.MaxBadCommands = s.MaxBadCommands;
+                    Server.ClientDebug = s.ClientDebug;
+                    Server.EnableLogNormalIn = s.EnableLogNormalIn;
+                    Server.EnableLogNormalOut = s.EnableLogNormalOut;
+                    Server.EnableLogUnknownError = s.EnableLogUnknownError;
+                    Server.EnableLogCriticalError = s.EnableLogCriticalError;
+                    Server.EnableLogPerformance = s.EnableLogPerformance;
+                    Server.EnableLogSystem = s.EnableLogSystem;
 
-                Success = true;
+                    Server.Start();
+
+                    Console.WriteLine(@"TCP服务器已启动。");
+                    Console.WriteLine(@"序列化协议类型: " + s.SerializationProtocolType.ToString());
+                    Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
+
+                    Success = true;
+                }
+                finally
+                {
+                    if (!Success)
+                    {
+                        Server.Dispose();
+                    }
+                }
+
+                return Server;
             }
-            finally
+            else if (vsc.OnHttp)
             {
-                if (!Success)
+                throw new NotImplementedException("Http服务器尚未实现。");
+            }
+            else
+            {
+                throw new InvalidOperationException("未知服务器类型: " + vsc._Tag.ToString());
+            }
+        }
+        private static void StopServer(VirtualServerConfiguration vsc, IServer Server, ConsoleLogger Logger)
+        {
+            if (vsc.OnTcp)
+            {
+                var s = vsc.Tcp;
+
+                try
+                {
+                    Server.Stop();
+
+                    Console.WriteLine(@"服务器已关闭。");
+
+                    if (s.EnableLogConsole)
+                    {
+                        Server.SessionLog -= Logger.Push;
+                    }
+                }
+                finally
                 {
                     Server.Dispose();
                 }
             }
-
-            return Server;
-        }
-        private static void StopServer(VirtualServer s, ManagedTcpServer Server, ConsoleLogger Logger)
-        {
-            try
+            else if (vsc.OnHttp)
             {
-                Server.Stop();
-
-                Console.WriteLine(@"服务器已关闭。");
-
-                if (s.EnableLogConsole)
-                {
-                    Server.SessionLog -= Logger.Push;
-                }
             }
-            finally
+            else
             {
-                Server.Dispose();
+                throw new InvalidOperationException();
             }
         }
 
