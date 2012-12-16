@@ -15,7 +15,7 @@ namespace Client
         public ArraySegment<Byte> Buffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
     }
 
-    public class JsonLinePacketClient<TContext> : IVirtualTransportClient
+    public class JsonLinePacketClient<TContext> : ITcpVirtualTransportClient
     {
         private class JsonSender : IJsonSender
         {
@@ -52,9 +52,9 @@ namespace Client
             return cc.Buffer;
         }
 
-        public VirtualTransportClientHandleResult Handle(int Count)
+        public TcpVirtualTransportClientHandleResult Handle(int Count)
         {
-            var ret = VirtualTransportClientHandleResult.CreateContinue();
+            var ret = TcpVirtualTransportClientHandleResult.CreateContinue();
 
             var Buffer = cc.Buffer.Array;
             var FirstPosition = cc.Buffer.Offset;
@@ -82,7 +82,7 @@ namespace Client
                     var CommandName = cmd.HasValue.CommandName;
                     var CommandHash = cmd.HasValue.CommandHash;
                     var Parameters = cmd.HasValue.Parameters;
-                    ret = VirtualTransportClientHandleResult.CreateCommand(new VirtualTransportClientHandleResultCommand
+                    ret = TcpVirtualTransportClientHandleResult.CreateCommand(new TcpVirtualTransportClientHandleResultCommand
                     {
                         CommandName = CommandName,
                         HandleResult = () => jc.HandleResult(c, CommandName, CommandHash, Parameters)

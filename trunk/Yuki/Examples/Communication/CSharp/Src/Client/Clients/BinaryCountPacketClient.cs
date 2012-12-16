@@ -27,7 +27,7 @@ namespace Client
         public Int32 ParametersLength = 0;
     }
 
-    public class BinaryCountPacketClient<TContext> : IVirtualTransportClient
+    public class BinaryCountPacketClient<TContext> : ITcpVirtualTransportClient
     {
         private class BinaySender : IBinarySender
         {
@@ -74,9 +74,9 @@ namespace Client
             return cc.Buffer;
         }
 
-        public VirtualTransportClientHandleResult Handle(int Count)
+        public TcpVirtualTransportClientHandleResult Handle(int Count)
         {
-            var ret = VirtualTransportClientHandleResult.CreateContinue();
+            var ret = TcpVirtualTransportClientHandleResult.CreateContinue();
 
             var Buffer = cc.Buffer.Array;
             var FirstPosition = cc.Buffer.Offset;
@@ -97,7 +97,7 @@ namespace Client
                     var CommandName = r.Command.CommandName;
                     var CommandHash = r.Command.CommandHash;
                     var Parameters = r.Command.Parameters;
-                    ret = VirtualTransportClientHandleResult.CreateCommand(new VirtualTransportClientHandleResultCommand
+                    ret = TcpVirtualTransportClientHandleResult.CreateCommand(new TcpVirtualTransportClientHandleResultCommand
                     {
                         CommandName = CommandName,
                         HandleResult = () => bc.HandleResult(c, CommandName, CommandHash, Parameters)

@@ -51,8 +51,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Servers\JsonLinePacketServer.cs" />
-    <Compile Include="Servers\ManagedTcpServer.cs" />
-    <Compile Include="Servers\ManagedTcpSession.cs" />
+    <Compile Include="Servers\TcpServer.cs" />
+    <Compile Include="Servers\TcpSession.cs" />
     <Compile Include="Servers\BinaryCountPacketServer.cs" />
     <Compile Include="Services\Admin.cs" />
     <Compile Include="Services\TestPerformance.cs" />

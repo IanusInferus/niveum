@@ -47,7 +47,7 @@
     <Compile Include="ClientImplementation.cs" />
     <Compile Include="Clients\BinaryCountPacketClient.cs" />
     <Compile Include="Clients\JsonLinePacketClient.cs" />
-    <Compile Include="Clients\ManagedTcpClient.cs" />
+    <Compile Include="Clients\TcpClient.cs" />
     <Compile Include="Clients\Concept.cs" />
     <Compile Include="Context\ClientContext.cs" />
     <Compile Include="LoadTest.cs" />
