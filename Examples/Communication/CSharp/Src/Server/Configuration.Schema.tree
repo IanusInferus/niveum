@@ -1,0 +1,49 @@
+﻿#Record Configuration
+    Servers                     List<VirtualServerConfiguration>
+
+#TaggedUnion VirtualServerConfiguration
+    Tcp                         TcpServerConfiguration
+    Http                        HttpServerConfiguration
+
+#Record TcpServerConfiguration
+    Bindings                    List<Binding>
+    EnableLogNormalIn           Boolean
+    EnableLogNormalOut          Boolean
+    EnableLogUnknownError       Boolean
+    EnableLogCriticalError      Boolean
+    EnableLogPerformance        Boolean
+    EnableLogSystem             Boolean
+    EnableLogConsole            Boolean
+    SessionIdleTimeout          Int
+    MaxConnections              Int
+    MaxConnectionsPerIP         Int
+    MaxBadCommands              Int
+    ClientDebug                 Boolean
+
+    SerializationProtocolType   SerializationProtocolType
+
+#Record HttpServerConfiguration
+    Bindings                    List<Binding>
+    EnableLogNormalIn           Boolean
+    EnableLogNormalOut          Boolean
+    EnableLogUnknownError       Boolean
+    EnableLogCriticalError      Boolean
+    EnableLogPerformance        Boolean
+    EnableLogSystem             Boolean
+    EnableLogConsole            Boolean
+    SessionIdleTimeout          Int
+    MaxConnections              Int
+    MaxConnectionsPerIP         Int
+    MaxBadCommands              Int
+    ClientDebug                 Boolean
+
+    ServicePath                 String
+    StaticContentPath           Optional<String>
+
+#Record Binding
+    IpAddress                   String
+    Port                        Int
+
+#Enum SerializationProtocolType
+    Binary
+    Json
