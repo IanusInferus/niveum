@@ -15,7 +15,7 @@ namespace Server
         public ArraySegment<Byte> Buffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
     }
 
-    public class JsonLinePacketServer<TContext> : IVirtualTransportServer<TContext>
+    public class JsonLinePacketServer<TContext> : ITcpVirtualTransportServer<TContext>
     {
         public delegate Boolean CheckCommandAllowedDelegate(TContext c, String CommandName);
 
@@ -43,11 +43,11 @@ namespace Server
             return bc.Buffer;
         }
 
-        public VirtualTransportServerHandleResult Handle(TContext c, int Count)
+        public TcpVirtualTransportServerHandleResult Handle(TContext c, int Count)
         {
             var bc = Acquire(c);
 
-            var ret = VirtualTransportServerHandleResult.CreateContinue();
+            var ret = TcpVirtualTransportServerHandleResult.CreateContinue();
 
             var Buffer = bc.Buffer.Array;
             var FirstPosition = bc.Buffer.Offset;
@@ -79,7 +79,7 @@ namespace Server
                     {
                         if (CommandHash.OnHasValue)
                         {
-                            ret = VirtualTransportServerHandleResult.CreateCommand(new VirtualTransportServerHandleResultCommand
+                            ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
                             {
                                 CommandName = CommandName,
                                 ExecuteCommand = () => TextEncoding.UTF8.GetBytes(sv.ExecuteCommand(c, CommandName, CommandHash.HasValue, Parameters)),
@@ -92,7 +92,7 @@ namespace Server
                         }
                         else
                         {
-                            ret = VirtualTransportServerHandleResult.CreateCommand(new VirtualTransportServerHandleResultCommand
+                            ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
                             {
                                 CommandName = CommandName,
                                 ExecuteCommand = () => TextEncoding.UTF8.GetBytes(sv.ExecuteCommand(c, CommandName, Parameters)),
@@ -106,12 +106,12 @@ namespace Server
                     }
                     else
                     {
-                        ret = VirtualTransportServerHandleResult.CreateBadCommand(new VirtualTransportServerHandleResultBadCommand { CommandName = CommandName });
+                        ret = TcpVirtualTransportServerHandleResult.CreateBadCommand(new TcpVirtualTransportServerHandleResultBadCommand { CommandName = CommandName });
                     }
                 }
                 else if (cmd.OnNotHasValue)
                 {
-                    ret = VirtualTransportServerHandleResult.CreateBadCommandLine(new VirtualTransportServerHandleResultBadCommandLine { CommandLine = Line });
+                    ret = TcpVirtualTransportServerHandleResult.CreateBadCommandLine(new TcpVirtualTransportServerHandleResultBadCommandLine { CommandLine = Line });
                 }
                 else
                 {

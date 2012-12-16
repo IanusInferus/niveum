@@ -19,9 +19,9 @@ namespace Server
     /// <summary>
     /// 本类的所有非继承的公共成员均是线程安全的。
     /// </summary>
-    public class ManagedTcpSession
+    public class TcpSession
     {
-        public ManagedTcpServer Server { get; set; }
+        public TcpServer Server { get; set; }
         private StreamedAsyncSocket Socket;
         public IPEndPoint RemoteEndPoint { get; private set; }
 
@@ -29,7 +29,7 @@ namespace Server
         private int NumBadCommands = 0;
         private Boolean IsDisposed = false;
 
-        public ManagedTcpSession(StreamedAsyncSocket Socket, IPEndPoint RemoteEndPoint)
+        public TcpSession(StreamedAsyncSocket Socket, IPEndPoint RemoteEndPoint)
         {
             this.Socket = Socket;
             this.RemoteEndPoint = RemoteEndPoint;
@@ -359,7 +359,7 @@ namespace Server
             }
         }
 
-        private void ReadCommand(VirtualTransportServerHandleResult r)
+        private void ReadCommand(TcpVirtualTransportServerHandleResult r)
         {
             if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
             {

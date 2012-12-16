@@ -20,11 +20,46 @@ namespace Client
         Json
     }
 
-    public sealed class ManagedTcpClient : IDisposable
+    public class TcpVirtualTransportClientHandleResultCommand
+    {
+        public String CommandName;
+        public Action HandleResult;
+    }
+
+    public enum TcpVirtualTransportClientHandleResultTag
+    {
+        Continue = 0,
+        Command = 1
+    }
+    [TaggedUnion]
+    public class TcpVirtualTransportClientHandleResult
+    {
+        [Tag] public TcpVirtualTransportClientHandleResultTag _Tag;
+        public Unit Continue;
+        public TcpVirtualTransportClientHandleResultCommand Command;
+
+        public static TcpVirtualTransportClientHandleResult CreateContinue() { return new TcpVirtualTransportClientHandleResult { _Tag = TcpVirtualTransportClientHandleResultTag.Continue, Continue = new Unit() }; }
+        public static TcpVirtualTransportClientHandleResult CreateCommand(TcpVirtualTransportClientHandleResultCommand Value) { return new TcpVirtualTransportClientHandleResult { _Tag = TcpVirtualTransportClientHandleResultTag.Command, Command = Value }; }
+
+        public Boolean OnRead { get { return _Tag == TcpVirtualTransportClientHandleResultTag.Continue; } }
+        public Boolean OnCommand { get { return _Tag == TcpVirtualTransportClientHandleResultTag.Command; } }
+    }
+
+    public interface ITcpVirtualTransportClient
+    {
+        IClient GetApplicationClient { get; }
+
+        ArraySegment<Byte> GetReadBuffer();
+        TcpVirtualTransportClientHandleResult Handle(int Count);
+        UInt64 Hash { get; }
+        event Action<Byte[]> ClientMethod;
+    }
+
+    public sealed class TcpClient : IDisposable
     {
         private IClientImplementation<ClientContext> ci;
         public IClient InnerClient { get { return VirtualTransportClient.GetApplicationClient; } }
-        public IVirtualTransportClient VirtualTransportClient { get; private set; }
+        public ITcpVirtualTransportClient VirtualTransportClient { get; private set; }
         public ClientContext Context { get; private set; }
 
         private IPEndPoint RemoteEndPoint;
@@ -38,7 +73,7 @@ namespace Client
             }
         }
 
-        public ManagedTcpClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci, SerializationProtocolType ProtocolType)
+        public TcpClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci, SerializationProtocolType ProtocolType)
         {
             this.RemoteEndPoint = RemoteEndPoint;
             Socket = new LockedVariable<StreamedAsyncSocket>(new StreamedAsyncSocket(new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp)));

@@ -20,10 +20,62 @@ namespace Server
         Json
     }
 
+    public class TcpVirtualTransportServerHandleResultCommand
+    {
+        public String CommandName;
+        public Func<Byte[]> ExecuteCommand;
+        public Func<Byte[], Byte[]> PackageOutput;
+    }
+
+    public class TcpVirtualTransportServerHandleResultBadCommand
+    {
+        public String CommandName;
+    }
+
+    public class TcpVirtualTransportServerHandleResultBadCommandLine
+    {
+        public String CommandLine;
+    }
+
+    public enum TcpVirtualTransportServerHandleResultTag
+    {
+        Continue = 0,
+        Command = 1,
+        BadCommand = 2,
+        BadCommandLine = 3
+    }
+    [TaggedUnion]
+    public class TcpVirtualTransportServerHandleResult
+    {
+        [Tag] public TcpVirtualTransportServerHandleResultTag _Tag;
+        public Unit Continue;
+        public TcpVirtualTransportServerHandleResultCommand Command;
+        public TcpVirtualTransportServerHandleResultBadCommand BadCommand;
+        public TcpVirtualTransportServerHandleResultBadCommandLine BadCommandLine;
+
+        public static TcpVirtualTransportServerHandleResult CreateContinue() { return new TcpVirtualTransportServerHandleResult { _Tag = TcpVirtualTransportServerHandleResultTag.Continue, Continue = new Unit() }; }
+        public static TcpVirtualTransportServerHandleResult CreateCommand(TcpVirtualTransportServerHandleResultCommand Value) { return new TcpVirtualTransportServerHandleResult { _Tag = TcpVirtualTransportServerHandleResultTag.Command, Command = Value }; }
+        public static TcpVirtualTransportServerHandleResult CreateBadCommand(TcpVirtualTransportServerHandleResultBadCommand Value) { return new TcpVirtualTransportServerHandleResult { _Tag = TcpVirtualTransportServerHandleResultTag.BadCommand, BadCommand = Value }; }
+        public static TcpVirtualTransportServerHandleResult CreateBadCommandLine(TcpVirtualTransportServerHandleResultBadCommandLine Value) { return new TcpVirtualTransportServerHandleResult { _Tag = TcpVirtualTransportServerHandleResultTag.BadCommandLine, BadCommandLine = Value }; }
+
+        public Boolean OnRead { get { return _Tag == TcpVirtualTransportServerHandleResultTag.Continue; } }
+        public Boolean OnCommand { get { return _Tag == TcpVirtualTransportServerHandleResultTag.Command; } }
+        public Boolean OnBadCommand { get { return _Tag == TcpVirtualTransportServerHandleResultTag.BadCommand; } }
+        public Boolean OnBadCommandLine { get { return _Tag == TcpVirtualTransportServerHandleResultTag.BadCommandLine; } }
+    }
+
+    public interface ITcpVirtualTransportServer<TContext>
+    {
+        ArraySegment<Byte> GetReadBuffer(TContext c);
+        TcpVirtualTransportServerHandleResult Handle(TContext c, int Count);
+        UInt64 Hash { get; }
+        event Action<TContext, Byte[]> ServerEvent;
+    }
+
     /// <summary>
     /// 本类的所有非继承的公共成员均是线程安全的。
     /// </summary>
-    public class ManagedTcpServer
+    public class TcpServer : IServer
     {
         private class BindingInfo
         {
@@ -49,18 +101,18 @@ namespace Server
         private Task PurifieringTask;
         private CancellationTokenSource PurifieringTaskTokenSource;
         private AutoResetEvent PurifieringTaskNotifier;
-        private LockedVariable<HashSet<ManagedTcpSession>> Sessions = new LockedVariable<HashSet<ManagedTcpSession>>(new HashSet<ManagedTcpSession>());
+        private LockedVariable<HashSet<TcpSession>> Sessions = new LockedVariable<HashSet<TcpSession>>(new HashSet<TcpSession>());
         private LockedVariable<Dictionary<IPAddress, int>> IpSessions = new LockedVariable<Dictionary<IPAddress, int>>(new Dictionary<IPAddress, int>());
-        private ConcurrentBag<ManagedTcpSession> StoppingSessions = new ConcurrentBag<ManagedTcpSession>();
+        private ConcurrentBag<TcpSession> StoppingSessions = new ConcurrentBag<TcpSession>();
 
         private class WorkPart
         {
             public ServerImplementation si;
-            public IVirtualTransportServer<SessionContext> vts;
+            public ITcpVirtualTransportServer<SessionContext> vts;
         }
         private ThreadLocal<WorkPart> WorkPartInstance;
         public ServerImplementation ApplicationServer { get { return WorkPartInstance.Value.si; } }
-        public IVirtualTransportServer<SessionContext> VirtualTransportServer { get { return WorkPartInstance.Value.vts; } }
+        public ITcpVirtualTransportServer<SessionContext> VirtualTransportServer { get { return WorkPartInstance.Value.vts; } }
         public ServerContext ServerContext { get; private set; }
 
         private SerializationProtocolType ProtocolTypeValue = SerializationProtocolType.Binary;
@@ -80,7 +132,7 @@ namespace Server
         private int? MaxConnectionsPerIPValue = null;
 
         /// <summary>只能在启动前修改，以保证线程安全</summary>
-        public SerializationProtocolType ProtocolType
+        public SerializationProtocolType SerializationProtocolType
         {
             get
             {
@@ -290,9 +342,9 @@ namespace Server
             }
         }
 
-        public LockedVariable<Dictionary<SessionContext, ManagedTcpSession>> SessionMappings = new LockedVariable<Dictionary<SessionContext, ManagedTcpSession>>(new Dictionary<SessionContext, ManagedTcpSession>());
+        public LockedVariable<Dictionary<SessionContext, TcpSession>> SessionMappings = new LockedVariable<Dictionary<SessionContext, TcpSession>>(new Dictionary<SessionContext, TcpSession>());
 
-        public ManagedTcpServer(ServerContext sc)
+        public TcpServer(ServerContext sc)
         {
             ServerContext = sc;
 
@@ -327,8 +379,8 @@ namespace Server
                         }
                     };
 
-                    IVirtualTransportServer<SessionContext> vts;
-                    if (ProtocolType == SerializationProtocolType.Binary)
+                    ITcpVirtualTransportServer<SessionContext> vts;
+                    if (SerializationProtocolType == SerializationProtocolType.Binary)
                     {
                         BinaryCountPacketServer<SessionContext>.CheckCommandAllowedDelegate cca = (c, CommandName) =>
                         {
@@ -337,7 +389,7 @@ namespace Server
                         };
                         vts = new BinaryCountPacketServer<SessionContext>(law, c => c.BinaryCountPacketContext, cca);
                     }
-                    else if (ProtocolType == SerializationProtocolType.Json)
+                    else if (SerializationProtocolType == SerializationProtocolType.Json)
                     {
                         JsonLinePacketServer<SessionContext>.CheckCommandAllowedDelegate cca = (c, CommandName) =>
                         {
@@ -348,7 +400,7 @@ namespace Server
                     }
                     else
                     {
-                        throw new InvalidOperationException("InvalidSerializationProtocol: " + ProtocolType.ToString());
+                        throw new InvalidOperationException("InvalidSerializationProtocol: " + SerializationProtocolType.ToString());
                     }
 
                     vts.ServerEvent += OnServerEvent;
@@ -367,7 +419,7 @@ namespace Server
 
         private void OnServerEvent(SessionContext c, Byte[] Bytes)
         {
-            ManagedTcpSession Session = null;
+            TcpSession Session = null;
             SessionMappings.DoAction(Mappings =>
             {
                 if (Mappings.ContainsKey(c))
@@ -390,14 +442,14 @@ namespace Server
             }
         }
 
-        private void OnMaxConnectionsExceeded(ManagedTcpSession s)
+        private void OnMaxConnectionsExceeded(TcpSession s)
         {
             if (s != null && s.IsRunning)
             {
                 s.RaiseError("", "Client host rejected: too many connections, please try again later.");
             }
         }
-        private void OnMaxConnectionsPerIPExceeded(ManagedTcpSession s)
+        private void OnMaxConnectionsPerIPExceeded(TcpSession s)
         {
             if (s != null && s.IsRunning)
             {
@@ -515,7 +567,7 @@ namespace Server
                             throw new AggregateException(Exceptions);
                         }
 
-                        Func<ManagedTcpSession, Boolean> Purify = StoppingSession =>
+                        Func<TcpSession, Boolean> Purify = StoppingSession =>
                         {
                             var Removed = false;
                             Sessions.DoAction
@@ -553,7 +605,7 @@ namespace Server
 
                         Func<Boolean> PurifyOneInSession = () =>
                         {
-                            ManagedTcpSession StoppingSession;
+                            TcpSession StoppingSession;
                             while (StoppingSessions.TryTake(out StoppingSession))
                             {
                                 var Removed = Purify(StoppingSession);
@@ -582,7 +634,7 @@ namespace Server
                                         {
                                             a.ReceiveTimeout = SessionIdleTimeoutValue.Value * 1000;
                                         }
-                                        var s = new ManagedTcpSession(new StreamedAsyncSocket(a), (IPEndPoint)(a.RemoteEndPoint)) { Server = this };
+                                        var s = new TcpSession(new StreamedAsyncSocket(a), (IPEndPoint)(a.RemoteEndPoint)) { Server = this };
 
                                         if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
                                         {
@@ -663,7 +715,7 @@ namespace Server
 
                                     PurifieringTaskNotifier.WaitOne();
 
-                                    ManagedTcpSession StoppingSession;
+                                    TcpSession StoppingSession;
                                     while (StoppingSessions.TryTake(out StoppingSession))
                                     {
                                         Purify(StoppingSession);
@@ -808,14 +860,14 @@ namespace Server
             );
         }
 
-        public void NotifySessionQuit(ManagedTcpSession s)
+        public void NotifySessionQuit(TcpSession s)
         {
             StoppingSessions.Add(s);
             PurifieringTaskNotifier.Set();
         }
 
-        private event Action<ManagedTcpSession> MaxConnectionsExceeded;
-        private event Action<ManagedTcpSession> MaxConnectionsPerIPExceeded;
+        private event Action<TcpSession> MaxConnectionsExceeded;
+        private event Action<TcpSession> MaxConnectionsPerIPExceeded;
 
         public void Dispose()
         {

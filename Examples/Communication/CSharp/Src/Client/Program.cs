@@ -145,7 +145,7 @@ namespace Client
             {
                 Console.WriteLine("协议不能识别：" + ProtocolType.ToString());
             }
-            using (var bc = new ManagedTcpClient(RemoteEndPoint, new ClientImplementation(), ProtocolType))
+            using (var bc = new TcpClient(RemoteEndPoint, new ClientImplementation(), ProtocolType))
             {
                 bc.Connect();
                 Console.WriteLine("连接成功。");
