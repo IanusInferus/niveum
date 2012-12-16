@@ -14,12 +14,6 @@ using Server.Services;
 
 namespace Server
 {
-    public enum SerializationProtocolType
-    {
-        Binary,
-        Json
-    }
-
     public class TcpVirtualTransportServerHandleResultCommand
     {
         public String CommandName;
