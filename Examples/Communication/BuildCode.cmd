@@ -6,6 +6,7 @@ SchemaManipulator.exe /loadtype:Schema\Common /t2cs:CSharp\Src\Communication\Gen
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2cs:CSharp\Src\Communication\Generated\Communication.cs,Communication
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csb:CSharp\Src\Communication\Generated\CommunicationBinary.cs,Communication.Binary
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csj:CSharp\Src\Communication\Generated\CommunicationJson.cs,Communication.Json
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:CSharp\Src\Server\Configuration.Schema.tree /t2cs:CSharp\Src\Server\Configuration.cs,Server
 
 :: C++2011
 @if not exist CPP\Src\Server @md CPP\Src\Server
