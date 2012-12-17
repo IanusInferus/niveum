@@ -57,10 +57,10 @@ Yummy Ultimate Kata Infrastructure (YUKI类型框架库)
 
                     类型定义        二进制序列化        JSON序列化      二进制通讯  JSON通讯
 VB.Net              √              Firefly库动态支持   ×              ×          ×
-C#                  √              Firefly库动态支持   √              √          √
+C#                  √              Firefly库动态支持   √              两端        两端
 Java                √              √                  ×              ×          ×
-C++2011             √              √                  ×              √          ×
-ActionScript        √              √                  √              √          √
+C++2011             √              √                  ×              两端        ×
+ActionScript        √              √                  √              客户端      客户端
 Xhtml               √              无需                无需            无需        无需
 
 其中，VB.Net、Java、C++2011的通讯功能，将会在今后逐步增加。

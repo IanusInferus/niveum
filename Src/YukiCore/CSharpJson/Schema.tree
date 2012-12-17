@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2012.12.13.
+      Version:     2012.12.17.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -62,20 +62,20 @@ ObjectSchemaTemplate
                     using Newtonsoft.Json;
                     using Newtonsoft.Json.Linq;
         Template
-            Name JsonServer
-            //Parameters: ${Hash}, ${Commands}
+            Name JsonSerializationServer
+            //Parameters: ${Hash}, ${ClientCommands}, ${ServerCommands}
             Value
                 $String
-                    public sealed class JsonServer<TContext>
+                    public sealed class JsonSerializationServer
                     {
-                        private Dictionary<String, Func<TContext, String, String>> ClientCommandsWithoutHash;
-                        private Dictionary<KeyValuePair<String, UInt32>, Func<TContext, String, String>> ClientCommands;
+                        private Dictionary<String, Func<IApplicationServer, String, String>> ClientCommandsWithoutHash;
+                        private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, String>> ClientCommands;
 
-                        public JsonServer(IServerImplementation<TContext> i)
+                        public JsonSerializationServer()
                         {
-                            ClientCommandsWithoutHash = new Dictionary<String, Func<TContext, String, String>>(StringComparer.OrdinalIgnoreCase);
-                            ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<TContext, String, String>>();
-                            ${Commands}
+                            ClientCommandsWithoutHash = new Dictionary<String, Func<IApplicationServer, String, String>>(StringComparer.OrdinalIgnoreCase);
+                            ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, String>>();
+                            ${ClientCommands}
                         }
 
                         public UInt64 Hash
@@ -96,43 +96,50 @@ ObjectSchemaTemplate
                             return ClientCommands.ContainsKey(new KeyValuePair<String, UInt32>(CommandName, CommandHash));
                         }
 
-                        public String ExecuteCommand(TContext c, String CommandName, String Parameters)
+                        public String ExecuteCommand(IApplicationServer s, String CommandName, String Parameters)
                         {
                             var cmd = ClientCommandsWithoutHash[CommandName];
-                            return cmd(c, Parameters);
+                            return cmd(s, Parameters);
                         }
 
-                        public String ExecuteCommand(TContext c, String CommandName, UInt32 CommandHash, String Parameters)
+                        public String ExecuteCommand(IApplicationServer s, String CommandName, UInt32 CommandHash, String Parameters)
                         {
                             var cmd = ClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];
-                            return cmd(c, Parameters);
+                            return cmd(s, Parameters);
+                        }
+                    }
+                    public sealed class JsonSerializationServerEventDispatcher
+                    {
+                        public JsonSerializationServerEventDispatcher(IApplicationServer s)
+                        {
+                            ${ServerCommands}
                         }
 
-                        public delegate void ServerEventDelegate(TContext c, String CommandName, UInt32 CommandHash, String Parameters);
+                        public delegate void ServerEventDelegate(String CommandName, UInt32 CommandHash, String Parameters);
                         public event ServerEventDelegate ServerEvent;
-                        private void OnServerEvent(TContext c, String CommandName, UInt32 CommandHash, String Parameters)
+                        private void OnServerEvent(String CommandName, UInt32 CommandHash, String Parameters)
                         {
-                            if (ServerEvent != null) { ServerEvent(c, CommandName, CommandHash, Parameters); }
+                            if (ServerEvent != null) { ServerEvent(CommandName, CommandHash, Parameters); }
                         }
                     }
         Template
-            Name JsonServer_ClientCommandWithoutHash
+            Name JsonSerializationServer_ClientCommandWithoutHash
             //Parameters: ${CommandName}, ${Name}
             Value
                 $String
-                    ClientCommandsWithoutHash.Add(@"${CommandName}", (c, p) => JsonTranslator.[[${Name}ReplyToJson]](i.[[${Name}]](c, JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
+                    ClientCommandsWithoutHash.Add(@"${CommandName}", (s, p) => JsonTranslator.[[${Name}ReplyToJson]](s.[[${Name}]](JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
         Template
-            Name JsonServer_ClientCommand
+            Name JsonSerializationServer_ClientCommand
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (c, p) => JsonTranslator.[[${Name}ReplyToJson]](i.[[${Name}]](c, JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
+                    ClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (s, p) => JsonTranslator.[[${Name}ReplyToJson]](s.[[${Name}]](JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
         Template
-            Name JsonServer_ServerCommand
+            Name JsonSerializationServer_ServerCommand
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    i.${Name} += (c, e) => OnServerEvent(c, @"${CommandName}", 0x${CommandHash}, JsonTranslator.[[${Name}EventToJson]](e).ToString(Formatting.None));
+                    s.${Name} += e => OnServerEvent(@"${CommandName}", 0x${CommandHash}, JsonTranslator.[[${Name}EventToJson]](e).ToString(Formatting.None));
         Template
             Name IJsonSender
             Value
@@ -142,39 +149,69 @@ ObjectSchemaTemplate
                         void Send(String CommandName, UInt32 CommandHash, String Parameters);
                     }
         Template
-            Name JsonClient
-            //Parameters: ${Hash}, ${ClientCommands}, ${ServerCommands}
+            Name JsonSerializationClient
+            //Parameters: ${Hash}, ${ApplicationCommands}, ${ServerCommands}
             Value
                 $String
-                    public sealed class JsonClient<TContext> : IClient
+                    public sealed class JsonSerializationClient
                     {
-                        private IJsonSender s;
-                        private IClientImplementation<TContext> i;
-                        private Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>> ClientCommandCallbacks;
-                        private Dictionary<KeyValuePair<String, UInt32>, Action<TContext, String>> ServerCommands;
-
-                        public JsonClient(IJsonSender s, IClientImplementation<TContext> i)
+                        public IApplicationClient GetApplicationClient()
                         {
-                            this.s = s;
-                            this.i = i;
-                            ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>>();
-                            ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<TContext, String>>();
+                            return c;
+                        }
+
+                        private class ApplicationClient : IApplicationClient
+                        {
+                            public IJsonSender s;
+                            public Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>> ClientCommandCallbacks;
+
+                            public UInt64 Hash
+                            {
+                                get
+                                {
+                                    return 0x${Hash};
+                                }
+                            }
+
+                            public void DequeueCallback(String CommandName)
+                            {
+                                ClientCommandCallbacks[CommandName].Dequeue();
+                            }
+
+                            private void AddCallback(String CommandName, UInt32 CommandHash, Action<String> Callback)
+                            {
+                                if (ClientCommandCallbacks.ContainsKey(CommandName))
+                                {
+                                    ClientCommandCallbacks[CommandName].Enqueue(new KeyValuePair<UInt32, Action<String>>(CommandHash, Callback));
+                                }
+                                else
+                                {
+                                    var q = new Queue<KeyValuePair<UInt32, Action<String>>>();
+                                    q.Enqueue(new KeyValuePair<UInt32, Action<String>>(CommandHash, Callback));
+                                    ClientCommandCallbacks.Add(CommandName, q);
+                                }
+                            }
+
+                            ${ApplicationCommands}
+                        }
+
+                        private ApplicationClient c;
+                        private Dictionary<KeyValuePair<String, UInt32>, Action<String>> ServerCommands;
+
+                        public JsonSerializationClient(IJsonSender s)
+                        {
+                            c = new ApplicationClient();
+                            c.s = s;
+                            c.ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>>();
+                            ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<String>>();
                             ${ServerCommands}
                         }
 
-                        public UInt64 Hash
+                        public void HandleResult(String CommandName, UInt32 CommandHash, String Parameters)
                         {
-                            get
+                            if (c.ClientCommandCallbacks.ContainsKey(CommandName))
                             {
-                                return 0x${Hash};
-                            }
-                        }
-
-                        public void HandleResult(TContext c, String CommandName, UInt32 CommandHash, String Parameters)
-                        {
-                            if (ClientCommandCallbacks.ContainsKey(CommandName))
-                            {
-                                var q = ClientCommandCallbacks[CommandName];
+                                var q = c.ClientCommandCallbacks[CommandName];
                                 if (q.Count == 0)
                                 {
                                     throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
@@ -194,40 +231,18 @@ ObjectSchemaTemplate
                             if (ServerCommands.ContainsKey(p))
                             {
                                 var a = ServerCommands[p];
-                                a(c, Parameters);
+                                a(Parameters);
                                 return;
                             }
 
                             throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
                         }
-
-                        private void AddCallback(String CommandName, UInt32 CommandHash, Action<String> Callback)
-                        {
-                            if (ClientCommandCallbacks.ContainsKey(CommandName))
-                            {
-                                ClientCommandCallbacks[CommandName].Enqueue(new KeyValuePair<UInt32, Action<String>>(CommandHash, Callback));
-                            }
-                            else
-                            {
-                                var q = new Queue<KeyValuePair<UInt32, Action<String>>>();
-                                q.Enqueue(new KeyValuePair<UInt32, Action<String>>(CommandHash, Callback));
-                                ClientCommandCallbacks.Add(CommandName, q);
-                            }
-                        }
-
-                        public void DequeueCallback(String CommandName)
-                        {
-                            ClientCommandCallbacks[CommandName].Dequeue();
-                        }
-
-                        ${ClientCommands}
                     }
         Template
-            Name JsonClient_ClientCommand
-            //Parameters: ${CommandName}, ${Name}, ${CommandHash}, ${XmlComment}
+            Name JsonSerializationClient_ApplicationClientCommand
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ${XmlComment}
                     public void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback)
                     {
                         var Request = JsonTranslator.[[${Name}RequestToJson]](r).ToString(Formatting.None);
@@ -235,29 +250,36 @@ ObjectSchemaTemplate
                         s.Send(@"${CommandName}", 0x${CommandHash}, Request);
                     }
         Template
-            Name JsonClient_ServerCommand
+            Name JsonSerializationClient_ApplicationServerCommand
+            //Parameters: ${Name}
+            Value
+                $String
+                    public event Action<[[${Name}Event]]> [[${Name}]];
+                    public void [[Raise${Name}]]([[${Name}Event]] e) { if ([[${Name}]] != null) { [[${Name}]](e); } }
+        Template
+            Name JsonSerializationClient_ServerCommand
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ServerCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (c, Parameters) => i.[[${Name}]](c, JsonTranslator.[[${Name}EventFromJson]](JToken.Parse(Parameters))));
+                    ServerCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), Parameters => c.[[Raise${Name}]](JsonTranslator.[[${Name}EventFromJson]](JToken.Parse(Parameters))));
         Template
             Name JsonLogAspectWrapper
             //Parameters: ${ServerCommandHooks}, ${Commands}
             Value
                 $String
-                    public sealed class JsonLogAspectWrapper<TContext> : IServerImplementation<TContext>
+                    public sealed class JsonLogAspectWrapper : IApplicationServer
                     {
-                        private IServerImplementation<TContext> Inner;
+                        private IApplicationServer Inner;
 
-                        public JsonLogAspectWrapper(IServerImplementation<TContext> Inner)
+                        public JsonLogAspectWrapper(IApplicationServer Inner)
                         {
                             this.Inner = Inner;
                             ${ServerCommandHooks}
                         }
 
-                        public event Action<TContext, String, String> ClientCommandIn;
-                        public event Action<TContext, String, String> ClientCommandOut;
-                        public event Action<TContext, String, String> ServerCommand;
+                        public event Action<String, String> ClientCommandIn;
+                        public event Action<String, String> ClientCommandOut;
+                        public event Action<String, String> ServerCommand;
 
                         ${Commands}
                     }
@@ -266,21 +288,21 @@ ObjectSchemaTemplate
             //Parameters: ${Name}
             Value
                 $String
-                    Inner.[[${Name}]] += (c, e) =>
+                    Inner.[[${Name}]] += e =>
                     {
-                        if (ServerCommand != null) { ServerCommand(c, @"${Name}", JsonTranslator.[[${Name}EventToJson]](e).ToString(Formatting.None)); }
-                        if ([[${Name}]] != null) { [[${Name}]](c, e); }
+                        if (ServerCommand != null) { ServerCommand(@"${Name}", JsonTranslator.[[${Name}EventToJson]](e).ToString(Formatting.None)); }
+                        if ([[${Name}]] != null) { [[${Name}]](e); }
                     };
         Template
             Name JsonLogAspectWrapper_ClientCommandHook
             //Parameters: ${Name}
             Value
                 $String
-                    public [[${Name}Reply]] [[${Name}]](TContext c, [[${Name}Request]] Request)
+                    public [[${Name}Reply]] [[${Name}]]([[${Name}Request]] Request)
                     {
-                        if (ClientCommandIn != null) { ClientCommandIn(c, @"${Name}", JsonTranslator.[[${Name}RequestToJson]](Request).ToString(Formatting.None)); }
-                        var Reply = Inner.[[${Name}]](c, Request);
-                        if (ClientCommandOut != null) { ClientCommandOut(c, @"${Name}", JsonTranslator.[[${Name}ReplyToJson]](Reply).ToString(Formatting.None)); }
+                        if (ClientCommandIn != null) { ClientCommandIn(@"${Name}", JsonTranslator.[[${Name}RequestToJson]](Request).ToString(Formatting.None)); }
+                        var Reply = Inner.[[${Name}]](Request);
+                        if (ClientCommandOut != null) { ClientCommandOut(@"${Name}", JsonTranslator.[[${Name}ReplyToJson]](Reply).ToString(Formatting.None)); }
                         return Reply;
                     }
         Template
@@ -288,7 +310,7 @@ ObjectSchemaTemplate
             //Parameters: ${Name}
             Value
                 $String
-                    public event Action<TContext, [[${Name}Event]]> [[${Name}]];
+                    public event Action<[[${Name}Event]]> [[${Name}]];
         Template
             Name JsonTranslator
             //Parameters: ${Serializers}
