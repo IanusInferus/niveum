@@ -6,7 +6,7 @@
     Http                        HttpServerConfiguration
 
 #Record TcpServerConfiguration
-    Bindings                    List<Binding>
+    Bindings                    List<TcpBinding>
     EnableLogNormalIn           Boolean
     EnableLogNormalOut          Boolean
     EnableLogUnknownError       Boolean
@@ -22,8 +22,16 @@
 
     SerializationProtocolType   SerializationProtocolType
 
+#Record TcpBinding
+    IpAddress                   String
+    Port                        Int
+
+#Enum SerializationProtocolType
+    Binary
+    Json
+
 #Record HttpServerConfiguration
-    Bindings                    List<Binding>
+    Bindings                    List<HttpBinding>
     EnableLogNormalIn           Boolean
     EnableLogNormalOut          Boolean
     EnableLogUnknownError       Boolean
@@ -37,13 +45,12 @@
     MaxBadCommands              Int
     ClientDebug                 Boolean
 
-    ServicePath                 String
-    StaticContentPath           Optional<String>
+    ServiceVirtualPath          String
+    StaticContentPath           Optional<HttpStaticContentPath>
 
-#Record Binding
-    IpAddress                   String
-    Port                        Int
+#Record HttpBinding
+    Prefix                      String
 
-#Enum SerializationProtocolType
-    Binary
-    Json
+#Record HttpStaticContentPath
+    VirtualPath                 String
+    PhysicalPath                String

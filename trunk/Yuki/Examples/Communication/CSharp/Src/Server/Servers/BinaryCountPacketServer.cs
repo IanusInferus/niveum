@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Firefly;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
@@ -9,76 +10,93 @@ using Communication.Binary;
 
 namespace Server
 {
-    public class BinaryCountPacketServerContext
+    public class BinaryCountPacketServer : ITcpVirtualTransportServer
     {
-        public ArraySegment<Byte> Buffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
-
-        public int State = 0;
-        // 0 初始状态
-        // 1 已读取NameLength
-        // 2 已读取CommandHash
-        // 3 已读取Name
-        // 4 已读取ParametersLength
-
-        public Int32 CommandNameLength = 0;
-        public String CommandName = "";
-        public UInt32 CommandHash = 0;
-        public Int32 ParametersLength = 0;
-    }
-
-    public class BinaryCountPacketServer<TContext> : ITcpVirtualTransportServer<TContext>
-    {
-        public delegate Boolean CheckCommandAllowedDelegate(TContext c, String CommandName);
-
-        private BinaryServer<TContext> sv;
-        private Func<TContext, BinaryCountPacketServerContext> Acquire;
-        private CheckCommandAllowedDelegate CheckCommandAllowed;
-        public BinaryCountPacketServer(IServerImplementation<TContext> ApplicationServer, Func<TContext, BinaryCountPacketServerContext> Acquire, CheckCommandAllowedDelegate CheckCommandAllowed)
+        private class Context
         {
-            this.sv = new BinaryServer<TContext>(ApplicationServer);
-            this.Acquire = Acquire;
+            public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
+            public Object WriteBufferLockee = new Object();
+            public List<Byte> WriteBuffer = new List<Byte>();
+
+            public int State = 0;
+            // 0 初始状态
+            // 1 已读取NameLength
+            // 2 已读取CommandHash
+            // 3 已读取Name
+            // 4 已读取ParametersLength
+
+            public Int32 CommandNameLength = 0;
+            public String CommandName = "";
+            public UInt32 CommandHash = 0;
+            public Int32 ParametersLength = 0;
+        }
+
+        public delegate Boolean CheckCommandAllowedDelegate(String CommandName);
+
+        private IApplicationServer s;
+        private static ThreadLocal<BinarySerializationServer> sss = new ThreadLocal<BinarySerializationServer>(() => new BinarySerializationServer());
+        private BinarySerializationServer ss = sss.Value;
+        private BinarySerializationServerEventDispatcher ssed;
+        private Context c;
+        private CheckCommandAllowedDelegate CheckCommandAllowed;
+        public BinaryCountPacketServer(IApplicationServer ApplicationServer, CheckCommandAllowedDelegate CheckCommandAllowed)
+        {
+            this.s = ApplicationServer;
+            this.ssed = new BinarySerializationServerEventDispatcher(ApplicationServer);
+            this.c = new Context();
             this.CheckCommandAllowed = CheckCommandAllowed;
-            this.sv.ServerEvent += (c, CommandName, CommandHash, Parameters) =>
+            this.ssed.ServerEvent += (CommandName, CommandHash, Parameters) =>
             {
+                var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
+                Byte[] Bytes;
+                using (var ms = Streams.CreateMemoryStream())
+                {
+                    ms.WriteInt32(CommandNameBytes.Length);
+                    ms.Write(CommandNameBytes);
+                    ms.WriteUInt32(CommandHash);
+                    ms.WriteInt32(Parameters.Length);
+                    ms.Write(Parameters);
+                    ms.Position = 0;
+                    Bytes = ms.Read((int)(ms.Length));
+                }
+                lock (c.WriteBufferLockee)
+                {
+                    c.WriteBuffer.AddRange(Bytes);
+                }
                 if (this.ServerEvent != null)
                 {
-                    var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
-                    Byte[] Bytes;
-                    using (var s = Streams.CreateMemoryStream())
-                    {
-                        s.WriteInt32(CommandNameBytes.Length);
-                        s.Write(CommandNameBytes);
-                        s.WriteUInt32(CommandHash);
-                        s.WriteInt32(Parameters.Length);
-                        s.Write(Parameters);
-                        s.Position = 0;
-                        Bytes = s.Read((int)(s.Length));
-                    }
-                    this.ServerEvent(c, Bytes);
+                    this.ServerEvent();
                 }
             };
         }
 
-        public ArraySegment<Byte> GetReadBuffer(TContext c)
+        public ArraySegment<Byte> GetReadBuffer()
         {
-            var bc = Acquire(c);
-            return bc.Buffer;
+            return c.ReadBuffer;
         }
 
-        public TcpVirtualTransportServerHandleResult Handle(TContext c, int Count)
+        public Byte[] TakeWriteBuffer()
         {
-            var bc = Acquire(c);
+            lock (c.WriteBufferLockee)
+            {
+                var r = c.WriteBuffer.ToArray();
+                c.WriteBuffer = new List<Byte>();
+                return r;
+            }
+        }
 
+        public TcpVirtualTransportServerHandleResult Handle(int Count)
+        {
             var ret = TcpVirtualTransportServerHandleResult.CreateContinue();
 
-            var Buffer = bc.Buffer.Array;
-            var FirstPosition = bc.Buffer.Offset;
-            var BufferLength = bc.Buffer.Offset + bc.Buffer.Count;
+            var Buffer = c.ReadBuffer.Array;
+            var FirstPosition = c.ReadBuffer.Offset;
+            var BufferLength = c.ReadBuffer.Offset + c.ReadBuffer.Count;
             BufferLength += Count;
 
             while (true)
             {
-                var r = TryShift(bc, Buffer, FirstPosition, BufferLength - FirstPosition);
+                var r = TryShift(c, Buffer, FirstPosition, BufferLength - FirstPosition);
                 if (r == null)
                 {
                     break;
@@ -90,27 +108,30 @@ namespace Server
                     var CommandName = r.Command.CommandName;
                     var CommandHash = r.Command.CommandHash;
                     var Parameters = r.Command.Parameters;
-                    if (sv.HasCommand(CommandName, CommandHash) && (CheckCommandAllowed != null ? CheckCommandAllowed(c, CommandName) : true))
+                    if (ss.HasCommand(CommandName, CommandHash) && (CheckCommandAllowed != null ? CheckCommandAllowed(CommandName) : true))
                     {
                         ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
                         {
                             CommandName = CommandName,
-                            ExecuteCommand = () => sv.ExecuteCommand(c, CommandName, CommandHash, Parameters),
-                            PackageOutput = OutputParameters =>
+                            ExecuteCommand = () =>
                             {
+                                var OutputParameters = ss.ExecuteCommand(s, CommandName, CommandHash, Parameters);
                                 var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
                                 Byte[] Bytes;
-                                using (var s = Streams.CreateMemoryStream())
+                                using (var ms = Streams.CreateMemoryStream())
                                 {
-                                    s.WriteInt32(CommandNameBytes.Length);
-                                    s.Write(CommandNameBytes);
-                                    s.WriteUInt32(CommandHash);
-                                    s.WriteInt32(OutputParameters.Length);
-                                    s.Write(OutputParameters);
-                                    s.Position = 0;
-                                    Bytes = s.Read((int)(s.Length));
+                                    ms.WriteInt32(CommandNameBytes.Length);
+                                    ms.Write(CommandNameBytes);
+                                    ms.WriteUInt32(CommandHash);
+                                    ms.WriteInt32(OutputParameters.Length);
+                                    ms.Write(OutputParameters);
+                                    ms.Position = 0;
+                                    Bytes = ms.Read((int)(ms.Length));
                                 }
-                                return Bytes;
+                                lock (c.WriteBufferLockee)
+                                {
+                                    c.WriteBuffer.AddRange(Bytes);
+                                }
                             }
                         });
                     }
@@ -134,18 +155,18 @@ namespace Server
             }
             if (FirstPosition >= BufferLength)
             {
-                bc.Buffer = new ArraySegment<Byte>(Buffer, 0, 0);
+                c.ReadBuffer = new ArraySegment<Byte>(Buffer, 0, 0);
             }
             else
             {
-                bc.Buffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
+                c.ReadBuffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
             }
 
             return ret;
         }
 
-        public UInt64 Hash { get { return sv.Hash; } }
-        public event Action<TContext, Byte[]> ServerEvent;
+        public UInt64 Hash { get { return ss.Hash; } }
+        public event Action ServerEvent;
 
         private class Command
         {
@@ -159,7 +180,7 @@ namespace Server
             public int Position;
         }
 
-        private static TryShiftResult TryShift(BinaryCountPacketServerContext bc, Byte[] Buffer, int Position, int Length)
+        private static TryShiftResult TryShift(Context bc, Byte[] Buffer, int Position, int Length)
         {
             if (bc.State == 0)
             {

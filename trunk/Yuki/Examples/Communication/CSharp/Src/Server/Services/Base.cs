@@ -6,16 +6,16 @@ using Communication.BaseSystem;
 
 namespace Server.Services
 {
-    public partial class ServerImplementation : IServerImplementation<SessionContext>
+    public partial class ServerImplementation : IApplicationServer
     {
-        public event Action<SessionContext, ErrorEvent> Error;
+        public event Action<ErrorEvent> Error;
 
-        public ServerTimeReply ServerTime(SessionContext c, ServerTimeRequest r)
+        public ServerTimeReply ServerTime(ServerTimeRequest r)
         {
             return ServerTimeReply.CreateSuccess(DateTime.UtcNow.DateTimeUtcToString());
         }
 
-        public QuitReply Quit(SessionContext c, QuitRequest r)
+        public QuitReply Quit(QuitRequest r)
         {
             c.RaiseQuit();
             return QuitReply.CreateSuccess();

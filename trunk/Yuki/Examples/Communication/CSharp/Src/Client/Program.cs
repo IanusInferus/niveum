@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2012.12.13.
+//  Version:     2012.12.17.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -145,7 +145,7 @@ namespace Client
             {
                 Console.WriteLine("协议不能识别：" + ProtocolType.ToString());
             }
-            using (var bc = new TcpClient(RemoteEndPoint, new ClientImplementation(), ProtocolType))
+            using (var bc = new TcpClient(RemoteEndPoint, ProtocolType))
             {
                 bc.Connect();
                 Console.WriteLine("连接成功。");
@@ -163,8 +163,22 @@ namespace Client
             }
         }
 
-        public static void ReadLineAndSendLoop(IClient InnerClient, Boolean UseOld, Object Lockee)
+        public static void ReadLineAndSendLoop(IApplicationClient InnerClient, Boolean UseOld, Object Lockee)
         {
+            InnerClient.Error += e =>
+            {
+                var m = "调用'" + e.CommandName + "'发生错误:" + e.Message;
+                Console.WriteLine(m);
+            };
+            InnerClient.MessageReceived += e => Console.WriteLine(e.Content);
+            InnerClient.MessageReceivedAt1 += e =>
+            {
+                Console.WriteLine(e.Title);
+                foreach (var Line in e.Lines)
+                {
+                    Console.WriteLine(Line);
+                }
+            };
             while (true)
             {
                 var Line = Console.ReadLine();

@@ -2,56 +2,73 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Firefly;
-using Firefly.Streaming;
 using Firefly.TextEncoding;
 using Communication;
 using Communication.Json;
 
 namespace Server
 {
-    public class JsonLinePacketServerContext
+    public class JsonLinePacketServer : ITcpVirtualTransportServer
     {
-        public ArraySegment<Byte> Buffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
-    }
-
-    public class JsonLinePacketServer<TContext> : ITcpVirtualTransportServer<TContext>
-    {
-        public delegate Boolean CheckCommandAllowedDelegate(TContext c, String CommandName);
-
-        private JsonServer<TContext> sv;
-        private Func<TContext, JsonLinePacketServerContext> Acquire;
-        private CheckCommandAllowedDelegate CheckCommandAllowed;
-        public JsonLinePacketServer(IServerImplementation<TContext> ApplicationServer, Func<TContext, JsonLinePacketServerContext> Acquire, CheckCommandAllowedDelegate CheckCommandAllowed)
+        private class Context
         {
-            this.sv = new JsonServer<TContext>(ApplicationServer);
-            this.Acquire = Acquire;
+            public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
+            public Object WriteBufferLockee = new Object();
+            public List<Byte> WriteBuffer = new List<Byte>();
+        }
+
+        public delegate Boolean CheckCommandAllowedDelegate(String CommandName);
+
+        private IApplicationServer s;
+        private static ThreadLocal<JsonSerializationServer> sss = new ThreadLocal<JsonSerializationServer>(() => new JsonSerializationServer());
+        private JsonSerializationServer ss = sss.Value;
+        private JsonSerializationServerEventDispatcher ssed;
+        private Context c;
+        private CheckCommandAllowedDelegate CheckCommandAllowed;
+        public JsonLinePacketServer(IApplicationServer ApplicationServer, CheckCommandAllowedDelegate CheckCommandAllowed)
+        {
+            this.s = ApplicationServer;
+            this.ssed = new JsonSerializationServerEventDispatcher(ApplicationServer);
+            this.c = new Context();
             this.CheckCommandAllowed = CheckCommandAllowed;
-            this.sv.ServerEvent += (c, CommandName, CommandHash, Parameters) =>
+            this.ssed.ServerEvent += (CommandName, CommandHash, Parameters) =>
             {
+                var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), Parameters));
+                lock (c.WriteBufferLockee)
+                {
+                    c.WriteBuffer.AddRange(Bytes);
+                }
                 if (this.ServerEvent != null)
                 {
-                    var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), Parameters));
-                    this.ServerEvent(c, Bytes);
+                    this.ServerEvent();
                 }
             };
         }
 
-        public ArraySegment<Byte> GetReadBuffer(TContext c)
+        public ArraySegment<Byte> GetReadBuffer()
         {
-            var bc = Acquire(c);
-            return bc.Buffer;
+            return c.ReadBuffer;
         }
 
-        public TcpVirtualTransportServerHandleResult Handle(TContext c, int Count)
+        public Byte[] TakeWriteBuffer()
         {
-            var bc = Acquire(c);
+            lock (c.WriteBufferLockee)
+            {
+                var r = c.WriteBuffer.ToArray();
+                c.WriteBuffer = new List<Byte>();
+                return r;
+            }
+        }
 
+        public TcpVirtualTransportServerHandleResult Handle(int Count)
+        {
             var ret = TcpVirtualTransportServerHandleResult.CreateContinue();
 
-            var Buffer = bc.Buffer.Array;
-            var FirstPosition = bc.Buffer.Offset;
-            var BufferLength = bc.Buffer.Offset + bc.Buffer.Count;
+            var Buffer = c.ReadBuffer.Array;
+            var FirstPosition = c.ReadBuffer.Offset;
+            var BufferLength = c.ReadBuffer.Offset + c.ReadBuffer.Count;
             var CheckPosition = FirstPosition;
             BufferLength += Count;
 
@@ -75,18 +92,21 @@ namespace Server
                     var CommandName = cmd.HasValue.CommandName;
                     var CommandHash = cmd.HasValue.CommandHash;
                     var Parameters = cmd.HasValue.Parameters;
-                    if ((CommandHash.OnHasValue ? sv.HasCommand(CommandName, CommandHash.HasValue) : sv.HasCommand(CommandName)) && (CheckCommandAllowed != null ? CheckCommandAllowed(c, CommandName) : true))
+                    if ((CommandHash.OnHasValue ? ss.HasCommand(CommandName, CommandHash.HasValue) : ss.HasCommand(CommandName)) && (CheckCommandAllowed != null ? CheckCommandAllowed(CommandName) : true))
                     {
                         if (CommandHash.OnHasValue)
                         {
                             ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
                             {
                                 CommandName = CommandName,
-                                ExecuteCommand = () => TextEncoding.UTF8.GetBytes(sv.ExecuteCommand(c, CommandName, CommandHash.HasValue, Parameters)),
-                                PackageOutput = OutputParameters =>
+                                ExecuteCommand = () =>
                                 {
-                                    var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} ", CommandName + "@" + CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture))).Concat(OutputParameters).Concat(TextEncoding.UTF8.GetBytes("\r\n")).ToArray();
-                                    return Bytes;
+                                    var OutputParameters = ss.ExecuteCommand(s, CommandName, CommandHash.HasValue, Parameters);
+                                    var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName + "@" + CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), OutputParameters));
+                                    lock (c.WriteBufferLockee)
+                                    {
+                                        c.WriteBuffer.AddRange(Bytes);
+                                    }
                                 }
                             });
                         }
@@ -95,11 +115,14 @@ namespace Server
                             ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
                             {
                                 CommandName = CommandName,
-                                ExecuteCommand = () => TextEncoding.UTF8.GetBytes(sv.ExecuteCommand(c, CommandName, Parameters)),
-                                PackageOutput = OutputParameters =>
+                                ExecuteCommand = () =>
                                 {
-                                    var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} ", CommandName)).Concat(OutputParameters).Concat(TextEncoding.UTF8.GetBytes("\r\n")).ToArray();
-                                    return Bytes;
+                                    var OutputParameters = ss.ExecuteCommand(s, CommandName, Parameters);
+                                    var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName, OutputParameters));
+                                    lock (c.WriteBufferLockee)
+                                    {
+                                        c.WriteBuffer.AddRange(Bytes);
+                                    }
                                 }
                             });
                         }
@@ -133,18 +156,18 @@ namespace Server
             }
             if (FirstPosition >= BufferLength)
             {
-                bc.Buffer = new ArraySegment<Byte>(Buffer, 0, 0);
+                c.ReadBuffer = new ArraySegment<Byte>(Buffer, 0, 0);
             }
             else
             {
-                bc.Buffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
+                c.ReadBuffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
             }
 
             return ret;
         }
 
-        public UInt64 Hash { get { return sv.Hash; } }
-        public event Action<TContext, Byte[]> ServerEvent;
+        public UInt64 Hash { get { return ss.Hash; } }
+        public event Action ServerEvent;
 
         private static Regex r = new Regex(@"^/(?<Name>\S+)(\s+(?<Params>.*))?$", RegexOptions.ExplicitCapture); //Regex是线程安全的
         private static Regex rName = new Regex(@"^(?<CommandName>.*?)@(?<CommandHash>.*)$", RegexOptions.ExplicitCapture); //Regex是线程安全的
@@ -167,7 +190,12 @@ namespace Server
             if (mName.Success)
             {
                 CommandName = mName.Result("${CommandName}");
-                CommandHash = UInt32.Parse(mName.Result("${CommandHash}"), System.Globalization.NumberStyles.HexNumber);
+                UInt32 ch;
+                if (!UInt32.TryParse(mName.Result("${CommandHash}"), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out ch))
+                {
+                    return Optional<Command>.Empty;
+                }
+                CommandHash = ch;
             }
             var Parameters = m.Result("${Params}") ?? "";
             if (Parameters == "") { Parameters = "{}"; }

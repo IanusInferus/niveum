@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Firefly;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
@@ -12,7 +13,7 @@ namespace Client
 {
     public class BinaryCountPacketClientContext
     {
-        public ArraySegment<Byte> Buffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
+        public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
 
         public int State = 0;
         // 0 初始状态
@@ -27,7 +28,7 @@ namespace Client
         public Int32 ParametersLength = 0;
     }
 
-    public class BinaryCountPacketClient<TContext> : ITcpVirtualTransportClient
+    public class BinaryCountPacketClient : ITcpVirtualTransportClient
     {
         private class BinaySender : IBinarySender
         {
@@ -51,36 +52,34 @@ namespace Client
             }
         }
 
-        private TContext c;
-        private BinaryClient<TContext> bc;
+        private BinarySerializationClient bc;
         private BinaryCountPacketClientContext cc;
-        public BinaryCountPacketClient(TContext c, IClientImplementation<TContext> ApplicationClientImplementation, BinaryCountPacketClientContext cc)
+        public BinaryCountPacketClient()
         {
-            this.c = c;
-            this.bc = new BinaryClient<TContext>(new BinaySender { SendBytes = Bytes => { if (this.ClientMethod != null) { ClientMethod(Bytes); } } }, ApplicationClientImplementation);
-            this.cc = cc;
+            this.bc = new BinarySerializationClient(new BinaySender { SendBytes = Bytes => { if (this.ClientMethod != null) { ClientMethod(Bytes); } } });
+            this.cc = new BinaryCountPacketClientContext();
         }
 
-        public IClient GetApplicationClient
+        public IApplicationClient ApplicationClient
         {
             get
             {
-                return bc;
+                return bc.GetApplicationClient();
             }
         }
 
         public ArraySegment<Byte> GetReadBuffer()
         {
-            return cc.Buffer;
+            return cc.ReadBuffer;
         }
 
         public TcpVirtualTransportClientHandleResult Handle(int Count)
         {
             var ret = TcpVirtualTransportClientHandleResult.CreateContinue();
 
-            var Buffer = cc.Buffer.Array;
-            var FirstPosition = cc.Buffer.Offset;
-            var BufferLength = cc.Buffer.Offset + cc.Buffer.Count;
+            var Buffer = cc.ReadBuffer.Array;
+            var FirstPosition = cc.ReadBuffer.Offset;
+            var BufferLength = cc.ReadBuffer.Offset + cc.ReadBuffer.Count;
             BufferLength += Count;
 
             while (true)
@@ -100,7 +99,7 @@ namespace Client
                     ret = TcpVirtualTransportClientHandleResult.CreateCommand(new TcpVirtualTransportClientHandleResultCommand
                     {
                         CommandName = CommandName,
-                        HandleResult = () => bc.HandleResult(c, CommandName, CommandHash, Parameters)
+                        HandleResult = () => bc.HandleResult(CommandName, CommandHash, Parameters)
                     });
                     break;
                 }
@@ -118,17 +117,17 @@ namespace Client
             }
             if (FirstPosition >= BufferLength)
             {
-                cc.Buffer = new ArraySegment<Byte>(Buffer, 0, 0);
+                cc.ReadBuffer = new ArraySegment<Byte>(Buffer, 0, 0);
             }
             else
             {
-                cc.Buffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
+                cc.ReadBuffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
             }
 
             return ret;
         }
 
-        public UInt64 Hash { get { return bc.Hash; } }
+        public UInt64 Hash { get { return ApplicationClient.Hash; } }
         public event Action<Byte[]> ClientMethod;
 
         private class Command

@@ -6,9 +6,9 @@ using Communication.BaseSystem;
 
 namespace Server.Services
 {
-    public partial class ServerImplementation : IServerImplementation<SessionContext>
+    public partial class ServerImplementation : IApplicationServer
     {
-        public SendMessageReply SendMessage(SessionContext c, SendMessageRequest r)
+        public SendMessageReply SendMessage(SendMessageRequest r)
         {
             if (r.Content.Length > 256)
             {
@@ -21,30 +21,30 @@ namespace Server.Services
                 try
                 {
                     rc.ReceivedMessageCount += 1;
+                    if (rc.MessageReceived != null)
+                    {
+                        rc.MessageReceived(new MessageReceivedEvent { Content = r.Content });
+                    }
                 }
                 finally
                 {
                     rc.SessionLock.ReleaseWriterLock();
                 }
-                if (MessageReceived != null)
-                {
-                    MessageReceived(rc, new MessageReceivedEvent { Content = r.Content });
-                }
             }
             return SendMessageReply.CreateSuccess();
         }
 
-        public event Action<SessionContext, MessageReceivedEvent> MessageReceived;
+        public event Action<MessageReceivedEvent> MessageReceived;
 
-        public SendMessageAt1Reply SendMessageAt1(SessionContext c, SendMessageAt1Request r)
+        public SendMessageAt1Reply SendMessageAt1(SendMessageAt1Request r)
         {
             if (MessageReceivedAt1 != null)
             {
-                MessageReceivedAt1(c, new MessageReceivedAt1Event { Title = "System Updated", Lines = new List<String> { "Please update your client to a recent version." } });
+                MessageReceivedAt1(new MessageReceivedAt1Event { Title = "System Updated", Lines = new List<String> { "Please update your client to a recent version." } });
             }
             return SendMessageAt1Reply.CreateSuccess();
         }
 
-        public event Action<SessionContext, MessageReceivedAt1Event> MessageReceivedAt1;
+        public event Action<MessageReceivedAt1Event> MessageReceivedAt1;
     }
 }

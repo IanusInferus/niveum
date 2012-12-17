@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Net;
 using Server.Algorithms;
+using Communication;
 
 namespace Server
 {
@@ -31,35 +32,12 @@ namespace Server
 
         public int ReceivedMessageCount = 0; //跨线程变量
 
+        public Action<MessageReceivedEvent> MessageReceived; 
+        
+        public Action<TestMessageReceivedEvent> TestMessageReceived;
 
         //单线程访问
 
         public int SendMessageCount = 0;
-
-        public BinaryCountPacketServerContext BinaryCountPacketContext
-        {
-            get
-            {
-                if (bcpc == null)
-                {
-                    bcpc = new BinaryCountPacketServerContext();
-                }
-                return bcpc;
-            }
-        }
-        private BinaryCountPacketServerContext bcpc;
-
-        public JsonLinePacketServerContext JsonLinePacketContext
-        {
-            get
-            {
-                if (jlpc == null)
-                {
-                    jlpc = new JsonLinePacketServerContext();
-                }
-                return jlpc;
-            }
-        }
-        private JsonLinePacketServerContext jlpc;
     }
 }
