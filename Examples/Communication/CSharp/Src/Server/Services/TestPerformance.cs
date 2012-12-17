@@ -6,14 +6,14 @@ using Communication.BaseSystem;
 
 namespace Server.Services
 {
-    public partial class ServerImplementation : IServerImplementation<SessionContext>
+    public partial class ServerImplementation : IApplicationServer
     {
-        public TestAddReply TestAdd(SessionContext c, TestAddRequest r)
+        public TestAddReply TestAdd(TestAddRequest r)
         {
             return TestAddReply.CreateResult(r.Left + r.Right);
         }
 
-        public TestMultiplyReply TestMultiply(SessionContext c, TestMultiplyRequest r)
+        public TestMultiplyReply TestMultiply(TestMultiplyRequest r)
         {
             var v = r.Operand;
             var o = 0.0;
@@ -24,12 +24,12 @@ namespace Server.Services
             return TestMultiplyReply.CreateResult(o);
         }
 
-        public TestTextReply TestText(SessionContext c, TestTextRequest r)
+        public TestTextReply TestText(TestTextRequest r)
         {
             return TestTextReply.CreateResult(r.Text);
         }
 
-        public TestMessageReply TestMessage(SessionContext c, TestMessageRequest r)
+        public TestMessageReply TestMessage(TestMessageRequest r)
         {
             var Sessions = ServerContext.Sessions;
             var m = new TestMessageReceivedEvent { Message = r.Message };
@@ -41,19 +41,19 @@ namespace Server.Services
                 try
                 {
                     rc.ReceivedMessageCount += 1;
+                    if (rc.TestMessageReceived != null)
+                    {
+                        rc.TestMessageReceived(m);
+                    }
                 }
                 finally
                 {
                     rc.SessionLock.ReleaseWriterLock();
                 }
-                if (TestMessageReceived != null)
-                {
-                    TestMessageReceived(rc, m);
-                }
             }
             return TestMessageReply.CreateSuccess(Sessions.Count);
         }
 
-        public event Action<SessionContext, TestMessageReceivedEvent> TestMessageReceived;
+        public event Action<TestMessageReceivedEvent> TestMessageReceived;
     }
 }

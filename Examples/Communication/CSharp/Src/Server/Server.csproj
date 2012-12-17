@@ -10,8 +10,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Server</RootNamespace>
     <AssemblyName>Server</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,6 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,6 +33,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -38,6 +41,9 @@
   <ItemGroup>
     <Reference Include="Firefly.Core">
       <HintPath>..\..\..\..\..\Bin\Firefly.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\..\..\Bin\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -50,11 +56,15 @@
     <Compile Include="Servers\Concept.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Servers\HttpServer.cs" />
+    <Compile Include="Servers\HttpSession.cs" />
+    <Compile Include="Servers\JsonHttpPacketServer.cs" />
     <Compile Include="Servers\JsonLinePacketServer.cs" />
     <Compile Include="Servers\TcpServer.cs" />
     <Compile Include="Servers\TcpSession.cs" />
     <Compile Include="Servers\BinaryCountPacketServer.cs" />
     <Compile Include="Services\Admin.cs" />
+    <Compile Include="Services\CrossSessionEvent.cs" />
     <Compile Include="Services\TestPerformance.cs" />
     <Compile Include="Util\ConsoleLogger.cs" />
     <Compile Include="Util\FileLogger.cs" />
@@ -75,6 +85,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Configuration.Schema.tree" />
     <None Include="Configuration.tree">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

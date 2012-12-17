@@ -47,7 +47,7 @@ namespace Client
 
     public interface ITcpVirtualTransportClient
     {
-        IClient GetApplicationClient { get; }
+        IApplicationClient ApplicationClient { get; }
 
         ArraySegment<Byte> GetReadBuffer();
         TcpVirtualTransportClientHandleResult Handle(int Count);
@@ -57,10 +57,8 @@ namespace Client
 
     public sealed class TcpClient : IDisposable
     {
-        private IClientImplementation<ClientContext> ci;
-        public IClient InnerClient { get { return VirtualTransportClient.GetApplicationClient; } }
+        public IApplicationClient InnerClient { get { return VirtualTransportClient.ApplicationClient; } }
         public ITcpVirtualTransportClient VirtualTransportClient { get; private set; }
-        public ClientContext Context { get; private set; }
 
         private IPEndPoint RemoteEndPoint;
         private LockedVariable<StreamedAsyncSocket> Socket = new LockedVariable<StreamedAsyncSocket>(null);
@@ -73,25 +71,23 @@ namespace Client
             }
         }
 
-        public TcpClient(IPEndPoint RemoteEndPoint, IClientImplementation<ClientContext> ci, SerializationProtocolType ProtocolType)
+        public TcpClient(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
         {
             this.RemoteEndPoint = RemoteEndPoint;
             Socket = new LockedVariable<StreamedAsyncSocket>(new StreamedAsyncSocket(new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp)));
-            this.ci = ci;
-            Context = new ClientContext();
             if (ProtocolType == SerializationProtocolType.Binary)
             {
-                VirtualTransportClient = new BinaryCountPacketClient<ClientContext>(Context, ci, new BinaryCountPacketClientContext());
+                VirtualTransportClient = new BinaryCountPacketClient();
             }
             else if (ProtocolType == SerializationProtocolType.Json)
             {
-                VirtualTransportClient = new JsonLinePacketClient<ClientContext>(Context, ci, new JsonLinePacketClientContext());
+                VirtualTransportClient = new JsonLinePacketClient();
             }
             else
             {
                 throw new InvalidOperationException("InvalidSerializationProtocol: " + ProtocolType.ToString());
             }
-            Context.DequeueCallback = InnerClient.DequeueCallback;
+            InnerClient.Error += e => InnerClient.DequeueCallback(e.CommandName);
             VirtualTransportClient.ClientMethod += Bytes => Socket.DoAction(sock => sock.InnerSocket.Send(Bytes));
         }
 

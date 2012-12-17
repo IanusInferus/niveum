@@ -6,7 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using Newtonsoft.Json.Linq;
 using Firefly;
+using Firefly.Streaming;
+using Firefly.TextEncoding;
+using Communication;
 using Communication.BaseSystem;
 using Communication.Net;
 using Communication.Json;
@@ -18,22 +22,19 @@ namespace Server
     /// <summary>
     /// 本类的所有非继承的公共成员均是线程安全的。
     /// </summary>
-    public class TcpSession
+    public class HttpSession
     {
-        public TcpServer Server { get; private set; }
-        private StreamedAsyncSocket Socket;
+        public HttpServer Server { get; set; }
         public IPEndPoint RemoteEndPoint { get; private set; }
 
         private SessionContext Context;
         private ServerImplementation si;
-        private ITcpVirtualTransportServer vts;
+        private IHttpVirtualTransportServer vts;
         private int NumBadCommands = 0;
         private Boolean IsDisposed = false;
 
-        public TcpSession(TcpServer Server, StreamedAsyncSocket Socket, IPEndPoint RemoteEndPoint)
+        public HttpSession(IPEndPoint RemoteEndPoint)
         {
-            this.Server = Server;
-            this.Socket = Socket;
             this.RemoteEndPoint = RemoteEndPoint;
 
             Context = new SessionContext();
@@ -66,29 +67,12 @@ namespace Server
                     Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
                 }
             };
-            if (Server.SerializationProtocolType == SerializationProtocolType.Binary)
+            JsonHttpPacketServer.CheckCommandAllowedDelegate cca = CommandName =>
             {
-                BinaryCountPacketServer.CheckCommandAllowedDelegate cca = CommandName =>
-                {
-                    if (Server.CheckCommandAllowed == null) { return true; }
-                    return Server.CheckCommandAllowed(Context, CommandName);
-                };
-                vts = new BinaryCountPacketServer(law, cca);
-            }
-            else if (Server.SerializationProtocolType == SerializationProtocolType.Json)
-            {
-                JsonLinePacketServer.CheckCommandAllowedDelegate cca = CommandName =>
-                {
-                    if (Server.CheckCommandAllowed == null) { return true; }
-                    return Server.CheckCommandAllowed(Context, CommandName);
-                };
-                vts = new JsonLinePacketServer(law, cca);
-            }
-            else
-            {
-                throw new InvalidOperationException("InvalidSerializationProtocol: " + Server.SerializationProtocolType.ToString());
-            }
-            vts.ServerEvent += WriteCommand;
+                if (Server.CheckCommandAllowed == null) { return true; }
+                return Server.CheckCommandAllowed(Context, CommandName);
+            };
+            vts = new JsonHttpPacketServer(law, cca);
         }
 
         public void Dispose()
@@ -135,9 +119,6 @@ namespace Server
                 }
             );
 
-            Socket.Shutdown(SocketShutdown.Both);
-            Socket.Dispose();
-
             IsExitingValue.Update(b => false);
         }
 
@@ -163,13 +144,6 @@ namespace Server
                 });
             }
 
-            try
-            {
-                Socket.Shutdown(SocketShutdown.Receive);
-            }
-            catch (Exception)
-            {
-            }
             if (Server.EnableLogSystem)
             {
                 Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExit" });
@@ -201,8 +175,6 @@ namespace Server
                 {
                     Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionEnter" });
                 }
-                //WriteLine(@"<cross-domain-policy><allow-access-from domain=""*"" to-ports=""*""/></cross-domain-policy>" + "\0"); //发送安全策略
-                PushCommand(SessionCommand.CreateReadRaw());
             }
             catch (Exception ex)
             {
@@ -211,26 +183,35 @@ namespace Server
             }
         }
 
-        private enum SessionCommandTag
+        public Boolean Push(HttpListenerContext Socket, String NewSessionId)
         {
-            Read = 0,
-            Write = 1,
-            ReadRaw = 2
-        }
-        private class SessionCommand
-        {
-            public SessionCommandTag _Tag;
-            public int Read;
-            public Unit Write;
-            public Unit ReadRaw;
+            var Pushed = true;
+            IsExitingValue.DoAction
+            (
+                b =>
+                {
+                    if (b)
+                    {
+                        Pushed = false;
+                        return;
+                    }
+                    IsRunningValue.DoAction
+                    (
+                        bb =>
+                        {
+                            if (!bb)
+                            {
+                                Pushed = false;
+                                return;
+                            }
 
-            public static SessionCommand CreateRead(int Value) { return new SessionCommand { _Tag = SessionCommandTag.Read, Read = Value }; }
-            public static SessionCommand CreateWrite() { return new SessionCommand { _Tag = SessionCommandTag.Write, Write = new Unit() }; }
-            public static SessionCommand CreateReadRaw() { return new SessionCommand { _Tag = SessionCommandTag.ReadRaw, ReadRaw = new Unit() }; }
+                            PushCommand(Socket, NewSessionId);
+                        }
+                    );
+                }
+            );
 
-            public Boolean OnRead { get { return _Tag == SessionCommandTag.Read; } }
-            public Boolean OnWrite { get { return _Tag == SessionCommandTag.Write; } }
-            public Boolean OnReadRaw { get { return _Tag == SessionCommandTag.ReadRaw; } }
+            return Pushed;
         }
 
         private AutoResetEvent NumSessionCommandUpdated = new AutoResetEvent(false);
@@ -257,7 +238,7 @@ namespace Server
             NumSessionCommandUpdated.Set();
         }
 
-        private void PushCommand(SessionCommand sc, TaskContinuationOptions? ContinuationOptions = null)
+        private void PushCommand(HttpListenerContext Socket, String NewSessionId)
         {
             LockSessionCommand();
 
@@ -266,7 +247,7 @@ namespace Server
             {
                 a = () =>
                 {
-                    MessageLoop(sc);
+                    MessageLoop(Socket, NewSessionId);
                 };
             }
             else
@@ -275,7 +256,7 @@ namespace Server
                 {
                     try
                     {
-                        MessageLoop(sc);
+                        MessageLoop(Socket, NewSessionId);
                     }
                     catch (Exception ex)
                     {
@@ -289,15 +270,7 @@ namespace Server
             (
                 t =>
                 {
-                    Task nt;
-                    if (ContinuationOptions != null)
-                    {
-                        nt = t.ContinueWith(tt => a(), ContinuationOptions.Value);
-                    }
-                    else
-                    {
-                        nt = t.ContinueWith(tt => a());
-                    }
+                    var nt = t.ContinueWith(tt => a());
                     nt = nt.ContinueWith
                     (
                         tt =>
@@ -309,120 +282,52 @@ namespace Server
                 }
             );
         }
-        private void QueueCommand(SessionCommand sc)
-        {
-            PushCommand(sc, TaskContinuationOptions.PreferFairness);
-        }
-        private Boolean IsSocketErrorKnown(SocketError se)
-        {
-            if (se == SocketError.ConnectionAborted) { return true; }
-            if (se == SocketError.ConnectionReset) { return true; }
-            if (se == SocketError.Shutdown) { return true; }
-            if (se == SocketError.OperationAborted) { return true; }
-            if (se == SocketError.Interrupted) { return true; }
-            return false;
-        }
 
-        private void MessageLoop(SessionCommand sc)
+        private void MessageLoop(HttpListenerContext Socket, String NewSessionId)
         {
-            if (sc.OnRead)
+            String Data;
+            using (var InputStream = Socket.Request.InputStream.AsReadable())
             {
-                var Count = sc.Read;
-                var r = vts.Handle(Count);
-                if (r.OnContinue)
-                {
-                }
-                else if (r.OnCommand || r.OnBadCommand || r.OnBadCommandLine)
+                Data = Socket.Request.ContentEncoding.GetString(InputStream.Read((int)(Socket.Request.ContentLength64)));
+            }
+            var Lines = Data.UnifyNewLineToLf().Split('\n').Select(Line => Line.Trim(' ')).Where(Line => Line != "").ToArray();
+
+            foreach (var Line in Lines)
+            {
+                var r = vts.Handle(Line);
+                if (r.OnCommand || r.OnBadCommand || r.OnBadCommandLine)
                 {
                     ReadCommand(r);
-                    var RemainCount = vts.GetReadBuffer().Count;
-                    if (RemainCount > 0)
-                    {
-                        PushCommand(SessionCommand.CreateRead(0));
-                        return;
-                    }
                 }
                 else
                 {
                     throw new InvalidOperationException();
                 }
+            }
 
-                QueueCommand(SessionCommand.CreateReadRaw());
-            }
-            else if (sc.OnWrite)
+            var jo = new JObject();
+            jo["commands"] = new JArray(vts.TakeWriteBuffer());
+            jo["sessionid"] = NewSessionId;
+            var Bytes = TextEncoding.UTF8.GetBytes(jo.ToString(Newtonsoft.Json.Formatting.None));
+            Socket.Response.StatusCode = 200;
+            Socket.Response.AddHeader("Accept-Ranges", "none");
+            Socket.Response.ContentEncoding = System.Text.Encoding.UTF8;
+            Socket.Response.ContentLength64 = Bytes.Length;
+            using (var OutputStream = Socket.Response.OutputStream.AsWritable())
             {
-                var Bytes = vts.TakeWriteBuffer();
-                Socket.SendAsync(Bytes, 0, Bytes.Length, () => { }, se =>
-                {
-                    if (!IsSocketErrorKnown(se))
-                    {
-                        OnCriticalError((new SocketException((int)se)), new StackTrace(true));
-                    }
-                    StopAsync();
-                });
+                OutputStream.Write(Bytes);
             }
-            else if (sc.OnReadRaw)
-            {
-                Action<int> CompletedInner = Count =>
-                {
-                    if (Count <= 0)
-                    {
-                        StopAsync();
-                        return;
-                    }
-                    PushCommand(SessionCommand.CreateRead(Count));
-                };
-                Action<int> Completed;
-                if (System.Diagnostics.Debugger.IsAttached)
-                {
-                    Completed = Count => CompletedInner(Count);
-                }
-                else
-                {
-                    Completed = Count =>
-                    {
-                        try
-                        {
-                            CompletedInner(Count);
-                        }
-                        catch (Exception ex)
-                        {
-                            OnCriticalError(ex, new StackTrace(true));
-                            StopAsync();
-                        }
-                    };
-                }
-                Action<SocketError> Faulted = se =>
-                {
-                    if (!IsSocketErrorKnown(se))
-                    {
-                        OnCriticalError((new SocketException((int)se)), new StackTrace(true));
-                    }
-                    StopAsync();
-                };
-                if (IsExitingValue.Check(b => b)) { return; }
-                var Buffer = vts.GetReadBuffer();
-                var BufferLength = Buffer.Offset + Buffer.Count;
-                Socket.ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
-            }
-            else
-            {
-                throw new InvalidOperationException();
-            }
+            Socket.Response.Close();
         }
 
-        private void ReadCommand(TcpVirtualTransportServerHandleResult r)
+        private void ReadCommand(HttpVirtualTransportServerHandleResult r)
         {
             if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
             {
                 return;
             }
 
-            if (r.OnContinue)
-            {
-                throw new InvalidProgramException();
-            }
-            else if (r.OnCommand)
+            if (r.OnCommand)
             {
                 var CommandName = r.Command.CommandName;
 
@@ -440,7 +345,6 @@ namespace Server
                     {
                         r.Command.ExecuteCommand();
                     }
-                    WriteCommand();
                 };
 
                 if (Debugger.IsAttached)
@@ -499,11 +403,6 @@ namespace Server
             }
         }
 
-        //线程安全
-        public void WriteCommand()
-        {
-            PushCommand(SessionCommand.CreateWrite());
-        }
         //线程安全
         public void RaiseError(String CommandName, String Message)
         {

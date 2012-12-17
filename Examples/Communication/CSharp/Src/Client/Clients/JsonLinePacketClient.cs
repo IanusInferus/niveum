@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Firefly;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
@@ -12,10 +13,10 @@ namespace Client
 {
     public class JsonLinePacketClientContext
     {
-        public ArraySegment<Byte> Buffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
+        public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
     }
 
-    public class JsonLinePacketClient<TContext> : ITcpVirtualTransportClient
+    public class JsonLinePacketClient : ITcpVirtualTransportClient
     {
         private class JsonSender : IJsonSender
         {
@@ -29,36 +30,34 @@ namespace Client
             }
         }
 
-        private TContext c;
-        private JsonClient<TContext> jc;
+        private JsonSerializationClient jc;
         private JsonLinePacketClientContext cc;
-        public JsonLinePacketClient(TContext c, IClientImplementation<TContext> ApplicationClientImplementation, JsonLinePacketClientContext cc)
+        public JsonLinePacketClient()
         {
-            this.c = c;
-            this.jc = new JsonClient<TContext>(new JsonSender { SendBytes = Bytes => { if (this.ClientMethod != null) { ClientMethod(Bytes); } } }, ApplicationClientImplementation);
-            this.cc = cc;
+            this.jc = new JsonSerializationClient(new JsonSender { SendBytes = Bytes => { if (this.ClientMethod != null) { ClientMethod(Bytes); } } });
+            this.cc = new JsonLinePacketClientContext();
         }
 
-        public IClient GetApplicationClient
+        public IApplicationClient ApplicationClient
         {
             get
             {
-                return jc;
+                return jc.GetApplicationClient();
             }
         }
 
         public ArraySegment<Byte> GetReadBuffer()
         {
-            return cc.Buffer;
+            return cc.ReadBuffer;
         }
 
         public TcpVirtualTransportClientHandleResult Handle(int Count)
         {
             var ret = TcpVirtualTransportClientHandleResult.CreateContinue();
 
-            var Buffer = cc.Buffer.Array;
-            var FirstPosition = cc.Buffer.Offset;
-            var BufferLength = cc.Buffer.Offset + cc.Buffer.Count;
+            var Buffer = cc.ReadBuffer.Array;
+            var FirstPosition = cc.ReadBuffer.Offset;
+            var BufferLength = cc.ReadBuffer.Offset + cc.ReadBuffer.Count;
             var CheckPosition = FirstPosition;
             BufferLength += Count;
 
@@ -85,7 +84,7 @@ namespace Client
                     ret = TcpVirtualTransportClientHandleResult.CreateCommand(new TcpVirtualTransportClientHandleResultCommand
                     {
                         CommandName = CommandName,
-                        HandleResult = () => jc.HandleResult(c, CommandName, CommandHash, Parameters)
+                        HandleResult = () => jc.HandleResult(CommandName, CommandHash, Parameters)
                     });
                 }
                 else
@@ -108,17 +107,17 @@ namespace Client
             }
             if (FirstPosition >= BufferLength)
             {
-                cc.Buffer = new ArraySegment<Byte>(Buffer, 0, 0);
+                cc.ReadBuffer = new ArraySegment<Byte>(Buffer, 0, 0);
             }
             else
             {
-                cc.Buffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
+                cc.ReadBuffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
             }
 
             return ret;
         }
 
-        public UInt64 Hash { get { return jc.Hash; } }
+        public UInt64 Hash { get { return ApplicationClient.Hash; } }
         public event Action<Byte[]> ClientMethod;
 
         private static Regex r = new Regex(@"^/svr\s+(?<Name>\S+)(\s+(?<Params>.*))?$", RegexOptions.ExplicitCapture); //Regex是线程安全的

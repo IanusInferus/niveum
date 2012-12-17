@@ -6,9 +6,9 @@ using Communication.BaseSystem;
 
 namespace Server.Services
 {
-    public partial class ServerImplementation : IServerImplementation<SessionContext>
+    public partial class ServerImplementation : IApplicationServer
     {
-        public ShutdownReply Shutdown(SessionContext c, ShutdownRequest r)
+        public ShutdownReply Shutdown(ShutdownRequest r)
         {
             ServerContext.RaiseShutdown();
             return ShutdownReply.CreateSuccess();
