@@ -38,3 +38,23 @@
                 MaxBadCommands 8
                 ClientDebug True
                 SerializationProtocolType Json
+        VirtualServer
+            Http
+                Bindings
+                    Binding
+                        Prefix http://*:8003/
+                EnableLogNormalIn True
+                EnableLogNormalOut True
+                EnableLogUnknownError True
+                EnableLogCriticalError True
+                EnableLogPerformance True
+                EnableLogSystem True
+                EnableLogConsole True
+                SessionIdleTimeout 60
+                MaxConnections 32768
+                MaxConnectionsPerIP 32768
+                MaxBadCommands 8
+                ClientDebug True
+                TimeoutCheckPeriod 30
+                ServiceVirtualPath cmd
+                StaticContentPath NotHasValue $Empty

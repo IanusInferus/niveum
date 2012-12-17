@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2012.12.14.
+//  Version:     2012.12.18.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -111,64 +111,38 @@ namespace Server
             return c;
         }
 
-        private static AutoResetEvent ExitEvent = new AutoResetEvent(false);
         public static void Run(Configuration c)
         {
-            var ProcessorCount = Environment.ProcessorCount;
-            ThreadPool.SetMinThreads(ProcessorCount + 1, ProcessorCount + 1);
-            ThreadPool.SetMaxThreads(ProcessorCount * 2 + 1, ProcessorCount * 2 + 1);
-
-            Console.WriteLine(@"逻辑处理器数量: " + ProcessorCount.ToString());
-
-            using (var Logger = new ConsoleLogger())
+            using (var ExitEvent = new AutoResetEvent(false))
             {
-                var ServerContext = new ServerContext();
-                ServerContext.Shutdown += () =>
+                var ProcessorCount = Environment.ProcessorCount;
+                ThreadPool.SetMinThreads(ProcessorCount + 1, ProcessorCount + 1);
+                ThreadPool.SetMaxThreads(ProcessorCount * 2 + 1, ProcessorCount * 2 + 1);
+
+                Console.WriteLine(@"逻辑处理器数量: " + ProcessorCount.ToString());
+
+                using (var Logger = new ConsoleLogger())
                 {
-                    ExitEvent.Set();
-                };
-
-                Logger.Start();
-
-                var ServerDict = new Dictionary<VirtualServerConfiguration, IServer>();
-
-                if (System.Diagnostics.Debugger.IsAttached)
-                {
-                    foreach (var s in c.Servers)
+                    var ServerContext = new ServerContext();
+                    ServerContext.Shutdown += () =>
                     {
-                        ServerDict.Add(s, StartServer(s, ServerContext, Logger));
-                    }
+                        ExitEvent.Set();
+                    };
 
-                    ExitEvent.WaitOne();
+                    Logger.Start();
 
-                    foreach (var s in c.Servers)
+                    var ServerDict = new Dictionary<VirtualServerConfiguration, IServer>();
+
+                    if (System.Diagnostics.Debugger.IsAttached)
                     {
-                        if (ServerDict.ContainsKey(s))
-                        {
-                            var Server = ServerDict[s];
-                            StopServer(s, Server, Logger);
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (var s in c.Servers)
-                    {
-                        try
+                        foreach (var s in c.Servers)
                         {
                             ServerDict.Add(s, StartServer(s, ServerContext, Logger));
                         }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
-                        }
-                    }
 
-                    ExitEvent.WaitOne();
+                        ExitEvent.WaitOne();
 
-                    foreach (var s in c.Servers)
-                    {
-                        try
+                        foreach (var s in c.Servers)
                         {
                             if (ServerDict.ContainsKey(s))
                             {
@@ -176,14 +150,42 @@ namespace Server
                                 StopServer(s, Server, Logger);
                             }
                         }
-                        catch (Exception ex)
+                    }
+                    else
+                    {
+                        foreach (var s in c.Servers)
                         {
-                            Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
+                            try
+                            {
+                                ServerDict.Add(s, StartServer(s, ServerContext, Logger));
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
+                            }
+                        }
+
+                        ExitEvent.WaitOne();
+
+                        foreach (var s in c.Servers)
+                        {
+                            try
+                            {
+                                if (ServerDict.ContainsKey(s))
+                                {
+                                    var Server = ServerDict[s];
+                                    StopServer(s, Server, Logger);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
+                            }
                         }
                     }
-                }
 
-                Logger.Stop();
+                    Logger.Stop();
+                }
             }
         }
 
@@ -248,7 +250,57 @@ namespace Server
             }
             else if (vsc.OnHttp)
             {
-                throw new NotImplementedException("Http服务器尚未实现。");
+                var s = vsc.Http;
+
+                var Server = new HttpServer(ServerContext);
+                var Success = false;
+
+                try
+                {
+                    if (s.EnableLogConsole)
+                    {
+                        Server.SessionLog += Logger.Push;
+                    }
+
+                    Server.CheckCommandAllowed = (sc, CommandName) =>
+                    {
+                        return true;
+                    };
+
+                    Server.Bindings = s.Bindings.Select(b => b.Prefix).ToArray();
+                    Server.SessionIdleTimeout = s.SessionIdleTimeout;
+                    Server.MaxConnections = s.MaxConnections;
+                    Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
+                    Server.MaxBadCommands = s.MaxBadCommands;
+                    Server.ClientDebug = s.ClientDebug;
+                    Server.EnableLogNormalIn = s.EnableLogNormalIn;
+                    Server.EnableLogNormalOut = s.EnableLogNormalOut;
+                    Server.EnableLogUnknownError = s.EnableLogUnknownError;
+                    Server.EnableLogCriticalError = s.EnableLogCriticalError;
+                    Server.EnableLogPerformance = s.EnableLogPerformance;
+                    Server.EnableLogSystem = s.EnableLogSystem;
+
+                    Server.TimeoutCheckPeriod = s.TimeoutCheckPeriod;
+                    Server.ServiceVirtualPath = s.ServiceVirtualPath;
+                    Server.StaticContentPath = s.StaticContentPath;
+
+                    Server.Start();
+
+                    Console.WriteLine(@"HTTP服务器已启动。");
+                    Console.WriteLine(@"序列化协议类型: Json");
+                    Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
+
+                    Success = true;
+                }
+                finally
+                {
+                    if (!Success)
+                    {
+                        Server.Dispose();
+                    }
+                }
+
+                return Server;
             }
             else
             {
@@ -279,16 +331,28 @@ namespace Server
             }
             else if (vsc.OnHttp)
             {
+                var s = vsc.Http;
+
+                try
+                {
+                    Server.Stop();
+
+                    Console.WriteLine(@"服务器已关闭。");
+
+                    if (s.EnableLogConsole)
+                    {
+                        Server.SessionLog -= Logger.Push;
+                    }
+                }
+                finally
+                {
+                    Server.Dispose();
+                }
             }
             else
             {
                 throw new InvalidOperationException();
             }
-        }
-
-        public static void Stop()
-        {
-            ExitEvent.Set();
         }
     }
 }

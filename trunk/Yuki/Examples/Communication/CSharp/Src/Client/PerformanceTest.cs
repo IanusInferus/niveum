@@ -94,7 +94,7 @@ namespace Client
                     vCompleted.Update(i => i + 1);
                     Check.Set();
                 };
-                bc.Receive
+                bc.ReceiveAsync
                 (
                     a =>
                     {

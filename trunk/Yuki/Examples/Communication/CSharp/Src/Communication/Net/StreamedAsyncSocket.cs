@@ -12,7 +12,7 @@ namespace Communication.Net
     {
         private AutoResetEvent NumAsyncOperationUpdated = new AutoResetEvent(false);
         private LockedVariable<int> NumAsyncOperation = new LockedVariable<int>(0);
-        public Socket InnerSocket { get; private set; }
+        private Socket InnerSocket;
 
         public StreamedAsyncSocket(Socket InnerSocket)
         {
@@ -36,26 +36,25 @@ namespace Communication.Net
             var Success = false;
             try
             {
-                Action<SocketAsyncEventArgs> a =
-                    e =>
+                Action<SocketAsyncEventArgs> a = e =>
+                {
+                    try
                     {
-                        try
+                        if (e.SocketError == SocketError.Success)
                         {
-                            if (e.SocketError == SocketError.Success)
-                            {
-                                Completed();
-                            }
-                            else
-                            {
-                                Faulted(e.SocketError);
-                            }
-                            e.Dispose();
+                            Completed();
                         }
-                        finally
+                        else
                         {
-                            ReleaseAsyncOperation();
+                            Faulted(e.SocketError);
                         }
-                    };
+                        e.Dispose();
+                    }
+                    finally
+                    {
+                        ReleaseAsyncOperation();
+                    }
+                };
                 SocketAsyncEventArgs socketEventArg = new SocketAsyncEventArgs();
                 socketEventArg.Completed += (sender, e) => a(e);
                 socketEventArg.RemoteEndPoint = RemoteEndPoint;
@@ -88,26 +87,25 @@ namespace Communication.Net
             var Success = false;
             try
             {
-                Action<SocketAsyncEventArgs> a =
-                    e =>
+                Action<SocketAsyncEventArgs> a = e =>
+                {
+                    try
                     {
-                        try
+                        if (e.SocketError == SocketError.Success)
                         {
-                            if (e.SocketError == SocketError.Success)
-                            {
-                                Completed(new StreamedAsyncSocket(e.AcceptSocket));
-                            }
-                            else
-                            {
-                                Faulted(e.SocketError);
-                            }
-                            e.Dispose();
+                            Completed(new StreamedAsyncSocket(e.AcceptSocket));
                         }
-                        finally
+                        else
                         {
-                            ReleaseAsyncOperation();
+                            Faulted(e.SocketError);
                         }
-                    };
+                        e.Dispose();
+                    }
+                    finally
+                    {
+                        ReleaseAsyncOperation();
+                    }
+                };
                 SocketAsyncEventArgs socketEventArg = new SocketAsyncEventArgs();
                 socketEventArg.Completed += (sender, e) => a(e);
                 bool willRaiseEvent = InnerSocket.AcceptAsync(socketEventArg);
@@ -129,26 +127,25 @@ namespace Communication.Net
             var Success = false;
             try
             {
-                Action<SocketAsyncEventArgs> a =
-                    e =>
+                Action<SocketAsyncEventArgs> a = e =>
+                {
+                    try
                     {
-                        try
+                        if (e.SocketError == SocketError.Success)
                         {
-                            if (e.SocketError == SocketError.Success)
-                            {
-                                Completed();
-                            }
-                            else
-                            {
-                                Faulted(e.SocketError);
-                            }
-                            e.Dispose();
+                            Completed();
                         }
-                        finally
+                        else
                         {
-                            ReleaseAsyncOperation();
+                            Faulted(e.SocketError);
                         }
-                    };
+                        e.Dispose();
+                    }
+                    finally
+                    {
+                        ReleaseAsyncOperation();
+                    }
+                };
                 SocketAsyncEventArgs socketEventArg = new SocketAsyncEventArgs();
                 socketEventArg.Completed += (sender, e) => a(e);
                 bool willRaiseEvent = InnerSocket.DisconnectAsync(socketEventArg);
@@ -170,26 +167,25 @@ namespace Communication.Net
             var Success = false;
             try
             {
-                Action<SocketAsyncEventArgs> a =
-                    e =>
+                Action<SocketAsyncEventArgs> a = e =>
+                {
+                    try
                     {
-                        try
+                        if (e.SocketError == SocketError.Success)
                         {
-                            if (e.SocketError == SocketError.Success)
-                            {
-                                Completed();
-                            }
-                            else
-                            {
-                                Faulted(e.SocketError);
-                            }
-                            e.Dispose();
+                            Completed();
                         }
-                        finally
+                        else
                         {
-                            ReleaseAsyncOperation();
+                            Faulted(e.SocketError);
                         }
-                    };
+                        e.Dispose();
+                    }
+                    finally
+                    {
+                        ReleaseAsyncOperation();
+                    }
+                };
                 SocketAsyncEventArgs socketEventArg = new SocketAsyncEventArgs();
                 socketEventArg.Completed += (sender, e) => a(e);
                 socketEventArg.SetBuffer(SendBuffer, Offset, Count);
@@ -212,26 +208,25 @@ namespace Communication.Net
             var Success = false;
             try
             {
-                Action<SocketAsyncEventArgs> a =
-                    e =>
+                Action<SocketAsyncEventArgs> a = e =>
+                {
+                    try
                     {
-                        try
+                        if (e.SocketError == SocketError.Success)
                         {
-                            if (e.SocketError == SocketError.Success)
-                            {
-                                Completed(e.BytesTransferred);
-                            }
-                            else
-                            {
-                                Faulted(e.SocketError);
-                            }
-                            e.Dispose();
+                            Completed(e.BytesTransferred);
                         }
-                        finally
+                        else
                         {
-                            ReleaseAsyncOperation();
+                            Faulted(e.SocketError);
                         }
-                    };
+                        e.Dispose();
+                    }
+                    finally
+                    {
+                        ReleaseAsyncOperation();
+                    }
+                };
                 SocketAsyncEventArgs socketEventArg = new SocketAsyncEventArgs();
                 socketEventArg.Completed += (sender, e) => a(e);
                 socketEventArg.SetBuffer(ReceiveBuffer, Offset, Count);
