@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 using Firefly;
@@ -34,14 +34,15 @@ namespace Client
     [TaggedUnion]
     public class TcpVirtualTransportClientHandleResult
     {
-        [Tag] public TcpVirtualTransportClientHandleResultTag _Tag;
+        [Tag]
+        public TcpVirtualTransportClientHandleResultTag _Tag;
         public Unit Continue;
         public TcpVirtualTransportClientHandleResultCommand Command;
 
         public static TcpVirtualTransportClientHandleResult CreateContinue() { return new TcpVirtualTransportClientHandleResult { _Tag = TcpVirtualTransportClientHandleResultTag.Continue, Continue = new Unit() }; }
         public static TcpVirtualTransportClientHandleResult CreateCommand(TcpVirtualTransportClientHandleResultCommand Value) { return new TcpVirtualTransportClientHandleResult { _Tag = TcpVirtualTransportClientHandleResultTag.Command, Command = Value }; }
 
-        public Boolean OnRead { get { return _Tag == TcpVirtualTransportClientHandleResultTag.Continue; } }
+        public Boolean OnContinue { get { return _Tag == TcpVirtualTransportClientHandleResultTag.Continue; } }
         public Boolean OnCommand { get { return _Tag == TcpVirtualTransportClientHandleResultTag.Command; } }
     }
 
@@ -50,9 +51,10 @@ namespace Client
         IApplicationClient ApplicationClient { get; }
 
         ArraySegment<Byte> GetReadBuffer();
+        Byte[] TakeWriteBuffer();
         TcpVirtualTransportClientHandleResult Handle(int Count);
         UInt64 Hash { get; }
-        event Action<Byte[]> ClientMethod;
+        event Action ClientMethod;
     }
 
     public sealed class TcpClient : IDisposable
@@ -61,7 +63,7 @@ namespace Client
         public ITcpVirtualTransportClient VirtualTransportClient { get; private set; }
 
         private IPEndPoint RemoteEndPoint;
-        private LockedVariable<StreamedAsyncSocket> Socket = new LockedVariable<StreamedAsyncSocket>(null);
+        private StreamedAsyncSocket Socket;
         private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
         public Boolean IsRunning
         {
@@ -70,11 +72,12 @@ namespace Client
                 return IsRunningValue.Check(b => b);
             }
         }
+        private Boolean Connected = false;
 
         public TcpClient(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
         {
             this.RemoteEndPoint = RemoteEndPoint;
-            Socket = new LockedVariable<StreamedAsyncSocket>(new StreamedAsyncSocket(new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp)));
+            Socket = new StreamedAsyncSocket(new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp));
             if (ProtocolType == SerializationProtocolType.Binary)
             {
                 VirtualTransportClient = new BinaryCountPacketClient();
@@ -88,7 +91,30 @@ namespace Client
                 throw new InvalidOperationException("InvalidSerializationProtocol: " + ProtocolType.ToString());
             }
             InnerClient.Error += e => InnerClient.DequeueCallback(e.CommandName);
-            VirtualTransportClient.ClientMethod += Bytes => Socket.DoAction(sock => sock.InnerSocket.Send(Bytes));
+            VirtualTransportClient.ClientMethod += () =>
+            {
+                using (var h = new AutoResetEvent(false))
+                {
+                    var Bytes = VirtualTransportClient.TakeWriteBuffer();
+
+                    var Error = Optional<SocketError>.Empty;
+                    Action Completed = () =>
+                    {
+                        h.Set();
+                    };
+                    Action<SocketError> Faulted = se =>
+                    {
+                        Error = se;
+                        h.Set();
+                    };
+                    Socket.SendAsync(Bytes, 0, Bytes.Length, Completed, Faulted);
+                    h.WaitOne();
+                    if (Error.OnHasValue)
+                    {
+                        throw new SocketException((int)(Error.HasValue));
+                    }
+                }
+            };
         }
 
         public void Connect()
@@ -101,15 +127,29 @@ namespace Client
                     return true;
                 }
             );
-            Socket.DoAction(sock => sock.InnerSocket.Connect(RemoteEndPoint));
+            using (var h = new AutoResetEvent(false))
+            {
+                var Error = Optional<SocketError>.Empty;
+                Action Completed = () =>
+                {
+                    h.Set();
+                };
+                Action<SocketError> Faulted = se =>
+                {
+                    Error = se;
+                    h.Set();
+                };
+                Socket.ConnectAsync(RemoteEndPoint, Completed, Faulted);
+                h.WaitOne();
+                if (Error.OnHasValue)
+                {
+                    throw new SocketException((int)(Error.HasValue));
+                }
+                Connected = true;
+            }
         }
 
-        public Socket GetSocket()
-        {
-            return Socket.Check(ss => ss).Branch(ss => ss != null, ss => ss.InnerSocket, ss => null);
-        }
-
-        private Boolean IsSocketErrorKnown(SocketError se)
+        private static Boolean IsSocketErrorKnown(SocketError se)
         {
             if (se == SocketError.ConnectionAborted) { return true; }
             if (se == SocketError.ConnectionReset) { return true; }
@@ -123,7 +163,7 @@ namespace Client
         /// <summary>接收消息</summary>
         /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
         /// <param name="UnknownFaulted">未知错误处理函数</param>
-        public void Receive(Action<Action> DoResultHandle, Action<SocketError> UnknownFaulted)
+        public void ReceiveAsync(Action<Action> DoResultHandle, Action<SocketError> UnknownFaulted)
         {
             Action<SocketError> Faulted = se =>
             {
@@ -142,7 +182,7 @@ namespace Client
                 while (true)
                 {
                     var r = VirtualTransportClient.Handle(Count);
-                    if (r.OnRead)
+                    if (r.OnContinue)
                     {
                         break;
                     }
@@ -163,67 +203,66 @@ namespace Client
                 }
                 var Buffer = VirtualTransportClient.GetReadBuffer();
                 var BufferLength = Buffer.Offset + Buffer.Count;
-                Socket.DoAction
-                (
-                    sock =>
-                    {
-                        if (sock == null) { return; }
-                        sock.ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
-                    }
-                );
+                Socket.ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
             };
 
             {
                 var Buffer = VirtualTransportClient.GetReadBuffer();
                 var BufferLength = Buffer.Offset + Buffer.Count;
-                Socket.DoAction
-                (
-                    sock =>
-                    {
-                        if (sock == null) { return; }
-                        sock.ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
-                    }
-                );
+                Socket.ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
             }
         }
 
+        private Boolean IsDisposed = false;
         public void Dispose()
         {
+            if (IsDisposed) { return; }
+            IsDisposed = true;
+
             IsRunningValue.Update(b => false);
-            Socket.Update
-            (
-                s =>
+            try
+            {
+                Socket.Shutdown(SocketShutdown.Both);
+            }
+            catch
+            {
+            }
+            try
+            {
+                if (Connected)
                 {
-                    if (s != null)
+                    using (var h = new AutoResetEvent(false))
                     {
-                        try
+                        var Error = Optional<SocketError>.Empty;
+                        Action Completed = () =>
                         {
-                            s.Shutdown(SocketShutdown.Both);
-                        }
-                        catch
+                            h.Set();
+                        };
+                        Action<SocketError> Faulted = se =>
                         {
-                        }
-                        try
+                            Error = se;
+                            h.Set();
+                        };
+                        Socket.DisconnectAsync(Completed, Faulted);
+                        h.WaitOne();
+                        if (Error.OnHasValue)
                         {
-                            if (s.InnerSocket.Connected)
-                            {
-                                s.InnerSocket.Disconnect(false);
-                            }
-                        }
-                        catch
-                        {
-                        }
-                        try
-                        {
-                            s.Dispose();
-                        }
-                        catch
-                        {
+                            throw new SocketException((int)(Error.HasValue));
                         }
                     }
-                    return null;
+                    Connected = false;
                 }
-            );
+            }
+            catch
+            {
+            }
+            try
+            {
+                Socket.Dispose();
+            }
+            catch
+            {
+            }
         }
     }
 }

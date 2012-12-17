@@ -34,7 +34,7 @@ namespace Server
             {
                 var rjo = new JObject();
                 rjo["commandName"] = CommandName;
-                rjo["commandHash"] = CommandHash;
+                rjo["commandHash"] = CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                 rjo["parameters"] = Parameters;
                 lock (c.WriteBufferLockee)
                 {
@@ -63,17 +63,12 @@ namespace Server
             var jv = j as JValue;
             return Convert.ToString(jv.Value);
         }
-        public HttpVirtualTransportServerHandleResult Handle(String CommandString)
+        public HttpVirtualTransportServerHandleResult Handle(JObject CommandObject)
         {
-            var j = JToken.Parse(CommandString);
-            var jo = j as JObject;
-            if (jo == null)
-            {
-                return HttpVirtualTransportServerHandleResult.CreateBadCommandLine(new HttpVirtualTransportServerHandleResultBadCommandLine { CommandLine = CommandString });
-            }
+            var jo = CommandObject;
             if (jo["commandName"] == null || jo["commandName"].Type != JTokenType.String || (jo["commandHash"] != null && jo["commandHash"].Type != JTokenType.String) || jo["parameters"] == null || jo["parameters"].Type != JTokenType.String)
             {
-                return HttpVirtualTransportServerHandleResult.CreateBadCommandLine(new HttpVirtualTransportServerHandleResultBadCommandLine { CommandLine = CommandString });
+                return HttpVirtualTransportServerHandleResult.CreateBadCommandLine(new HttpVirtualTransportServerHandleResultBadCommandLine { CommandLine = jo.ToString(Newtonsoft.Json.Formatting.None) });
             }
             var CommandName = StringFromJson(jo["commandName"]);
             var CommandHash = Optional<UInt32>.Empty;
@@ -82,7 +77,7 @@ namespace Server
                 UInt32 ch;
                 if (!UInt32.TryParse(StringFromJson(jo["commandHash"]), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out ch))
                 {
-                    return HttpVirtualTransportServerHandleResult.CreateBadCommandLine(new HttpVirtualTransportServerHandleResultBadCommandLine { CommandLine = CommandString });
+                    return HttpVirtualTransportServerHandleResult.CreateBadCommandLine(new HttpVirtualTransportServerHandleResultBadCommandLine { CommandLine = jo.ToString(Newtonsoft.Json.Formatting.None) });
                 }
                 CommandHash = ch;
             }
@@ -100,7 +95,7 @@ namespace Server
                         {
                             var rjo = new JObject();
                             rjo["commandName"] = CommandName;
-                            rjo["commandHash"] = CommandHash.HasValue;
+                            rjo["commandHash"] = CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                             rjo["parameters"] = ss.ExecuteCommand(s, CommandName, CommandHash.HasValue, Parameters);
                             lock (c.WriteBufferLockee)
                             {

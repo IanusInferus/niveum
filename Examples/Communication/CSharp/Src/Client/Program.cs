@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2012.12.17.
+//  Version:     2012.12.18.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -38,6 +38,13 @@ namespace Client
                     return -1;
                 }
             }
+        }
+
+        private enum ServerProtocolType
+        {
+            Binary,
+            Json,
+            Http
         }
 
         public static int MainInner()
@@ -76,44 +83,78 @@ namespace Client
             }
 
             var argv = CmdLine.Arguments;
-            IPEndPoint RemoteEndPoint;
-            SerializationProtocolType ProtocolType;
-            if (argv.Length == 3)
+            ServerProtocolType ProtocolType = ServerProtocolType.Binary;
+            SerializationProtocolType SerializationProtocolType = SerializationProtocolType.Binary;
+            if (argv.Length > 0)
             {
-                RemoteEndPoint = new IPEndPoint(IPAddress.Parse(argv[1]), int.Parse(argv[2]));
-                ProtocolType = (SerializationProtocolType)Enum.Parse(typeof(SerializationProtocolType), argv[0], true);
-            }
-            else if (argv.Length == 1)
-            {
-                RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
-                ProtocolType = (SerializationProtocolType)Enum.Parse(typeof(SerializationProtocolType), argv[0], true);
-            }
-            else if (argv.Length == 0)
-            {
-                RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
-                ProtocolType = SerializationProtocolType.Binary;
-            }
-            else
-            {
-                DisplayInfo();
-                return -1;
+                ProtocolType = (ServerProtocolType)Enum.Parse(typeof(ServerProtocolType), argv[0], true);
+                if (ProtocolType == ServerProtocolType.Binary)
+                {
+                    SerializationProtocolType = SerializationProtocolType.Binary;
+                }
+                else if (ProtocolType == ServerProtocolType.Json)
+                {
+                    SerializationProtocolType = SerializationProtocolType.Json;
+                }
             }
 
-            if (UseLoadTest)
+            if (ProtocolType != ServerProtocolType.Http)
             {
-                LoadTest.DoTest(RemoteEndPoint, ProtocolType);
-            }
-            else if (UsePerformanceTest)
-            {
-                PerformanceTest.DoTest(RemoteEndPoint, ProtocolType);
-            }
-            else if (UseStableTest)
-            {
-                StableTest.DoTest(RemoteEndPoint, ProtocolType);
+                IPEndPoint RemoteEndPoint;
+                if (argv.Length == 3)
+                {
+                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse(argv[1]), int.Parse(argv[2]));
+                }
+                else if (argv.Length == 1)
+                {
+                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
+                }
+                else if (argv.Length == 0)
+                {
+                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
+                }
+                else
+                {
+                    DisplayInfo();
+                    return -1;
+                }
+
+                if (UseLoadTest)
+                {
+                    LoadTest.DoTest(RemoteEndPoint, SerializationProtocolType);
+                }
+                else if (UsePerformanceTest)
+                {
+                    PerformanceTest.DoTest(RemoteEndPoint, SerializationProtocolType);
+                }
+                else if (UseStableTest)
+                {
+                    StableTest.DoTest(RemoteEndPoint, SerializationProtocolType);
+                }
+                else
+                {
+                    RunTcp(RemoteEndPoint, SerializationProtocolType, UseOld);
+                }
             }
             else
             {
-                Run(RemoteEndPoint, ProtocolType, UseOld);
+                String UrlPrefix = "http://localhost:8003/";
+                String ServiceVirtualPath = "cmd";
+                if (argv.Length == 3)
+                {
+                    UrlPrefix = argv[1];
+                    ServiceVirtualPath = argv[2];
+                }
+                else if (argv.Length == 1)
+                {
+                }
+                else
+                {
+                    DisplayInfo();
+                    return -1;
+                }
+
+                RunHttp(UrlPrefix, ServiceVirtualPath, UseOld);
             }
 
             return 0;
@@ -129,17 +170,18 @@ namespace Client
         public static void DisplayInfo()
         {
             Console.WriteLine(@"用法:");
-            Console.WriteLine(@"Client [<Protocol> [<IpAddress> <Port>]] [/old|/load|/perf|/stable]");
-            Console.WriteLine(@"Protocol 通讯协议，可为Binary或Json，默认为Binary");
-            Console.WriteLine(@"IpAddress 服务器IP地址，默认为127.0.0.1");
-            Console.WriteLine(@"Port 服务器端口，默认为8001");
+            Console.WriteLine(@"Client [<Protocol=Binary|Json> [<IpAddress=127.0.0.1> <Port=8001>]] [/old|/load|/perf|/stable]");
+            Console.WriteLine(@"Client <Protocol=Http> [<UrlPrefix=http://localhost:8003/> <ServiceVirtualPath=cmd>] [/old]");
+            Console.WriteLine(@"Protocol 通讯协议，可为Binary|Json|Http，默认为Binary");
+            Console.WriteLine(@"IpAddress 服务器IP地址");
+            Console.WriteLine(@"Port 服务器端口");
             Console.WriteLine(@"/old 使用老协议");
             Console.WriteLine(@"/load 自动化负载测试");
             Console.WriteLine(@"/perf 自动化性能测试");
             Console.WriteLine(@"/stable 自动化稳定性测试");
         }
 
-        public static void Run(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, Boolean UseOld)
+        public static void RunTcp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, Boolean UseOld)
         {
             if (!(ProtocolType == SerializationProtocolType.Binary || ProtocolType == SerializationProtocolType.Json))
             {
@@ -158,7 +200,16 @@ namespace Client
                         a();
                     }
                 };
-                bc.Receive(DoHandle, se => Console.WriteLine((new SocketException((int)se)).Message));
+                bc.ReceiveAsync(DoHandle, se => Console.WriteLine((new SocketException((int)se)).Message));
+                ReadLineAndSendLoop(bc.InnerClient, UseOld, Lockee);
+            }
+        }
+
+        public static void RunHttp(String UrlPrefix, String ServiceVirtualPath, Boolean UseOld)
+        {
+            using (var bc = new HttpClient(UrlPrefix, ServiceVirtualPath))
+            {
+                var Lockee = new Object();
                 ReadLineAndSendLoop(bc.InnerClient, UseOld, Lockee);
             }
         }
@@ -184,7 +235,11 @@ namespace Client
                 var Line = Console.ReadLine();
                 lock (Lockee)
                 {
-                    if (Line == "exit") { break; }
+                    if (Line == "exit")
+                    {
+                        InnerClient.Quit(new QuitRequest(), r => { });
+                        break;
+                    }
                     if (Line == "shutdown")
                     {
                         InnerClient.Shutdown(new ShutdownRequest(), r =>

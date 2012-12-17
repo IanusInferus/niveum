@@ -45,6 +45,7 @@
     MaxBadCommands              Int
     ClientDebug                 Boolean
 
+    TimeoutCheckPeriod          Int
     ServiceVirtualPath          String
     StaticContentPath           Optional<HttpStaticContentPath>
 

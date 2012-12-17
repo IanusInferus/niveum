@@ -3,16 +3,12 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using Communication;
+using Firefly;
 using Communication.BaseSystem;
-using Communication.Net;
-using Communication.Json;
 using Server.Algorithms;
-using Server.Services;
 
 namespace Server
 {
@@ -59,7 +55,7 @@ namespace Server
     public interface IHttpVirtualTransportServer
     {
         JObject[] TakeWriteBuffer();
-        HttpVirtualTransportServerHandleResult Handle(String CommandString);
+        HttpVirtualTransportServerHandleResult Handle(JObject CommandObject);
         UInt64 Hash { get; }
         event Action ServerEvent;
     }
@@ -81,13 +77,14 @@ namespace Server
         private HttpListener Listener = new HttpListener();
         private Task ListeningTask;
         private CancellationTokenSource ListeningTaskTokenSource;
-        private ConcurrentBag<HttpListenerContext> AcceptedSockets = new ConcurrentBag<HttpListenerContext>();
+        private ConcurrentBag<HttpListenerContext> AcceptedListenerContexts = new ConcurrentBag<HttpListenerContext>();
         private Task AcceptingTask;
         private CancellationTokenSource AcceptingTaskTokenSource;
         private AutoResetEvent AcceptingTaskNotifier;
         private Task PurifieringTask;
         private CancellationTokenSource PurifieringTaskTokenSource;
         private AutoResetEvent PurifieringTaskNotifier;
+        private Timer LastActiveTimeCheckTimer;
 
         private class ServerSessionSets
         {
@@ -97,7 +94,7 @@ namespace Server
             public Dictionary<HttpSession, String> SessionToId = new Dictionary<HttpSession, String>();
         }
         private ConcurrentBag<HttpSession> StoppingSessions = new ConcurrentBag<HttpSession>();
-        private ConcurrentBag<HttpListenerContext> StoppingSockets = new ConcurrentBag<HttpListenerContext>();
+        private ConcurrentBag<HttpListenerContext> StoppingListenerContexts = new ConcurrentBag<HttpListenerContext>();
         private LockedVariable<ServerSessionSets> SessionSets = new LockedVariable<ServerSessionSets>(new ServerSessionSets());
 
         public ServerContext ServerContext { get; private set; }
@@ -116,6 +113,10 @@ namespace Server
         private int? SessionIdleTimeoutValue = null;
         private int? MaxConnectionsValue = null;
         private int? MaxConnectionsPerIPValue = null;
+
+        private int TimeoutCheckPeriodValue = 30;
+        private String ServiceVirtualPathValue = null;
+        private Optional<HttpStaticContentPath> StaticContentPathValue = Optional<HttpStaticContentPath>.Empty;
 
         /// <summary>只能在启动前修改，以保证线程安全</summary>
         public CheckCommandAllowedDelegate CheckCommandAllowed
@@ -313,6 +314,63 @@ namespace Server
                 );
             }
         }
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public int TimeoutCheckPeriod
+        {
+            get
+            {
+                return TimeoutCheckPeriodValue;
+            }
+            set
+            {
+                IsRunningValue.DoAction
+                (
+                    b =>
+                    {
+                        if (b) { throw new InvalidOperationException(); }
+                        TimeoutCheckPeriodValue = value;
+                    }
+                );
+            }
+        }
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public String ServiceVirtualPath
+        {
+            get
+            {
+                return ServiceVirtualPathValue;
+            }
+            set
+            {
+                IsRunningValue.DoAction
+                (
+                    b =>
+                    {
+                        if (b) { throw new InvalidOperationException(); }
+                        ServiceVirtualPathValue = value;
+                    }
+                );
+            }
+        }
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public Optional<HttpStaticContentPath> StaticContentPath
+        {
+            get
+            {
+                return StaticContentPathValue;
+            }
+            set
+            {
+                IsRunningValue.DoAction
+                (
+                    b =>
+                    {
+                        if (b) { throw new InvalidOperationException(); }
+                        StaticContentPathValue = value;
+                    }
+                );
+            }
+        }
 
         public LockedVariable<Dictionary<SessionContext, HttpSession>> SessionMappings = new LockedVariable<Dictionary<SessionContext, HttpSession>>(new Dictionary<SessionContext, HttpSession>());
 
@@ -328,6 +386,13 @@ namespace Server
             {
                 SessionLog(Entry);
             }
+        }
+
+        private static String GetBindingName(Uri Url)
+        {
+            var p = Url.AbsolutePath;
+            if (p.StartsWith("/")) { return p.Substring(1); }
+            return p;
         }
 
         public void Start()
@@ -375,7 +440,40 @@ namespace Server
                         (
                             () =>
                             {
-                                Listener.Start();
+                                try
+                                {
+                                    Listener.Start();
+                                }
+                                catch (HttpListenerException ex)
+                                {
+                                    String Message;
+                                    if (ex.ErrorCode == 5)
+                                    {
+                                        var l = new List<String>();
+                                        l.Add("Under Windows, try run the following as administrator:");
+                                        var UserDomainName = Environment.UserDomainName;
+                                        var UserName = Environment.UserName;
+                                        foreach (var p in BindingsValue)
+                                        {
+                                            l.Add(@"netsh http add urlacl url={0} user={1}\{2}".Formats(p, UserDomainName, UserName));
+                                        }
+                                        l.Add("and delete it when you don't need it:");
+                                        foreach (var p in BindingsValue)
+                                        {
+                                            l.Add(@"netsh http delete urlacl url={0}".Formats(p));
+                                        }
+                                        Message = String.Join("\r\n", l.ToArray());
+                                    }
+                                    else
+                                    {
+                                        Message = ExceptionInfo.GetExceptionInfo(ex);
+                                    }
+                                    RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0), Time = DateTime.UtcNow, Type = "Sys", Message = Message });
+                                }
+                                catch (Exception ex)
+                                {
+                                    RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0), Time = DateTime.UtcNow, Type = "Sys", Message = ExceptionInfo.GetExceptionInfo(ex) });
+                                }
                                 try
                                 {
                                     while (true)
@@ -386,7 +484,7 @@ namespace Server
                                         {
                                             ca.Wait(ListeningTaskToken);
                                             var a = ca.Result;
-                                            AcceptedSockets.Add(a);
+                                            AcceptedListenerContexts.Add(a);
                                             AcceptingTaskNotifier.Set();
                                         }
                                         catch (OperationCanceledException)
@@ -452,7 +550,7 @@ namespace Server
                                     while (true)
                                     {
                                         HttpListenerContext a;
-                                        if (!AcceptedSockets.TryTake(out a))
+                                        if (!AcceptedListenerContexts.TryTake(out a))
                                         {
                                             break;
                                         }
@@ -460,14 +558,30 @@ namespace Server
                                         if (a.Request.ContentLength64 < 0)
                                         {
                                             a.Response.StatusCode = 411;
-                                            StoppingSockets.Add(a);
+                                            NotifyListenerContextQuit(a);
                                             continue;
                                         }
 
                                         if (a.Request.ContentLength64 > 8 * 1024)
                                         {
                                             a.Response.StatusCode = 413;
-                                            StoppingSockets.Add(a);
+                                            NotifyListenerContextQuit(a);
+                                            continue;
+                                        }
+
+                                        var BindingName = GetBindingName(a.Request.Url);
+                                        if (!BindingName.Equals(ServiceVirtualPathValue, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            a.Response.StatusCode = 404;
+                                            NotifyListenerContextQuit(a);
+                                            continue;
+                                        }
+
+                                        var Headers = a.Request.Headers.AllKeys.ToDictionary(k => k, k => a.Request.Headers[k]);
+                                        if (Headers.ContainsKey("Range"))
+                                        {
+                                            a.Response.StatusCode = 400;
+                                            NotifyListenerContextQuit(a);
                                             continue;
                                         }
 
@@ -475,7 +589,7 @@ namespace Server
                                         if (Keys.Count() > 1)
                                         {
                                             a.Response.StatusCode = 400;
-                                            StoppingSockets.Add(a);
+                                            NotifyListenerContextQuit(a);
                                             continue;
                                         }
 
@@ -497,7 +611,7 @@ namespace Server
                                                         return;
                                                     }
                                                     var CurrentSession = ss.SessionIdToSession[SessionId];
-                                                    if (CurrentSession.RemoteEndPoint != e)
+                                                    if (!CurrentSession.RemoteEndPoint.Address.Equals(e.Address))
                                                     {
                                                         a.Response.StatusCode = 403;
                                                         Close = true;
@@ -508,7 +622,7 @@ namespace Server
                                             );
                                             if (Close)
                                             {
-                                                StoppingSockets.Add(a);
+                                                NotifyListenerContextQuit(a);
                                                 continue;
                                             }
                                             var NewSessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
@@ -523,7 +637,8 @@ namespace Server
                                             );
                                             if (!s.Push(a, NewSessionId))
                                             {
-                                                StoppingSockets.Add(a);
+                                                NotifyListenerContextQuit(a);
+                                                continue;
                                             }
                                             continue;
                                         }
@@ -535,18 +650,18 @@ namespace Server
                                         if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
                                         {
                                             a.Response.StatusCode = 503;
-                                            StoppingSockets.Add(a);
+                                            NotifyListenerContextQuit(a);
                                             continue;
                                         }
 
                                         if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address] : 0) >= MaxConnectionsPerIPValue.Value))
                                         {
                                             a.Response.StatusCode = 503;
-                                            StoppingSockets.Add(a);
+                                            NotifyListenerContextQuit(a);
                                             continue;
                                         }
 
-                                        s = new HttpSession(e) { Server = this };
+                                        s = new HttpSession(this, e);
 
                                         {
                                             var SessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
@@ -571,7 +686,8 @@ namespace Server
                                             s.Start();
                                             if (!s.Push(a, SessionId))
                                             {
-                                                StoppingSockets.Add(a);
+                                                NotifyListenerContextQuit(a);
+                                                continue;
                                             }
                                         }
                                     }
@@ -591,16 +707,47 @@ namespace Server
 
                                     PurifieringTaskNotifier.WaitOne();
 
+                                    if (SessionIdleTimeout.HasValue)
+                                    {
+                                        var CheckTime = DateTime.UtcNow.AddSeconds(-SessionIdleTimeoutValue.Value);
+                                        SessionSets.DoAction
+                                        (
+                                            ss =>
+                                            {
+                                                foreach (var s in ss.Sessions)
+                                                {
+                                                    if (s.LastActiveTime < CheckTime)
+                                                    {
+                                                        s.NotifyDie();
+                                                        StoppingSessions.Add(s);
+                                                    }
+                                                }
+                                            }
+                                        );
+                                    }
+
                                     HttpSession StoppingSession;
                                     while (StoppingSessions.TryTake(out StoppingSession))
                                     {
                                         Purify(StoppingSession);
+                                    }
+
+                                    HttpListenerContext ListenerContext;
+                                    while (StoppingListenerContexts.TryTake(out ListenerContext))
+                                    {
+                                        ListenerContext.Response.Close();
                                     }
                                 }
                             },
                             PurifieringTaskToken,
                             TaskCreationOptions.LongRunning
                         );
+
+                        if (SessionIdleTimeoutValue.HasValue)
+                        {
+                            var TimePeriod = TimeSpan.FromSeconds(Math.Max(TimeoutCheckPeriodValue, 1));
+                            LastActiveTimeCheckTimer = new Timer(state => { PurifieringTaskNotifier.Set(); }, null, TimePeriod, TimePeriod);
+                        }
 
                         AcceptingTask.Start();
                         PurifieringTask.Start();
@@ -628,6 +775,12 @@ namespace Server
                 b =>
                 {
                     if (!b) { return false; }
+
+                    if (LastActiveTimeCheckTimer != null)
+                    {
+                        LastActiveTimeCheckTimer.Dispose();
+                        LastActiveTimeCheckTimer = null;
+                    }
 
                     if (ListeningTaskTokenSource != null)
                     {
@@ -695,6 +848,11 @@ namespace Server
             );
         }
 
+        public void NotifyListenerContextQuit(HttpListenerContext ListenerContext)
+        {
+            StoppingListenerContexts.Add(ListenerContext);
+            PurifieringTaskNotifier.Set();
+        }
         public void NotifySessionQuit(HttpSession s)
         {
             StoppingSessions.Add(s);

@@ -313,7 +313,7 @@ namespace Server
         {
             PushCommand(sc, TaskContinuationOptions.PreferFairness);
         }
-        private Boolean IsSocketErrorKnown(SocketError se)
+        private static Boolean IsSocketErrorKnown(SocketError se)
         {
             if (se == SocketError.ConnectionAborted) { return true; }
             if (se == SocketError.ConnectionReset) { return true; }
