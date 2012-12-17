@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#模板数据
-      Version:     2012.12.13.
+      Version:     2012.12.17.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -538,50 +538,34 @@ ObjectSchemaTemplate
                 $String
                     /// <summary>${Description}</summary>
         Template
-            Name IServerImplementation
+            Name IApplicationServer
             //Parameters: ${Commands}
             Value
                 $String
-                    public interface IServerImplementation<TContext>
+                    public interface IApplicationServer
                     {
                         ${Commands}
                     }
         Template
-            Name IServerImplementation_ClientCommand
+            Name IApplicationServer_ClientCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
-                    [[${Name}Reply]] [[${Name}]](TContext c, [[${Name}Request]] r);
+                    [[${Name}Reply]] [[${Name}]]([[${Name}Request]] r);
         Template
-            Name IServerImplementation_ServerCommand
+            Name IApplicationServer_ServerCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
-                    event Action<TContext, [[${Name}Event]]> [[${Name}]];
+                    event Action<[[${Name}Event]]> [[${Name}]];
         Template
-            Name IClientImplementation
-            //Parameters: ${Commands}
-            Value
-                $String
-                    public interface IClientImplementation<TContext>
-                    {
-                        ${Commands}
-                    }
-        Template
-            Name IClientImplementation_ServerCommand
-            //Parameters: ${Name}, ${XmlComment}
-            Value
-                $String
-                    ${XmlComment}
-                    void [[${Name}]](TContext c, [[${Name}Event]] e);
-        Template
-            Name IClient
+            Name IApplicationClient
             //Parameters: ${Hash}, ${Commands}
             Value
                 $String
-                    public interface IClient
+                    public interface IApplicationClient
                     {
                         UInt64 Hash { get; }
                         void DequeueCallback(String CommandName);
@@ -589,9 +573,16 @@ ObjectSchemaTemplate
                         ${Commands}
                     }
         Template
-            Name IClient_ClientCommand
+            Name IApplicationClient_ClientCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
                     void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback);
+        Template
+            Name IApplicationClient_ServerCommand
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    event Action<[[${Name}Event]]> [[${Name}]];

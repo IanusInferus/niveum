@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板数据
-      Version:     2012.12.13.
+      Version:     2012.12.17.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -65,18 +65,18 @@ ObjectSchemaTemplate
                     using Firefly.Mapping.Binary;
                     using Firefly.TextEncoding;
         Template
-            Name BinaryServer
-            //Parameters: ${Hash}, ${Commands}
+            Name BinarySerializationServer
+            //Parameters: ${Hash}, ${ClientCommands}, ${ServerCommands}
             Value
                 $String
-                    public sealed class BinaryServer<TContext>
+                    public sealed class BinarySerializationServer
                     {
-                        private Dictionary<KeyValuePair<String, UInt32>, Func<TContext, Byte[], Byte[]>> ClientCommands;
+                        private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>> ClientCommands;
 
-                        public BinaryServer(IServerImplementation<TContext> i)
+                        public BinarySerializationServer()
                         {
-                            ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<TContext, Byte[], Byte[]>>();
-                            ${Commands}
+                            ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>>();
+                            ${ClientCommands}
                         }
 
                         public UInt64 Hash
@@ -92,31 +92,38 @@ ObjectSchemaTemplate
                             return ClientCommands.ContainsKey(new KeyValuePair<String, UInt32>(CommandName, CommandHash));
                         }
 
-                        public Byte[] ExecuteCommand(TContext c, String CommandName, UInt32 CommandHash, Byte[] Parameters)
+                        public Byte[] ExecuteCommand(IApplicationServer s, String CommandName, UInt32 CommandHash, Byte[] Parameters)
                         {
                             var cmd = ClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];
-                            return cmd(c, Parameters);
+                            return cmd(s, Parameters);
+                        }
+                    }
+                    public sealed class BinarySerializationServerEventDispatcher
+                    {
+                        public BinarySerializationServerEventDispatcher(IApplicationServer s)
+                        {
+                            ${ServerCommands}
                         }
 
-                        public delegate void ServerEventDelegate(TContext c, String CommandName, UInt32 CommandHash, Byte[] Parameters);
+                        public delegate void ServerEventDelegate(String CommandName, UInt32 CommandHash, Byte[] Parameters);
                         public event ServerEventDelegate ServerEvent;
-                        private void OnServerEvent(TContext c, String CommandName, UInt32 CommandHash, Byte[] Parameters)
+                        private void OnServerEvent(String CommandName, UInt32 CommandHash, Byte[] Parameters)
                         {
-                            if (ServerEvent != null) { ServerEvent(c, CommandName, CommandHash, Parameters); }
+                            if (ServerEvent != null) { ServerEvent(CommandName, CommandHash, Parameters); }
                         }
                     }
         Template
-            Name BinaryServer_ClientCommand
+            Name BinarySerializationServer_ClientCommand
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (c, p) => BinaryTranslator.Serialize(i.[[${Name}]](c, BinaryTranslator.Deserialize<[[${Name}Request]]>(p))));
+                    ClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (s, p) => BinaryTranslator.Serialize(s.[[${Name}]](BinaryTranslator.Deserialize<[[${Name}Request]]>(p))));
         Template
-            Name BinaryServer_ServerCommand
+            Name BinarySerializationServer_ServerCommand
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    i.${Name} += (c, e) => OnServerEvent(c, @"${CommandName}", 0x${CommandHash}, BinaryTranslator.Serialize(e));
+                    s.${Name} += e => OnServerEvent(@"${CommandName}", 0x${CommandHash}, BinaryTranslator.Serialize(e));
         Template
             Name IBinarySender
             Value
@@ -126,39 +133,69 @@ ObjectSchemaTemplate
                         void Send(String CommandName, UInt32 CommandHash, Byte[] Parameters);
                     }
         Template
-            Name BinaryClient
-            //Parameters: ${Hash}, ${ClientCommands}, ${ServerCommands}
+            Name BinarySerializationClient
+            //Parameters: ${Hash}, ${ApplicationCommands}, ${ServerCommands}
             Value
                 $String
-                    public sealed class BinaryClient<TContext> : IClient
+                    public sealed class BinarySerializationClient
                     {
-                        private IBinarySender s;
-                        private IClientImplementation<TContext> i;
-                        private Dictionary<String, Queue<KeyValuePair<UInt32, Action<Byte[]>>>> ClientCommandCallbacks;
-                        private Dictionary<KeyValuePair<String, UInt32>, Action<TContext, Byte[]>> ServerCommands;
-
-                        public BinaryClient(IBinarySender s, IClientImplementation<TContext> i)
+                        public IApplicationClient GetApplicationClient()
                         {
-                            this.s = s;
-                            this.i = i;
-                            ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<Byte[]>>>>();
-                            ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<TContext, Byte[]>>();
+                            return c;
+                        }
+
+                        private class ApplicationClient : IApplicationClient
+                        {
+                            public IBinarySender s;
+                            public Dictionary<String, Queue<KeyValuePair<UInt32, Action<Byte[]>>>> ClientCommandCallbacks;
+
+                            public UInt64 Hash
+                            {
+                                get
+                                {
+                                    return 0x${Hash};
+                                }
+                            }
+
+                            public void DequeueCallback(String CommandName)
+                            {
+                                ClientCommandCallbacks[CommandName].Dequeue();
+                            }
+
+                            private void AddCallback(String CommandName, UInt32 CommandHash, Action<Byte[]> Callback)
+                            {
+                                if (ClientCommandCallbacks.ContainsKey(CommandName))
+                                {
+                                    ClientCommandCallbacks[CommandName].Enqueue(new KeyValuePair<UInt32, Action<Byte[]>>(CommandHash, Callback));
+                                }
+                                else
+                                {
+                                    var q = new Queue<KeyValuePair<UInt32, Action<Byte[]>>>();
+                                    q.Enqueue(new KeyValuePair<UInt32, Action<Byte[]>>(CommandHash, Callback));
+                                    ClientCommandCallbacks.Add(CommandName, q);
+                                }
+                            }
+
+                            ${ApplicationCommands}
+                        }
+
+                        private ApplicationClient c;
+                        private Dictionary<KeyValuePair<String, UInt32>, Action<Byte[]>> ServerCommands;
+
+                        public BinarySerializationClient(IBinarySender s)
+                        {
+                            c = new ApplicationClient();
+                            c.s = s;
+                            c.ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<Byte[]>>>>();
+                            ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<Byte[]>>();
                             ${ServerCommands}
                         }
 
-                        public UInt64 Hash
+                        public void HandleResult(String CommandName, UInt32 CommandHash, Byte[] Parameters)
                         {
-                            get
+                            if (c.ClientCommandCallbacks.ContainsKey(CommandName))
                             {
-                                return 0x${Hash};
-                            }
-                        }
-
-                        public void HandleResult(TContext c, String CommandName, UInt32 CommandHash, Byte[] Parameters)
-                        {
-                            if (ClientCommandCallbacks.ContainsKey(CommandName))
-                            {
-                                var q = ClientCommandCallbacks[CommandName];
+                                var q = c.ClientCommandCallbacks[CommandName];
                                 if (q.Count == 0)
                                 {
                                     throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
@@ -178,40 +215,18 @@ ObjectSchemaTemplate
                             if (ServerCommands.ContainsKey(p))
                             {
                                 var a = ServerCommands[p];
-                                a(c, Parameters);
+                                a(Parameters);
                                 return;
                             }
 
                             throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
                         }
-
-                        private void AddCallback(String CommandName, UInt32 CommandHash, Action<Byte[]> Callback)
-                        {
-                            if (ClientCommandCallbacks.ContainsKey(CommandName))
-                            {
-                                ClientCommandCallbacks[CommandName].Enqueue(new KeyValuePair<UInt32, Action<Byte[]>>(CommandHash, Callback));
-                            }
-                            else
-                            {
-                                var q = new Queue<KeyValuePair<UInt32, Action<Byte[]>>>();
-                                q.Enqueue(new KeyValuePair<UInt32, Action<Byte[]>>(CommandHash, Callback));
-                                ClientCommandCallbacks.Add(CommandName, q);
-                            }
-                        }
-
-                        public void DequeueCallback(String CommandName)
-                        {
-                            ClientCommandCallbacks[CommandName].Dequeue();
-                        }
-
-                        ${ClientCommands}
                     }
         Template
-            Name BinaryClient_ClientCommand
-            //Parameters: ${CommandName}, ${Name}, ${CommandHash}, ${XmlComment}
+            Name BinarySerializationClient_ApplicationClientCommand
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ${XmlComment}
                     public void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback)
                     {
                         var Request = BinaryTranslator.Serialize(r);
@@ -219,11 +234,18 @@ ObjectSchemaTemplate
                         s.Send(@"${CommandName}", 0x${CommandHash}, Request);
                     }
         Template
-            Name BinaryClient_ServerCommand
+            Name BinarySerializationClient_ApplicationServerCommand
+            //Parameters: ${Name}
+            Value
+                $String
+                    public event Action<[[${Name}Event]]> [[${Name}]];
+                    public void [[Raise${Name}]]([[${Name}Event]] e) { if ([[${Name}]] != null) { [[${Name}]](e); } }
+        Template
+            Name BinarySerializationClient_ServerCommand
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ServerCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (c, Parameters) => i.[[${Name}]](c, BinaryTranslator.Deserialize<[[${Name}Event]]>(Parameters)));
+                    ServerCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), Parameters => c.[[Raise${Name}]](BinaryTranslator.Deserialize<[[${Name}Event]]>(Parameters)));
         Template
             Name BinaryTranslator
             //Parameters: ${Serializers}
