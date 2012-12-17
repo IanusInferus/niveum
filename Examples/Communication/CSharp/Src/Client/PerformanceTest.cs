@@ -16,7 +16,11 @@ namespace Client
 {
     class PerformanceTest
     {
-        public static void TestAdd(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
+        public class ClientContext
+        {
+        }
+
+        public static void TestAdd(int NumUser, int n, ClientContext cc, IApplicationClient ic, Action Completed)
         {
             ic.TestAdd(new TestAddRequest { Left = n - 1, Right = n + 1 }, r =>
             {
@@ -25,7 +29,7 @@ namespace Client
             });
         }
 
-        public static void TestMultiply(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
+        public static void TestMultiply(int NumUser, int n, ClientContext cc, IApplicationClient ic, Action Completed)
         {
             double v = n;
             var o = v * 1000001 * 0.5;
@@ -37,7 +41,7 @@ namespace Client
             });
         }
 
-        public static void TestText(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
+        public static void TestText(int NumUser, int n, ClientContext cc, IApplicationClient ic, Action Completed)
         {
             var ss = n.ToString();
             String s = String.Join("", Enumerable.Range(0, 10000 / ss.Length).Select(i => ss).ToArray()).Substring(0, 4096 - 256);
@@ -49,7 +53,7 @@ namespace Client
             });
         }
 
-        public static void TestForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumRequestPerUser, int NumUser, String Title, Action<int, int, ClientContext, IClient, Action> Test)
+        public static void TestForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumRequestPerUser, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test)
         {
             var tll = new Object();
             var tl = new List<Task>();
@@ -67,7 +71,13 @@ namespace Client
 
                 var n = k;
                 var Lockee = new Object();
-                var bc = new TcpClient(RemoteEndPoint, new ClientImplementation(), ProtocolType);
+                var bc = new TcpClient(RemoteEndPoint, ProtocolType);
+                var cc = new ClientContext();
+                bc.InnerClient.Error += e =>
+                {
+                    var m = "调用'" + e.CommandName + "'发生错误:" + e.Message;
+                    Console.WriteLine(m);
+                };
                 bc.Connect();
                 Action<SocketError> HandleError = se =>
                 {
@@ -107,7 +117,7 @@ namespace Client
                 {
                     lock (Lockee)
                     {
-                        Test(NumUser, n, bc.Context, bc.InnerClient, Completed);
+                        Test(NumUser, n, cc, bc.InnerClient, Completed);
                     }
                 };
                 var t = new Task(f);
@@ -116,7 +126,7 @@ namespace Client
                     tl.Add(t);
                 }
                 bcl.Add(bc);
-                ccl.Add(bc.Context);
+                ccl.Add(cc);
 
                 int RequestCount = NumRequestPerUser;
                 Completed = () =>

@@ -16,7 +16,18 @@ namespace Client
 {
     class LoadTest
     {
-        public static void TestQuit(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
+        public class ClientContext
+        {
+            public Object Lockee = new Object();
+
+            public int NumOnline;
+            public int Num;
+            public Action Completed;
+
+            public Int64 Sum = 0;
+        }
+
+        public static void TestQuit(int NumUser, int n, ClientContext cc, IApplicationClient ic, Action Completed)
         {
             ic.Quit(new QuitRequest { }, r =>
             {
@@ -24,7 +35,7 @@ namespace Client
             });
         }
 
-        public static void TestAdd(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
+        public static void TestAdd(int NumUser, int n, ClientContext cc, IApplicationClient ic, Action Completed)
         {
             ic.TestAdd(new TestAddRequest { Left = n - 1, Right = n + 1 }, r =>
             {
@@ -33,7 +44,7 @@ namespace Client
             });
         }
 
-        public static void TestMultiply(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
+        public static void TestMultiply(int NumUser, int n, ClientContext cc, IApplicationClient ic, Action Completed)
         {
             double v = n;
             var o = v * 1000001 * 0.5;
@@ -45,7 +56,7 @@ namespace Client
             });
         }
 
-        public static void TestText(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
+        public static void TestText(int NumUser, int n, ClientContext cc, IApplicationClient ic, Action Completed)
         {
             var ss = n.ToString();
             String s = String.Join("", Enumerable.Range(0, 10000 / ss.Length).Select(i => ss).ToArray()).Substring(0, 4096 - 256);
@@ -57,13 +68,27 @@ namespace Client
             });
         }
 
-        public static void TestMessageInitializeClientContext(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
+        public static void TestMessageInitializeClientContext(int NumUser, int n, ClientContext cc, IApplicationClient ic, Action Completed)
         {
+            ic.TestMessageReceived += e =>
+            {
+                var Done = false;
+                lock (cc.Lockee)
+                {
+                    cc.Sum += Int32.Parse(e.Message);
+                    cc.Num -= 1;
+                    Done = cc.Num == 0;
+                }
+                if (Done)
+                {
+                    cc.Completed();
+                }
+            };
             cc.NumOnline = NumUser;
             cc.Num = NumUser;
             cc.Completed = Completed;
         }
-        public static void TestMessage(int NumUser, int n, ClientContext cc, IClient ic, Action Completed)
+        public static void TestMessage(int NumUser, int n, ClientContext cc, IApplicationClient ic, Action Completed)
         {
             var s = n.ToString();
 
@@ -85,7 +110,7 @@ namespace Client
             Trace.Assert(Sum == PredicatedSum);
         }
 
-        public static void TestForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IClient, Action> Test, Action<int, int, ClientContext, IClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
+        public static void TestForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test, Action<int, int, ClientContext, IApplicationClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
         {
             var tl = new List<Task>();
             var bcl = new List<TcpClient>();
@@ -106,8 +131,14 @@ namespace Client
             {
                 var n = k;
                 var Lockee = new Object();
-                var bc = new TcpClient(RemoteEndPoint, new ClientImplementation(), ProtocolType);
-                if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, bc.Context, bc.InnerClient, Completed); }
+                var bc = new TcpClient(RemoteEndPoint, ProtocolType);
+                var cc = new ClientContext();
+                bc.InnerClient.Error += e =>
+                {
+                    var m = "调用'" + e.CommandName + "'发生错误:" + e.Message;
+                    Console.WriteLine(m);
+                };
+                if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, cc, bc.InnerClient, Completed); }
                 bc.Connect();
                 Action<SocketError> HandleError = se =>
                 {
@@ -148,13 +179,13 @@ namespace Client
                     {
                         lock (Lockee)
                         {
-                            Test(NumUser, n, bc.Context, bc.InnerClient, Completed);
+                            Test(NumUser, n, cc, bc.InnerClient, Completed);
                         }
                     }
                 );
                 tl.Add(t);
                 bcl.Add(bc);
-                ccl.Add(bc.Context);
+                ccl.Add(cc);
             }
 
             while (vConnected.Check(i => i != NumUser))
