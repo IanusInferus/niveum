@@ -154,7 +154,7 @@ namespace Client
                     }
                     Completed();
                 };
-                bc.Receive
+                bc.ReceiveAsync
                 (
                     a =>
                     {

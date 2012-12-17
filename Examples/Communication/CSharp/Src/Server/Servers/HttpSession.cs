@@ -5,14 +5,11 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
-using System.Net.Sockets;
 using Newtonsoft.Json.Linq;
 using Firefly;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
-using Communication;
 using Communication.BaseSystem;
-using Communication.Net;
 using Communication.Json;
 using Server.Algorithms;
 using Server.Services;
@@ -24,8 +21,11 @@ namespace Server
     /// </summary>
     public class HttpSession
     {
-        public HttpServer Server { get; set; }
+        public HttpServer Server { get; private set; }
         public IPEndPoint RemoteEndPoint { get; private set; }
+
+        private LockedVariable<DateTime> LastActiveTimeValue;
+        public DateTime LastActiveTime { get { return LastActiveTimeValue.Check(v => v); } }
 
         private SessionContext Context;
         private ServerImplementation si;
@@ -33,9 +33,11 @@ namespace Server
         private int NumBadCommands = 0;
         private Boolean IsDisposed = false;
 
-        public HttpSession(IPEndPoint RemoteEndPoint)
+        public HttpSession(HttpServer Server, IPEndPoint RemoteEndPoint)
         {
+            this.Server = Server;
             this.RemoteEndPoint = RemoteEndPoint;
+            this.LastActiveTimeValue = new LockedVariable<DateTime>(DateTime.UtcNow);
 
             Context = new SessionContext();
             Context.SessionToken = Cryptography.CreateRandom(4);
@@ -122,6 +124,14 @@ namespace Server
             IsExitingValue.Update(b => false);
         }
 
+        public void NotifyDie()
+        {
+            if (Server.EnableLogSystem)
+            {
+                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExit" });
+            }
+        }
+
         //线程安全
         private void StopAsync()
         {
@@ -183,7 +193,7 @@ namespace Server
             }
         }
 
-        public Boolean Push(HttpListenerContext Socket, String NewSessionId)
+        public Boolean Push(HttpListenerContext ListenerContext, String NewSessionId)
         {
             var Pushed = true;
             IsExitingValue.DoAction
@@ -205,7 +215,7 @@ namespace Server
                                 return;
                             }
 
-                            PushCommand(Socket, NewSessionId);
+                            PushCommand(ListenerContext, NewSessionId);
                         }
                     );
                 }
@@ -238,7 +248,7 @@ namespace Server
             NumSessionCommandUpdated.Set();
         }
 
-        private void PushCommand(HttpListenerContext Socket, String NewSessionId)
+        private void PushCommand(HttpListenerContext ListenerContext, String NewSessionId)
         {
             LockSessionCommand();
 
@@ -247,7 +257,7 @@ namespace Server
             {
                 a = () =>
                 {
-                    MessageLoop(Socket, NewSessionId);
+                    MessageLoop(ListenerContext, NewSessionId);
                 };
             }
             else
@@ -256,7 +266,7 @@ namespace Server
                 {
                     try
                     {
-                        MessageLoop(Socket, NewSessionId);
+                        MessageLoop(ListenerContext, NewSessionId);
                     }
                     catch (Exception ex)
                     {
@@ -283,18 +293,25 @@ namespace Server
             );
         }
 
-        private void MessageLoop(HttpListenerContext Socket, String NewSessionId)
+        private void MessageLoop(HttpListenerContext ListenerContext, String NewSessionId)
         {
             String Data;
-            using (var InputStream = Socket.Request.InputStream.AsReadable())
+            using (var InputStream = ListenerContext.Request.InputStream.AsReadable())
             {
-                Data = Socket.Request.ContentEncoding.GetString(InputStream.Read((int)(Socket.Request.ContentLength64)));
+                Data = ListenerContext.Request.ContentEncoding.GetString(InputStream.Read((int)(ListenerContext.Request.ContentLength64)));
             }
-            var Lines = Data.UnifyNewLineToLf().Split('\n').Select(Line => Line.Trim(' ')).Where(Line => Line != "").ToArray();
-
-            foreach (var Line in Lines)
+            var Objects = JToken.Parse(Data) as JArray;
+            if (Objects == null || Objects.Any(j => j.Type != JTokenType.Object))
             {
-                var r = vts.Handle(Line);
+                ListenerContext.Response.StatusCode = 400;
+                ListenerContext.Response.Close();
+                StopAsync();
+                return;
+            }
+
+            foreach (var co in Objects)
+            {
+                var r = vts.Handle(co as JObject);
                 if (r.OnCommand || r.OnBadCommand || r.OnBadCommandLine)
                 {
                     ReadCommand(r);
@@ -309,15 +326,18 @@ namespace Server
             jo["commands"] = new JArray(vts.TakeWriteBuffer());
             jo["sessionid"] = NewSessionId;
             var Bytes = TextEncoding.UTF8.GetBytes(jo.ToString(Newtonsoft.Json.Formatting.None));
-            Socket.Response.StatusCode = 200;
-            Socket.Response.AddHeader("Accept-Ranges", "none");
-            Socket.Response.ContentEncoding = System.Text.Encoding.UTF8;
-            Socket.Response.ContentLength64 = Bytes.Length;
-            using (var OutputStream = Socket.Response.OutputStream.AsWritable())
+            ListenerContext.Response.StatusCode = 200;
+            ListenerContext.Response.AddHeader("Accept-Ranges", "none");
+            ListenerContext.Response.ContentEncoding = System.Text.Encoding.UTF8;
+            ListenerContext.Response.ContentLength64 = Bytes.Length;
+            ListenerContext.Response.ContentType = "application/json; charset=utf-8";
+            using (var OutputStream = ListenerContext.Response.OutputStream.AsWritable())
             {
                 OutputStream.Write(Bytes);
             }
-            Socket.Response.Close();
+            ListenerContext.Response.Close();
+
+            LastActiveTimeValue.Update(v => DateTime.UtcNow);
         }
 
         private void ReadCommand(HttpVirtualTransportServerHandleResult r)

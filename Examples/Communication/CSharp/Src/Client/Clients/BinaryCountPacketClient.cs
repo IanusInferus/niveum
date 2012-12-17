@@ -11,25 +11,26 @@ using Communication.Binary;
 
 namespace Client
 {
-    public class BinaryCountPacketClientContext
-    {
-        public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
-
-        public int State = 0;
-        // 0 初始状态
-        // 1 已读取NameLength
-        // 2 已读取CommandHash
-        // 3 已读取Name
-        // 4 已读取ParametersLength
-
-        public Int32 CommandNameLength = 0;
-        public String CommandName = "";
-        public UInt32 CommandHash = 0;
-        public Int32 ParametersLength = 0;
-    }
-
     public class BinaryCountPacketClient : ITcpVirtualTransportClient
     {
+        private class Context
+        {
+            public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
+            public List<Byte> WriteBuffer = new List<Byte>();
+
+            public int State = 0;
+            // 0 初始状态
+            // 1 已读取NameLength
+            // 2 已读取CommandHash
+            // 3 已读取Name
+            // 4 已读取ParametersLength
+
+            public Int32 CommandNameLength = 0;
+            public String CommandName = "";
+            public UInt32 CommandHash = 0;
+            public Int32 ParametersLength = 0;
+        }
+
         private class BinaySender : IBinarySender
         {
             public Action<Byte[]> SendBytes;
@@ -52,12 +53,17 @@ namespace Client
             }
         }
 
+        private Context c;
         private BinarySerializationClient bc;
-        private BinaryCountPacketClientContext cc;
         public BinaryCountPacketClient()
         {
-            this.bc = new BinarySerializationClient(new BinaySender { SendBytes = Bytes => { if (this.ClientMethod != null) { ClientMethod(Bytes); } } });
-            this.cc = new BinaryCountPacketClientContext();
+            this.c = new Context();
+            Action<Byte[]> SendBytes = Bytes =>
+            {
+                c.WriteBuffer.AddRange(Bytes);
+                if (this.ClientMethod != null) { ClientMethod(); }
+            };
+            this.bc = new BinarySerializationClient(new BinaySender { SendBytes = SendBytes });
         }
 
         public IApplicationClient ApplicationClient
@@ -70,21 +76,28 @@ namespace Client
 
         public ArraySegment<Byte> GetReadBuffer()
         {
-            return cc.ReadBuffer;
+            return c.ReadBuffer;
+        }
+
+        public Byte[] TakeWriteBuffer()
+        {
+            var r = c.WriteBuffer.ToArray();
+            c.WriteBuffer = new List<Byte>();
+            return r;
         }
 
         public TcpVirtualTransportClientHandleResult Handle(int Count)
         {
             var ret = TcpVirtualTransportClientHandleResult.CreateContinue();
 
-            var Buffer = cc.ReadBuffer.Array;
-            var FirstPosition = cc.ReadBuffer.Offset;
-            var BufferLength = cc.ReadBuffer.Offset + cc.ReadBuffer.Count;
+            var Buffer = c.ReadBuffer.Array;
+            var FirstPosition = c.ReadBuffer.Offset;
+            var BufferLength = c.ReadBuffer.Offset + c.ReadBuffer.Count;
             BufferLength += Count;
 
             while (true)
             {
-                var r = TryShift(cc, Buffer, FirstPosition, BufferLength - FirstPosition);
+                var r = TryShift(c, Buffer, FirstPosition, BufferLength - FirstPosition);
                 if (r == null)
                 {
                     break;
@@ -117,18 +130,18 @@ namespace Client
             }
             if (FirstPosition >= BufferLength)
             {
-                cc.ReadBuffer = new ArraySegment<Byte>(Buffer, 0, 0);
+                c.ReadBuffer = new ArraySegment<Byte>(Buffer, 0, 0);
             }
             else
             {
-                cc.ReadBuffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
+                c.ReadBuffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
             }
 
             return ret;
         }
 
         public UInt64 Hash { get { return ApplicationClient.Hash; } }
-        public event Action<Byte[]> ClientMethod;
+        public event Action ClientMethod;
 
         private class Command
         {
@@ -142,7 +155,7 @@ namespace Client
             public int Position;
         }
 
-        private static TryShiftResult TryShift(BinaryCountPacketClientContext bc, Byte[] Buffer, int Position, int Length)
+        private static TryShiftResult TryShift(Context bc, Byte[] Buffer, int Position, int Length)
         {
             if (bc.State == 0)
             {

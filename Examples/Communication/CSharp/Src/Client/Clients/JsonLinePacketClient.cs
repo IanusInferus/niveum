@@ -11,13 +11,14 @@ using Communication.Json;
 
 namespace Client
 {
-    public class JsonLinePacketClientContext
-    {
-        public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
-    }
-
     public class JsonLinePacketClient : ITcpVirtualTransportClient
     {
+        private class Context
+        {
+            public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
+            public List<Byte> WriteBuffer = new List<Byte>();
+        }
+
         private class JsonSender : IJsonSender
         {
             public Action<Byte[]> SendBytes;
@@ -30,12 +31,17 @@ namespace Client
             }
         }
 
+        private Context c;
         private JsonSerializationClient jc;
-        private JsonLinePacketClientContext cc;
         public JsonLinePacketClient()
         {
-            this.jc = new JsonSerializationClient(new JsonSender { SendBytes = Bytes => { if (this.ClientMethod != null) { ClientMethod(Bytes); } } });
-            this.cc = new JsonLinePacketClientContext();
+            this.c = new Context();
+            Action<Byte[]> SendBytes = Bytes =>
+            {
+                c.WriteBuffer.AddRange(Bytes);
+                if (this.ClientMethod != null) { ClientMethod(); }
+            };
+            this.jc = new JsonSerializationClient(new JsonSender { SendBytes = SendBytes });
         }
 
         public IApplicationClient ApplicationClient
@@ -48,16 +54,23 @@ namespace Client
 
         public ArraySegment<Byte> GetReadBuffer()
         {
-            return cc.ReadBuffer;
+            return c.ReadBuffer;
+        }
+
+        public Byte[] TakeWriteBuffer()
+        {
+            var r = c.WriteBuffer.ToArray();
+            c.WriteBuffer = new List<Byte>();
+            return r;
         }
 
         public TcpVirtualTransportClientHandleResult Handle(int Count)
         {
             var ret = TcpVirtualTransportClientHandleResult.CreateContinue();
 
-            var Buffer = cc.ReadBuffer.Array;
-            var FirstPosition = cc.ReadBuffer.Offset;
-            var BufferLength = cc.ReadBuffer.Offset + cc.ReadBuffer.Count;
+            var Buffer = c.ReadBuffer.Array;
+            var FirstPosition = c.ReadBuffer.Offset;
+            var BufferLength = c.ReadBuffer.Offset + c.ReadBuffer.Count;
             var CheckPosition = FirstPosition;
             BufferLength += Count;
 
@@ -107,18 +120,18 @@ namespace Client
             }
             if (FirstPosition >= BufferLength)
             {
-                cc.ReadBuffer = new ArraySegment<Byte>(Buffer, 0, 0);
+                c.ReadBuffer = new ArraySegment<Byte>(Buffer, 0, 0);
             }
             else
             {
-                cc.ReadBuffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
+                c.ReadBuffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
             }
 
             return ret;
         }
 
         public UInt64 Hash { get { return ApplicationClient.Hash; } }
-        public event Action<Byte[]> ClientMethod;
+        public event Action ClientMethod;
 
         private static Regex r = new Regex(@"^/svr\s+(?<Name>\S+)(\s+(?<Params>.*))?$", RegexOptions.ExplicitCapture); //Regex是线程安全的
         private static Regex rName = new Regex(@"^(?<CommandName>.*?)@(?<CommandHash>.*)$", RegexOptions.ExplicitCapture); //Regex是线程安全的
@@ -138,7 +151,7 @@ namespace Client
             var mName = rName.Match(Name);
             if (!mName.Success) { return Optional<Command>.Empty; }
             var CommandName = mName.Result("${CommandName}");
-            var CommandHash = UInt32.Parse(mName.Result("${CommandHash}"), System.Globalization.NumberStyles.HexNumber);
+            var CommandHash = UInt32.Parse(mName.Result("${CommandHash}"), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
             var Parameters = m.Result("${Params}") ?? "";
             if (Parameters == "") { Parameters = "{}"; }
 
