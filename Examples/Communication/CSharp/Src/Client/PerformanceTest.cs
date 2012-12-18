@@ -53,7 +53,7 @@ namespace Client
             });
         }
 
-        public static void TestForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumRequestPerUser, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test)
+        public static void TestTcpForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumRequestPerUser, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test)
         {
             var tll = new Object();
             var tl = new List<Task>();
@@ -189,28 +189,200 @@ namespace Client
             Console.WriteLine("{0}: {1} Users, {2} Request/User, {3} ms", Title, NumUser, NumRequestPerUser, TimeDiff);
         }
 
-        public static int DoTest(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
+        public static void TestHttpForNumUser(String UrlPrefix, String ServiceVirtualPath, int NumRequestPerUser, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test)
         {
-            TestForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestAdd", TestAdd);
-            TestForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestMultiply", TestMultiply);
-            TestForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestText", TestText);
+            var tll = new Object();
+            var tl = new List<Task>();
+            var bcl = new List<HttpClient>();
+            var ccl = new List<ClientContext>();
+            var vConnected = new LockedVariable<int>(0);
+            var vCompleted = new LockedVariable<int>(0);
+            var Check = new AutoResetEvent(false);
+
+            var vError = new LockedVariable<int>(0);
+
+            for (int k = 0; k < NumUser; k += 1)
+            {
+                Action Completed = null;
+
+                var n = k;
+                var Lockee = new Object();
+                var bc = new HttpClient(UrlPrefix, ServiceVirtualPath);
+                var cc = new ClientContext();
+                bc.InnerClient.Error += e =>
+                {
+                    var m = "调用'" + e.CommandName + "'发生错误:" + e.Message;
+                    Console.WriteLine(m);
+                };
+                Action<Exception> HandleError = ex =>
+                {
+                    int OldValue = 0;
+                    vError.Update(v =>
+                    {
+                        OldValue = v;
+                        return v + 1;
+                    });
+                    if (OldValue <= 10)
+                    {
+                        Console.WriteLine("{0}:{1}".Formats(n, ex.Message));
+                    }
+                    vCompleted.Update(i => i + 1);
+                    Check.Set();
+                };
+                lock (Lockee)
+                {
+                    try
+                    {
+                        bc.InnerClient.ServerTime(new ServerTimeRequest { }, r =>
+                        {
+                            vConnected.Update(i => i + 1);
+                            Check.Set();
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        HandleError(ex);
+                    }
+                }
+                Action f = () =>
+                {
+                    lock (Lockee)
+                    {
+                        try
+                        {
+                            Test(NumUser, n, cc, bc.InnerClient, Completed);
+                        }
+                        catch (Exception ex)
+                        {
+                            HandleError(ex);
+                        }
+                    }
+                };
+                var t = new Task(f);
+                lock (tll)
+                {
+                    tl.Add(t);
+                }
+                bcl.Add(bc);
+                ccl.Add(cc);
+
+                int RequestCount = NumRequestPerUser;
+                Completed = () =>
+                {
+                    if (RequestCount > 0)
+                    {
+                        RequestCount -= 1;
+                        var tt = new Task(f);
+                        lock (tll)
+                        {
+                            tl.Add(t);
+                        }
+                        tt.Start();
+                        return;
+                    }
+                    vCompleted.Update(i => i + 1);
+                    Check.Set();
+                };
+            }
+
+            while (vConnected.Check(i => i != NumUser))
+            {
+                Check.WaitOne();
+            }
+
+            var Time = Environment.TickCount;
+
+            lock (tll)
+            {
+                foreach (var t in tl)
+                {
+                    t.Start();
+                }
+            }
+
+            while (vCompleted.Check(i => i != NumUser))
+            {
+                Check.WaitOne();
+            }
+
+            var TimeDiff = Environment.TickCount - Time;
+
+            Task.WaitAll(tl.ToArray());
+            foreach (var t in tl)
+            {
+                t.Dispose();
+            }
+
+            foreach (var bc in bcl)
+            {
+                try
+                {
+                    bc.InnerClient.Quit(new QuitRequest { }, r => { });
+                }
+                catch
+                {
+                }
+                bc.Dispose();
+            }
+
+            var NumError = vError.Check(v => v);
+            if (NumError > 0)
+            {
+                Console.WriteLine("{0}: {1} Errors", Title, NumError);
+            }
+            if (Title == "") { return; }
+            Console.WriteLine("{0}: {1} Users, {2} Request/User, {3} ms", Title, NumUser, NumRequestPerUser, TimeDiff);
+        }
+
+        public static int DoTestTcp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
+        {
+            TestTcpForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestAdd", TestAdd);
+            TestTcpForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestMultiply", TestMultiply);
+            TestTcpForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestText", TestText);
 
             Thread.Sleep(5000);
             for (int k = 0; k < 4; k += 1)
             {
-                TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestAdd", TestAdd);
+                TestTcpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestAdd", TestAdd);
             }
 
             Thread.Sleep(5000);
             for (int k = 0; k < 4; k += 1)
             {
-                TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestMultiply", TestMultiply);
+                TestTcpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestMultiply", TestMultiply);
             }
 
             Thread.Sleep(5000);
             for (int k = 0; k < 4; k += 1)
             {
-                TestForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestText", TestText);
+                TestTcpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestText", TestText);
+            }
+
+            return 0;
+        }
+
+        public static int DoTestHttp(String UrlPrefix, String ServiceVirtualPath)
+        {
+            TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 8, 1, "TestAdd", TestAdd);
+            TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 8, 1, "TestMultiply", TestMultiply);
+            TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 8, 1, "TestText", TestText);
+
+            Thread.Sleep(5000);
+            for (int k = 0; k < 4; k += 1)
+            {
+                TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 1 << (2 * k), 4096, "TestAdd", TestAdd);
+            }
+
+            Thread.Sleep(5000);
+            for (int k = 0; k < 4; k += 1)
+            {
+                TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 1 << (2 * k), 4096, "TestMultiply", TestMultiply);
+            }
+
+            Thread.Sleep(5000);
+            for (int k = 0; k < 4; k += 1)
+            {
+                TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 1 << (2 * k), 4096, "TestText", TestText);
             }
 
             return 0;
