@@ -121,15 +121,15 @@ namespace Client
 
                 if (UseLoadTest)
                 {
-                    LoadTest.DoTest(RemoteEndPoint, SerializationProtocolType);
+                    LoadTest.DoTestTcp(RemoteEndPoint, SerializationProtocolType);
                 }
                 else if (UsePerformanceTest)
                 {
-                    PerformanceTest.DoTest(RemoteEndPoint, SerializationProtocolType);
+                    PerformanceTest.DoTestTcp(RemoteEndPoint, SerializationProtocolType);
                 }
                 else if (UseStableTest)
                 {
-                    StableTest.DoTest(RemoteEndPoint, SerializationProtocolType);
+                    StableTest.DoTestTcp(RemoteEndPoint, SerializationProtocolType);
                 }
                 else
                 {
@@ -154,7 +154,22 @@ namespace Client
                     return -1;
                 }
 
-                RunHttp(UrlPrefix, ServiceVirtualPath, UseOld);
+                if (UseLoadTest)
+                {
+                    LoadTest.DoTestHttp(UrlPrefix, ServiceVirtualPath);
+                }
+                else if (UsePerformanceTest)
+                {
+                    PerformanceTest.DoTestHttp(UrlPrefix, ServiceVirtualPath);
+                }
+                else if (UseStableTest)
+                {
+                    StableTest.DoTestHttp(UrlPrefix, ServiceVirtualPath);
+                }
+                else
+                {
+                    RunHttp(UrlPrefix, ServiceVirtualPath, UseOld);
+                }
             }
 
             return 0;
@@ -171,7 +186,7 @@ namespace Client
         {
             Console.WriteLine(@"用法:");
             Console.WriteLine(@"Client [<Protocol=Binary|Json> [<IpAddress=127.0.0.1> <Port=8001>]] [/old|/load|/perf|/stable]");
-            Console.WriteLine(@"Client <Protocol=Http> [<UrlPrefix=http://localhost:8003/> <ServiceVirtualPath=cmd>] [/old]");
+            Console.WriteLine(@"Client <Protocol=Http> [<UrlPrefix=http://localhost:8003/> <ServiceVirtualPath=cmd>] [/old|/load|/perf|/stable]");
             Console.WriteLine(@"Protocol 通讯协议，可为Binary|Json|Http，默认为Binary");
             Console.WriteLine(@"IpAddress 服务器IP地址");
             Console.WriteLine(@"Port 服务器端口");
