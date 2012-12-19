@@ -6,15 +6,26 @@
     import flash.utils.ByteArray;
     import com.brooksandrus.utils.ISO8601Util;
     import communication.*;
-    import context.*;
 
     public class JsonSocketClient implements IJsonSender
     {
-        private var ci:IClientImplementation;
-        private var innerClientValue:JsonClient;
-        public function get innerClient():JsonClient { return innerClientValue; }
-        private var c:ClientContext;
-        public function get context():context.ClientContext { return c; }
+        private var innerClientValue:JsonSerializationClient;
+        public function get innerClient():IApplicationClient { return innerClientValue; }
+        public function set error(callback:Function):void
+		{
+			innerClient.error = function(e:communication.ErrorEvent):void
+			{
+				try
+				{
+					innerClient.dequeueCallback(e.commandName);
+				}
+				catch (err:Error)
+				{
+					trace(err);
+				}
+				callback(e);
+			};
+		}
 
         private var bindings:Vector.<Binding>
         private var bindingInfos:Vector.<BindingInfo>
@@ -51,9 +62,7 @@
         /// handleResult : (commandName : String, params : String) -> unit
         public function JsonSocketClient(bindings:Vector.<Binding>)
         {
-            c = new ClientContext();
-            ci = new ClientImplementation(c);
-            this.innerClientValue = new JsonClient(this, ci);
+            this.innerClientValue = new JsonSerializationClient(this);
             if (bindings.length == 0)
             {
                 throw new RangeError("bindings");
@@ -64,7 +73,17 @@
             {
                 bindingInfos[i] = new BindingInfo();
             }
-            c.dequeueCallback = innerClientValue.dequeueCallback;
+			innerClient.error = function(e:communication.ErrorEvent):void
+			{
+				try
+				{
+					innerClient.dequeueCallback(e.commandName);
+				}
+				catch (err:Error)
+				{
+					trace(err);
+				}
+			};
             readBuffer = new ByteArray();
             writeBuffer = new ByteArray();
         }
@@ -159,6 +178,15 @@
             });
         }
 
+		private function toHex8String(v:uint):String
+		{
+			var s:String = v.toString(16).toUpperCase();
+			if (s.length >= 8)
+			{
+				return s;
+			}
+			return "00000000".substr(0, 8 - s.length) + s;
+		}
         private var iso:ISO8601Util = new ISO8601Util();
         public function sendChat(s:String):void
         {
@@ -180,22 +208,25 @@
             socket.flush();
         }
 
-        public function send(commandName:String, params:String):void
+        public function send(commandName:String, commandHash:uint, params:String):void
         {
             var ts:String = iso.formatExtendedDateTime(new Date()) + " /" + commandName;
             //trace(ts);
-            sendChat("/" + commandName + " " + params + "\r\n");
+            sendChat("/" + commandName + "@" + toHex8String(commandHash) + " " + params + "\r\n");
         }
 
         private function parseServerData(data:String):void
         {
             var arr:Array = data.split(" ", 3);
             var cmd:String = arr[1];
+			var cmdParts:Array = cmd.split("@", 2);
+			var cmdName:String = cmdParts[0];
+			var cmdHash:uint = (uint)(parseInt(cmdParts[1], 16));
             try
             {
                 var ts:String = iso.formatExtendedDateTime(new Date()) + " /svr " + cmd;
                 //trace(ts);
-                innerClientValue.handleResult(cmd, arr[2]);
+                innerClientValue.handleResult(cmdName, cmdHash, arr[2]);
             }
             catch (ex:Error)
             {

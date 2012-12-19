@@ -3,7 +3,7 @@
 //  File:        Main.as
 //  Location:    Yuki.Examples <ActionScript>
 //  Description: 聊天客户端
-//  Version:     2012.04.24.
+//  Version:     2012.12.19.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -11,7 +11,6 @@
 
 package
 {
-    import context.ClientContext;
     import flash.display.Sprite;
     import flash.events.Event;
     import communication.*;
@@ -56,16 +55,12 @@ package
             bindings.push(binding);
             var bsc:BinarySocketClient = new BinarySocketClient(bindings);
             bsc.doConnect();
-            var bc:BinaryClient = bsc.innerClient;
-            var req:SendMessageRequest = new SendMessageRequest();
-            req.content = "Hello.";
-            bc.sendMessage(req, function(r:SendMessageReply):void
-            {
-               if (r.onTooLong)
-               {
-                   trace("消息过长。");
-               }
-            });
+			bsc.innerClient.error = function(e:ErrorEvent):void
+			{
+				var m:String = "调用'" + e.commandName + "'发生错误:" + e.message;
+				trace(m);
+			}
+			ReadLineAndSendLoop(bsc.innerClient);
         }
 
         public function EnableJsonClient():void
@@ -73,20 +68,33 @@ package
             var bindings:Vector.<Binding> = new Vector.<Binding>();
             var binding:Binding = new Binding();
             binding.host = "localhost";
-            binding.port = 8001;
+            binding.port = 8002;
             bindings.push(binding);
             var jsc:JsonSocketClient = new JsonSocketClient(bindings);
             jsc.doConnect();
-            var jc:JsonClient = jsc.innerClient;
+			jsc.innerClient.error = function(e:ErrorEvent):void
+			{
+				var m:String = "调用'" + e.commandName + "'发生错误:" + e.message;
+				trace(m);
+			}
+			ReadLineAndSendLoop(jsc.innerClient);
+        }
+
+		public function ReadLineAndSendLoop(InnerClient:IApplicationClient):void
+		{
+			InnerClient.messageReceived = function(e:MessageReceivedEvent):void
+			{
+				trace(e.content);
+			}
             var req:SendMessageRequest = new SendMessageRequest();
             req.content = "Hello.";
-            jc.sendMessage(req, function(r:SendMessageReply):void
+            InnerClient.sendMessage(req, function(r:SendMessageReply):void
             {
                if (r.onTooLong)
                {
                    trace("消息过长。");
                }
             });
-        }
+		}
     }
 }

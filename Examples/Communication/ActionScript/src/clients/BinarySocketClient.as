@@ -6,15 +6,26 @@
     import flash.utils.ByteArray;
     import com.brooksandrus.utils.ISO8601Util;
     import communication.*;
-    import context.*;
 
     public class BinarySocketClient implements IBinarySender
     {
-        private var ci:IClientImplementation;
-        private var innerClientValue:BinaryClient;
-        public function get innerClient():BinaryClient { return innerClientValue; }
-        private var c:ClientContext;
-        public function get context():context.ClientContext { return c; }
+        private var innerClientValue:BinarySerializationClient;
+        public function get innerClient():IApplicationClient { return innerClientValue; }
+        public function set error(callback:Function):void
+		{
+			innerClient.error = function(e:communication.ErrorEvent):void
+			{
+				try
+				{
+					innerClient.dequeueCallback(e.commandName);
+				}
+				catch (err:Error)
+				{
+					trace(err);
+				}
+				callback(e);
+			};
+		}
 
         private var bindings:Vector.<Binding>
         private var bindingInfos:Vector.<BindingInfo>
@@ -53,9 +64,7 @@
         /// handleResult : (commandName : String, params : String) -> unit
         public function BinarySocketClient(bindings:Vector.<Binding>)
         {
-            c = new ClientContext();
-            ci = new ClientImplementation(c);
-            this.innerClientValue = new BinaryClient(this, ci);
+            this.innerClientValue = new BinarySerializationClient(this);
             if (bindings.length == 0)
             {
                 throw new RangeError("bindings");
@@ -66,7 +75,17 @@
             {
                 bindingInfos[i] = new BindingInfo();
             }
-            c.dequeueCallback = innerClientValue.dequeueCallback;
+			innerClient.error = function(e:communication.ErrorEvent):void
+			{
+				try
+				{
+					innerClient.dequeueCallback(e.commandName);
+				}
+				catch (err:Error)
+				{
+					trace(err);
+				}
+			};
             readBuffer = new ByteArray();
             readBuffer.length = 8 * 1024;
             readBufferLength = 0;
