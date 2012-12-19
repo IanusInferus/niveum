@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构ActionScript3.0 JSON通讯模板数据
-      Version:     2012.12.13.
+      Version:     2012.12.19.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -48,23 +48,21 @@ ObjectSchemaTemplate
                 $String
                     public interface IJsonSender
                     {
-                        function send(commandName:String, parameters:String):void;
+                        function send(commandName:String, commandHash:uint, parameters:String):void;
                     }
         Template
-            Name JsonClient
-            //Parameters: ${NumClientCommand}, ${Hash}, ${Client_ServerCommandHandles}, ${Client_ClientCommandHandles}, ${Client_ClientCommandDeques}, ${Client_ClientCommands}
+            Name JsonSerializationClient
+            //Parameters: ${NumClientCommand}, ${Hash}, ${Client_ServerCommandHandles}, ${Client_ClientCommandHandles}, ${Client_ClientCommandDeques}, ${Client_Commands}
             Value
                 $String
-                    public class JsonClient
+                    public class JsonSerializationClient implements IApplicationClient
                     {
                         private var s:IJsonSender;
-                        private var ci:IClientImplementation;
                         private var requests:Vector.<Vector.<Function>>;
 
-                        public function JsonClient(s:IJsonSender, ci:IClientImplementation)
+                        public function JsonSerializationClient(s:IJsonSender)
                         {
                             this.s = s;
-                            this.ci = ci;
                             requests = new Vector.<Vector.<Function>>();
                             for (var k:int = 0; k < ${NumClientCommand}; k += 1)
                             {
@@ -77,7 +75,7 @@ ObjectSchemaTemplate
                             return "${Hash}";
                         }
 
-                        public function handleResult(commandName:String, parameters:String):void
+                        public function handleResult(commandName:String, commandHash:uint, parameters:String):void
                         {
                             switch (commandName)
                             {
@@ -107,26 +105,37 @@ ObjectSchemaTemplate
                             dequeueCallbackInner(commandName);
                         }
 
-                        ${Client_ClientCommands}
+                        ${Client_Commands}
                     }
         Template
-            Name JsonClient_ServerCommandHandle
-            //Parameters: ${Name}
+            Name JsonSerializationClient_ServerCommandHandle
+            //Parameters: ${Name}, ${CommandHash}
             Value
                 $String
                     case "${Name}":
-                        ci.[[${name}]](JsonTranslator.[[${name}EventFromJson]](JSON.decode(parameters)));
-                        return;
+                        if (commandHash == 0x${CommandHash})
+                        {
+                            if ([[${name}Handler]] != null)
+                            {
+                                [[${name}Handler]](JsonTranslator.[[${name}EventFromJson]](JSON.decode(parameters)));
+                            }
+                            return;
+                        }
+                        break;
         Template
-            Name JsonClient_ClientCommandHandle
-            //Parameters: ${Name}
+            Name JsonSerializationClient_ClientCommandHandle
+            //Parameters: ${Name}, ${CommandHash}
             Value
                 $String
                     case "${Name}":
-                        callback(JsonTranslator.[[${name}ReplyFromJson]](JSON.decode(parameters)));
-                        return;
+                        if (commandHash == 0x${CommandHash})
+                        {
+                            callback(JsonTranslator.[[${name}ReplyFromJson]](JSON.decode(parameters)));
+                            return;
+                        }
+                        break;
         Template
-            Name JsonClient_ClientCommandDeque
+            Name JsonSerializationClient_ClientCommandDeque
             //Parameters: ${Name}, ${ClientCommandIndex}
             Value
                 $String
@@ -134,14 +143,20 @@ ObjectSchemaTemplate
                         var [[r${ClientCommandIndex}]]:Vector.<Function> = requests[${ClientCommandIndex}];
                         return [[r${ClientCommandIndex}]].shift();
         Template
-            Name JsonClient_ClientCommand
-            //Parameters: ${Name}, ${ClientCommandIndex}, ${XmlComment}
+            Name JsonSerializationClient_ClientCommand
+            //Parameters: ${Name}, ${CommandHash}, ${ClientCommandIndex}
             Value
                 $String
-                    ${XmlComment}
                     public function [[${name}]](r:[[${Name}Request]], callback:Function):void
                     {
                         var ra:Vector.<Function> = requests[${ClientCommandIndex}];
-                        s.send("${Name}", JSON.encode(JsonTranslator.[[${name}RequestToJson]](r)));
+                        s.send("${Name}", 0x${CommandHash}, JSON.encode(JsonTranslator.[[${name}RequestToJson]](r)));
                         ra.push(callback);
                     }
+        Template
+            Name JsonSerializationClient_ServerCommand
+            //Parameters: ${Name}
+            Value
+                $String
+                    private var [[${name}Handler]]:Function;
+                    public function set [[${name}]](callback:Function):void { [[${name}Handler]] = callback; }
