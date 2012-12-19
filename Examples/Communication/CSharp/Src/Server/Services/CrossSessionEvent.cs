@@ -7,12 +7,21 @@ namespace Server.Services
 {
     public partial class ServerImplementation
     {
-        private void RegisterCrossSessionEvent()
+        public void RegisterCrossSessionEvents()
         {
             lock (c.SessionLock)
             {
-                c.MessageReceived += e => { if (MessageReceived != null) { MessageReceived(e); } };
-                c.TestMessageReceived += e => { if (TestMessageReceived != null) { TestMessageReceived(e); } };
+                c.MessageReceived = e => { if (MessageReceived != null) { MessageReceived(e); } };
+                c.TestMessageReceived = e => { if (TestMessageReceived != null) { TestMessageReceived(e); } };
+            }
+        }
+
+        public void UnregisterCrossSessionEvents()
+        {
+            lock (c.SessionLock)
+            {
+                c.MessageReceived = null;
+                c.TestMessageReceived = null;
             }
         }
     }

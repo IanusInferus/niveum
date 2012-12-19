@@ -112,6 +112,9 @@ namespace Client
 
         public static void TestTcpForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test, Action<int, int, ClientContext, IApplicationClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
         {
+            Console.Write("{0}: ", Title);
+            Console.Out.Flush();
+
             var tl = new List<Task>();
             var bcl = new List<TcpClient>();
             var ccl = new List<ClientContext>();
@@ -226,14 +229,16 @@ namespace Client
             var NumError = vError.Check(v => v);
             if (NumError > 0)
             {
-                Console.WriteLine("{0}: {1} Errors", Title, NumError);
+                Console.WriteLine("{0} Errors", NumError);
             }
-            if (Title == "") { return; }
-            Console.WriteLine("{0}: {1} Users, {2} ms", Title, NumUser, TimeDiff);
+            Console.WriteLine("{0} Users, {1} ms", NumUser, TimeDiff);
         }
 
         public static void TestHttpForNumUser(String UrlPrefix, String ServiceVirtualPath, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test, Action<int, int, ClientContext, IApplicationClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
         {
+            Console.Write("{0}: ", Title);
+            Console.Out.Flush();
+
             var tl = new List<Task>();
             var bcl = new List<HttpClient>();
             var ccl = new List<ClientContext>();
@@ -345,10 +350,9 @@ namespace Client
             var NumError = vError.Check(v => v);
             if (NumError > 0)
             {
-                Console.WriteLine("{0}: {1} Errors", Title, NumError);
+                Console.WriteLine("{0} Errors", NumError);
             }
-            if (Title == "") { return; }
-            Console.WriteLine("{0}: {1} Users, {2} ms", Title, NumUser, TimeDiff);
+            Console.WriteLine("{0} Users, {1} ms", NumUser, TimeDiff);
         }
 
         public static int DoTestTcp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
@@ -359,36 +363,36 @@ namespace Client
             TestTcpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestText", TestText);
             Thread.Sleep(1000);
             TestTcpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMessage", TestMessage, TestMessageInitializeClientContext, TestMessageFinalCheck);
-
             Thread.Sleep(5000);
+
             for (int k = 0; k < 8; k += 1)
             {
                 TestTcpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestQuit", TestQuit);
             }
-
             Thread.Sleep(5000);
+
             for (int k = 0; k < 8; k += 1)
             {
                 TestTcpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestAdd", TestAdd);
             }
-
             Thread.Sleep(5000);
+
             for (int k = 0; k < 7; k += 1)
             {
                 TestTcpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestMultiply", TestMultiply);
             }
-
             Thread.Sleep(5000);
+
             for (int k = 0; k < 7; k += 1)
             {
                 TestTcpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestText", TestText);
             }
+            Thread.Sleep(10000);
 
-            Thread.Sleep(5000);
             for (int k = 0; k < 6; k += 1)
             {
-                Thread.Sleep(1000);
                 TestTcpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestMessage", TestMessage, TestMessageInitializeClientContext, TestMessageFinalCheck);
+                Thread.Sleep(1000);
             }
 
             return 0;
@@ -400,26 +404,26 @@ namespace Client
             TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 64, "TestAdd", TestAdd);
             TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 64, "TestMultiply", TestMultiply);
             TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 64, "TestText", TestText);
-
             Thread.Sleep(5000);
+
             for (int k = 0; k < 8; k += 1)
             {
                 TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 1 << (2 * k), "TestQuit", TestQuit);
             }
-
             Thread.Sleep(5000);
+
             for (int k = 0; k < 8; k += 1)
             {
                 TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 1 << (2 * k), "TestAdd", TestAdd);
             }
-
             Thread.Sleep(5000);
+
             for (int k = 0; k < 7; k += 1)
             {
                 TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 1 << (2 * k), "TestMultiply", TestMultiply);
             }
-
             Thread.Sleep(5000);
+
             for (int k = 0; k < 7; k += 1)
             {
                 TestHttpForNumUser(UrlPrefix, ServiceVirtualPath, 1 << (2 * k), "TestText", TestText);

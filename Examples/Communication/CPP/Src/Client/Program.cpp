@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2012.12.14.
+//  Version:     2012.12.19.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -13,7 +13,6 @@
 #include "Communication.h"
 #include "UtfEncoding.h"
 #include "CommunicationBinary.h"
-#include "ClientImplementation.h"
 #include "Clients/BinarySocketClient.h"
 
 #include <exception>
@@ -71,11 +70,59 @@ namespace Client
             std::wprintf(L"%ls\n", L"Port 服务器端口，默认为8001");
         }
 
+        static void ReadLineAndSendLoop(std::shared_ptr<Communication::IApplicationClient> InnerClient, boost::mutex &Lockee)
+        {
+            auto OriginalError = InnerClient->Error;
+            InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
+            {
+                if (OriginalError != nullptr)
+                {
+                    OriginalError(e);
+                }
+                auto m = L"调用'" + e->CommandName + L"'发生错误:" + e->Message;
+                wprintf(L"%ls\n", m.c_str());
+            };
+            InnerClient->MessageReceived = [=](std::shared_ptr<Communication::MessageReceivedEvent> e)
+            {
+                wprintf(L"%ls\n", e->Content.c_str());
+            };
+
+            while (true)
+            {
+                std::wstring Line;
+                std::getline(std::wcin, Line);
+
+                {
+                    boost::unique_lock<boost::mutex> Lock(Lockee);
+                    if (Line == L"exit") { break; }
+                    if (Line == L"shutdown")
+                    {
+                        InnerClient->Shutdown(std::make_shared<Communication::ShutdownRequest>(), [](std::shared_ptr<Communication::ShutdownReply> r)
+                        {
+                            if (r->OnSuccess())
+                            {
+                                std::wprintf(L"%ls\n", L"服务器关闭。");
+                            }
+                        });
+                        break;
+                    }
+                    auto Request = std::make_shared<Communication::SendMessageRequest>();
+                    Request->Content = Line;
+                    InnerClient->SendMessage(Request, [](std::shared_ptr<Communication::SendMessageReply> r)
+                    {
+                        if (r->OnTooLong())
+                        {
+                            std::wprintf(L"%ls\n", L"消息过长。");
+                        }
+                    });
+                }
+            }
+        }
+
         static void Run(boost::asio::ip::tcp::endpoint RemoteEndPoint)
         {
             boost::asio::io_service IoService;
-            auto ci = std::make_shared<ClientImplementation>();
-            auto bsc = std::make_shared<BinarySocketClient>(IoService, RemoteEndPoint, ci);
+            auto bsc = std::make_shared<BinarySocketClient>(IoService, RemoteEndPoint);
             bsc->Connect();
             std::wprintf(L"%ls\n", L"连接成功。");
 
@@ -89,36 +136,7 @@ namespace Client
             
             boost::thread t([&]() { IoService.run(); });
 
-            while (true)
-            {
-                std::wstring Line;
-                std::getline(std::wcin, Line);
-
-                {
-                    boost::unique_lock<boost::mutex> Lock(Lockee);
-                    if (Line == L"exit") { break; }
-                    if (Line == L"shutdown")
-                    {
-                        bsc->InnerClient->Shutdown(std::make_shared<Communication::ShutdownRequest>(), [](std::shared_ptr<Communication::ShutdownReply> r)
-                        {
-                            if (r->OnSuccess())
-                            {
-                                std::wprintf(L"%ls\n", L"服务器关闭。");
-                            }
-                        });
-                        break;
-                    }
-                    auto Request = std::make_shared<Communication::SendMessageRequest>();
-                    Request->Content = Line;
-                    bsc->InnerClient->SendMessage(Request, [](std::shared_ptr<Communication::SendMessageReply> r)
-                    {
-                        if (r->OnTooLong())
-                        {
-                            std::wprintf(L"%ls\n", L"消息过长。");
-                        }
-                    });
-                }
-            }
+            ReadLineAndSendLoop(bsc->InnerClient, Lockee);
 
             bsc->Close();
             t.join();

@@ -10,14 +10,14 @@
     <Filter Include="Services">
       <UniqueIdentifier>{7c7e2ead-57ce-4294-9e62-acd8cd8b9f58}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Net">
-      <UniqueIdentifier>{53703e91-bd37-40c4-a4c0-604c00d77021}</UniqueIdentifier>
-    </Filter>
     <Filter Include="BaseSystem">
       <UniqueIdentifier>{b13b98e4-2307-4711-a503-7011a8ccc28a}</UniqueIdentifier>
     </Filter>
     <Filter Include="Util">
       <UniqueIdentifier>{c0b87016-8ebf-4a4d-8408-1ddc70c37728}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Net">
+      <UniqueIdentifier>{de601411-e602-43b6-8dc7-9233c114fe56}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -63,13 +63,10 @@
     <ClInclude Include="Util\ConsoleLogger.h">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="Net\TcpServer.h">
-      <Filter>Net</Filter>
-    </ClInclude>
-    <ClInclude Include="Net\TcpSession.h">
-      <Filter>Net</Filter>
-    </ClInclude>
     <ClInclude Include="UtfEncoding.h" />
+    <ClInclude Include="Net\StreamedAsyncSocket.h">
+      <Filter>Net</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
@@ -88,12 +85,6 @@
     </ClCompile>
     <ClCompile Include="Servers\BinarySocketSession.cpp">
       <Filter>Servers</Filter>
-    </ClCompile>
-    <ClCompile Include="Net\TcpServer.cpp">
-      <Filter>Net</Filter>
-    </ClCompile>
-    <ClCompile Include="Net\TcpSession.cpp">
-      <Filter>Net</Filter>
     </ClCompile>
     <ClCompile Include="Services\Admin.cpp">
       <Filter>Services</Filter>

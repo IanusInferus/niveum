@@ -3,11 +3,13 @@
 
 #include "Utility.h"
 #include "BaseSystem/ThreadLocalRandom.h"
+#include "BaseSystem/ThreadLocalVariable.h"
+
+#include <stdexcept>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace Server
 {
-    PRIVATE Communication::BaseSystem::ThreadLocalRandom RNG;
-
     class BinarySocketSession::CommandBody
     {
     public:
@@ -56,6 +58,173 @@ namespace Server
         Boolean OnWrite() { return _Tag == SessionCommandTag_Write; }
         Boolean OnReadRaw() { return _Tag == SessionCommandTag_ReadRaw; }
     };
+
+    PRIVATE std::shared_ptr<Communication::BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>> bsss(std::make_shared<Communication::BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>>([]() { return std::make_shared<Communication::Binary::BinarySerializationServer>(); }));
+
+    PRIVATE Communication::BaseSystem::ThreadLocalRandom RNG;
+
+    BinarySocketSession::BinarySocketSession(boost::asio::io_service &IoService, std::shared_ptr<BinarySocketServer> Server, std::shared_ptr<boost::asio::ip::tcp::socket> s)
+        :
+        IoService(IoService),
+        Socket(std::make_shared<Communication::Net::StreamedAsyncSocket>(s)),
+        IsDisposed(false),
+        IdleTimeout(Communication::BaseSystem::Optional<int>::CreateNotHasValue()),
+        Server(Server),
+        si(nullptr),
+        bssed(nullptr),
+        NumBadCommands(0),
+        Context(std::make_shared<SessionContext>()),
+        NumSessionCommandUpdated(std::make_shared<Communication::BaseSystem::AutoResetEvent>()),
+        NumSessionCommand(std::make_shared<Communication::BaseSystem::LockedVariable<int>>(0)),
+        IsRunningValue(false),
+        IsExitingValue(false),
+        bsm(std::make_shared<BufferStateMachine>()),
+        Buffer(std::make_shared<std::vector<uint8_t>>()),
+        BufferLength(0),
+        CommandQueue(std::make_shared<std::queue<std::shared_ptr<SessionCommand>>>())
+    {
+        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
+        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
+        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
+        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
+        Context->Quit = [=]() { StopAsync(); };
+        Buffer->resize(8 * 1024, 0);
+
+        si = std::make_shared<ServerImplementation>(Server->sc, Context);
+        si->RegisterCrossSessionEvents();
+        bssed = std::make_shared<Communication::Binary::BinarySerializationServerEventDispatcher>(si);
+        bssed->ServerEvent = [=](std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
+        {
+            WriteCommand(CommandName, CommandHash, Parameters);
+        };
+    }
+
+    BinarySocketSession::~BinarySocketSession()
+    {
+        Stop();
+    }
+
+    void BinarySocketSession::Start()
+    {
+        IsRunningValue.Update([=](bool b) -> bool
+        {
+            if (b)
+            {
+                throw std::logic_error("InvalidOperationException");
+            }
+            return true;
+        });
+
+        try
+        {
+            Context->RemoteEndPoint = RemoteEndPoint;
+            Server->SessionMappings.DoAction([=](std::shared_ptr<BinarySocketServer::TSessionMapping> &Mappings)
+            {
+                if (Mappings->count(Context) > 0)
+                {
+                    throw std::logic_error("InvalidOperationException");
+                }
+                Mappings->insert(std::pair<std::shared_ptr<SessionContext>, std::shared_ptr<BinarySocketSession>>(Context, this->shared_from_this()));
+            });
+
+            if (Server->GetEnableLogSystem())
+            {
+                auto e = std::make_shared<SessionLogEntry>();
+                e->RemoteEndPoint = RemoteEndPoint;
+                e->Token = Context->GetSessionTokenString();
+                e->Time = boost::posix_time::second_clock::universal_time();
+                e->Type = L"Sys";
+                e->Message = L"SessionEnter";
+                Server->RaiseSessionLog(e);
+            }
+            PushCommand(SessionCommand::CreateReadRaw());
+        }
+        catch (std::exception &ex)
+        {
+            OnCriticalError(ex);
+            StopAsync();
+        }
+    }
+
+    void BinarySocketSession::Stop()
+    {
+        if (IsDisposed) { return; }
+        IsDisposed = true;
+
+        IsExitingValue.Update([](bool b) { return true; });
+
+        if (Server != nullptr)
+        {
+            if (Server->GetEnableLogSystem())
+            {
+                auto e = std::make_shared<SessionLogEntry>();
+                e->RemoteEndPoint = RemoteEndPoint;
+                e->Token = Context->GetSessionTokenString();
+                e->Time = boost::posix_time::second_clock::universal_time();
+                e->Type = L"Sys";
+                e->Message = L"SessionExit";
+                Server->RaiseSessionLog(e);
+            }
+            Server->SessionMappings.DoAction([&](const std::shared_ptr<BinarySocketServer::TSessionMapping> &Mappings)
+            {
+                if (Mappings->count(Context) > 0)
+                {
+                    Mappings->erase(Context);
+                }
+            });
+        }
+
+        si->UnregisterCrossSessionEvents();
+
+        IsRunningValue.Update([=](bool b) { return false; });
+        while (NumSessionCommand->Check<bool>([](const int &n) { return n != 0; }))
+        {
+            NumSessionCommandUpdated->WaitOne();
+        }
+
+        if (Socket != nullptr)
+        {
+            Socket->ShutdownBoth();
+            if (Socket.use_count() != 1)
+            {
+                throw std::logic_error("InvalidOperationException");
+            }
+            Socket = nullptr;
+        }
+
+        if (Buffer != nullptr)
+        {
+            if (Buffer.use_count() != 1)
+            {
+                throw std::logic_error("InvalidOperationException");
+            }
+            Buffer = nullptr;
+        }
+
+        if (Server != nullptr)
+        {
+            Server = nullptr;
+        }
+
+        if (si != nullptr)
+        {
+            if (si.use_count() != 1)
+            {
+                throw std::logic_error("InvalidOperationException");
+            }
+            si = nullptr;
+        }
+        if (bssed != nullptr)
+        {
+            if (bssed.use_count() != 1)
+            {
+                throw std::logic_error("InvalidOperationException");
+            }
+            bssed = nullptr;
+        }
+
+        IsExitingValue.Update([=](bool b) { return false; });
+    }
 
     class BinarySocketSession::TryShiftResult
     {
@@ -200,71 +369,6 @@ namespace Server
         }
     };
 
-    BinarySocketSession::BinarySocketSession(boost::asio::io_service &IoService)
-        : Communication::Net::TcpSession(IoService),
-          NumBadCommands(0),
-          Context(std::make_shared<SessionContext>()),
-          NumAsyncOperationUpdated(std::make_shared<Communication::BaseSystem::AutoResetEvent>()),
-          NumAsyncOperation(std::make_shared<Communication::BaseSystem::LockedVariable<int>>(0)),
-          NumSessionCommandUpdated(std::make_shared<Communication::BaseSystem::AutoResetEvent>()),
-          NumSessionCommand(std::make_shared<Communication::BaseSystem::LockedVariable<int>>(0)),
-          IsRunningValue(false),
-          IsExitingValue(false),
-          bsm(std::make_shared<BufferStateMachine>()),
-          Buffer(std::make_shared<std::vector<uint8_t>>()),
-          BufferLength(0),
-          CommandQueue(std::make_shared<std::queue<std::shared_ptr<SessionCommand>>>())
-    {
-        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
-        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
-        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
-        Context->SessionToken->push_back(RNG.NextInt<std::uint8_t>(0, 255));
-        Context->Quit = [=]() { StopAsync(); };
-        Buffer->resize(8 * 1024, 0);
-    }
-
-    void BinarySocketSession::StartInner()
-    {
-        IsRunningValue.Update([=](bool b) -> bool
-        {
-            if (b)
-            {
-                throw std::logic_error("InvalidOperationException");
-            }
-            return true;
-        });
-
-        try
-        {
-            Context->RemoteEndPoint = RemoteEndPoint;
-            Server->SessionMappings.DoAction([=](std::shared_ptr<BinarySocketServer::TSessionMapping> &Mappings)
-            {
-                if (Mappings->count(Context) > 0)
-                {
-                    throw std::logic_error("InvalidOperationException");
-                }
-                Mappings->insert(std::pair<std::shared_ptr<SessionContext>, std::shared_ptr<BinarySocketSession>>(Context, this->shared_from_this()));
-            });
-
-            if (Server->GetEnableLogSystem())
-            {
-                auto e = std::make_shared<SessionLogEntry>();
-                e->RemoteEndPoint = RemoteEndPoint;
-                e->Token = Context->GetSessionTokenString();
-                e->Time = boost::posix_time::second_clock::universal_time();
-                e->Type = L"Sys";
-                e->Message = L"SessionEnter";
-                Server->RaiseSessionLog(e);
-            }
-            PushCommand(SessionCommand::CreateReadRaw());
-        }
-        catch (std::exception &ex)
-        {
-            OnCriticalError(ex);
-            StopAsync();
-        }
-    }
-
     void BinarySocketSession::MessageLoop(std::shared_ptr<SessionCommand> sc)
     {
         if (sc->OnRead())
@@ -281,16 +385,41 @@ namespace Server
             s.WriteBytes(cmd->Parameters);
             s.SetPosition(0);
             auto Bytes = s.ReadBytes(s.GetLength());
-            LockAsyncOperation();
-            SendAsync(Bytes, 0, Bytes->size(), [=]() { ReleaseAsyncOperation(); }, [=](const boost::system::error_code &se)
+            if (IdleTimeout->OnHasValue())
             {
-                if (!IsSocketErrorKnown(se))
+                auto Timer = std::make_shared<boost::asio::deadline_timer>(IoService);
+                Timer->expires_from_now(boost::posix_time::milliseconds(IdleTimeout->HasValue));
+                Timer->async_wait([=](const boost::system::error_code& error)
                 {
-                    OnCriticalError(std::logic_error(se.message()));
-                }
-                StopAsync();
-                ReleaseAsyncOperation();
-            });
+                    if (error == boost::system::errc::success)
+                    {
+                        if (Server != nullptr)
+                        {
+                            Server->NotifySessionQuit(this->shared_from_this());
+                        }
+                    }
+                });
+                Socket->SendAsync(Bytes, 0, Bytes->size(), [=]() { Timer->cancel(); }, [=](const boost::system::error_code &se)
+                {
+                    Timer->cancel();
+                    if (!IsSocketErrorKnown(se))
+                    {
+                        OnCriticalError(std::logic_error(se.message()));
+                    }
+                    StopAsync();
+                });
+            }
+            else
+            {
+                Socket->SendAsync(Bytes, 0, Bytes->size(), [=]() { }, [=](const boost::system::error_code &se)
+                {
+                    if (!IsSocketErrorKnown(se))
+                    {
+                        OnCriticalError(std::logic_error(se.message()));
+                    }
+                    StopAsync();
+                });
+            }
         }
         else if (sc->OnReadRaw())
         {
@@ -305,7 +434,6 @@ namespace Server
                     OnCriticalError(ex);
                     StopAsync();
                 }
-                ReleaseAsyncOperation();
             };
             auto Faulted = [=](const boost::system::error_code &se)
             {
@@ -314,11 +442,46 @@ namespace Server
                     OnCriticalError(std::logic_error(se.message()));
                 }
                 StopAsync();
-                ReleaseAsyncOperation();
             };
+            if (IdleTimeout->OnHasValue())
+            {
+                auto Timer = std::make_shared<boost::asio::deadline_timer>(IoService);
+                Timer->expires_from_now(boost::posix_time::milliseconds(IdleTimeout->HasValue));
+                Timer->async_wait([=](const boost::system::error_code& error)
+                {
+                    if (error == boost::system::errc::success)
+                    {
+                        if (Server != nullptr)
+                        {
+                            Server->NotifySessionQuit(this->shared_from_this());
+                        }
+                    }
+                });
+                auto Completed = [=](int Count)
+                {
+                    Timer->cancel();
+                    try
+                    {
+                        CompletedInner(Count);
+                    }
+                    catch (std::exception &ex)
+                    {
+                        OnCriticalError(ex);
+                        StopAsync();
+                    }
+                };
+                auto Faulted = [=](const boost::system::error_code &se)
+                {
+                    Timer->cancel();
+                    if (!IsSocketErrorKnown(se))
+                    {
+                        OnCriticalError(std::logic_error(se.message()));
+                    }
+                    StopAsync();
+                };
+            }
             if (IsExitingValue.Check<bool>([](const bool &s) { return s; })) { return; }
-            LockAsyncOperation();
-            ReceiveAsync(Buffer, BufferLength, Buffer->size() - BufferLength, Completed, Faulted);
+            Socket->ReceiveAsync(Buffer, BufferLength, Buffer->size() - BufferLength, Completed, Faulted);
         }
         else
         {
@@ -326,22 +489,6 @@ namespace Server
         }
     }
 
-    void BinarySocketSession::LockAsyncOperation()
-    {
-        NumAsyncOperation->Update([](const int &n) { return n + 1; });
-        NumAsyncOperationUpdated->Set();
-    }
-    int BinarySocketSession::ReleaseAsyncOperation()
-    {
-        int nValue = 0;
-        NumAsyncOperation->Update([&](const int &n) -> int
-        {
-            nValue = n - 1;
-            NumAsyncOperationUpdated->Set();
-            return n - 1;
-        });
-        return nValue;
-    }
     void BinarySocketSession::LockSessionCommand()
     {
         NumSessionCommand->Update([](const int &n) { return n + 1; });
@@ -369,10 +516,14 @@ namespace Server
                 if (q->size() > 0)
                 {
                     sc = q->front();
-                    q->pop();
                 }
             });
-            if (sc == nullptr) { return; }
+            if (sc == nullptr)
+            {
+                throw std::logic_error("InvalidOperation");
+            }
+
+            Communication::BaseSystem::AutoRelease Final([=]() { this->ReleaseSessionCommand(); });
             try
             {
                 MessageLoop(sc);
@@ -382,20 +533,23 @@ namespace Server
                 OnCriticalError(ex);
                 StopAsync();
             }
-            if (ReleaseSessionCommand() > 0)
+            CommandQueue.DoAction([&](std::shared_ptr<std::queue<std::shared_ptr<SessionCommand>>> &q)
             {
-                DoCommandAsync();
-            }
+                q->pop();
+                if (q->size() > 0)
+                {
+                    DoCommandAsync();
+                }
+            });
         };
         IoService.post(a);
     }
 
     void BinarySocketSession::PushCommand(std::shared_ptr<SessionCommand> sc)
     {
-        LockSessionCommand();
-
         CommandQueue.DoAction([&](std::shared_ptr<std::queue<std::shared_ptr<SessionCommand>>> &q)
         {
+            LockSessionCommand();
             q->push(sc);
             if (q->size() == 1)
             {
@@ -472,12 +626,12 @@ namespace Server
         auto CommandHash = cmd->CommandHash;
         auto Parameters = cmd->Parameters;
 
-        auto sv = Server->InnerServer();
+        auto sv = bsss->Value();
         if (sv->HasCommand(CommandName, CommandHash) && ((Server->GetCheckCommandAllowed() != nullptr) ? Server->GetCheckCommandAllowed()(Context, CommandName) : true))
         {
             auto a = [=]()
             {
-                auto s = sv->ExecuteCommand(*Context, CommandName, CommandHash, Parameters);
+                auto s = sv->ExecuteCommand(si, CommandName, CommandHash, Parameters);
                 WriteCommand(CommandName, CommandHash, s);
             };
 
@@ -534,7 +688,7 @@ namespace Server
     //线程安全
     void BinarySocketSession::RaiseError(std::wstring CommandName, std::wstring Message)
     {
-        Server->RaiseError(*Context, CommandName, Message);
+        si->RaiseError(CommandName, Message);
     }
     //线程安全
     void BinarySocketSession::RaiseUnknownError(std::wstring CommandName, const std::exception &ex)
@@ -542,11 +696,11 @@ namespace Server
         auto Info = s2w(ex.what());
         if (Server->GetClientDebug())
         {
-            Server->RaiseError(*Context, CommandName, Info);
+            si->RaiseError(CommandName, Info);
         }
         else
         {
-            Server->RaiseError(*Context, CommandName, L"Internal server error.");
+            si->RaiseError(CommandName, L"Internal server error.");
         }
         if (Server->GetEnableLogUnknownError())
         {
@@ -591,63 +745,10 @@ namespace Server
 
         if (Done) { return; }
 
-        auto ss = GetSocket();
-        if (ss != nullptr)
-        {
-            try
-            {
-                ss->shutdown(boost::asio::ip::tcp::socket::shutdown_receive);
-            }
-            catch (std::exception &)
-            {
-            }
-        }
-        if (NotifySessionQuit != nullptr)
-        {
-            NotifySessionQuit();
-        }
-    }
-
-    void BinarySocketSession::StopInner()
-    {
-        IsExitingValue.Update([](bool b) { return true; });
-
+        Socket->ShutdownReceive();
         if (Server != nullptr)
         {
-            if (Server->GetEnableLogSystem())
-            {
-                auto e = std::make_shared<SessionLogEntry>();
-                e->RemoteEndPoint = RemoteEndPoint;
-                e->Token = Context->GetSessionTokenString();
-                e->Time = boost::posix_time::second_clock::universal_time();
-                e->Type = L"Sys";
-                e->Message = L"SessionExit";
-                Server->RaiseSessionLog(e);
-            }
-            Server->SessionMappings.DoAction([&](const std::shared_ptr<BinarySocketServer::TSessionMapping> &Mappings)
-            {
-                if (Mappings->count(Context) > 0)
-                {
-                    Mappings->erase(Context);
-                }
-            });
+            Server->NotifySessionQuit(this->shared_from_this());
         }
-
-        IsRunningValue.Update([=](bool b) { return false; });
-        while (NumSessionCommand->Check<bool>([](const int &n) { return n != 0; }))
-        {
-            NumSessionCommandUpdated->WaitOne();
-        }
-        while (NumAsyncOperation->Check<bool>([](const int &n) { return n != 0; }))
-        {
-            NumAsyncOperationUpdated->WaitOne();
-        }
-
-        Buffer = nullptr;
-        if (Server != nullptr)
-        {
-            Server = nullptr;
-        }
-        IsExitingValue.Update([=](bool b) { return false; });
     }
 }

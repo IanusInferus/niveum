@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2012.12.18.
+//  Version:     2012.12.19.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //

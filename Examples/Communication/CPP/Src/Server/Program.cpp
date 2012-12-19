@@ -3,20 +3,20 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2012.06.18.
+//  Version:     2012.06.19.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
 //==========================================================================
 
-#include "BaseSystem/AutoResetEvent.h"
-#include "BaseSystem/Optional.h"
-#include "Util/ConsoleLogger.h"
 #include "Services/ServerImplementation.h"
 #include "Servers/BinarySocketSession.h"
 #include "Servers/BinarySocketServer.h"
 
 #include "Utility.h"
+#include "BaseSystem/AutoResetEvent.h"
+#include "BaseSystem/Optional.h"
+#include "Util/ConsoleLogger.h"
 
 #include <vector>
 #include <string>
@@ -41,9 +41,18 @@ namespace Server
         {
             DisplayTitle();
 
+            if (argc == 2)
+            {
+                auto v = s2w(argv[1]);
+                if (v == L"/?" || v == L"/help" || v == L"--help")
+                {
+                    DisplayInfo();
+                    return 0;
+                }
+            }
+
             if (argc == 3)
             {
-
                 Run(Parse<std::uint16_t>(s2w(argv[1])), !EqualIgnoreCase(s2w(argv[2]), L"/nolog"));
             }
             else if (argc == 2)

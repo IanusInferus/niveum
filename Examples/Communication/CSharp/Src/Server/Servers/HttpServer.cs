@@ -584,6 +584,23 @@ namespace Server
                                             NotifyListenerContextQuit(a);
                                             continue;
                                         }
+                                        if (Headers.ContainsKey("Accept-Charset"))
+                                        {
+                                            var AcceptCharsetParts = Headers["Accept-Charset"].Split(';');
+                                            if (AcceptCharsetParts.Length == 0)
+                                            {
+                                                a.Response.StatusCode = 400;
+                                                NotifyListenerContextQuit(a);
+                                                continue;
+                                            }
+                                            var EncodingNames = AcceptCharsetParts[0].Split(',').Select(n => n.Trim(' ')).ToArray();
+                                            if (!(EncodingNames.Contains("utf-8", StringComparer.OrdinalIgnoreCase) || EncodingNames.Contains("*", StringComparer.OrdinalIgnoreCase)))
+                                            {
+                                                a.Response.StatusCode = 400;
+                                                NotifyListenerContextQuit(a);
+                                                continue;
+                                            }
+                                        }
 
                                         var Keys = a.Request.QueryString.AllKeys.Where(k => k.Equals("sessionid", StringComparison.OrdinalIgnoreCase)).ToArray();
                                         if (Keys.Count() > 1)
