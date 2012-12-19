@@ -555,156 +555,175 @@ namespace Server
                                             break;
                                         }
 
-                                        if (a.Request.ContentLength64 < 0)
-                                        {
-                                            a.Response.StatusCode = 411;
-                                            NotifyListenerContextQuit(a);
-                                            continue;
-                                        }
-
-                                        if (a.Request.ContentLength64 > 8 * 1024)
-                                        {
-                                            a.Response.StatusCode = 413;
-                                            NotifyListenerContextQuit(a);
-                                            continue;
-                                        }
-
-                                        var BindingName = GetBindingName(a.Request.Url);
-                                        if (!BindingName.Equals(ServiceVirtualPathValue, StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            a.Response.StatusCode = 404;
-                                            NotifyListenerContextQuit(a);
-                                            continue;
-                                        }
-
-                                        var Headers = a.Request.Headers.AllKeys.ToDictionary(k => k, k => a.Request.Headers[k]);
-                                        if (Headers.ContainsKey("Range"))
-                                        {
-                                            a.Response.StatusCode = 400;
-                                            NotifyListenerContextQuit(a);
-                                            continue;
-                                        }
-                                        if (Headers.ContainsKey("Accept-Charset"))
-                                        {
-                                            var AcceptCharsetParts = Headers["Accept-Charset"].Split(';');
-                                            if (AcceptCharsetParts.Length == 0)
-                                            {
-                                                a.Response.StatusCode = 400;
-                                                NotifyListenerContextQuit(a);
-                                                continue;
-                                            }
-                                            var EncodingNames = AcceptCharsetParts[0].Split(',').Select(n => n.Trim(' ')).ToArray();
-                                            if (!(EncodingNames.Contains("utf-8", StringComparer.OrdinalIgnoreCase) || EncodingNames.Contains("*", StringComparer.OrdinalIgnoreCase)))
-                                            {
-                                                a.Response.StatusCode = 400;
-                                                NotifyListenerContextQuit(a);
-                                                continue;
-                                            }
-                                        }
-
-                                        var Keys = a.Request.QueryString.AllKeys.Where(k => k.Equals("sessionid", StringComparison.OrdinalIgnoreCase)).ToArray();
-                                        if (Keys.Count() > 1)
-                                        {
-                                            a.Response.StatusCode = 400;
-                                            NotifyListenerContextQuit(a);
-                                            continue;
-                                        }
-
                                         var e = (IPEndPoint)a.Request.RemoteEndPoint;
-                                        HttpSession s = null;
 
-                                        if (Keys.Count() == 1)
+                                        try
                                         {
-                                            var SessionId = a.Request.QueryString[Keys.Single()];
-                                            var Close = false;
-                                            SessionSets.DoAction
-                                            (
-                                                ss =>
-                                                {
-                                                    if (!ss.SessionIdToSession.ContainsKey(SessionId))
-                                                    {
-                                                        a.Response.StatusCode = 403;
-                                                        Close = true;
-                                                        return;
-                                                    }
-                                                    var CurrentSession = ss.SessionIdToSession[SessionId];
-                                                    if (!CurrentSession.RemoteEndPoint.Address.Equals(e.Address))
-                                                    {
-                                                        a.Response.StatusCode = 403;
-                                                        Close = true;
-                                                        return;
-                                                    }
-                                                    s = ss.SessionIdToSession[SessionId];
-                                                }
-                                            );
-                                            if (Close)
+                                            if (EnableLogSystem)
                                             {
+                                                RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Message = "RequestIn" });
+                                            }
+
+                                            if (a.Request.ContentLength64 < 0)
+                                            {
+                                                a.Response.StatusCode = 411;
                                                 NotifyListenerContextQuit(a);
                                                 continue;
                                             }
-                                            var NewSessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
-                                            SessionSets.DoAction
-                                            (
-                                                ss =>
-                                                {
-                                                    ss.SessionIdToSession.Remove(SessionId);
-                                                    ss.SessionIdToSession.Add(NewSessionId, s);
-                                                    ss.SessionToId[s] = NewSessionId;
-                                                }
-                                            );
-                                            if (!s.Push(a, NewSessionId))
+
+                                            if (a.Request.ContentLength64 > 8 * 1024)
                                             {
+                                                a.Response.StatusCode = 413;
                                                 NotifyListenerContextQuit(a);
                                                 continue;
                                             }
-                                            continue;
-                                        }
 
-                                        if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
-                                        {
-                                            PurifyOneInSession();
-                                        }
-                                        if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
-                                        {
-                                            a.Response.StatusCode = 503;
-                                            NotifyListenerContextQuit(a);
-                                            continue;
-                                        }
-
-                                        if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address] : 0) >= MaxConnectionsPerIPValue.Value))
-                                        {
-                                            a.Response.StatusCode = 503;
-                                            NotifyListenerContextQuit(a);
-                                            continue;
-                                        }
-
-                                        s = new HttpSession(this, e);
-
-                                        {
-                                            var SessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
-                                            SessionSets.DoAction
-                                            (
-                                                ss =>
-                                                {
-                                                    ss.Sessions.Add(s);
-                                                    if (ss.IpSessions.ContainsKey(e.Address))
-                                                    {
-                                                        ss.IpSessions[e.Address] += 1;
-                                                    }
-                                                    else
-                                                    {
-                                                        ss.IpSessions.Add(e.Address, 1);
-                                                    }
-                                                    ss.SessionIdToSession.Add(SessionId, s);
-                                                    ss.SessionToId.Add(s, SessionId);
-                                                }
-                                            );
-
-                                            s.Start();
-                                            if (!s.Push(a, SessionId))
+                                            var BindingName = GetBindingName(a.Request.Url);
+                                            if (!BindingName.Equals(ServiceVirtualPathValue, StringComparison.OrdinalIgnoreCase))
                                             {
+                                                a.Response.StatusCode = 404;
                                                 NotifyListenerContextQuit(a);
                                                 continue;
+                                            }
+
+                                            var Headers = a.Request.Headers.AllKeys.ToDictionary(k => k, k => a.Request.Headers[k]);
+                                            if (Headers.ContainsKey("Range"))
+                                            {
+                                                a.Response.StatusCode = 400;
+                                                NotifyListenerContextQuit(a);
+                                                continue;
+                                            }
+                                            if (Headers.ContainsKey("Accept-Charset"))
+                                            {
+                                                var AcceptCharsetParts = Headers["Accept-Charset"].Split(';');
+                                                if (AcceptCharsetParts.Length == 0)
+                                                {
+                                                    a.Response.StatusCode = 400;
+                                                    NotifyListenerContextQuit(a);
+                                                    continue;
+                                                }
+                                                var EncodingNames = AcceptCharsetParts[0].Split(',').Select(n => n.Trim(' ')).ToArray();
+                                                if (!(EncodingNames.Contains("utf-8", StringComparer.OrdinalIgnoreCase) || EncodingNames.Contains("*", StringComparer.OrdinalIgnoreCase)))
+                                                {
+                                                    a.Response.StatusCode = 400;
+                                                    NotifyListenerContextQuit(a);
+                                                    continue;
+                                                }
+                                            }
+
+                                            if (a.Request.QueryString != null)
+                                            {
+                                                var Keys = a.Request.QueryString.AllKeys.Where(k => k != null && k.Equals("sessionid", StringComparison.OrdinalIgnoreCase)).ToArray();
+                                                if (Keys.Count() > 1)
+                                                {
+                                                    a.Response.StatusCode = 400;
+                                                    NotifyListenerContextQuit(a);
+                                                    continue;
+                                                }
+
+                                                if (Keys.Count() == 1)
+                                                {
+                                                    HttpSession s = null;
+
+                                                    var SessionId = a.Request.QueryString[Keys.Single()];
+                                                    var Close = false;
+                                                    SessionSets.DoAction
+                                                    (
+                                                        ss =>
+                                                        {
+                                                            if (!ss.SessionIdToSession.ContainsKey(SessionId))
+                                                            {
+                                                                a.Response.StatusCode = 403;
+                                                                Close = true;
+                                                                return;
+                                                            }
+                                                            var CurrentSession = ss.SessionIdToSession[SessionId];
+                                                            if (!CurrentSession.RemoteEndPoint.Address.Equals(e.Address))
+                                                            {
+                                                                a.Response.StatusCode = 403;
+                                                                Close = true;
+                                                                return;
+                                                            }
+                                                            s = ss.SessionIdToSession[SessionId];
+                                                        }
+                                                    );
+                                                    if (Close)
+                                                    {
+                                                        NotifyListenerContextQuit(a);
+                                                        continue;
+                                                    }
+                                                    var NewSessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
+                                                    SessionSets.DoAction
+                                                    (
+                                                        ss =>
+                                                        {
+                                                            ss.SessionIdToSession.Remove(SessionId);
+                                                            ss.SessionIdToSession.Add(NewSessionId, s);
+                                                            ss.SessionToId[s] = NewSessionId;
+                                                        }
+                                                    );
+                                                    if (!s.Push(a, NewSessionId))
+                                                    {
+                                                        NotifyListenerContextQuit(a);
+                                                        continue;
+                                                    }
+                                                    continue;
+                                                }
+                                            }
+
+                                            if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
+                                            {
+                                                PurifyOneInSession();
+                                            }
+                                            if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
+                                            {
+                                                a.Response.StatusCode = 503;
+                                                NotifyListenerContextQuit(a);
+                                                continue;
+                                            }
+
+                                            if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address] : 0) >= MaxConnectionsPerIPValue.Value))
+                                            {
+                                                a.Response.StatusCode = 503;
+                                                NotifyListenerContextQuit(a);
+                                                continue;
+                                            }
+
+                                            {
+                                                var s = new HttpSession(this, e);
+
+                                                var SessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
+                                                SessionSets.DoAction
+                                                (
+                                                    ss =>
+                                                    {
+                                                        ss.Sessions.Add(s);
+                                                        if (ss.IpSessions.ContainsKey(e.Address))
+                                                        {
+                                                            ss.IpSessions[e.Address] += 1;
+                                                        }
+                                                        else
+                                                        {
+                                                            ss.IpSessions.Add(e.Address, 1);
+                                                        }
+                                                        ss.SessionIdToSession.Add(SessionId, s);
+                                                        ss.SessionToId.Add(s, SessionId);
+                                                    }
+                                                );
+
+                                                s.Start();
+                                                if (!s.Push(a, SessionId))
+                                                {
+                                                    NotifyListenerContextQuit(a);
+                                                    continue;
+                                                }
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            if (EnableLogSystem)
+                                            {
+                                                RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Message = ExceptionInfo.GetExceptionInfo(ex) });
                                             }
                                         }
                                     }
