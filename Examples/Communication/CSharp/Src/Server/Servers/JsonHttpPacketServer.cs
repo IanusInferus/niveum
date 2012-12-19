@@ -113,7 +113,7 @@ namespace Server
                         {
                             var rjo = new JObject();
                             rjo["commandName"] = CommandName;
-                            rjo["parameters"] = ss.ExecuteCommand(s, CommandName, CommandHash.HasValue, Parameters);
+                            rjo["parameters"] = ss.ExecuteCommand(s, CommandName, Parameters);
                             lock (c.WriteBufferLockee)
                             {
                                 c.WriteBuffer.Add(rjo);

@@ -303,7 +303,26 @@ namespace Server
             {
                 Data = ListenerContext.Request.ContentEncoding.GetString(InputStream.Read((int)(ListenerContext.Request.ContentLength64)));
             }
-            var Objects = JToken.Parse(Data) as JArray;
+            if (Data == "")
+            {
+                var Keys = ListenerContext.Request.QueryString.AllKeys.Where(k => k != null && k.Equals("data", StringComparison.OrdinalIgnoreCase)).ToArray();
+                if (Keys.Length == 1)
+                {
+                    Data = ListenerContext.Request.QueryString[Keys.Single()];
+                }
+            }
+            JArray Objects;
+            try
+            {
+                Objects = JToken.Parse(Data) as JArray;
+            }
+            catch
+            {
+                ListenerContext.Response.StatusCode = 400;
+                ListenerContext.Response.Close();
+                StopAsync();
+                return;
+            }
             if (Objects == null || Objects.Any(j => j.Type != JTokenType.Object))
             {
                 ListenerContext.Response.StatusCode = 400;
