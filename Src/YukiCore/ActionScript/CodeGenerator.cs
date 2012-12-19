@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0代码生成器
-//  Version:     2012.12.13.
+//  Version:     2012.12.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -162,11 +162,10 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                 l.Add(GetFile("BinaryTranslator", GetBinaryTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray())));
                 l.Add(GetFile("JsonTranslator", GetJsonTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray())));
 
-                var ClientCommands = Schema.Types.Where(t => t.OnClientCommand).Select(t => t.ClientCommand).ToArray();
-                var ServerCommands = Schema.Types.Where(t => t.OnServerCommand).Select(t => t.ServerCommand).ToArray();
-                if (ClientCommands.Length + ServerCommands.Length > 0)
+                var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Where(t => t.Version() == "").ToArray();
+                if (Commands.Length > 0)
                 {
-                    l.Add(GetFile("IClientImplementation", GetIClientImplementation(ServerCommands)));
+                    l.Add(GetFile("IApplicationClient", GetIApplicationClient(Commands)));
                 }
 
                 return l.ToArray();
@@ -362,16 +361,25 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                 }
             }
 
-            public String[] GetIClientImplementation(ServerCommandDef[] Commands)
+            public String[] GetIApplicationClient(TypeDef[] Commands)
             {
-                return GetTemplate("IClientImplementation").Substitute("Commands", GetIClientImplementationCommands(Commands));
+                return GetTemplate("IApplicationClient").Substitute("Commands", GetIApplicationClientCommands(Commands));
             }
-            public String[] GetIClientImplementationCommands(ServerCommandDef[] Commands)
+            public String[] GetIApplicationClientCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    l.AddRange(GetTemplate("IClientImplementation_ServerCommand").Substitute("Name", c.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.Description)));
+                    if (c.OnClientCommand)
+                    {
+                        var Description = String.Join("\r\n", (new String[] { c.ClientCommand.Description }).Concat(GetTemplate("IApplicationClient_ClientCommandCallback").Substitute("Name", c.ClientCommand.TypeFriendlyName())));
+                        l.AddRange(GetTemplate("IApplicationClient_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(Description)));
+                    }
+                    else if (c.OnServerCommand)
+                    {
+                        var Description = String.Join("\r\n", (new String[] { c.ServerCommand.Description }).Concat(GetTemplate("IApplicationClient_ServerCommandFunction").Substitute("Name", c.ServerCommand.TypeFriendlyName())));
+                        l.AddRange(GetTemplate("IApplicationClient_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(Description)));
+                    }
                 }
                 return l.ToArray();
             }

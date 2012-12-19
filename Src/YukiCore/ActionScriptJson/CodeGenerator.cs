@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0 JSON通讯代码生成器
-//  Version:     2012.12.13.
+//  Version:     2012.12.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -67,12 +67,11 @@ namespace Yuki.ObjectSchema.ActionScriptJson
 
                 InnerWriter.FillEnumSet();
 
-                var ClientCommands = Schema.Types.Where(t => t.OnClientCommand).Select(t => t.ClientCommand).Where(c => c.Version == "").ToArray();
-                var ServerCommands = Schema.Types.Where(t => t.OnServerCommand).Select(t => t.ServerCommand).Where(c => c.Version == "").ToArray();
-                if (ClientCommands.Length + ServerCommands.Length > 0)
+                var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Where(t => t.Version() == "").ToArray();
+                if (Commands.Length > 0)
                 {
                     l.Add(GetFile("IJsonSender", GetTemplate("IJsonSender")));
-                    l.Add(GetFile("JsonClient", GetClient(ClientCommands, ServerCommands)));
+                    l.Add(GetFile("JsonSerializationClient", GetClient(Commands)));
                 }
 
                 return l.ToArray();
@@ -95,52 +94,64 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                 return InnerWriter.GetXmlComment(Description);
             }
 
-            public String[] GetClient(ClientCommandDef[] ClientCommands, ServerCommandDef[] ServerCommands)
+            public String[] GetClient(TypeDef[] Commands)
             {
+                var ClientCommands = Commands.Where(c => c.OnClientCommand).ToArray();
+                var ServerCommands = Commands.Where(c => c.OnServerCommand).ToArray();
                 var NumClientCommand = ClientCommands.Length;
                 var Client_ServerCommandHandles = GetClientServerCommandHandles(ServerCommands);
                 var Client_ClientCommandHandles = GetClientClientCommandHandles(ClientCommands);
                 var Client_ClientCommandDeques = GetClientClientCommandDeques(ClientCommands);
-                var Client_ClientCommands = GetClientClientCommands(ClientCommands);
-                return GetTemplate("JsonClient").Substitute("NumClientCommand", NumClientCommand.ToInvariantString()).Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("Client_ServerCommandHandles", Client_ServerCommandHandles).Substitute("Client_ClientCommandHandles", Client_ClientCommandHandles).Substitute("Client_ClientCommandDeques", Client_ClientCommandDeques).Substitute("Client_ClientCommands", Client_ClientCommands);
+                var Client_Commands = GetClientCommands(Commands);
+                return GetTemplate("JsonSerializationClient").Substitute("NumClientCommand", NumClientCommand.ToInvariantString()).Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("Client_ServerCommandHandles", Client_ServerCommandHandles).Substitute("Client_ClientCommandHandles", Client_ClientCommandHandles).Substitute("Client_ClientCommandDeques", Client_ClientCommandDeques).Substitute("Client_Commands", Client_Commands);
             }
-            public String[] GetClientServerCommandHandles(ServerCommandDef[] ServerCommands)
+            public String[] GetClientServerCommandHandles(TypeDef[] ServerCommands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in ServerCommands)
                 {
-                    l.AddRange(GetTemplate("JsonClient_ServerCommandHandle").Substitute("Name", c.TypeFriendlyName()));
+                    var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                    l.AddRange(GetTemplate("JsonSerializationClient_ServerCommandHandle").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                 }
                 return l.ToArray();
             }
-            public String[] GetClientClientCommandHandles(ClientCommandDef[] ClientCommands)
+            public String[] GetClientClientCommandHandles(TypeDef[] ClientCommands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in ClientCommands)
                 {
-                    l.AddRange(GetTemplate("JsonClient_ClientCommandHandle").Substitute("Name", c.TypeFriendlyName()));
+                    var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                    l.AddRange(GetTemplate("JsonSerializationClient_ClientCommandHandle").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                 }
                 return l.ToArray();
             }
-            public String[] GetClientClientCommandDeques(ClientCommandDef[] ClientCommands)
-            {
-                List<String> l = new List<String>();
-                var k = 0;
-                foreach (var c in ClientCommands)
-                {
-                    l.AddRange(GetTemplate("JsonClient_ClientCommandDeque").Substitute("Name", c.TypeFriendlyName()).Substitute("ClientCommandIndex", k.ToInvariantString()));
-                    k += 1;
-                }
-                return l.ToArray();
-            }
-            public String[] GetClientClientCommands(ClientCommandDef[] ClientCommands)
+            public String[] GetClientClientCommandDeques(TypeDef[] ClientCommands)
             {
                 List<String> l = new List<String>();
                 var k = 0;
                 foreach (var c in ClientCommands)
                 {
-                    l.AddRange(GetTemplate("JsonClient_ClientCommand").Substitute("Name", c.TypeFriendlyName()).Substitute("ClientCommandIndex", k.ToInvariantString()).Substitute("XmlComment", GetXmlComment(c.Description)));
+                    l.AddRange(GetTemplate("JsonSerializationClient_ClientCommandDeque").Substitute("Name", c.TypeFriendlyName()).Substitute("ClientCommandIndex", k.ToInvariantString()));
                     k += 1;
+                }
+                return l.ToArray();
+            }
+            public String[] GetClientCommands(TypeDef[] Commands)
+            {
+                List<String> l = new List<String>();
+                var k = 0;
+                foreach (var c in Commands)
+                {
+                    if (c.OnClientCommand)
+                    {
+                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        l.AddRange(GetTemplate("JsonSerializationClient_ClientCommand").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommandIndex", k.ToInvariantString()));
+                        k += 1;
+                    }
+                    else if (c.OnServerCommand)
+                    {
+                        l.AddRange(GetTemplate("JsonSerializationClient_ServerCommand").Substitute("Name", c.TypeFriendlyName()));
+                    }
                 }
                 return l.ToArray();
             }
