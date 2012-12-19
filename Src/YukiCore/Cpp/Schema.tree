@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++模板数据
-      Version:     2012.12.13.
+      Version:     2012.12.19.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -587,49 +587,57 @@ ObjectSchemaTemplate
                 $String
                     /// <summary>${Description}</summary>
         Template
-            Name IServerImplementation
+            Name IApplicationServer
             //Parameters: ${Commands}
             Value
                 $String
-                    template<typename TContext>
-                    class IServerImplementation
+                    class IApplicationServer
                     {
                     public:
                         ${Commands}
 
-                        virtual ~IServerImplementation() {}
+                        virtual ~IApplicationServer() {}
                     };
         Template
-            Name IServerImplementation_ClientCommand
+            Name IApplicationServer_ClientCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
-                    virtual std::shared_ptr<[[${Name}Reply]]> [[${Name}]](TContext &c, std::shared_ptr<[[${Name}Request]]> r) = 0;
+                    virtual std::shared_ptr<[[${Name}Reply]]> [[${Name}]](std::shared_ptr<[[${Name}Request]]> r) = 0;
         Template
-            Name IServerImplementation_ServerCommand
+            Name IApplicationServer_ServerCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
-                    std::function<void(TContext &, std::shared_ptr<[[${Name}Event]]>)> [[${Name}]];
+                    std::function<void(std::shared_ptr<[[${Name}Event]]>)> [[${Name}]];
         Template
-            Name IClientImplementation
+            Name IApplicationClient
             //Parameters: ${Commands}
             Value
                 $String
-                    template<typename TContext>
-                    class IClientImplementation
+                    class IApplicationClient
                     {
                     public:
+                        virtual std::uint64_t Hash() = 0;
+                        virtual void DequeueCallback(std::wstring CommandName) = 0;
+
                         ${Commands}
 
-                        virtual ~IClientImplementation() {}
+                        virtual ~IApplicationClient() {}
                     };
         Template
-            Name IClientImplementation_ServerCommand
+            Name IApplicationClient_ClientCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
-                    virtual void [[${Name}]](TContext &c, std::shared_ptr<[[${Name}Event]]> e) = 0;
+                    virtual void [[${Name}]](std::shared_ptr<[[${Name}Request]]> r, std::function<void(std::shared_ptr<[[${Name}Reply]]>)> Callback) = 0;
+        Template
+            Name IApplicationClient_ServerCommand
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    std::function<void(std::shared_ptr<[[${Name}Event]]>)> [[${Name}]];
