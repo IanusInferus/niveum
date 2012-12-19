@@ -2,14 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="Utility.h" />
-    <ClInclude Include="ClientImplementation.h" />
     <ClInclude Include="Communication.h" />
     <ClInclude Include="CommunicationBinary.h" />
     <ClInclude Include="Clients\BinarySocketClient.h">
       <Filter>Clients</Filter>
-    </ClInclude>
-    <ClInclude Include="Context\ClientContext.h">
-      <Filter>Context</Filter>
     </ClInclude>
     <ClInclude Include="UtfEncoding.h" />
   </ItemGroup>
@@ -20,9 +16,6 @@
   <ItemGroup>
     <Filter Include="Clients">
       <UniqueIdentifier>{4dc36970-e2ac-4780-b5ac-b59255a00d7d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Context">
-      <UniqueIdentifier>{843a436e-75de-49d0-9edb-3c94d3d37f1b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

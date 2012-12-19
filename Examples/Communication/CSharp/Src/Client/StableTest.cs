@@ -19,6 +19,9 @@ namespace Client
     {
         public static void TestTcpForNumUser(IPEndPoint RemoteEndPoint, int NumUser, String Title)
         {
+            Console.Write("{0}: ", Title);
+            Console.Out.Flush();
+
             var Bytes = new Byte[] { 0x00, 0x01, 0x02, 0x03 };
 
             for (int k = 0; k < NumUser; k += 1)
@@ -29,12 +32,14 @@ namespace Client
                 s.Dispose();
             }
 
-            if (Title == "") { return; }
-            Console.WriteLine("{0}: {1} Connections", Title, NumUser);
+            Console.WriteLine("{0} Connections", NumUser);
         }
 
         public static void TestHttpForNumUser(String UrlPrefix, String ServiceVirtualPath, int NumUser, String Title)
         {
+            Console.Write("{0}: ", Title);
+            Console.Out.Flush();
+
             var Bytes = new Byte[] { 0x00, 0x01, 0x02, 0x03 };
 
             for (int k = 0; k < NumUser; k += 1)
@@ -57,8 +62,7 @@ namespace Client
                 req.Abort();
             }
 
-            if (Title == "") { return; }
-            Console.WriteLine("{0}: {1} Connections", Title, NumUser);
+            Console.WriteLine("{0} Connections", NumUser);
         }
 
         public static int DoTestTcp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)

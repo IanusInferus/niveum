@@ -3,7 +3,6 @@
 #include "Communication.h"
 #include "UtfEncoding.h"
 #include "CommunicationBinary.h"
-#include "Context/ClientContext.h"
 
 #include <memory>
 #include <cstdint>
@@ -20,13 +19,10 @@ namespace Client
 {
     class BinarySocketClient
     {
-    private:
-        std::shared_ptr<Communication::IClientImplementation<ClientContext>> ci;
     public:
-        std::shared_ptr<Communication::Binary::BinaryClient<ClientContext>> InnerClient;
+        std::shared_ptr<Communication::IApplicationClient> InnerClient;
     private:
-        std::shared_ptr<ClientContext> Context;
-
+        std::shared_ptr<Communication::Binary::BinarySerializationClient> bc;
         boost::asio::ip::tcp::endpoint RemoteEndPoint;
         boost::asio::ip::tcp::socket sock;
 
@@ -59,15 +55,14 @@ namespace Client
         std::shared_ptr<BinarySender> bs;
 
     public:
-        BinarySocketClient(boost::asio::io_service& io_service, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::shared_ptr<Communication::IClientImplementation<ClientContext>> ci)
+        BinarySocketClient(boost::asio::io_service& io_service, boost::asio::ip::tcp::endpoint RemoteEndPoint)
             : sock(io_service), BufferLength(0)
         {
             this->RemoteEndPoint = RemoteEndPoint;
-            this->ci = ci;
             bs = std::make_shared<BinarySender>(sock);
-            InnerClient = std::make_shared<Communication::Binary::BinaryClient<ClientContext>>(bs, ci);
-            Context = std::make_shared<ClientContext>();
-            Context->DequeueCallback = [=](std::wstring CommandName) { return InnerClient->DequeueCallback(CommandName); };
+            bc = std::make_shared<Communication::Binary::BinarySerializationClient>(bs);
+            InnerClient = bc->GetApplicationClient();
+            InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e) { InnerClient->DequeueCallback(e->CommandName); };
             Buffer.resize(8 * 1024, 0);
         }
 
@@ -259,7 +254,7 @@ namespace Client
                 if (r->Command != nullptr)
                 {
                     auto cmd = r->Command;
-                    DoResultHandle([=]() { InnerClient->HandleResult(*Context, cmd->CommandName, cmd->CommandHash, cmd->Parameters); });
+                    DoResultHandle([=]() { bc->HandleResult(cmd->CommandName, cmd->CommandHash, cmd->Parameters); });
                 }
             }
             if (FirstPosition > 0)

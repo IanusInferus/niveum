@@ -9,13 +9,13 @@ using namespace Communication;
 using namespace Server;
 
 /// <summary>发送消息</summary>
-shared_ptr<SendMessageReply> ServerImplementation::SendMessage(SessionContext &c, shared_ptr<SendMessageRequest> r)
+shared_ptr<SendMessageReply> ServerImplementation::SendMessage(shared_ptr<SendMessageRequest> r)
 {
     if (r->Content.size() > 256)
     {
         return SendMessageReply::CreateTooLong();
     }
-    c.SendMessageCount += 1;
+    c->SendMessageCount += 1;
     auto Sessions = sc->Sessions();
     for (int k = 0; k < (int)(Sessions->size()); k += 1)
     {
@@ -23,19 +23,19 @@ shared_ptr<SendMessageReply> ServerImplementation::SendMessage(SessionContext &c
         {
             boost::unique_lock<boost::shared_mutex> WriterLock(rc->SessionLock);
             rc->ReceivedMessageCount += 1;
-        }
-        if (MessageReceived != nullptr)
-        {
-            auto e = make_shared<MessageReceivedEvent>();
-            e->Content = r->Content;
-            MessageReceived(*rc, e);
+            if (rc->MessageReceived != nullptr)
+            {
+                auto e = make_shared<MessageReceivedEvent>();
+                e->Content = r->Content;
+                rc->MessageReceived(e);
+            }
         }
     }
     return SendMessageReply::CreateSuccess();
 }
 
 /// <summary>发送消息</summary>
-shared_ptr<SendMessageAt1Reply> ServerImplementation::SendMessageAt1(SessionContext &c, shared_ptr<SendMessageAt1Request> r)
+shared_ptr<SendMessageAt1Reply> ServerImplementation::SendMessageAt1(shared_ptr<SendMessageAt1Request> r)
 {
     if (MessageReceivedAt1 != nullptr)
     {
@@ -43,7 +43,7 @@ shared_ptr<SendMessageAt1Reply> ServerImplementation::SendMessageAt1(SessionCont
         e->Title = L"System Updated";
         e->Lines = make_shared<vector<wstring>>();
         e->Lines->push_back(L"Please update your client to a recent version.");
-        MessageReceivedAt1(c, e);
+        MessageReceivedAt1(e);
     }
     return SendMessageAt1Reply::CreateSuccess();
 }

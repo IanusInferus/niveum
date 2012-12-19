@@ -44,6 +44,7 @@ namespace Server
             Context.Quit += StopAsync;
 
             si = new ServerImplementation(Server.ServerContext, Context);
+            si.RegisterCrossSessionEvents();
             var law = new JsonLogAspectWrapper(si);
             law.ClientCommandIn += (CommandName, Parameters) =>
             {
@@ -101,6 +102,8 @@ namespace Server
                     }
                 });
             }
+
+            si.UnregisterCrossSessionEvents();
 
             IsRunningValue.Update(b => false);
             while (NumSessionCommand.Check(n => n != 0))
