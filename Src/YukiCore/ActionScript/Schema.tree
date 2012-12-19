@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构ActionScript3.0模板数据
-      Version:     2012.12.13.
+      Version:     2012.12.19.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -314,21 +314,43 @@ ObjectSchemaTemplate
                 $String
                     /** ${Description} */
         Template
-            Name IClientImplementation
-            //Parameters: ${Commands}
+            Name IApplicationClient
+            //Parameters: ${Hash}, ${Commands}
             Value
                 $String
-                    public interface IClientImplementation
+                    public interface IApplicationClient
                     {
+                        function get hash():String;
+                        function dequeueCallback(commandName:String):void;
+
                         ${Commands}
                     }
         Template
-            Name IClientImplementation_ServerCommand
+            Name IApplicationClient_ClientCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
-                    function [[${name}]](e:[[${Name}Event]]):void;
+                    function [[${name}]](r:[[${Name}Request]], callback:Function):void
+        Template
+            Name IApplicationClient_ClientCommandCallback
+            //Parameters: ${Name}
+            Value
+                $String
+                    @param callback function(r:[[${Name}Reply]]):void
+        Template
+            Name IApplicationClient_ServerCommand
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    function set [[${name}]](callback:Function):void;
+        Template
+            Name IApplicationClient_ServerCommandFunction
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    @param callback function(e:[[${Name}Event]]):void
         Template
             Name BinaryTranslator
             //Parameters: ${Serializers}
