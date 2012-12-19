@@ -25,7 +25,7 @@
     <option es="False" />
     <option locale="" />
     <option loadConfig="" />
-    <option optimize="True" />
+    <option optimize="False" />
     <option omitTraces="True" />
     <option showActionScriptWarnings="True" />
     <option showBindingWarnings="True" />
@@ -36,7 +36,7 @@
     <option useNetwork="True" />
     <option useResourceBundleMetadata="True" />
     <option warnings="True" />
-    <option verboseStackTraces="False" />
+    <option verboseStackTraces="True" />
     <option linkReport="" />
     <option loadExterns="" />
     <option staticLinkRSL="True" />
