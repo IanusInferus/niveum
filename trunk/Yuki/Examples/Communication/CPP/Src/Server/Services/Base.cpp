@@ -10,7 +10,7 @@ using namespace Communication;
 using namespace Server;
 
 /// <summary>服务器时间</summary>
-shared_ptr<ServerTimeReply> ServerImplementation::ServerTime(SessionContext &c, shared_ptr<ServerTimeRequest> r)
+shared_ptr<ServerTimeReply> ServerImplementation::ServerTime(shared_ptr<ServerTimeRequest> r)
 {
     ptime now = second_clock::universal_time();
     auto s = to_iso_extended_wstring(now) + L"Z"; //yyyy-MM-ddTHH:mm:ssZ
@@ -18,8 +18,8 @@ shared_ptr<ServerTimeReply> ServerImplementation::ServerTime(SessionContext &c, 
 }
 
 /// <summary>退出</summary>
-shared_ptr<QuitReply> ServerImplementation::Quit(SessionContext &c, shared_ptr<QuitRequest> r)
+shared_ptr<QuitReply> ServerImplementation::Quit(shared_ptr<QuitRequest> r)
 {
-    c.RaiseQuit();
+    c->RaiseQuit();
     return QuitReply::CreateSuccess();
 }

@@ -1,18 +1,22 @@
 ﻿#pragma once
 
+#include "BaseSystem/LockedVariable.h"
+#include "BaseSystem/Optional.h"
 #include "Communication.h"
 #include "UtfEncoding.h"
 #include "CommunicationBinary.h"
 #include "BaseSystem/LockedVariable.h"
 #include "BaseSystem/AutoResetEvent.h"
-#include "Net/TcpSession.h"
-#include "Net/TcpServer.h"
 #include "Util/SessionLogEntry.h"
+#include "Net/StreamedAsyncSocket.h"
 #include "Context/ServerContext.h"
+#include "Context/SessionContext.h"
+#include "Services/ServerImplementation.h"
 
 #include <memory>
 #include <cstdint>
 #include <vector>
+#include <queue>
 #include <unordered_map>
 #include <string>
 #include <random>
@@ -28,18 +32,31 @@
 namespace Server
 {
     class BinarySocketServer;
-    class BinarySocketSession : public Communication::Net::TcpSession, public std::enable_shared_from_this<BinarySocketSession>
+    class BinarySocketSession : public std::enable_shared_from_this<BinarySocketSession>
     {
+    protected:
+        boost::asio::io_service &IoService;
     private:
-        int NumBadCommands;
-
+        std::shared_ptr<Communication::Net::StreamedAsyncSocket> Socket;
+        bool IsDisposed;
     public:
-        std::shared_ptr<SessionContext> Context;
+        boost::asio::ip::tcp::endpoint RemoteEndPoint;
+        std::shared_ptr<Communication::BaseSystem::Optional<int>> IdleTimeout;
+
+        BinarySocketSession(boost::asio::io_service &IoService, std::shared_ptr<BinarySocketServer> Server, std::shared_ptr<boost::asio::ip::tcp::socket> s);
+
+        virtual ~BinarySocketSession();
+
+        void Start();
+
+        void Stop();
+
+    private:
         std::shared_ptr<BinarySocketServer> Server; //循环引用
-
-        BinarySocketSession(boost::asio::io_service &IoService);
-
-        void StartInner();
+        std::shared_ptr<SessionContext> Context;
+        std::shared_ptr<ServerImplementation> si;
+        std::shared_ptr<Communication::Binary::BinarySerializationServerEventDispatcher> bssed;
+        int NumBadCommands;
 
     private:
         class CommandBody;
@@ -47,16 +64,12 @@ namespace Server
         class TryShiftResult;
         class BufferStateMachine;
 
-        std::shared_ptr<Communication::BaseSystem::AutoResetEvent> NumAsyncOperationUpdated;
-        std::shared_ptr<Communication::BaseSystem::LockedVariable<int>> NumAsyncOperation;
         std::shared_ptr<Communication::BaseSystem::AutoResetEvent> NumSessionCommandUpdated;
         std::shared_ptr<Communication::BaseSystem::LockedVariable<int>> NumSessionCommand;
         Communication::BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<SessionCommand>>>> CommandQueue;
         Communication::BaseSystem::LockedVariable<bool> IsRunningValue;
         Communication::BaseSystem::LockedVariable<bool> IsExitingValue;
 
-        void LockAsyncOperation();
-        int ReleaseAsyncOperation();
         void LockSessionCommand();
         int ReleaseSessionCommand();
 
@@ -92,7 +105,5 @@ namespace Server
         void Logon();
 
         void StopAsync();
-
-        void StopInner();
     };
 }

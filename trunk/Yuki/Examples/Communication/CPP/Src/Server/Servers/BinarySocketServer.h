@@ -1,44 +1,144 @@
 ﻿#pragma once
 
+#include "BaseSystem/LockedVariable.h"
+#include "BaseSystem/CancellationToken.h"
+#include "BaseSystem/AutoResetEvent.h"
+#include "BaseSystem/Optional.h"
+#include "BaseSystem/AutoRelease.h"
 #include "Communication.h"
 #include "UtfEncoding.h"
 #include "CommunicationBinary.h"
-#include "BaseSystem/ThreadLocalVariable.h"
-#include "Net/TcpSession.h"
-#include "Net/TcpServer.h"
 #include "Util/SessionLogEntry.h"
 #include "Context/ServerContext.h"
 #include "Context/SessionContext.h"
-#include "Services/ServerImplementation.h"
 
 #include <memory>
 #include <cstdint>
 #include <vector>
+#include <queue>
+#include <unordered_set>
 #include <unordered_map>
 #include <string>
 #include <exception>
 #include <stdexcept>
+#include <functional>
+#include <boost/functional/hash.hpp>
 #include <boost/asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
+#include <boost/thread.hpp>
 #include <boost/format.hpp>
 
 namespace Server
 {
     class BinarySocketSession;
-    class BinarySocketServer : public Communication::Net::TcpServer, public std::enable_shared_from_this<BinarySocketServer>
+    class BinarySocketServer : public std::enable_shared_from_this<BinarySocketServer>
     {
     private:
-        class WorkPart
+        class BindingInfo;
+
+        Communication::BaseSystem::LockedVariable<bool> IsRunningValue;
+
+    private:
+        template <typename T>
+        struct SharedPtrHash
         {
-        public:
-            std::shared_ptr<ServerImplementation> si;
-            std::shared_ptr<Communication::Binary::BinaryServer<SessionContext>> bs;
+            std::size_t operator() (const std::shared_ptr<T> &p) const
+            {
+                return (std::size_t)(p.get());
+            }
         };
-        std::shared_ptr<Communication::BaseSystem::ThreadLocalVariable<WorkPart>> WorkPartInstance;
+        typedef std::unordered_set<std::shared_ptr<BinarySocketSession>, SharedPtrHash<BinarySocketSession>> TSessionSet;
+        struct IpAddressHash
+        {
+            std::size_t operator() (const boost::asio::ip::address &p) const
+            {
+                if (p.is_v4())
+                {
+                    auto Bytes = p.to_v4().to_bytes();
+                    auto a = (uint8_t (*)[sizeof(Bytes)])(Bytes.data());
+                    return boost::hash<decltype(*a)>()(*a);
+                }
+                else if (p.is_v6())
+                {
+                    auto Bytes = p.to_v6().to_bytes();
+                    auto a = (uint8_t (*)[sizeof(Bytes)])(Bytes.data());
+                    return boost::hash<decltype(*a)>()(*a);
+                }
+                else
+                {
+                    auto s = p.to_string();
+                    return boost::hash<decltype(s)>()(s);
+                }
+            }
+        };
+        typedef std::unordered_map<boost::asio::ip::address, int, IpAddressHash> TIpAddressMap;
+
+    protected:
+        boost::asio::io_service &IoService;
+
+    private:
+        std::vector<std::shared_ptr<BindingInfo>> BindingInfos;
+        Communication::BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<boost::asio::ip::tcp::socket>>>> AcceptedSockets;
+        std::shared_ptr<boost::thread> AcceptingTask;
+        Communication::BaseSystem::CancellationToken AcceptingTaskToken;
+        Communication::BaseSystem::AutoResetEvent AcceptingTaskNotifier;
+        std::shared_ptr<boost::thread> PurifieringTask;
+        Communication::BaseSystem::CancellationToken PurifieringTaskToken;
+        Communication::BaseSystem::AutoResetEvent PurifieringTaskNotifier;
+        Communication::BaseSystem::LockedVariable<std::shared_ptr<TSessionSet>> Sessions;
+        Communication::BaseSystem::LockedVariable<std::shared_ptr<TIpAddressMap>> IpSessions;
+        Communication::BaseSystem::LockedVariable<std::shared_ptr<TSessionSet>> StoppingSessions;
+
+        std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> BindingsValue;
+        std::shared_ptr<Communication::BaseSystem::Optional<int>> SessionIdleTimeoutValue;
+        std::shared_ptr<Communication::BaseSystem::Optional<int>> MaxConnectionsValue;
+        std::shared_ptr<Communication::BaseSystem::Optional<int>> MaxConnectionsPerIPValue;
+
     public:
-        std::shared_ptr<Communication::Binary::BinaryServer<SessionContext>> InnerServer();
+        BinarySocketServer(boost::asio::io_service &IoService);
+
+        virtual ~BinarySocketServer();
+
+        bool IsRunning();
+
+        std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> GetBindings() const;
+        void SetBindings(std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> Bindings);
+
+        std::shared_ptr<Communication::BaseSystem::Optional<int>> GetSessionIdleTimeout() const;
+        void SetSessionIdleTimeout(std::shared_ptr<Communication::BaseSystem::Optional<int>> ms);
+
+        std::shared_ptr<Communication::BaseSystem::Optional<int>> GetMaxConnections() const;
+        void SetMaxConnections(std::shared_ptr<Communication::BaseSystem::Optional<int>> v);
+
+        std::shared_ptr<Communication::BaseSystem::Optional<int>> GetMaxConnectionsPerIP() const;
+        void SetMaxConnectionsPerIP(std::shared_ptr<Communication::BaseSystem::Optional<int>> v);
+
+        void Start();
+
+    private:
+        void DoAccepting();
+
+        bool Purify(std::shared_ptr<BinarySocketSession> StoppingSession);
+        bool PurifyOneInSession();
+        void DoPurifiering();
+
+        bool DoStopping(bool b);
+
+    public:
+        void Stop();
+
+        void NotifySessionQuit(std::shared_ptr<BinarySocketSession> s)
+        {
+            StoppingSessions.DoAction([&](std::shared_ptr<TSessionSet> &Sessions)
+            {
+                Sessions->insert(s);
+            });
+            PurifieringTaskNotifier.Set();
+        }
+
+    public:
         std::shared_ptr<ServerContext> sc;
 
     private:
@@ -54,8 +154,6 @@ namespace Server
         bool EnableLogSystemValue;
         
     public:
-        std::shared_ptr<Communication::Net::TcpSession> CreateSession();
-
         std::function<bool(std::shared_ptr<SessionContext>, std::wstring)> GetCheckCommandAllowed() const;
         /// <summary>只能在启动前修改，以保证线程安全</summary>
         void SetCheckCommandAllowed(std::function<bool(std::shared_ptr<SessionContext>, std::wstring)> value);
@@ -96,27 +194,13 @@ namespace Server
         /// <summary>只能在启动前修改，以保证线程安全</summary>
         void SetEnableLogSystem(bool value);
 
-        template <typename T>
-        struct SharedPtrHash
-        {
-            std::size_t operator() (const std::shared_ptr<T> &p) const
-            {
-                return (std::size_t)(p.get());
-            }
-        };
         typedef std::unordered_map<std::shared_ptr<SessionContext>, std::shared_ptr<BinarySocketSession>, SharedPtrHash<SessionContext>> TSessionMapping;
         Communication::BaseSystem::LockedVariable<std::shared_ptr<TSessionMapping>> SessionMappings;
-
-        BinarySocketServer(boost::asio::io_service &IoService);
-
-        void RaiseError(SessionContext &c, std::wstring CommandName, std::wstring Message);
 
         std::function<void(std::shared_ptr<SessionLogEntry>)> SessionLog;
         void RaiseSessionLog(std::shared_ptr<SessionLogEntry> Entry);
 
     private:
-        void OnServerEvent(SessionContext &c, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters);
-
         void OnMaxConnectionsExceeded(std::shared_ptr<BinarySocketSession> s);
 
         void OnMaxConnectionsPerIPExceeded(std::shared_ptr<BinarySocketSession> s);

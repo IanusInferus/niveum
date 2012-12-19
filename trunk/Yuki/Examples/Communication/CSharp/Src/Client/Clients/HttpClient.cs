@@ -62,6 +62,7 @@ namespace Client
                 req.ContentType = "application/json; charset=utf-8";
                 req.ContentLength = Bytes.Length;
                 req.MediaType = "application/json";
+                req.Headers.Add("Accept-Charset", "utf-8");
 
                 using (var OutputStream = req.GetRequestStream().AsWritable())
                 {

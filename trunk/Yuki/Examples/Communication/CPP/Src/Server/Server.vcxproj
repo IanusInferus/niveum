@@ -21,8 +21,7 @@
     <ClInclude Include="CommunicationBinary.h" />
     <ClInclude Include="Context\ServerContext.h" />
     <ClInclude Include="Context\SessionContext.h" />
-    <ClInclude Include="Net\TcpServer.h" />
-    <ClInclude Include="Net\TcpSession.h" />
+    <ClInclude Include="Net\StreamedAsyncSocket.h" />
     <ClInclude Include="Servers\BinarySocketServer.h" />
     <ClInclude Include="Servers\BinarySocketSession.h" />
     <ClInclude Include="Services\ServerImplementation.h" />
@@ -32,8 +31,6 @@
     <ClInclude Include="Util\SessionLogEntry.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Net\TcpServer.cpp" />
-    <ClCompile Include="Net\TcpSession.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Servers\BinarySocketServer.cpp" />
     <ClCompile Include="Servers\BinarySocketSession.cpp" />
@@ -94,7 +91,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4345;4503;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4345;4503;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -108,7 +105,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4345;4503;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4345;4503;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>

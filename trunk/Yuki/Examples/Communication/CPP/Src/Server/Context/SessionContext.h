@@ -12,6 +12,9 @@
 #include <boost/thread.hpp>
 #include <boost/format.hpp>
 
+class Communication::MessageReceivedEvent;
+class Communication::TestMessageReceivedEvent;
+
 namespace Server
 {
     class SessionContext : public std::enable_shared_from_this<SessionContext>
@@ -50,6 +53,9 @@ namespace Server
 
         int ReceivedMessageCount; //跨线程变量
 
+        std::function<void(std::shared_ptr<Communication::MessageReceivedEvent>)> MessageReceived;
+
+        std::function<void(std::shared_ptr<Communication::TestMessageReceivedEvent>)> TestMessageReceived;
 
         //单线程访问
 

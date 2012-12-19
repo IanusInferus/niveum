@@ -20,6 +20,5 @@ namespace Server
 
         std::function<std::shared_ptr<std::vector<std::shared_ptr<SessionContext>>>()> GetSessions;
         std::shared_ptr<std::vector<std::shared_ptr<SessionContext>>> Sessions() { return GetSessions(); }
-        std::wstring SchemaHash;
     };
 }

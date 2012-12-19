@@ -17,8 +17,8 @@ namespace Server.Services
         {
             this.ServerContext = ServerContext;
             this.c = c;
-            RegisterCrossSessionEvent();
         }
+
         public void RaiseError(String CommandName, String Message)
         {
             if (Error != null) { Error(new ErrorEvent { CommandName = CommandName, Message = Message }); }
