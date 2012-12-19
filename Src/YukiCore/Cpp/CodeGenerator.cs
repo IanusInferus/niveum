@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2012.10.31.
+//  Version:     2012.12.18.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -432,38 +432,42 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 }
             }
 
-            public String[] GetIServerImplementation(TypeDef[] Commands)
+            public String[] GetIApplicationServer(TypeDef[] Commands)
             {
-                return GetTemplate("IServerImplementation").Substitute("Commands", GetIServerImplementationCommands(Commands));
+                return GetTemplate("IApplicationServer").Substitute("Commands", GetIApplicationServerCommands(Commands));
             }
-            public String[] GetIServerImplementationCommands(TypeDef[] Commands)
+            public String[] GetIApplicationServerCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
                     if (c.OnClientCommand)
                     {
-                        l.AddRange(GetTemplate("IServerImplementation_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
+                        l.AddRange(GetTemplate("IApplicationServer_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
                     }
                     else if (c.OnServerCommand)
                     {
-                        l.AddRange(GetTemplate("IServerImplementation_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
+                        l.AddRange(GetTemplate("IApplicationServer_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
                     }
                 }
                 return l.ToArray();
             }
-            public String[] GetIClientImplementation(TypeDef[] Commands)
+            public String[] GetIApplicationClient(TypeDef[] Commands)
             {
-                return GetTemplate("IClientImplementation").Substitute("Commands", GetIClientImplementationCommands(Commands));
+                return GetTemplate("IApplicationClient").Substitute("Commands", GetIApplicationClientCommands(Commands));
             }
-            public String[] GetIClientImplementationCommands(TypeDef[] Commands)
+            public String[] GetIApplicationClientCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c.OnServerCommand)
+                    if (c.OnClientCommand)
                     {
-                        l.AddRange(GetTemplate("IClientImplementation_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
+                        l.AddRange(GetTemplate("IApplicationClient_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
+                    }
+                    else if (c.OnServerCommand)
+                    {
+                        l.AddRange(GetTemplate("IApplicationClient_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
                     }
                 }
                 return l.ToArray();
@@ -560,9 +564,9 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 {
                     var ca = cl.ToArray();
 
-                    l.AddRange(GetIServerImplementation(ca));
+                    l.AddRange(GetIApplicationServer(ca));
                     l.Add("");
-                    l.AddRange(GetIClientImplementation(ca));
+                    l.AddRange(GetIApplicationClient(ca));
                     l.Add("");
                 }
 

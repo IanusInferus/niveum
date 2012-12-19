@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2012.12.13.
+//  Version:     2012.12.18.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -111,34 +111,11 @@ namespace Yuki.ObjectSchema.CppBinary
                 return InnerWriter.GetXmlComment(Description);
             }
 
-            public String[] GetBinaryServer(TypeDef[] Commands)
+            public String[] GetBinarySerializationServer(TypeDef[] Commands)
             {
-                return GetTemplate("BinaryServer").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("Commands", GetBinaryServerCommands(Commands));
+                return GetTemplate("BinarySerializationServer").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommands", GetBinarySerializationServerClientCommands(Commands)).Substitute("ServerCommands", GetBinarySerializationServerServerCommands(Commands));
             }
-            public String[] GetBinaryServerCommands(TypeDef[] Commands)
-            {
-                List<String> l = new List<String>();
-                foreach (var c in Commands)
-                {
-                    if (c.OnClientCommand)
-                    {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
-                        l.AddRange(GetTemplate("BinaryServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
-                    }
-                    else if (c.OnServerCommand)
-                    {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
-                        l.AddRange(GetTemplate("BinaryServer_ServerCommand").Substitute("CommandName", c.ServerCommand.Name.Escape()).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
-                    }
-                }
-                return l.ToArray();
-            }
-
-            public String[] GetBinaryClient(TypeDef[] Commands)
-            {
-                return GetTemplate("BinaryClient").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommands", GetBinaryClientClientCommands(Commands)).Substitute("ServerCommands", GetBinaryClientServerCommands(Commands));
-            }
-            public String[] GetBinaryClientClientCommands(TypeDef[] Commands)
+            public String[] GetBinarySerializationServerClientCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
@@ -146,12 +123,12 @@ namespace Yuki.ObjectSchema.CppBinary
                     if (c.OnClientCommand)
                     {
                         var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
-                        l.AddRange(GetTemplate("BinaryClient_ClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
+                        l.AddRange(GetTemplate("BinarySerializationServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
                 return l.ToArray();
             }
-            public String[] GetBinaryClientServerCommands(TypeDef[] Commands)
+            public String[] GetBinarySerializationServerServerCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
@@ -159,7 +136,38 @@ namespace Yuki.ObjectSchema.CppBinary
                     if (c.OnServerCommand)
                     {
                         var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
-                        l.AddRange(GetTemplate("BinaryClient_ServerCommand").Substitute("CommandName", c.ServerCommand.Name.Escape()).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                        l.AddRange(GetTemplate("BinarySerializationServer_ServerCommand").Substitute("CommandName", c.ServerCommand.Name.Escape()).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                    }
+                }
+                return l.ToArray();
+            }
+
+            public String[] GetBinarySerializationClient(TypeDef[] Commands)
+            {
+                return GetTemplate("BinarySerializationClient").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ApplicationCommands", GetBinarySerializationClientApplicationCommands(Commands)).Substitute("ServerCommands", GetBinarySerializationClientServerCommands(Commands));
+            }
+            public String[] GetBinarySerializationClientApplicationCommands(TypeDef[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c.OnClientCommand)
+                    {
+                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        l.AddRange(GetTemplate("BinarySerializationClient_ApplicationClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
+                    }
+                }
+                return l.ToArray();
+            }
+            public String[] GetBinarySerializationClientServerCommands(TypeDef[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c.OnServerCommand)
+                    {
+                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        l.AddRange(GetTemplate("BinarySerializationClient_ServerCommand").Substitute("CommandName", c.ServerCommand.Name.Escape()).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
                 return l.ToArray();
@@ -504,11 +512,11 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     var ca = cl.ToArray();
 
-                    l.AddRange(GetBinaryServer(ca));
+                    l.AddRange(GetBinarySerializationServer(ca));
                     l.Add("");
                     l.AddRange(GetTemplate("IBinarySender"));
                     l.Add("");
-                    l.AddRange(GetBinaryClient(ca));
+                    l.AddRange(GetBinarySerializationClient(ca));
                     l.Add("");
                 }
 
