@@ -21,6 +21,9 @@ SchemaManipulator.exe /loadtyperef:Schema /t2cppb:CPP\Src\WorldBinary.h,World
 @if not exist ActionScript\src\worldBinary @md ActionScript\src\worldBinary
 SchemaManipulator.exe /loadtype:Schema /t2as:ActionScript\Src\worldBinary,worldBinary
 
+::Haxe
+SchemaManipulator.exe /loadtype:Schema /t2hx:Haxe\src\WorldBinary.hx
+
 :: Xhtml
 @if not exist XHTML @md XHTML
 SchemaManipulator.exe /loadtype:Schema /t2xhtml:XHTML,"Binary Serialization Example","Copyright Public Domain"
