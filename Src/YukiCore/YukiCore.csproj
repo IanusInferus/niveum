@@ -60,6 +60,7 @@
     <Compile Include="CSharpBinary\CodeGenerator.cs" />
     <Compile Include="CSharpJson\CodeGenerator.cs" />
     <Compile Include="CSharp\CodeGenerator.cs" />
+    <Compile Include="Haxe\CodeGenerator.cs" />
     <Compile Include="JavaBinary\CodeGenerator.cs" />
     <Compile Include="Java\CodeGenerator.cs" />
     <Compile Include="ObjectSchema\TreeBinaryConverter.cs" />
@@ -84,6 +85,7 @@
     <EmbeddedResource Include="CSharp\Schema.tree" />
     <EmbeddedResource Include="JavaBinary\Schema.tree" />
     <EmbeddedResource Include="Java\Schema.tree" />
+    <EmbeddedResource Include="Haxe\Schema.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
     <EmbeddedResource Include="VB\Schema.tree" />
     <EmbeddedResource Include="Xhtml\Schema.tree" />
