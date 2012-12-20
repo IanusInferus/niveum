@@ -33,6 +33,7 @@ using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.ActionScript;
 using Yuki.ObjectSchema.ActionScriptBinary;
 using Yuki.ObjectSchema.ActionScriptJson;
+using Yuki.ObjectSchema.Haxe;
 using Yuki.ObjectSchema.Xhtml;
 
 namespace Yuki.SchemaManipulator
@@ -383,6 +384,23 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2hx")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ObjectSchemaToHaxeCode(args[0], "");
+                    }
+                    else if (args.Length == 2)
+                    {
+                        ObjectSchemaToHaxeCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (opt.Name.ToLower() == "t2xhtml")
                 {
                     var args = opt.Arguments;
@@ -450,6 +468,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2asb:<AsCodeDir>,<PackageName>");
             Console.WriteLine(@"生成ActionScript JSON通讯类型");
             Console.WriteLine(@"/t2asj:<AsCodeDir>,<PackageName>");
+            Console.WriteLine(@"生成Haxe类型");
+            Console.WriteLine(@"/t2hx:<HaxeCodePath>,<PackageName>");
             Console.WriteLine(@"生成XHTML文档");
             Console.WriteLine(@"/t2xhtml:<XhtmlDir>,<Title>,<CopyrightText>");
             Console.WriteLine(@"CookedObjectSchemaFile 已编译过的对象类型结构Tree文件路径。");
@@ -464,6 +484,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"CsCodePath C#代码文件路径。");
             Console.WriteLine(@"JavaCodePath Java代码文件路径。");
             Console.WriteLine(@"AsCodeDir ActionScript代码文件夹路径。");
+            Console.WriteLine(@"HaxeCodePath Haxe代码文件路径。");
             Console.WriteLine(@"XhtmlDir XHTML文件夹路径。");
             Console.WriteLine(@"Title 标题。");
             Console.WriteLine(@"CopyrightText 版权文本。");
@@ -754,6 +775,23 @@ namespace Yuki.SchemaManipulator
                 if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
                 Txt.WriteFile(AsCodePath, TextEncoding.UTF8, Compiled);
             }
+        }
+
+        public static void ObjectSchemaToHaxeCode(String HaxeCodePath, String NamespaceName)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToHaxe(NamespaceName);
+            if (File.Exists(HaxeCodePath))
+            {
+                var Original = Txt.ReadFile(HaxeCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(HaxeCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(HaxeCodePath, Compiled);
         }
 
         public static void ObjectSchemaToXhtml(String XhtmlDir, String Title, String CopyrightText)

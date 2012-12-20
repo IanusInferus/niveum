@@ -1,10 +1,17 @@
-﻿2012.12.19
+﻿2012.12.20
+Yuki.Core:
+增加Haxe类型定义代码生成。
+Examples:
+增加Haxe代码生成示例。
+
+2012.12.19
 Yuki.Core:
 修改C++代码生成，去除生成的代码中的Context概念。
 修改ActionScript代码生成，使得服务器事件不再强制要求实现。
 Examples:
 重构C++通讯示例，整理代码并测试。
 修改ActionScript通讯示例，和代码生成一致。
+修正C#通讯示例HTTP客户端与Haxe/Javascript交互的一些问题。
 
 2012.12.18
 Examples:
