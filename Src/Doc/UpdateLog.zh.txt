@@ -1,4 +1,10 @@
-﻿2012.12.21
+﻿2012.12.22.0
+Yuki.Core:
+调整Haxe JSON代码生成。
+Examples:
+增加Haxe通讯客户端示例。
+
+2012.12.21
 Yuki.Core:
 增加Haxe JSON代码生成。
 修正C# JSON代码生成中Tuple类型和Optional类型中的错误。

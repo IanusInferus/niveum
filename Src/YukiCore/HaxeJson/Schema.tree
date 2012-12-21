@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Haxe JSON通讯模板数据
-      Version:     2012.12.21.
+      Version:     2012.12.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -40,7 +40,7 @@ ObjectSchemaTemplate
                 $String
                     interface IJsonSender
                     {
-                        function send(commandName : String, commandHash : Int, parameters : String) : Void;
+                        function send(commandName : String, commandHash : String, parameters : String) : Void;
                     }
         Template
             Name JsonSerializationClient
@@ -50,7 +50,7 @@ ObjectSchemaTemplate
                     private class ApplicationClient implements IApplicationClient
                     {
                         public var s : IJsonSender;
-                        public var clientCommandCallbacks : Hash<Array<{commandHash : UInt32, _callback : String -> Void}>>;
+                        public var clientCommandCallbacks : Hash<Array<{commandHash : String, _callback : String -> Void}>>;
                     
                         public function new()
                         {
@@ -67,7 +67,7 @@ ObjectSchemaTemplate
                             clientCommandCallbacks.get(commandName).shift();
                         }
                     
-                        private function addCallback(commandName : String, commandHash : UInt32, _callback : String -> Void) : Void
+                        private function addCallback(commandName : String, commandHash : String, _callback : String -> Void) : Void
                         {
                             if (clientCommandCallbacks.exists(commandName))
                             {
@@ -75,7 +75,7 @@ ObjectSchemaTemplate
                             }
                             else
                             {
-                                var q = new Array<{commandHash : UInt32, _callback : String -> Void}>();
+                                var q = new Array<{commandHash : String, _callback : String -> Void}>();
                                 q.push({commandHash : commandHash, _callback : _callback});
                                 clientCommandCallbacks.set(commandName, q);
                             }
@@ -92,30 +92,30 @@ ObjectSchemaTemplate
                         }
                     
                         private var c : ApplicationClient;
-                        private var serverCommands : Hash<{commandHash : UInt32, _callback : String -> Void}>;
+                        private var serverCommands : Hash<{commandHash : String, _callback : String -> Void}>;
                     
                         public function new(s : IJsonSender)
                         {
                             c = new ApplicationClient();
                             c.s = s;
-                            c.clientCommandCallbacks = new Hash<Array<{commandHash : UInt32, _callback : String -> Void}>>();
-                            serverCommands = new Hash<{commandHash : UInt32, _callback : String -> Void}>();
+                            c.clientCommandCallbacks = new Hash<Array<{commandHash : String, _callback : String -> Void}>>();
+                            serverCommands = new Hash<{commandHash : String, _callback : String -> Void}>();
                             ${ServerCommands}
                         }
                     
-                        public function handleResult(commandName : String, commandHash : UInt32, parameters : String) : Void
+                        public function handleResult(commandName : String, commandHash : String, parameters : String) : Void
                         {
                             if (c.clientCommandCallbacks.exists(commandName))
                             {
                                 var q = c.clientCommandCallbacks.get(commandName);
                                 if (q.length == 0)
                                 {
-                                    throw "InvalidOperationException: " + commandName + "@" + StringTools.hex(commandHash, 8);
+                                    throw "InvalidOperationException: " + commandName + "@" + commandHash;
                                 }
                                 var callbackPair = q[0];
                                 if (callbackPair.commandHash != commandHash)
                                 {
-                                    throw "InvalidOperationException: " + commandName + "@" + StringTools.hex(commandHash, 8);
+                                    throw "InvalidOperationException: " + commandName + "@" + commandHash;
                                 }
                                 q.shift();
                                 var _callback = callbackPair._callback;
@@ -128,14 +128,14 @@ ObjectSchemaTemplate
                                 var callbackPair = serverCommands.get(commandName);
                                 if (callbackPair.commandHash != commandHash)
                                 {
-                                    throw "InvalidOperationException: " + commandName + "@" + StringTools.hex(commandHash, 8);
+                                    throw "InvalidOperationException: " + commandName + "@" + commandHash;
                                 }
                                 var _callback = callbackPair._callback;
                                 _callback(parameters);
                                 return;
                             }
                     
-                            throw "InvalidOperationException: " + commandName + "@" + StringTools.hex(commandHash, 8);
+                            throw "InvalidOperationException: " + commandName + "@" + commandHash;
                         }
                     }
         Template
@@ -146,8 +146,8 @@ ObjectSchemaTemplate
                     public function [[${name}]](r : [[${Name}Request]], _callback : [[${Name}Reply]] -> Void) : Void
                     {
                         var request = Json.stringify(JsonTranslator.[[${name}RequestToJson]](r));
-                        addCallback("${CommandName}", 0x${CommandHash}, function(parameters) { return _callback(JsonTranslator.[[${name}ReplyFromJson]](Json.parse(parameters))); });
-                        s.send("${CommandName}", 0x${CommandHash}, request);
+                        addCallback("${CommandName}", "${CommandHash}", function(parameters) { return _callback(JsonTranslator.[[${name}ReplyFromJson]](Json.parse(parameters))); });
+                        s.send("${CommandName}", "${CommandHash}", request);
                     }
         Template
             Name JsonSerializationClient_ApplicationServerCommand
@@ -161,7 +161,7 @@ ObjectSchemaTemplate
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    serverCommands.set("${CommandName}", {commandHash : 0x${CommandHash}, _callback : function(parameters) { c.[[raise${Name}]](JsonTranslator.[[${name}EventFromJson]](Json.parse(parameters))); }});
+                    serverCommands.set("${CommandName}", {commandHash : "${CommandHash}", _callback : function(parameters) { c.[[raise${Name}]](JsonTranslator.[[${name}EventFromJson]](Json.parse(parameters))); }});
         Template
             Name JsonTranslator
             //Parameters: ${Serializers}
