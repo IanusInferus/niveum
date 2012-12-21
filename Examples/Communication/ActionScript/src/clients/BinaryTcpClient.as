@@ -7,25 +7,25 @@
     import com.brooksandrus.utils.ISO8601Util;
     import communication.*;
 
-    public class BinarySocketClient implements IBinarySender
+    public class BinaryTcpClient implements IBinarySender
     {
         private var innerClientValue:BinarySerializationClient;
         public function get innerClient():IApplicationClient { return innerClientValue; }
         public function set error(callback:Function):void
-		{
-			innerClient.error = function(e:communication.ErrorEvent):void
-			{
-				try
-				{
-					innerClient.dequeueCallback(e.commandName);
-				}
-				catch (err:Error)
-				{
-					trace(err);
-				}
-				callback(e);
-			};
-		}
+        {
+            innerClient.error = function(e:communication.ErrorEvent):void
+            {
+                try
+                {
+                    innerClient.dequeueCallback(e.commandName);
+                }
+                catch (err:Error)
+                {
+                    trace(err);
+                }
+                callback(e);
+            };
+        }
 
         private var bindings:Vector.<Binding>
         private var bindingInfos:Vector.<BindingInfo>
@@ -61,8 +61,7 @@
             }
         }
 
-        /// handleResult : (commandName : String, params : String) -> unit
-        public function BinarySocketClient(bindings:Vector.<Binding>)
+        public function BinaryTcpClient(bindings:Vector.<Binding>)
         {
             this.innerClientValue = new BinarySerializationClient(this);
             if (bindings.length == 0)
@@ -75,17 +74,17 @@
             {
                 bindingInfos[i] = new BindingInfo();
             }
-			innerClient.error = function(e:communication.ErrorEvent):void
-			{
-				try
-				{
-					innerClient.dequeueCallback(e.commandName);
-				}
-				catch (err:Error)
-				{
-					trace(err);
-				}
-			};
+            innerClient.error = function(e:communication.ErrorEvent):void
+            {
+                try
+                {
+                    innerClient.dequeueCallback(e.commandName);
+                }
+                catch (err:Error)
+                {
+                    trace(err);
+                }
+            };
             readBuffer = new ByteArray();
             readBuffer.length = 8 * 1024;
             readBufferLength = 0;

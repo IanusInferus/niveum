@@ -3,7 +3,7 @@
 //  File:        Main.as
 //  Location:    Yuki.Examples <ActionScript>
 //  Description: 聊天客户端
-//  Version:     2012.12.19.
+//  Version:     2012.12.21.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -45,7 +45,7 @@ package
             //EnableBinaryClient();
             EnableJsonClient();
         }
-        
+
         public function EnableBinaryClient():void
         {
             var bindings:Vector.<Binding> = new Vector.<Binding>();
@@ -53,14 +53,14 @@ package
             binding.host = "localhost";
             binding.port = 8001;
             bindings.push(binding);
-            var bsc:BinarySocketClient = new BinarySocketClient(bindings);
+            var bsc:BinaryTcpClient = new BinaryTcpClient(bindings);
             bsc.doConnect();
-			bsc.innerClient.error = function(e:ErrorEvent):void
-			{
-				var m:String = "调用'" + e.commandName + "'发生错误:" + e.message;
-				trace(m);
-			}
-			ReadLineAndSendLoop(bsc.innerClient);
+            bsc.innerClient.error = function(e:ErrorEvent):void
+            {
+                var m:String = "调用'" + e.commandName + "'发生错误:" + e.message;
+                trace(m);
+            }
+            ReadLineAndSendLoop(bsc.innerClient);
         }
 
         public function EnableJsonClient():void
@@ -70,22 +70,22 @@ package
             binding.host = "localhost";
             binding.port = 8002;
             bindings.push(binding);
-            var jsc:JsonSocketClient = new JsonSocketClient(bindings);
+            var jsc:JsonTcpClient = new JsonTcpClient(bindings);
             jsc.doConnect();
-			jsc.innerClient.error = function(e:ErrorEvent):void
-			{
-				var m:String = "调用'" + e.commandName + "'发生错误:" + e.message;
-				trace(m);
-			}
-			ReadLineAndSendLoop(jsc.innerClient);
+            jsc.innerClient.error = function(e:ErrorEvent):void
+            {
+                var m:String = "调用'" + e.commandName + "'发生错误:" + e.message;
+                trace(m);
+            }
+            ReadLineAndSendLoop(jsc.innerClient);
         }
 
-		public function ReadLineAndSendLoop(InnerClient:IApplicationClient):void
-		{
-			InnerClient.messageReceived = function(e:MessageReceivedEvent):void
-			{
-				trace(e.content);
-			}
+        public function ReadLineAndSendLoop(InnerClient:IApplicationClient):void
+        {
+            InnerClient.messageReceived = function(e:MessageReceivedEvent):void
+            {
+                trace(e.content);
+            }
             var req:SendMessageRequest = new SendMessageRequest();
             req.content = "Hello.";
             InnerClient.sendMessage(req, function(r:SendMessageReply):void
@@ -95,6 +95,6 @@ package
                    trace("消息过长。");
                }
             });
-		}
+        }
     }
 }

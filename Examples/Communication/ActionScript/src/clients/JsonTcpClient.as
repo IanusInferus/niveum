@@ -7,25 +7,25 @@
     import com.brooksandrus.utils.ISO8601Util;
     import communication.*;
 
-    public class JsonSocketClient implements IJsonSender
+    public class JsonTcpClient implements IJsonSender
     {
         private var innerClientValue:JsonSerializationClient;
         public function get innerClient():IApplicationClient { return innerClientValue; }
         public function set error(callback:Function):void
-		{
-			innerClient.error = function(e:communication.ErrorEvent):void
-			{
-				try
-				{
-					innerClient.dequeueCallback(e.commandName);
-				}
-				catch (err:Error)
-				{
-					trace(err);
-				}
-				callback(e);
-			};
-		}
+        {
+            innerClient.error = function(e:communication.ErrorEvent):void
+            {
+                try
+                {
+                    innerClient.dequeueCallback(e.commandName);
+                }
+                catch (err:Error)
+                {
+                    trace(err);
+                }
+                callback(e);
+            };
+        }
 
         private var bindings:Vector.<Binding>
         private var bindingInfos:Vector.<BindingInfo>
@@ -59,8 +59,7 @@
             }
         }
 
-        /// handleResult : (commandName : String, params : String) -> unit
-        public function JsonSocketClient(bindings:Vector.<Binding>)
+        public function JsonTcpClient(bindings:Vector.<Binding>)
         {
             this.innerClientValue = new JsonSerializationClient(this);
             if (bindings.length == 0)
@@ -73,17 +72,17 @@
             {
                 bindingInfos[i] = new BindingInfo();
             }
-			innerClient.error = function(e:communication.ErrorEvent):void
-			{
-				try
-				{
-					innerClient.dequeueCallback(e.commandName);
-				}
-				catch (err:Error)
-				{
-					trace(err);
-				}
-			};
+            innerClient.error = function(e:communication.ErrorEvent):void
+            {
+                try
+                {
+                    innerClient.dequeueCallback(e.commandName);
+                }
+                catch (err:Error)
+                {
+                    trace(err);
+                }
+            };
             readBuffer = new ByteArray();
             writeBuffer = new ByteArray();
         }
@@ -178,15 +177,15 @@
             });
         }
 
-		private function toHex8String(v:uint):String
-		{
-			var s:String = v.toString(16).toUpperCase();
-			if (s.length >= 8)
-			{
-				return s;
-			}
-			return "00000000".substr(0, 8 - s.length) + s;
-		}
+        private function toHex8String(v:uint):String
+        {
+            var s:String = v.toString(16).toUpperCase();
+            if (s.length >= 8)
+            {
+                return s;
+            }
+            return "00000000".substr(0, 8 - s.length) + s;
+        }
         private var iso:ISO8601Util = new ISO8601Util();
         public function sendChat(s:String):void
         {
@@ -219,9 +218,9 @@
         {
             var arr:Array = data.split(" ", 3);
             var cmd:String = arr[1];
-			var cmdParts:Array = cmd.split("@", 2);
-			var cmdName:String = cmdParts[0];
-			var cmdHash:uint = (uint)(parseInt(cmdParts[1], 16));
+            var cmdParts:Array = cmd.split("@", 2);
+            var cmdName:String = cmdParts[0];
+            var cmdHash:uint = (uint)(parseInt(cmdParts[1], 16));
             try
             {
                 var ts:String = iso.formatExtendedDateTime(new Date()) + " /svr " + cmd;
