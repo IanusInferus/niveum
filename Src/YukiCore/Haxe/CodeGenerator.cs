@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Haxe代码生成器
-//  Version:     2012.12.20.
+//  Version:     2012.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -96,7 +96,7 @@ namespace Yuki.ObjectSchema.Haxe.Common
                         if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
                         {
                             var Name = Type.TypeRef.Name;
-                            if (Name == "Optional" || Name == "List" || Name == "Set" || Name == "Map")
+                            if (Name.Equals("Optional", StringComparison.OrdinalIgnoreCase) || Name.Equals("List", StringComparison.OrdinalIgnoreCase) || Name.Equals("Set", StringComparison.OrdinalIgnoreCase) || Name.Equals("Map", StringComparison.OrdinalIgnoreCase))
                             {
                                 var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Name].PlatformName;
                                 return PlatformName;

@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2012.12.17.
+      Version:     2012.12.21.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -563,7 +563,7 @@ ObjectSchemaTemplate
                     {
                         return new [[${Name}]] { Value = [[${ValueTypeFriendlyName}FromJson]](j) };
                     }
-                    public static JValue [[${Name}ToJson]]([[${Name}]] o)
+                    public static JToken [[${Name}ToJson]]([[${Name}]] o)
                     {
                         return [[${ValueTypeFriendlyName}ToJson]](o.Value);
                     }
@@ -662,7 +662,7 @@ ObjectSchemaTemplate
                     public static [[${TypeFriendlyName}]] [[${TypeFriendlyName}FromJson]](JToken j)
                     {
                         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
-                        var ja = j as JObject;
+                        var ja = j as JArray;
                         var t = new [[${TypeFriendlyName}]]();
                         ${TupleElementFroms}
                         return t;
@@ -720,14 +720,13 @@ ObjectSchemaTemplate
                         if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
                         var jo = j as JObject;
                         var o = new [[${TypeString}]]();
-                        o._Tag = OptionalTagFromJson(jo[@"_tag"]);
+                        var d = (IDictionary<string, JToken>)(jo);
                         ${AlternativeFroms}
                         throw new InvalidOperationException();
                     }
                     public static JObject [[${TypeFriendlyName}ToJson]]([[${TypeString}]] o)
                     {
                         var jo = new JObject();
-                        jo.Add(@"_tag", OptionalTagToJson(o._Tag));
                         ${AlternativeTos}
                         throw new InvalidOperationException();
                     }
