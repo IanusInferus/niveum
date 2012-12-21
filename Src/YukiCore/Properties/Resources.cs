@@ -3,7 +3,7 @@
 //  File:        Resources.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 资源读取类
-//  Version:     2012.12.13.
+//  Version:     2012.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -36,6 +36,7 @@ namespace Yuki.ObjectSchema.Properties
         public static Byte[] CSharpBinary { get { return GetResource("CSharpBinary"); } }
         public static Byte[] CSharpJson { get { return GetResource("CSharpJson"); } }
         public static Byte[] Haxe { get { return GetResource("Haxe"); } }
+        public static Byte[] HaxeJson { get { return GetResource("HaxeJson"); } }
         public static Byte[] Java { get { return GetResource("Java"); } }
         public static Byte[] JavaBinary { get { return GetResource("JavaBinary"); } }
         public static Byte[] VB { get { return GetResource("VB"); } }

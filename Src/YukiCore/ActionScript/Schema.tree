@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构ActionScript3.0模板数据
-      Version:     2012.12.19.
+      Version:     2012.12.21.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -151,6 +151,85 @@ ObjectSchemaTemplate
 
                 $End
         Template
+            Name Alias
+            //Parameters: ${Name}, ${Type}, ${TypeFriendlyName}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    public class [[${Name}]]
+                    {
+                        public var value:[[${Type}]];
+
+                        public function [[${Name}]]()
+                        {
+                        }
+                        public static function fromBinary(ba:IDataInput):[[${Name}]]
+                        {
+                            var o:[[${Name}]] = new [[${Name}]]();
+                            o.value = BinaryTranslator.[[${typeFriendlyName}FromBinary]](ba);
+                            return o;
+                        }
+                        public static function toBinary(ba:IDataOutput, o:[[${Name}]]):void
+                        {
+                            BinaryTranslator.[[${typeFriendlyName}ToBinary]](ba, o.value);
+                        }
+                        public static function fromJson(j:Object):[[${Name}]]
+                        {
+                            var o:[[${Name}]] = new [[${Name}]]();
+                            o.value = JsonTranslator.[[${typeFriendlyName}FromJson]](j);
+                            return o;
+                        }
+                        public static function toJson(o:[[${Name}]]):Object
+                        {
+                            var j:Object;
+                            j = JsonTranslator.[[${typeFriendlyName}ToJson]](o.value);
+                            return j;
+                        }
+                    }
+        Template
+            Name TupleElement
+            //Parameters: ${NameIndex}, ${Type}
+            Value
+                $String
+                    public var [[item${NameIndex}]]:[[${Type}]];
+        Template
+            Name Tuple
+            //Parameters: ${Name}, ${TupleElements}, ${BinaryTupleElementFroms}, ${BinaryTupleElementTos}, ${JsonTupleElementFroms}, ${JsonTupleElementTos}
+            Value
+                $String
+                    /* Tuple */
+                    public class [[${Name}]]
+                    {
+                        ${TupleElements}
+
+                        public function [[${Name}]]()
+                        {
+                        }
+                        public static function fromBinary(ba:IDataInput):[[${Name}]]
+                        {
+                            var o:[[${Name}]] = new [[${Name}]]();
+                            ${BinaryTupleElementFroms}
+                            return o;
+                        }
+                        public static function toBinary(ba:IDataOutput, o:[[${Name}]]):void
+                        {
+                            ${BinaryTupleElementTos}
+                        }
+                        public static function fromJson(j:Object):[[${Name}]]
+                        {
+                            var ja:Array = j as Array;
+                            var o:[[${Name}]] = new [[${Name}]]();
+                            ${JsonTupleElementFroms}
+                            return o;
+                        }
+                        public static function toJson(o:[[${Name}]]):Object
+                        {
+                            var ja:Array = new Array();
+                            ${JsonTupleElementTos}
+                            return ja;
+                        }
+                    }
+        Template
             Name Field
             //Parameters: ${Name}, ${Type}, ${XmlComment}
             Value
@@ -180,7 +259,7 @@ ObjectSchemaTemplate
                         {
                             ${BinaryFieldTos}
                         }
-                        public static function fromJson(jo:Object):[[${Name}]]
+                        public static function fromJson(j:Object):[[${Name}]]
                         {
                             var o:[[${Name}]] = new [[${Name}]]();
                             ${JsonFieldFroms}
@@ -188,9 +267,9 @@ ObjectSchemaTemplate
                         }
                         public static function toJson(o:[[${Name}]]):Object
                         {
-                            var jo:Object = new Object();
+                            var j:Object = new Object();
                             ${JsonFieldTos}
-                            return jo;
+                            return j;
                         }
                     }
         Template
@@ -265,7 +344,7 @@ ObjectSchemaTemplate
                             ${BinaryAlternativeTos}
                             throw new flash.errors.IllegalOperationError();
                         }
-                        public static function fromJson(jo:Object):[[${Name}]]
+                        public static function fromJson(j:Object):[[${Name}]]
                         {
                             var o:[[${Name}]] = new [[${Name}]]();
                             ${JsonAlternativeFroms}
@@ -273,7 +352,7 @@ ObjectSchemaTemplate
                         }
                         public static function toJson(o:[[${Name}]]):Object
                         {
-                            var jo:Object = new Object();
+                            var j:Object = new Object();
                             ${JsonAlternativeTos}
                             throw new flash.errors.IllegalOperationError();
                         }
@@ -642,36 +721,48 @@ ObjectSchemaTemplate
             //Parameters: ${Name}
             Value
                 $String
-                    public static function [[${name}FromJson]](jo:Object):[[${Name}]] { return [[${Name}]].fromJson(jo); }
+                    public static function [[${name}FromJson]](j:Object):[[${Name}]] { return [[${Name}]].fromJson(j); }
                     public static function [[${name}ToJson]](o:[[${Name}]]):Object { return [[${Name}]].toJson(o); }
+        Template
+            Name JsonTranslator_TupleElementFrom
+            //Parameters: ${NameIndex}, ${TypeFriendlyName}
+            Value
+                $String
+                    o.[[item${NameIndex}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](ja[${NameIndex}]);
+        Template
+            Name JsonTranslator_TupleElementTo
+            //Parameters: ${NameIndex}, ${TypeFriendlyName}
+            Value
+                $String
+                    ja[${NameIndex}] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[item${NameIndex}]]);
         Template
             Name JsonTranslator_FieldFrom
             //Parameters: ${Name}, ${TypeFriendlyName}
             Value
                 $String
-                    o.[[${name}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](jo["${name}"]);
+                    o.[[${name}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](j["${name}"]);
         Template
             Name JsonTranslator_FieldTo
             //Parameters: ${Name}, ${TypeFriendlyName}
             Value
                 $String
-                    jo["${name}"] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[${name}]]);
+                    j["${name}"] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[${name}]]);
         Template
             Name JsonTranslator_TaggedUnion
             //Parameters: ${Name}
             Value
                 $String
-                    public static function [[${name}FromJson]](jo:Object):[[${Name}]] { return [[${Name}]].fromJson(jo); }
+                    public static function [[${name}FromJson]](j:Object):[[${Name}]] { return [[${Name}]].fromJson(j); }
                     public static function [[${name}ToJson]](o:[[${Name}]]):Object { return [[${Name}]].toJson(o); }
         Template
             Name JsonTranslator_AlternativeFrom
             //Parameters: ${TaggedUnionName}, ${Name}, ${TypeFriendlyName}
             Value
                 $String
-                    if (jo.hasOwnProperty("${name}"))
+                    if (j.hasOwnProperty("${name}"))
                     {
                         o._tag = [[${TaggedUnionName}Tag.${NAME}]];
-                        o.[[${name}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](jo["${name}"]);
+                        o.[[${name}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](j["${name}"]);
                         return o;
                     }
         Template
@@ -681,8 +772,8 @@ ObjectSchemaTemplate
                 $String
                     if (o._tag == [[${TaggedUnionName}Tag.${NAME}]])
                     {
-                        jo["${name}"] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[${name}]]);
-                        return jo;
+                        j["${name}"] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[${name}]]);
+                        return j;
                     }
         Template
             Name JsonTranslator_Enum
@@ -698,7 +789,7 @@ ObjectSchemaTemplate
                 $String
                     public static function [[${typeFriendlyName}FromJson]](j:Object):[[${TypeString}]]
                     {
-                        var jl:Array = (Array)(j);
+                        var jl:Array = j as Array;
                         var l:[[${TypeString}]] = new [[${TypeString}]]();
                         for (var k:int = 0; k < jl.length; k += 1)
                         {

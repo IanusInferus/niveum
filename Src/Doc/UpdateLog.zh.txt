@@ -1,4 +1,12 @@
-﻿2012.12.20
+﻿2012.12.21
+Yuki.Core:
+增加Haxe JSON代码生成。
+修正C# JSON代码生成中Tuple类型和Optional类型中的错误。
+修正ActionScript JSON代码生成中的Alias类型和List类型中的错误。
+Examples:
+将BinarySerialization示例改为Serialization示例，增加C#、ActionScript、Haxe对JSON的序列化。
+
+2012.12.20
 Yuki.Core:
 增加Haxe类型定义代码生成。
 Examples:
