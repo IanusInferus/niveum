@@ -65,22 +65,16 @@ namespace Yuki.ObjectSchema.Haxe.Common
                     }
                 }
 
-                var Header = GetHeader();
                 var Types = GetTypes(Schema);
 
                 if (PackageName != "")
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("PackageName", PackageName).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", PackageName).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToArray();
                 }
                 else
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("PackageName", new String[] { }).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", new String[] { }).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToArray();
                 }
-            }
-
-            public String[] GetHeader()
-            {
-                return GetTemplate("Header");
             }
 
             public String[] GetPrimitive(String Name, String PlatformName)
@@ -379,7 +373,7 @@ namespace Yuki.ObjectSchema.Haxe.Common
                 {
                     if (TemplateInfo.Keywords.Contains(IdentifierPart))
                     {
-                        l.Add("__" + IdentifierPart);
+                        l.Add("_" + IdentifierPart);
                     }
                     else
                     {
