@@ -347,7 +347,16 @@ namespace Server
             var jo = new JObject();
             jo["commands"] = new JArray(vts.TakeWriteBuffer());
             jo["sessionid"] = NewSessionId;
-            var Bytes = TextEncoding.UTF8.GetBytes(jo.ToString(Newtonsoft.Json.Formatting.None));
+            var Result = jo.ToString(Newtonsoft.Json.Formatting.None);
+            {
+                var Keys = ListenerContext.Request.QueryString.AllKeys.Where(k => k != null && k.Equals("callback", StringComparison.OrdinalIgnoreCase)).ToArray();
+                if (Keys.Length == 1)
+                {
+                    var CallbackName = ListenerContext.Request.QueryString[Keys.Single()];
+                    Result = "{0}({1});".Formats(CallbackName, Result);
+                }
+            }
+            var Bytes = TextEncoding.UTF8.GetBytes(Result);
             ListenerContext.Response.StatusCode = 200;
             ListenerContext.Response.AddHeader("Accept-Ranges", "none");
             ListenerContext.Response.ContentEncoding = System.Text.Encoding.UTF8;
