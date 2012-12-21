@@ -98,8 +98,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                     }
                     else if (c.OnAlias)
                     {
-                        var r = new RecordDef { Name = c.Alias.TypeFriendlyName(), Version = "", Fields = new VariableDef[] { new VariableDef { Name = "Value", Type = c.Alias.Type, Description = "" } }, Description = "" };
-                        l.Add(GetFile(r.TypeFriendlyName(), GetRecord(r)));
+                        l.Add(GetFile(c.Alias.TypeFriendlyName(), GetAlias(c.Alias)));
                     }
                     else if (c.OnRecord)
                     {
@@ -137,7 +136,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
 
                 foreach (var t in Tuples)
                 {
-                    l.Add(GetFile(t.TypeFriendlyName(), GetRecord(new RecordDef { Name = t.TypeFriendlyName(), Version = "", GenericParameters = new VariableDef[] { }, Fields = t.Tuple.Types.Select((tp, i) => new VariableDef { Name = String.Format("Item{0}", i), Type = tp, Description = "" }).ToArray(), Description = "" })));
+                    l.Add(GetFile(t.TypeFriendlyName(), GetTuple(t.TypeFriendlyName(), t.Tuple)));
                 }
 
                 var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToArray();
@@ -230,6 +229,31 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                 }
             }
 
+            public String[] GetAlias(AliasDef a)
+            {
+                return GetTemplate("Alias").Substitute("Name", a.TypeFriendlyName()).Substitute("Type", GetTypeString(a.Type)).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(a.Description));
+            }
+            public String[] GetTupleElement(Int64 NameIndex, TypeSpec Type)
+            {
+                return GetTemplate("TupleElement").Substitute("NameIndex", NameIndex.ToInvariantString()).Substitute("Type", GetTypeString(Type));
+            }
+            public String[] GetTupleElements(TypeSpec[] Types)
+            {
+                List<String> l = new List<String>();
+                var n = 0;
+                foreach (var e in Types)
+                {
+                    l.AddRange(GetTupleElement(n, e));
+                    n += 1;
+                }
+                return l.ToArray();
+            }
+            public String[] GetTuple(String Name, TupleDef t)
+            {
+                var TupleElements = GetTupleElements(t.Types);
+                var Fields = t.Types.Select((tp, i) => new VariableDef { Name = String.Format("Item{0}", i), Type = tp, Description = "" }).ToArray();
+                return GetTemplate("Tuple").Substitute("Name", Name).Substitute("TupleElements", TupleElements).Substitute("BinaryTupleElementFroms", GetBinaryTranslatorFieldFroms(Fields)).Substitute("BinaryTupleElementTos", GetBinaryTranslatorFieldTos(Fields)).Substitute("JsonTupleElementFroms", GetJsonTranslatorTupleElementFroms(t.Types)).Substitute("JsonTupleElementTos", GetJsonTranslatorTupleElementTos(t.Types));
+            }
             public String[] GetField(VariableDef f)
             {
                 var d = f.Description;
@@ -659,6 +683,28 @@ namespace Yuki.ObjectSchema.ActionScript.Common
             {
                 List<String> l = new List<String>();
                 l.AddRange(GetTemplate("JsonTranslator_Record").Substitute("Name", Name));
+                return l.ToArray();
+            }
+            public String[] GetJsonTranslatorTupleElementFroms(TypeSpec[] Types)
+            {
+                List<String> l = new List<String>();
+                var n = 0;
+                foreach (var e in Types)
+                {
+                    l.AddRange(GetTemplate("JsonTranslator_TupleElementFrom").Substitute("NameIndex", n.ToInvariantString()).Substitute("TypeFriendlyName", e.TypeFriendlyName()));
+                    n += 1;
+                }
+                return l.ToArray();
+            }
+            public String[] GetJsonTranslatorTupleElementTos(TypeSpec[] Types)
+            {
+                List<String> l = new List<String>();
+                var n = 0;
+                foreach (var e in Types)
+                {
+                    l.AddRange(GetTemplate("JsonTranslator_TupleElementTo").Substitute("NameIndex", n.ToInvariantString()).Substitute("TypeFriendlyName", e.TypeFriendlyName()));
+                    n += 1;
+                }
                 return l.ToArray();
             }
             public String[] GetJsonTranslatorFieldFroms(VariableDef[] Fields)
