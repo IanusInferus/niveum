@@ -61,7 +61,7 @@ C#                  √              Firefly库动态支持   √              两端    
 Java                √              √                  ×              ×          ×
 C++2011             √              √                  ×              两端        ×
 ActionScript        √              √                  √              客户端      客户端
-Haxe                √              ×                  √              ×          ×
+Haxe                √              ×                  √              ×          客户端
 Xhtml               √              无需                无需            无需        无需
 
 
