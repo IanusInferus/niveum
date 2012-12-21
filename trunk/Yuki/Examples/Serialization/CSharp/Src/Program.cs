@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 数据转换工具
-//  Version:     2012.04.07.
+//  Version:     2012.12.21.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -15,7 +15,9 @@ using System.Linq;
 using System.IO;
 using Firefly;
 using Firefly.Streaming;
+using Firefly.Mapping.XmlText;
 using Firefly.TextEncoding;
+using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Yuki;
 using Yuki.ObjectSchema;
@@ -96,6 +98,32 @@ namespace DataConv
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2j")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        TreeToJson(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "j2t")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        JsonToTree(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else
                 {
                     throw new ArgumentException(opt.Name);
@@ -116,8 +144,13 @@ namespace DataConv
             Console.WriteLine(@"/t2b:<TreeFile>,<BinaryFile>");
             Console.WriteLine(@"将二进制数据转化为Tree格式数据");
             Console.WriteLine(@"/b2t:<BinaryFile>,<TreeFile>");
+            Console.WriteLine(@"将Tree格式数据转化为JSON数据");
+            Console.WriteLine(@"/t2j:<TreeFile>,<JsonFile>");
+            Console.WriteLine(@"将JSON数据转化为Tree格式数据");
+            Console.WriteLine(@"/j2t:<JsonFile>,<TreeFile>");
             Console.WriteLine(@"TreeFile Tree文件路径。");
             Console.WriteLine(@"BinaryFile 二进制文件路径。");
+            Console.WriteLine(@"JsonFile JSON文件路径。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
             Console.WriteLine(@"DataConv /t2b:..\..\Data\WorldData.tree,..\Data\WorldData.bin");
@@ -144,6 +177,26 @@ namespace DataConv
                 Data = s.Read((int)(s.Length));
             }
             var x = tbc.BinaryToTree<World.World>(Data);
+            TreeFile.WriteFile(TreePath, x);
+        }
+
+        public static void TreeToJson(String TreePath, String JsonPath)
+        {
+            var xs = new XmlSerializer(true);
+            var x = TreeFile.ReadFile(TreePath);
+            var o = xs.Read<World.World>(x);
+            var j = World.Json.JsonTranslator.WorldToJson(o);
+            var t = j.ToString(Newtonsoft.Json.Formatting.Indented);
+            Txt.WriteFile(JsonPath, t);
+        }
+
+        public static void JsonToTree(String JsonPath, String TreePath)
+        {
+            var xs = new XmlSerializer(true);
+            var t = Txt.ReadFile(JsonPath);
+            var j = Newtonsoft.Json.Linq.JToken.Parse(t);
+            var o = World.Json.JsonTranslator.WorldFromJson(j);
+            var x = xs.Write<World.World>(o);
             TreeFile.WriteFile(TreePath, x);
         }
     }
