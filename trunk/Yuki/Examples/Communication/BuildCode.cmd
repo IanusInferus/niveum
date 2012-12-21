@@ -18,9 +18,14 @@ copy CPP\Src\Server\CommunicationBinary.h CPP\Src\Client\ /Y
 
 :: ActionScript
 @if not exist ActionScript\src\communication @md ActionScript\src\communication
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2as:ActionScript\Src\communication,communication
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2asb:ActionScript\Src\communication,communication
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2asj:ActionScript\Src\communication,communication
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2as:ActionScript\src\communication,communication
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2asb:ActionScript\src\communication,communication
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2asj:ActionScript\src\communication,communication
+
+::Haxe
+SchemaManipulator.exe /loadtype:Schema\Common /t2hx:Haxe\src\Common.hx
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /import:Common /t2hx:Haxe\src\Communication.hx
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /import:Common /import:Communication /t2hxj:Haxe\src\CommunicationJson.hx
 
 :: Xhtml
 @if not exist XHTML @md XHTML
