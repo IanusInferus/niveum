@@ -21,6 +21,14 @@ ulimit -u 65536
 改变成较大的值。
 运行mono Server.exe
 注意此时若退出root状态ulimit会还原。
+若要永久更改配置，需要
+在/etc/pam.d/login中添加
+session  required       pam_limits.so
+然后在/etc/security/limits.conf中添加
+*                soft    nofile          65536
+*                hard    nofile          65536
+*                soft    nproc           65536
+*                hard    nproc           65536
 
 这样服务器端程序就成功运行起来了。
 客户端程序Client.exe也是通过类似操作即可。

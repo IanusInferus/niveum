@@ -85,23 +85,20 @@ namespace Server
 
             IsExitingValue.Update(b => true);
 
-            if (Server != null)
+            Server.SessionMappings.DoAction(Mappings =>
             {
-                Server.SessionMappings.DoAction(Mappings =>
+                if (Mappings.ContainsKey(Context))
                 {
-                    if (Mappings.ContainsKey(Context))
-                    {
-                        Mappings.Remove(Context);
-                    }
-                });
-                Server.ServerContext.SessionSet.DoAction(ss =>
+                    Mappings.Remove(Context);
+                }
+            });
+            Server.ServerContext.SessionSet.DoAction(ss =>
+            {
+                if (ss.Contains(Context))
                 {
-                    if (ss.Contains(Context))
-                    {
-                        ss.Remove(Context);
-                    }
-                });
-            }
+                    ss.Remove(Context);
+                }
+            });
 
             si.UnregisterCrossSessionEvents();
 
@@ -125,10 +122,7 @@ namespace Server
             );
 
             IsExitingValue.Update(b => false);
-        }
 
-        public void NotifyDie()
-        {
             if (Server.EnableLogSystem)
             {
                 Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExit" });
@@ -159,7 +153,7 @@ namespace Server
 
             if (Server.EnableLogSystem)
             {
-                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExit" });
+                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExitAsync" });
             }
             Server.NotifySessionQuit(this);
         }

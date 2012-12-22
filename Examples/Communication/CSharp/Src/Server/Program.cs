@@ -116,10 +116,31 @@ namespace Server
             using (var ExitEvent = new AutoResetEvent(false))
             {
                 var ProcessorCount = Environment.ProcessorCount;
-                ThreadPool.SetMinThreads(ProcessorCount + 1, ProcessorCount + 1);
-                ThreadPool.SetMaxThreads(ProcessorCount * 2 + 1, ProcessorCount * 2 + 1);
+                var MinWorkThreadCount = ProcessorCount + 1;
+                var MaxWorkThreadCount = ProcessorCount * 2 + 1;
+                var MinCompletionPortThreadCount = ProcessorCount + 1;
+                var MaxCompletionPortThreadCount = ProcessorCount * 2 + 1;
+                foreach (var s in c.Servers)
+                {
+                    if (s.OnTcp)
+                    {
+                        MaxWorkThreadCount += 2 + s.Tcp.Bindings.Count();
+                    }
+                    else if (s.OnHttp)
+                    {
+                        MaxWorkThreadCount += 3;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
+                ThreadPool.SetMinThreads(MinWorkThreadCount, MinCompletionPortThreadCount);
+                ThreadPool.SetMaxThreads(MaxWorkThreadCount, MaxCompletionPortThreadCount);
 
                 Console.WriteLine(@"逻辑处理器数量: " + ProcessorCount.ToString());
+                Console.WriteLine(@"工作线程数量: [{0}-{1}]".Formats(MinWorkThreadCount, MaxWorkThreadCount));
+                Console.WriteLine(@"完成端口线程数量: [{0}-{1}]".Formats(MinCompletionPortThreadCount, MaxCompletionPortThreadCount));
 
                 using (var Logger = new ConsoleLogger())
                 {

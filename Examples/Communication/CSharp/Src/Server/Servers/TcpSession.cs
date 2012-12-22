@@ -99,23 +99,20 @@ namespace Server
 
             IsExitingValue.Update(b => true);
 
-            if (Server != null)
+            Server.SessionMappings.DoAction(Mappings =>
             {
-                Server.SessionMappings.DoAction(Mappings =>
+                if (Mappings.ContainsKey(Context))
                 {
-                    if (Mappings.ContainsKey(Context))
-                    {
-                        Mappings.Remove(Context);
-                    }
-                });
-                Server.ServerContext.SessionSet.DoAction(ss =>
+                    Mappings.Remove(Context);
+                }
+            });
+            Server.ServerContext.SessionSet.DoAction(ss =>
+            {
+                if (ss.Contains(Context))
                 {
-                    if (ss.Contains(Context))
-                    {
-                        ss.Remove(Context);
-                    }
-                });
-            }
+                    ss.Remove(Context);
+                }
+            });
 
             si.UnregisterCrossSessionEvents();
 
@@ -142,6 +139,11 @@ namespace Server
             Socket.Dispose();
 
             IsExitingValue.Update(b => false);
+
+            if (Server.EnableLogSystem)
+            {
+                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExit" });
+            }
         }
 
         //线程安全
@@ -155,17 +157,6 @@ namespace Server
             });
             if (Done) { return; }
 
-            if (Server != null)
-            {
-                Server.SessionMappings.DoAction(Mappings =>
-                {
-                    if (Mappings.ContainsKey(Context))
-                    {
-                        Mappings.Remove(Context);
-                    }
-                });
-            }
-
             try
             {
                 Socket.Shutdown(SocketShutdown.Receive);
@@ -175,7 +166,7 @@ namespace Server
             }
             if (Server.EnableLogSystem)
             {
-                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExit" });
+                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExitAsync" });
             }
             Server.NotifySessionQuit(this);
         }
@@ -260,7 +251,7 @@ namespace Server
             NumSessionCommandUpdated.Set();
         }
 
-        private void PushCommand(SessionCommand sc, TaskContinuationOptions? ContinuationOptions = null)
+        private void PushCommand(SessionCommand sc)
         {
             LockSessionCommand();
 
@@ -292,15 +283,7 @@ namespace Server
             (
                 t =>
                 {
-                    Task nt;
-                    if (ContinuationOptions != null)
-                    {
-                        nt = t.ContinueWith(tt => a(), ContinuationOptions.Value);
-                    }
-                    else
-                    {
-                        nt = t.ContinueWith(tt => a());
-                    }
+                    var nt = t.ContinueWith(tt => a());
                     nt = nt.ContinueWith
                     (
                         tt =>
@@ -311,10 +294,6 @@ namespace Server
                     return nt;
                 }
             );
-        }
-        private void QueueCommand(SessionCommand sc)
-        {
-            PushCommand(sc, TaskContinuationOptions.PreferFairness);
         }
         private static Boolean IsSocketErrorKnown(SocketError se)
         {
@@ -350,19 +329,31 @@ namespace Server
                     throw new InvalidOperationException();
                 }
 
-                QueueCommand(SessionCommand.CreateReadRaw());
+                PushCommand(SessionCommand.CreateReadRaw());
             }
             else if (sc.OnWrite)
             {
                 var Bytes = vts.TakeWriteBuffer();
-                Socket.SendAsync(Bytes, 0, Bytes.Length, () => { }, se =>
-                {
-                    if (!IsSocketErrorKnown(se))
+                LockSessionCommand();
+                Socket.SendAsync
+                (
+                    Bytes,
+                    0,
+                    Bytes.Length,
+                    () =>
                     {
-                        OnCriticalError((new SocketException((int)se)), new StackTrace(true));
+                        ReleaseSessionCommand();
+                    },
+                    se =>
+                    {
+                        ReleaseSessionCommand();
+                        if (!IsSocketErrorKnown(se))
+                        {
+                            OnCriticalError((new SocketException((int)se)), new StackTrace(true));
+                        }
+                        StopAsync();
                     }
-                    StopAsync();
-                });
+                );
             }
             else if (sc.OnReadRaw)
             {
@@ -443,7 +434,7 @@ namespace Server
                     {
                         r.Command.ExecuteCommand();
                     }
-                    WriteCommand();
+                    PushCommand(SessionCommand.CreateWrite());
                 };
 
                 if (Debugger.IsAttached)
@@ -505,6 +496,7 @@ namespace Server
         //线程安全
         public void WriteCommand()
         {
+            if (!IsRunningValue.Check(b => b)) { throw new InvalidOperationException("NotRunning"); }
             PushCommand(SessionCommand.CreateWrite());
         }
         //线程安全

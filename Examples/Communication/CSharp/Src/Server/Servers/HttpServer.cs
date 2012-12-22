@@ -77,7 +77,7 @@ namespace Server
         private HttpListener Listener = new HttpListener();
         private Task ListeningTask;
         private CancellationTokenSource ListeningTaskTokenSource;
-        private ConcurrentBag<HttpListenerContext> AcceptedListenerContexts = new ConcurrentBag<HttpListenerContext>();
+        private ConcurrentQueue<HttpListenerContext> AcceptedListenerContexts = new ConcurrentQueue<HttpListenerContext>();
         private Task AcceptingTask;
         private CancellationTokenSource AcceptingTaskTokenSource;
         private AutoResetEvent AcceptingTaskNotifier;
@@ -93,8 +93,8 @@ namespace Server
             public Dictionary<String, HttpSession> SessionIdToSession = new Dictionary<String, HttpSession>(StringComparer.OrdinalIgnoreCase);
             public Dictionary<HttpSession, String> SessionToId = new Dictionary<HttpSession, String>();
         }
-        private ConcurrentBag<HttpSession> StoppingSessions = new ConcurrentBag<HttpSession>();
-        private ConcurrentBag<HttpListenerContext> StoppingListenerContexts = new ConcurrentBag<HttpListenerContext>();
+        private ConcurrentQueue<HttpSession> StoppingSessions = new ConcurrentQueue<HttpSession>();
+        private ConcurrentQueue<HttpListenerContext> StoppingListenerContexts = new ConcurrentQueue<HttpListenerContext>();
         private LockedVariable<ServerSessionSets> SessionSets = new LockedVariable<ServerSessionSets>(new ServerSessionSets());
 
         public ServerContext ServerContext { get; private set; }
@@ -395,6 +395,24 @@ namespace Server
             return p;
         }
 
+        private static void SetTimerInner(HttpListener Listener, int Seconds)
+        {
+            var tm = Listener.TimeoutManager;
+            var ts = TimeSpan.FromSeconds(Seconds);
+            tm.DrainEntityBody = ts;
+            tm.EntityBody = ts;
+            tm.HeaderWait = ts;
+            tm.IdleConnection = ts;
+            tm.RequestQueue = ts;
+        }
+        private static void SetTimer(HttpListener Listener, int Seconds)
+        {
+            if (typeof(HttpListener).GetProperty("TimeoutManager", System.Reflection.BindingFlags.Public) != null)
+            {
+                SetTimerInner(Listener, Seconds);
+            }
+        }
+
         public void Start()
         {
             var Success = false;
@@ -428,13 +446,7 @@ namespace Server
                         }
                         if (SessionIdleTimeoutValue.HasValue)
                         {
-                            var tm = Listener.TimeoutManager;
-                            var ts = TimeSpan.FromSeconds(SessionIdleTimeoutValue.Value);
-                            tm.DrainEntityBody = ts;
-                            tm.EntityBody = ts;
-                            tm.HeaderWait = ts;
-                            tm.IdleConnection = ts;
-                            tm.RequestQueue = ts;
+                            SetTimer(Listener, SessionIdleTimeoutValue.Value);
                         }
                         ListeningTask = new Task
                         (
@@ -479,13 +491,15 @@ namespace Server
                                     while (true)
                                     {
                                         if (ListeningTaskToken.IsCancellationRequested) { return; }
-                                        var ca = Listener.GetContextAsync();
+                                        var ca = Listener.BeginGetContext(ar =>
+                                        {
+                                            var a = Listener.EndGetContext(ar);
+                                            AcceptedListenerContexts.Enqueue(a);
+                                            AcceptingTaskNotifier.Set();
+                                        }, null);
                                         try
                                         {
-                                            ca.Wait(ListeningTaskToken);
-                                            var a = ca.Result;
-                                            AcceptedListenerContexts.Add(a);
-                                            AcceptingTaskNotifier.Set();
+                                            WaitHandle.WaitAny(new WaitHandle[] { ca.AsyncWaitHandle, ListeningTaskToken.WaitHandle });
                                         }
                                         catch (OperationCanceledException)
                                         {
@@ -531,7 +545,7 @@ namespace Server
                         Func<Boolean> PurifyOneInSession = () =>
                         {
                             HttpSession StoppingSession;
-                            while (StoppingSessions.TryTake(out StoppingSession))
+                            while (StoppingSessions.TryDequeue(out StoppingSession))
                             {
                                 var Removed = Purify(StoppingSession);
                                 if (Removed) { return true; }
@@ -550,7 +564,7 @@ namespace Server
                                     while (true)
                                     {
                                         HttpListenerContext a;
-                                        if (!AcceptedListenerContexts.TryTake(out a))
+                                        if (!AcceptedListenerContexts.TryDequeue(out a))
                                         {
                                             break;
                                         }
@@ -754,8 +768,7 @@ namespace Server
                                                 {
                                                     if (s.LastActiveTime < CheckTime)
                                                     {
-                                                        s.NotifyDie();
-                                                        StoppingSessions.Add(s);
+                                                        StoppingSessions.Enqueue(s);
                                                     }
                                                 }
                                             }
@@ -763,13 +776,13 @@ namespace Server
                                     }
 
                                     HttpSession StoppingSession;
-                                    while (StoppingSessions.TryTake(out StoppingSession))
+                                    while (StoppingSessions.TryDequeue(out StoppingSession))
                                     {
                                         Purify(StoppingSession);
                                     }
 
                                     HttpListenerContext ListenerContext;
-                                    while (StoppingListenerContexts.TryTake(out ListenerContext))
+                                    while (StoppingListenerContexts.TryDequeue(out ListenerContext))
                                     {
                                         ListenerContext.Response.Close();
                                     }
@@ -886,12 +899,12 @@ namespace Server
 
         public void NotifyListenerContextQuit(HttpListenerContext ListenerContext)
         {
-            StoppingListenerContexts.Add(ListenerContext);
+            StoppingListenerContexts.Enqueue(ListenerContext);
             PurifieringTaskNotifier.Set();
         }
         public void NotifySessionQuit(HttpSession s)
         {
-            StoppingSessions.Add(s);
+            StoppingSessions.Enqueue(s);
             PurifieringTaskNotifier.Set();
         }
 
