@@ -43,7 +43,7 @@ CSharp服务器默认在8003端口监听HTTP请求。
 安装nginx，修改配置文件conf/nginx.conf，删去原来的location /，增加如下配置。
         location / {
             root   D:/Projects/YUKI/Examples/Communication/Haxe/bin;
-            index  index.html index.htm;
+            index  index.xhtml index.html index.htm;
         }
 
         location = /cmd {
