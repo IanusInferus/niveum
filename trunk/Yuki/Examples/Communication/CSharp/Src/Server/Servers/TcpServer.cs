@@ -85,7 +85,7 @@ namespace Server
 
         private Dictionary<IPEndPoint, BindingInfo> BindingInfos = new Dictionary<IPEndPoint, BindingInfo>();
         private CancellationTokenSource ListeningTaskTokenSource;
-        private ConcurrentBag<Socket> AcceptedSockets = new ConcurrentBag<Socket>();
+        private ConcurrentQueue<Socket> AcceptedSockets = new ConcurrentQueue<Socket>();
         private Task AcceptingTask;
         private CancellationTokenSource AcceptingTaskTokenSource;
         private AutoResetEvent AcceptingTaskNotifier;
@@ -94,7 +94,7 @@ namespace Server
         private AutoResetEvent PurifieringTaskNotifier;
         private LockedVariable<HashSet<TcpSession>> Sessions = new LockedVariable<HashSet<TcpSession>>(new HashSet<TcpSession>());
         private LockedVariable<Dictionary<IPAddress, int>> IpSessions = new LockedVariable<Dictionary<IPAddress, int>>(new Dictionary<IPAddress, int>());
-        private ConcurrentBag<TcpSession> StoppingSessions = new ConcurrentBag<TcpSession>();
+        private ConcurrentQueue<TcpSession> StoppingSessions = new ConcurrentQueue<TcpSession>();
 
         public ServerContext ServerContext { get; private set; }
 
@@ -419,7 +419,7 @@ namespace Server
                                             try
                                             {
                                                 var a = BindingInfo.Socket.Check(s => s).Accept();
-                                                AcceptedSockets.Add(a);
+                                                AcceptedSockets.Enqueue(a);
                                                 AcceptingTaskNotifier.Set();
                                             }
                                             catch (SocketException)
@@ -508,7 +508,7 @@ namespace Server
                         Func<Boolean> PurifyOneInSession = () =>
                         {
                             TcpSession StoppingSession;
-                            while (StoppingSessions.TryTake(out StoppingSession))
+                            while (StoppingSessions.TryDequeue(out StoppingSession))
                             {
                                 var Removed = Purify(StoppingSession);
                                 if (Removed) { return true; }
@@ -527,7 +527,7 @@ namespace Server
                                     while (true)
                                     {
                                         Socket a;
-                                        if (!AcceptedSockets.TryTake(out a))
+                                        if (!AcceptedSockets.TryDequeue(out a))
                                         {
                                             break;
                                         }
@@ -572,7 +572,7 @@ namespace Server
                                             }
                                             finally
                                             {
-                                                StoppingSessions.Add(s);
+                                                StoppingSessions.Enqueue(s);
                                                 PurifieringTaskNotifier.Set();
                                             }
                                             continue;
@@ -619,7 +619,7 @@ namespace Server
                                     PurifieringTaskNotifier.WaitOne();
 
                                     TcpSession StoppingSession;
-                                    while (StoppingSessions.TryTake(out StoppingSession))
+                                    while (StoppingSessions.TryDequeue(out StoppingSession))
                                     {
                                         Purify(StoppingSession);
                                     }
@@ -765,7 +765,7 @@ namespace Server
 
         public void NotifySessionQuit(TcpSession s)
         {
-            StoppingSessions.Add(s);
+            StoppingSessions.Enqueue(s);
             PurifieringTaskNotifier.Set();
         }
 
