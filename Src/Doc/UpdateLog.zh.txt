@@ -1,4 +1,15 @@
-﻿2012.12.22.0
+﻿2012.12.23
+Examples:
+修正C#通讯示例在openSUSE/Mono下的一些兼容性问题。
+
+2012.12.22
+Examples:
+修改Haxe通讯示例网页为HTML5(XHTML)标准。
+修正C++通讯示例在openSUSE下编译的警告。
+修正C#通讯示例在Mono上System.Collections.Concurrent.ConcurrentBag(Of T)类型TryTake获得错误空值的问题。
+修正C#通讯示例一处加锁问题。
+
+2012.12.22.0
 Yuki.Core:
 调整Haxe JSON代码生成。
 Examples:
