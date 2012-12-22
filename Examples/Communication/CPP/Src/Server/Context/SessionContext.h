@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "Communication.h"
+
 #include <memory>
 #include <cstdint>
 #include <vector>
@@ -11,9 +13,6 @@
 #endif
 #include <boost/thread.hpp>
 #include <boost/format.hpp>
-
-class Communication::MessageReceivedEvent;
-class Communication::TestMessageReceivedEvent;
 
 namespace Server
 {
