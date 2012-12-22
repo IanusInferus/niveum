@@ -60,6 +60,32 @@ namespace Server
         event Action ServerEvent;
     }
 
+    public static class HttpListenerRequestExtension
+    {
+        public static Dictionary<String, String> GetQuery(HttpListenerRequest r)
+        {
+            var q = r.Url.Query;
+            if (q.StartsWith("?"))
+            {
+                q = q.Substring(1);
+            }
+            var d = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
+            foreach (var p in q.Split('&'))
+            {
+                var Parts = p.Split('=');
+                if (Parts.Length != 2) { continue; }
+                var Key = Uri.UnescapeDataString(Parts[0]);
+                var Value = Uri.UnescapeDataString(Parts[1]);
+                if (d.ContainsKey(Key))
+                {
+                    d.Remove(Key);
+                }
+                d.Add(Key, Value);
+            }
+            return d;
+        }
+    }
+
     /// <summary>
     /// 本类的所有非继承的公共成员均是线程安全的。
     /// </summary>
@@ -625,21 +651,14 @@ namespace Server
                                                 }
                                             }
 
-                                            if (a.Request.QueryString != null)
                                             {
-                                                var Keys = a.Request.QueryString.AllKeys.Where(k => k != null && k.Equals("sessionid", StringComparison.OrdinalIgnoreCase)).ToArray();
-                                                if (Keys.Count() > 1)
-                                                {
-                                                    a.Response.StatusCode = 400;
-                                                    NotifyListenerContextQuit(a);
-                                                    continue;
-                                                }
+                                                var Query = HttpListenerRequestExtension.GetQuery(a.Request);
 
-                                                if (Keys.Count() == 1)
+                                                if (Query.ContainsKey("sessionid"))
                                                 {
                                                     HttpSession s = null;
 
-                                                    var SessionId = a.Request.QueryString[Keys.Single()];
+                                                    var SessionId = Query["sessionid"];
                                                     var Close = false;
                                                     SessionSets.DoAction
                                                     (
@@ -647,6 +666,11 @@ namespace Server
                                                         {
                                                             if (!ss.SessionIdToSession.ContainsKey(SessionId))
                                                             {
+                                                                Console.WriteLine(SessionId);
+                                                                foreach (var ssss in ss.SessionIdToSession)
+                                                                {
+                                                                    Console.WriteLine(ssss.Key);
+                                                                }
                                                                 a.Response.StatusCode = 403;
                                                                 Close = true;
                                                                 return;
