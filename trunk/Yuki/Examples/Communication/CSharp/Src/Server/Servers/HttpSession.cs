@@ -41,7 +41,7 @@ namespace Server
 
             Context = new SessionContext();
             Context.SessionToken = Cryptography.CreateRandom(4);
-            Context.Quit += StopAsync;
+            Context.Quit += Quit;
 
             si = new ServerImplementation(Server.ServerContext, Context);
             si.RegisterCrossSessionEvents();
@@ -140,17 +140,6 @@ namespace Server
             });
             if (Done) { return; }
 
-            if (Server != null)
-            {
-                Server.SessionMappings.DoAction(Mappings =>
-                {
-                    if (Mappings.ContainsKey(Context))
-                    {
-                        Mappings.Remove(Context);
-                    }
-                });
-            }
-
             if (Server.EnableLogSystem)
             {
                 Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExitAsync" });
@@ -245,6 +234,31 @@ namespace Server
             NumSessionCommandUpdated.Set();
         }
 
+        private void Quit()
+        {
+            LockSessionCommand();
+
+            Action a = () =>
+            {
+                StopAsync();
+            };
+
+            SessionTask.Update
+            (
+                t =>
+                {
+                    var nt = t.ContinueWith(tt => a());
+                    nt = nt.ContinueWith
+                    (
+                        tt =>
+                        {
+                            ReleaseSessionCommand();
+                        }
+                    );
+                    return nt;
+                }
+            );
+        }
         private void PushCommand(HttpListenerContext ListenerContext, String NewSessionId)
         {
             LockSessionCommand();
@@ -297,12 +311,12 @@ namespace Server
             {
                 Data = ListenerContext.Request.ContentEncoding.GetString(InputStream.Read((int)(ListenerContext.Request.ContentLength64)));
             }
+            var Query = HttpListenerRequestExtension.GetQuery(ListenerContext.Request);
             if (Data == "")
             {
-                var Keys = ListenerContext.Request.QueryString.AllKeys.Where(k => k != null && k.Equals("data", StringComparison.OrdinalIgnoreCase)).ToArray();
-                if (Keys.Length == 1)
+                if (Query.ContainsKey("data"))
                 {
-                    Data = ListenerContext.Request.QueryString[Keys.Single()];
+                    Data = Query["data"];
                 }
             }
             JArray Objects;
@@ -343,10 +357,9 @@ namespace Server
             jo["sessionid"] = NewSessionId;
             var Result = jo.ToString(Newtonsoft.Json.Formatting.None);
             {
-                var Keys = ListenerContext.Request.QueryString.AllKeys.Where(k => k != null && k.Equals("callback", StringComparison.OrdinalIgnoreCase)).ToArray();
-                if (Keys.Length == 1)
+                if (Query.ContainsKey("callback"))
                 {
-                    var CallbackName = ListenerContext.Request.QueryString[Keys.Single()];
+                    var CallbackName = Query["callback"];
                     Result = "{0}({1});".Formats(CallbackName, Result);
                 }
             }

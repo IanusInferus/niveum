@@ -38,7 +38,7 @@ namespace Server
 
             Context = new SessionContext();
             Context.SessionToken = Cryptography.CreateRandom(4);
-            Context.Quit += StopAsync;
+            Context.Quit += Quit;
 
             si = new ServerImplementation(Server.ServerContext, Context);
             si.RegisterCrossSessionEvents();
@@ -251,6 +251,31 @@ namespace Server
             NumSessionCommandUpdated.Set();
         }
 
+        private void Quit()
+        {
+            LockSessionCommand();
+
+            Action a = () =>
+            {
+                StopAsync();
+            };
+
+            SessionTask.Update
+            (
+                t =>
+                {
+                    var nt = t.ContinueWith(tt => a());
+                    nt = nt.ContinueWith
+                    (
+                        tt =>
+                        {
+                            ReleaseSessionCommand();
+                        }
+                    );
+                    return nt;
+                }
+            );
+        }
         private void PushCommand(SessionCommand sc)
         {
             LockSessionCommand();
