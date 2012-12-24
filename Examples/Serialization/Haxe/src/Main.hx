@@ -1,6 +1,6 @@
 ﻿import haxe.Json;
 import haxe.io.Bytes;
-import neko.io.File;
+import sys.io.File;
 
 import World;
 import WorldJson;
@@ -34,19 +34,19 @@ class Main
 		f.close();
 	}
 	
-    static function copyJson() : Void
-    {
-        var t:String = readUtf8File("..\\..\\CSharp\\Data\\WorldData.json");
-        var j:Dynamic = Json.parse(t);
-        var w:World = JsonTranslator.worldFromJson(j);
+	static function copyJson() : Void
+	{
+		var t:String = readUtf8File("..\\..\\CSharp\\Data\\WorldData.json");
+		var j:Dynamic = Json.parse(t);
+		var w:World = JsonTranslator.worldFromJson(j);
 
-        var j2:Dynamic = JsonTranslator.worldToJson(w);
-        var t2:String = Json.stringify(j2);
+		var j2:Dynamic = JsonTranslator.worldToJson(w);
+		var t2:String = Json.stringify(j2);
 		writeUtf8File("..\\Data\\WorldData.json", t2);
-    }
+	}
 
-    static function main() : Void
+	static function main() : Void
 	{
 		copyJson();
-    }
+	}
 }
