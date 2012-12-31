@@ -7,6 +7,7 @@ using Firefly.Streaming;
 using Firefly.TextEncoding;
 using Communication;
 using Communication.Binary;
+using ByteArrayStream = Firefly.Streaming.ByteArrayStream;
 
 namespace Server
 {

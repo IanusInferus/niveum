@@ -54,6 +54,10 @@
   <ItemGroup>
     <Compile Include="Algorithms\Cryptography.cs" />
     <Compile Include="Configuration.cs" />
+    <Compile Include="Generated\Common.cs" />
+    <Compile Include="Generated\Communication.cs" />
+    <Compile Include="Generated\CommunicationBinary.cs" />
+    <Compile Include="Generated\CommunicationJson.cs" />
     <Compile Include="Servers\Concept.cs">
       <SubType>Code</SubType>
     </Compile>

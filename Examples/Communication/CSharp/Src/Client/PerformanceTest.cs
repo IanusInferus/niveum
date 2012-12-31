@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
-using Firefly;
 using Communication;
 using Communication.BaseSystem;
 using Communication.Binary;
@@ -92,7 +91,7 @@ namespace Client
                     });
                     if (OldValue <= 10)
                     {
-                        Console.WriteLine("{0}:{1}".Formats(n, (new SocketException((int)se)).Message));
+                        Console.WriteLine(String.Format("{0}:{1}", n, (new SocketException((int)se)).Message));
                     }
                     vCompleted.Update(i => i + 1);
                     Check.Set();
@@ -229,7 +228,7 @@ namespace Client
                     });
                     if (OldValue <= 10)
                     {
-                        Console.WriteLine("{0}:{1}".Formats(n, ex.Message));
+                        Console.WriteLine(String.Format("{0}:{1}", n, ex.Message));
                     }
                     vCompleted.Update(i => i + 1);
                     Check.Set();

@@ -5,9 +5,6 @@ using System.Text;
 using System.Threading;
 using System.Net;
 using Newtonsoft.Json.Linq;
-using Firefly;
-using Firefly.Streaming;
-using Firefly.TextEncoding;
 using Communication;
 using Communication.BaseSystem;
 using Communication.Net;
@@ -40,12 +37,12 @@ namespace Client
 
         public HttpClient(String Prefix, String ServiceVirtualPath)
         {
-            if (!Prefix.EndsWith("/")) { throw new InvalidOperationException("PrefixNotEndWithSlash: '{0}'".Formats(Prefix)); }
+            if (!Prefix.EndsWith("/")) { throw new InvalidOperationException(String.Format("PrefixNotEndWithSlash: '{0}'", Prefix)); }
             VirtualTransportClient = new JsonHttpPacketClient();
             InnerClient.Error += e => InnerClient.DequeueCallback(e.CommandName);
             VirtualTransportClient.ClientMethod += () =>
             {
-                var Bytes = TextEncoding.UTF8.GetBytes((new JArray(VirtualTransportClient.TakeWriteBuffer())).ToString(Newtonsoft.Json.Formatting.None));
+                var Bytes = System.Text.Encoding.UTF8.GetBytes((new JArray(VirtualTransportClient.TakeWriteBuffer())).ToString(Newtonsoft.Json.Formatting.None));
 
                 Uri Uri;
                 if (SessionId == null)
@@ -64,9 +61,9 @@ namespace Client
                 req.MediaType = "application/json";
                 req.Headers.Add("Accept-Charset", "utf-8");
 
-                using (var OutputStream = req.GetRequestStream().AsWritable())
+                using (var OutputStream = req.GetRequestStream())
                 {
-                    OutputStream.Write(Bytes);
+                    OutputStream.Write(Bytes, 0, Bytes.Length);
                 }
 
                 String ResultString;
@@ -76,15 +73,15 @@ namespace Client
                     Encoding e;
                     if (resp.CharacterSet == "")
                     {
-                        e = TextEncoding.UTF8;
+                        e = System.Text.Encoding.UTF8;
                     }
                     else
                     {
                         e = Encoding.GetEncoding(resp.CharacterSet);
                     }
-                    using (var InputStream = resp.GetResponseStream().AsReadable())
+                    using (var InputStream = resp.GetResponseStream())
                     {
-                        var ResultBytes = InputStream.Read(Length);
+                        var ResultBytes = Read(InputStream, Length);
                         ResultString = e.GetString(ResultBytes);
                     }
 
@@ -101,6 +98,21 @@ namespace Client
                     r.HandleResult();
                 }
             };
+        }
+
+        private static Byte[] Read(System.IO.Stream s, int Count)
+        {
+            var Buffer = new Byte[Count];
+            var c = 0;
+            while (c < Count)
+            {
+                var k = s.Read(Buffer, c, Count - c);
+                if (k < 0) { throw new System.IO.EndOfStreamException(); }
+                if (k == 0) { break; }
+                c += k;
+            }
+            if (c != Count) { throw new System.IO.EndOfStreamException(); }
+            return Buffer;
         }
 
         private Boolean IsDisposed = false;
