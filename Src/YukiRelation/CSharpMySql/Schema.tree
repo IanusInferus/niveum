@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# MySQL代码模板数据
-      Version:     2012.12.13.
+      Version:     2012.12.31.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -128,19 +128,12 @@ ObjectSchemaTemplate
                             return cmd;
                         }
 
-                        private static void Add(MySqlCommand cmd, String ParameterName, Boolean? Value)
+                        private static void Add(MySqlCommand cmd, String ParameterName, Boolean Value)
                         {
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
                             p.DbType = DbType.Boolean;
-                            if (Value.HasValue)
-                            {
-                                p.Value = Value;
-                            }
-                            else
-                            {
-                                p.Value = DBNull.Value;
-                            }
+                            p.Value = Value;
                             cmd.Parameters.Add(p);
                         }
                         private static void Add(MySqlCommand cmd, String ParameterName, String Value)
@@ -148,44 +141,23 @@ ObjectSchemaTemplate
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
                             p.DbType = DbType.String;
-                            if (Value != null)
-                            {
-                                p.Value = Value;
-                            }
-                            else
-                            {
-                                p.Value = DBNull.Value;
-                            }
+                            p.Value = Value;
                             cmd.Parameters.Add(p);
                         }
-                        private static void Add(MySqlCommand cmd, String ParameterName, int? Value)
+                        private static void Add(MySqlCommand cmd, String ParameterName, Int Value)
                         {
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
                             p.DbType = DbType.Int32;
-                            if (Value.HasValue)
-                            {
-                                p.Value = Value;
-                            }
-                            else
-                            {
-                                p.Value = DBNull.Value;
-                            }
+                            p.Value = Value;
                             cmd.Parameters.Add(p);
                         }
-                        private static void Add(MySqlCommand cmd, String ParameterName, Double? Value)
+                        private static void Add(MySqlCommand cmd, String ParameterName, Real Value)
                         {
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
                             p.DbType = DbType.Single;
-                            if (Value.HasValue)
-                            {
-                                p.Value = (Single)(Value);
-                            }
-                            else
-                            {
-                                p.Value = DBNull.Value;
-                            }
+                            p.Value = (Single)(Value);
                             cmd.Parameters.Add(p);
                         }
                         private static void Add(MySqlCommand cmd, String ParameterName, List<Byte> Value)
@@ -193,9 +165,77 @@ ObjectSchemaTemplate
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
                             p.DbType = DbType.Binary;
-                            if (Value != null)
+                            p.Value = Value.ToArray();
+                            cmd.Parameters.Add(p);
+                        }
+                        private static void Add(MySqlCommand cmd, String ParameterName, Optional<Boolean> Value)
+                        {
+                            var p = cmd.CreateParameter();
+                            p.ParameterName = ParameterName;
+                            p.DbType = DbType.Boolean;
+                            if (Value.OnHasValue)
                             {
-                                p.Value = Value.ToArray();
+                                p.Value = Value.HasValue;
+                            }
+                            else
+                            {
+                                p.Value = DBNull.Value;
+                            }
+                            cmd.Parameters.Add(p);
+                        }
+                        private static void Add(MySqlCommand cmd, String ParameterName, Optional<String> Value)
+                        {
+                            var p = cmd.CreateParameter();
+                            p.ParameterName = ParameterName;
+                            p.DbType = DbType.String;
+                            if (Value.OnHasValue)
+                            {
+                                p.Value = Value.HasValue;
+                            }
+                            else
+                            {
+                                p.Value = DBNull.Value;
+                            }
+                            cmd.Parameters.Add(p);
+                        }
+                        private static void Add(MySqlCommand cmd, String ParameterName, Optional<Int> Value)
+                        {
+                            var p = cmd.CreateParameter();
+                            p.ParameterName = ParameterName;
+                            p.DbType = DbType.Int32;
+                            if (Value.OnHasValue)
+                            {
+                                p.Value = Value.HasValue;
+                            }
+                            else
+                            {
+                                p.Value = DBNull.Value;
+                            }
+                            cmd.Parameters.Add(p);
+                        }
+                        private static void Add(MySqlCommand cmd, String ParameterName, Optional<Real> Value)
+                        {
+                            var p = cmd.CreateParameter();
+                            p.ParameterName = ParameterName;
+                            p.DbType = DbType.Single;
+                            if (Value.OnHasValue)
+                            {
+                                p.Value = (Single)(Value.HasValue);
+                            }
+                            else
+                            {
+                                p.Value = DBNull.Value;
+                            }
+                            cmd.Parameters.Add(p);
+                        }
+                        private static void Add(MySqlCommand cmd, String ParameterName, Optional<List<Byte>> Value)
+                        {
+                            var p = cmd.CreateParameter();
+                            p.ParameterName = ParameterName;
+                            p.DbType = DbType.Binary;
+                            if (Value.OnHasValue)
+                            {
+                                p.Value = Value.HasValue.ToArray();
                             }
                             else
                             {
@@ -213,11 +253,11 @@ ObjectSchemaTemplate
                             if (v == DBNull.Value) { throw new InvalidOperationException(); }
                             return (String)(v);
                         }
-                        private static int GetInt(MySqlDataReader dr, String FieldName)
+                        private static Int GetInt(MySqlDataReader dr, String FieldName)
                         {
                             return dr.GetInt32(dr.GetOrdinal(FieldName));
                         }
-                        private static Double GetReal(MySqlDataReader dr, String FieldName)
+                        private static Real GetReal(MySqlDataReader dr, String FieldName)
                         {
                             return dr.GetFloat(dr.GetOrdinal(FieldName));
                         }
