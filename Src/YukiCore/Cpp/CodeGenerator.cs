@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2012.12.18.
+//  Version:     2012.12.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -29,7 +29,6 @@ namespace Yuki.ObjectSchema.Cpp
         {
             return CompileToCpp(Schema, "");
         }
-
     }
 }
 
