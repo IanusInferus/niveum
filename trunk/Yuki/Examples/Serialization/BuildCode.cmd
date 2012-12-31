@@ -6,7 +6,9 @@ SchemaManipulator.exe /loadtype:Schema /t2vb:VB\Src\World.vb,World
 
 :: C#
 @if not exist CSharp\Src @md CSharp\Src
-SchemaManipulator.exe /loadtype:Schema /t2cs:CSharp\Src\World.cs,World
+SchemaManipulator.exe /loadtype:Schema /t2cs:CSharp\Src\World.cs,World,True
+SchemaManipulator.exe /loadtype:Schema /t2csb:CSharp\Src\WorldBinary.cs,World.Binary,True
+SchemaManipulator.exe /loadtype:Schema /t2csb:CSharp\Src\WorldBinaryWithoutFirefly.cs,World.BinaryWithoutFirefly,False
 SchemaManipulator.exe /loadtype:Schema /t2csj:CSharp\Src\WorldJson.cs,World.Json
 
 :: Java

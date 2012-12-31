@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 数据转换工具
-//  Version:     2012.12.21.
+//  Version:     2012.12.31.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -157,7 +157,7 @@ namespace DataConv
             Console.WriteLine(@"将WorldData.tree转化为WorldData.bin。");
         }
 
-        public static void TreeToBinary(String TreePath, String BinaryPath)
+        public static void TreeToBinaryWithFirefly(String TreePath, String BinaryPath)
         {
             var tbc = new TreeBinaryConverter();
             var Data = TreeFile.ReadFile(TreePath);
@@ -168,7 +168,7 @@ namespace DataConv
             }
         }
 
-        public static void BinaryToTree(String BinaryPath, String TreePath)
+        public static void BinaryToTreeWithFirefly(String BinaryPath, String TreePath)
         {
             var tbc = new TreeBinaryConverter();
             Byte[] Data;
@@ -177,6 +177,43 @@ namespace DataConv
                 Data = s.Read((int)(s.Length));
             }
             var x = tbc.BinaryToTree<World.World>(Data);
+            TreeFile.WriteFile(TreePath, x);
+        }
+
+        public static void TreeToBinary(String TreePath, String BinaryPath)
+        {
+            var xs = new XmlSerializer(true);
+            var x = TreeFile.ReadFile(TreePath);
+            var o = xs.Read<World.World>(x);
+            Byte[] b;
+            using (var s = new World.BinaryWithoutFirefly.ByteArrayStream())
+            {
+                World.BinaryWithoutFirefly.BinaryTranslator.WorldToBinary(s, o);
+                s.Position = 0;
+                b = s.ReadBytes(s.Length);
+            }
+            using (var s = Streams.CreateWritable(BinaryPath))
+            {
+                s.Write(b);
+            }
+        }
+
+        public static void BinaryToTree(String BinaryPath, String TreePath)
+        {
+            Byte[] b;
+            using (var s = Streams.OpenReadable(BinaryPath))
+            {
+                b = s.Read((int)(s.Length));
+            }
+            World.World o;
+            using (var s = new World.BinaryWithoutFirefly.ByteArrayStream())
+            {
+                s.WriteBytes(b);
+                s.Position = 0;
+                o = World.BinaryWithoutFirefly.BinaryTranslator.WorldFromBinary(s);
+            }
+            var xs = new XmlSerializer(true);
+            var x = xs.Write<World.World>(o);
             TreeFile.WriteFile(TreePath, x);
         }
 

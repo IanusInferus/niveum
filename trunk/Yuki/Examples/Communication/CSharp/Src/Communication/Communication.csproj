@@ -36,9 +36,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Firefly.Core">
-      <HintPath>..\..\..\..\..\Bin\Firefly.Core.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\..\..\..\Bin\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -51,10 +48,6 @@
     <Compile Include="BaseSystem\LockedVariable.cs" />
     <Compile Include="BaseSystem\ThreadLocalRandom.cs" />
     <Compile Include="BaseSystem\Times.cs" />
-    <Compile Include="Generated\Common.cs" />
-    <Compile Include="Generated\Communication.cs" />
-    <Compile Include="Generated\CommunicationBinary.cs" />
-    <Compile Include="Generated\CommunicationJson.cs" />
     <Compile Include="Net\StreamedAsyncSocket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

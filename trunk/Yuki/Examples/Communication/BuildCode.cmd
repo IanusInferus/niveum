@@ -1,12 +1,17 @@
 @PATH ..\..\Bin;%PATH%
 
 :: C#
-@if not exist CSharp\Src\Communication\Generated @md CSharp\Src\Communication\Generated
-SchemaManipulator.exe /loadtype:Schema\Common /t2cs:CSharp\Src\Communication\Generated\Common.cs
-SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2cs:CSharp\Src\Communication\Generated\Communication.cs,Communication
-SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csb:CSharp\Src\Communication\Generated\CommunicationBinary.cs,Communication.Binary
-SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csj:CSharp\Src\Communication\Generated\CommunicationJson.cs,Communication.Json
+@if not exist CSharp\Src\Server\Generated @md CSharp\Src\Server\Generated
+SchemaManipulator.exe /loadtype:Schema\Common /t2cs:CSharp\Src\Server\Generated\Common.cs,"",true
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2cs:CSharp\Src\Server\Generated\Communication.cs,Communication,true
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csb:CSharp\Src\Server\Generated\CommunicationBinary.cs,Communication.Binary,true
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csj:CSharp\Src\Server\Generated\CommunicationJson.cs,Communication.Json
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:CSharp\Src\Server\Configuration.Schema.tree /t2cs:CSharp\Src\Server\Configuration.cs,Server
+@if not exist CSharp\Src\Client\Generated @md CSharp\Src\Client\Generated
+SchemaManipulator.exe /loadtype:Schema\Common /t2cs:CSharp\Src\Client\Generated\Common.cs,"",false
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2cs:CSharp\Src\Client\Generated\Communication.cs,Communication,false
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csb:CSharp\Src\Client\Generated\CommunicationBinary.cs,Communication.Binary,false
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csj:CSharp\Src\Client\Generated\CommunicationJson.cs,Communication.Json
 
 :: C++2011
 @if not exist CPP\Src\Server @md CPP\Src\Server

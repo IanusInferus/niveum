@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Firefly;
-using Firefly.Streaming;
-using Firefly.TextEncoding;
 using Communication;
 using Communication.Json;
 
@@ -26,7 +23,7 @@ namespace Client
             public void Send(String CommandName, UInt32 CommandHash, String Parameters)
             {
                 var Message = "/" + CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture) + " " + Parameters + "\r\n";
-                var Bytes = TextEncoding.UTF8.GetBytes(Message);
+                var Bytes = System.Text.Encoding.UTF8.GetBytes(Message);
                 SendBytes(Bytes);
             }
         }
@@ -87,7 +84,7 @@ namespace Client
             if (LineFeedPosition >= FirstPosition)
             {
                 var LineBytes = Buffer.Skip(FirstPosition).Take(LineFeedPosition - FirstPosition).Where(b => b != '\r').ToArray();
-                var Line = TextEncoding.UTF8.GetString(LineBytes, 0, LineBytes.Length);
+                var Line = System.Text.Encoding.UTF8.GetString(LineBytes, 0, LineBytes.Length);
                 var cmd = ParseCommand(Line);
                 if (cmd.OnHasValue)
                 {

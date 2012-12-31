@@ -6,8 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
-using Firefly;
-using Firefly.Streaming;
 using Communication;
 using Communication.BaseSystem;
 using Communication.Binary;
@@ -51,9 +49,9 @@ namespace Client
                     req.ContentType = "application/json; charset=utf-8";
                     req.ContentLength = 4;
                     req.MediaType = "application/json";
-                    using (var OutputStream = req.GetRequestStream().AsWritable())
+                    using (var OutputStream = req.GetRequestStream())
                     {
-                        OutputStream.Write(Bytes);
+                        OutputStream.Write(Bytes, 0, Bytes.Length);
                     }
                 }
                 catch
