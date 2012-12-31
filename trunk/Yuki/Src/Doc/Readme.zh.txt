@@ -56,8 +56,8 @@
 下面列出各语言代码生成支持的部分。
 
                     类型定义        二进制序列化        JSON序列化      二进制通讯  JSON通讯
-VB.Net              √              Firefly库动态支持   ×              ×          ×
-C#                  √              Firefly库动态支持   √              两端        两端
+VB.Net              √              Firefly             ×              ×          ×
+C#                  √              √|Firefly          √              两端        两端
 Java                √              √                  ×              ×          ×
 C++2011             √              √                  ×              两端        ×
 ActionScript        √              √                  √              客户端      客户端

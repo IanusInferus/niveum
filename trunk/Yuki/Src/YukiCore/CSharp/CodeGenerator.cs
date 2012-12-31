@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2012.12.17.
+//  Version:     2012.12.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,17 +19,16 @@ namespace Yuki.ObjectSchema.CSharp
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharp(this Schema Schema, String NamespaceName)
+        public static String CompileToCSharp(this Schema Schema, String NamespaceName, Boolean WithFirefly)
         {
-            var w = new Common.CodeGenerator.Writer(Schema, NamespaceName);
+            var w = new Common.CodeGenerator.Writer(Schema, NamespaceName, WithFirefly);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
         public static String CompileToCSharp(this Schema Schema)
         {
-            return CompileToCSharp(Schema, "");
+            return CompileToCSharp(Schema, "", true);
         }
-
     }
 }
 
@@ -43,16 +42,18 @@ namespace Yuki.ObjectSchema.CSharp.Common
 
             private Schema Schema;
             private String NamespaceName;
+            private Boolean WithFirefly;
 
             static Writer()
             {
                 TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharp);
             }
 
-            public Writer(Schema Schema, String NamespaceName)
+            public Writer(Schema Schema, String NamespaceName, Boolean WithFirefly)
             {
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
+                this.WithFirefly = WithFirefly;
             }
 
             public String[] GetSchema()
@@ -419,7 +420,14 @@ namespace Yuki.ObjectSchema.CSharp.Common
 
                 if (Schema.TypeRefs.Length == 0)
                 {
-                    l.AddRange(GetTemplate("PredefinedTypes"));
+                    if (WithFirefly)
+                    {
+                        l.AddRange(GetTemplate("PredefinedTypes_WithFirefly"));
+                    }
+                    else
+                    {
+                        l.AddRange(GetTemplate("PredefinedTypes"));
+                    }
                 }
 
                 foreach (var c in Schema.Types)

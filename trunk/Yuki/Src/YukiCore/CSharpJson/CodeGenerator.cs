@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2012.12.17.
+//  Version:     2012.12.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -57,7 +57,7 @@ namespace Yuki.ObjectSchema.CSharpJson
 
             public String[] GetSchema()
             {
-                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName);
+                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, false);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {

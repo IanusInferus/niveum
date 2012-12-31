@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.12.20.
+//  Version:     2012.12.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -215,11 +215,15 @@ namespace Yuki.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        ObjectSchemaToVBCode(args[0], "");
+                        ObjectSchemaToVBCode(args[0], "", true);
                     }
                     else if (args.Length == 2)
                     {
-                        ObjectSchemaToVBCode(args[0], args[1]);
+                        ObjectSchemaToVBCode(args[0], args[1], true);
+                    }
+                    else if (args.Length == 3)
+                    {
+                        ObjectSchemaToVBCode(args[0], args[1], Boolean.Parse(args[2]));
                     }
                     else
                     {
@@ -232,11 +236,15 @@ namespace Yuki.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        ObjectSchemaToCSharpCode(args[0], "");
+                        ObjectSchemaToCSharpCode(args[0], "", true);
                     }
                     else if (args.Length == 2)
                     {
-                        ObjectSchemaToCSharpCode(args[0], args[1]);
+                        ObjectSchemaToCSharpCode(args[0], args[1], true);
+                    }
+                    else if (args.Length == 3)
+                    {
+                        ObjectSchemaToCSharpCode(args[0], args[1], Boolean.Parse(args[2]));
                     }
                     else
                     {
@@ -249,11 +257,15 @@ namespace Yuki.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        ObjectSchemaToCSharpBinaryCode(args[0], "");
+                        ObjectSchemaToCSharpBinaryCode(args[0], "", true);
                     }
                     else if (args.Length == 2)
                     {
-                        ObjectSchemaToCSharpBinaryCode(args[0], args[1]);
+                        ObjectSchemaToCSharpBinaryCode(args[0], args[1], true);
+                    }
+                    else if (args.Length == 3)
+                    {
+                        ObjectSchemaToCSharpBinaryCode(args[0], args[1], Boolean.Parse(args[2]));
                     }
                     else
                     {
@@ -465,11 +477,11 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"将二进制数据转化为Tree格式数据");
             Console.WriteLine(@"/b2t:<BinaryFile>,<TreeFile>,<MainType>");
             Console.WriteLine(@"生成VB.Net类型");
-            Console.WriteLine(@"/t2vb:<VbCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"/t2vb:<VbCodePath>[,<NamespaceName>[,<WithFirefly=true>]]");
             Console.WriteLine(@"生成C#类型");
-            Console.WriteLine(@"/t2cs:<CsCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"/t2cs:<CsCodePath>[,<NamespaceName>[,<WithFirefly=true>]]");
             Console.WriteLine(@"生成C#二进制通讯类型");
-            Console.WriteLine(@"/t2csb:<CsCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"/t2csb:<CsCodePath>[,<NamespaceName>[,<WithFirefly=true>]]");
             Console.WriteLine(@"生成C# JSON通讯类型");
             Console.WriteLine(@"/t2csj:<CsCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成Java类型");
@@ -500,8 +512,9 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"NamespaceName C#文件中的命名空间名称。");
             Console.WriteLine(@"PackageName Java/ActionScript文件中的包名。");
             Console.WriteLine(@"ClassName Java文件中的类名。");
-            Console.WriteLine(@"VbCodePath VB代码文件路径。");
             Console.WriteLine(@"CsCodePath C#代码文件路径。");
+            Console.WriteLine(@"VbCodePath VB代码文件路径。");
+            Console.WriteLine(@"WithFirefly 是否使用Firefly库。");
             Console.WriteLine(@"JavaCodePath Java代码文件路径。");
             Console.WriteLine(@"AsCodeDir ActionScript代码文件夹路径。");
             Console.WriteLine(@"HaxeCodePath Haxe代码文件路径。");
@@ -595,10 +608,10 @@ namespace Yuki.SchemaManipulator
             TreeFile.WriteFile(TreePath, x);
         }
 
-        public static void ObjectSchemaToVBCode(String VbCodePath, String NamespaceName)
+        public static void ObjectSchemaToVBCode(String VbCodePath, String NamespaceName, Boolean WithFirefly)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToVB(NamespaceName);
+            var Compiled = ObjectSchema.CompileToVB(NamespaceName, WithFirefly);
             if (File.Exists(VbCodePath))
             {
                 var Original = Txt.ReadFile(VbCodePath);
@@ -612,10 +625,10 @@ namespace Yuki.SchemaManipulator
             Txt.WriteFile(VbCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpCode(String CsCodePath, String NamespaceName)
+        public static void ObjectSchemaToCSharpCode(String CsCodePath, String NamespaceName, Boolean WithFirefly)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharp(NamespaceName);
+            var Compiled = ObjectSchema.CompileToCSharp(NamespaceName, WithFirefly);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -629,10 +642,10 @@ namespace Yuki.SchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpBinaryCode(String CsCodePath, String NamespaceName)
+        public static void ObjectSchemaToCSharpBinaryCode(String CsCodePath, String NamespaceName, Boolean WithFirefly)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpBinary(NamespaceName);
+            var Compiled = ObjectSchema.CompileToCSharpBinary(NamespaceName, WithFirefly);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
