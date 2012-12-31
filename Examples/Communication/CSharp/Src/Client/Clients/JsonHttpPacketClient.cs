@@ -4,9 +4,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Newtonsoft.Json.Linq;
-using Firefly;
-using Firefly.Streaming;
-using Firefly.TextEncoding;
 using Communication;
 using Communication.Json;
 

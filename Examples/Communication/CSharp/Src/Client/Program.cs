@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2012.12.18.
+//  Version:     2012.12.31.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -85,16 +85,19 @@ namespace Client
             var argv = CmdLine.Arguments;
             ServerProtocolType ProtocolType = ServerProtocolType.Binary;
             SerializationProtocolType SerializationProtocolType = SerializationProtocolType.Binary;
+            int DefaultPort = 8001;
             if (argv.Length > 0)
             {
                 ProtocolType = (ServerProtocolType)Enum.Parse(typeof(ServerProtocolType), argv[0], true);
                 if (ProtocolType == ServerProtocolType.Binary)
                 {
                     SerializationProtocolType = SerializationProtocolType.Binary;
+                    DefaultPort = 8001;
                 }
                 else if (ProtocolType == ServerProtocolType.Json)
                 {
                     SerializationProtocolType = SerializationProtocolType.Json;
+                    DefaultPort = 8002;
                 }
             }
 
@@ -107,11 +110,11 @@ namespace Client
                 }
                 else if (argv.Length == 1)
                 {
-                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
+                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), DefaultPort);
                 }
                 else if (argv.Length == 0)
                 {
-                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
+                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), DefaultPort);
                 }
                 else
                 {
@@ -185,7 +188,8 @@ namespace Client
         public static void DisplayInfo()
         {
             Console.WriteLine(@"用法:");
-            Console.WriteLine(@"Client [<Protocol=Binary|Json> [<IpAddress=127.0.0.1> <Port=8001>]] [/old|/load|/perf|/stable]");
+            Console.WriteLine(@"Client [<Protocol=Binary> [<IpAddress=127.0.0.1> <Port=8001>]] [/old|/load|/perf|/stable]");
+            Console.WriteLine(@"Client <Protocol=Json> [<IpAddress=127.0.0.1> <Port=8002>] [/old|/load|/perf|/stable]");
             Console.WriteLine(@"Client <Protocol=Http> [<UrlPrefix=http://localhost:8003/> <ServiceVirtualPath=cmd>] [/old|/load|/perf|/stable]");
             Console.WriteLine(@"Protocol 通讯协议，可为Binary|Json|Http，默认为Binary");
             Console.WriteLine(@"IpAddress 服务器IP地址");
