@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 邮件管理程序
-//  Version:     2012.06.29.
+//  Version:     2012.12.31.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -291,7 +291,7 @@ namespace Database
         public static void DisplayInfo()
         {
             Console.WriteLine(@"用法:");
-            Console.WriteLine(Assembly.GetEntryAssembly().GetName().Name + @"/mssql|/mysql <ConnectionString>");
+            Console.WriteLine(Assembly.GetEntryAssembly().GetName().Name + @" /mssql|/mysql <ConnectionString>");
             Console.WriteLine(@"ConnectionString 数据库连接字符串");
             Console.WriteLine(@"示例:");
             Console.WriteLine(Assembly.GetEntryAssembly().GetName().Name + @" /mssql """ + DataAccessManager.GetConnectionStringExample(DatabaseType.SqlServer) + @"""");

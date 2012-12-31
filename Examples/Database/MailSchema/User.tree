@@ -4,13 +4,13 @@
       File:        User.tree
       Location:    Yuki.Examples <Tree>
       Description: 用户
-      Version:     2012.11.24.
+      Version:     2012.12.31.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
     ==========================================================================
 
-#Entity UserProfile                                 [CN:UserProfiles][UKC:Name]用户账号信息
+#Entity UserProfile                                 [CN:UserProfiles][UKC:Name][NK:EmailAddress]用户账号信息
     Id                  Int                         [I]用户号
     Name                String                      [P:32]用户名
     EmailAddress        String                      [N][P:32]邮件地址
@@ -30,4 +30,5 @@
     Select Count UserProfile By Id
     Select One UserProfile By Id
     Select Optional UserProfile By Name
+    Select Optional UserProfile By EmailAddress
     Select Optional DirectUserAuthentication By Name
