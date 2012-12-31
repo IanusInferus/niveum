@@ -265,6 +265,36 @@ ObjectSchemaTemplate
                     End Structure
 
                     Public Class RecordAttribute
+                        Inherits Attribute
+                    End Class
+
+                    Public Class AliasAttribute
+                        Inherits Attribute
+                    End Class
+
+                    Public Class TaggedUnionAttribute
+                        Inherits Attribute
+                    End Class
+
+                    Public Class TagAttribute
+                        Inherits Attribute
+                    End Class
+
+                    Public Class TupleAttribute
+                        Inherits Attribute
+                    End Class
+
+                $End
+        Template
+            Name PredefinedTypes_WithFirefly
+            //Parameters:
+            Value
+                $String
+                    <Record()>
+                    Public Structure Unit
+                    End Structure
+
+                    Public Class RecordAttribute
                         Inherits Firefly.Mapping.MetaSchema.RecordAttribute
                     End Class
 
@@ -578,39 +608,49 @@ ObjectSchemaTemplate
                 $String
                     ''' <summary>${Description}</summary>
         Template
-            Name IServerImplementation
+            Name IApplicationServer
             //Parameters: ${Commands}
             Value
                 $String
-                    Public Interface IServerImplementation(Of TContext)
+                    Public Interface IApplicationServer
                         ${Commands}
                     End Interface
         Template
-            Name IServerImplementation_ClientCommand
+            Name IApplicationServer_ClientCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
-                    Function [[${Name}]](ByVal c As TContext, ByVal r As [[${Name}Request]]) As [[${Name}Reply]]
+                    Function [[${Name}]](ByVal r As [[${Name}Request]]) As [[${Name}Reply]]
         Template
-            Name IServerImplementation_ServerCommand
+            Name IApplicationServer_ServerCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
-                    Event [[${Name}]] As Action(Of TContext, [[${Name}Event]])
+                    Event [[${Name}]] As Action(Of [[${Name}Event]])
         Template
-            Name IClientImplementation
-            //Parameters: ${Commands}
+            Name IApplicationClient
+            //Parameters: ${Hash}, ${Commands}
             Value
                 $String
-                    Public Interface IClientImplementation(Of TContext)
+                    Public Interface IApplicationClient
+                        ReadOnly Property Hash As UInt64
+                        Sub DequeueCallback(ByVal CommandName As String)
+
                         ${Commands}
                     End Interface
         Template
-            Name IClientImplementation_ServerCommand
+            Name IApplicationClient_ClientCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
-                    Sub [[${Name}]](ByVal c As TContext, ByVal e As [[${Name}Event]])
+                    Sub [[${Name}]](ByVal r As [[${Name}Request]], ByVal Callback As Action(Of [[${Name}Reply]]))
+        Template
+            Name IApplicationClient_ServerCommand
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    Event [[${Name}]] As Action(Of [[${Name}Event]])

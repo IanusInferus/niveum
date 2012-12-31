@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#模板数据
-      Version:     2012.12.17.
+      Version:     2012.12.31.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -189,6 +189,37 @@ ObjectSchemaTemplate
                 $End
         Template
             Name PredefinedTypes
+            //Parameters:
+            Value
+                $String
+                    [Record]
+                    public struct Unit
+                    {
+                    }
+
+                    public class RecordAttribute : Attribute
+                    {
+                    }
+
+                    public class AliasAttribute : Attribute
+                    {
+                    }
+
+                    public class TaggedUnionAttribute : Attribute
+                    {
+                    }
+
+                    public class TagAttribute : Attribute
+                    {
+                    }
+
+                    public class TupleAttribute : Attribute
+                    {
+                    }
+
+                $End
+        Template
+            Name PredefinedTypes_WithFirefly
             //Parameters:
             Value
                 $String

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构VB.Net代码生成器
-//  Version:     2012.12.13.
+//  Version:     2012.12.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,17 +19,16 @@ namespace Yuki.ObjectSchema.VB
 {
     public static class CodeGenerator
     {
-        public static String CompileToVB(this Schema Schema, String NamespaceName)
+        public static String CompileToVB(this Schema Schema, String NamespaceName, Boolean WithFirefly)
         {
-            var w = new Common.CodeGenerator.Writer() { Schema = Schema, NamespaceName = NamespaceName };
+            var w = new Common.CodeGenerator.Writer(Schema, NamespaceName, WithFirefly);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
         public static String CompileToVB(this Schema Schema)
         {
-            return CompileToVB(Schema, "");
+            return CompileToVB(Schema, "", true);
         }
-
     }
 }
 
@@ -41,12 +40,20 @@ namespace Yuki.ObjectSchema.VB.Common
         {
             private static ObjectSchemaTemplateInfo TemplateInfo;
 
-            public Schema Schema;
-            public String NamespaceName;
+            private Schema Schema;
+            private String NamespaceName;
+            private Boolean WithFirefly;
 
             static Writer()
             {
                 TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.VB);
+            }
+
+            public Writer(Schema Schema, String NamespaceName, Boolean WithFirefly)
+            {
+                this.Schema = Schema;
+                this.NamespaceName = NamespaceName;
+                this.WithFirefly = WithFirefly;
             }
 
             public String[] GetSchema()
@@ -336,38 +343,42 @@ namespace Yuki.ObjectSchema.VB.Common
                 }
             }
 
-            public String[] GetIServerImplementation(TypeDef[] Commands)
+            public String[] GetIApplicationServer(TypeDef[] Commands)
             {
-                return GetTemplate("IServerImplementation").Substitute("Commands", GetIServerImplementationCommands(Commands));
+                return GetTemplate("IApplicationServer").Substitute("Commands", GetIApplicationServerCommands(Commands));
             }
-            public String[] GetIServerImplementationCommands(TypeDef[] Commands)
+            public String[] GetIApplicationServerCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
                     if (c.OnClientCommand)
                     {
-                        l.AddRange(GetTemplate("IServerImplementation_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
+                        l.AddRange(GetTemplate("IApplicationServer_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
                     }
                     else if (c.OnServerCommand)
                     {
-                        l.AddRange(GetTemplate("IServerImplementation_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
+                        l.AddRange(GetTemplate("IApplicationServer_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
                     }
                 }
                 return l.ToArray();
             }
-            public String[] GetIClientImplementation(TypeDef[] Commands)
+            public String[] GetIApplicationClient(TypeDef[] Commands)
             {
-                return GetTemplate("IClientImplementation").Substitute("Commands", GetIClientImplementationCommands(Commands));
+                return GetTemplate("IApplicationClient").Substitute("Commands", GetIApplicationClientCommands(Commands));
             }
-            public String[] GetIClientImplementationCommands(TypeDef[] Commands)
+            public String[] GetIApplicationClientCommands(TypeDef[] Commands)
             {
                 List<String> l = new List<String>();
                 foreach (var c in Commands)
                 {
-                    if (c.OnServerCommand)
+                    if (c.OnClientCommand)
                     {
-                        l.AddRange(GetTemplate("IClientImplementation_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
+                        l.AddRange(GetTemplate("IApplicationClient_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
+                    }
+                    else if (c.OnServerCommand)
+                    {
+                        l.AddRange(GetTemplate("IApplicationClient_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
                     }
                 }
                 return l.ToArray();
@@ -381,7 +392,14 @@ namespace Yuki.ObjectSchema.VB.Common
 
                 if (Schema.TypeRefs.Length == 0)
                 {
-                    l.AddRange(GetTemplate("PredefinedTypes"));
+                    if (WithFirefly)
+                    {
+                        l.AddRange(GetTemplate("PredefinedTypes_WithFirefly"));
+                    }
+                    else
+                    {
+                        l.AddRange(GetTemplate("PredefinedTypes"));
+                    }
                 }
 
                 foreach (var c in Schema.Types)
@@ -445,9 +463,9 @@ namespace Yuki.ObjectSchema.VB.Common
                 {
                     var ca = cl.ToArray();
 
-                    l.AddRange(GetIServerImplementation(ca));
+                    l.AddRange(GetIApplicationServer(ca));
                     l.Add("");
-                    l.AddRange(GetIClientImplementation(ca));
+                    l.AddRange(GetIApplicationClient(ca));
                     l.Add("");
                 }
 
