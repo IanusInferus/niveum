@@ -1,4 +1,6 @@
 ﻿2013.01.02
+Yuki.Relation:
+修正数据库导入SQL语句生成的换行格式。
 Examples:
 修正MySQL的说明，增加关于Unicode非基本平面的字符的支持的配置说明。
 
