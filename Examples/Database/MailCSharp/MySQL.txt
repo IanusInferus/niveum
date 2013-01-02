@@ -1,3 +1,5 @@
 ﻿复制Connector NET 6.5.4 for .Net Framework 4.0的下列文件到YUKI\Bin文件夹下。
 MySql.Data.dll
 MySql.Data.Entity.dll
+
+若要支持Unicode非基本平面的字符，如“🌸💓”，需要设置MySQL服务器的字符集为utf8mb4，而不能是utf8。
