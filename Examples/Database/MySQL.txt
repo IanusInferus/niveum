@@ -1,0 +1,13 @@
+﻿默认的utf8不支持Unicode非基本平面的字符，如“🌸💓”，可以在my.ini中的[mysqld]中设定character-set-server = utf8mb4或在MySQL Workbench的服务器管理-Options File-General中将character-set-server设为utf8mb4来解决这个问题。
+
+在Windows上MySQL导入数据表时默认为全小写，在Linux上MySQL导入数据表时默认为原始大小写。
+有两种解决方式，
+1)在Windows和Linux上都设置lower_case_table_names = 1
+2)在Windows上设置lower_case_table_names = 2，Linux上设置lower_case_table_names = 0
+lower_case_table_names的设置方式(以设成2为例)，可以在my.ini中的[mysqld]中增加lower_case_table_names = 2或在MySQL Workbench的服务器管理-Options File-Advanced中将lower_case_table_names设为2。
+lower_case_table_names = 2时，查询还是不会区分大小写，只是在导入导出时会对大小写有区别。参见
+http://dev.mysql.com/doc/refman/5.0/en/identifier-case-sensitivity.html
+
+推荐的方式为1)，因为MySQL对lower_case_table_names = 2的支持似乎并不是非常稳定，有一些异常情况。
+
+若需要在Windows上导入不输入密码，可以将密码设为空。在MySQL Workbench中的服务器管理-Users and Privileges中将root的几个来源于localhost(或者127.0.0.1、::1)的Password设为空即可。
