@@ -1,4 +1,8 @@
-﻿2013.01.02
+﻿2013.01.22
+Examples:
+将所有C#示例在mono 3.0.3的xbuild下编译成功。
+
+2013.01.02
 Yuki.Relation:
 修正数据库导入SQL语句生成的换行格式。
 Examples:
