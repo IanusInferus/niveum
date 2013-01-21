@@ -54,10 +54,10 @@ make
 3)导入数据
 若要支持Unicode非基本平面的字符，如“🌸💓”，需要设置MySQL服务器的字符集为utf8mb4，而不能是utf8。
 运行
-mono ../../Bin/DatabaseRegenerator.exe /loadtype:Schema /connect:"server=localhost;uid=root;pwd={password};" /database:Mail /regenmysql:Data
+mono ../../Bin/DatabaseRegenerator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /connect:"server=localhost;uid=root;pwd={password};" /database:Test /regenmysql:TestData
 其中{password}是MySQL密码。
 如果已经在mysql-workbench中使用密码连接过并保存了密码，可不输入密码，即
-mono ../../Bin/DatabaseRegenerator.exe /loadtype:Schema /connect:"server=localhost;uid=root;" /database:Mail /regenmysql:Data
+mono ../../Bin/DatabaseRegenerator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /connect:"server=localhost;uid=root;" /database:Test /regenmysql:TestData
 
 4)运行程序
 执行
