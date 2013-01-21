@@ -421,21 +421,23 @@ namespace Server
             return p;
         }
 
-        private static void SetTimerInner(HttpListener Listener, int Seconds)
-        {
-            var tm = Listener.TimeoutManager;
-            var ts = TimeSpan.FromSeconds(Seconds);
-            tm.DrainEntityBody = ts;
-            tm.EntityBody = ts;
-            tm.HeaderWait = ts;
-            tm.IdleConnection = ts;
-            tm.RequestQueue = ts;
-        }
         private static void SetTimer(HttpListener Listener, int Seconds)
         {
-            if (typeof(HttpListener).GetProperty("TimeoutManager", System.Reflection.BindingFlags.Public) != null)
+            if (typeof(HttpListener).GetProperty("TimeoutManager") != null)
             {
-                SetTimerInner(Listener, Seconds);
+                var ts = TimeSpan.FromSeconds(Seconds);
+                var p = typeof(HttpListener).GetProperty("TimeoutManager");
+                var tm = p.GetValue(Listener, null);
+                var tmt = p.PropertyType;
+                tmt.GetProperty("DrainEntityBody").SetValue(tm, ts, null);
+                tmt.GetProperty("EntityBody").SetValue(tm, ts, null);
+                tmt.GetProperty("HeaderWait").SetValue(tm, ts, null);
+                tmt.GetProperty("IdleConnection").SetValue(tm, ts, null);
+                tmt.GetProperty("RequestQueue").SetValue(tm, ts, null);
+            }
+            else
+            {
+                Console.WriteLine("SetTimerFailed");
             }
         }
 

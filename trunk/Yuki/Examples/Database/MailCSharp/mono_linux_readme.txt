@@ -43,7 +43,7 @@ rcpostgresql restart
 
 5)导入数据
 在Database目录执行，其中密码为刚才设置的密码
-mono ../../Bin/DatabaseRegenerator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /connect:"Server=localhost;User ID=postgres;Password={Password};" /database:Test /regenmysql:TestData
+mono ../../Bin/DatabaseRegenerator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /connect:"Server=localhost;User ID=postgres;Password={Password};" /database:Mail /regenpgsql:MailData
 
 6)运行程序
 运行编译好的程序(附带Npgsql中的库文件Npgsql.dll等)

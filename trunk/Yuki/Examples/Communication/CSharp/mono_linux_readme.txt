@@ -59,3 +59,11 @@ TIME_WAIT 962
 [修改Linux内核参数，减少TCP连接中的TIME-WAIT sockets by 张宴 http://blog.s135.com/post/271/]
 
 还可以用socklist查看当前打开的TCP连接数。
+
+3)mono-core、mono-devel，用于编译.Net程序，需要使用最新3.0.3版。
+http://download.mono-project.com/archive/3.0.3/linux/x64/
+编译方法，在Src文件夹执行
+xbuild
+
+4)monodevelop、monodevelop-debugger-mdb、libgnomeui，用于调试，最好用3.0以上，以免打开最开始出错。
+http://download.opensuse.org/repositories/Mono/openSUSE_12.1/
