@@ -44,17 +44,17 @@ namespace Client
             {
                 var Bytes = System.Text.Encoding.UTF8.GetBytes((new JArray(VirtualTransportClient.TakeWriteBuffer())).ToString(Newtonsoft.Json.Formatting.None));
 
-                Uri Uri;
+                Uri u;
                 if (SessionId == null)
                 {
-                    Uri = new Uri(Prefix + ServiceVirtualPath);
+                    u = new Uri(Prefix + ServiceVirtualPath);
                 }
                 else
                 {
-                    Uri = new Uri(Prefix + ServiceVirtualPath + "?sessionid=" + Uri.EscapeDataString(SessionId));
+                    u = new Uri(Prefix + ServiceVirtualPath + "?sessionid=" + Uri.EscapeDataString(SessionId));
                 }
 
-                var req = (HttpWebRequest)(WebRequest.Create(Uri));
+                var req = (HttpWebRequest)(WebRequest.Create(u));
                 req.Method = "POST";
                 req.ContentType = "application/json; charset=utf-8";
                 req.ContentLength = Bytes.Length;

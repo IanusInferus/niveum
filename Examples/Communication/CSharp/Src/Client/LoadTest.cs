@@ -21,7 +21,6 @@ namespace Client
 
             public int NumOnline;
             public int Num;
-            public Action Completed;
 
             public Int64 Sum = 0;
         }
@@ -80,12 +79,11 @@ namespace Client
                 }
                 if (Done)
                 {
-                    cc.Completed();
+                    Completed();
                 }
             };
             cc.NumOnline = NumUser;
             cc.Num = NumUser;
-            cc.Completed = Completed;
         }
         public static void TestMessage(int NumUser, int n, ClientContext cc, IApplicationClient ic, Action Completed)
         {
@@ -103,10 +101,13 @@ namespace Client
         }
         public static void TestMessageFinalCheck(ClientContext[] ccl)
         {
-            var NumUser = ccl.Length;
-            var PredicatedSum = (Int64)NumUser * (Int64)(NumUser - 1) * (Int64)(NumUser - 1) / (Int64)2;
-            var Sum = ccl.Select(cc => cc.Sum).Sum();
-            Trace.Assert(Sum == PredicatedSum);
+            if (ccl.All(cc => cc.Num == 0))
+            {
+                var NumUser = ccl.Length;
+                var PredicatedSum = (Int64)NumUser * (Int64)(NumUser - 1) * (Int64)(NumUser - 1) / (Int64)2;
+                var Sum = ccl.Select(cc => cc.Sum).Sum();
+                Trace.Assert(Sum == PredicatedSum);
+            }
         }
 
         public static void TestTcpForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test, Action<int, int, ClientContext, IApplicationClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
@@ -204,7 +205,13 @@ namespace Client
 
             while (vCompleted.Check(i => i != NumUser))
             {
-                Check.WaitOne();
+                if (!Check.WaitOne(10000))
+                {
+                    if (vCompleted.Check(i => i > 0))
+                    {
+                        break;
+                    }
+                }
             }
 
             var TimeDiff = Environment.TickCount - Time;
@@ -230,7 +237,7 @@ namespace Client
             {
                 Console.WriteLine("{0} Errors", NumError);
             }
-            Console.WriteLine("{0} Users, {1} ms", NumUser, TimeDiff);
+            Console.WriteLine("{0} Users, {1} ms, {2} Lost", NumUser, TimeDiff, NumUser - vCompleted.Check(i => i));
         }
 
         public static void TestHttpForNumUser(String UrlPrefix, String ServiceVirtualPath, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test, Action<int, int, ClientContext, IApplicationClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
@@ -318,7 +325,13 @@ namespace Client
 
             while (vCompleted.Check(i => i != NumUser))
             {
-                Check.WaitOne();
+                if (!Check.WaitOne(10000))
+                {
+                    if (vCompleted.Check(i => i > 0))
+                    {
+                        break;
+                    }
+                }
             }
 
             var TimeDiff = Environment.TickCount - Time;
@@ -351,7 +364,7 @@ namespace Client
             {
                 Console.WriteLine("{0} Errors", NumError);
             }
-            Console.WriteLine("{0} Users, {1} ms", NumUser, TimeDiff);
+            Console.WriteLine("{0} Users, {1} ms, {2} Lost", NumUser, TimeDiff, NumUser - vCompleted.Check(i => i));
         }
 
         public static int DoTestTcp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
