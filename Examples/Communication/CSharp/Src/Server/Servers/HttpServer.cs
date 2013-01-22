@@ -668,11 +668,6 @@ namespace Server
                                                         {
                                                             if (!ss.SessionIdToSession.ContainsKey(SessionId))
                                                             {
-                                                                Console.WriteLine(SessionId);
-                                                                foreach (var ssss in ss.SessionIdToSession)
-                                                                {
-                                                                    Console.WriteLine(ssss.Key);
-                                                                }
                                                                 a.Response.StatusCode = 403;
                                                                 Close = true;
                                                                 return;
