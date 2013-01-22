@@ -118,15 +118,12 @@ namespace Client
             var tl = new List<Task>();
             var bcl = new List<TcpClient>();
             var ccl = new List<ClientContext>();
+            var tmrl = new List<Timer>();
             var vConnected = new LockedVariable<int>(0);
             var vCompleted = new LockedVariable<int>(0);
             var Check = new AutoResetEvent(false);
 
-            Action Completed = () =>
-            {
-                vCompleted.Update(i => i + 1);
-                Check.Set();
-            };
+            var bAbondon = new LockedVariable<Boolean>(false);
 
             var vError = new LockedVariable<int>(0);
 
@@ -136,6 +133,14 @@ namespace Client
                 var Lockee = new Object();
                 var bc = new TcpClient(RemoteEndPoint, ProtocolType);
                 var cc = new ClientContext();
+                var bCompleted = new LockedVariable<Boolean>(false);
+                Action Completed = () =>
+                {
+                    bCompleted.Update(b => true);
+                    vCompleted.Update(i => i + 1);
+                    Check.Set();
+                };
+
                 bc.InnerClient.Error += e =>
                 {
                     var m = "调用'" + e.CommandName + "'发生错误:" + e.Message;
@@ -186,9 +191,25 @@ namespace Client
                         }
                     }
                 );
+                var tmr = new Timer
+                (
+                    o =>
+                    {
+                        if (!bAbondon.Check(b => b)) { return; }
+                        if (bCompleted.Check(b => b)) { return; }
+                        lock (Lockee)
+                        {
+                            bc.InnerClient.ServerTime(new ServerTimeRequest { }, r => { });
+                        }
+                    },
+                    null,
+                    10000,
+                    10000
+                );
                 tl.Add(t);
                 bcl.Add(bc);
                 ccl.Add(cc);
+                tmrl.Add(tmr);
             }
 
             while (vConnected.Check(i => i != NumUser))
@@ -209,9 +230,21 @@ namespace Client
                 {
                     if (vCompleted.Check(i => i > 0))
                     {
+                        bAbondon.Update(b => true);
                         break;
                     }
                 }
+            }
+
+            var NumMutualWaiting = NumUser - vCompleted.Check(i => i);
+
+            while (vCompleted.Check(i => i != NumUser))
+            {
+                Check.WaitOne();
+            }
+            foreach (var tmr in tmrl)
+            {
+                tmr.Dispose();
             }
 
             var TimeDiff = Environment.TickCount - Time;
@@ -237,7 +270,14 @@ namespace Client
             {
                 Console.WriteLine("{0} Errors", NumError);
             }
-            Console.WriteLine("{0} Users, {1} ms, {2} Lost", NumUser, TimeDiff, NumUser - vCompleted.Check(i => i));
+            if (NumMutualWaiting > 0)
+            {
+                Console.WriteLine("{0} Users, {1} ms, {2} MutualWaiting", NumUser, TimeDiff, NumMutualWaiting);
+            }
+            else
+            {
+                Console.WriteLine("{0} Users, {1} ms", NumUser, TimeDiff);
+            }
         }
 
         public static void TestHttpForNumUser(String UrlPrefix, String ServiceVirtualPath, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test, Action<int, int, ClientContext, IApplicationClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
@@ -325,13 +365,7 @@ namespace Client
 
             while (vCompleted.Check(i => i != NumUser))
             {
-                if (!Check.WaitOne(10000))
-                {
-                    if (vCompleted.Check(i => i > 0))
-                    {
-                        break;
-                    }
-                }
+                Check.WaitOne();
             }
 
             var TimeDiff = Environment.TickCount - Time;
@@ -364,7 +398,7 @@ namespace Client
             {
                 Console.WriteLine("{0} Errors", NumError);
             }
-            Console.WriteLine("{0} Users, {1} ms, {2} Lost", NumUser, TimeDiff, NumUser - vCompleted.Check(i => i));
+            Console.WriteLine("{0} Users, {1} ms", NumUser, TimeDiff);
         }
 
         public static int DoTestTcp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)

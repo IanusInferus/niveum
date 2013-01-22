@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2013.01.21.
+//  Version:     2013.01.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -124,10 +124,12 @@ namespace Server
                 {
                     if (s.OnTcp)
                     {
+                        MinWorkThreadCount += 2 + s.Tcp.Bindings.Count();
                         MaxWorkThreadCount += 2 + s.Tcp.Bindings.Count();
                     }
                     else if (s.OnHttp)
                     {
+                        MinWorkThreadCount += 3;
                         MaxWorkThreadCount += 3;
                     }
                     else
