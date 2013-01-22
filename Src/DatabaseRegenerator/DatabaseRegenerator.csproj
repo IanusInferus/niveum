@@ -8,10 +8,9 @@
     <ProjectGuid>{8EA3C197-8B12-4A72-8C91-E22DB8039E51}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Huanda.DatabaseRegenerator</RootNamespace>
+    <RootNamespace>Yuki.DatabaseRegenerator</RootNamespace>
     <AssemblyName>DatabaseRegenerator</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>$(FLTKey)</AssemblyOriginatorKeyFile>

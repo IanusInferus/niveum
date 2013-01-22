@@ -1,6 +1,11 @@
 ﻿2013.01.22
 Examples:
 将所有C#示例在mono 3.0.3的xbuild下编译成功。
+完善数据库示例说明。
+Yuki.*:
+升级Firefly，使得其在Linux下能处理双引号转义。
+放弃.Net Framework 4.0 Client Profile，所有项目均转为使用完整版的.Net Framework 4.0。
+将除TcpSendReceive以外的项目在mono 3.03的xbuild下编译成功。
 
 2013.01.02
 Yuki.Relation:
