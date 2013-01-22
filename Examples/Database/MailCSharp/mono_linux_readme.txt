@@ -21,19 +21,26 @@ rcpostgresql start
 然后保持root状态，用postgres帐号登录进入PostgreSQL服务器管理
 su postgres -c psql postgres
 然后修改PostgreSQL密码
-ALTER USER postgres WITH PASSWORD 'password';
+ALTER USER postgres WITH PASSWORD '{Password}';
+注意最后有个分号，完成后有回显ALTER ROLE。
 退出
 \q
 修改/var/lib/pgsql/data/pg_hba.conf，将
+# "local" is for Unix domain socket connections only
+local   all             all                                     peer
 # IPv4 local connections:
 host    all             all             127.0.0.1/32            ident
 # IPv6 local connections:
 host    all             all             ::1/128                 ident
 修改为
+# "local" is for Unix domain socket connections only
+local   all             all                                     peer
 # IPv4 local connections:
 host    all             all             127.0.0.1/32            md5
 # IPv6 local connections:
 host    all             all             ::1/128                 md5
+local和host，local表示从本地管道登录(通过psql)，host表示用TCP连接登录(用pgadmin时)。
+其中trust表示无需密码，peer表示只需要和系统账号名匹配，ident表示使用验证服务器验证，在本地连接时和peer相同，reject表示拒绝，md5表示用MD5验证密码。
 然后重新启动PostgreSQL
 rcpostgresql restart
 
@@ -42,14 +49,13 @@ rcpostgresql restart
 安装后执行pgadmin3即可运行。
 
 5)导入数据
-在Database目录执行，其中密码为刚才设置的密码
-mono ../../Bin/DatabaseRegenerator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /connect:"Server=localhost;User ID=postgres;Password={Password};" /database:Mail /regenpgsql:MailData
+在Database目录执行RegenerateDatabasePostgreSQL.sh，其中密码为刚才设置的密码。
 
 6)运行程序
 运行编译好的程序(附带Npgsql中的库文件Npgsql.dll等)
 mono DatabasePostgreSQL.exe "Server=localhost;User ID=postgres;Password={Password};Database=mail;" /load
 
-7)mono-core、mono-devel，用于编译.Net程序，需要使用最新3.0.3版。
+7)mono-core、mono-data、mono-devel，用于编译.Net程序，需要使用最新3.0.3版。
 http://download.mono-project.com/archive/3.0.3/linux/x64/
 编译方法，在Src文件夹执行
 xbuild
