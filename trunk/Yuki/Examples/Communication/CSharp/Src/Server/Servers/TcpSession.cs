@@ -153,22 +153,18 @@ namespace Server
             IsExitingValue.Update(b =>
             {
                 Done = b;
+                if (!b)
+                {
+                    Socket.Shutdown(SocketShutdown.Receive);
+                    if (Server.EnableLogSystem)
+                    {
+                        Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExitAsync" });
+                    }
+                    Server.NotifySessionQuit(this);
+                }
                 return true;
             });
             if (Done) { return; }
-
-            try
-            {
-                Socket.Shutdown(SocketShutdown.Receive);
-            }
-            catch (Exception)
-            {
-            }
-            if (Server.EnableLogSystem)
-            {
-                Server.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Message = "SessionExitAsync" });
-            }
-            Server.NotifySessionQuit(this);
         }
 
         public void Start()

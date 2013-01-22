@@ -65,6 +65,10 @@ namespace Communication.Net
                 }
                 Success = true;
             }
+            catch (ObjectDisposedException)
+            {
+                Faulted(SocketError.OperationAborted);
+            }
             finally
             {
                 if (!Success) { ReleaseAsyncOperation(); }
@@ -115,6 +119,10 @@ namespace Communication.Net
                 }
                 Success = true;
             }
+            catch (ObjectDisposedException)
+            {
+                Faulted(SocketError.OperationAborted);
+            }
             finally
             {
                 if (!Success) { ReleaseAsyncOperation(); }
@@ -154,6 +162,10 @@ namespace Communication.Net
                     ThreadPool.QueueUserWorkItem(o => a(o as SocketAsyncEventArgs), socketEventArg);
                 }
                 Success = true;
+            }
+            catch (ObjectDisposedException)
+            {
+                Faulted(SocketError.OperationAborted);
             }
             finally
             {
@@ -196,6 +208,10 @@ namespace Communication.Net
                 }
                 Success = true;
             }
+            catch (ObjectDisposedException)
+            {
+                Faulted(SocketError.OperationAborted);
+            }
             finally
             {
                 if (!Success) { ReleaseAsyncOperation(); }
@@ -237,6 +253,10 @@ namespace Communication.Net
                 }
                 Success = true;
             }
+            catch (ObjectDisposedException)
+            {
+                Faulted(SocketError.OperationAborted);
+            }
             finally
             {
                 if (!Success) { ReleaseAsyncOperation(); }
@@ -245,7 +265,18 @@ namespace Communication.Net
 
         public void Shutdown(SocketShutdown How)
         {
-            InnerSocket.Shutdown(How);
+            //Mono上没有考虑到多线程的情况，所以在对方先Shutdown的时候Shutdown会抛出异常。
+            try
+            {
+                if (!InnerSocket.Connected)
+                {
+                    InnerSocket.Shutdown(How);
+                }
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
         }
 
         public void Dispose()
