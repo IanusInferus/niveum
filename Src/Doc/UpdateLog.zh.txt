@@ -1,4 +1,9 @@
-﻿2013.01.22
+﻿2013.01.23
+Examples:
+C#通讯示例服务器端在Linux上由于Mono在socket shutdown时远程主机率先shutdown时出现socket没有连接的异常的问题得到了workaround。
+C#通讯示例服务器端在Linux上流量过大时出现的疑似丢包导致的双边等待卡死问题在测试程序中进行了处理。
+
+2013.01.22
 Examples:
 将所有C#示例在mono 3.0.3的xbuild下编译成功。
 完善数据库示例说明。
