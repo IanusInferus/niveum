@@ -17,6 +17,7 @@
     SessionIdleTimeout          Int
     MaxConnections              Int
     MaxConnectionsPerIP         Int
+    MaxUnauthenticatedPerIP     Int
     MaxBadCommands              Int
     ClientDebug                 Boolean
 
@@ -42,6 +43,7 @@
     SessionIdleTimeout          Int
     MaxConnections              Int
     MaxConnectionsPerIP         Int
+    MaxUnauthenticatedPerIP     Int
     MaxBadCommands              Int
     ClientDebug                 Boolean
 

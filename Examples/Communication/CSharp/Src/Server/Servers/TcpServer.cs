@@ -83,6 +83,12 @@ namespace Server
             }
         }
 
+        private class IpSessionInfo
+        {
+            public int Count = 0;
+            public HashSet<TcpSession> Authenticated = new HashSet<TcpSession>();
+        }
+
         private Dictionary<IPEndPoint, BindingInfo> BindingInfos = new Dictionary<IPEndPoint, BindingInfo>();
         private CancellationTokenSource ListeningTaskTokenSource;
         private ConcurrentQueue<Socket> AcceptedSockets = new ConcurrentQueue<Socket>();
@@ -93,7 +99,7 @@ namespace Server
         private CancellationTokenSource PurifieringTaskTokenSource;
         private AutoResetEvent PurifieringTaskNotifier;
         private LockedVariable<HashSet<TcpSession>> Sessions = new LockedVariable<HashSet<TcpSession>>(new HashSet<TcpSession>());
-        private LockedVariable<Dictionary<IPAddress, int>> IpSessions = new LockedVariable<Dictionary<IPAddress, int>>(new Dictionary<IPAddress, int>());
+        private LockedVariable<Dictionary<IPAddress, IpSessionInfo>> IpSessions = new LockedVariable<Dictionary<IPAddress, IpSessionInfo>>(new Dictionary<IPAddress, IpSessionInfo>());
         private ConcurrentQueue<TcpSession> StoppingSessions = new ConcurrentQueue<TcpSession>();
 
         public ServerContext ServerContext { get; private set; }
@@ -112,6 +118,7 @@ namespace Server
         private int? SessionIdleTimeoutValue = null;
         private int? MaxConnectionsValue = null;
         private int? MaxConnectionsPerIPValue = null;
+        private int? MaxUnauthenticatedPerIPValue = null;
         private SerializationProtocolType ProtocolTypeValue = SerializationProtocolType.Binary;
 
         /// <summary>只能在启动前修改，以保证线程安全</summary>
@@ -310,6 +317,25 @@ namespace Server
                 );
             }
         }
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public int? MaxUnauthenticatedPerIP
+        {
+            get
+            {
+                return MaxUnauthenticatedPerIPValue;
+            }
+            set
+            {
+                IsRunningValue.DoAction
+                (
+                    b =>
+                    {
+                        if (b) { throw new InvalidOperationException(); }
+                        MaxUnauthenticatedPerIPValue = value;
+                    }
+                );
+            }
+        }
 
         /// <summary>只能在启动前修改，以保证线程安全</summary>
         public SerializationProtocolType SerializationProtocolType
@@ -492,8 +518,13 @@ namespace Server
                                     {
                                         if (iss.ContainsKey(IpAddress))
                                         {
-                                            iss[IpAddress] -= 1;
-                                            if (iss[IpAddress] == 0)
+                                            var isi = iss[IpAddress];
+                                            if (isi.Authenticated.Contains(StoppingSession))
+                                            {
+                                                isi.Authenticated.Remove(StoppingSession);
+                                            }
+                                            isi.Count -= 1;
+                                            if (isi.Count == 0)
                                             {
                                                 iss.Remove(IpAddress);
                                             }
@@ -560,7 +591,25 @@ namespace Server
                                         }
 
                                         IPEndPoint e = (IPEndPoint)(a.RemoteEndPoint);
-                                        if (MaxConnectionsPerIPValue.HasValue && (IpSessions.Check(iss => iss.ContainsKey(e.Address) ? iss[e.Address] : 0) >= MaxConnectionsPerIPValue.Value))
+                                        if (MaxConnectionsPerIPValue.HasValue && (IpSessions.Check(iss => iss.ContainsKey(e.Address) ? iss[e.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
+                                        {
+                                            try
+                                            {
+                                                s.Start();
+                                                if (MaxConnectionsPerIPExceeded != null)
+                                                {
+                                                    MaxConnectionsPerIPExceeded(s);
+                                                }
+                                            }
+                                            finally
+                                            {
+                                                StoppingSessions.Enqueue(s);
+                                                PurifieringTaskNotifier.Set();
+                                            }
+                                            continue;
+                                        }
+
+                                        if (MaxUnauthenticatedPerIPValue.HasValue && (IpSessions.Check(iss => iss.ContainsKey(e.Address) ? (iss[e.Address].Count - iss[e.Address].Authenticated.Count) : 0) >= MaxUnauthenticatedPerIPValue.Value))
                                         {
                                             try
                                             {
@@ -591,11 +640,13 @@ namespace Server
                                             {
                                                 if (iss.ContainsKey(e.Address))
                                                 {
-                                                    iss[e.Address] += 1;
+                                                    iss[e.Address].Count += 1;
                                                 }
                                                 else
                                                 {
-                                                    iss.Add(e.Address, 1);
+                                                    var isi = new IpSessionInfo();
+                                                    isi.Count += 1;
+                                                    iss.Add(e.Address, isi);
                                                 }
                                             }
                                         );
@@ -767,6 +818,24 @@ namespace Server
         {
             StoppingSessions.Enqueue(s);
             PurifieringTaskNotifier.Set();
+        }
+        public void NotifySessionAuthenticated(TcpSession s)
+        {
+            var e = s.RemoteEndPoint;
+            IpSessions.DoAction
+            (
+                iss =>
+                {
+                    if (iss.ContainsKey(e.Address))
+                    {
+                        var isi = iss[e.Address];
+                        if (!isi.Authenticated.Contains(s))
+                        {
+                            isi.Authenticated.Add(s);
+                        }
+                    }
+                }
+            );
         }
 
         private event Action<TcpSession> MaxConnectionsExceeded;

@@ -39,6 +39,7 @@ namespace Server
             Context = new SessionContext();
             Context.SessionToken = Cryptography.CreateRandom(4);
             Context.Quit += Quit;
+            Context.Authenticated += () => Server.NotifySessionAuthenticated(this);
 
             si = new ServerImplementation(Server.ServerContext, Context);
             si.RegisterCrossSessionEvents();
