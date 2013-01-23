@@ -19,6 +19,11 @@ namespace Server
         {
             if (Quit != null) { Quit(); }
         }
+        public event Action Authenticated; //跨线程事件(订阅者需要保证线程安全)
+        public void RaiseAuthenticated()
+        {
+            if (Authenticated != null) { Authenticated(); }
+        }
 
         public IPEndPoint RemoteEndPoint { get; set; }
 

@@ -112,10 +112,15 @@ namespace Server
         private AutoResetEvent PurifieringTaskNotifier;
         private Timer LastActiveTimeCheckTimer;
 
+        private class IpSessionInfo
+        {
+            public int Count = 0;
+            public HashSet<HttpSession> Authenticated = new HashSet<HttpSession>();
+        }
         private class ServerSessionSets
         {
             public HashSet<HttpSession> Sessions = new HashSet<HttpSession>();
-            public Dictionary<IPAddress, int> IpSessions = new Dictionary<IPAddress, int>();
+            public Dictionary<IPAddress, IpSessionInfo> IpSessions = new Dictionary<IPAddress, IpSessionInfo>();
             public Dictionary<String, HttpSession> SessionIdToSession = new Dictionary<String, HttpSession>(StringComparer.OrdinalIgnoreCase);
             public Dictionary<HttpSession, String> SessionToId = new Dictionary<HttpSession, String>();
         }
@@ -139,6 +144,7 @@ namespace Server
         private int? SessionIdleTimeoutValue = null;
         private int? MaxConnectionsValue = null;
         private int? MaxConnectionsPerIPValue = null;
+        private int? MaxUnauthenticatedPerIPValue = null;
 
         private int TimeoutCheckPeriodValue = 30;
         private String ServiceVirtualPathValue = null;
@@ -336,6 +342,25 @@ namespace Server
                     {
                         if (b) { throw new InvalidOperationException(); }
                         MaxConnectionsPerIPValue = value;
+                    }
+                );
+            }
+        }
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public int? MaxUnauthenticatedPerIP
+        {
+            get
+            {
+                return MaxUnauthenticatedPerIPValue;
+            }
+            set
+            {
+                IsRunningValue.DoAction
+                (
+                    b =>
+                    {
+                        if (b) { throw new InvalidOperationException(); }
+                        MaxUnauthenticatedPerIPValue = value;
                     }
                 );
             }
@@ -555,8 +580,13 @@ namespace Server
                                         ss.Sessions.Remove(StoppingSession);
                                         Removed = true;
                                         var IpAddress = StoppingSession.RemoteEndPoint.Address;
-                                        ss.IpSessions[IpAddress] -= 1;
-                                        if (ss.IpSessions[IpAddress] == 0)
+                                        var isi = ss.IpSessions[IpAddress];
+                                        if (isi.Authenticated.Contains(StoppingSession))
+                                        {
+                                            isi.Authenticated.Remove(StoppingSession);
+                                        }
+                                        isi.Count -= 1;
+                                        if (isi.Count == 0)
                                         {
                                             ss.IpSessions.Remove(IpAddress);
                                         }
@@ -717,7 +747,14 @@ namespace Server
                                                 continue;
                                             }
 
-                                            if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address] : 0) >= MaxConnectionsPerIPValue.Value))
+                                            if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
+                                            {
+                                                a.Response.StatusCode = 503;
+                                                NotifyListenerContextQuit(a);
+                                                continue;
+                                            }
+
+                                            if (MaxUnauthenticatedPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? (ss.IpSessions[e.Address].Count - ss.IpSessions[e.Address].Authenticated.Count) : 0) >= MaxUnauthenticatedPerIPValue.Value))
                                             {
                                                 a.Response.StatusCode = 503;
                                                 NotifyListenerContextQuit(a);
@@ -735,11 +772,13 @@ namespace Server
                                                         ss.Sessions.Add(s);
                                                         if (ss.IpSessions.ContainsKey(e.Address))
                                                         {
-                                                            ss.IpSessions[e.Address] += 1;
+                                                            ss.IpSessions[e.Address].Count += 1;
                                                         }
                                                         else
                                                         {
-                                                            ss.IpSessions.Add(e.Address, 1);
+                                                            var isi = new IpSessionInfo();
+                                                            isi.Count += 1;
+                                                            ss.IpSessions.Add(e.Address, isi);
                                                         }
                                                         ss.SessionIdToSession.Add(SessionId, s);
                                                         ss.SessionToId.Add(s, SessionId);
@@ -927,6 +966,24 @@ namespace Server
         {
             StoppingSessions.Enqueue(s);
             PurifieringTaskNotifier.Set();
+        }
+        public void NotifySessionAuthenticated(HttpSession s)
+        {
+            var e = s.RemoteEndPoint;
+            SessionSets.DoAction
+            (
+                ss =>
+                {
+                    if (ss.IpSessions.ContainsKey(e.Address))
+                    {
+                        var isi = ss.IpSessions[e.Address];
+                        if (!isi.Authenticated.Contains(s))
+                        {
+                            isi.Authenticated.Add(s);
+                        }
+                    }
+                }
+            );
         }
 
         public void Dispose()
