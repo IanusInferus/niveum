@@ -16,6 +16,7 @@
                 SessionIdleTimeout 600
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
+                MaxUnauthenticatedPerIP 32768
                 MaxBadCommands 8
                 ClientDebug True
                 SerializationProtocolType Binary
@@ -35,6 +36,7 @@
                 SessionIdleTimeout 600
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
+                MaxUnauthenticatedPerIP 32768
                 MaxBadCommands 8
                 ClientDebug True
                 SerializationProtocolType Json
@@ -53,6 +55,7 @@
                 SessionIdleTimeout 600
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
+                MaxUnauthenticatedPerIP 32768
                 MaxBadCommands 8
                 ClientDebug True
                 TimeoutCheckPeriod 30

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2013.01.22.
+//  Version:     2013.01.23.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -244,6 +244,7 @@ namespace Server
                     Server.SessionIdleTimeout = s.SessionIdleTimeout;
                     Server.MaxConnections = s.MaxConnections;
                     Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
+                    Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
                     Server.MaxBadCommands = s.MaxBadCommands;
                     Server.ClientDebug = s.ClientDebug;
                     Server.EnableLogNormalIn = s.EnableLogNormalIn;
@@ -295,6 +296,7 @@ namespace Server
                     Server.MaxConnections = s.MaxConnections;
                     Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
                     Server.MaxBadCommands = s.MaxBadCommands;
+                    Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
                     Server.ClientDebug = s.ClientDebug;
                     Server.EnableLogNormalIn = s.EnableLogNormalIn;
                     Server.EnableLogNormalOut = s.EnableLogNormalOut;
