@@ -30,7 +30,7 @@ std\haxe\Json.hx : 337
 			}
 			#end
 
-到目前(svn5712)，补丁尚没有进入SVN。
+该问题已在(svn5724)版修正。
 
 2)生成代码并编译CSharp服务器
 运行外层目录BuildCode.cmd。
