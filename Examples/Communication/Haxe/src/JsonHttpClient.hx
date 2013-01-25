@@ -36,6 +36,17 @@ class JsonHttpClient
         if (!StringTools.endsWith(prefix, "/")) { throw "InvalidOperationException: PrefixNotEndWithSlash: '" + prefix + "'"; }
         var js = new JsonSender();
         jc = new JsonSerializationClient(js);
+        var ac = jc.GetApplicationClient();
+        ac.error = function(e)
+        {
+            try
+            {
+                ac.dequeueCallback(e.commandName);
+            }
+            catch (unknown : Dynamic)
+            {
+            }
+        };
         sessionId = null;
         js.sendObject = function(jo : Dynamic)
         {
