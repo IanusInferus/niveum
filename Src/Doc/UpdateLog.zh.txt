@@ -1,4 +1,10 @@
-﻿2013.01.23
+﻿2013.01.25
+Examples:
+C#通讯示例修正一处行尾空格不规范。
+Yuki.Relation:
+修正ObjectSchema转换为RelationSchema时，泛型基元转换时Set、Map变成非泛型基元的问题。
+
+2013.01.23
 Examples:
 C#通讯示例服务器端在Linux上由于Mono在socket shutdown时远程主机率先shutdown时出现socket没有连接的异常的问题得到了workaround。
 C#通讯示例服务器端在Linux上流量过大时出现的疑似丢包导致的双边等待卡死问题在测试程序中进行了处理。
