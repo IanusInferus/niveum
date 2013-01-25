@@ -37,8 +37,8 @@ namespace Server
 
         public int ReceivedMessageCount = 0; //跨线程变量
 
-        public Action<MessageReceivedEvent> MessageReceived; 
-        
+        public Action<MessageReceivedEvent> MessageReceived;
+
         public Action<TestMessageReceivedEvent> TestMessageReceived;
 
         //单线程访问
