@@ -10,4 +10,9 @@ http://dev.mysql.com/doc/refman/5.0/en/identifier-case-sensitivity.html
 
 推荐的方式为1)，因为MySQL对lower_case_table_names = 2的支持似乎并不是非常稳定，有一些异常情况。
 
-若需要在Windows上导入不输入密码，可以将密码设为空。在MySQL Workbench中的服务器管理-Users and Privileges中将root的几个来源于localhost(或者127.0.0.1、::1)的Password设为空即可。
+若需要在Windows上导入不输入密码，可以将密码设为空，避免在开发环境中出现密码。
+
+从开始菜单打开MySQL 5.5 Command Line Client，输入初始root密码。
+输入
+UPDATE mysql.user SET Password=PASSWORD('') WHERE User='root';
+FLUSH PRIVILEGES;
