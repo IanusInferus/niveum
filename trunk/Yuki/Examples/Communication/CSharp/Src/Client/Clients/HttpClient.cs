@@ -39,7 +39,7 @@ namespace Client
         {
             if (!Prefix.EndsWith("/")) { throw new InvalidOperationException(String.Format("PrefixNotEndWithSlash: '{0}'", Prefix)); }
             VirtualTransportClient = new JsonHttpPacketClient();
-            InnerClient.Error += e => InnerClient.DequeueCallback(e.CommandName);
+            InnerClient.ErrorCommand += e => InnerClient.DequeueCallback(e.CommandName);
             VirtualTransportClient.ClientMethod += () =>
             {
                 var Bytes = System.Text.Encoding.UTF8.GetBytes((new JArray(VirtualTransportClient.TakeWriteBuffer())).ToString(Newtonsoft.Json.Formatting.None));

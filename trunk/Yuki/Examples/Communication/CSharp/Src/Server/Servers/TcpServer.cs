@@ -361,13 +361,9 @@ namespace Server
             this.MaxConnectionsPerIPExceeded += OnMaxConnectionsPerIPExceeded;
         }
 
-        public event Action<SessionLogEntry> SessionLog;
         public void RaiseSessionLog(SessionLogEntry Entry)
         {
-            if (SessionLog != null)
-            {
-                SessionLog(Entry);
-            }
+            ServerContext.RaiseSessionLog(Entry);
         }
 
         private void OnMaxConnectionsExceeded(TcpSession s)

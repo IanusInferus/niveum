@@ -62,7 +62,7 @@ namespace Client
             bs = std::make_shared<BinarySender>(sock);
             bc = std::make_shared<Communication::Binary::BinarySerializationClient>(bs);
             InnerClient = bc->GetApplicationClient();
-            InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e) { InnerClient->DequeueCallback(e->CommandName); };
+            InnerClient->ErrorCommand = [=](std::shared_ptr<Communication::ErrorCommandEvent> e) { InnerClient->DequeueCallback(e->CommandName); };
             Buffer.resize(8 * 1024, 0);
         }
 

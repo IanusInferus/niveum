@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2013.01.23.
+//  Version:     2013.01.29.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -146,73 +146,83 @@ namespace Server
 
                 using (var Logger = new ConsoleLogger())
                 {
-                    var ServerContext = new ServerContext();
-                    ServerContext.Shutdown += () =>
+                    using (var ServerContext = new ServerContext())
                     {
-                        ExitEvent.Set();
-                    };
-
-                    Logger.Start();
-
-                    var ServerDict = new Dictionary<VirtualServerConfiguration, IServer>();
-
-                    if (System.Diagnostics.Debugger.IsAttached)
-                    {
-                        foreach (var s in c.Servers)
+                        ServerContext.Shutdown += () =>
                         {
-                            ServerDict.Add(s, StartServer(s, ServerContext, Logger));
+                            ExitEvent.Set();
+                        };
+                        if (c.EnableLogConsole)
+                        {
+                            ServerContext.SessionLog += Logger.Push;
                         }
 
-                        ExitEvent.WaitOne();
+                        Logger.Start();
 
-                        foreach (var s in c.Servers)
-                        {
-                            if (ServerDict.ContainsKey(s))
-                            {
-                                var Server = ServerDict[s];
-                                StopServer(s, Server, Logger);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        foreach (var s in c.Servers)
-                        {
-                            try
-                            {
-                                ServerDict.Add(s, StartServer(s, ServerContext, Logger));
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
-                            }
-                        }
+                        var ServerDict = new Dictionary<VirtualServerConfiguration, IServer>();
 
-                        ExitEvent.WaitOne();
-
-                        foreach (var s in c.Servers)
+                        if (System.Diagnostics.Debugger.IsAttached)
                         {
-                            try
+                            foreach (var s in c.Servers)
+                            {
+                                ServerDict.Add(s, StartServer(c, s, ServerContext));
+                            }
+
+                            ExitEvent.WaitOne();
+
+                            foreach (var s in c.Servers)
                             {
                                 if (ServerDict.ContainsKey(s))
                                 {
                                     var Server = ServerDict[s];
-                                    StopServer(s, Server, Logger);
+                                    StopServer(c, s, Server);
                                 }
                             }
-                            catch (Exception ex)
+                        }
+                        else
+                        {
+                            foreach (var s in c.Servers)
                             {
-                                Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
+                                try
+                                {
+                                    ServerDict.Add(s, StartServer(c, s, ServerContext));
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
+                                }
+                            }
+
+                            ExitEvent.WaitOne();
+
+                            foreach (var s in c.Servers)
+                            {
+                                try
+                                {
+                                    if (ServerDict.ContainsKey(s))
+                                    {
+                                        var Server = ServerDict[s];
+                                        StopServer(c, s, Server);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
+                                }
                             }
                         }
-                    }
 
-                    Logger.Stop();
+
+                        if (c.EnableLogConsole)
+                        {
+                            ServerContext.SessionLog -= Logger.Push;
+                        }
+                    }
                 }
             }
         }
 
-        private static IServer StartServer(VirtualServerConfiguration vsc, ServerContext ServerContext, ConsoleLogger Logger)
+        private static IServer StartServer(Configuration c, VirtualServerConfiguration vsc, ServerContext ServerContext)
         {
             if (vsc.OnTcp)
             {
@@ -228,11 +238,6 @@ namespace Server
 
                 try
                 {
-                    if (s.EnableLogConsole)
-                    {
-                        Server.SessionLog += Logger.Push;
-                    }
-
                     Server.SerializationProtocolType = s.SerializationProtocolType;
 
                     Server.CheckCommandAllowed = (sc, CommandName) =>
@@ -246,7 +251,7 @@ namespace Server
                     Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
                     Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
                     Server.MaxBadCommands = s.MaxBadCommands;
-                    Server.ClientDebug = s.ClientDebug;
+                    Server.ClientDebug = c.ClientDebug;
                     Server.EnableLogNormalIn = s.EnableLogNormalIn;
                     Server.EnableLogNormalOut = s.EnableLogNormalOut;
                     Server.EnableLogUnknownError = s.EnableLogUnknownError;
@@ -281,11 +286,6 @@ namespace Server
 
                 try
                 {
-                    if (s.EnableLogConsole)
-                    {
-                        Server.SessionLog += Logger.Push;
-                    }
-
                     Server.CheckCommandAllowed = (sc, CommandName) =>
                     {
                         return true;
@@ -297,7 +297,7 @@ namespace Server
                     Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
                     Server.MaxBadCommands = s.MaxBadCommands;
                     Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
-                    Server.ClientDebug = s.ClientDebug;
+                    Server.ClientDebug = c.ClientDebug;
                     Server.EnableLogNormalIn = s.EnableLogNormalIn;
                     Server.EnableLogNormalOut = s.EnableLogNormalOut;
                     Server.EnableLogUnknownError = s.EnableLogUnknownError;
@@ -332,7 +332,7 @@ namespace Server
                 throw new InvalidOperationException("未知服务器类型: " + vsc._Tag.ToString());
             }
         }
-        private static void StopServer(VirtualServerConfiguration vsc, IServer Server, ConsoleLogger Logger)
+        private static void StopServer(Configuration c, VirtualServerConfiguration vsc, IServer Server)
         {
             if (vsc.OnTcp)
             {
@@ -343,11 +343,6 @@ namespace Server
                     Server.Stop();
 
                     Console.WriteLine(@"服务器已关闭。");
-
-                    if (s.EnableLogConsole)
-                    {
-                        Server.SessionLog -= Logger.Push;
-                    }
                 }
                 finally
                 {
@@ -363,11 +358,6 @@ namespace Server
                     Server.Stop();
 
                     Console.WriteLine(@"服务器已关闭。");
-
-                    if (s.EnableLogConsole)
-                    {
-                        Server.SessionLog -= Logger.Push;
-                    }
                 }
                 finally
                 {

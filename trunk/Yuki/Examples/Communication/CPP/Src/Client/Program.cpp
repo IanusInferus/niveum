@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2012.12.19.
+//  Version:     2013.01.29.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -72,14 +72,9 @@ namespace Client
 
         static void ReadLineAndSendLoop(std::shared_ptr<Communication::IApplicationClient> InnerClient, boost::mutex &Lockee)
         {
-            auto OriginalError = InnerClient->Error;
             InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
             {
-                if (OriginalError != nullptr)
-                {
-                    OriginalError(e);
-                }
-                auto m = L"调用'" + e->CommandName + L"'发生错误:" + e->Message;
+                auto m = e->Message;
                 wprintf(L"%ls\n", m.c_str());
             };
             InnerClient->MessageReceived = [=](std::shared_ptr<Communication::MessageReceivedEvent> e)

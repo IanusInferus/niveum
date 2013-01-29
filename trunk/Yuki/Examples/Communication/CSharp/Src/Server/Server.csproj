@@ -74,6 +74,7 @@
     <Compile Include="Util\FileLogger.cs" />
     <Compile Include="Util\FileLoggerSync.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Util\ILogger.cs" />
     <Compile Include="Util\SessionLogEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Context\ServerContext.cs" />

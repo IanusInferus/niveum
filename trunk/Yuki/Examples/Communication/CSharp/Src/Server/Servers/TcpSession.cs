@@ -139,6 +139,8 @@ namespace Server
             Socket.Shutdown(SocketShutdown.Both);
             Socket.Dispose();
 
+            Context.Dispose();
+
             IsExitingValue.Update(b => false);
 
             if (Server.EnableLogSystem)
@@ -501,12 +503,12 @@ namespace Server
                 // Maximum allowed bad commands exceeded.
                 if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
                 {
-                    RaiseError(String.Format(@"""{0}""", CommandLine), "Too many bad commands, closing transmission channel.");
+                    RaiseError("", String.Format(@"""{0}"": Too many bad commands, closing transmission channel.", CommandLine));
                     StopAsync();
                 }
                 else
                 {
-                    RaiseError(String.Format(@"""{0}""", CommandLine), "Not recognized.");
+                    RaiseError("", String.Format(@"""{0}"":  recognized.", CommandLine));
                 }
             }
             else

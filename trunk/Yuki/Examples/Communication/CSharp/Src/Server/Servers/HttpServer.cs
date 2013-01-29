@@ -430,13 +430,9 @@ namespace Server
             ServerContext = sc;
         }
 
-        public event Action<SessionLogEntry> SessionLog;
         public void RaiseSessionLog(SessionLogEntry Entry)
         {
-            if (SessionLog != null)
-            {
-                SessionLog(Entry);
-            }
+            ServerContext.RaiseSessionLog(Entry);
         }
 
         private static String GetBindingName(Uri Url)

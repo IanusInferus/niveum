@@ -14,7 +14,5 @@ namespace Server
     {
         void Start();
         void Stop();
-
-        event Action<SessionLogEntry> SessionLog;
     }
 }
