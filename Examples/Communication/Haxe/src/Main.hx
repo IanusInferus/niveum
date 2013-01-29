@@ -54,7 +54,7 @@ class Main
 
             Q("#button_ajax").click(function(e)
             {
-                JQueryStatic.getJSON("users.txt", function(r)
+                JQueryStatic.getJSON("users.json", function(r)
                 {
                     var users = r;
                     var template = T("#tmpl_template");

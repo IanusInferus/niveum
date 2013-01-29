@@ -48,12 +48,29 @@ namespace Server
 
             void RaiseError(std::wstring CommandName, std::wstring Message)
             {
-                if (Error != nullptr)
+                if (CommandName != L"")
                 {
-                    auto e = std::make_shared<ErrorEvent>();
-                    e->CommandName = CommandName;
-                    e->Message = Message;
-                    Error(e);
+                    if (ErrorCommand != nullptr)
+                    {
+                        auto e = std::make_shared<ErrorCommandEvent>();
+                        e->CommandName = CommandName;
+                        ErrorCommand(e);
+                    }
+                    if (Error != nullptr)
+                    {
+                        auto e = std::make_shared<ErrorEvent>();
+                        e->Message = CommandName + L": " + Message;
+                        Error(e);
+                    }
+                }
+                else
+                {
+                    if (Error != nullptr)
+                    {
+                        auto e = std::make_shared<ErrorEvent>();
+                        e->Message = Message;
+                        Error(e);
+                    }
                 }
             }
 

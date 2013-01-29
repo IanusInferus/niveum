@@ -87,7 +87,7 @@ namespace Client
             {
                 throw new InvalidOperationException("InvalidSerializationProtocol: " + ProtocolType.ToString());
             }
-            InnerClient.Error += e => InnerClient.DequeueCallback(e.CommandName);
+            InnerClient.ErrorCommand += e => InnerClient.DequeueCallback(e.CommandName);
             VirtualTransportClient.ClientMethod += () =>
             {
                 using (var h = new AutoResetEvent(false))

@@ -143,7 +143,7 @@ namespace Client
 
                 bc.InnerClient.Error += e =>
                 {
-                    var m = "调用'" + e.CommandName + "'发生错误:" + e.Message;
+                    var m = e.Message;
                     Console.WriteLine(m);
                 };
                 if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, cc, bc.InnerClient, Completed); }
@@ -308,7 +308,7 @@ namespace Client
                 var cc = new ClientContext();
                 bc.InnerClient.Error += e =>
                 {
-                    var m = "调用'" + e.CommandName + "'发生错误:" + e.Message;
+                    var m = e.Message;
                     Console.WriteLine(m);
                 };
                 if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, cc, bc.InnerClient, Completed); }

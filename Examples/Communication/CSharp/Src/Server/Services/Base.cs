@@ -9,6 +9,7 @@ namespace Server.Services
     public partial class ServerImplementation : IApplicationServer
     {
         public event Action<ErrorEvent> Error;
+        public event Action<ErrorCommandEvent> ErrorCommand;
 
         public ServerTimeReply ServerTime(ServerTimeRequest r)
         {

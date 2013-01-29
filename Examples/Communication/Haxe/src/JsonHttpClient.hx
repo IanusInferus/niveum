@@ -37,7 +37,7 @@ class JsonHttpClient
         var js = new JsonSender();
         jc = new JsonSerializationClient(js);
         var ac = jc.GetApplicationClient();
-        ac.error = function(e)
+        ac.errorCommand = function(e)
         {
             try
             {

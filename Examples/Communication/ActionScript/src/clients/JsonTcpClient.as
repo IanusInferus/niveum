@@ -11,21 +11,6 @@
     {
         private var innerClientValue:JsonSerializationClient;
         public function get innerClient():IApplicationClient { return innerClientValue; }
-        public function set error(callback:Function):void
-        {
-            innerClient.error = function(e:communication.ErrorEvent):void
-            {
-                try
-                {
-                    innerClient.dequeueCallback(e.commandName);
-                }
-                catch (err:Error)
-                {
-                    trace(err);
-                }
-                callback(e);
-            };
-        }
 
         private var bindings:Vector.<Binding>
         private var bindingInfos:Vector.<BindingInfo>
@@ -72,16 +57,9 @@
             {
                 bindingInfos[i] = new BindingInfo();
             }
-            innerClient.error = function(e:communication.ErrorEvent):void
+            innerClient.errorCommand = function(e:communication.ErrorCommandEvent):void
             {
-                try
-                {
-                    innerClient.dequeueCallback(e.commandName);
-                }
-                catch (err:Error)
-                {
-                    trace(err);
-                }
+                innerClient.dequeueCallback(e.commandName);
             };
             readBuffer = new ByteArray();
             writeBuffer = new ByteArray();

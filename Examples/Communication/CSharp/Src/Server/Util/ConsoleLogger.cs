@@ -9,7 +9,7 @@ namespace Server
     /// <summary>
     /// 本类的所有公共成员均是线程安全的。
     /// </summary>
-    public class ConsoleLogger : IDisposable
+    public class ConsoleLogger : ILogger
     {
         private AsyncConsumer<SessionLogEntry> AsyncConsumer = null;
 
@@ -38,7 +38,7 @@ namespace Server
             AsyncConsumer.Push(e);
         }
 
-        public void Stop()
+        public void Dispose()
         {
             if (AsyncConsumer != null)
             {
@@ -47,11 +47,6 @@ namespace Server
                 AsyncConsumer.Dispose();
                 AsyncConsumer = null;
             }
-        }
-
-        public void Dispose()
-        {
-            Stop();
         }
     }
 }

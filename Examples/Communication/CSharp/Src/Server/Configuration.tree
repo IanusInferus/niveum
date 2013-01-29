@@ -12,13 +12,11 @@
                 EnableLogCriticalError True
                 EnableLogPerformance True
                 EnableLogSystem True
-                EnableLogConsole True
                 SessionIdleTimeout 600
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
                 MaxBadCommands 8
-                ClientDebug True
                 SerializationProtocolType Binary
         VirtualServer
             Tcp
@@ -32,13 +30,11 @@
                 EnableLogCriticalError True
                 EnableLogPerformance True
                 EnableLogSystem True
-                EnableLogConsole True
                 SessionIdleTimeout 600
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
                 MaxBadCommands 8
-                ClientDebug True
                 SerializationProtocolType Json
         VirtualServer
             Http
@@ -51,13 +47,13 @@
                 EnableLogCriticalError True
                 EnableLogPerformance True
                 EnableLogSystem True
-                EnableLogConsole True
                 SessionIdleTimeout 600
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
                 MaxBadCommands 8
-                ClientDebug True
                 TimeoutCheckPeriod 30
                 ServiceVirtualPath cmd
                 StaticContentPath NotHasValue $Empty
+    EnableLogConsole True
+    ClientDebug True

@@ -42,8 +42,8 @@ package
 
         public function MainInner():void
         {
-            //EnableBinaryClient();
-            EnableJsonClient();
+            EnableBinaryClient();
+            //EnableJsonClient();
         }
 
         public function EnableBinaryClient():void
@@ -57,7 +57,7 @@ package
             bsc.doConnect();
             bsc.innerClient.error = function(e:ErrorEvent):void
             {
-                var m:String = "调用'" + e.commandName + "'发生错误:" + e.message;
+                var m:String = e.message;
                 trace(m);
             }
             ReadLineAndSendLoop(bsc.innerClient);
@@ -74,7 +74,7 @@ package
             jsc.doConnect();
             jsc.innerClient.error = function(e:ErrorEvent):void
             {
-                var m:String = "调用'" + e.commandName + "'发生错误:" + e.message;
+                var m:String = e.message;
                 trace(m);
             }
             ReadLineAndSendLoop(jsc.innerClient);
