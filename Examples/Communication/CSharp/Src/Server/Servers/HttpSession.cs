@@ -122,6 +122,8 @@ namespace Server
                 }
             );
 
+            Context.Dispose();
+
             IsExitingValue.Update(b => false);
 
             if (Server.EnableLogSystem)

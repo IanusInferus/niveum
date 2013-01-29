@@ -4,15 +4,17 @@
       File:        Base.tree
       Location:    Yuki.Examples <Tree>
       Description: 基础
-      Version:     2012.04.17.
+      Version:     2013.01.29.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
     ==========================================================================
 
 #ServerCommand Error                                错误
-    CommandName         String                      客户端命令名称
     Message             String                      错误信息
+
+#ServerCommand ErrorCommand                         错误命令
+    CommandName         String                      客户端命令名称
 
 #ClientCommand ServerTime                           服务器时间
     >

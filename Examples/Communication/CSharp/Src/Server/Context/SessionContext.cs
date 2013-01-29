@@ -10,8 +10,13 @@ using Communication;
 
 namespace Server
 {
-    public class SessionContext
+    public class SessionContext : IDisposable
     {
+        //单线程访问
+        public void Dispose()
+        {
+        }
+
         //跨线程共享只读访问
 
         public event Action Quit; //跨线程事件(订阅者需要保证线程安全)

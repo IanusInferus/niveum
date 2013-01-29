@@ -21,7 +21,15 @@ namespace Server.Services
 
         public void RaiseError(String CommandName, String Message)
         {
-            if (Error != null) { Error(new ErrorEvent { CommandName = CommandName, Message = Message }); }
+            if (CommandName != "")
+            {
+                if (ErrorCommand != null) { ErrorCommand(new ErrorCommandEvent { CommandName = CommandName }); }
+                if (Error != null) { Error(new ErrorEvent { Message = CommandName + ": " + Message }); }
+            }
+            else
+            {
+                if (Error != null) { Error(new ErrorEvent { Message = Message }); }
+            }
         }
     }
 }

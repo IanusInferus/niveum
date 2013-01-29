@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2013.01.21.
+//  Version:     2013.01.29.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -237,7 +237,7 @@ namespace Client
         {
             InnerClient.Error += e =>
             {
-                var m = "调用'" + e.CommandName + "'发生错误:" + e.Message;
+                var m = e.Message;
                 Console.WriteLine(m);
             };
             InnerClient.MessageReceived += e => Console.WriteLine(e.Content);
