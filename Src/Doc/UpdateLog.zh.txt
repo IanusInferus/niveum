@@ -1,4 +1,8 @@
-﻿2013.01.29
+﻿2013.02.01
+Yuki.TcpSendReceive:
+修正dll引用路径错误。
+
+2013.01.29
 Examples:
 通讯示例分离错误和命令无法识别两个事件。
 C#通讯示例增加SessionContext的销毁步骤。
