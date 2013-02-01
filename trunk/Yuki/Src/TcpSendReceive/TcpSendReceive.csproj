@@ -40,7 +40,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Firefly.Core">
-      <HintPath>..\..\..\..\..\Bin\Firefly.Core.dll</HintPath>
+      <HintPath>..\Lib\Firefly\Firefly.Core.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\Lib\JsonNet\Newtonsoft.Json.dll</HintPath>
