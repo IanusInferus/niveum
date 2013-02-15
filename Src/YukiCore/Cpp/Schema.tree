@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++模板数据
-      Version:     2012.12.19.
+      Version:     2013.02.16.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -495,7 +495,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    static std::shared_ptr<[[${TaggedUnionName}]]> [[Create${Name}]]([[${Type}]] Value)
+                    static std::shared_ptr<class [[${TaggedUnionName}]]> [[Create${Name}]]([[${Type}]] Value)
                     {
                         auto r = std::make_shared<[[${TaggedUnionName}]]>();
                         r->_Tag = [[${TaggedUnionTagName}_${Name}]];
@@ -508,7 +508,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    static std::shared_ptr<[[${TaggedUnionName}]]> [[Create${Name}]]()
+                    static std::shared_ptr<class [[${TaggedUnionName}]]> [[Create${Name}]]()
                     {
                         auto r = std::make_shared<[[${TaggedUnionName}]]>();
                         r->_Tag = [[${TaggedUnionTagName}_${Name}]];
@@ -604,14 +604,14 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    virtual std::shared_ptr<[[${Name}Reply]]> [[${Name}]](std::shared_ptr<[[${Name}Request]]> r) = 0;
+                    virtual std::shared_ptr<class [[${Name}Reply]]> [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r) = 0;
         Template
             Name IApplicationServer_ServerCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
-                    std::function<void(std::shared_ptr<[[${Name}Event]]>)> [[${Name}]];
+                    std::function<void(std::shared_ptr<class [[${Name}Event]]>)> [[${Name}]];
         Template
             Name IApplicationClient
             //Parameters: ${Commands}
@@ -633,11 +633,11 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    virtual void [[${Name}]](std::shared_ptr<[[${Name}Request]]> r, std::function<void(std::shared_ptr<[[${Name}Reply]]>)> Callback) = 0;
+                    virtual void [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r, std::function<void(std::shared_ptr<class [[${Name}Reply]]>)> Callback) = 0;
         Template
             Name IApplicationClient_ServerCommand
             //Parameters: ${Name}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
-                    std::function<void(std::shared_ptr<[[${Name}Event]]>)> [[${Name}]];
+                    std::function<void(std::shared_ptr<class [[${Name}Event]]>)> [[${Name}]];

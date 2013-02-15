@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2012.12.31.
+//  Version:     2013.02.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -179,13 +179,13 @@ namespace Yuki.ObjectSchema.Cpp.Common
                         }
                         else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
                         {
-                            return Type.TypeRef.TypeFriendlyName();
+                            return "enum " + Type.TypeRef.TypeFriendlyName();
                         }
                         if (ForceAsValue)
                         {
                             return Type.TypeRef.TypeFriendlyName();
                         }
-                        return "std::shared_ptr<" + Type.TypeRef.TypeFriendlyName() + ">";
+                        return "std::shared_ptr<class " + Type.TypeRef.TypeFriendlyName() + ">";
                     case TypeSpecTag.GenericParameterRef:
                         return Type.GenericParameterRef.Value;
                     case TypeSpecTag.Tuple:
@@ -194,7 +194,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                             {
                                 return Type.TypeFriendlyName();
                             }
-                            return "std::shared_ptr<" + Type.TypeFriendlyName() + ">";
+                            return "std::shared_ptr<class " + Type.TypeFriendlyName() + ">";
                         }
                     case TypeSpecTag.GenericTypeSpec:
                         {
@@ -209,7 +209,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                                 {
                                     return TypeString;
                                 }
-                                return "std::shared_ptr<" + TypeString + ">";
+                                return "std::shared_ptr<class " + TypeString + ">";
                             }
                             else
                             {
@@ -222,7 +222,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                                 {
                                     return Type.TypeFriendlyName();
                                 }
-                                return "std::shared_ptr<" + Type.TypeFriendlyName() + ">";
+                                return "std::shared_ptr<class " + Type.TypeFriendlyName() + ">";
                             }
                         }
                     default:
@@ -585,7 +585,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
             {
                 return Value.UnifyNewLineToLf().Split('\n');
             }
-            private static Regex rIdentifierPart = new Regex(@"[^\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F]+");
+            private static Regex rIdentifierPart = new Regex(@"typename |class |struct |union |enum |[^\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F]+");
             public String GetEscapedIdentifier(String Identifier)
             {
                 return rIdentifierPart.Replace(Identifier, m =>

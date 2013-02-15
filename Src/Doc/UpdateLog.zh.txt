@@ -1,4 +1,8 @@
-﻿2013.02.15
+﻿2013.02.16
+Yuki.Core:
+修正C++代码生成中TaggedUnion中类型名称和变量名称重复时出现的编译问题，通过添加class和enum前缀。
+
+2013.02.15
 Yuki.SchemaManipulator, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
 修正两处写法不一致。
 
