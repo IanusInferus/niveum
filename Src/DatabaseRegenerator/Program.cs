@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2012.12.10.
+//  Version:     2013.02.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -211,7 +211,7 @@ namespace Yuki.DatabaseRegenerator
         public static void DisplayInfo()
         {
             Console.WriteLine(@"数据库重建工具");
-            Console.WriteLine("Yuki.DatabaseRegenerator，按BSD许可证分发");
+            Console.WriteLine(@"Yuki.DatabaseRegenerator，按BSD许可证分发");
             Console.WriteLine(@"F.R.C.");
             Console.WriteLine(@"");
             Console.WriteLine(@"本工具用于重建数据库，并导入数据。");

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.12.31.
+//  Version:     2013.02.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -455,7 +455,7 @@ namespace Yuki.SchemaManipulator
         public static void DisplayInfo()
         {
             Console.WriteLine(@"对象类型结构处理工具");
-            Console.WriteLine("Yuki.SchemaManipulator，按BSD许可证分发");
+            Console.WriteLine(@"Yuki.SchemaManipulator，按BSD许可证分发");
             Console.WriteLine(@"F.R.C.");
             Console.WriteLine(@"");
             Console.WriteLine(@"本工具用于从对象类型结构生成代码。");
