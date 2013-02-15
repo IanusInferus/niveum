@@ -1,4 +1,8 @@
-﻿2013.02.14.0
+﻿2013.02.15
+Yuki.SchemaManipulator, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
+修正一处写法不一致。
+
+2013.02.14.0
 *:
 升级Firefly库。
 
