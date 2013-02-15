@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2012.12.19.
+      Version:     2013.02.16.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -140,7 +140,7 @@ ObjectSchemaTemplate
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    s->${Name} = [=](std::shared_ptr<[[${Name}Event]]> e)
+                    s->${Name} = [=](std::shared_ptr<class [[${Name}Event]]> e)
                     {
                         ByteArrayStream bas;
                         BinaryTranslator::[[${Name}EventToBinary]](bas, e);
@@ -275,7 +275,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    void [[${Name}]](std::shared_ptr<[[${Name}Request]]> r, std::function<void(std::shared_ptr<[[${Name}Reply]]>)> Callback)
+                    void [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r, std::function<void(std::shared_ptr<class [[${Name}Reply]]>)> Callback)
                     {
                         ByteArrayStream bas;
                         BinaryTranslator::[[${Name}RequestToBinary]](bas, r);
@@ -808,13 +808,13 @@ ObjectSchemaTemplate
             //Parameters: ${Name}, ${ValueTypeFriendlyName}
             Value
                 $String
-                    static std::shared_ptr<[[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
+                    static std::shared_ptr<class [[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
                     {
                         auto o = std::make_shared<[[${Name}]]>();
                         o->Value = [[${ValueTypeFriendlyName}FromBinary]](s);
                         return o;
                     }
-                    static void [[${Name}ToBinary]](IWritableStream &s, std::shared_ptr<[[${Name}]]> o)
+                    static void [[${Name}ToBinary]](IWritableStream &s, std::shared_ptr<class [[${Name}]]> o)
                     {
                         [[${ValueTypeFriendlyName}ToBinary]](s, o->Value);
                     }
@@ -823,13 +823,13 @@ ObjectSchemaTemplate
             //Parameters: ${Name}, ${FieldFroms}, ${FieldTos}
             Value
                 $String
-                    static std::shared_ptr<[[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
+                    static std::shared_ptr<class [[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
                     {
                         auto o = std::make_shared<[[${Name}]]>();
                         ${FieldFroms}
                         return o;
                     }
-                    static void [[${Name}ToBinary]](IWritableStream &s, std::shared_ptr<[[${Name}]]> o)
+                    static void [[${Name}ToBinary]](IWritableStream &s, std::shared_ptr<class [[${Name}]]> o)
                     {
                         ${FieldTos}
                     }
@@ -850,14 +850,14 @@ ObjectSchemaTemplate
             //Parameters: ${Name}, ${AlternativeFroms}, ${AlternativeTos}
             Value
                 $String
-                    static std::shared_ptr<[[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
+                    static std::shared_ptr<class [[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
                     {
                         auto o = std::make_shared<[[${Name}]]>();
                         o->_Tag = [[${Name}TagFromBinary]](s);
                         ${AlternativeFroms}
                         throw std::logic_error("InvalidOperation");
                     }
-                    static void [[${Name}ToBinary]](IWritableStream &s, std::shared_ptr<[[${Name}]]> o)
+                    static void [[${Name}ToBinary]](IWritableStream &s, std::shared_ptr<class [[${Name}]]> o)
                     {
                         [[${Name}TagToBinary]](s, o->_Tag);
                         ${AlternativeTos}
@@ -901,13 +901,13 @@ ObjectSchemaTemplate
             //Parameters: ${TypeFriendlyName}, ${TupleElementFroms}, ${TupleElementTos}
             Value
                 $String
-                    static std::shared_ptr<[[${TypeFriendlyName}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+                    static std::shared_ptr<class [[${TypeFriendlyName}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
                         auto t = std::make_shared<[[${TypeFriendlyName}]]>();
                         ${TupleElementFroms}
                         return t;
                     }
-                    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeFriendlyName}]]> t)
+                    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<class [[${TypeFriendlyName}]]> t)
                     {
                         ${TupleElementTos}
                     }
@@ -928,7 +928,7 @@ ObjectSchemaTemplate
             //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
             Value
                 $String
-                    static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+                    static std::shared_ptr<class [[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
                         auto l = std::make_shared<[[${TypeString}]]>();
                         int Length = static_cast<int>(IntFromBinary(s));
@@ -938,7 +938,7 @@ ObjectSchemaTemplate
                         }
                         return l;
                     }
-                    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeString}]]> l)
+                    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<class [[${TypeString}]]> l)
                     {
                         int Length = static_cast<int>(l->size());
                         IntToBinary(s, static_cast<Int>(Length));
@@ -952,7 +952,7 @@ ObjectSchemaTemplate
             //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
             Value
                 $String
-                    static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+                    static std::shared_ptr<class [[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
                         auto l = std::make_shared<[[${TypeString}]]>();
                         int Length = static_cast<int>(IntFromBinary(s));
@@ -962,7 +962,7 @@ ObjectSchemaTemplate
                         }
                         return l;
                     }
-                    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeString}]]> l)
+                    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<class [[${TypeString}]]> l)
                     {
                         int Length = static_cast<int>(l->size());
                         IntToBinary(s, static_cast<Int>(Length));
@@ -976,7 +976,7 @@ ObjectSchemaTemplate
             //Parameters: ${TypeFriendlyName}, ${TypeString}, ${KeyTypeFriendlyName}, ${ValueTypeFriendlyName}
             Value
                 $String
-                    static std::shared_ptr<[[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+                    static std::shared_ptr<class [[${TypeString}]]> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
                     {
                         auto l = std::make_shared<[[${TypeString}]]>();
                         int Length = static_cast<int>(IntFromBinary(s));
@@ -987,7 +987,7 @@ ObjectSchemaTemplate
                         }
                         return l;
                     }
-                    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<[[${TypeString}]]> l)
+                    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<class [[${TypeString}]]> l)
                     {
                         int Length = static_cast<int>(l->size());
                         IntToBinary(s, static_cast<Int>(Length));
