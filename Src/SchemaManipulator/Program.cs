@@ -512,9 +512,10 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"NamespaceName C#文件中的命名空间名称。");
             Console.WriteLine(@"PackageName Java/ActionScript文件中的包名。");
             Console.WriteLine(@"ClassName Java文件中的类名。");
-            Console.WriteLine(@"CsCodePath C#代码文件路径。");
             Console.WriteLine(@"VbCodePath VB代码文件路径。");
+            Console.WriteLine(@"CsCodePath C#代码文件路径。");
             Console.WriteLine(@"WithFirefly 是否使用Firefly库。");
+            Console.WriteLine(@"CppCodePath C++代码文件路径。");
             Console.WriteLine(@"JavaCodePath Java代码文件路径。");
             Console.WriteLine(@"AsCodeDir ActionScript代码文件夹路径。");
             Console.WriteLine(@"HaxeCodePath Haxe代码文件路径。");
