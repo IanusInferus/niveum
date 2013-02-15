@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2012.11.28.
+//  Version:     2013.02.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -304,7 +304,7 @@ namespace Yuki.RelationSchemaManipulator
         public static void DisplayInfo()
         {
             Console.WriteLine(@"关系类型结构处理工具");
-            Console.WriteLine("Yuki.RelationSchemaManipulator，按BSD许可证分发");
+            Console.WriteLine(@"Yuki.RelationSchemaManipulator，按BSD许可证分发");
             Console.WriteLine(@"F.R.C.");
             Console.WriteLine(@"");
             Console.WriteLine(@"本工具用于从关系类型结构生成代码。");
