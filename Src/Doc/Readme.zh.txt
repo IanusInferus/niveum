@@ -119,5 +119,6 @@ http://download.microsoft.com/download/9/5/A/95A9616B-7A37-4AF6-BC36-D6EA96C8DAA
 
 7 备注
 
-如果发现了BUG，或者有什么意见或建议，请到以下网址与我联系。
-http://www.cnblogs.com/Rex/Contact.aspx?id=1
+如果发现了BUG，或者有什么意见或建议，请通过以下邮件地址或网址与我联系。
+r_ex@163.com
+http://www.cnblogs.com/Rex/archive/2012/02/10/2344735.html
