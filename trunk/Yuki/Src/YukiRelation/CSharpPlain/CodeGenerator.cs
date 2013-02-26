@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C#简单类型代码生成器
-//  Version:     2012.12.31.
+//  Version:     2013.02.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,9 +20,9 @@ namespace Yuki.RelationSchema.CSharpPlain
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpPlain(this Schema Schema, String NamespaceName)
+        public static String CompileToCSharpPlain(this Schema Schema, String NamespaceName, Boolean WithFirefly)
         {
-            Writer w = new Writer(Schema, NamespaceName);
+            Writer w = new Writer(Schema, NamespaceName, WithFirefly);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -46,13 +46,13 @@ namespace Yuki.RelationSchema.CSharpPlain
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
-            public Writer(Schema Schema, String NamespaceName)
+            public Writer(Schema Schema, String NamespaceName, Boolean WithFirefly = true)
             {
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
                 InnerSchema = PlainObjectSchemaGenerator.Generate(Schema);
                 TypeDict = OS.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
-                InnerWriter = new OS.CSharp.Common.CodeGenerator.Writer(InnerSchema, NamespaceName, false);
+                InnerWriter = new OS.CSharp.Common.CodeGenerator.Writer(InnerSchema, NamespaceName, WithFirefly);
             }
 
             public String[] GetSchema()
