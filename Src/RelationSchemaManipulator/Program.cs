@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2013.02.15.
+//  Version:     2013.02.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -233,7 +233,11 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 2)
                     {
-                        RelationSchemaToCSharpDatabasePlainCode(args[0], args[1]);
+                        RelationSchemaToCSharpDatabasePlainCode(args[0], args[1], true);
+                    }
+                    else if (args.Length == 3)
+                    {
+                        RelationSchemaToCSharpDatabasePlainCode(args[0], args[1], Boolean.Parse(args[2]));
                     }
                     else
                     {
@@ -326,7 +330,7 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"生成C#数据库Linq to Entities类型");
             Console.WriteLine(@"/t2cse:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库简单类型");
-            Console.WriteLine(@"/t2csdp:<CsCodePath>,<EntityNamespaceName>");
+            Console.WriteLine(@"/t2csdp:<CsCodePath>,<EntityNamespaceName>[,<WithFirefly=true>]");
             Console.WriteLine(@"生成C# SQL Server类型");
             Console.WriteLine(@"/t2csmssql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# PostgreSQL类型");
@@ -343,6 +347,7 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"EntityNamespaceName 实体命名空间名称。");
             Console.WriteLine(@"ContextNamespaceName 上下文命名空间名称。");
             Console.WriteLine(@"ContextClassName 上下文类名称。");
+            Console.WriteLine(@"WithFirefly 是否使用Firefly库。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
             Console.WriteLine(@"RelationSchemaManipulator /loadtype:DatabaseSchema /t2csd:Src\Generated\Database.cs,Example,Example.Database,Example.Database.Context,DbRoot");
@@ -488,10 +493,10 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void RelationSchemaToCSharpDatabasePlainCode(String CsCodePath, String EntityNamespaceName)
+        public static void RelationSchemaToCSharpDatabasePlainCode(String CsCodePath, String EntityNamespaceName, Boolean WithFirefly)
         {
             var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpPlain(EntityNamespaceName);
+            var Compiled = RelationSchema.CompileToCSharpPlain(EntityNamespaceName, WithFirefly);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
