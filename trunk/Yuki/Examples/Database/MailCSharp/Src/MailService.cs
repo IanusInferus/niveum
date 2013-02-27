@@ -96,9 +96,13 @@ namespace Database
                     Content = m.Content,
                     Attachments = Attachments
                 };
-                mo.IsNew = false;
-                da.UpdateOneMailOwner(mo);
-                da.Complete();
+                var IsReadOnly = da.GetType().Name == "MemoryDataAccess";
+                if (!IsReadOnly)
+                {
+                    mo.IsNew = false;
+                    da.UpdateOneMailOwner(mo);
+                    da.Complete();
+                }
                 return v;
             }
         }

@@ -13,6 +13,7 @@ RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2
 :: C#
 @if not exist MailCSharp\Src @md MailCSharp\Src
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csdp:MailCSharp\Src\Database.cs,Database.Database
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csm:MailCSharp\Src\Memory\MemoryDataAccess.cs,Database.Database,Database.Memory
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csmssql:MailCSharp\Src\SqlServer\SqlServerDataAccess.cs,Database.Database,Database.SqlServer
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2cspgsql:MailCSharp\Src\PostgreSql\PostgreSqlDataAccess.cs,Database.Database,Database.PostgreSql
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csmysql:MailCSharp\Src\MySql\MySqlDataAccess.cs,Database.Database,Database.MySql
