@@ -173,17 +173,29 @@ namespace Yuki.RelationSchema.CSharpMemory
                     var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(k => k.Columns.Select(c => c.Name).ToArray()).Distinct(new StringArrayComparer()).ToArray();
                     foreach (var k in NondirectionalKeys)
                     {
-                        for (var n = k.Length; n > 0; n -= 1)
+                        for (var j = k.Length; j > 0; j -= 1)
                         {
-                            var Key = k.Take(n).ToArray();
+                            var Key = k.Take(j).ToArray();
                             if (h.Contains(Key)) { continue; }
                             h.Add(Key);
-                            var Remain = k.Skip(n).ToArray();
+                            var Remain = k.Skip(j).ToArray();
                             var PartialIndexName = e.Name + "By" + String.Join("And", Key);
                             var IndexName = e.Name + "By" + String.Join("And", k);
                             var ParameterDeclarations = String.Join(", ", Key.Select(c => "{0} {1}".Formats(GetEscapedIdentifier(GetTypeString(d[c].Type)), GetEscapedIdentifier(c))).ToArray());
-                            var Filters = String.Join("", Key.Select(c => ".Where(_d_ => _d_.Key == [[{0}]]).SelectMany(_d_ => _d_.Value)".Formats(c)).Concat(Remain.Select(c => ".SelectMany(_d_ => _d_.Value)")).ToArray());
-                            l.AddRange(GetTemplate("DataAccessBase_SelectMany").Substitute("EntityName", e.Name).Substitute("PartialIndexName", PartialIndexName).Substitute("IndexName", IndexName).Substitute("ParameterDeclarations", ParameterDeclarations).Substitute("Filters", Filters));
+                            var Fetches = new List<String>();
+                            for (var n = 0; n < Key.Length; n += 1)
+                            {
+                                var ParentByIndex = "";
+                                if (n > 0)
+                                {
+                                    ParentByIndex = "By" + String.Join("And", Key.Take(n).ToArray());
+                                }
+                                var Column = GetEscapedIdentifier(k[n]);
+                                var ByIndex = "By" + String.Join("And", Key.Take(n + 1).ToArray());
+                                Fetches.AddRange(GetTemplate("DataAccessBase_SelectMany_Fetch").Substitute("EntityName", e.Name).Substitute("ParentByIndex", ParentByIndex).Substitute("Column", Column).Substitute("ByIndex", ByIndex));
+                            }
+                            var Filters = String.Join("", Remain.Select(c => ".SelectMany(_d_ => _d_.Value)").ToArray());
+                            l.AddRange(GetTemplate("DataAccessBase_SelectMany").Substitute("EntityName", e.Name).Substitute("PartialIndexName", PartialIndexName).Substitute("IndexName", IndexName).Substitute("ParameterDeclarations", ParameterDeclarations).Substitute("Fetches", Fetches.ToArray()).Substitute("ByIndex", "By" + String.Join("And", Key.ToArray())).Substitute("Filters", Filters));
                         }
                     }
                 }
