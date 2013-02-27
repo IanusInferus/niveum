@@ -23,10 +23,10 @@ namespace Database
         private static readonly String SqlServerType = "Database.SqlServer.SqlServerDataAccess";
         private static readonly String PostgreSqlType = "Database.PostgreSql.PostgreSqlDataAccess";
         private static readonly String MySqlType = "Database.MySql.MySqlDataAccess";
-        private static readonly String MemoryConnectionString = "Test.md";
-        private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Test";
-        private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=test;";
-        private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Test;";
+        private static readonly String MemoryConnectionString = "Mail.md";
+        private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Mail";
+        private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=mail;";
+        private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Mail;";
 
         private static Type GetType(String FullName, Boolean ThrowOnError = false)
         {
