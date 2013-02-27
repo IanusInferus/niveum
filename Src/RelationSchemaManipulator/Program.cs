@@ -31,6 +31,7 @@ using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpLinqToSql;
 using Yuki.RelationSchema.CSharpLinqToEntities;
 using Yuki.RelationSchema.CSharpPlain;
+using Yuki.RelationSchema.CSharpMemory;
 using Yuki.RelationSchema.CSharpSqlServer;
 using Yuki.RelationSchema.CSharpPostgreSql;
 using Yuki.RelationSchema.CSharpMySql;
@@ -245,6 +246,19 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "t2csm")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 3)
+                    {
+                        RelationSchemaToCSharpMemoryCode(args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (opt.Name.ToLower() == "t2csmssql")
                 {
                     var args = opt.Arguments;
@@ -331,6 +345,8 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2cse:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库简单类型");
             Console.WriteLine(@"/t2csdp:<CsCodePath>,<EntityNamespaceName>[,<WithFirefly=true>]");
+            Console.WriteLine(@"生成C# Memory类型");
+            Console.WriteLine(@"/t2csm:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# SQL Server类型");
             Console.WriteLine(@"/t2csmssql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# PostgreSQL类型");
@@ -497,6 +513,23 @@ namespace Yuki.RelationSchemaManipulator
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCSharpPlain(EntityNamespaceName, WithFirefly);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void RelationSchemaToCSharpMemoryCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        {
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToCSharpMemory(EntityNamespaceName, ContextNamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);

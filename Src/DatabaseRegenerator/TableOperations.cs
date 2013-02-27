@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2012.12.10.
+//  Version:     2013.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -295,13 +295,14 @@ namespace Yuki.DatabaseRegenerator
         {
             public Dictionary<String, List<Node>> Tables;
             public Dictionary<String, RelationSchema.EntityDef> TableMetas;
+            public Dictionary<String, String> EnumUnderlyingTypes;
             public Dictionary<String, Dictionary<String, Int64>> EnumMetas;
         }
 
         public static ImportTableMetas GetImportTableMetas(RelationSchema.Schema s, String DataDir)
         {
             var Tables = new Dictionary<String, List<Node>>();
-            foreach (var f in Directory.EnumerateFiles(DataDir, "*.tree", SearchOption.AllDirectories))
+            foreach (var f in Directory.GetFiles(DataDir, "*.tree", SearchOption.AllDirectories).OrderBy(ff => ff, StringComparer.OrdinalIgnoreCase))
             {
                 var Result = TreeFile.ReadDirect(f, new TreeFormatParseSetting(), new TreeFormatEvaluateSetting());
                 foreach (var n in Result.Value.Nodes)
@@ -317,11 +318,17 @@ namespace Yuki.DatabaseRegenerator
             }
 
             var TableMetas = new Dictionary<String, RelationSchema.EntityDef>(StringComparer.OrdinalIgnoreCase);
+            var EnumUnderlyingTypes = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
             var EnumMetas = new Dictionary<String, Dictionary<String, Int64>>(StringComparer.OrdinalIgnoreCase);
             foreach (var t in s.TypeRefs.Concat(s.Types))
             {
                 if (t.OnEnum)
                 {
+                    if (!t.Enum.UnderlyingType.OnTypeRef)
+                    {
+                        throw new InvalidOperationException("EnumUnderlyingTypeNotTypeRef: {0}".Formats(t.Enum.Name));
+                    }
+                    EnumUnderlyingTypes.Add(t.Enum.Name, t.Enum.UnderlyingType.TypeRef);
                     if (!EnumMetas.ContainsKey(t.Enum.Name))
                     {
                         var d = new Dictionary<String, Int64>(StringComparer.OrdinalIgnoreCase);
@@ -371,7 +378,7 @@ namespace Yuki.DatabaseRegenerator
                 throw new InvalidOperationException("TableUnknown: " + String.Join(" ", NotExists));
             }
 
-            return new ImportTableMetas { Tables = Tables, TableMetas = TableMetas, EnumMetas = EnumMetas };
+            return new ImportTableMetas { Tables = Tables, TableMetas = TableMetas, EnumUnderlyingTypes = EnumUnderlyingTypes, EnumMetas = EnumMetas };
         }
     }
 }
