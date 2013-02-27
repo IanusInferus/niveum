@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2012.11.28.
+//  Version:     2013.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -539,11 +539,15 @@ namespace Yuki.RelationSchema
             if (q.OrderBy.Length != 0)
             {
                 QueryStrings.Add("OrderBy");
-                var OrderByString = String.Join("And", q.OrderBy.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name).ToArray());
+                var OrderByString = q.OrderBy.FriendlyName();
                 QueryStrings.Add(OrderByString);
             }
             var QueryLine = String.Join("", QueryStrings.ToArray());
             return QueryLine;
+        }
+        public static String FriendlyName(this KeyColumn[] Key)
+        {
+            return String.Join("And", Key.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name).ToArray());
         }
     }
 }

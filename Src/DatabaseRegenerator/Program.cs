@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2013.02.15.
+//  Version:     2013.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -16,6 +16,7 @@ using System.IO;
 using System.Reflection;
 using System.Data;
 using Firefly;
+using Firefly.Streaming;
 using Yuki.ObjectSchema;
 using OS = Yuki.ObjectSchema;
 using Yuki.RelationSchema;
@@ -93,7 +94,7 @@ namespace Yuki.DatabaseRegenerator
                         var SchemaPath = args[0];
                         if (Directory.Exists(SchemaPath))
                         {
-                            foreach (var f in Directory.EnumerateFiles(SchemaPath, "*.tree", SearchOption.AllDirectories))
+                            foreach (var f in Directory.GetFiles(SchemaPath, "*.tree", SearchOption.AllDirectories).OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
                             {
                                 rsl.LoadTypeRef(f);
                             }
@@ -118,7 +119,7 @@ namespace Yuki.DatabaseRegenerator
                         var SchemaPath = args[0];
                         if (Directory.Exists(SchemaPath))
                         {
-                            foreach (var f in Directory.EnumerateFiles(SchemaPath, "*.tree", SearchOption.AllDirectories))
+                            foreach (var f in Directory.GetFiles(SchemaPath, "*.tree", SearchOption.AllDirectories).OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
                             {
                                 rsl.LoadType(f);
                             }
@@ -154,6 +155,19 @@ namespace Yuki.DatabaseRegenerator
                     if (args.Length == 1)
                     {
                         DatabaseName = args[0];
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "regenm")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length >= 0)
+                    {
+                        RegenMemory(Schema(), ConnectionString, args);
                     }
                     else
                     {
@@ -226,6 +240,8 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/connect:<ConnectionString>");
             Console.WriteLine(@"指定数据库名称");
             Console.WriteLine(@"/database:<DatabaseName>");
+            Console.WriteLine(@"重建Memory数据库");
+            Console.WriteLine(@"/regenm:<DataDir>*");
             Console.WriteLine(@"重建SQL Server数据库");
             Console.WriteLine(@"/regenmssql:<DataDir>*");
             Console.WriteLine(@"重建PostgreSQL数据库");
@@ -235,11 +251,52 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"ObjectSchemaDir|ObjectSchemaFile 对象类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"ConnectionString 数据库连接字符串。");
             Console.WriteLine(@"DataDir 数据目录，里面有若干tree数据文件。");
+            Console.WriteLine(@"DataFilePath 数据文件路径。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
-            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=.;Integrated Security=True"" /database:Example /regen /import:Data /import:TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:Data.md /regenm:Data,TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=.;Integrated Security=True"" /database:Example /regenmssql:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Server=localhost;User ID=postgres;Password=postgres;"" /database:Example /regenpgsql:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root"" /database:Example /regenmysql:Data,TestData");
+        }
+
+        public static void RegenMemory(RelationSchema.Schema s, String ConnectionString, String[] DataDirs)
+        {
+            var l = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
+            var d = l.ToDictionary(e => e.Name, e => (Byte[])(null), StringComparer.OrdinalIgnoreCase);
+            foreach (var DataDir in DataDirs)
+            {
+                var ImportTableMetas = TableOperations.GetImportTableMetas(s, DataDir);
+                var Tables = ImportTableMetas.Tables;
+                var TableMetas = ImportTableMetas.TableMetas;
+                var EnumUnderlyingTypes = ImportTableMetas.EnumUnderlyingTypes;
+                var EnumMetas = ImportTableMetas.EnumMetas;
+                foreach (var t in Tables)
+                {
+                    var EntityName = TableMetas[t.Key].Name;
+                    using (var ms = Streams.CreateMemoryStream())
+                    {
+                        TableOperationsMemory.ImportTable(TableMetas, EnumUnderlyingTypes, EnumMetas, ms, t);
+                        ms.Position = 0;
+                        d[EntityName] = ms.Read((int)(ms.Length));
+                    }
+                }
+            }
+            using (var fs = Streams.CreateWritable(ConnectionString))
+            {
+                foreach (var e in l)
+                {
+                    var Bytes = d[e.Name];
+                    if (Bytes == null)
+                    {
+                        fs.WriteInt32(0);
+                    }
+                    else
+                    {
+                        fs.Write(Bytes);
+                    }
+                }
+            }
         }
 
         public static void RegenSqlServer(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
@@ -338,7 +395,7 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
         }
-            
+
         public static void RegenPostgreSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
         {
             var GenSqls = s.CompileToPostgreSql(DatabaseName);

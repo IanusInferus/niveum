@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构PostgreSQL数据库代码生成器
-//  Version:     2012.12.13.
+//  Version:     2013.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -132,7 +132,7 @@ namespace Yuki.RelationSchema.PostgreSql
                                     var fk = new ForeignKey { ThisTableName = ThisTable.CollectionName, ThisKeyColumns = f.Attribute.Navigation.OtherKey, OtherTableName = t.Entity.CollectionName, OtherKeyColumns = f.Attribute.Navigation.ThisKey };
                                     if (!h.Contains(fk))
                                     {
-                                        var Name = String.Format("FK_{0}_{1}__{2}_{3}", fk.ThisTableName, String.Join("_", fk.ThisKeyColumns), fk.OtherTableName, String.Join("_", fk.OtherKeyColumns));
+                                        var Name = String.Format("FK_{0}_{1}_{2}_{3}", fk.ThisTableName, String.Join("And", fk.ThisKeyColumns), fk.OtherTableName, String.Join("And", fk.OtherKeyColumns));
                                         l.AddRange(GetForeignKey(Name, fk.ThisTableName, fk.ThisKeyColumns, fk.OtherTableName, fk.OtherKeyColumns));
                                         h.Add(fk);
                                     }
@@ -142,7 +142,7 @@ namespace Yuki.RelationSchema.PostgreSql
                                     var fk = new ForeignKey { ThisTableName = t.Entity.CollectionName, ThisKeyColumns = f.Attribute.Navigation.ThisKey, OtherTableName = Records[f.Type.TypeRef.Value].CollectionName, OtherKeyColumns = f.Attribute.Navigation.OtherKey };
                                     if (!h.Contains(fk))
                                     {
-                                        var Name = String.Format("FK_{0}_{1}__{2}_{3}", fk.ThisTableName, String.Join("_", fk.ThisKeyColumns), fk.OtherTableName, String.Join("_", fk.OtherKeyColumns));
+                                        var Name = String.Format("FK_{0}_{1}_{2}_{3}", fk.ThisTableName, String.Join("And", fk.ThisKeyColumns), fk.OtherTableName, String.Join("And", fk.OtherKeyColumns));
                                         l.AddRange(GetForeignKey(Name, fk.ThisTableName, fk.ThisKeyColumns, fk.OtherTableName, fk.OtherKeyColumns));
                                         h.Add(fk);
                                     }
@@ -165,19 +165,19 @@ namespace Yuki.RelationSchema.PostgreSql
                     }
                 }
                 {
-                    var Name = String.Format("PK_{0}_{1}", r.CollectionName, String.Join("_", r.PrimaryKey.Columns.Select(c => c.Name).ToArray()));
+                    var Name = String.Format("PK_{0}_{1}", r.CollectionName, r.PrimaryKey.Columns.FriendlyName());
                     FieldsAndKeys.Add(GetPrimaryKey(r.PrimaryKey, Name));
                 }
                 foreach (var k in r.UniqueKeys)
                 {
-                    var Name = String.Format("UQ_{0}_{1}", r.CollectionName, String.Join("_", k.Columns.Select(c => c.Name).ToArray()));
+                    var Name = String.Format("UQ_{0}_{1}", r.CollectionName, k.Columns.FriendlyName());
                     FieldsAndKeys.Add(GetUniqueKey(k, Name));
                 }
 
                 var NonUniqueKeys = new List<String>();
                 foreach (var k in r.NonUniqueKeys)
                 {
-                    var Name = String.Format("IX_{0}_{1}", r.CollectionName, String.Join("_", k.Columns.Select(c => c.Name).ToArray()));
+                    var Name = String.Format("IX_{0}_{1}", r.CollectionName, k.Columns.FriendlyName());
                     NonUniqueKeys.AddRange(GetNonUniqueKey(k, Name, r.CollectionName));
                 }
 

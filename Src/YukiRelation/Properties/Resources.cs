@@ -29,6 +29,7 @@ namespace Yuki.RelationSchema.Properties
 
         public static Byte[] CSharpLinqToEntities { get { return GetResource("CSharpLinqToEntities"); } }
         public static Byte[] CSharpLinqToSql { get { return GetResource("CSharpLinqToSql"); } }
+        public static Byte[] CSharpMemory { get { return GetResource("CSharpMemory"); } }
         public static Byte[] CSharpMySql { get { return GetResource("CSharpMySql"); } }
         public static Byte[] CSharpPlain { get { return GetResource("CSharpPlain"); } }
         public static Byte[] CSharpPostgreSql { get { return GetResource("CSharpPostgreSql"); } }
