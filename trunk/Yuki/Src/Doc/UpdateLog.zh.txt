@@ -4,8 +4,11 @@ Yuki.Relation:
 Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
 增加只读内存数据库代码生成。
 增加只读内存数据库文件生成，支持创建文件之前先创建目录。
+Yuki.Relation:
+改进只读内存数据库代码的性能。
 Examples:
 增加C# Memory邮件数据库示例。
+调整C# Memory邮件数据库示例脚本和说明。
 
 2013.02.26
 Yuki.Relation, Yuki.RelationSchemaManipulator:

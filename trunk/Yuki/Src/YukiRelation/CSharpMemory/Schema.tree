@@ -155,13 +155,25 @@ ObjectSchemaTemplate
                     public [[${IndexType}]] [[${IndexName}]] = null;
         Template
             Name DataAccessBase_SelectMany
-            //Parameters: ${EntityName}, ${PartialIndexName}, ${IndexName}, ${ParameterDeclarations}, ${Filters}
+            //Parameters: ${EntityName}, ${PartialIndexName}, ${IndexName}, ${ParameterDeclarations}, ${Fetches}, ${ByIndex}, ${Filters}
             Value
                 $String
                     public static IEnumerable<[[${EntityName}]]> [[SelectMany${PartialIndexName}]](MemoryDataTables _Tables_, MemoryDataIndices _Indices_, ${ParameterDeclarations})
                     {
-                        return _Indices_.[[${IndexName}]]${Filters}.Select(_i_ => _Tables_.[[${EntityName}]][_i_]);
+                        var _Index_ = _Indices_.[[${IndexName}]];
+                        ${Fetches}
+                        return [[_Index${ByIndex}_]]${Filters}.Select(_i_ => _Tables_.[[${EntityName}]][_i_]);
                     }
+        Template
+            Name DataAccessBase_SelectMany_Fetch
+            //Parameters: ${EntityName}, ${ParentByIndex}, ${Column}, ${ByIndex}
+            Value
+                $String
+                    if (![[_Index${ParentByIndex}_]].ContainsKey(${Column}))
+                    {
+                        return new [[${EntityName}]][] { };
+                    }
+                    var [[_Index${ByIndex}_]] = [[_Index${ParentByIndex}_]][${Column}];
         Template
             Name DataAccessBase_SelectAll
             //Parameters: ${EntityName}
