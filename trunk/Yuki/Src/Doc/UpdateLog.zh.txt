@@ -1,4 +1,13 @@
-﻿2013.02.26
+﻿2013.02.27
+Yuki.Relation:
+修正T-SQL、PostgreSQL、MySQL代码生成中声明多个列名和顺序相同但部分列排列方向不同时索引名称冲突的问题。
+Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
+增加只读内存数据库代码生成。
+增加只读内存数据库文件生成。
+Examples:
+增加C# Memory邮件数据库示例。
+
+2013.02.26
 Yuki.Relation, Yuki.RelationSchemaManipulator:
 增加C#数据库简单类型代码生成是否依赖于Firefly的选项。
 
