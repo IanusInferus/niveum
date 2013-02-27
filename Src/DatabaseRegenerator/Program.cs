@@ -282,6 +282,8 @@ namespace Yuki.DatabaseRegenerator
                     }
                 }
             }
+            var Dir = FileNameHandling.GetFileDirectory(ConnectionString);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             using (var fs = Streams.CreateWritable(ConnectionString))
             {
                 foreach (var e in l)
