@@ -18,9 +18,9 @@ namespace Database
     {
         private Func<IDataAccess> ConnectionFactory;
 
-        private static readonly String SqlServerType = "Database.SqlServer.SqlServerDataAccess";
-        private static readonly String PostgreSqlType = "Database.PostgreSql.PostgreSqlDataAccess";
-        private static readonly String MySqlType = "Database.MySql.MySqlDataAccess";
+        private static readonly String SqlServerType = "Database.SqlServer.SqlServerDataAccessPool";
+        private static readonly String PostgreSqlType = "Database.PostgreSql.PostgreSqlDataAccessPool";
+        private static readonly String MySqlType = "Database.MySql.MySqlDataAccessPool";
         private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Test";
         private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=test;";
         private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Test;";
@@ -43,9 +43,8 @@ namespace Database
         }
         private static Func<String, IDataAccess> GetConstructor(Type t)
         {
-            var c = t.GetMethod("Create", (new Type[] { typeof(String) }));
-            var d = Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), c);
-            return (Func<String, IDataAccess>)(d);
+            var c = (IDataAccessPool)(Activator.CreateInstance(t));
+            return c.Create;
         }
 
         public static String GetConnectionStringExample()
