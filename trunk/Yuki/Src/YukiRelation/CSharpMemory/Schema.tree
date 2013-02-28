@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Memory代码模板数据
-      Version:     2013.02.27.
+      Version:     2013.02.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -273,3 +273,29 @@ ObjectSchemaTemplate
             Value
                 $String
                     throw new NotSupportedException();
+        Template
+            Name DataAccessPool
+            //Parameters:
+            Value
+                $String
+                    public class MemoryDataAccessPool : IDataAccessPool
+                    {
+                        private Dictionary<String, IDataAccess> d = new Dictionary<String, IDataAccess>();
+                        public IDataAccess Create(String ConnectionString)
+                        {
+                            lock (d)
+                            {
+                                if (d.ContainsKey(ConnectionString)){ return d[ConnectionString]; }
+                                var c = MemoryDataAccess.Create(ConnectionString);
+                                d.Add(ConnectionString, c);
+                                return c;
+                            }
+                        }
+                        public void Dispose()
+                        {
+                            lock (d)
+                            {
+                                d.Clear();
+                            }
+                        }
+                    }

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Memory代码生成器
-//  Version:     2013.02.27.
+//  Version:     2013.02.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -346,6 +346,8 @@ namespace Yuki.RelationSchema.CSharpMemory
                     ql = ql.Take(ql.Count - 1).ToList();
                 }
                 l.AddRange(GetTemplate("DataAccess").Substitute("Queries", ql.ToArray()));
+                l.Add("");
+                l.AddRange(GetTemplate("DataAccessPool"));
                 l.Add("");
 
                 if (l.Count > 0)
