@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2013.02.27.
+//  Version:     2013.02.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -233,9 +233,9 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"用法:");
             Console.WriteLine(@"DatabaseRegenerator (/<Command>)*");
             Console.WriteLine(@"装载类型引用");
-            Console.WriteLine(@"/loadtyperef:<ObjectSchemaDir|ObjectSchemaFile>");
+            Console.WriteLine(@"/loadtyperef:<RelationSchemaDir|RelationSchemaFile>");
             Console.WriteLine(@"装载类型定义");
-            Console.WriteLine(@"/loadtype:<ObjectSchemaDir|ObjectSchemaFile>");
+            Console.WriteLine(@"/loadtype:<RelationSchemaDir|RelationSchemaFile>");
             Console.WriteLine(@"连接数据库");
             Console.WriteLine(@"/connect:<ConnectionString>");
             Console.WriteLine(@"指定数据库名称");
@@ -248,7 +248,7 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/regenpgsql:<DataDir>*");
             Console.WriteLine(@"重建MySQL数据库");
             Console.WriteLine(@"/regenmysql:<DataDir>*");
-            Console.WriteLine(@"ObjectSchemaDir|ObjectSchemaFile 对象类型结构Tree文件(夹)路径。");
+            Console.WriteLine(@"RelationSchemaDir|RelationSchemaFile 关系类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"ConnectionString 数据库连接字符串。");
             Console.WriteLine(@"DataDir 数据目录，里面有若干tree数据文件。");
             Console.WriteLine(@"DataFilePath 数据文件路径。");

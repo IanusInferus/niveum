@@ -4,6 +4,8 @@ Yuki.Relation:
 修正C# MySQL数据库代码生成中Upsert时返回值影响行数为2导致的问题。
 Examples:
 调整C#邮件和测试数据库示例，使用连接池接口。
+Yuki.DatabaseRegenerator:
+修正说明文字。
 
 2013.02.27
 Yuki.Relation:
