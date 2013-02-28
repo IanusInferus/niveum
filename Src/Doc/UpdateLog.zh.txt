@@ -1,4 +1,11 @@
-﻿2013.02.27
+﻿2013.02.28
+Yuki.Relation:
+增加C#数据库代码连接池接口。
+修正C# MySQL数据库代码生成中Upsert时返回值影响行数为2导致的问题。
+Examples:
+调整C#邮件和测试数据库示例，使用连接池接口。
+
+2013.02.27
 Yuki.Relation:
 修正T-SQL、PostgreSQL、MySQL代码生成中声明多个列名和顺序相同但部分列排列方向不同时索引名称冲突的问题。
 Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:

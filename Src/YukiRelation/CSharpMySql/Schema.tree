@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# MySQL代码模板数据
-      Version:     2012.12.31.
+      Version:     2013.02.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -420,7 +420,7 @@ ObjectSchemaTemplate
                     ${ParameterAdds}
                     return Convert.ToInt32(cmd.ExecuteScalar());
         Template
-            Name InsertUpdateUpsert_One
+            Name InsertUpdate_One
             //Parameters: ${SQL}, ${ParameterAdds}
             Value
                 $String
@@ -432,7 +432,7 @@ ObjectSchemaTemplate
                         throw new InvalidOperationException();
                     }
         Template
-            Name InsertUpdateUpsert_Many
+            Name InsertUpdate_Many
             //Parameters: ${SQL}, ${ParameterAdds}
             Value
                 $String
@@ -442,6 +442,35 @@ ObjectSchemaTemplate
                         cmd.CommandText = @"${SQL}";
                         ${ParameterAdds}
                         if (cmd.ExecuteNonQuery() != 1)
+                        {
+                            throw new InvalidOperationException();
+                        }
+                    }
+        Template
+            Name Upsert_One
+            //Parameters: ${SQL}, ${ParameterAdds}
+            Value
+                $String
+                    var cmd = CreateTextCommand();
+                    cmd.CommandText = @"${SQL}";
+                    ${ParameterAdds}
+                    var Count = cmd.ExecuteNonQuery();
+                    if ((Count != 1) && (Count != 2))
+                    {
+                        throw new InvalidOperationException();
+                    }
+        Template
+            Name Upsert_Many
+            //Parameters: ${SQL}, ${ParameterAdds}
+            Value
+                $String
+                    foreach (var v in l)
+                    {
+                        var cmd = CreateTextCommand();
+                        cmd.CommandText = @"${SQL}";
+                        ${ParameterAdds}
+                        var Count = cmd.ExecuteNonQuery();
+                        if ((Count != 1) && (Count != 2))
                         {
                             throw new InvalidOperationException();
                         }
@@ -551,3 +580,18 @@ ObjectSchemaTemplate
             Value
                 $String
                     v.[[${ParameterName}]] = [[${TypeGet}]](dr, "${ParameterName}");
+        Template
+            Name DataAccessPool
+            //Parameters:
+            Value
+                $String
+                    public class MySqlDataAccessPool : IDataAccessPool
+                    {
+                        public IDataAccess Create(String ConnectionString)
+                        {
+                            return MySqlDataAccess.Create(ConnectionString);
+                        }
+                        public void Dispose()
+                        {
+                        }
+                    }
