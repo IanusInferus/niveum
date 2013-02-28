@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# SQL Server代码模板数据
-      Version:     2012.12.31.
+      Version:     2013.02.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -551,3 +551,18 @@ ObjectSchemaTemplate
             Value
                 $String
                     v.[[${ParameterName}]] = [[${TypeGet}]](dr, "${ParameterName}");
+        Template
+            Name DataAccessPool
+            //Parameters:
+            Value
+                $String
+                    public class SqlServerDataAccessPool : IDataAccessPool
+                    {
+                        public IDataAccess Create(String ConnectionString)
+                        {
+                            return SqlServerDataAccess.Create(ConnectionString);
+                        }
+                        public void Dispose()
+                        {
+                        }
+                    }

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C#简单类型代码生成器
-//  Version:     2013.02.26.
+//  Version:     2013.02.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -164,6 +164,8 @@ namespace Yuki.RelationSchema.CSharpPlain
                 if (Queries.Length > 0)
                 {
                     l.AddRange(GetTemplate("IDataAccess").Substitute("Queries", Queries.Select(q => GetQuerySignature(q) + ";").ToArray()));
+                    l.Add("");
+                    l.AddRange(GetTemplate("IDataAccessPool"));
                     l.Add("");
                 }
 
