@@ -1,4 +1,12 @@
-﻿2013.02.28
+﻿2013.03.08
+Yuki.Core:
+修正Haxe JSON代码生成对Haxe 3.0.0 RC的Map的支持。
+Examples:
+修正Haxe通讯示例对Haxe 3.0.0 RC的macro的支持。
+增加C#通讯示例服务器使用Ctrl+C正常退出的功能。
+修正C#通讯示例Http服务器退出时的一处执行顺序问题。
+
+2013.02.28
 Yuki.Relation:
 增加C#数据库代码连接池接口。
 修正C# MySQL数据库代码生成中Upsert时返回值影响行数为2导致的问题。
