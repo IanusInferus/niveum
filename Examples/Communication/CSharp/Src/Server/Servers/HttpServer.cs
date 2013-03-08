@@ -535,30 +535,49 @@ namespace Server
                                 {
                                     RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0), Time = DateTime.UtcNow, Type = "Sys", Message = ExceptionInfo.GetExceptionInfo(ex) });
                                 }
+                                Boolean ListenerStopped = false;
                                 try
                                 {
                                     while (true)
                                     {
                                         if (ListeningTaskToken.IsCancellationRequested) { return; }
-                                        var ca = Listener.BeginGetContext(ar =>
+                                        var l = Listener;
+                                        using (var Finished = new AutoResetEvent(false))
                                         {
-                                            var a = Listener.EndGetContext(ar);
-                                            AcceptedListenerContexts.Enqueue(a);
-                                            AcceptingTaskNotifier.Set();
-                                        }, null);
-                                        try
-                                        {
-                                            WaitHandle.WaitAny(new WaitHandle[] { ca.AsyncWaitHandle, ListeningTaskToken.WaitHandle });
-                                        }
-                                        catch (OperationCanceledException)
-                                        {
-                                            return;
+                                            var ca = Listener.BeginGetContext(ar =>
+                                            {
+                                                try
+                                                {
+                                                    var a = l.EndGetContext(ar);
+                                                    AcceptedListenerContexts.Enqueue(a);
+                                                    AcceptingTaskNotifier.Set();
+                                                }
+                                                catch (HttpListenerException)
+                                                {
+                                                }
+                                                finally
+                                                {
+                                                    Finished.Set();
+                                                }
+                                            }, null);
+                                            var Index = WaitHandle.WaitAny(new WaitHandle[] { Finished, ListeningTaskToken.WaitHandle });
+                                            if (Index == 1)
+                                            {
+                                                Listener.Stop();
+                                                ListenerStopped = true;
+                                                Finished.WaitOne();
+                                            }
+                                            ca.AsyncWaitHandle.WaitOne();
+                                            ca.AsyncWaitHandle.Dispose();
                                         }
                                     }
                                 }
                                 finally
                                 {
-                                    Listener.Stop();
+                                    if (!ListenerStopped)
+                                    {
+                                        Listener.Stop();
+                                    }
                                 }
                             },
                             TaskCreationOptions.LongRunning

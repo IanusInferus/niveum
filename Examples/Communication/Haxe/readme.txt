@@ -2,7 +2,7 @@
 
 Windows平台下需要软件
 .Net Framework 4.5
-Haxe r5693以上
+Haxe 3.0.0 RC以上
 nginx
 FlashDevelop，可选，编辑环境
 Chrome，可选，调试环境，支持Source map功能，可以直接调试Haxe代码
@@ -11,26 +11,8 @@ Chrome，可选，调试环境，支持Source map功能，可以直接调试Haxe
 从下面地址下载安装包安装，然后
 http://haxe.org/file/Haxe-2.10-Windows.exe
 
-从下面地址下载最新版，覆盖安装目录
+*可选，从下面地址下载最新版，覆盖安装目录
 http://94.142.242.48/builds/windows/?C=M;O=D
-
-Haxe的JSON库haxe.Json中存在一个bug，读取UTF-8文本时，如果含有中文会出错。
-补丁如下(适用于svn5693)：
-std\haxe\Json.hx : 337
-
-			#if (neko || php || cpp)
-			// ensure utf8 chars are not cut
-			else if( c >= 0x80 ) {
-				pos++;
--				if( c >= 0xE0 ) pos += 1 + (c & 32);
-+				if( c >= 0xFC ) pos += 4;
-+				else if( c >= 0xF8 ) pos += 3;
-+				else if( c >= 0xF0 ) pos += 2;
-+				else if( c >= 0xE0 ) pos++;
-			}
-			#end
-
-该问题已在(svn5724)版修正。
 
 2)生成代码并编译CSharp服务器
 运行外层目录BuildCode.cmd。
