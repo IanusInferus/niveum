@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2013.01.29.
+//  Version:     2013.03.08.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -144,12 +144,22 @@ namespace Server
                 Console.WriteLine(@"工作线程数量: [{0}-{1}]".Formats(MinWorkThreadCount, MaxWorkThreadCount));
                 Console.WriteLine(@"完成端口线程数量: [{0}-{1}]".Formats(MinCompletionPortThreadCount, MaxCompletionPortThreadCount));
 
+                ConsoleCancelEventHandler CancelKeyPress = null;
+                CancelKeyPress = (sender, e) =>
+                {
+                    e.Cancel = true;
+                    Console.WriteLine("命令行中断退出。");
+                    ExitEvent.Set();
+                };
+                Console.CancelKeyPress += CancelKeyPress;
+
                 using (var Logger = new ConsoleLogger())
                 {
                     using (var ServerContext = new ServerContext())
                     {
                         ServerContext.Shutdown += () =>
                         {
+                            Console.WriteLine("远程命令退出。");
                             ExitEvent.Set();
                         };
                         if (c.EnableLogConsole)
@@ -169,6 +179,7 @@ namespace Server
                             }
 
                             ExitEvent.WaitOne();
+                            Console.CancelKeyPress -= CancelKeyPress;
 
                             foreach (var s in c.Servers)
                             {
@@ -194,6 +205,7 @@ namespace Server
                             }
 
                             ExitEvent.WaitOne();
+                            Console.CancelKeyPress -= CancelKeyPress;
 
                             foreach (var s in c.Servers)
                             {
@@ -220,6 +232,8 @@ namespace Server
                     }
                 }
             }
+
+            Console.WriteLine("服务器进程退出完成。");
         }
 
         private static IServer StartServer(Configuration c, VirtualServerConfiguration vsc, ServerContext ServerContext)
