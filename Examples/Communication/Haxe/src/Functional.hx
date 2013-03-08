@@ -4,7 +4,7 @@ using Lambda;
 
 class Functional
 {
-    @:macro public static function fun(e : Array<Expr>) : Expr
+    macro public static function fun(e : Array<Expr>) : Expr
     {
         if (e.length <= 0) { Context.error("At least one argument is required.", Context.currentPos()); }
         var body = e[e.length - 1];
@@ -33,7 +33,7 @@ class Functional
         return {expr : ExprDef.EFunction(null, {args : argExprs, ret : null, expr : Return, params : []}), pos : Context.currentPos()};
     }
 
-    @:macro public static function sub(e : Array<Expr>) : Expr
+    macro public static function sub(e : Array<Expr>) : Expr
     {
         if (e.length <= 0) { Context.error("At least one argument is required.", Context.currentPos()); }
         var body = e[e.length - 1];
