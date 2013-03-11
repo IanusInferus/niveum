@@ -1,4 +1,8 @@
-﻿2013.03.08
+﻿2013.03.11
+Yuki.Core:
+Haxe代码生成增加对Haxe 3.0.0 RC中新增的abstract关键字的识别。
+
+2013.03.08
 Yuki.Core:
 修正Haxe JSON代码生成对Haxe 3.0.0 RC的Map的支持。
 Examples:
