@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchemaManipulator", "SchemaManipulator\SchemaManipulator.csproj", "{D9D1181E-2141-4CE7-80F5-73F3B8620247}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseRegenerator", "DatabaseRegenerator\DatabaseRegenerator.csproj", "{8EA3C197-8B12-4A72-8C91-E22DB8039E51}"
@@ -12,6 +12,13 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RelationSchemaManipulator", "RelationSchemaManipulator\RelationSchemaManipulator.csproj", "{C608D189-D985-4CFB-9B8D-E44804C3416F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpSendReceive", "TcpSendReceive\TcpSendReceive.csproj", "{44BAA95D-E876-44F9-B6E0-C7B87D00869D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YukiExpression", "YukiExpression\YukiExpression.csproj", "{C197CBAF-712C-4DA8-B7ED-FAE0CB9F77C3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D9D1181E-2141-4CE7-80F5-73F3B8620247} = {D9D1181E-2141-4CE7-80F5-73F3B8620247}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpressionManipulator", "ExpressionManipulator\ExpressionManipulator.csproj", "{31045E21-7CE2-46D4-9855-1575E290190B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,6 +50,14 @@ Global
 		{44BAA95D-E876-44F9-B6E0-C7B87D00869D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44BAA95D-E876-44F9-B6E0-C7B87D00869D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{44BAA95D-E876-44F9-B6E0-C7B87D00869D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C197CBAF-712C-4DA8-B7ED-FAE0CB9F77C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C197CBAF-712C-4DA8-B7ED-FAE0CB9F77C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C197CBAF-712C-4DA8-B7ED-FAE0CB9F77C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C197CBAF-712C-4DA8-B7ED-FAE0CB9F77C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31045E21-7CE2-46D4-9855-1575E290190B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31045E21-7CE2-46D4-9855-1575E290190B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31045E21-7CE2-46D4-9855-1575E290190B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31045E21-7CE2-46D4-9855-1575E290190B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,6 +1,11 @@
 ﻿2013.03.11
 Yuki.Core:
 Haxe代码生成增加对Haxe 3.0.0 RC中新增的abstract关键字的识别。
+Yuki.Expression, ExpressionManipulator:
+增加表达式解析。
+增加表达式生成二进制程序集。
+Examples:
+增加表达式示例。
 
 2013.03.08
 Yuki.Core:
