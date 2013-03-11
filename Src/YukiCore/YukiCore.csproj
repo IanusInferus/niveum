@@ -92,11 +92,9 @@
     <EmbeddedResource Include="Xhtml\Schema.tree" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Condition=" '$(OS)' == 'Windows_NT' " Name="BeforeBuild">
-    <Exec Command="&quot;Lib\Firefly\MetaSchemaManipulator.exe&quot; /t2cs:&quot;YukiCore\ObjectSchema\ObjectSchema.tree&quot;,&quot;YukiCore\ObjectSchema\ObjectSchema.Designer.cs&quot;,Yuki.ObjectSchema" WorkingDirectory="$(SolutionDir)" />
-  </Target>
-  <Target Condition=" '$(OS)' != 'Windows_NT' " Name="BeforeBuild">
-    <Exec Command="mono &quot;Lib/Firefly/MetaSchemaManipulator.exe&quot; /t2cs:&quot;YukiCore/ObjectSchema/ObjectSchema.tree&quot;,&quot;YukiCore/ObjectSchema/ObjectSchema.Designer.cs&quot;,Yuki.ObjectSchema" WorkingDirectory="$(SolutionDir)" />
+  <Target Name="BeforeBuild">
+    <Exec Command="&quot;Lib\Firefly\MetaSchemaManipulator.exe&quot; /t2cs:&quot;YukiCore\ObjectSchema\ObjectSchema.tree&quot;,&quot;YukiCore\ObjectSchema\ObjectSchema.Designer.cs&quot;,Yuki.ObjectSchema" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
+    <Exec Command="mono &quot;Lib/Firefly/MetaSchemaManipulator.exe&quot; /t2cs:&quot;YukiCore/ObjectSchema/ObjectSchema.tree&quot;,&quot;YukiCore/ObjectSchema/ObjectSchema.Designer.cs&quot;,Yuki.ObjectSchema" WorkingDirectory="$(SolutionDir)"  Condition=" '$(OS)' != 'Windows_NT' " />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

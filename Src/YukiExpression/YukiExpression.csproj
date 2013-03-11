@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7BD101DA-2049-4B20-A89F-D5C7D4384D8B}</ProjectGuid>
+    <ProjectGuid>{C197CBAF-712C-4DA8-B7ED-FAE0CB9F77C3}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Yuki.RelationSchema</RootNamespace>
-    <AssemblyName>Yuki.Relation</AssemblyName>
+    <RootNamespace>Yuki.ExpressionSchema</RootNamespace>
+    <AssemblyName>Yuki.Expression</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>false</SignAssembly>
@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\Bin\</OutputPath>
-    <DocumentationFile>..\..\Bin\Yuki.Relation.xml</DocumentationFile>
+    <DocumentationFile>..\..\Bin\Yuki.Expression.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -34,7 +34,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\Bin\</OutputPath>
-    <DocumentationFile>..\..\Bin\Yuki.Relation.xml</DocumentationFile>
+    <DocumentationFile>..\..\Bin\Yuki.Expression.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -51,37 +51,17 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CSharpLinqToEntities\CodeGenerator.cs" />
-    <Compile Include="CSharpMemory\CodeGenerator.cs" />
-    <Compile Include="CSharpMySql\CodeGenerator.cs" />
-    <Compile Include="CSharpPlain\CodeGenerator.cs" />
-    <Compile Include="CSharpPostgreSql\CodeGenerator.cs" />
-    <Compile Include="CSharpSqlServer\CodeGenerator.cs" />
-    <Compile Include="MySql\CodeGenerator.cs" />
-    <Compile Include="PostgreSql\CodeGenerator.cs" />
-    <Compile Include="RelationSchema\PlainObjectSchemaGenerator.cs" />
-    <Compile Include="RelationSchema\RelationSchemaExtensions.cs" />
-    <Compile Include="RelationSchema\RelationSchemaLoader.cs" />
-    <Compile Include="RelationSchema\RelationSchemaTranslator.cs" />
+    <Compile Include="ExpressionSchema\ExpressionAssemblyLoader.cs" />
+    <Compile Include="ExpressionSchema\ExpressionParser.cs" />
+    <Compile Include="ExpressionSchema\ExpressionSchema.Designer.cs" />
+    <Compile Include="ExpressionSchema\ExpressionSchemaExtensions.cs" />
+    <Compile Include="ExpressionSchema\ExpressionSchemaLoader.cs" />
+    <Compile Include="ExpressionSchema\SemanticTranslator.cs" />
+    <Compile Include="ExpressionSchema\SyntaxParser.cs" />
+    <Compile Include="ExpressionSchema\TokenParser.cs" />
+    <Compile Include="ExpressionSchema\TypeBinder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RelationSchema\RelationSchema.Designer.cs" />
-    <Compile Include="DbmlDatabase\CodeGenerator.cs" />
-    <Compile Include="CSharpLinqToSql\CodeGenerator.cs" />
     <Compile Include="Properties\Resources.cs" />
-    <Compile Include="TSql\CodeGenerator.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="CSharpLinqToEntities\Schema.tree" />
-    <EmbeddedResource Include="CSharpMySql\Schema.tree" />
-    <EmbeddedResource Include="CSharpPlain\Schema.tree" />
-    <EmbeddedResource Include="CSharpPostgreSql\Schema.tree" />
-    <EmbeddedResource Include="CSharpSqlServer\Schema.tree" />
-    <EmbeddedResource Include="MySql\Schema.tree" />
-    <EmbeddedResource Include="PostgreSql\Schema.tree" />
-    <EmbeddedResource Include="CSharpMemory\Schema.tree" />
-    <None Include="RelationSchema\RelationSchema.tree" />
-    <EmbeddedResource Include="CSharpLinqToSql\Schema.tree" />
-    <EmbeddedResource Include="TSql\Schema.tree" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YukiCore\YukiCore.csproj">
@@ -89,11 +69,15 @@
       <Name>YukiCore</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="ExpressionSchema\Common.tree" />
+    <None Include="ExpressionSchema\Semantics.tree" />
+    <None Include="ExpressionSchema\Syntax.tree" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild">
-    <Exec Command="&quot;Lib\Firefly\MetaSchemaManipulator.exe&quot; /t2cs:&quot;YukiRelation\RelationSchema\RelationSchema.tree&quot;,&quot;YukiRelation\RelationSchema\RelationSchema.Designer.cs&quot;,Yuki.RelationSchema" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
-    <Exec Command="mono &quot;Lib/Firefly/MetaSchemaManipulator.exe&quot; /t2cs:&quot;YukiRelation/RelationSchema/RelationSchema.tree&quot;,&quot;YukiRelation/RelationSchema/RelationSchema.Designer.cs&quot;,Yuki.RelationSchema" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
+    <Exec Command="&quot;..\Bin\SchemaManipulator.exe&quot; /loadtype:&quot;YukiExpression\ExpressionSchema&quot; /t2cs:&quot;YukiExpression\ExpressionSchema\ExpressionSchema.Designer.cs&quot;,Yuki.ExpressionSchema,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
+    <Exec Command="mono &quot;../Bin/SchemaManipulator.exe&quot; /loadtype:&quot;YukiExpression/ExpressionSchema&quot; /t2cs:&quot;YukiExpression/ExpressionSchema/ExpressionSchema.Designer.cs&quot;,Yuki.ExpressionSchema,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
