@@ -1,0 +1,52 @@
+﻿词法分析状态机
+
+
+词法上只需要一次扫描。扫描时每次尝试最长匹配并规约为token。抛弃whitespace。
+
+
+1.终结符
+
+//whitespace
+whitespace ::= ' '
+
+//字面量
+boolean_literal ::= 'false' | 'true'
+int_literal ::= [0-9]+
+real_literal ::= [0-9]+ '.' [0-9]* | [0-9]* '.' [0-9]+
+literal ::= boolean_literal | int_literal | real_literal
+
+//标识符
+identifier ::= [A-Za-z_][A-Za-z0-9_]*
+
+//运算符
+binary_operator ::= '+' | '-' | '*' | '/'
+                  | '&&' | '||'
+                  | '<' | '>' | '<=' | '>=' | '==' | '!='
+
+unary_operator ::= '!'
+
+//其他
+left_paren ::= '('
+right_paren ::= ')'
+comma ::= ','
+
+
+2.状态机
+
+初始状态为0
+
+状态0
+    EndOfLine -> 返回空Token，RemainingChars为空
+    空格 -> 保持，前进
+    '&&' | '||' | '<=' | '>=' | '==' | '!=' -> 加入Output，前进，前进，返回binary_operator
+    '+' | '-' | '*' | '/' | '<' | '>' -> 加入Output，前进，返回binary_operator
+    '!' -> 加入Output，前进，返回unary_operator
+    '(' -> 前进，返回left_paren
+    ')' -> 前进，返回right_paren
+    ',' -> 前进，返回comma
+    [A-Za-z0-9_.] 标记符号开始，加入Output，转到状态1，前进
+    . -> 失败
+
+状态1
+    [A-Za-z0-9_.] 加入Output，前进
+    EndOfLine | 空格 | . -> 检查Output，返回boolean_literal|int_literal|real_literal|identifier
