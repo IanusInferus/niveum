@@ -3,7 +3,7 @@
 //  File:        TypeBinder.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 类型绑定器
-//  Version:     2013.03.11.
+//  Version:     2013.03.12.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,122 +17,67 @@ using Firefly.Texting.TreeFormat.Semantics;
 
 namespace Yuki.ExpressionSchema
 {
+    public interface IVariableTypeProvider
+    {
+        PrimitiveType[][] GetOverloads(String Name);
+        PrimitiveType[] GetMatched(String Name, PrimitiveType[] ParameterTypes);
+    }
+
+    public class VariableTypeProviderCombiner : IVariableTypeProvider
+    {
+        private IVariableTypeProvider[] Providers;
+
+        public VariableTypeProviderCombiner(params IVariableTypeProvider[] Providers)
+        {
+            this.Providers = Providers;
+        }
+
+        public PrimitiveType[][] GetOverloads(String Name)
+        {
+            return Providers.SelectMany(p => p.GetOverloads(Name)).ToArray();
+        }
+
+        public PrimitiveType[] GetMatched(String Name, PrimitiveType[] ParameterTypes)
+        {
+            return Providers.SelectMany(p => p.GetMatched(Name, ParameterTypes)).ToArray();
+        }
+    }
+
+    public class SimpleVariableTypeProvider : IVariableTypeProvider
+    {
+        private Dictionary<String, PrimitiveType> d;
+
+        public SimpleVariableTypeProvider(Dictionary<String, PrimitiveType> d)
+        {
+            this.d = d;
+        }
+
+        public PrimitiveType[][] GetOverloads(String Name)
+        {
+            if (d.ContainsKey(Name))
+            {
+                return new PrimitiveType[][] { new PrimitiveType[] { d[Name] } };
+            }
+            else
+            {
+                return new PrimitiveType[][] { };
+            }
+        }
+
+        public PrimitiveType[] GetMatched(String Name, PrimitiveType[] ParameterTypes)
+        {
+            if (ParameterTypes.Length == 0 && d.ContainsKey(Name))
+            {
+                return new PrimitiveType[] { d[Name] };
+            }
+            return new PrimitiveType[] { };
+        }
+    }
+
     public class TypeBinderResult
     {
         public Expr Semantics;
         public Dictionary<Expr, PrimitiveType> TypeDict;
-    }
-
-    public class FunctionSignature
-    {
-        public String Name;
-        public PrimitiveType[] ParameterTypes;
-        public PrimitiveType ReturnType;
-
-        public FunctionSignature()
-        {
-        }
-        public FunctionSignature(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType pt2, PrimitiveType rt)
-        {
-            this.Name = Name;
-            this.ParameterTypes = new PrimitiveType[] { pt0, pt1, pt2 };
-            this.ReturnType = rt;
-        }
-        public FunctionSignature(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt)
-        {
-            this.Name = Name;
-            this.ParameterTypes = new PrimitiveType[] { pt0, pt1 };
-            this.ReturnType = rt;
-        }
-        public FunctionSignature(String Name, PrimitiveType pt0, PrimitiveType rt)
-        {
-            this.Name = Name;
-            this.ParameterTypes = new PrimitiveType[] { pt0 };
-            this.ReturnType = rt;
-        }
-        public FunctionSignature(String Name, PrimitiveType rt)
-        {
-            this.Name = Name;
-            this.ParameterTypes = new PrimitiveType[] { };
-            this.ReturnType = rt;
-        }
-    }
-
-    public static class FunctionSignatureMap
-    {
-        public static Dictionary<String, List<FunctionSignature>> Map;
-
-        static FunctionSignatureMap()
-        {
-            var l = new List<FunctionSignature>();
-
-            //算术运算
-            l.Add(new FunctionSignature("+", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-            l.Add(new FunctionSignature("-", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-            l.Add(new FunctionSignature("*", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-            l.Add(new FunctionSignature("/", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Real));
-            l.Add(new FunctionSignature("+", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-            l.Add(new FunctionSignature("-", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-            l.Add(new FunctionSignature("*", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-            l.Add(new FunctionSignature("/", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-            l.Add(new FunctionSignature("pow", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-            l.Add(new FunctionSignature("pow", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-            l.Add(new FunctionSignature("mod", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-            l.Add(new FunctionSignature("div", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-
-            //逻辑运算
-            l.Add(new FunctionSignature("!", PrimitiveType.Boolean, PrimitiveType.Boolean));
-
-            //关系运算
-            l.Add(new FunctionSignature("<", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-            l.Add(new FunctionSignature(">", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-            l.Add(new FunctionSignature("<=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-            l.Add(new FunctionSignature(">=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-            l.Add(new FunctionSignature("==", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-            l.Add(new FunctionSignature("!=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-            l.Add(new FunctionSignature("<", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean));
-            l.Add(new FunctionSignature(">", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean));
-            l.Add(new FunctionSignature("<=", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean));
-            l.Add(new FunctionSignature(">=", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean));
-            l.Add(new FunctionSignature("==", PrimitiveType.Boolean, PrimitiveType.Boolean, PrimitiveType.Boolean));
-            l.Add(new FunctionSignature("!=", PrimitiveType.Boolean, PrimitiveType.Boolean, PrimitiveType.Boolean));
-
-            //取整运算
-            l.Add(new FunctionSignature("round", PrimitiveType.Real, PrimitiveType.Int));
-            l.Add(new FunctionSignature("floor", PrimitiveType.Real, PrimitiveType.Int));
-            l.Add(new FunctionSignature("ceil", PrimitiveType.Real, PrimitiveType.Int));
-            l.Add(new FunctionSignature("round", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real));
-            l.Add(new FunctionSignature("floor", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real));
-            l.Add(new FunctionSignature("ceil", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real));
-
-            //范围限制运算
-            l.Add(new FunctionSignature("min", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-            l.Add(new FunctionSignature("max", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-            l.Add(new FunctionSignature("clamp", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-            l.Add(new FunctionSignature("min", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-            l.Add(new FunctionSignature("max", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-            l.Add(new FunctionSignature("clamp", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-
-            //其他运算
-            l.Add(new FunctionSignature("abs", PrimitiveType.Int, PrimitiveType.Int));
-            l.Add(new FunctionSignature("rand", PrimitiveType.Real));
-            l.Add(new FunctionSignature("rand", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-            l.Add(new FunctionSignature("rand", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-            l.Add(new FunctionSignature("creal", PrimitiveType.Int, PrimitiveType.Real));
-
-            Map = new Dictionary<String, List<FunctionSignature>>();
-            foreach (var fs in l)
-            {
-                if (Map.ContainsKey(fs.Name))
-                {
-                    Map[fs.Name].Add(fs);
-                }
-                else
-                {
-                    Map.Add(fs.Name, new List<FunctionSignature> { fs });
-                }
-            }
-        }
     }
 
     public class TypeBinder
@@ -148,7 +93,20 @@ namespace Yuki.ExpressionSchema
             this.st = new SemanticTranslator(Text, Positions);
         }
 
-        public TypeBinderResult Bind(Func<String, PrimitiveType> VariableTypeProvider, PrimitiveType ReturnType, TextRange RangeInLine)
+        public TypeBinderResult Bind(IVariableTypeProvider VariableTypeProvider, TextRange RangeInLine)
+        {
+            var Result = st.Translate(RangeInLine);
+
+            var TypeDict = new Dictionary<Expr, PrimitiveType>();
+            BindExpr(VariableTypeProvider, TypeDict, Result.Semantics);
+            var tbr = new TypeBinderResult
+            {
+                Semantics = Result.Semantics,
+                TypeDict = TypeDict
+            };
+            return tbr;
+        }
+        public TypeBinderResult Bind(IVariableTypeProvider VariableTypeProvider, PrimitiveType ReturnType, TextRange RangeInLine)
         {
             var Result = st.Translate(RangeInLine);
 
@@ -178,7 +136,7 @@ namespace Yuki.ExpressionSchema
             return tbr;
         }
 
-        private void BindExpr(Func<String, PrimitiveType> VariableTypeProvider, Dictionary<Expr, PrimitiveType> TypeDict, Expr e)
+        private void BindExpr(IVariableTypeProvider VariableTypeProvider, Dictionary<Expr, PrimitiveType> TypeDict, Expr e)
         {
             if (e.OnLiteral)
             {
@@ -202,16 +160,24 @@ namespace Yuki.ExpressionSchema
             }
             else if (e.OnVariable)
             {
-                PrimitiveType t;
+                PrimitiveType[][] t;
                 try
                 {
-                    t = VariableTypeProvider(e.Variable.Name);
+                    t = VariableTypeProvider.GetOverloads(e.Variable.Name).Where(fs => fs.Length == 1).ToArray();
                 }
                 catch (Exception ex)
                 {
                     throw new InvalidSyntaxException(String.Format("'{0}' : VariableNotExist", e.Variable.Name), new FileTextRange { Text = Text, Range = Positions[e] }, ex);
                 }
-                TypeDict.Add(e, t);
+                if (t.Length == 0)
+                {
+                    throw new InvalidSyntaxException("'{0}' : VariableNotExist".Formats(e.Variable.Name), new FileTextRange { Text = Text, Range = Positions[e] });
+                }
+                if (t.Length > 1)
+                {
+                    throw new InvalidSyntaxException("'{0}' : VariableFunctionOverloadExist".Formats(e.Variable.Name), new FileTextRange { Text = Text, Range = Positions[e] });
+                }
+                TypeDict.Add(e, t.Single().Single());
             }
             else if (e.OnFunction)
             {
@@ -309,19 +275,23 @@ namespace Yuki.ExpressionSchema
             }
         }
 
-        private PrimitiveType BindFunctionExpr(Func<String, PrimitiveType> VariableTypeProvider, Dictionary<Expr, PrimitiveType> TypeDict, FunctionExpr fe)
+        private PrimitiveType BindFunctionExpr(IVariableTypeProvider VariableTypeProvider, Dictionary<Expr, PrimitiveType> TypeDict, FunctionExpr fe)
         {
             foreach (var p in fe.Parameters)
             {
                 BindExpr(VariableTypeProvider, TypeDict, p);
             }
             var ParameterTypes = fe.Parameters.Select(p => TypeDict[p]).ToArray();
-            if (!FunctionSignatureMap.Map.ContainsKey(fe.Name))
+            PrimitiveType[][] Functions;
+            try
             {
-                throw new InvalidSyntaxException("'{0}' : FunctionNotExist".Formats(fe.Name), new FileTextRange { Text = Text, Range = Positions[fe] });
+                Functions = VariableTypeProvider.GetOverloads(fe.Name);
             }
-            var sl = FunctionSignatureMap.Map[fe.Name];
-            var Sorted = sl.Where(fs => IsOverloadSatisfied(ParameterTypes, fs)).GroupBy(fs => GetOverloadMatchPoint(ParameterTypes, fs)).OrderBy(g => g.Key).ToArray();
+            catch (Exception ex)
+            {
+                throw new InvalidSyntaxException("'{0}' : FunctionNotExist".Formats(fe.Name), new FileTextRange { Text = Text, Range = Positions[fe] }, ex);
+            }
+            var Sorted = Functions.Where(fs => IsOverloadSatisfied(ParameterTypes, fs)).GroupBy(fs => GetOverloadTypeConversionPoint(ParameterTypes, fs)).OrderBy(g => g.Key).ToArray();
             if (Sorted.Length == 0)
             {
                 throw new InvalidSyntaxException("'{0}' : FunctionNotExist".Formats(fe.Name), new FileTextRange { Text = Text, Range = Positions[fe] });
@@ -335,7 +305,7 @@ namespace Yuki.ExpressionSchema
             for (int k = 0; k < ParameterTypes.Length; k += 1)
             {
                 var pt = ParameterTypes[k];
-                var fspt = MostMatchedSignature.ParameterTypes[k];
+                var fspt = MostMatchedSignature[k];
                 if (pt == PrimitiveType.Int && fspt == PrimitiveType.Real)
                 {
                     var feCReal = new FunctionExpr { Name = "creal", Parameters = new List<Expr> { fe.Parameters[k] } };
@@ -347,16 +317,16 @@ namespace Yuki.ExpressionSchema
                     fe.Parameters[k] = CReal;
                 }
             }
-            return MostMatchedSignature.ReturnType;
+            return MostMatchedSignature.Last();
         }
 
-        private static bool IsOverloadSatisfied(PrimitiveType[] ParameterTypes, FunctionSignature fs)
+        private static bool IsOverloadSatisfied(PrimitiveType[] ParameterTypes, PrimitiveType[] fs)
         {
-            if (ParameterTypes.Length != fs.ParameterTypes.Length) { return false; }
+            if (ParameterTypes.Length != fs.Length - 1) { return false; }
             for (int k = 0; k < ParameterTypes.Length; k += 1)
             {
                 var pt = ParameterTypes[k];
-                var fspt = fs.ParameterTypes[k];
+                var fspt = fs[k];
                 if (pt != fspt)
                 {
                     if (pt == PrimitiveType.Int && fspt == PrimitiveType.Real)
@@ -368,13 +338,13 @@ namespace Yuki.ExpressionSchema
             }
             return true;
         }
-        private static int GetOverloadMatchPoint(PrimitiveType[] ParameterTypes, FunctionSignature fs)
+        private static int GetOverloadTypeConversionPoint(PrimitiveType[] ParameterTypes, PrimitiveType[] fs)
         {
             var Point = 0;
             for (int k = 0; k < ParameterTypes.Length; k += 1)
             {
                 var pt = ParameterTypes[k];
-                var fspt = fs.ParameterTypes[k];
+                var fspt = fs[k];
                 if (pt == PrimitiveType.Int && fspt == PrimitiveType.Real)
                 {
                     Point += 1;

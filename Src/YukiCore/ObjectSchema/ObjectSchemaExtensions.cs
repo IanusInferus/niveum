@@ -34,8 +34,7 @@ namespace Yuki.ObjectSchema
             var Types = s.GetMap().OrderBy(t => t.Key, StringComparer.Ordinal).Select(t => t.Value).ToArray();
             var TypesWithoutDescription = Types.Select(t => MapWithoutDescription(t)).ToArray();
 
-            var bs = new BinarySerializer();
-            bs.PutWriter((String str, IWritableStream ws) => ws.Write(TextEncoding.UTF16.GetBytes(str)));
+            var bs = BinarySerializerWithString.Create();
             var sha = new SHA1CryptoServiceProvider();
             Byte[] result;
 

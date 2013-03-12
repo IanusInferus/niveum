@@ -127,7 +127,7 @@ namespace Yuki.ExpressionSchema
                             ReachedFunctions.Add(FunctionName);
                             var ep = new ExpressionParser(null, nm.Text);
                             var BodyRange = new Syntax.TextRange { Start = nm.Text.Calc(Line.Range.Start, gBody.Index), End = Line.Range.End };
-                            var func = ep.ParseFunction(fd, BodyRange);
+                            var func = ep.ParseFunction(new Yuki.Expression.ExpressionRuntimeProvider(), fd, BodyRange);
                             Functions.Add(FunctionName, func.Definition);
                         }
 
