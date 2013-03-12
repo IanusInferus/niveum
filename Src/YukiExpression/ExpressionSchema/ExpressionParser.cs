@@ -3,7 +3,7 @@
 //  File:        ExpressionParser.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2013.03.11.
+//  Version:     2013.03.12.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,7 +23,7 @@ namespace Yuki.ExpressionSchema
         public Dictionary<Object, TextRange> Positions;
     }
 
-    public class ExpressionParserBodyResult
+    public class ExpressionParserExprResult
     {
         public Expr Body;
         public Dictionary<Expr, PrimitiveType> TypeDict;
@@ -55,15 +55,23 @@ namespace Yuki.ExpressionSchema
             var p = new Parser(tSignature, null);
             return p.ParseDeclaration(LinesSignature.Single().Range);
         }
-        public static ExpressionParserBodyResult ParseBody(FunctionDecl Declaration, String Body)
+        public static ExpressionParserExprResult ParseBody(IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, String Body)
         {
             var LinesBody = new List<TextLine>();
             LinesBody.Add(new TextLine { Text = Body, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Body.Length, Row = 1, Column = Body.Length + 1 } } });
             var tBody = new Text { Path = "Body", Lines = LinesBody.ToArray() };
             var p = new Parser(null, tBody);
-            return p.ParseBody(Declaration, LinesBody.Single().Range);
+            return p.ParseBody(VariableTypeProvider, Declaration, LinesBody.Single().Range);
         }
-        public static ExpressionParserResult ParseFunction(String Signature, String Body)
+        public static ExpressionParserExprResult ParseExpr(IVariableTypeProvider VariableTypeProvider, String Body)
+        {
+            var LinesBody = new List<TextLine>();
+            LinesBody.Add(new TextLine { Text = Body, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Body.Length, Row = 1, Column = Body.Length + 1 } } });
+            var tBody = new Text { Path = "Body", Lines = LinesBody.ToArray() };
+            var p = new Parser(null, tBody);
+            return p.ParseExpr(VariableTypeProvider, LinesBody.Single().Range);
+        }
+        public static ExpressionParserResult ParseFunction(IVariableTypeProvider VariableTypeProvider, String Signature, String Body)
         {
             var LinesSignature = new List<TextLine>();
             LinesSignature.Add(new TextLine { Text = Signature, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Signature.Length, Row = 1, Column = Signature.Length + 1 } } });
@@ -72,7 +80,7 @@ namespace Yuki.ExpressionSchema
             var tSignature = new Text { Path = "Signature", Lines = LinesSignature.ToArray() };
             var tBody = new Text { Path = "Body", Lines = LinesBody.ToArray() };
             var p = new Parser(tSignature, tBody);
-            return p.ParseFunction(LinesSignature.Single().Range, LinesBody.Single().Range);
+            return p.ParseFunction(VariableTypeProvider, LinesSignature.Single().Range, LinesBody.Single().Range);
         }
 
         public ExpressionParserDeclarationResult ParseDeclaration(TextRange Signature)
@@ -80,20 +88,25 @@ namespace Yuki.ExpressionSchema
             var p = new Parser(SignatureText, BodyText);
             return p.ParseDeclaration(Signature);
         }
-        public ExpressionParserBodyResult ParseBody(FunctionDecl Declaration, TextRange Body)
+        public ExpressionParserExprResult ParseBody(IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body)
         {
             var p = new Parser(SignatureText, BodyText);
-            return p.ParseBody(Declaration, Body);
+            return p.ParseBody(VariableTypeProvider, Declaration, Body);
         }
-        public ExpressionParserResult ParseFunction(FunctionDecl Declaration, TextRange Body)
+        public ExpressionParserExprResult ParseExpr(IVariableTypeProvider VariableTypeProvider, TextRange Body)
         {
             var p = new Parser(SignatureText, BodyText);
-            return p.ParseFunction(Declaration, Body);
+            return p.ParseExpr(VariableTypeProvider, Body);
         }
-        public ExpressionParserResult ParseFunction(TextRange Signature, TextRange Body)
+        public ExpressionParserResult ParseFunction(IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body)
         {
             var p = new Parser(SignatureText, BodyText);
-            return p.ParseFunction(Signature, Body);
+            return p.ParseFunction(VariableTypeProvider, Declaration, Body);
+        }
+        public ExpressionParserResult ParseFunction(IVariableTypeProvider VariableTypeProvider, TextRange Signature, TextRange Body)
+        {
+            var p = new Parser(SignatureText, BodyText);
+            return p.ParseFunction(VariableTypeProvider, Signature, Body);
         }
 
         private class Parser
@@ -148,21 +161,14 @@ namespace Yuki.ExpressionSchema
                 };
                 return epr;
             }
-            public ExpressionParserBodyResult ParseBody(FunctionDecl Declaration, TextRange Body)
+            public ExpressionParserExprResult ParseBody(IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body)
             {
                 var d = Declaration;
                 var dParameters = d.Parameters.ToDictionary(p => p.Name, p => p.Type);
-                var br = ParseExpr(n => dParameters[n], d.ReturnValue, Body);
+                var vtp = new VariableTypeProviderCombiner(new SimpleVariableTypeProvider(dParameters), VariableTypeProvider);
+                var br = BindExpr(vtp, d.ReturnValue, Body);
 
-                var fd = new FunctionDef
-                {
-                    Name = d.Name,
-                    Parameters = d.Parameters,
-                    ReturnValue = d.ReturnValue,
-                    Body = br.Semantics
-                };
-
-                var epr = new ExpressionParserBodyResult
+                var epr = new ExpressionParserExprResult
                 {
                     Body = br.Semantics,
                     TypeDict = br.TypeDict,
@@ -170,10 +176,22 @@ namespace Yuki.ExpressionSchema
                 };
                 return epr;
             }
-            public ExpressionParserResult ParseFunction(FunctionDecl Declaration, TextRange Body)
+            public ExpressionParserExprResult ParseExpr(IVariableTypeProvider VariableTypeProvider, TextRange Body)
+            {
+                var br = BindExpr(VariableTypeProvider, Body);
+
+                var epr = new ExpressionParserExprResult
+                {
+                    Body = br.Semantics,
+                    TypeDict = br.TypeDict,
+                    Positions = Positions
+                };
+                return epr;
+            }
+            public ExpressionParserResult ParseFunction(IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body)
             {
                 var d = Declaration;
-                var epbr = ParseBody(d, Body);
+                var epbr = ParseBody(VariableTypeProvider, d, Body);
 
                 var fd = new FunctionDef
                 {
@@ -191,11 +209,11 @@ namespace Yuki.ExpressionSchema
                 };
                 return epr;
             }
-            public ExpressionParserResult ParseFunction(TextRange Signature, TextRange Body)
+            public ExpressionParserResult ParseFunction(IVariableTypeProvider VariableTypeProvider, TextRange Signature, TextRange Body)
             {
                 var epdr = ParseDeclaration(Signature);
                 var d = epdr.Declaration;
-                var epbr = ParseBody(d, Body);
+                var epbr = ParseBody(VariableTypeProvider, d, Body);
 
                 var fd = new FunctionDef
                 {
@@ -231,9 +249,14 @@ namespace Yuki.ExpressionSchema
                 throw new InvalidSyntaxException("TypeInvalid: " + e, r);
             }
 
-            private TypeBinderResult ParseExpr(Func<String, PrimitiveType> ParameterTypeProvider, PrimitiveType ReturnType, TextRange RangeInLine)
+            private TypeBinderResult BindExpr(IVariableTypeProvider VariableTypeProvider, PrimitiveType ReturnType, TextRange RangeInLine)
             {
-                var r = tb.Bind(ParameterTypeProvider, ReturnType, RangeInLine);
+                var r = tb.Bind(VariableTypeProvider, ReturnType, RangeInLine);
+                return r;
+            }
+            private TypeBinderResult BindExpr(IVariableTypeProvider VariableTypeProvider, TextRange RangeInLine)
+            {
+                var r = tb.Bind(VariableTypeProvider, RangeInLine);
                 return r;
             }
         }

@@ -24,6 +24,7 @@ using Firefly.Texting.TreeFormat;
 using OS = Yuki.ObjectSchema;
 using ES = Yuki.ExpressionSchema;
 using Yuki.ExpressionSchema;
+using Yuki.ObjectSchema;
 using Yuki.ObjectSchema.CSharp;
 using Yuki.ObjectSchema.Cpp;
 
@@ -203,8 +204,7 @@ namespace Yuki.ExpressionManipulator
                 }
             }
             var a = eal.GetResult();
-            var bs = new BinarySerializer();
-            bs.PutWriter((String str, IWritableStream ws) => ws.Write(TextEncoding.UTF16.GetBytes(str)));
+            var bs = BinarySerializerWithString.Create();
             Byte[] Compiled;
             using (var ms = Streams.CreateMemoryStream())
             {

@@ -155,6 +155,12 @@ namespace Yuki.ExpressionSchema
                 Mark(st, Range);
                 TokenQueue.AddFirst(st);
             };
+            Action<SyntaxRule> Replace = f =>
+            {
+                Mark(f, Positions[Token.Value]);
+                Token = f;
+                TokenQueue.First.Value = f;
+            };
 
             Func<InvalidSyntaxException> MakeInvalidEndOfFile = () =>
             {
@@ -187,7 +193,14 @@ namespace Yuki.ExpressionSchema
                     }
                     else if (t.OnBinaryOperator)
                     {
-                        throw MakeInvalidSyntaxRule();
+                        if (t.BinaryOperator.Name == "+" || t.BinaryOperator.Name == "-")
+                        {
+                            Replace(SyntaxRule.CreateUnaryOperator(new TokenUnaryOperator { Name = t.BinaryOperator.Name }));
+                        }
+                        else
+                        {
+                            throw MakeInvalidSyntaxRule();
+                        }
                     }
                     else if (t.OnUnaryOperator)
                     {
@@ -251,7 +264,14 @@ namespace Yuki.ExpressionSchema
                     }
                     else if (t.OnBinaryOperator)
                     {
-                        throw MakeInvalidSyntaxRule();
+                        if (t.BinaryOperator.Name == "+" || t.BinaryOperator.Name == "-")
+                        {
+                            Replace(SyntaxRule.CreateUnaryOperator(new TokenUnaryOperator { Name = t.BinaryOperator.Name }));
+                        }
+                        else
+                        {
+                            throw MakeInvalidSyntaxRule();
+                        }
                     }
                     else if (t.OnUnaryOperator)
                     {
@@ -300,7 +320,14 @@ namespace Yuki.ExpressionSchema
                     }
                     else if (t.OnBinaryOperator)
                     {
-                        throw MakeInvalidSyntaxRule();
+                        if (t.BinaryOperator.Name == "+" || t.BinaryOperator.Name == "-")
+                        {
+                            Replace(SyntaxRule.CreateUnaryOperator(new TokenUnaryOperator { Name = t.BinaryOperator.Name }));
+                        }
+                        else
+                        {
+                            throw MakeInvalidSyntaxRule();
+                        }
                     }
                     else if (t.OnUnaryOperator)
                     {
@@ -363,7 +390,14 @@ namespace Yuki.ExpressionSchema
                     }
                     else if (t.OnBinaryOperator)
                     {
-                        throw MakeInvalidSyntaxRule();
+                        if (t.BinaryOperator.Name == "+" || t.BinaryOperator.Name == "-")
+                        {
+                            Replace(SyntaxRule.CreateUnaryOperator(new TokenUnaryOperator { Name = t.BinaryOperator.Name }));
+                        }
+                        else
+                        {
+                            throw MakeInvalidSyntaxRule();
+                        }
                     }
                     else if (t.OnUnaryOperator)
                     {
@@ -441,7 +475,14 @@ namespace Yuki.ExpressionSchema
                     }
                     else if (t.OnBinaryOperator)
                     {
-                        throw MakeInvalidSyntaxRule();
+                        if (t.BinaryOperator.Name == "+" || t.BinaryOperator.Name == "-")
+                        {
+                            Replace(SyntaxRule.CreateUnaryOperator(new TokenUnaryOperator { Name = t.BinaryOperator.Name }));
+                        }
+                        else
+                        {
+                            throw MakeInvalidSyntaxRule();
+                        }
                     }
                     else if (t.OnUnaryOperator)
                     {
@@ -563,7 +604,14 @@ namespace Yuki.ExpressionSchema
                     }
                     else if (t.OnBinaryOperator)
                     {
-                        throw MakeInvalidSyntaxRule();
+                        if (t.BinaryOperator.Name == "+" || t.BinaryOperator.Name == "-")
+                        {
+                            Replace(SyntaxRule.CreateUnaryOperator(new TokenUnaryOperator { Name = t.BinaryOperator.Name }));
+                        }
+                        else
+                        {
+                            throw MakeInvalidSyntaxRule();
+                        }
                     }
                     else if (t.OnUnaryOperator)
                     {
