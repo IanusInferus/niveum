@@ -21,6 +21,32 @@ using Firefly.TextEncoding;
 
 namespace Yuki.ObjectSchema
 {
+    public static class BinarySerializerWithString
+    {
+        public static BinarySerializer Create()
+        {
+            var bs = new BinarySerializer();
+            var st = new StringTranslator();
+            bs.PutReaderTranslator(st);
+            bs.PutWriterTranslator(st);
+            bs.PutCounterTranslator(st);
+            return bs;
+        }
+
+        private class StringTranslator : IProjectorToProjectorDomainTranslator<String, Byte[]>, IProjectorToProjectorRangeTranslator<String, Byte[]>
+        {
+            public Func<String, R> TranslateProjectorToProjectorDomain<R>(Func<Byte[], R> Projector)
+            {
+                return s => Projector(TextEncoding.UTF16.GetBytes(s));
+            }
+
+            public Func<D, String> TranslateProjectorToProjectorRange<D>(Func<D, Byte[]> Projector)
+            {
+                return k => TextEncoding.UTF16.GetString(Projector(k));
+            }
+        }
+    }
+
     public class TreeBinaryConverter
     {
         private BinarySerializer bs;
@@ -28,11 +54,7 @@ namespace Yuki.ObjectSchema
 
         public TreeBinaryConverter()
         {
-            bs = new BinarySerializer();
-            var st = new StringTranslator();
-            bs.PutReaderTranslator(st);
-            bs.PutWriterTranslator(st);
-            bs.PutCounterTranslator(st);
+            bs = BinarySerializerWithString.Create();
             xs = new XmlSerializer(true);
         }
 
@@ -55,19 +77,6 @@ namespace Yuki.ObjectSchema
         {
             var tbc = new TypedTreeBinaryConverter<T>(bs, xs) as ITreeBinaryConverter;
             return tbc.BinaryToTree(b);
-        }
-
-        private class StringTranslator : IProjectorToProjectorDomainTranslator<String, Byte[]>, IProjectorToProjectorRangeTranslator<String, Byte[]>
-        {
-            public Func<String, R> TranslateProjectorToProjectorDomain<R>(Func<Byte[], R> Projector)
-            {
-                return s => Projector(TextEncoding.UTF16.GetBytes(s));
-            }
-
-            public Func<D, String> TranslateProjectorToProjectorRange<D>(Func<D, Byte[]> Projector)
-            {
-                return k => TextEncoding.UTF16.GetString(Projector(k));
-            }
         }
 
         private interface ITreeBinaryConverter

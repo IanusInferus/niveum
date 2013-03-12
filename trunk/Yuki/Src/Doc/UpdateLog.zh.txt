@@ -1,4 +1,13 @@
-﻿2013.03.11
+﻿2013.03.12
+Yuki.Core:
+修改ObjectSchema的散列方法。
+Yuki.Expression, ExpressionManipulator:
+修正表达式的缺少一目正负运算符的问题。
+增加表达式求值。
+Examples:
+表达式示例增加表达式计算功能。
+
+2013.03.11
 Yuki.Core:
 Haxe代码生成增加对Haxe 3.0.0 RC中新增的abstract关键字的识别。
 Yuki.Expression, ExpressionManipulator:
