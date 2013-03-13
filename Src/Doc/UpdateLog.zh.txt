@@ -3,10 +3,13 @@ Yuki.Expression:
 调整库函数的加入方法。
 修正部分库函数的问题。
 增加默认变量上下文。
+Yuki.Expression, ExpressionManipulator:
+增加C#表达式计算二进制程序集加载代码生成。
 Examples:
 增加变量和函数赋值功能。
 增加表达式计算测试样例。
 增加删除变量和函数功能。
+增加C#表达式计算二进制程序集加载代码生成测试。
 
 2013.03.12
 Yuki.Core:
