@@ -1,4 +1,12 @@
-﻿2013.03.12
+﻿2013.03.13
+Yuki.Expression:
+调整库函数的加入方法。
+修正部分库函数的问题。
+Examples:
+增加变量和函数赋值功能。
+增加表达式计算测试样例。
+
+2013.03.12
 Yuki.Core:
 修改ObjectSchema的散列方法。
 Yuki.Expression, ExpressionManipulator:
