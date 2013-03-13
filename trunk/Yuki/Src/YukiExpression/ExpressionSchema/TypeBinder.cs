@@ -17,9 +17,15 @@ using Firefly.Texting.TreeFormat.Semantics;
 
 namespace Yuki.ExpressionSchema
 {
+    public class FunctionParameterAndReturnTypes
+    {
+        public PrimitiveType[] ParameterTypes;
+        public PrimitiveType ReturnType;
+    }
+
     public interface IVariableTypeProvider
     {
-        PrimitiveType[][] GetOverloads(String Name);
+        FunctionParameterAndReturnTypes[] GetOverloads(String Name);
         PrimitiveType[] GetMatched(String Name, PrimitiveType[] ParameterTypes);
     }
 
@@ -32,7 +38,7 @@ namespace Yuki.ExpressionSchema
             this.Providers = Providers;
         }
 
-        public PrimitiveType[][] GetOverloads(String Name)
+        public FunctionParameterAndReturnTypes[] GetOverloads(String Name)
         {
             return Providers.SelectMany(p => p.GetOverloads(Name)).ToArray();
         }
@@ -52,15 +58,15 @@ namespace Yuki.ExpressionSchema
             this.d = d;
         }
 
-        public PrimitiveType[][] GetOverloads(String Name)
+        public FunctionParameterAndReturnTypes[] GetOverloads(String Name)
         {
             if (d.ContainsKey(Name))
             {
-                return new PrimitiveType[][] { new PrimitiveType[] { d[Name] } };
+                return new FunctionParameterAndReturnTypes[] { new FunctionParameterAndReturnTypes { ParameterTypes = null, ReturnType = d[Name] } };
             }
             else
             {
-                return new PrimitiveType[][] { };
+                return new FunctionParameterAndReturnTypes[] { };
             }
         }
 
@@ -160,10 +166,10 @@ namespace Yuki.ExpressionSchema
             }
             else if (e.OnVariable)
             {
-                PrimitiveType[][] t;
+                FunctionParameterAndReturnTypes[] t;
                 try
                 {
-                    t = VariableTypeProvider.GetOverloads(e.Variable.Name).Where(fs => fs.Length == 1).ToArray();
+                    t = VariableTypeProvider.GetOverloads(e.Variable.Name).Where(fs => fs.ParameterTypes == null).ToArray();
                 }
                 catch (Exception ex)
                 {
@@ -177,7 +183,7 @@ namespace Yuki.ExpressionSchema
                 {
                     throw new InvalidSyntaxException("'{0}' : VariableFunctionOverloadExist".Formats(e.Variable.Name), new FileTextRange { Text = Text, Range = Positions[e] });
                 }
-                TypeDict.Add(e, t.Single().Single());
+                TypeDict.Add(e, t.Single().ReturnType);
             }
             else if (e.OnFunction)
             {
@@ -282,7 +288,7 @@ namespace Yuki.ExpressionSchema
                 BindExpr(VariableTypeProvider, TypeDict, p);
             }
             var ParameterTypes = fe.Parameters.Select(p => TypeDict[p]).ToArray();
-            PrimitiveType[][] Functions;
+            FunctionParameterAndReturnTypes[] Functions;
             try
             {
                 Functions = VariableTypeProvider.GetOverloads(fe.Name);
@@ -291,7 +297,7 @@ namespace Yuki.ExpressionSchema
             {
                 throw new InvalidSyntaxException("'{0}' : FunctionNotExist".Formats(fe.Name), new FileTextRange { Text = Text, Range = Positions[fe] }, ex);
             }
-            var Sorted = Functions.Where(fs => IsOverloadSatisfied(ParameterTypes, fs)).GroupBy(fs => GetOverloadTypeConversionPoint(ParameterTypes, fs)).OrderBy(g => g.Key).ToArray();
+            var Sorted = Functions.Where(fs => IsOverloadSatisfied(ParameterTypes, fs.ParameterTypes)).GroupBy(fs => GetOverloadTypeConversionPoint(ParameterTypes, fs.ParameterTypes)).OrderBy(g => g.Key).ToArray();
             if (Sorted.Length == 0)
             {
                 throw new InvalidSyntaxException("'{0}' : FunctionNotExist".Formats(fe.Name), new FileTextRange { Text = Text, Range = Positions[fe] });
@@ -305,7 +311,7 @@ namespace Yuki.ExpressionSchema
             for (int k = 0; k < ParameterTypes.Length; k += 1)
             {
                 var pt = ParameterTypes[k];
-                var fspt = MostMatchedSignature[k];
+                var fspt = MostMatchedSignature.ParameterTypes[k];
                 if (pt == PrimitiveType.Int && fspt == PrimitiveType.Real)
                 {
                     var feCReal = new FunctionExpr { Name = "creal", Parameters = new List<Expr> { fe.Parameters[k] } };
@@ -317,12 +323,13 @@ namespace Yuki.ExpressionSchema
                     fe.Parameters[k] = CReal;
                 }
             }
-            return MostMatchedSignature.Last();
+            return MostMatchedSignature.ReturnType;
         }
 
         private static bool IsOverloadSatisfied(PrimitiveType[] ParameterTypes, PrimitiveType[] fs)
         {
-            if (ParameterTypes.Length != fs.Length - 1) { return false; }
+            if (fs == null) { return false; }
+            if (ParameterTypes.Length != fs.Length) { return false; }
             for (int k = 0; k < ParameterTypes.Length; k += 1)
             {
                 var pt = ParameterTypes[k];

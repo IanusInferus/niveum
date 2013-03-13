@@ -29,7 +29,7 @@ namespace Yuki.Expression
             this.Providers = Providers;
         }
 
-        public PrimitiveType[][] GetOverloads(String Name)
+        public FunctionParameterAndReturnTypes[] GetOverloads(String Name)
         {
             return Providers.SelectMany(p => p.GetOverloads(Name)).ToArray();
         }
