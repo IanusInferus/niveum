@@ -106,10 +106,10 @@ namespace Yuki.Expression
         }
         public void Replace(String Name, FunctionDef Definition)
         {
-            Func<VariableContext, Delegate> d = vc => ExpressionEvaluator.Compile(new VariableProviderCombiner(vc, new ExpressionRuntimeProvider()), Definition.Body);
+            Func<IVariableProvider, Delegate> d = vc => ExpressionEvaluator.Compile(new VariableProviderCombiner(vc, new ExpressionRuntimeProvider()), Definition.Body);
             Replace(Name, Definition.Parameters.ToArray(), Definition.ReturnValue, d);
         }
-        public void Replace(String Name, Yuki.ExpressionSchema.VariableDef[] Parameters, PrimitiveType ReturnValue, Func<VariableContext, Delegate> Create)
+        public void Replace(String Name, Yuki.ExpressionSchema.VariableDef[] Parameters, PrimitiveType ReturnValue, Func<IVariableProvider, Delegate> Create)
         {
             var nv = new Variable
             {
