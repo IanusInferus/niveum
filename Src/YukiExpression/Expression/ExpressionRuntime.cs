@@ -3,7 +3,7 @@
 //  File:        ExpressionRuntime.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式系统库
-//  Version:     2013.03.12.
+//  Version:     2013.03.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,9 +23,18 @@ namespace Yuki.Expression
         public static int pow(int Left, int Right)
         {
             if (Right < 0) { throw new InvalidOperationException(); }
+            int n = 30;
+            for (int k = 30; k >= 0; k -= 1)
+            {
+                if ((Right & (1 << k)) != 0)
+                {
+                    n = k;
+                    break;
+                }
+            }
             int v = 1;
             int b = Left;
-            for (int k = 0; k < 32; k += 1)
+            for (int k = 0; k <= n; k += 1)
             {
                 if ((Right & (1 << k)) != 0)
                 {
@@ -71,7 +80,7 @@ namespace Yuki.Expression
 
         public static double round(double v, int NumFractionDigit)
         {
-            return Math.Round(v, NumFractionDigit);
+            return Math.Round(v * pow(10.0, NumFractionDigit)) * pow(0.1, NumFractionDigit);
         }
 
         public static double floor(double v, int NumFractionDigit)
@@ -167,103 +176,145 @@ namespace Yuki.Expression
 
     public class ExpressionRuntimeProvider : IVariableTypeProvider, IVariableProvider
     {
-        private class FunctionSignature
+        private class FunctionResolver
         {
             public String Name;
             public PrimitiveType[] Types;
+            public Delegate Create;
 
-            public FunctionSignature()
+            public FunctionResolver()
             {
             }
-            public FunctionSignature(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType pt2, PrimitiveType rt)
-            {
-                this.Name = Name;
-                this.Types = new PrimitiveType[] { pt0, pt1, pt2, rt };
-            }
-            public FunctionSignature(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt)
-            {
-                this.Name = Name;
-                this.Types = new PrimitiveType[] { pt0, pt1, rt };
-            }
-            public FunctionSignature(String Name, PrimitiveType pt0, PrimitiveType rt)
-            {
-                this.Name = Name;
-                this.Types = new PrimitiveType[] { pt0, rt };
-            }
-            public FunctionSignature(String Name, PrimitiveType rt)
+            public FunctionResolver(String Name, PrimitiveType rt, Func<Delegate> Create)
             {
                 this.Name = Name;
                 this.Types = new PrimitiveType[] { rt };
+                this.Create = Create;
+            }
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<Boolean>, Delegate> Create)
+            {
+                this.Name = Name;
+                this.Types = new PrimitiveType[] { pt0, rt };
+                this.Create = Create;
+            }
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<int>, Delegate> Create)
+            {
+                this.Name = Name;
+                this.Types = new PrimitiveType[] { pt0, rt };
+                this.Create = Create;
+            }
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<double>, Delegate> Create)
+            {
+                this.Name = Name;
+                this.Types = new PrimitiveType[] { pt0, rt };
+                this.Create = Create;
+            }
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<Boolean>, Func<Boolean>, Delegate> Create)
+            {
+                this.Name = Name;
+                this.Types = new PrimitiveType[] { pt0, pt1, rt };
+                this.Create = Create;
+            }
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<int>, Func<int>, Delegate> Create)
+            {
+                this.Name = Name;
+                this.Types = new PrimitiveType[] { pt0, pt1, rt };
+                this.Create = Create;
+            }
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<double>, Func<double>, Delegate> Create)
+            {
+                this.Name = Name;
+                this.Types = new PrimitiveType[] { pt0, pt1, rt };
+                this.Create = Create;
+            }
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<double>, Func<int>, Delegate> Create)
+            {
+                this.Name = Name;
+                this.Types = new PrimitiveType[] { pt0, pt1, rt };
+                this.Create = Create;
+            }
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType pt2, PrimitiveType rt, Func<Func<int>, Func<int>, Func<int>, Delegate> Create)
+            {
+                this.Name = Name;
+                this.Types = new PrimitiveType[] { pt0, pt1, pt2, rt };
+                this.Create = Create;
+            }
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType pt2, PrimitiveType rt, Func<Func<double>, Func<double>, Func<double>, Delegate> Create)
+            {
+                this.Name = Name;
+                this.Types = new PrimitiveType[] { pt0, pt1, pt2, rt };
+                this.Create = Create;
             }
         }
 
         private static class FunctionSignatureMap
         {
-            public static Dictionary<String, List<FunctionSignature>> Map;
+            public static Dictionary<String, List<FunctionResolver>> Map;
 
             static FunctionSignatureMap()
             {
-                var l = new List<FunctionSignature>();
+                var l = new List<FunctionResolver>();
 
                 //算术运算
-                l.Add(new FunctionSignature("+", PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("-", PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("+", PrimitiveType.Real, PrimitiveType.Real));
-                l.Add(new FunctionSignature("-", PrimitiveType.Real, PrimitiveType.Real));
-                l.Add(new FunctionSignature("+", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("-", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("*", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("/", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Real));
-                l.Add(new FunctionSignature("+", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-                l.Add(new FunctionSignature("-", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-                l.Add(new FunctionSignature("*", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-                l.Add(new FunctionSignature("/", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-                l.Add(new FunctionSignature("pow", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("pow", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-                l.Add(new FunctionSignature("mod", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("div", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
+                l.Add(new FunctionResolver("+", PrimitiveType.Int, PrimitiveType.Int, (Func<int> Operand) => (Func<int>)(() => +Operand())));
+                l.Add(new FunctionResolver("-", PrimitiveType.Int, PrimitiveType.Int, (Func<int> Operand) => (Func<int>)(() => -Operand())));
+                l.Add(new FunctionResolver("+", PrimitiveType.Real, PrimitiveType.Real, (Func<double> Operand) => (Func<double>)(() => +Operand())));
+                l.Add(new FunctionResolver("-", PrimitiveType.Real, PrimitiveType.Real, (Func<double> Operand) => (Func<double>)(() => -Operand())));
+                l.Add(new FunctionResolver("+", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => Left() + Right())));
+                l.Add(new FunctionResolver("-", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => Left() - Right())));
+                l.Add(new FunctionResolver("*", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => Left() * Right())));
+                l.Add(new FunctionResolver("/", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Real, (Func<int> Left, Func<int> Right) => (Func<double>)(() => (double)(Left()) / (double)(Right()))));
+                l.Add(new FunctionResolver("+", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => Left() + Right())));
+                l.Add(new FunctionResolver("-", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => Left() - Right())));
+                l.Add(new FunctionResolver("*", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => Left() * Right())));
+                l.Add(new FunctionResolver("/", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => Left() / Right())));
+                l.Add(new FunctionResolver("pow", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.pow(Left(), Right()))));
+                l.Add(new FunctionResolver("pow", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => ExpressionRuntime.pow(Left(), Right()))));
+                l.Add(new FunctionResolver("mod", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.mod(Left(), Right()))));
+                l.Add(new FunctionResolver("div", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.div(Left(), Right()))));
 
                 //逻辑运算
-                l.Add(new FunctionSignature("!", PrimitiveType.Boolean, PrimitiveType.Boolean));
+                l.Add(new FunctionResolver("!", PrimitiveType.Boolean, PrimitiveType.Boolean, (Func<Boolean> Operand) => (Func<Boolean>)(() => !Operand())));
 
                 //关系运算
-                l.Add(new FunctionSignature("<", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-                l.Add(new FunctionSignature(">", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-                l.Add(new FunctionSignature("<=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-                l.Add(new FunctionSignature(">=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-                l.Add(new FunctionSignature("==", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-                l.Add(new FunctionSignature("!=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean));
-                l.Add(new FunctionSignature("<", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean));
-                l.Add(new FunctionSignature(">", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean));
-                l.Add(new FunctionSignature("<=", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean));
-                l.Add(new FunctionSignature(">=", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean));
-                l.Add(new FunctionSignature("==", PrimitiveType.Boolean, PrimitiveType.Boolean, PrimitiveType.Boolean));
-                l.Add(new FunctionSignature("!=", PrimitiveType.Boolean, PrimitiveType.Boolean, PrimitiveType.Boolean));
+                l.Add(new FunctionResolver("<", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() < Right())));
+                l.Add(new FunctionResolver(">", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() > Right())));
+                l.Add(new FunctionResolver("<=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() <= Right())));
+                l.Add(new FunctionResolver(">=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() >= Right())));
+                l.Add(new FunctionResolver("==", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() == Right())));
+                l.Add(new FunctionResolver("!=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() != Right())));
+                l.Add(new FunctionResolver("<", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<double> Left, Func<double> Right) => (Func<Boolean>)(() => Left() < Right())));
+                l.Add(new FunctionResolver(">", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<double> Left, Func<double> Right) => (Func<Boolean>)(() => Left() > Right())));
+                l.Add(new FunctionResolver("<=", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<double> Left, Func<double> Right) => (Func<Boolean>)(() => Left() <= Right())));
+                l.Add(new FunctionResolver(">=", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<double> Left, Func<double> Right) => (Func<Boolean>)(() => Left() >= Right())));
+                l.Add(new FunctionResolver("==", PrimitiveType.Boolean, PrimitiveType.Boolean, PrimitiveType.Boolean, (Func<Boolean> Left, Func<Boolean> Right) => (Func<Boolean>)(() => Left() == Right())));
+                l.Add(new FunctionResolver("!=", PrimitiveType.Boolean, PrimitiveType.Boolean, PrimitiveType.Boolean, (Func<Boolean> Left, Func<Boolean> Right) => (Func<Boolean>)(() => Left() != Right())));
 
                 //取整运算
-                l.Add(new FunctionSignature("round", PrimitiveType.Real, PrimitiveType.Int));
-                l.Add(new FunctionSignature("floor", PrimitiveType.Real, PrimitiveType.Int));
-                l.Add(new FunctionSignature("ceil", PrimitiveType.Real, PrimitiveType.Int));
-                l.Add(new FunctionSignature("round", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real));
-                l.Add(new FunctionSignature("floor", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real));
-                l.Add(new FunctionSignature("ceil", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real));
+                l.Add(new FunctionResolver("round", PrimitiveType.Real, PrimitiveType.Int, (Func<double> Operand) => (Func<int>)(() => ExpressionRuntime.round(Operand()))));
+                l.Add(new FunctionResolver("floor", PrimitiveType.Real, PrimitiveType.Int, (Func<double> Operand) => (Func<int>)(() => ExpressionRuntime.floor(Operand()))));
+                l.Add(new FunctionResolver("ceil", PrimitiveType.Real, PrimitiveType.Int, (Func<double> Operand) => (Func<int>)(() => ExpressionRuntime.ceil(Operand()))));
+                l.Add(new FunctionResolver("round", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real, (Func<double> Left, Func<int> Right) => (Func<double>)(() => ExpressionRuntime.round(Left(), Right()))));
+                l.Add(new FunctionResolver("floor", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real, (Func<double> Left, Func<int> Right) => (Func<double>)(() => ExpressionRuntime.floor(Left(), Right()))));
+                l.Add(new FunctionResolver("ceil", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real, (Func<double> Left, Func<int> Right) => (Func<double>)(() => ExpressionRuntime.ceil(Left(), Right()))));
 
                 //范围限制运算
-                l.Add(new FunctionSignature("min", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("max", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("clamp", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("min", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-                l.Add(new FunctionSignature("max", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-                l.Add(new FunctionSignature("clamp", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
+                l.Add(new FunctionResolver("min", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.min(Left(), Right()))));
+                l.Add(new FunctionResolver("max", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.max(Left(), Right()))));
+                l.Add(new FunctionResolver("clamp", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Arg0, Func<int> Arg1, Func<int> Arg2) => (Func<int>)(() => ExpressionRuntime.clamp(Arg0(), Arg1(), Arg2()))));
+                l.Add(new FunctionResolver("min", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => ExpressionRuntime.min(Left(), Right()))));
+                l.Add(new FunctionResolver("max", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => ExpressionRuntime.max(Left(), Right()))));
+                l.Add(new FunctionResolver("clamp", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Arg0, Func<double> Arg1, Func<double> Arg2) => (Func<double>)(() => ExpressionRuntime.clamp(Arg0(), Arg1(), Arg2()))));
 
                 //其他运算
-                l.Add(new FunctionSignature("abs", PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("rand", PrimitiveType.Real));
-                l.Add(new FunctionSignature("rand", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int));
-                l.Add(new FunctionSignature("rand", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real));
-                l.Add(new FunctionSignature("creal", PrimitiveType.Int, PrimitiveType.Real));
+                l.Add(new FunctionResolver("abs", PrimitiveType.Int, PrimitiveType.Int, (Func<int> Operand) => (Func<int>)(() => ExpressionRuntime.abs(Operand()))));
+                l.Add(new FunctionResolver("abs", PrimitiveType.Real, PrimitiveType.Real, (Func<double> Operand) => (Func<double>)(() => ExpressionRuntime.abs(Operand()))));
+                l.Add(new FunctionResolver("rand", PrimitiveType.Real, () => (Func<double>)(() => ExpressionRuntime.rand())));
+                l.Add(new FunctionResolver("rand", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Arg0, Func<int> Arg1) => (Func<int>)(() => ExpressionRuntime.rand(Arg0(), Arg1()))));
+                l.Add(new FunctionResolver("rand", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Arg0, Func<double> Arg1) => (Func<double>)(() => ExpressionRuntime.rand(Arg0(), Arg1()))));
+                l.Add(new FunctionResolver("creal", PrimitiveType.Int, PrimitiveType.Real, (Func<int> Operand) => (Func<double>)(() => Operand())));
 
-                Map = new Dictionary<String, List<FunctionSignature>>();
+                Map = new Dictionary<String, List<FunctionResolver>>();
                 foreach (var fs in l)
                 {
                     if (Map.ContainsKey(fs.Name))
@@ -272,7 +323,7 @@ namespace Yuki.Expression
                     }
                     else
                     {
-                        Map.Add(fs.Name, new List<FunctionSignature> { fs });
+                        Map.Add(fs.Name, new List<FunctionResolver> { fs });
                     }
                 }
             }
@@ -294,361 +345,14 @@ namespace Yuki.Expression
             return new PrimitiveType[] { };
         }
 
-        public Delegate[] GetValue<TVariableContext>(String Name, PrimitiveType[] ParameterTypes, Delegate[] ParameterFuncs)
+        public Delegate[] GetValue(String Name, PrimitiveType[] ParameterTypes, Delegate[] ParameterFuncs)
         {
-            //算术运算
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "+", PrimitiveType.Int))
+            if (FunctionSignatureMap.Map.ContainsKey(Name))
             {
-                var Operand = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => +Operand(vc)) };
+                var Matched = FunctionSignatureMap.Map[Name].Where(f => f.Types.Take(f.Types.Length - 1).SequenceEqual(ParameterTypes)).Select(f => f.Create.StaticDynamicInvokeWithObjects<Delegate>(ParameterFuncs)).ToArray();
+                return Matched;
             }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "-", PrimitiveType.Int))
-            {
-                var Operand = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => -Operand(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "+", PrimitiveType.Real))
-            {
-                var Operand = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => +Operand(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "-", PrimitiveType.Real))
-            {
-                var Operand = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => -Operand(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "+", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => Left(vc) + Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "-", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => Left(vc) - Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "*", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => Left(vc) * Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "/", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => (double)(Left(vc)) / (double)(Right(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "+", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => Left(vc) + Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "-", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => Left(vc) - Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "*", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => Left(vc) * Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "/", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => Left(vc) / Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "pow", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => ExpressionRuntime.pow(Left(vc), Right(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "pow", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => ExpressionRuntime.pow(Left(vc), Right(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "mod", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => ExpressionRuntime.mod(Left(vc), Right(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "div", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => ExpressionRuntime.div(Left(vc), Right(vc))) };
-            }
-
-            //逻辑运算
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "!", PrimitiveType.Boolean))
-            {
-                var Operand = (Func<TVariableContext, Boolean>)(ParameterFuncs[0]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => !Operand(vc)) };
-            }
-
-            //关系运算
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "<", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) < Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, ">", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) > Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "<=", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) <= Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, ">=", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) >= Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "==", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) == Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "!=", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) != Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "<", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) < Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, ">", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) > Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "<=", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) <= Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, ">=", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) >= Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "==", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) == Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "!=", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) != Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "==", PrimitiveType.Boolean, PrimitiveType.Boolean))
-            {
-                var Left = (Func<TVariableContext, Boolean>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, Boolean>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) == Right(vc)) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "!=", PrimitiveType.Boolean, PrimitiveType.Boolean))
-            {
-                var Left = (Func<TVariableContext, Boolean>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, Boolean>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, Boolean>)(vc => Left(vc) != Right(vc)) };
-            }
-
-            //取整运算
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "round", PrimitiveType.Real))
-            {
-                var Operand = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => ExpressionRuntime.round(Operand(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "floor", PrimitiveType.Real))
-            {
-                var Operand = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => ExpressionRuntime.floor(Operand(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "ceil", PrimitiveType.Real))
-            {
-                var Operand = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => ExpressionRuntime.ceil(Operand(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "round", PrimitiveType.Real, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => ExpressionRuntime.round(Left(vc), Right(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "floor", PrimitiveType.Real, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => ExpressionRuntime.floor(Left(vc), Right(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "ceil", PrimitiveType.Real, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => ExpressionRuntime.ceil(Left(vc), Right(vc))) };
-            }
-
-            //范围限制运算
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "min", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => ExpressionRuntime.min(Left(vc), Right(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "max", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Left = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => ExpressionRuntime.max(Left(vc), Right(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "clamp", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Arg0 = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Arg1 = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                var Arg2 = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => ExpressionRuntime.clamp(Arg0(vc), Arg1(vc), Arg2(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "min", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => ExpressionRuntime.min(Left(vc), Right(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "max", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Left = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Right = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => ExpressionRuntime.max(Left(vc), Right(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "clamp", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Arg0 = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Arg1 = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                var Arg2 = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => ExpressionRuntime.clamp(Arg0(vc), Arg1(vc), Arg2(vc))) };
-            }
-
-            //其他运算
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "abs", PrimitiveType.Int))
-            {
-                var Operand = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => ExpressionRuntime.abs(Operand(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "abs", PrimitiveType.Real))
-            {
-                var Operand = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => ExpressionRuntime.abs(Operand(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "rand"))
-            {
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => ExpressionRuntime.rand()) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "rand", PrimitiveType.Int, PrimitiveType.Int))
-            {
-                var Arg0 = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                var Arg1 = (Func<TVariableContext, int>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, int>)(vc => ExpressionRuntime.rand(Arg0(vc), Arg1(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "rand", PrimitiveType.Real, PrimitiveType.Real))
-            {
-                var Arg0 = (Func<TVariableContext, double>)(ParameterFuncs[0]);
-                var Arg1 = (Func<TVariableContext, double>)(ParameterFuncs[1]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => ExpressionRuntime.rand(Arg0(vc), Arg1(vc))) };
-            }
-            if (MatchFunctionNameAndParameters(Name, ParameterFuncs, "creal", PrimitiveType.Int))
-            {
-                var Operand = (Func<TVariableContext, int>)(ParameterFuncs[0]);
-                return new Delegate[] { (Func<TVariableContext, double>)(vc => Operand(vc)) };
-            }
-
             return new Delegate[] { };
-        }
-
-        private static Boolean MatchFuncType(Delegate ParameterFunc, PrimitiveType t)
-        {
-            if (t == PrimitiveType.Boolean && ParameterFunc.ReturnType() == typeof(Boolean))
-            {
-                return true;
-            }
-            if (t == PrimitiveType.Int && ParameterFunc.ReturnType() == typeof(int))
-            {
-                return true;
-            }
-            if (t == PrimitiveType.Real && ParameterFunc.ReturnType() == typeof(double))
-            {
-                return true;
-            }
-            return false;
-        }
-        private static Boolean MatchFunctionNameAndParameters(String NameFunc, Delegate[] ParameterFuncs, String Name)
-        {
-            if (NameFunc != Name) { return false; }
-            if (ParameterFuncs.Length != 0) { return false; }
-            return true;
-        }
-        private static Boolean MatchFunctionNameAndParameters(String NameFunc, Delegate[] ParameterFuncs, String Name, PrimitiveType t1)
-        {
-            if (NameFunc != Name) { return false; }
-            if (ParameterFuncs.Length != 1) { return false; }
-            if (!MatchFuncType(ParameterFuncs[0], t1)) { return false; }
-            return true;
-        }
-        private static Boolean MatchFunctionNameAndParameters(String NameFunc, Delegate[] ParameterFuncs, String Name, PrimitiveType t1, PrimitiveType t2)
-        {
-            if (NameFunc != Name) { return false; }
-            if (ParameterFuncs.Length != 2) { return false; }
-            if (!MatchFuncType(ParameterFuncs[0], t1)) { return false; }
-            if (!MatchFuncType(ParameterFuncs[1], t2)) { return false; }
-            return true;
-        }
-        private static Boolean MatchFunctionNameAndParameters(String NameFunc, Delegate[] ParameterFuncs, String Name, PrimitiveType t1, PrimitiveType t2, PrimitiveType t3)
-        {
-            if (NameFunc != Name) { return false; }
-            if (ParameterFuncs.Length != 3) { return false; }
-            if (!MatchFuncType(ParameterFuncs[0], t1)) { return false; }
-            if (!MatchFuncType(ParameterFuncs[1], t2)) { return false; }
-            if (!MatchFuncType(ParameterFuncs[2], t3)) { return false; }
-            return true;
-        }
-        private static Boolean MatchFunctionNameAndParameters(String NameFunc, Delegate[] ParameterFuncs, String Name, params PrimitiveType[] ts)
-        {
-            if (NameFunc != Name) { return false; }
-            if (ParameterFuncs.Length != ts.Length) { return false; }
-            for (int k = 0; k < ParameterFuncs.Length; k += 1)
-            {
-                if (!MatchFuncType(ParameterFuncs[k], ts[k])) { return false; }
-            }
-            return true;
         }
     }
 }
