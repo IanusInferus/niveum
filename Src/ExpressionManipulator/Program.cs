@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.ExpressionManipulator <Visual C#>
 //  Description: 表达式结构处理工具
-//  Version:     2013.03.11.
+//  Version:     2013.03.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,10 +23,9 @@ using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using OS = Yuki.ObjectSchema;
 using ES = Yuki.ExpressionSchema;
-using Yuki.ExpressionSchema;
 using Yuki.ObjectSchema;
-using Yuki.ObjectSchema.CSharp;
-using Yuki.ObjectSchema.Cpp;
+using Yuki.ExpressionSchema;
+using Yuki.ExpressionSchema.CSharpBinaryLoader;
 
 namespace Yuki.ExpressionManipulator
 {
@@ -234,19 +233,19 @@ namespace Yuki.ExpressionManipulator
 
         public static void ExpressionSchemaToCSharpBinaryLoaderCode(String CsCodePath, String NamespaceName)
         {
-            //var ExpressionSchema = GetExpressionSchema();
-            //var Compiled = ExpressionSchema.CompileToCSharpPlain(NamespaceName, WithFirefly);
-            //if (File.Exists(CsCodePath))
-            //{
-            //    var Original = Txt.ReadFile(CsCodePath);
-            //    if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-            //    {
-            //        return;
-            //    }
-            //}
-            //var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
-            //if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            //Txt.WriteFile(CsCodePath, Compiled);
+            var ExpressionSchema = GetExpressionSchema();
+            var Compiled = ExpressionSchema.CompileToCSharpBinaryLoader(NamespaceName);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
         }
     }
 }

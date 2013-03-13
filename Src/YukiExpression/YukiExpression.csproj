@@ -74,7 +74,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="CSharpBinaryLoader\Schema.tree" />
+    <EmbeddedResource Include="CSharpBinaryLoader\Schema.tree" />
     <None Include="ExpressionSchema\Common.tree" />
     <None Include="ExpressionSchema\Semantics.tree" />
     <None Include="ExpressionSchema\Syntax.tree" />
