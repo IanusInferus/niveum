@@ -95,6 +95,16 @@ namespace ExprCalc
                 }
             }
 
+            var c = new Calculation(a);
+            Trace.Assert(c.Character.GetUpgradeExperience(1, 2) == 2);
+
+            TestBasic(vc);
+
+            TestInteractive(vc);
+        }
+
+        private static void TestBasic(VariableContext vc)
+        {
             //等于/不等于
             Trace.Assert(Evaluate(vc, "false==false").Equals(true));
             Trace.Assert(Evaluate(vc, "false==true").Equals(false));
@@ -385,8 +395,6 @@ namespace ExprCalc
             }
             Trace.Assert(e("abs(creal(1)-1.0)<0.00001"));
             Trace.Assert(e("abs(1-1.0)<0.00001"));
-
-            TestInteractive(vc);
         }
 
         private static Object Evaluate(VariableContext vc, String s)
