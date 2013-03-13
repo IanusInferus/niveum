@@ -72,108 +72,9 @@ namespace ExprCalc
             Console.WriteLine(@"a");
             Console.WriteLine(@"a(x:Int):Int=x*2");
             Console.WriteLine(@"a(2)");
+            Console.WriteLine(@"del a");
             Console.WriteLine(@"exit");
             Console.WriteLine(@"");
-        }
-
-        public class VariableContext : IVariableProvider
-        {
-            public Dictionary<String, Delegate> SimpleVariableDict = new Dictionary<String, Delegate>(StringComparer.OrdinalIgnoreCase);
-            public Dictionary<String, List<FunctionDef>> FunctionDict = new Dictionary<String, List<FunctionDef>>(StringComparer.OrdinalIgnoreCase);
-            public VariableContext()
-            {
-            }
-
-            public PrimitiveType[][] GetOverloads(String Name)
-            {
-                var l = new List<PrimitiveType[]>();
-                if (SimpleVariableDict.ContainsKey(Name))
-                {
-                    var t = SimpleVariableDict[Name].GetType();
-                    if (t == typeof(Func<Boolean>))
-                    {
-                        l.Add(new PrimitiveType[] { PrimitiveType.Boolean });
-                    }
-                    if (t == typeof(Func<int>))
-                    {
-                        l.Add(new PrimitiveType[] { PrimitiveType.Int });
-                    }
-                    if (t == typeof(Func<double>))
-                    {
-                        l.Add(new PrimitiveType[] { PrimitiveType.Real });
-                    }
-                }
-                if (FunctionDict.ContainsKey(Name))
-                {
-                    var fl = FunctionDict[Name];
-                    foreach (var f in fl)
-                    {
-                        l.Add(f.Parameters.Select(p => p.Type).Concat(new PrimitiveType[] { f.ReturnValue }).ToArray());
-                    }
-                }
-                return l.ToArray();
-            }
-
-            public PrimitiveType[] GetMatched(String Name, PrimitiveType[] ParameterTypes)
-            {
-                var l = new List<PrimitiveType>();
-                if (SimpleVariableDict.ContainsKey(Name) && ParameterTypes == null)
-                {
-                    var t = SimpleVariableDict[Name].GetType();
-                    if (t == typeof(Func<Boolean>))
-                    {
-                        l.Add(PrimitiveType.Boolean);
-                    }
-                    else if (t == typeof(Func<int>))
-                    {
-                        l.Add(PrimitiveType.Int);
-                    }
-                    else if (t == typeof(Func<double>))
-                    {
-                        l.Add(PrimitiveType.Real);
-                    }
-                }
-                if (FunctionDict.ContainsKey(Name) && ParameterTypes != null)
-                {
-                    var fl = FunctionDict[Name];
-                    foreach (var f in fl)
-                    {
-                        if (f.Parameters.Select(p => p.Type).SequenceEqual(ParameterTypes))
-                        {
-                            l.Add(f.ReturnValue);
-                        }
-                    }
-                }
-                return l.ToArray();
-            }
-
-            public Delegate[] GetValue(String Name, PrimitiveType[] ParameterTypes, Delegate[] Parameters)
-            {
-                var l = new List<Delegate>();
-                if (SimpleVariableDict.ContainsKey(Name) && ParameterTypes == null)
-                {
-                    var v = SimpleVariableDict[Name];
-                    l.Add(v);
-                }
-                if (FunctionDict.ContainsKey(Name) && ParameterTypes != null)
-                {
-                    var fl = FunctionDict[Name];
-                    foreach (var f in fl)
-                    {
-                        if (f.Parameters.Select(p => p.Type).SequenceEqual(ParameterTypes))
-                        {
-                            var vc = new VariableContext();
-                            for (int k = 0; k < f.Parameters.Count; k += 1)
-                            {
-                                vc.SimpleVariableDict.Add(f.Parameters[k].Name, Parameters[k]);
-                            }
-                            var d = ExpressionEvaluator.Compile(new VariableProviderCombiner(vc, new ExpressionRuntimeProvider()), f.Body);
-                            l.Add(d);
-                        }
-                    }
-                }
-                return l.ToArray();
-            }
         }
 
         public static void Test()
@@ -190,8 +91,7 @@ namespace ExprCalc
             {
                 foreach (var f in m.Functions)
                 {
-                    if (!vc.FunctionDict.ContainsKey(f.Name)) { vc.FunctionDict.Add(f.Name, new List<FunctionDef>()); }
-                    vc.FunctionDict[f.Name].Add(f);
+                    vc.Replace(f.Name, f);
                 }
             }
 
@@ -517,6 +417,7 @@ namespace ExprCalc
 
         private static Regex rAssignment = new Regex(@"^\s*(?<Identifier>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?<Expr>.*)$", RegexOptions.ExplicitCapture);
         private static Regex rFunctionDefinition = new Regex(@"^\s*(?<Signature>.*?)\s*=\s*(?<Expr>.*)$", RegexOptions.ExplicitCapture);
+        private static Regex rDelete = new Regex(@"^\s*del\s*(?<Identifier>[A-Za-z_][A-Za-z0-9_]*)\s*", RegexOptions.ExplicitCapture);
         public static void TestInteractive(VariableContext vc)
         {
             while (true)
@@ -539,23 +440,7 @@ namespace ExprCalc
                             OutputStart += Line.Length - Expr.Length;
 
                             var v = Evaluate(vc, Expr);
-                            if (vc.SimpleVariableDict.ContainsKey(Identifier)) { vc.SimpleVariableDict.Remove(Identifier); }
-                            var t = v.GetType();
-                            if (t == typeof(Boolean))
-                            {
-                                var vv = (Boolean)(v);
-                                vc.SimpleVariableDict.Add(Identifier, (Func<Boolean>)(() => vv));
-                            }
-                            else if (t == typeof(int))
-                            {
-                                var vv = (int)(v);
-                                vc.SimpleVariableDict.Add(Identifier, (Func<int>)(() => vv));
-                            }
-                            else if (t == typeof(double))
-                            {
-                                var vv = (double)(v);
-                                vc.SimpleVariableDict.Add(Identifier, (Func<double>)(() => vv));
-                            }
+                            vc.Replace(Identifier, v);
                             Console.WriteLine(ToString(v));
                             continue;
                         }
@@ -582,11 +467,31 @@ namespace ExprCalc
                                 Positions = rb.Positions,
                                 TypeDict = rb.TypeDict
                             };
-                            if (!vc.FunctionDict.ContainsKey(r.Definition.Name)) { vc.FunctionDict.Add(r.Definition.Name, new List<FunctionDef>()); }
-                            var l = vc.FunctionDict[r.Definition.Name];
-                            l.RemoveAll(f => f.Parameters.SequenceEqual(r.Definition.Parameters));
-                            l.Add(r.Definition);
+                            vc.Replace(r.Definition.Name, r.Definition);
                             Console.WriteLine(rs.Declaration.Name);
+                            continue;
+                        }
+                    }
+                    {
+                        var m = rDelete.Match(Line);
+                        if (m.Success)
+                        {
+                            var Identifier = m.Result("${Identifier}");
+                            var Overloads = vc.GetOverloads(Identifier);
+                            foreach (var o in Overloads)
+                            {
+                                vc.TryRemove(Identifier, o.ParameterTypes);
+                                String t;
+                                if (o.ParameterTypes == null)
+                                {
+                                    t = o.ReturnType.ToString();
+                                }
+                                else
+                                {
+                                    t = String.Join("->", o.ParameterTypes.Concat(new PrimitiveType[] { o.ReturnType }).Select(p => p.ToString()).ToArray());
+                                }
+                                Console.WriteLine(String.Format("{0}:{1} deleted.", Identifier, t));
+                            }
                             continue;
                         }
                     }
