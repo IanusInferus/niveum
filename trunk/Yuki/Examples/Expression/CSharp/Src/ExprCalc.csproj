@@ -39,20 +39,14 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="Firefly.Core">
       <HintPath>..\..\..\..\Bin\Firefly.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Yuki.Core, Version=2013.3.11.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Yuki.Core">
       <HintPath>..\..\..\..\Bin\Yuki.Core.dll</HintPath>
     </Reference>
     <Reference Include="Yuki.Expression">
       <HintPath>..\..\..\..\Bin\Yuki.Expression.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\..\Bin\Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
