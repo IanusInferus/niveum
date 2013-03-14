@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 表达式计算工具
-//  Version:     2013.03.13.
+//  Version:     2013.03.14.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -423,8 +423,8 @@ namespace ExprCalc
             return o.ToString();
         }
 
-        private static Regex rAssignment = new Regex(@"^\s*(?<Identifier>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?<Expr>.*)$", RegexOptions.ExplicitCapture);
-        private static Regex rFunctionDefinition = new Regex(@"^\s*(?<Signature>.*?)\s*=\s*(?<Expr>.*)$", RegexOptions.ExplicitCapture);
+        private static Regex rAssignment = new Regex(@"^\s*(?<Identifier>[A-Za-z_][A-Za-z0-9_]*)\s*(?<!=)=(?!=)\s*(?<Expr>.*)$", RegexOptions.ExplicitCapture);
+        private static Regex rFunctionDefinition = new Regex(@"^\s*(?<Signature>.*?)\s*(?<!=)=(?!=)\s*(?<Expr>.*)$", RegexOptions.ExplicitCapture);
         private static Regex rDelete = new Regex(@"^\s*del\s*(?<Identifier>[A-Za-z_][A-Za-z0-9_]*)\s*", RegexOptions.ExplicitCapture);
         public static void TestInteractive(VariableContext vc)
         {
