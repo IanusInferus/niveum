@@ -1,6 +1,8 @@
 ﻿2013.03.14
 Doc:
 增加Yuki.Expression测试样例文档。
+Examples:
+表达式示例去除不必要的程序集引用。
 
 2013.03.13
 Yuki.Expression:
