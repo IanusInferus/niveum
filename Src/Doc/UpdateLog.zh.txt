@@ -1,4 +1,10 @@
-﻿2013.03.14
+﻿2013.03.17
+Yuki.Expression:
+增加指数和自然对数函数。
+Examples:
+增加指数和自然对数函数的测试样例。
+
+2013.03.14
 Doc:
 增加Yuki.Expression测试样例文档。
 Examples:

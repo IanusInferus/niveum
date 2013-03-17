@@ -50,6 +50,16 @@ namespace Yuki.Expression
             return Math.Pow(Left, Right);
         }
 
+        public static double exp(double v)
+        {
+            return Math.Exp(v);
+        }
+
+        public static double log(double v)
+        {
+            return Math.Log(v);
+        }
+
         public static int mod(int v, int m)
         {
             var r = v % m;
@@ -281,6 +291,8 @@ namespace Yuki.Expression
                 l.Add(new FunctionResolver("/", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => Left() / Right())));
                 l.Add(new FunctionResolver("pow", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.pow(Left(), Right()))));
                 l.Add(new FunctionResolver("pow", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => ExpressionRuntime.pow(Left(), Right()))));
+                l.Add(new FunctionResolver("exp", PrimitiveType.Real, PrimitiveType.Real, (Func<double> Operand) => (Func<double>)(() => ExpressionRuntime.exp(Operand()))));
+                l.Add(new FunctionResolver("log", PrimitiveType.Real, PrimitiveType.Real, (Func<double> Operand) => (Func<double>)(() => ExpressionRuntime.log(Operand()))));
                 l.Add(new FunctionResolver("mod", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.mod(Left(), Right()))));
                 l.Add(new FunctionResolver("div", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.div(Left(), Right()))));
 
