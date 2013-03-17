@@ -190,6 +190,8 @@ namespace ExprCalc
             Trace.Assert(e("pow(3,5)==243"));
             Trace.Assert(e("abs(pow(2.0,4.0)-16.0)<0.00001"));
             Trace.Assert(e("abs(pow(3.0,5.0)-243.0)<0.00001"));
+            Trace.Assert(e("abs(exp(2.2)-9.02501)<0.00001"));
+            Trace.Assert(e("abs(log(2.2)-0.788457)<0.00001"));
             Trace.Assert(e("mod(6,3)==0"));
             Trace.Assert(e("mod(7,3)==1"));
             Trace.Assert(e("mod(6,-3)==0"));
