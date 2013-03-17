@@ -108,6 +108,8 @@ if伪函数、&&运算符、||运算符单独处理，因为需要考虑求值�
 (/)(Real, Real) -> Real
 pow(b:Int, e:Int) -> Int                // 指数函数，b为底数，p为指数，b != 0，p >= 0
 pow(b:Real, e:Real) -> Real             // 指数函数，实数版，b为底数，p为指数，b != 0
+exp(Real) -> Real                       // 指数函数
+log(Real) -> Real                       // 自然对数函数
 mod(Int, Int) -> Int                    // 模运算，获得带余除法的余数，余数的符号始终和模数相同
 div(Int, Int) -> Int                    // 整除，无论除数为正还是负，总有恒等式a == div(a, b) * b + mod(a, b)
 
