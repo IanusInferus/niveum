@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-namespace Communication.BaseSystem
+namespace BaseSystem
 {
     public static class Times
     {

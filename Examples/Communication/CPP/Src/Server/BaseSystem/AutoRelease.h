@@ -2,24 +2,21 @@
 
 #include <functional>
 
-namespace Communication
+namespace BaseSystem
 {
-    namespace BaseSystem
+    class AutoRelease /* final */
     {
-        class AutoRelease /* final */
+    private:
+        std::function<void()> ReleaseAction;
+    public:
+        AutoRelease(std::function<void()> ReleaseAction)
         {
-        private:
-            std::function<void()> ReleaseAction;
-        public:
-            AutoRelease(std::function<void()> ReleaseAction)
-            {
-                this->ReleaseAction = ReleaseAction;
-            }
+            this->ReleaseAction = ReleaseAction;
+        }
 
-            ~AutoRelease()
-            {
-                ReleaseAction();
-            }
-        };
-    }
+        ~AutoRelease()
+        {
+            ReleaseAction();
+        }
+    };
 }

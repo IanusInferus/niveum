@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Firefly;
-using Communication.BaseSystem;
+using BaseSystem;
 using Server.Algorithms;
 
 namespace Server

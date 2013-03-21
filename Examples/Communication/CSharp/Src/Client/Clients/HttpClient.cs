@@ -6,8 +6,8 @@ using System.Threading;
 using System.Net;
 using Newtonsoft.Json.Linq;
 using Communication;
-using Communication.BaseSystem;
-using Communication.Net;
+using BaseSystem;
+using Net;
 using Communication.Binary;
 
 namespace Client
