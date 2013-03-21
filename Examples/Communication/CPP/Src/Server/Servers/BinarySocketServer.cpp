@@ -14,8 +14,8 @@ namespace Server
         boost::asio::io_service &IoService;
         boost::asio::ip::tcp::endpoint LocalEndPoint;
         std::shared_ptr<boost::thread> Task;
-        Communication::BaseSystem::LockedVariable<std::shared_ptr<boost::asio::ip::tcp::acceptor>> Acceptor;
-        Communication::BaseSystem::CancellationToken ListeningTaskToken;
+        BaseSystem::LockedVariable<std::shared_ptr<boost::asio::ip::tcp::acceptor>> Acceptor;
+        BaseSystem::CancellationToken ListeningTaskToken;
 
     public:
         BindingInfo(boost::asio::io_service &IoService)
@@ -154,9 +154,9 @@ namespace Server
         IpSessions(std::make_shared<TIpAddressMap>()),
         StoppingSessions(std::make_shared<TSessionSet>()),
         BindingsValue(std::make_shared<std::vector<boost::asio::ip::tcp::endpoint>>()),
-        SessionIdleTimeoutValue(Communication::BaseSystem::Optional<int>::CreateNotHasValue()),
-        MaxConnectionsValue(Communication::BaseSystem::Optional<int>::CreateNotHasValue()),
-        MaxConnectionsPerIPValue(Communication::BaseSystem::Optional<int>::CreateNotHasValue()),
+        SessionIdleTimeoutValue(BaseSystem::Optional<int>::CreateNotHasValue()),
+        MaxConnectionsValue(BaseSystem::Optional<int>::CreateNotHasValue()),
+        MaxConnectionsPerIPValue(BaseSystem::Optional<int>::CreateNotHasValue()),
         CheckCommandAllowedValue(nullptr),
         ShutdownValue(nullptr),
         MaxBadCommandsValue(8),
@@ -214,11 +214,11 @@ namespace Server
         });
     }
 
-    std::shared_ptr<Communication::BaseSystem::Optional<int>> BinarySocketServer::GetSessionIdleTimeout() const
+    std::shared_ptr<BaseSystem::Optional<int>> BinarySocketServer::GetSessionIdleTimeout() const
     {
         return SessionIdleTimeoutValue;
     }
-    void BinarySocketServer::SetSessionIdleTimeout(std::shared_ptr<Communication::BaseSystem::Optional<int>> ms)
+    void BinarySocketServer::SetSessionIdleTimeout(std::shared_ptr<BaseSystem::Optional<int>> ms)
     {
         IsRunningValue.DoAction([&](bool &b)
         {
@@ -227,11 +227,11 @@ namespace Server
         });
     }
 
-    std::shared_ptr<Communication::BaseSystem::Optional<int>> BinarySocketServer::GetMaxConnections() const
+    std::shared_ptr<BaseSystem::Optional<int>> BinarySocketServer::GetMaxConnections() const
     {
         return MaxConnectionsValue;
     }
-    void BinarySocketServer::SetMaxConnections(std::shared_ptr<Communication::BaseSystem::Optional<int>> v)
+    void BinarySocketServer::SetMaxConnections(std::shared_ptr<BaseSystem::Optional<int>> v)
     {
         IsRunningValue.DoAction([&](bool &b)
         {
@@ -240,11 +240,11 @@ namespace Server
         });
     }
 
-    std::shared_ptr<Communication::BaseSystem::Optional<int>> BinarySocketServer::GetMaxConnectionsPerIP() const
+    std::shared_ptr<BaseSystem::Optional<int>> BinarySocketServer::GetMaxConnectionsPerIP() const
     {
         return MaxConnectionsPerIPValue;
     }
-    void BinarySocketServer::SetMaxConnectionsPerIP(std::shared_ptr<Communication::BaseSystem::Optional<int>> v)
+    void BinarySocketServer::SetMaxConnectionsPerIP(std::shared_ptr<BaseSystem::Optional<int>> v)
     {
         IsRunningValue.DoAction([&](bool &b)
         {
@@ -298,7 +298,7 @@ namespace Server
 
                     if (SessionCount >= MaxConnectionsValue->HasValue)
                     {
-                        Communication::BaseSystem::AutoRelease Final([&]()
+                        BaseSystem::AutoRelease Final([&]()
                         {
                             s->Stop();
                         });
@@ -318,7 +318,7 @@ namespace Server
 
                     if (IpSessionCount >= MaxConnectionsPerIPValue->HasValue)
                     {
-                        Communication::BaseSystem::AutoRelease Final([&]()
+                        BaseSystem::AutoRelease Final([&]()
                         {
                             s->Stop();
                         });
@@ -491,7 +491,7 @@ namespace Server
     void BinarySocketServer::Start()
     {
         bool Success = false;
-        Communication::BaseSystem::AutoRelease ar([&]()
+        BaseSystem::AutoRelease ar([&]()
         {
             if (!Success)
             {

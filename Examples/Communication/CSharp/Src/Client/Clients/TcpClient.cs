@@ -5,8 +5,8 @@ using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 using Communication;
-using Communication.BaseSystem;
-using Communication.Net;
+using BaseSystem;
+using Net;
 using Communication.Binary;
 
 namespace Client

@@ -88,7 +88,7 @@ namespace Server
 
         static void Run(std::uint16_t Port, bool EnableLogConsole)
         {
-            auto ExitEvent = std::make_shared<Communication::BaseSystem::AutoResetEvent>();
+            auto ExitEvent = std::make_shared<BaseSystem::AutoResetEvent>();
 
             int ProcessorCount = (int)(boost::thread::hardware_concurrency());
 
@@ -115,7 +115,7 @@ namespace Server
             auto LocalEndPoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), Port);
             Bindings->push_back(LocalEndPoint);
             Server->SetBindings(Bindings);
-            Server->SetSessionIdleTimeout(Communication::BaseSystem::Optional<int>::CreateHasValue(600 * 1000));
+            Server->SetSessionIdleTimeout(BaseSystem::Optional<int>::CreateHasValue(600 * 1000));
 
             Server->SetMaxBadCommands(8);
             Server->SetClientDebug(true);

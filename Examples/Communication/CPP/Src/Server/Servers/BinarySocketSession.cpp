@@ -59,23 +59,23 @@ namespace Server
         Boolean OnReadRaw() { return _Tag == SessionCommandTag_ReadRaw; }
     };
 
-    PRIVATE std::shared_ptr<Communication::BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>> bsss(std::make_shared<Communication::BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>>([]() { return std::make_shared<Communication::Binary::BinarySerializationServer>(); }));
+    PRIVATE std::shared_ptr<BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>> bsss(std::make_shared<BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>>([]() { return std::make_shared<Communication::Binary::BinarySerializationServer>(); }));
 
-    PRIVATE Communication::BaseSystem::ThreadLocalRandom RNG;
+    PRIVATE BaseSystem::ThreadLocalRandom RNG;
 
     BinarySocketSession::BinarySocketSession(boost::asio::io_service &IoService, std::shared_ptr<BinarySocketServer> Server, std::shared_ptr<boost::asio::ip::tcp::socket> s)
         :
         IoService(IoService),
-        Socket(std::make_shared<Communication::Net::StreamedAsyncSocket>(s)),
+        Socket(std::make_shared<Net::StreamedAsyncSocket>(s)),
         IsDisposed(false),
-        IdleTimeout(Communication::BaseSystem::Optional<int>::CreateNotHasValue()),
+        IdleTimeout(BaseSystem::Optional<int>::CreateNotHasValue()),
         Server(Server),
         si(nullptr),
         bssed(nullptr),
         NumBadCommands(0),
         Context(std::make_shared<SessionContext>()),
-        NumSessionCommandUpdated(std::make_shared<Communication::BaseSystem::AutoResetEvent>()),
-        NumSessionCommand(std::make_shared<Communication::BaseSystem::LockedVariable<int>>(0)),
+        NumSessionCommandUpdated(std::make_shared<BaseSystem::AutoResetEvent>()),
+        NumSessionCommand(std::make_shared<BaseSystem::LockedVariable<int>>(0)),
         IsRunningValue(false),
         IsExitingValue(false),
         bsm(std::make_shared<BufferStateMachine>()),
@@ -523,7 +523,7 @@ namespace Server
                 throw std::logic_error("InvalidOperation");
             }
 
-            Communication::BaseSystem::AutoRelease Final([=]() { this->ReleaseSessionCommand(); });
+            BaseSystem::AutoRelease Final([=]() { this->ReleaseSessionCommand(); });
             try
             {
                 MessageLoop(sc);

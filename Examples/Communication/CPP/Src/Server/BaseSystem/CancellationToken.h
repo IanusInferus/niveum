@@ -2,32 +2,29 @@
 
 #include <boost/thread.hpp>
 
-namespace Communication
+namespace BaseSystem
 {
-    namespace BaseSystem
+    class CancellationToken
     {
-        class CancellationToken
+    private:
+        bool Cancelled;
+        boost::mutex Lockee;
+    public:
+        CancellationToken()
+            : Cancelled(false)
         {
-        private:
-            bool Cancelled;
-            boost::mutex Lockee;
-        public:
-            CancellationToken()
-                : Cancelled(false)
-            {
-            }
+        }
 
-            bool IsCancellationRequested()
-            {
-                boost::unique_lock<boost::mutex> Lock(Lockee);
-                return Cancelled;
-            }
+        bool IsCancellationRequested()
+        {
+            boost::unique_lock<boost::mutex> Lock(Lockee);
+            return Cancelled;
+        }
 
-            void Cancel()
-            {
-                boost::unique_lock<boost::mutex> Lock(Lockee);
-                Cancelled = true;
-            }
-        };
-    }
+        void Cancel()
+        {
+            boost::unique_lock<boost::mutex> Lock(Lockee);
+            Cancelled = true;
+        }
+    };
 }

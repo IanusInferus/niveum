@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Communication.BaseSystem
+namespace BaseSystem
 {
     /// <summary>
     /// 本类的所有公共成员均是线程安全的。

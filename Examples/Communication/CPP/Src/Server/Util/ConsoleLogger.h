@@ -15,7 +15,7 @@ namespace Server
     {
     private:
         std::shared_ptr<boost::thread> LogThread;
-        Communication::BaseSystem::AutoResetEvent LogNotifier;
+        BaseSystem::AutoResetEvent LogNotifier;
 
         boost::mutex Lockee;
         std::queue<std::shared_ptr<SessionLogEntry>> Entries;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Communication.BaseSystem
+namespace BaseSystem
 {
     public static class Functional
     {

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using Communication;
-using Communication.BaseSystem;
+using BaseSystem;
 using Communication.Binary;
 using Communication.Json;
 

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
-using Communication.BaseSystem;
+using BaseSystem;
 
-namespace Communication.Net
+namespace Net
 {
     public sealed class StreamedAsyncSocket : IDisposable
     {

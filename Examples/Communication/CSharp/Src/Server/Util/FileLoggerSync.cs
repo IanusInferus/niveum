@@ -6,7 +6,7 @@ using System.IO;
 using Firefly;
 using Firefly.TextEncoding;
 using Firefly.Texting;
-using Communication.BaseSystem;
+using BaseSystem;
 
 namespace Server
 {

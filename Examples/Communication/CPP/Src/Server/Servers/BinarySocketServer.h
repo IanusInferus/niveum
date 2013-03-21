@@ -38,7 +38,7 @@ namespace Server
     private:
         class BindingInfo;
 
-        Communication::BaseSystem::LockedVariable<bool> IsRunningValue;
+        BaseSystem::LockedVariable<bool> IsRunningValue;
 
     private:
         template <typename T>
@@ -80,21 +80,21 @@ namespace Server
 
     private:
         std::vector<std::shared_ptr<BindingInfo>> BindingInfos;
-        Communication::BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<boost::asio::ip::tcp::socket>>>> AcceptedSockets;
+        BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<boost::asio::ip::tcp::socket>>>> AcceptedSockets;
         std::shared_ptr<boost::thread> AcceptingTask;
-        Communication::BaseSystem::CancellationToken AcceptingTaskToken;
-        Communication::BaseSystem::AutoResetEvent AcceptingTaskNotifier;
+        BaseSystem::CancellationToken AcceptingTaskToken;
+        BaseSystem::AutoResetEvent AcceptingTaskNotifier;
         std::shared_ptr<boost::thread> PurifieringTask;
-        Communication::BaseSystem::CancellationToken PurifieringTaskToken;
-        Communication::BaseSystem::AutoResetEvent PurifieringTaskNotifier;
-        Communication::BaseSystem::LockedVariable<std::shared_ptr<TSessionSet>> Sessions;
-        Communication::BaseSystem::LockedVariable<std::shared_ptr<TIpAddressMap>> IpSessions;
-        Communication::BaseSystem::LockedVariable<std::shared_ptr<TSessionSet>> StoppingSessions;
+        BaseSystem::CancellationToken PurifieringTaskToken;
+        BaseSystem::AutoResetEvent PurifieringTaskNotifier;
+        BaseSystem::LockedVariable<std::shared_ptr<TSessionSet>> Sessions;
+        BaseSystem::LockedVariable<std::shared_ptr<TIpAddressMap>> IpSessions;
+        BaseSystem::LockedVariable<std::shared_ptr<TSessionSet>> StoppingSessions;
 
         std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> BindingsValue;
-        std::shared_ptr<Communication::BaseSystem::Optional<int>> SessionIdleTimeoutValue;
-        std::shared_ptr<Communication::BaseSystem::Optional<int>> MaxConnectionsValue;
-        std::shared_ptr<Communication::BaseSystem::Optional<int>> MaxConnectionsPerIPValue;
+        std::shared_ptr<BaseSystem::Optional<int>> SessionIdleTimeoutValue;
+        std::shared_ptr<BaseSystem::Optional<int>> MaxConnectionsValue;
+        std::shared_ptr<BaseSystem::Optional<int>> MaxConnectionsPerIPValue;
 
     public:
         BinarySocketServer(boost::asio::io_service &IoService);
@@ -106,14 +106,14 @@ namespace Server
         std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> GetBindings() const;
         void SetBindings(std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> Bindings);
 
-        std::shared_ptr<Communication::BaseSystem::Optional<int>> GetSessionIdleTimeout() const;
-        void SetSessionIdleTimeout(std::shared_ptr<Communication::BaseSystem::Optional<int>> ms);
+        std::shared_ptr<BaseSystem::Optional<int>> GetSessionIdleTimeout() const;
+        void SetSessionIdleTimeout(std::shared_ptr<BaseSystem::Optional<int>> ms);
 
-        std::shared_ptr<Communication::BaseSystem::Optional<int>> GetMaxConnections() const;
-        void SetMaxConnections(std::shared_ptr<Communication::BaseSystem::Optional<int>> v);
+        std::shared_ptr<BaseSystem::Optional<int>> GetMaxConnections() const;
+        void SetMaxConnections(std::shared_ptr<BaseSystem::Optional<int>> v);
 
-        std::shared_ptr<Communication::BaseSystem::Optional<int>> GetMaxConnectionsPerIP() const;
-        void SetMaxConnectionsPerIP(std::shared_ptr<Communication::BaseSystem::Optional<int>> v);
+        std::shared_ptr<BaseSystem::Optional<int>> GetMaxConnectionsPerIP() const;
+        void SetMaxConnectionsPerIP(std::shared_ptr<BaseSystem::Optional<int>> v);
 
         void Start();
 
@@ -195,7 +195,7 @@ namespace Server
         void SetEnableLogSystem(bool value);
 
         typedef std::unordered_map<std::shared_ptr<SessionContext>, std::shared_ptr<BinarySocketSession>, SharedPtrHash<SessionContext>> TSessionMapping;
-        Communication::BaseSystem::LockedVariable<std::shared_ptr<TSessionMapping>> SessionMappings;
+        BaseSystem::LockedVariable<std::shared_ptr<TSessionMapping>> SessionMappings;
 
         std::function<void(std::shared_ptr<SessionLogEntry>)> SessionLog;
         void RaiseSessionLog(std::shared_ptr<SessionLogEntry> Entry);
