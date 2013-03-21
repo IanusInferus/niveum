@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 using Firefly;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
-using Communication.BaseSystem;
+using BaseSystem;
 using Communication.Json;
 using Server.Algorithms;
 using Server.Services;

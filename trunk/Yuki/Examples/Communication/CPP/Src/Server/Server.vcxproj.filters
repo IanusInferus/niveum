@@ -67,6 +67,9 @@
     <ClInclude Include="Net\StreamedAsyncSocket.h">
       <Filter>Net</Filter>
     </ClInclude>
+    <ClInclude Include="BaseSystem\ThreadLocalRandom.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />

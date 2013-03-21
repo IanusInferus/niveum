@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using Communication;
-using Communication.BaseSystem;
+using BaseSystem;
 
 namespace Server
 {

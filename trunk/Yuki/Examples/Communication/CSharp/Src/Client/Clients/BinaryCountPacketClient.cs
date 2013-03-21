@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Communication;
-using Communication.Net;
+using Net;
 using Communication.Binary;
 
 namespace Client

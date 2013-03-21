@@ -37,11 +37,11 @@ namespace Server
     protected:
         boost::asio::io_service &IoService;
     private:
-        std::shared_ptr<Communication::Net::StreamedAsyncSocket> Socket;
+        std::shared_ptr<Net::StreamedAsyncSocket> Socket;
         bool IsDisposed;
     public:
         boost::asio::ip::tcp::endpoint RemoteEndPoint;
-        std::shared_ptr<Communication::BaseSystem::Optional<int>> IdleTimeout;
+        std::shared_ptr<BaseSystem::Optional<int>> IdleTimeout;
 
         BinarySocketSession(boost::asio::io_service &IoService, std::shared_ptr<BinarySocketServer> Server, std::shared_ptr<boost::asio::ip::tcp::socket> s);
 
@@ -64,11 +64,11 @@ namespace Server
         class TryShiftResult;
         class BufferStateMachine;
 
-        std::shared_ptr<Communication::BaseSystem::AutoResetEvent> NumSessionCommandUpdated;
-        std::shared_ptr<Communication::BaseSystem::LockedVariable<int>> NumSessionCommand;
-        Communication::BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<SessionCommand>>>> CommandQueue;
-        Communication::BaseSystem::LockedVariable<bool> IsRunningValue;
-        Communication::BaseSystem::LockedVariable<bool> IsExitingValue;
+        std::shared_ptr<BaseSystem::AutoResetEvent> NumSessionCommandUpdated;
+        std::shared_ptr<BaseSystem::LockedVariable<int>> NumSessionCommand;
+        BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<SessionCommand>>>> CommandQueue;
+        BaseSystem::LockedVariable<bool> IsRunningValue;
+        BaseSystem::LockedVariable<bool> IsExitingValue;
 
         void LockSessionCommand();
         int ReleaseSessionCommand();
