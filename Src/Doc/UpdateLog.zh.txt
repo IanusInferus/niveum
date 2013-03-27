@@ -1,4 +1,8 @@
-﻿2013.03.21
+﻿2013.03.27
+Yuki.Relation:
+修正错误提示中查询语句里没有By和OrderBy的问题。
+
+2013.03.21
 Examples:
 去除通讯C#和C++示例中的无用Communication命名空间。
 
