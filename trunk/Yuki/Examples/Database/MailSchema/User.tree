@@ -4,7 +4,7 @@
       File:        User.tree
       Location:    Yuki.Examples <Tree>
       Description: 用户
-      Version:     2012.12.31.
+      Version:     2013.03.27.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -32,3 +32,4 @@
     Select Optional UserProfile By Name
     Select Optional UserProfile By EmailAddress
     Select Optional DirectUserAuthentication By Name
+    Insert One UserProfile
