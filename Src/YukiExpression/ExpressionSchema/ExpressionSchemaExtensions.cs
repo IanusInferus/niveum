@@ -1,12 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Security.Cryptography;
+using Firefly;
+using Firefly.Mapping.Binary;
+using Firefly.Streaming;
 
 namespace Yuki.ExpressionSchema
 {
     public static class ExpressionSchemaExtensions
     {
+        public static UInt64 Hash(this Schema s)
+        {
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+            var sha = new SHA1CryptoServiceProvider();
+            Byte[] result;
+
+            using (var ms = Streams.CreateMemoryStream())
+            {
+                bs.Write(s, ms);
+                ms.Position = 0;
+
+                result = sha.ComputeHash(ms.ToUnsafeStream());
+            }
+
+            using (var ms = Streams.CreateMemoryStream())
+            {
+                ms.Write(result.Skip(result.Length - 8).ToArray());
+                ms.Position = 0;
+
+                return ms.ReadUInt64B();
+            }
+        }
+
         public static void Verify(this Schema s)
         {
             VerifyDuplicatedNames(s);

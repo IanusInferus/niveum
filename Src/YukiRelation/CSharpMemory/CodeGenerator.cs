@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Memory代码生成器
-//  Version:     2013.02.28.
+//  Version:     2013.03.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -331,7 +331,8 @@ namespace Yuki.RelationSchema.CSharpMemory
                 var Indices = GetIndices();
                 var Selects = GetSelects();
                 var Generates = GetGenerates();
-                l.AddRange(GetTemplate("DataAccessBase").Substitute("Tables", Tables).Substitute("Indices", Indices).Substitute("Selects", Selects).Substitute("Generates", Generates));
+                var Hash = Schema.Hash().ToString("X16", System.Globalization.CultureInfo.InvariantCulture);
+                l.AddRange(GetTemplate("DataAccessBase").Substitute("Tables", Tables).Substitute("Indices", Indices).Substitute("Selects", Selects).Substitute("Generates", Generates).Substitute("Hash", Hash));
                 l.Add("");
 
                 var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToArray();

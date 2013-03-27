@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Expression <Tree>
       Description: 表达式结构C#二进制加载器模板数据
-      Version:     2013.03.13.
+      Version:     2013.03.27.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -63,7 +63,7 @@ ObjectSchemaTemplate
                     using Real = System.Double;
         Template
             Name Assembly
-            //Parameters: ${Name}, ${Modules}, ${ModuleInitializes}
+            //Parameters: ${Name}, ${Modules}, ${Hash}, ${ModuleInitializes}
             Value
                 $String
                     public class [[${Name}]]
@@ -72,6 +72,7 @@ ObjectSchemaTemplate
 
                         public [[${Name}]](Assembly a)
                         {
+                            if (a.Hash != 0x${Hash}) { throw new InvalidOperationException(); }
                             var _d_ = a.Modules.ToDictionary(_m_ => _m_.Name);
                             ${ModuleInitializes}
                         }
