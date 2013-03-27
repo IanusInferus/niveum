@@ -4,6 +4,8 @@ Yuki.Relation:
 修正C#的SqlServer、PostgreSQL、MySQL中插入带有枚举类型的Entity时，生成的代码中没有枚举类型的Add方法导致编译出错的问题。
 Examples:
 数据库示例中增加插入带有枚举类型的Entity的测试样例。
+Yuki.Core:
+修正Haxe JSON代码生成中枚举类型转换错误的问题。
 
 2013.03.21
 Examples:
