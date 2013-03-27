@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Haxe JSON通讯模板数据
-      Version:     2013.03.08.
+      Version:     2013.03.27.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -489,13 +489,13 @@ ObjectSchemaTemplate
             //Parameters: ${Name}, ${UnderlyingType}
             Value
                 $String
-                    public static function [[${name}FromJson]](j : Dynamic) : [[${UnderlyingType}]]
+                    public static function [[${name}FromJson]](j : Dynamic) : [[${Name}]]
                     {
-                        return cast(j, [[${UnderlyingType}]]);
+                        return cast(cast(j, [[${UnderlyingType}]]), [[${Name}]]);
                     }
-                    public static function [[${name}ToJson]](o : [[${UnderlyingType}]]) : Dynamic
+                    public static function [[${name}ToJson]](o : [[${Name}]]) : Dynamic
                     {
-                        return o;
+                        return cast(o, [[${UnderlyingType}]]);
                     }
         Template
             Name JsonTranslator_Tuple
