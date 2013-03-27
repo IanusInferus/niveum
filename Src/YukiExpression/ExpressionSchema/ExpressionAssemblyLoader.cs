@@ -25,19 +25,21 @@ namespace Yuki.ExpressionSchema
 {
     public class ExpressionAssemblyLoader
     {
+        private UInt64 Hash;
         private Dictionary<String, ModuleDecl> ModuleDecls;
         private Dictionary<String, Dictionary<String, FunctionDecl>> ModuleDeclDicts;
         private List<ModuleDef> Modules = new List<ModuleDef>();
 
         public ExpressionAssemblyLoader(Schema s)
         {
+            Hash = s.Hash();
             ModuleDecls = s.Modules.ToDictionary(m => m.Name);
             ModuleDeclDicts = s.Modules.ToDictionary(m => m.Name, m => m.Functions.ToDictionary(f => f.Name));
         }
 
         public Assembly GetResult()
         {
-            var Result = new Assembly { Modules = Modules };
+            var Result = new Assembly { Hash = Hash, Modules = Modules };
             return Result;
         }
 

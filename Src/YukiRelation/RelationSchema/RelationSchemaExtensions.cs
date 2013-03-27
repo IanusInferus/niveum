@@ -11,7 +11,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using Firefly;
+using Firefly.Mapping.Binary;
+using Firefly.Streaming;
 
 namespace Yuki.RelationSchema
 {
@@ -20,6 +23,68 @@ namespace Yuki.RelationSchema
         public static IEnumerable<KeyValuePair<String, TypeDef>> GetMap(this Schema s)
         {
             return s.TypeRefs.Concat(s.Types).Where(t => !t.OnQueryList).Select(t => CollectionOperations.CreatePair(t.Name(), t));
+        }
+
+        public static UInt64 Hash(this Schema s)
+        {
+            var Types = s.GetMap().OrderBy(t => t.Key, StringComparer.Ordinal).Select(t => t.Value).ToArray();
+            var TypesWithoutDescription = Types.Select(t => MapWithoutDescription(t)).ToArray();
+
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+            var sha = new SHA1CryptoServiceProvider();
+            Byte[] result;
+
+            using (var ms = Streams.CreateMemoryStream())
+            {
+                bs.Write(TypesWithoutDescription, ms);
+                ms.Position = 0;
+
+                result = sha.ComputeHash(ms.ToUnsafeStream());
+            }
+
+            using (var ms = Streams.CreateMemoryStream())
+            {
+                ms.Write(result.Skip(result.Length - 8).ToArray());
+                ms.Position = 0;
+
+                return ms.ReadUInt64B();
+            }
+        }
+
+        private static TypeDef MapWithoutDescription(TypeDef t)
+        {
+            if (t.OnPrimitive)
+            {
+                var p = t.Primitive;
+                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, Description = "" });
+            }
+            else if (t.OnEntity)
+            {
+                var r = t.Entity;
+                return TypeDef.CreateEntity(new EntityDef { Name = r.Name, CollectionName = r.CollectionName, Fields = r.Fields.Select(gp => MapWithoutDescription(gp)).ToArray(), Description = "", PrimaryKey = r.PrimaryKey, UniqueKeys= r.UniqueKeys, NonUniqueKeys=r.NonUniqueKeys });
+            }
+            else if (t.OnEnum)
+            {
+                var e = t.Enum;
+                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, UnderlyingType = e.UnderlyingType, Literals = e.Literals.Select(l => MapWithoutDescription(l)).ToArray(), Description = "" });
+            }
+            else if (t.OnQueryList)
+            {
+                var ql = t.QueryList;
+                return t;
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+        private static VariableDef MapWithoutDescription(VariableDef v)
+        {
+            return new VariableDef { Name = v.Name, Type = v.Type, Description = "", Attribute = v.Attribute };
+        }
+        private static LiteralDef MapWithoutDescription(LiteralDef l)
+        {
+            return new LiteralDef { Name = l.Name, Value = l.Value, Description = "" };
         }
 
         private class Marker

@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2012.04.15.
+//  Version:     2013.03.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -48,7 +48,7 @@ namespace Yuki.ObjectSchema
 
             using (var ms = Streams.CreateMemoryStream())
             {
-                ms.Write(result.Reverse().Take(8).Reverse().ToArray());
+                ms.Write(result.Skip(result.Length - 8).ToArray());
                 ms.Position = 0;
 
                 return ms.ReadUInt64B();

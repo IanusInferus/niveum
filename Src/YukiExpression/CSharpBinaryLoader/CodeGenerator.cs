@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式结构C#二进制加载器代码生成器
-//  Version:     2013.03.13.
+//  Version:     2013.03.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -106,9 +106,10 @@ namespace Yuki.ExpressionSchema.CSharpBinaryLoader
 
             public String[] GetAssembly(Schema Schema)
             {
+                var Hash = Schema.Hash().ToString("X16", System.Globalization.CultureInfo.InvariantCulture);
                 var Modules = Schema.Modules.SelectMany(m => GetTemplate("Assembly_Module").Substitute("Name", m.Name)).ToArray();
                 var ModuleInitializes = Schema.Modules.SelectMany(m => GetTemplate("Assembly_ModuleInitialize").Substitute("Name", m.Name)).ToArray();
-                return GetTemplate("Assembly").Substitute("Name", "Calculation").Substitute("Modules", Modules).Substitute("ModuleInitializes", ModuleInitializes);
+                return GetTemplate("Assembly").Substitute("Name", "Calculation").Substitute("Modules", Modules).Substitute("Hash", Hash).Substitute("ModuleInitializes", ModuleInitializes);
             }
 
             public String[] GetComplexTypes(Schema Schema)

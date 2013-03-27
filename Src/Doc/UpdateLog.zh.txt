@@ -6,6 +6,15 @@ Examples:
 数据库示例中增加插入带有枚举类型的Entity的测试样例。
 Yuki.Core:
 修正Haxe JSON代码生成中枚举类型转换错误的问题。
+修正一处写法。
+Yuki.Relation, Yuki.Expression:
+增加获得Hash的功能。
+Yuki.Relation:
+增加C# Memory代码生成结果中判断Hash的功能。
+Yuki.Expression:
+增加C#表达式计算二进制程序集加载代码中判断Hash的功能。
+DatabaseRegenerator:
+增加C# Memory数据生成时产生Hash的功能。
 
 2013.03.21
 Examples:

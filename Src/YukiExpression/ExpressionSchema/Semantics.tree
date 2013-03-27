@@ -4,7 +4,7 @@
       File:        Semantics.tree
       Location:    Yuki.Expression <Tree>
       Description: 语义结构
-      Version:     2013.03.11.
+      Version:     2013.03.27.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -19,6 +19,7 @@
     Functions           List<FunctionDecl>          函数声明
 
 #Record Assembly                                    函数集
+    Hash                UInt64                      散列
     Modules             List<ModuleDef>             函数定义
 
 #Record ModuleDef                                   模块定义
