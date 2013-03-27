@@ -301,16 +301,16 @@ ObjectSchemaTemplate
                         }
                     }
         Template
-            Name DataAccessEnum
-            //Parameters: ${EnumGets}
+            Name DataAccessEnums
+            //Parameters: ${Enums}
             Value
                 $String
                     public partial class PostgreSqlDataAccess
                     {
-                        ${EnumGets}
+                        ${Enums}
                     }
         Template
-            Name DataAccessEnumGet
+            Name DataAccessEnum
             //Parameters: ${EnumName}
             Value
                 $String
@@ -323,6 +323,21 @@ ObjectSchemaTemplate
                         var v = GetOptionalOfInt(dr, FieldName);
                         if (v.OnNotHasValue) { return Optional<[[${EnumName}]]>.Empty; }
                         return ([[${EnumName}]])(v.HasValue);
+                    }
+                    private static void Add(NpgsqlCommand cmd, String ParameterName, [[${EnumName}]] Value)
+                    {
+                        Add(cmd, ParameterName, (Int)(Value));
+                    }
+                    private static void Add(NpgsqlCommand cmd, String ParameterName, Optional<[[${EnumName}]]> Value)
+                    {
+                        if (Value.OnNotHasValue)
+                        {
+                            Add(cmd, ParameterName, Optional<Int>.Empty);
+                        }
+                        else
+                        {
+                            Add(cmd, ParameterName, (Int)(Value.HasValue));
+                        }
                     }
         Template
             Name DataAccess

@@ -1,6 +1,9 @@
 ﻿2013.03.27
 Yuki.Relation:
 修正错误提示中查询语句里没有By和OrderBy的问题。
+修正C#的SqlServer、PostgreSQL、MySQL中插入带有枚举类型的Entity时，生成的代码中没有枚举类型的Add方法导致编译出错的问题。
+Examples:
+数据库示例中增加插入带有枚举类型的Entity的测试样例。
 
 2013.03.21
 Examples:

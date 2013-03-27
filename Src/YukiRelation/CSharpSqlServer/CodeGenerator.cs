@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# SQL Server代码生成器
-//  Version:     2013.02.28.
+//  Version:     2013.03.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -105,9 +105,9 @@ namespace Yuki.RelationSchema.CSharpSqlServer
                 return InnerWriter.GetTypeString(Type);
             }
 
-            public String[] GetEnumGet(EnumDef e)
+            public String[] GetEnum(EnumDef e)
             {
-                return GetTemplate("DataAccessEnumGet").Substitute("EnumName", e.Name);
+                return GetTemplate("DataAccessEnum").Substitute("EnumName", e.Name);
             }
 
             public String GetTypeGetName(TypeSpec t)
@@ -388,14 +388,14 @@ namespace Yuki.RelationSchema.CSharpSqlServer
                 {
                     foreach (var e in Enums)
                     {
-                        el.AddRange(GetEnumGet(e));
+                        el.AddRange(GetEnum(e));
                         el.Add("");
                     }
                     if (el.Count > 0)
                     {
                         el = el.Take(el.Count - 1).ToList();
                     }
-                    l.AddRange(GetTemplate("DataAccessEnum").Substitute("EnumGets", el.ToArray()));
+                    l.AddRange(GetTemplate("DataAccessEnums").Substitute("Enums", el.ToArray()));
                     l.Add("");
                 }
 
