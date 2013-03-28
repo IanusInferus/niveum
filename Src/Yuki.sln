@@ -8,6 +8,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YukiCore", "YukiCore\YukiCore.csproj", "{23021296-4E59-4532-9B5F-CB3CED3A978E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YukiRelation", "YukiRelation\YukiRelation.csproj", "{7BD101DA-2049-4B20-A89F-D5C7D4384D8B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D9D1181E-2141-4CE7-80F5-73F3B8620247} = {D9D1181E-2141-4CE7-80F5-73F3B8620247}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RelationSchemaManipulator", "RelationSchemaManipulator\RelationSchemaManipulator.csproj", "{C608D189-D985-4CFB-9B8D-E44804C3416F}"
 EndProject

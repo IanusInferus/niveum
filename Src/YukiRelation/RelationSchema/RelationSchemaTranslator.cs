@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2013.01.25.
+//  Version:     2013.03.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -190,7 +190,7 @@ namespace Yuki.RelationSchema
                     FillRecordNavigations(r);
                 }
 
-                return new RS.Schema { Types = Types.ToArray(), TypeRefs = TypeRefs.ToArray(), Imports = Schema.Imports.ToArray(), TypePaths = Schema.TypePaths.Select(tp => new RS.TypePath { Name = tp.Name, Path = tp.Path }).ToArray() };
+                return new RS.Schema { Types = Types, TypeRefs = TypeRefs, Imports = Schema.Imports.ToList(), TypePaths = Schema.TypePaths.Select(tp => new RS.TypePath { Name = tp.Name, Path = tp.Path }).ToList() };
             }
 
             private RS.PrimitiveDef TranslatePrimitive(OS.PrimitiveDef e)
@@ -204,7 +204,7 @@ namespace Yuki.RelationSchema
             }
             private RS.EnumDef TranslateEnum(OS.EnumDef e)
             {
-                return new RS.EnumDef { Name = e.Name, UnderlyingType = TranslateTypeSpec(e.UnderlyingType), Literals = e.Literals.Select(l => TranslateLiteral(l)).ToArray(), Description = e.Description };
+                return new RS.EnumDef { Name = e.Name, UnderlyingType = TranslateTypeSpec(e.UnderlyingType), Literals = e.Literals.Select(l => TranslateLiteral(l)).ToList(), Description = e.Description };
             }
 
             private RS.TypeSpec TranslateTypeSpec(OS.TypeSpec t)
@@ -355,7 +355,7 @@ namespace Yuki.RelationSchema
             private RS.EntityDef TranslateRecord(OS.RecordDef r)
             {
                 var dc = Decompose(r.Description);
-                var Fields = r.Fields.Select(f => TranslateField(r, f)).ToArray();
+                var Fields = r.Fields.Select(f => TranslateField(r, f)).ToList();
 
                 foreach (var f in Fields)
                 {
@@ -430,7 +430,7 @@ namespace Yuki.RelationSchema
                     {
                         throw new InvalidOperationException(String.Format("没有标注主键，且默认主键字段类型不为简单类型: {0}", r.Name));
                     }
-                    PrimaryKey = new RS.Key { Columns = new KeyColumn[] { new KeyColumn { Name = Id.Name, IsDescending = false } }, IsClustered = false };
+                    PrimaryKey = new RS.Key { Columns = new List<KeyColumn> { new KeyColumn { Name = Id.Name, IsDescending = false } }, IsClustered = false };
                     //Id.Attribute.Column.IsIdentity = true;
                 }
 
@@ -440,7 +440,7 @@ namespace Yuki.RelationSchema
                     PrimaryKey.IsClustered = true;
                 }
 
-                return new RS.EntityDef { Name = r.Name, CollectionName = CollectionName, Fields = Fields, PrimaryKey = PrimaryKey, UniqueKeys = UniqueKeys.ToArray(), NonUniqueKeys = NonUniqueKeys.ToArray(), Description = dc.Description };
+                return new RS.EntityDef { Name = r.Name, CollectionName = CollectionName, Fields = Fields, PrimaryKey = PrimaryKey, UniqueKeys = UniqueKeys, NonUniqueKeys = NonUniqueKeys, Description = dc.Description };
             }
             private void FillRecordNavigations(RS.EntityDef r)
             {
@@ -480,9 +480,9 @@ namespace Yuki.RelationSchema
                             if (FieldNameIds.Length == 1)
                             {
                                 var FieldNameId = FieldNameIds.Single();
-                                if (TypeRecord.PrimaryKey.Columns.Length == 1)
+                                if (TypeRecord.PrimaryKey.Columns.Count == 1)
                                 {
-                                    f.Attribute.Navigation = new RS.NavigationAttribute { IsReverse = false, IsUnique = true, ThisKey = new String[] { FieldNameId.Name }, OtherKey = new String[] { TypeRecord.PrimaryKey.Columns.Select(c => c.Name).Single() } };
+                                    f.Attribute.Navigation = new RS.NavigationAttribute { IsReverse = false, IsUnique = true, ThisKey = new List<String> { FieldNameId.Name }, OtherKey = new List<String> { TypeRecord.PrimaryKey.Columns.Select(c => c.Name).Single() } };
                                     continue;
                                 }
                             }
@@ -491,9 +491,9 @@ namespace Yuki.RelationSchema
                             if (TableNameIds.Length == 1)
                             {
                                 var TableNameId = TableNameIds.Single();
-                                if (r.PrimaryKey.Columns.Length == 1)
+                                if (r.PrimaryKey.Columns.Count == 1)
                                 {
-                                    f.Attribute.Navigation = new RS.NavigationAttribute { IsReverse = true, IsUnique = true, ThisKey = new String[] { r.PrimaryKey.Columns.Select(c => c.Name).Single() }, OtherKey = new String[] { TableNameId.Name } };
+                                    f.Attribute.Navigation = new RS.NavigationAttribute { IsReverse = true, IsUnique = true, ThisKey = new List<String> { r.PrimaryKey.Columns.Select(c => c.Name).Single() }, OtherKey = new List<String> { TableNameId.Name } };
                                     continue;
                                 }
                             }
@@ -530,8 +530,8 @@ namespace Yuki.RelationSchema
 
             private class KeyMap
             {
-                public String[] ThisKey;
-                public String[] OtherKey;
+                public List<String> ThisKey;
+                public List<String> OtherKey;
             }
             private KeyMap GetKeyMap(String Parameters)
             {
@@ -540,16 +540,16 @@ namespace Yuki.RelationSchema
                 {
                     throw new InvalidOperationException(String.Format("映射无效: {0}", Parameters));
                 }
-                var ThisKey = Keys[0].Split(',').Select(f => f.Trim(' ')).ToArray();
-                var OtherKey = Keys[1].Split(',').Select(f => f.Trim(' ')).ToArray();
-                if (ThisKey.Length != OtherKey.Length || ThisKey.Length == 0)
+                var ThisKey = Keys[0].Split(',').Select(f => f.Trim(' ')).ToList();
+                var OtherKey = Keys[1].Split(',').Select(f => f.Trim(' ')).ToList();
+                if (ThisKey.Count != OtherKey.Count || ThisKey.Count == 0)
                 {
                     throw new InvalidOperationException(String.Format("映射无效: {0}", Parameters));
                 }
                 return new KeyMap { ThisKey = ThisKey, OtherKey = OtherKey };
             }
 
-            private KeyColumn[] GetColumns(String Parameters)
+            private List<KeyColumn> GetColumns(String Parameters)
             {
                 var Columns = new List<KeyColumn>();
                 foreach (var cs in Parameters.Split(',').Select(f => f.Trim(' ')).ToArray())
@@ -567,7 +567,7 @@ namespace Yuki.RelationSchema
                 {
                     throw new InvalidOperationException(String.Format("键无效: {0}", Parameters));
                 }
-                return Columns.ToArray();
+                return Columns;
             }
         }
     }
