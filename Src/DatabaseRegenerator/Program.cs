@@ -19,8 +19,6 @@ using Firefly;
 using Firefly.Streaming;
 using Firefly.Texting.TreeFormat;
 using Firefly.Texting.TreeFormat.Semantics;
-using Yuki.ObjectSchema;
-using OS = Yuki.ObjectSchema;
 using Yuki.RelationSchema;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.PostgreSql;
@@ -263,11 +261,8 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root"" /database:Example /regenmysql:Data,TestData");
         }
 
-        public static void RegenMemory(RelationSchema.Schema s, String ConnectionString, String[] DataDirs)
+        public static RelationVal LoadData(RelationSchema.Schema s, String[] DataDirs)
         {
-            var l = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
-            var d = l.ToDictionary(e => e.Name, e => (Byte[])(null), StringComparer.OrdinalIgnoreCase);
-
             var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
             var CollectionNameToEntity = Entities.ToDictionary(e => e.CollectionName, StringComparer.OrdinalIgnoreCase);
             var Tables = new Dictionary<String, List<Node>>();
@@ -302,6 +297,13 @@ namespace Yuki.DatabaseRegenerator
             var rvts = new RelationValueTreeSerializer(s);
             var Value = rvts.Read(Tables);
 
+            return Value;
+        }
+
+        public static void RegenMemory(RelationSchema.Schema s, String ConnectionString, String[] DataDirs)
+        {
+            var Value = LoadData(s, DataDirs);
+
             var rvs = new RelationValueSerializer(s);
             Byte[] Bytes;
             using (var ms = Streams.CreateMemoryStream())
@@ -327,6 +329,8 @@ namespace Yuki.DatabaseRegenerator
                 throw new InvalidOperationException("数据库名称没有指定。");
             }
 
+            var Value = LoadData(s, DataDirs);
+
             var cf = GetConnectionFactory(DatabaseType.SqlServer);
             using (var c = cf(ConnectionString))
             {
@@ -350,75 +354,74 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
 
-            foreach (var DataDir in DataDirs)
+            var ImportTableInfo = TableOperations.GetImportTableInfo(s, Value);
+            var Tables = ImportTableInfo.Tables;
+            var EntityMetas = ImportTableInfo.EntityMetas;
+            var EnumUnderlyingTypes = ImportTableInfo.EnumUnderlyingTypes;
+
+            using (var c = cf(ConnectionString))
             {
-                var ImportTableMetas = TableOperations.GetImportTableMetas(s, DataDir);
-                var Tables = ImportTableMetas.Tables;
-                var TableMetas = ImportTableMetas.TableMetas;
-                var EnumMetas = ImportTableMetas.EnumMetas;
-
-                using (var c = cf(ConnectionString))
+                c.Open();
+                c.ChangeDatabase(DatabaseName);
+                try
                 {
-                    c.Open();
-                    c.ChangeDatabase(DatabaseName);
-                    try
+                    using (var b = c.BeginTransaction())
                     {
-                        using (var b = c.BeginTransaction())
+                        var Success = false;
+                        try
                         {
-                            var Success = false;
-                            try
+                            foreach (var t in EntityMetas)
                             {
-                                foreach (var t in TableMetas)
-                                {
-                                    var CollectionName = t.Key;
+                                var CollectionName = t.Key;
 
-                                    {
-                                        IDbCommand cmd = c.CreateCommand();
-                                        cmd.Transaction = b;
-                                        cmd.CommandText = String.Format("ALTER TABLE [{0}] NOCHECK CONSTRAINT ALL", CollectionName);
-                                        cmd.CommandType = CommandType.Text;
-                                        cmd.ExecuteNonQuery();
-                                    }
-                                }
-                                foreach (var t in Tables)
                                 {
-                                    TableOperations.ImportTable(TableMetas, EnumMetas, c, b, t, DatabaseType.SqlServer);
+                                    IDbCommand cmd = c.CreateCommand();
+                                    cmd.Transaction = b;
+                                    cmd.CommandText = String.Format("ALTER TABLE [{0}] NOCHECK CONSTRAINT ALL", CollectionName);
+                                    cmd.CommandType = CommandType.Text;
+                                    cmd.ExecuteNonQuery();
                                 }
-                                foreach (var t in TableMetas)
-                                {
-                                    var CollectionName = t.Key;
-
-                                    {
-                                        IDbCommand cmd = c.CreateCommand();
-                                        cmd.Transaction = b;
-                                        cmd.CommandText = String.Format("ALTER TABLE [{0}] WITH CHECK CHECK CONSTRAINT ALL", CollectionName);
-                                        cmd.CommandType = CommandType.Text;
-                                        cmd.ExecuteNonQuery();
-                                    }
-                                }
-
-                                b.Commit();
-                                Success = true;
                             }
-                            finally
+                            foreach (var t in Tables)
                             {
-                                if (!Success)
+                                TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.SqlServer);
+                            }
+                            foreach (var t in EntityMetas)
+                            {
+                                var CollectionName = t.Key;
+
                                 {
-                                    b.Rollback();
+                                    IDbCommand cmd = c.CreateCommand();
+                                    cmd.Transaction = b;
+                                    cmd.CommandText = String.Format("ALTER TABLE [{0}] WITH CHECK CHECK CONSTRAINT ALL", CollectionName);
+                                    cmd.CommandType = CommandType.Text;
+                                    cmd.ExecuteNonQuery();
                                 }
+                            }
+
+                            b.Commit();
+                            Success = true;
+                        }
+                        finally
+                        {
+                            if (!Success)
+                            {
+                                b.Rollback();
                             }
                         }
                     }
-                    finally
-                    {
-                        c.Close();
-                    }
+                }
+                finally
+                {
+                    c.Close();
                 }
             }
         }
 
         public static void RegenPostgreSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
         {
+            var Value = LoadData(s, DataDirs);
+
             var GenSqls = s.CompileToPostgreSql(DatabaseName);
             var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
             RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToArray();
@@ -469,45 +472,42 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
 
-            foreach (var DataDir in DataDirs)
+            var ImportTableInfo = TableOperations.GetImportTableInfo(s, Value);
+            var Tables = ImportTableInfo.Tables;
+            var EntityMetas = ImportTableInfo.EntityMetas;
+            var EnumUnderlyingTypes = ImportTableInfo.EnumUnderlyingTypes;
+
+            using (var c = cf(ConnectionString))
             {
-                var ImportTableMetas = TableOperations.GetImportTableMetas(s, DataDir);
-                var Tables = ImportTableMetas.Tables;
-                var TableMetas = ImportTableMetas.TableMetas;
-                var EnumMetas = ImportTableMetas.EnumMetas;
-
-                using (var c = cf(ConnectionString))
+                c.Open();
+                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
+                try
                 {
-                    c.Open();
-                    c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                    try
+                    using (var b = c.BeginTransaction())
                     {
-                        using (var b = c.BeginTransaction())
+                        var Success = false;
+                        try
                         {
-                            var Success = false;
-                            try
+                            foreach (var t in Tables)
                             {
-                                foreach (var t in Tables)
-                                {
-                                    TableOperations.ImportTable(TableMetas, EnumMetas, c, b, t, DatabaseType.PostgreSQL);
-                                }
-
-                                b.Commit();
-                                Success = true;
+                                TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.PostgreSQL);
                             }
-                            finally
+
+                            b.Commit();
+                            Success = true;
+                        }
+                        finally
+                        {
+                            if (!Success)
                             {
-                                if (!Success)
-                                {
-                                    b.Rollback();
-                                }
+                                b.Rollback();
                             }
                         }
                     }
-                    finally
-                    {
-                        c.Close();
-                    }
+                }
+                finally
+                {
+                    c.Close();
                 }
             }
 
@@ -536,6 +536,8 @@ namespace Yuki.DatabaseRegenerator
 
         public static void RegenMySQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
         {
+            var Value = LoadData(s, DataDirs);
+
             var GenSqls = s.CompileToMySql(DatabaseName);
             var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
             var Creates = RegenSqls.TakeWhile(q => !q.StartsWith("ALTER")).ToArray();
@@ -563,45 +565,42 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
 
-            foreach (var DataDir in DataDirs)
+            var ImportTableInfo = TableOperations.GetImportTableInfo(s, Value);
+            var Tables = ImportTableInfo.Tables;
+            var EntityMetas = ImportTableInfo.EntityMetas;
+            var EnumUnderlyingTypes = ImportTableInfo.EnumUnderlyingTypes;
+
+            using (var c = cf(ConnectionString))
             {
-                var ImportTableMetas = TableOperations.GetImportTableMetas(s, DataDir);
-                var Tables = ImportTableMetas.Tables;
-                var TableMetas = ImportTableMetas.TableMetas;
-                var EnumMetas = ImportTableMetas.EnumMetas;
-
-                using (var c = cf(ConnectionString))
+                c.Open();
+                c.ChangeDatabase(DatabaseName);
+                try
                 {
-                    c.Open();
-                    c.ChangeDatabase(DatabaseName);
-                    try
+                    using (var b = c.BeginTransaction())
                     {
-                        using (var b = c.BeginTransaction())
+                        var Success = false;
+                        try
                         {
-                            var Success = false;
-                            try
+                            foreach (var t in Tables)
                             {
-                                foreach (var t in Tables)
-                                {
-                                    TableOperations.ImportTable(TableMetas, EnumMetas, c, b, t, DatabaseType.MySQL);
-                                }
-
-                                b.Commit();
-                                Success = true;
+                                TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.MySQL);
                             }
-                            finally
+
+                            b.Commit();
+                            Success = true;
+                        }
+                        finally
+                        {
+                            if (!Success)
                             {
-                                if (!Success)
-                                {
-                                    b.Rollback();
-                                }
+                                b.Rollback();
                             }
                         }
                     }
-                    finally
-                    {
-                        c.Close();
-                    }
+                }
+                finally
+                {
+                    c.Close();
                 }
             }
 
