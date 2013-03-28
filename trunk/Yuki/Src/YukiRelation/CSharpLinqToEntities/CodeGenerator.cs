@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2012.12.31.
+//  Version:     2013.03.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -70,7 +70,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 var EntityComplexTypes = GetEntityComplexTypes(Schema);
                 var ContextComplexTypes = GetContextComplexTypes(Schema);
 
-                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("EntityNamespaceName", EntityNamespaceName).Substitute("ContextNamespaceName", ContextNamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("EntityComplexTypes", EntityComplexTypes).Substitute("ContextComplexTypes", ContextComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("EntityNamespaceName", EntityNamespaceName).Substitute("ContextNamespaceName", ContextNamespaceName).Substitute("Imports", Schema.Imports.ToArray()).Substitute("Primitives", Primitives).Substitute("EntityComplexTypes", EntityComplexTypes).Substitute("ContextComplexTypes", ContextComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
 
             public String[] GetPrimitive(String Name, String PlatformName)
@@ -140,7 +140,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
             {
                 return GetTemplate("Literal").Substitute("Name", lrl.Name).Substitute("Value", lrl.Value.ToInvariantString()).Substitute("XmlComment", GetXmlComment(lrl.Description));
             }
-            public String[] GetLiterals(LiteralDef[] Literals)
+            public String[] GetLiterals(IEnumerable<LiteralDef> Literals)
             {
                 var l = new List<String>();
                 foreach (var lrl in Literals)
@@ -420,9 +420,9 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                     var h = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
                     foreach (var k in Keys)
                     {
-                        for (int m = 1; m <= k.Columns.Length; m += 1)
+                        for (int m = 1; m <= k.Columns.Count; m += 1)
                         {
-                            var Subkey = new Key { Columns = k.Columns.Take(m).ToArray(), IsClustered = k.IsClustered };
+                            var Subkey = new Key { Columns = k.Columns.Take(m).ToList(), IsClustered = k.IsClustered };
                             var KeyFriendlyName = String.Join("And", Subkey.Columns.Select(c => c.Name).ToArray());
                             if (h.Contains(KeyFriendlyName))
                             {

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构T-SQL(SQL Server)数据库代码生成器
-//  Version:     2013.02.27.
+//  Version:     2013.03.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -68,32 +68,6 @@ namespace Yuki.RelationSchema.TSql
                     }
                 }
                 return l.ToArray();
-            }
-            private class ForeignKey
-            {
-                public String ThisTableName;
-                public String[] ThisKeyColumns;
-                public String OtherTableName;
-                public String[] OtherKeyColumns;
-
-                public override bool Equals(object obj)
-                {
-                    var o = obj as ForeignKey;
-                    if (o == null) { return false; }
-                    if (!ThisTableName.Equals(o.ThisTableName, StringComparison.OrdinalIgnoreCase)) { return false; }
-                    if (!OtherTableName.Equals(o.OtherTableName, StringComparison.OrdinalIgnoreCase)) { return false; }
-                    if (ThisKeyColumns.Length != o.ThisKeyColumns.Length) { return false; }
-                    if (OtherKeyColumns.Length != o.OtherKeyColumns.Length) { return false; }
-                    if (ThisKeyColumns.Intersect(o.ThisKeyColumns, StringComparer.OrdinalIgnoreCase).Count() != ThisKeyColumns.Length) { return false; }
-                    if (OtherKeyColumns.Intersect(o.OtherKeyColumns, StringComparer.OrdinalIgnoreCase).Count() != OtherKeyColumns.Length) { return false; }
-                    return true;
-                }
-
-                public override int GetHashCode()
-                {
-                    Func<String, int> h = StringComparer.OrdinalIgnoreCase.GetHashCode;
-                    return h(ThisTableName) ^ h(OtherTableName) ^ ThisKeyColumns.Select(k => h(k)).Aggregate((a, b) => a ^ b) ^ OtherKeyColumns.Select(k => h(k)).Aggregate((a, b) => a ^ b);
-                }
             }
             public String[] GetForeignKeys(Schema s)
             {
@@ -291,16 +265,16 @@ namespace Yuki.RelationSchema.TSql
                 }
             }
 
-            public String[] GetForeignKey(String Name, String ThisTableName, String[] ThisKeyColumns, String OtherTableName, String[] OtherKeyColumns)
+            public String[] GetForeignKey(String Name, String ThisTableName, IEnumerable<String> ThisKeyColumns, String OtherTableName, IEnumerable<String> OtherKeyColumns)
             {
                 return GetTemplate("ForeignKey").Substitute("Name", Name).Substitute("ThisTableName", ThisTableName).Substitute("ThisKeyColumns", GetForeignColumns(ThisKeyColumns)).Substitute("OtherTableName", OtherTableName).Substitute("OtherKeyColumns", GetForeignColumns(OtherKeyColumns));
             }
 
-            public String[] GetForeignColumns(String[] Columns)
+            public String[] GetForeignColumns(IEnumerable<String> Columns)
             {
                 return JoinWithComma(Columns.Select(c => new String[] { String.Format("[{0}]", c) }).ToArray());
             }
-            public String[] GetColumns(KeyColumn[] Columns)
+            public String[] GetColumns(IEnumerable<KeyColumn> Columns)
             {
                 return JoinWithComma(Columns.Select(c => new String[] { c.IsDescending ? String.Format("[{0}] DESC", c.Name) : String.Format("[{0}]", c.Name) }).ToArray());
             }

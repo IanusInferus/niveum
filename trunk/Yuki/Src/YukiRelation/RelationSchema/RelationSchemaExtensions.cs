@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2013.03.27.
+//  Version:     2013.03.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -18,6 +18,33 @@ using Firefly.Streaming;
 
 namespace Yuki.RelationSchema
 {
+    public class ForeignKey
+    {
+        public String ThisTableName;
+        public List<String> ThisKeyColumns;
+        public String OtherTableName;
+        public List<String> OtherKeyColumns;
+
+        public override bool Equals(object obj)
+        {
+            var o = obj as ForeignKey;
+            if (o == null) { return false; }
+            if (!ThisTableName.Equals(o.ThisTableName, StringComparison.OrdinalIgnoreCase)) { return false; }
+            if (!OtherTableName.Equals(o.OtherTableName, StringComparison.OrdinalIgnoreCase)) { return false; }
+            if (ThisKeyColumns.Count != o.ThisKeyColumns.Count) { return false; }
+            if (OtherKeyColumns.Count != o.OtherKeyColumns.Count) { return false; }
+            if (ThisKeyColumns.Intersect(o.ThisKeyColumns, StringComparer.OrdinalIgnoreCase).Count() != ThisKeyColumns.Count) { return false; }
+            if (OtherKeyColumns.Intersect(o.OtherKeyColumns, StringComparer.OrdinalIgnoreCase).Count() != OtherKeyColumns.Count) { return false; }
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            Func<String, int> h = StringComparer.OrdinalIgnoreCase.GetHashCode;
+            return h(ThisTableName) ^ h(OtherTableName) ^ ThisKeyColumns.Select(k => h(k)).Aggregate((a, b) => a ^ b) ^ OtherKeyColumns.Select(k => h(k)).Aggregate((a, b) => a ^ b);
+        }
+    }
+
     public static class RelationSchemaExtensions
     {
         public static IEnumerable<KeyValuePair<String, TypeDef>> GetMap(this Schema s)
@@ -61,12 +88,12 @@ namespace Yuki.RelationSchema
             else if (t.OnEntity)
             {
                 var r = t.Entity;
-                return TypeDef.CreateEntity(new EntityDef { Name = r.Name, CollectionName = r.CollectionName, Fields = r.Fields.Select(gp => MapWithoutDescription(gp)).ToArray(), Description = "", PrimaryKey = r.PrimaryKey, UniqueKeys= r.UniqueKeys, NonUniqueKeys=r.NonUniqueKeys });
+                return TypeDef.CreateEntity(new EntityDef { Name = r.Name, CollectionName = r.CollectionName, Fields = r.Fields.Select(gp => MapWithoutDescription(gp)).ToList(), Description = "", PrimaryKey = r.PrimaryKey, UniqueKeys= r.UniqueKeys, NonUniqueKeys=r.NonUniqueKeys });
             }
             else if (t.OnEnum)
             {
                 var e = t.Enum;
-                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, UnderlyingType = e.UnderlyingType, Literals = e.Literals.Select(l => MapWithoutDescription(l)).ToArray(), Description = "" });
+                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, UnderlyingType = e.UnderlyingType, Literals = e.Literals.Select(l => MapWithoutDescription(l)).ToList(), Description = "" });
             }
             else if (t.OnQueryList)
             {
@@ -239,20 +266,20 @@ namespace Yuki.RelationSchema
 
         private class ByIndex
         {
-            public String[] Columns;
+            public List<String> Columns;
 
             public override bool Equals(object obj)
             {
                 var o = obj as ByIndex;
                 if (o == null) { return false; }
-                if (Columns.Length != o.Columns.Length) { return false; }
-                if (Columns.Intersect(o.Columns, StringComparer.OrdinalIgnoreCase).Count() != Columns.Length) { return false; }
+                if (Columns.Count != o.Columns.Count) { return false; }
+                if (Columns.Intersect(o.Columns, StringComparer.OrdinalIgnoreCase).Count() != Columns.Count) { return false; }
                 return true;
             }
 
             public override int GetHashCode()
             {
-                if (Columns.Length == 0) { return 0; }
+                if (Columns.Count == 0) { return 0; }
                 Func<String, int> h = StringComparer.OrdinalIgnoreCase.GetHashCode;
                 return Columns.Select(k => h(k)).Aggregate((a, b) => a ^ b);
             }
@@ -260,14 +287,14 @@ namespace Yuki.RelationSchema
 
         private class OrderByIndex
         {
-            public KeyColumn[] Columns;
+            public List<KeyColumn> Columns;
 
             public override bool Equals(object obj)
             {
                 var o = obj as OrderByIndex;
                 if (o == null) { return false; }
-                if (Columns.Length != o.Columns.Length) { return false; }
-                for (int k = 0; k < Columns.Length; k += 1)
+                if (Columns.Count != o.Columns.Count) { return false; }
+                for (int k = 0; k < Columns.Count; k += 1)
                 {
                     var c = Columns[k];
                     var oc = o.Columns[k];
@@ -279,7 +306,7 @@ namespace Yuki.RelationSchema
 
             public override int GetHashCode()
             {
-                if (Columns.Length == 0) { return 0; }
+                if (Columns.Count == 0) { return 0; }
                 Func<String, int> h = StringComparer.OrdinalIgnoreCase.GetHashCode;
                 return Columns.Select(k => h(k.Name) ^ k.IsDescending.GetHashCode()).Aggregate((a, b) => a ^ b);
             }
@@ -294,9 +321,9 @@ namespace Yuki.RelationSchema
                 var h = new HashSet<ByIndex>();
                 foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
                 {
-                    for (int i = 1; i <= k.Columns.Length; i += 1)
+                    for (int i = 1; i <= k.Columns.Count; i += 1)
                     {
-                        var SubIndex = new ByIndex { Columns = k.Columns.Take(i).Select(c => c.Name).ToArray() };
+                        var SubIndex = new ByIndex { Columns = k.Columns.Take(i).Select(c => c.Name).ToList() };
                         if (!h.Contains(SubIndex))
                         {
                             h.Add(SubIndex);
@@ -383,45 +410,45 @@ namespace Yuki.RelationSchema
                         {
                             if (q.Numeral.OnOptional)
                             {
-                                if (q.By.Length != 0 && q.OrderBy.Length == 0) { continue; }
+                                if (q.By.Count != 0 && q.OrderBy.Count == 0) { continue; }
                             }
                             if (q.Numeral.OnOne)
                             {
-                                if (q.By.Length != 0 && q.OrderBy.Length == 0) { continue; }
+                                if (q.By.Count != 0 && q.OrderBy.Count == 0) { continue; }
                             }
                             if (q.Numeral.OnMany)
                             {
-                                if (q.By.Length != 0) { continue; }
+                                if (q.By.Count != 0) { continue; }
                             }
                             if (q.Numeral.OnAll)
                             {
-                                if (q.By.Length == 0) { continue; }
+                                if (q.By.Count == 0) { continue; }
                             }
                             if (q.Numeral.OnRange)
                             {
-                                if (q.OrderBy.Length != 0) { continue; }
+                                if (q.OrderBy.Count != 0) { continue; }
                             }
                             if (q.Numeral.OnCount)
                             {
-                                if (q.OrderBy.Length == 0) { continue; }
+                                if (q.OrderBy.Count == 0) { continue; }
                             }
                         }
                         if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert)
                         {
                             if (q.Numeral.OnOne || q.Numeral.OnMany)
                             {
-                                if (q.By.Length == 0 && q.OrderBy.Length == 0) { continue; }
+                                if (q.By.Count == 0 && q.OrderBy.Count == 0) { continue; }
                             }
                         }
                         if (q.Verb.OnDelete)
                         {
                             if (q.Numeral.OnOptional || q.Numeral.OnOne || q.Numeral.OnMany)
                             {
-                                if (q.By.Length != 0 && q.OrderBy.Length == 0) { continue; }
+                                if (q.By.Count != 0 && q.OrderBy.Count == 0) { continue; }
                             }
                             if (q.Numeral.OnAll)
                             {
-                                if (q.By.Length == 0 && q.OrderBy.Length == 0) { continue; }
+                                if (q.By.Count == 0 && q.OrderBy.Count == 0) { continue; }
                             }
                         }
 
@@ -447,9 +474,9 @@ namespace Yuki.RelationSchema
                 var h = new HashSet<ByIndex>();
                 foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
                 {
-                    for (int i = 1; i <= k.Columns.Length; i += 1)
+                    for (int i = 1; i <= k.Columns.Count; i += 1)
                     {
-                        var SubIndex = new ByIndex { Columns = k.Columns.Take(i).Select(c => c.Name).ToArray() };
+                        var SubIndex = new ByIndex { Columns = k.Columns.Take(i).Select(c => c.Name).ToList() };
                         if (!h.Contains(SubIndex))
                         {
                             h.Add(SubIndex);
@@ -463,9 +490,9 @@ namespace Yuki.RelationSchema
                 var h = new HashSet<OrderByIndex>();
                 foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
                 {
-                    for (int i = 1; i <= k.Columns.Length; i += 1)
+                    for (int i = 1; i <= k.Columns.Count; i += 1)
                     {
-                        var SubIndex = new OrderByIndex { Columns = k.Columns.Take(i).ToArray() };
+                        var SubIndex = new OrderByIndex { Columns = k.Columns.Take(i).ToList() };
                         if (!h.Contains(SubIndex))
                         {
                             h.Add(SubIndex);
@@ -491,13 +518,13 @@ namespace Yuki.RelationSchema
                             {
                                 throw new InvalidOperationException(String.Format("UpsertNotValidOnEntityWithIdentityColumn: '{0}' in {1}", q.EntityName, GetQueryLine(q)));
                             }
-                            if (e.UniqueKeys.Length != 0)
+                            if (e.UniqueKeys.Count != 0)
                             {
                                 throw new InvalidOperationException(String.Format("UpsertNotValidOnEntityWithMultiplePrimaryKeyOrUniqueKey: '{0}' in {1}", q.EntityName, GetQueryLine(q)));
                             }
                         }
 
-                        if (q.By.Length != 0)
+                        if (q.By.Count != 0)
                         {
                             var bih = ByIndexDict[q.EntityName];
                             var bi = new ByIndex { Columns = q.By };
@@ -506,7 +533,7 @@ namespace Yuki.RelationSchema
                                 throw new InvalidOperationException(String.Format("ByIndexNotExist: '{0}.{1}' in {2}", q.EntityName, GetByKeyString(q.By), GetQueryLine(q)));
                             }
                         }
-                        if (q.OrderBy.Length != 0)
+                        if (q.OrderBy.Count != 0)
                         {
                             var obih = OrderByIndexDict[q.EntityName];
                             var obi = new OrderByIndex { Columns = q.OrderBy };
@@ -552,18 +579,18 @@ namespace Yuki.RelationSchema
             }
         }
 
-        private static String GetByKeyString(String[] ByKey)
+        private static String GetByKeyString(IEnumerable<String> ByKey)
         {
-            if (ByKey.Length == 1)
+            if (ByKey.Count() == 1)
             {
                 return ByKey.Single();
             }
             return "(" + String.Join(" ", ByKey) + ")";
         }
-        private static String GetOrderByKeyString(KeyColumn[] OrderByKey)
+        private static String GetOrderByKeyString(IEnumerable<KeyColumn> OrderByKey)
         {
             var OrderByKeyColumnStrings = OrderByKey.Select(c => c.IsDescending ? c.Name + "-" : c.Name).ToArray();
-            if (OrderByKey.Length == 1)
+            if (OrderByKey.Count() == 1)
             {
                 return OrderByKeyColumnStrings.Single();
             }
@@ -575,13 +602,13 @@ namespace Yuki.RelationSchema
             QueryStrings.Add(q.Verb._Tag.ToString());
             QueryStrings.Add(q.Numeral._Tag.ToString());
             QueryStrings.Add(q.EntityName);
-            if (q.By.Length != 0)
+            if (q.By.Count != 0)
             {
                 QueryStrings.Add("By");
                 var ByString = GetByKeyString(q.By);
                 QueryStrings.Add(ByString);
             }
-            if (q.OrderBy.Length != 0)
+            if (q.OrderBy.Count != 0)
             {
                 QueryStrings.Add("OrderBy");
                 var OrderByString = GetOrderByKeyString(q.OrderBy);
@@ -597,13 +624,13 @@ namespace Yuki.RelationSchema
             QueryStrings.Add(q.Verb._Tag.ToString());
             QueryStrings.Add(q.Numeral._Tag.ToString());
             QueryStrings.Add(q.EntityName);
-            if (q.By.Length != 0)
+            if (q.By.Count != 0)
             {
                 QueryStrings.Add("By");
                 var ByString = String.Join("And", q.By);
                 QueryStrings.Add(ByString);
             }
-            if (q.OrderBy.Length != 0)
+            if (q.OrderBy.Count != 0)
             {
                 QueryStrings.Add("OrderBy");
                 var OrderByString = q.OrderBy.FriendlyName();
@@ -612,7 +639,7 @@ namespace Yuki.RelationSchema
             var QueryLine = String.Join("", QueryStrings.ToArray());
             return QueryLine;
         }
-        public static String FriendlyName(this KeyColumn[] Key)
+        public static String FriendlyName(this IEnumerable<KeyColumn> Key)
         {
             return String.Join("And", Key.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name).ToArray());
         }
