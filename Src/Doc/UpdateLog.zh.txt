@@ -1,4 +1,8 @@
-﻿2013.03.27
+﻿2013.03.28
+Yuki.Core:
+增加类型名不存在时加载的检查。
+
+2013.03.27
 Yuki.Relation:
 修正错误提示中查询语句里没有By和OrderBy的问题。
 修正C#的SqlServer、PostgreSQL、MySQL中插入带有枚举类型的Entity时，生成的代码中没有枚举类型的Add方法导致编译出错的问题。
