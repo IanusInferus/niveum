@@ -389,6 +389,7 @@ namespace Yuki.RelationSchema.CSharpMySql
             {
                 var l = new List<String>();
 
+                var Hash = Schema.Hash().ToString("X16", System.Globalization.CultureInfo.InvariantCulture);
                 l.AddRange(GetTemplate("DataAccessBase"));
                 l.Add("");
 
@@ -422,7 +423,7 @@ namespace Yuki.RelationSchema.CSharpMySql
                 }
                 l.AddRange(GetTemplate("DataAccess").Substitute("Queries", ql.ToArray()));
                 l.Add("");
-                l.AddRange(GetTemplate("DataAccessPool"));
+                l.AddRange(GetTemplate("DataAccessPool").Substitute("Hash", Hash));
                 l.Add("");
 
                 if (l.Count > 0)

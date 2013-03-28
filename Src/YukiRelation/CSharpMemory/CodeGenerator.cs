@@ -348,7 +348,7 @@ namespace Yuki.RelationSchema.CSharpMemory
                 }
                 l.AddRange(GetTemplate("DataAccess").Substitute("Queries", ql.ToArray()));
                 l.Add("");
-                l.AddRange(GetTemplate("DataAccessPool"));
+                l.AddRange(GetTemplate("DataAccessPool").Substitute("Hash", Hash));
                 l.Add("");
 
                 if (l.Count > 0)
