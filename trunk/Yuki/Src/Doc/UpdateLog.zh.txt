@@ -9,6 +9,8 @@ Yuki.Relation, DatabaseRegenerator:
 增加RelationValue，用于将数据库数据进行二进制和Tree序列化。将C# Memory只读内存数据库文件读写代码改用该序列化代码。
 Yuki.Core, Yuki.Relation, Yuki.Expression, DatabaseRegenerator:
 修改写法。
+DatabaseRegenerator:
+加载数据时使用对象结构代替原来的Tree结构。
 
 2013.03.27
 Yuki.Relation:
