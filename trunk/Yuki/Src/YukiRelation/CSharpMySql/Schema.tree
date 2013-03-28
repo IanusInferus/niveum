@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# MySQL代码模板数据
-      Version:     2013.02.28.
+      Version:     2013.03.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -597,11 +597,19 @@ ObjectSchemaTemplate
                     v.[[${ParameterName}]] = [[${TypeGet}]](dr, "${ParameterName}");
         Template
             Name DataAccessPool
-            //Parameters:
+            //Parameters: ${Hash}
             Value
                 $String
                     public class MySqlDataAccessPool : IDataAccessPool
                     {
+                        public UInt64 Hash
+                        {
+                            get
+                            {
+                                return 0x${Hash};
+                            }
+                        }
+
                         public IDataAccess Create(String ConnectionString)
                         {
                             return MySqlDataAccess.Create(ConnectionString);

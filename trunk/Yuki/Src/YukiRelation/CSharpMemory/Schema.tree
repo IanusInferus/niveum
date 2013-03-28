@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Memory代码模板数据
-      Version:     2013.03.27.
+      Version:     2013.03.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -115,14 +115,6 @@ ObjectSchemaTemplate
                             }
                             Indices = new MemoryDataIndices();
                             ${Generates}
-                        }
-
-                        public static UInt64 Hash
-                        {
-                            get
-                            {
-                                return 0x${Hash};
-                            }
                         }
 
                         private class StringTranslator : IProjectorToProjectorDomainTranslator<String, Byte[]>, IProjectorToProjectorRangeTranslator<String, Byte[]>
@@ -285,11 +277,19 @@ ObjectSchemaTemplate
                     throw new NotSupportedException();
         Template
             Name DataAccessPool
-            //Parameters:
+            //Parameters: ${Hash}
             Value
                 $String
                     public class MemoryDataAccessPool : IDataAccessPool
                     {
+                        public UInt64 Hash
+                        {
+                            get
+                            {
+                                return 0x${Hash};
+                            }
+                        }
+
                         private Dictionary<String, IDataAccess> d = new Dictionary<String, IDataAccess>();
                         public IDataAccess Create(String ConnectionString)
                         {
