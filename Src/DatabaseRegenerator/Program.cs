@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2013.03.27.
+//  Version:     2013.03.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,12 +17,15 @@ using System.Reflection;
 using System.Data;
 using Firefly;
 using Firefly.Streaming;
+using Firefly.Texting.TreeFormat;
+using Firefly.Texting.TreeFormat.Semantics;
 using Yuki.ObjectSchema;
 using OS = Yuki.ObjectSchema;
 using Yuki.RelationSchema;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
+using Yuki.RelationValue;
 
 namespace Yuki.DatabaseRegenerator
 {
@@ -264,41 +267,56 @@ namespace Yuki.DatabaseRegenerator
         {
             var l = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
             var d = l.ToDictionary(e => e.Name, e => (Byte[])(null), StringComparer.OrdinalIgnoreCase);
+
+            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
+            var CollectionNameToEntity = Entities.ToDictionary(e => e.CollectionName, StringComparer.OrdinalIgnoreCase);
+            var Tables = new Dictionary<String, List<Node>>();
             foreach (var DataDir in DataDirs)
             {
-                var ImportTableMetas = TableOperations.GetImportTableMetas(s, DataDir);
-                var Tables = ImportTableMetas.Tables;
-                var TableMetas = ImportTableMetas.TableMetas;
-                var EnumUnderlyingTypes = ImportTableMetas.EnumUnderlyingTypes;
-                var EnumMetas = ImportTableMetas.EnumMetas;
-                foreach (var t in Tables)
+                foreach (var f in Directory.GetFiles(DataDir, "*.tree", SearchOption.AllDirectories).OrderBy(ff => ff, StringComparer.OrdinalIgnoreCase))
                 {
-                    var EntityName = TableMetas[t.Key].Name;
-                    using (var ms = Streams.CreateMemoryStream())
+                    var Result = TreeFile.ReadDirect(f, new TreeFormatParseSetting(), new TreeFormatEvaluateSetting());
+                    foreach (var n in Result.Value.Nodes)
                     {
-                        TableOperationsMemory.ImportTable(TableMetas, EnumUnderlyingTypes, EnumMetas, ms, t);
-                        ms.Position = 0;
-                        d[EntityName] = ms.Read((int)(ms.Length));
+                        if (n._Tag != NodeTag.Stem) { continue; }
+                        var Name = n.Stem.Name;
+                        if (CollectionNameToEntity.ContainsKey(Name))
+                        {
+                            Name = CollectionNameToEntity[Name].Name;
+                        }
+                        if (!Tables.ContainsKey(Name))
+                        {
+                            Tables.Add(Name, new List<Node>());
+                        }
+                        var t = Tables[Name];
+                        t.AddRange(n.Stem.Children);
                     }
                 }
             }
+            var Missings = Entities.Select(e => e.Name).Except(Tables.Keys, StringComparer.OrdinalIgnoreCase).ToArray();
+            foreach (var Name in Missings)
+            {
+                Tables.Add(Name, new List<Node>());
+            }
+
+            var rvts = new RelationValueTreeSerializer(s);
+            var Value = rvts.Read(Tables);
+
+            var rvs = new RelationValueSerializer(s);
+            Byte[] Bytes;
+            using (var ms = Streams.CreateMemoryStream())
+            {
+                rvs.Write(ms, Value);
+                ms.Position = 0;
+                Bytes = ms.Read((int)(ms.Length));
+            }
+
             var Dir = FileNameHandling.GetFileDirectory(ConnectionString);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             using (var fs = Streams.CreateWritable(ConnectionString))
             {
                 fs.WriteUInt64(s.Hash());
-                foreach (var e in l)
-                {
-                    var Bytes = d[e.Name];
-                    if (Bytes == null)
-                    {
-                        fs.WriteInt32(0);
-                    }
-                    else
-                    {
-                        fs.Write(Bytes);
-                    }
-                }
+                fs.Write(Bytes);
             }
         }
 
