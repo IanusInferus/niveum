@@ -130,13 +130,13 @@ namespace Yuki.ObjectSchema
         }
         private Semantics.Node MakeLeafNode(String Value)
         {
-            var n = new Semantics.Node { _Tag = Semantics.NodeTag.Leaf, Leaf = Value };
+            var n = Semantics.Node.CreateLeaf(Value);
             return n;
         }
         private Semantics.Node MakeStemNode(String Name, params Semantics.Node[] Children)
         {
             var s = new Semantics.Stem { Name = Name, Children = Children };
-            var n = new Semantics.Node { _Tag = Semantics.NodeTag.Stem, Stem = s };
+            var n = Semantics.Node.CreateStem(s);
             return n;
         }
 
@@ -290,7 +290,7 @@ namespace Yuki.ObjectSchema
                     if (f.Parameters.Length >= 2)
                     {
                         var DescriptionParameter = f.Parameters[1];
-                        if (DescriptionParameter._Tag != Semantics.NodeTag.Leaf) { throw new Syntax.InvalidEvaluationException("InvalidDescription", nm.GetFileRange(DescriptionParameter), DescriptionParameter); }
+                        if (!DescriptionParameter.OnLeaf) { throw new Syntax.InvalidEvaluationException("InvalidDescription", nm.GetFileRange(DescriptionParameter), DescriptionParameter); }
                         Description = DescriptionParameter.Leaf;
                     }
 
@@ -783,7 +783,7 @@ namespace Yuki.ObjectSchema
 
         private String GetLeafNodeValue(Semantics.Node n, ISemanticsNodeMaker nm, String ErrorCause)
         {
-            if (n._Tag != Semantics.NodeTag.Leaf) { throw new Syntax.InvalidEvaluationException(ErrorCause, nm.GetFileRange(n), n); }
+            if (!n.OnLeaf) { throw new Syntax.InvalidEvaluationException(ErrorCause, nm.GetFileRange(n), n); }
             return n.Leaf;
         }
 

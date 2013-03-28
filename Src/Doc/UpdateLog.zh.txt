@@ -7,6 +7,8 @@ Yuki.Core, Yuki.Relation, Yuki.Expression:
 将公共类型提到Yuki.Core中。
 Yuki.Relation, DatabaseRegenerator:
 增加RelationValue，用于将数据库数据进行二进制和Tree序列化。将C# Memory只读内存数据库文件读写代码改用该序列化代码。
+Yuki.Core, Yuki.Relation, Yuki.Expression, DatabaseRegenerator:
+修改写法。
 
 2013.03.27
 Yuki.Relation:

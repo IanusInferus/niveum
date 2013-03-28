@@ -3,7 +3,7 @@
 //  File:        ExpressionSchemaLoader.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式Schema加载器
-//  Version:     2013.03.11.
+//  Version:     2013.03.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -123,7 +123,7 @@ namespace Yuki.ExpressionSchema
 
         private static String GetLeafNodeValue(Semantics.Node n, ISemanticsNodeMaker nm, String ErrorCause)
         {
-            if (n._Tag != Semantics.NodeTag.Leaf) { throw new Syntax.InvalidEvaluationException(ErrorCause, nm.GetFileRange(n), n); }
+            if (!n.OnLeaf) { throw new Syntax.InvalidEvaluationException(ErrorCause, nm.GetFileRange(n), n); }
             return n.Leaf;
         }
     }

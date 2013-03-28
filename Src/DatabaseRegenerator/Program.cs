@@ -278,7 +278,7 @@ namespace Yuki.DatabaseRegenerator
                     var Result = TreeFile.ReadDirect(f, new TreeFormatParseSetting(), new TreeFormatEvaluateSetting());
                     foreach (var n in Result.Value.Nodes)
                     {
-                        if (n._Tag != NodeTag.Stem) { continue; }
+                        if (!n.OnStem) { continue; }
                         var Name = n.Stem.Name;
                         if (CollectionNameToEntity.ContainsKey(Name))
                         {
