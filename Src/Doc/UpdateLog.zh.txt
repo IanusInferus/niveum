@@ -1,6 +1,8 @@
 ﻿2013.03.28
 Yuki.Core:
 增加类型名不存在时加载的检查。
+Yuki.Relation:
+将RelationSchema代码生成从使用Firefly项目的MetaSchemaManipulator改为使用YUKI项目的SchemaManipulator。
 
 2013.03.27
 Yuki.Relation:

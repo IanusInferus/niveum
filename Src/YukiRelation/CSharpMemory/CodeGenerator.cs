@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Memory代码生成器
-//  Version:     2013.03.27.
+//  Version:     2013.03.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -77,11 +77,11 @@ namespace Yuki.RelationSchema.CSharpMemory
 
                 if (NamespaceName != "")
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports.ToArray()).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
                 }
                 else
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports.ToArray()).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
                 }
             }
 
@@ -276,7 +276,7 @@ namespace Yuki.RelationSchema.CSharpMemory
                 var e = TypeDict[q.EntityName].Entity;
 
                 var Signature = InnerWriter.GetQuerySignature(q);
-                var ManyName = (new QueryDef { Verb = q.Verb, Numeral = Numeral.CreateMany(), EntityName = q.EntityName, By = q.By, OrderBy = new KeyColumn[] { } }).FriendlyName();
+                var ManyName = (new QueryDef { Verb = q.Verb, Numeral = Numeral.CreateMany(), EntityName = q.EntityName, By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
                 var Parameters = String.Join(", ", q.By);
                 var OrderBys = GetOrderBy(q);
                 String[] Content;
@@ -296,7 +296,7 @@ namespace Yuki.RelationSchema.CSharpMemory
                     }
                     else if (q.Numeral.OnAll)
                     {
-                        var AllName = (new QueryDef { Verb = q.Verb, Numeral = q.Numeral, EntityName = q.EntityName, By = q.By, OrderBy = new KeyColumn[] { } }).FriendlyName();
+                        var AllName = (new QueryDef { Verb = q.Verb, Numeral = q.Numeral, EntityName = q.EntityName, By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
                         Content = GetTemplate("SelectLock_All").Substitute("AllName", AllName).Substitute("OrderBys", OrderBys);
                     }
                     else if (q.Numeral.OnRange)

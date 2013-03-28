@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# PostgreSQL代码生成器
-//  Version:     2013.03.27.
+//  Version:     2013.03.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -75,11 +75,11 @@ namespace Yuki.RelationSchema.CSharpPostgreSql
 
                 if (NamespaceName != "")
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports.ToArray()).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
                 }
                 else
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports.ToArray()).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
                 }
             }
 
@@ -145,11 +145,11 @@ namespace Yuki.RelationSchema.CSharpPostgreSql
                         l.Add("SELECT " + String.Join(", ", e.Fields.Where(f => f.Attribute.OnColumn).Select(f => @"""{0}""".Formats(f.Name.ToLowerInvariant()))));
                     }
                     l.Add(@"FROM ""{0}""".Formats(e.CollectionName.ToLowerInvariant()));
-                    if (q.By.Length != 0)
+                    if (q.By.Count != 0)
                     {
                         l.Add("WHERE " + String.Join(" AND ", q.By.Select(c => @"""{0}"" = @{0}".Formats(c.ToLowerInvariant()))));
                     }
-                    if (q.OrderBy.Length != 0)
+                    if (q.OrderBy.Count != 0)
                     {
                         l.Add("ORDER BY " + String.Join(", ", q.OrderBy.Select(c => (c.IsDescending ? @"""{0}"" DESC" : @"""{0}""").Formats(c.Name.ToLowerInvariant()))));
                     }
@@ -208,7 +208,7 @@ namespace Yuki.RelationSchema.CSharpPostgreSql
                 {
                     l.Add("DELETE");
                     l.Add(@"FROM ""{0}""".Formats(e.CollectionName.ToLowerInvariant()));
-                    if (q.By.Length != 0)
+                    if (q.By.Count != 0)
                     {
                         l.Add("WHERE " + String.Join(" AND ", q.By.Select(c => @"""{0}"" = @{0}".Formats(c.ToLowerInvariant()))));
                     }

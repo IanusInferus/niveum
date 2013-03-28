@@ -3,7 +3,7 @@
 //  File:        RelationSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构加载器
-//  Version:     2012.11.26.
+//  Version:     2013.03.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -110,8 +110,8 @@ namespace Yuki.RelationSchema
             }
 
             var s = RelationSchemaTranslator.Translate(os);
-            s.Types = s.Types.Concat(rs.Types).ToArray();
-            s.TypeRefs = s.TypeRefs.Concat(rs.TypeRefs).ToArray();
+            s.Types = s.Types.Concat(rs.Types).ToList();
+            s.TypeRefs = s.TypeRefs.Concat(rs.TypeRefs).ToList();
 
             s.Verify();
 
