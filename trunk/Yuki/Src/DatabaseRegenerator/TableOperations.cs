@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2013.02.27.
+//  Version:     2013.02.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -94,7 +94,7 @@ namespace Yuki.DatabaseRegenerator
 
                         foreach (var f in Columns)
                         {
-                            var cvs = v.Stem.Children.Where(col => col._Tag == NodeTag.Stem && col.Stem.Name.Equals(f.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
+                            var cvs = v.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(f.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
                             if (cvs.Length != 1)
                             {
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", CollectionName, f.Name));
@@ -307,7 +307,7 @@ namespace Yuki.DatabaseRegenerator
                 var Result = TreeFile.ReadDirect(f, new TreeFormatParseSetting(), new TreeFormatEvaluateSetting());
                 foreach (var n in Result.Value.Nodes)
                 {
-                    if (n._Tag != NodeTag.Stem) { continue; }
+                    if (!n.OnStem) { continue; }
                     if (!Tables.ContainsKey(n.Stem.Name))
                     {
                         Tables.Add(n.Stem.Name, new List<Node>());
