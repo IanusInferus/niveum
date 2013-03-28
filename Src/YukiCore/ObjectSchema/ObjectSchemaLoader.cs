@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2012.11.25.
+//  Version:     2013.03.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -851,6 +851,11 @@ namespace Yuki.ObjectSchema
             if (String.Equals(TypeName, "Tuple", StringComparison.OrdinalIgnoreCase))
             {
                 return TypeSpec.CreateTuple(new TupleDef { Types = Parameters.Select(p => ParseTypeSpec(p, TypeDefName, TypeMap, TypePaths)).ToArray() });
+            }
+
+            if (!TypeMap.ContainsKey(TypeName))
+            {
+                throw new Syntax.InvalidEvaluationException(String.Format("TypeNotFound: {0}", TypeName));
             }
 
             var ts = ParseTypeSpec(TypeName, TypeDefName, TypeMap, TypePaths);
