@@ -11,18 +11,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.IO;
 using System.Data;
 using Firefly;
-using Firefly.Mapping.XmlText;
-using Firefly.Texting.TreeFormat;
-using Firefly.Texting.TreeFormat.Semantics;
-using Yuki.ObjectSchema;
-using OS = Yuki.ObjectSchema;
 using Yuki.RelationSchema;
-using Yuki.RelationSchema.TSql;
+using Yuki.RelationValue;
 
 namespace Yuki.DatabaseRegenerator
 {
@@ -34,7 +26,7 @@ namespace Yuki.DatabaseRegenerator
     }
     public static class TableOperations
     {
-        public static void ImportTable(Dictionary<String, RelationSchema.EntityDef> TableMetas, Dictionary<String, Dictionary<String, Int64>> EnumMetas, IDbConnection c, IDbTransaction b, KeyValuePair<string, List<Node>> t, DatabaseType Type)
+        public static void ImportTable(Dictionary<String, EntityDef> EntityMetas, Dictionary<String, String> EnumUnderlyingTypes, IDbConnection c, IDbTransaction b, KeyValuePair<String, TableVal> t, DatabaseType Type)
         {
             Func<String, String> Escape;
             if (Type == DatabaseType.SqlServer)
@@ -54,17 +46,17 @@ namespace Yuki.DatabaseRegenerator
                 throw new InvalidOperationException();
             }
 
-            var CollectionName = t.Key;
-            var Meta = TableMetas[CollectionName];
+            var Meta = EntityMetas[t.Key];
             var Name = Meta.Name;
-            var Values = t.Value;
+            var CollectionName = Meta.CollectionName;
+            var Values = t.Value.Rows;
             var Columns = Meta.Fields.Where(f => f.Attribute.OnColumn).ToArray();
 
             if (Type == DatabaseType.SqlServer)
             {
                 if (Columns.Any(col => col.Attribute.Column.IsIdentity))
                 {
-                    IDbCommand cmd = c.CreateCommand();
+                    var cmd = c.CreateCommand();
                     cmd.Transaction = b;
                     cmd.CommandText = String.Format("SET IDENTITY_INSERT {0} ON", Escape(CollectionName));
                     cmd.CommandType = CommandType.Text;
@@ -74,7 +66,7 @@ namespace Yuki.DatabaseRegenerator
             try
             {
                 {
-                    IDbCommand cmd = c.CreateCommand();
+                    var cmd = c.CreateCommand();
                     cmd.Transaction = b;
                     cmd.CommandText = String.Format("DELETE FROM {0}", Escape(CollectionName));
                     cmd.CommandType = CommandType.Text;
@@ -83,7 +75,7 @@ namespace Yuki.DatabaseRegenerator
                 {
                     var ColumnStr = String.Join(", ", Columns.Select(col => Escape(col.Name)).ToArray());
                     var ParamStr = String.Join(", ", Columns.Select(col => String.Format("@{0}", col.Name)).ToArray());
-                    IDbCommand cmd = c.CreateCommand();
+                    var cmd = c.CreateCommand();
                     cmd.Transaction = b;
                     cmd.CommandText = String.Format("INSERT INTO {0}({1}) VALUES ({2})", Escape(CollectionName), ColumnStr, ParamStr);
                     cmd.CommandType = CommandType.Text;
@@ -92,129 +84,165 @@ namespace Yuki.DatabaseRegenerator
                     {
                         cmd.Parameters.Clear();
 
+                        var k = 0;
                         foreach (var f in Columns)
                         {
-                            var cvs = v.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(f.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                            if (cvs.Length != 1)
-                            {
-                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", CollectionName, f.Name));
-                            }
+                            var cv = v.Columns[k];
 
-                            var cv = cvs.Single().Stem.Children.Single().Leaf;
                             String TypeName;
-                            Boolean IsNullable;
+                            Boolean IsOptional;
                             if (f.Type.OnTypeRef)
                             {
                                 TypeName = f.Type.TypeRef.Value;
-                                IsNullable = false;
+                                IsOptional = false;
                             }
                             else if (f.Type.OnOptional)
                             {
                                 TypeName = f.Type.Optional.Value;
-                                IsNullable = true;
+                                IsOptional = true;
                             }
                             else
                             {
                                 throw new InvalidOperationException(String.Format("InvalidType: {0}.{1}", CollectionName, f.Name));
                             }
+                            if (EnumUnderlyingTypes.ContainsKey(TypeName))
+                            {
+                                TypeName = EnumUnderlyingTypes[TypeName];
+                            }
+                            if (!((!IsOptional && cv.OnPrimitive) || (IsOptional && cv.OnOptional)))
+                            {
+                                throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k));
+                            }
                             try
                             {
-                                if (EnumMetas.ContainsKey(TypeName))
-                                {
-                                    var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Int64);
-                                    if (IsNullable && cv == "-")
-                                    {
-                                        p.Value = DBNull.Value;
-                                    }
-                                    else
-                                    {
-                                        var e = EnumMetas[TypeName];
-                                        Int64 ev = 0;
-                                        if (e.ContainsKey(cv))
-                                        {
-                                            ev = e[cv];
-                                        }
-                                        else
-                                        {
-                                            ev = Int64.Parse(cv);
-                                        }
-                                        p.Value = ev;
-                                    }
-                                }
-                                else if (TypeName.Equals("Boolean", StringComparison.OrdinalIgnoreCase))
+                                if (TypeName.Equals("Boolean", StringComparison.OrdinalIgnoreCase))
                                 {
                                     if (Type == DatabaseType.PostgreSQL)
                                     {
                                         Object Value;
-                                        if (IsNullable && cv == "-")
+                                        if (IsOptional)
                                         {
-                                            Value = DBNull.Value;
+                                            if (cv.Optional == null)
+                                            {
+                                                Value = DBNull.Value;
+                                            }
+                                            else
+                                            {
+                                                if (!cv.Optional.HasValue.OnBooleanValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                                Value = cv.Optional.HasValue.BooleanValue;
+                                            }
                                         }
                                         else
                                         {
-                                            Value = Boolean.Parse(cv);
+                                            if (!cv.Primitive.OnBooleanValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                            Value = cv.Primitive.BooleanValue;
                                         }
                                         var p = cmd.AddPostgreSqlBoolean(String.Format("@{0}", f.Name), Value);
                                     }
                                     else
                                     {
                                         var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Boolean);
-                                        if (IsNullable && cv == "-")
+                                        if (IsOptional)
                                         {
-                                            p.Value = DBNull.Value;
+                                            if (cv.Optional == null)
+                                            {
+                                                p.Value = DBNull.Value;
+                                            }
+                                            else
+                                            {
+                                                if (!cv.Optional.HasValue.OnBooleanValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                                p.Value = cv.Optional.HasValue.BooleanValue;
+                                            }
                                         }
                                         else
                                         {
-                                            p.Value = Boolean.Parse(cv);
+                                            if (!cv.Primitive.OnBooleanValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                            p.Value = cv.Primitive.BooleanValue;
                                         }
                                     }
                                 }
                                 else if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var p = cmd.Add(String.Format("@{0}", f.Name), DbType.String);
-                                    if (IsNullable && cv == "-")
+                                    if (IsOptional)
                                     {
-                                        p.Value = DBNull.Value;
+                                        if (cv.Optional == null)
+                                        {
+                                            p.Value = DBNull.Value;
+                                        }
+                                        else
+                                        {
+                                            if (!cv.Optional.HasValue.OnStringValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                            p.Value = cv.Optional.HasValue.StringValue;
+                                        }
                                     }
                                     else
                                     {
-                                        p.Value = cv;
+                                        if (!cv.Primitive.OnStringValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                        p.Value = cv.Primitive.StringValue;
                                     }
                                 }
                                 else if (TypeName.Equals("Int", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Int32);
-                                    if (IsNullable && cv == "-")
+                                    if (IsOptional)
                                     {
-                                        p.Value = DBNull.Value;
+                                        if (cv.Optional == null)
+                                        {
+                                            p.Value = DBNull.Value;
+                                        }
+                                        else
+                                        {
+                                            if (!cv.Optional.HasValue.OnIntValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                            p.Value = cv.Optional.HasValue.IntValue;
+                                        }
                                     }
                                     else
                                     {
-                                        p.Value = Int32.Parse(cv);
+                                        if (!cv.Primitive.OnIntValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                        p.Value = cv.Primitive.IntValue;
                                     }
                                 }
                                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Single);
-                                    if (IsNullable && cv == "-")
+                                    if (IsOptional)
                                     {
-                                        p.Value = DBNull.Value;
+                                        if (cv.Optional == null)
+                                        {
+                                            p.Value = DBNull.Value;
+                                        }
+                                        else
+                                        {
+                                            if (!cv.Optional.HasValue.OnRealValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                            p.Value = cv.Optional.HasValue.RealValue;
+                                        }
                                     }
                                     else
                                     {
-                                        p.Value = Double.Parse(cv);
+                                        if (!cv.Primitive.OnRealValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                        p.Value = cv.Primitive.RealValue;
                                     }
                                 }
                                 else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Binary);
-                                    if (IsNullable && cv == "-")
+                                    if (IsOptional)
                                     {
-                                        p.Value = DBNull.Value;
+                                        if (cv.Optional == null)
+                                        {
+                                            p.Value = DBNull.Value;
+                                        }
+                                        else
+                                        {
+                                            if (!cv.Optional.HasValue.OnBinaryValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                            p.Value = cv.Optional.HasValue.BinaryValue;
+                                        }
                                     }
                                     else
                                     {
-                                        p.Value = Regex.Split(cv.Trim(" \t\r\n".ToCharArray()), "( |\t|\r|\n)+", RegexOptions.ExplicitCapture).Select(s => Byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToArray();
+                                        if (!cv.Primitive.OnBinaryValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                        p.Value = cv.Primitive.BinaryValue;
                                     }
                                 }
                                 else
@@ -226,6 +254,8 @@ namespace Yuki.DatabaseRegenerator
                             {
                                 throw new InvalidOperationException(String.Format("InvalidField: {0}.{1} = {2}", CollectionName, f.Name, cv), e);
                             }
+
+                            k += 1;
                         }
 
                         cmd.ExecuteNonQuery();
@@ -236,7 +266,7 @@ namespace Yuki.DatabaseRegenerator
                     var IdentityColumns = Meta.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
                     foreach (var ic in IdentityColumns)
                     {
-                        IDbCommand cmd = c.CreateCommand();
+                        var cmd = c.CreateCommand();
                         cmd.Transaction = b;
                         cmd.CommandText = String.Format(@"SELECT setval(pg_get_serial_sequence('{0}', '{1}'), MAX({3})) FROM {2};", CollectionName.ToLowerInvariant(), ic.ToLowerInvariant(), Escape(CollectionName), Escape(ic));
                         cmd.CommandType = CommandType.Text;
@@ -250,7 +280,7 @@ namespace Yuki.DatabaseRegenerator
                 {
                     if (Columns.Any(col => col.Attribute.Column.IsIdentity))
                     {
-                        IDbCommand cmd = c.CreateCommand();
+                        var cmd = c.CreateCommand();
                         cmd.Transaction = b;
                         cmd.CommandText = String.Format("SET IDENTITY_INSERT {0} OFF", Escape(CollectionName));
                         cmd.CommandType = CommandType.Text;
@@ -291,35 +321,18 @@ namespace Yuki.DatabaseRegenerator
             return p;
         }
 
-        public class ImportTableMetas
+        public class ImportTableInfo
         {
-            public Dictionary<String, List<Node>> Tables;
-            public Dictionary<String, RelationSchema.EntityDef> TableMetas;
+            public Dictionary<String, TableVal> Tables;
+            public Dictionary<String, EntityDef> EntityMetas;
             public Dictionary<String, String> EnumUnderlyingTypes;
-            public Dictionary<String, Dictionary<String, Int64>> EnumMetas;
         }
 
-        public static ImportTableMetas GetImportTableMetas(RelationSchema.Schema s, String DataDir)
+        public static ImportTableInfo GetImportTableInfo(Schema s, RelationVal Value)
         {
-            var Tables = new Dictionary<String, List<Node>>();
-            foreach (var f in Directory.GetFiles(DataDir, "*.tree", SearchOption.AllDirectories).OrderBy(ff => ff, StringComparer.OrdinalIgnoreCase))
-            {
-                var Result = TreeFile.ReadDirect(f, new TreeFormatParseSetting(), new TreeFormatEvaluateSetting());
-                foreach (var n in Result.Value.Nodes)
-                {
-                    if (!n.OnStem) { continue; }
-                    if (!Tables.ContainsKey(n.Stem.Name))
-                    {
-                        Tables.Add(n.Stem.Name, new List<Node>());
-                    }
-                    var t = Tables[n.Stem.Name];
-                    t.AddRange(n.Stem.Children);
-                }
-            }
-
-            var TableMetas = new Dictionary<String, RelationSchema.EntityDef>(StringComparer.OrdinalIgnoreCase);
+            var Tables = new Dictionary<String, TableVal>(StringComparer.OrdinalIgnoreCase);
+            var EntityMetas = new Dictionary<String, EntityDef>(StringComparer.OrdinalIgnoreCase);
             var EnumUnderlyingTypes = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
-            var EnumMetas = new Dictionary<String, Dictionary<String, Int64>>(StringComparer.OrdinalIgnoreCase);
             foreach (var t in s.TypeRefs.Concat(s.Types))
             {
                 if (t.OnEnum)
@@ -329,56 +342,26 @@ namespace Yuki.DatabaseRegenerator
                         throw new InvalidOperationException("EnumUnderlyingTypeNotTypeRef: {0}".Formats(t.Enum.Name));
                     }
                     EnumUnderlyingTypes.Add(t.Enum.Name, t.Enum.UnderlyingType.TypeRef);
-                    if (!EnumMetas.ContainsKey(t.Enum.Name))
-                    {
-                        var d = new Dictionary<String, Int64>(StringComparer.OrdinalIgnoreCase);
-                        var eh = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
-                        foreach (var l in t.Enum.Literals)
-                        {
-                            if (!eh.Contains(l.Name))
-                            {
-                                if (d.ContainsKey(l.Name))
-                                {
-                                    eh.Add(l.Name);
-                                    d.Remove(l.Name);
-                                }
-                                else
-                                {
-                                    d.Add(l.Name, l.Value);
-                                }
-                            }
-                            if (!eh.Contains(l.Description))
-                            {
-                                if (d.ContainsKey(l.Description))
-                                {
-                                    eh.Add(l.Description);
-                                    d.Remove(l.Description);
-                                }
-                                else
-                                {
-                                    d.Add(l.Description, l.Value);
-                                }
-                            }
-                        }
-                        EnumMetas.Add(t.Enum.Name, d);
-                    }
                 }
             }
+            var k = 0;
             foreach (var t in s.Types)
             {
                 if (t.OnEntity)
                 {
-                    TableMetas.Add(t.Entity.CollectionName, t.Entity);
+                    Tables.Add(t.Entity.Name, Value.Tables[k]);
+                    EntityMetas.Add(t.Entity.Name, t.Entity);
+                    k += 1;
                 }
             }
 
-            var NotExists = Tables.Keys.Except(TableMetas.Keys).ToArray();
+            var NotExists = Tables.Keys.Except(EntityMetas.Keys).ToArray();
             if (NotExists.Length > 0)
             {
                 throw new InvalidOperationException("TableUnknown: " + String.Join(" ", NotExists));
             }
 
-            return new ImportTableMetas { Tables = Tables, TableMetas = TableMetas, EnumUnderlyingTypes = EnumUnderlyingTypes, EnumMetas = EnumMetas };
+            return new ImportTableInfo { Tables = Tables, EntityMetas = EntityMetas, EnumUnderlyingTypes = EnumUnderlyingTypes };
         }
     }
 }
