@@ -1,4 +1,8 @@
-﻿2013.03.28
+﻿2013.03.29
+Yuki.Relation:
+修正无法识别Optional类型的问题。
+
+2013.03.28
 Yuki.Core:
 增加类型名不存在时加载的检查。
 Yuki.Relation:

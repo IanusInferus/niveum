@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2013.03.28.
+//  Version:     2013.03.29.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -213,6 +213,21 @@ namespace Yuki.RelationSchema
                 {
                     return RS.TypeSpec.CreateTypeRef(new RS.TypeRef { Value = t.TypeRef.Name });
                 }
+                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
+                {
+                    if (t.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    {
+                        var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
+                        if (Parameter.OnTypeSpec)
+                        {
+                            var InnerType = TranslateTypeSpec(Parameter.TypeSpec);
+                            if (InnerType.OnTypeRef)
+                            {
+                                return RS.TypeSpec.CreateOptional(InnerType.TypeRef);
+                            }
+                        }
+                    }
+                }
                 else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List")
                 {
                     if (t.GenericTypeSpec.GenericParameterValues.Length == 1)
@@ -225,10 +240,7 @@ namespace Yuki.RelationSchema
                     }
                     return RS.TypeSpec.CreateList(TranslateTypeSpec(t.GenericTypeSpec.GenericParameterValues.Single().TypeSpec).TypeRef);
                 }
-                else
-                {
-                    throw new InvalidOperationException("有TypeRef、List以外的类型规格。");
-                }
+                throw new InvalidOperationException("有TypeRef、Optional<'T>、List<'T>以外的类型规格。");
             }
 
             private RS.VariableDef TranslateField(OS.RecordDef r, OS.VariableDef f)
