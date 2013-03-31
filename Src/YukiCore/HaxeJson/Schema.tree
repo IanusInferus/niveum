@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Haxe JSON通讯模板数据
-      Version:     2013.03.27.
+      Version:     2013.03.31.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -529,30 +529,6 @@ ObjectSchemaTemplate
                 $String
                     ja.push([[${typeFriendlyName}ToJson]](t.[[item${NameIndex}]]));
         Template
-            Name JsonTranslator_List
-            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
-            Value
-                $String
-                    public static function [[${typeFriendlyName}FromJson]](j : Dynamic) : [[${TypeString}]]
-                    {
-                        var ja = cast(j, Array<Dynamic>);
-                        var a = new [[${TypeString}]]();
-                        for (e in ja)
-                        {
-                            a.push([[${elementTypeFriendlyName}FromJson]](e));
-                        }
-                        return a;
-                    }
-                    public static function [[${typeFriendlyName}ToJson]](l : [[${TypeString}]]) : Dynamic
-                    {
-                        var ja = new Array<Dynamic>();
-                        for (e in l)
-                        {
-                            ja.push([[${elementTypeFriendlyName}ToJson]](e));
-                        }
-                        return ja;
-                    }
-        Template
             Name JsonTranslator_Optional
             //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}, ${ElementTypeString}
             Value
@@ -582,4 +558,28 @@ ObjectSchemaTemplate
                             setField(j, "hasValue", [[${elementTypeFriendlyName}ToJson]](cast(o, [[${ElementTypeString}]])));
                         }
                         return j;
+                    }
+        Template
+            Name JsonTranslator_List
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
+            Value
+                $String
+                    public static function [[${typeFriendlyName}FromJson]](j : Dynamic) : [[${TypeString}]]
+                    {
+                        var ja = cast(j, Array<Dynamic>);
+                        var a = new [[${TypeString}]]();
+                        for (e in ja)
+                        {
+                            a.push([[${elementTypeFriendlyName}FromJson]](e));
+                        }
+                        return a;
+                    }
+                    public static function [[${typeFriendlyName}ToJson]](l : [[${TypeString}]]) : Dynamic
+                    {
+                        var ja = new Array<Dynamic>();
+                        for (e in l)
+                        {
+                            ja.push([[${elementTypeFriendlyName}ToJson]](e));
+                        }
+                        return ja;
                     }
