@@ -35,7 +35,7 @@ if exist CPP\Bin\DataCopy.exe (
 @if not exist Haxe\Data @md Haxe\Data
 if exist Haxe\bin\DataCopy.n (
   @pushd Haxe
-  Run.cmd
+  call Run.cmd
   @popd
 )
 
@@ -43,7 +43,7 @@ if exist Haxe\bin\DataCopy.n (
 @if not exist ActionScript\Data @md ActionScript\Data
 if exist ActionScript\bin\DataCopy.swf (
   @pushd ActionScript
-  Run.bat
+  call Run.bat
   @popd
 )
 

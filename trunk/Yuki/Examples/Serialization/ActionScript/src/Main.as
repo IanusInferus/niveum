@@ -3,7 +3,7 @@
 //  File:        Main.as
 //  Location:    Yuki.Examples <ActionScript>
 //  Description: 数据转换工具
-//  Version:     2012.12.21.
+//  Version:     2013.03.31.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -13,7 +13,6 @@ package
 {
     import flash.display.Sprite;
     import flash.filesystem.*;
-    import com.utils.json.JSON;
     import world.*;
 
     public class Main extends Sprite
@@ -51,7 +50,7 @@ package
             var infs:FileStream = new FileStream();
             infs.open(inf, FileMode.READ);
             var t:String = infs.readUTFBytes(inf.size);
-            var j:Object = JSON.decode(t);
+            var j:Object = JSON.parse(t);
             var w:World = JsonTranslator.worldFromJson(j);
             infs.close();
 
@@ -59,7 +58,7 @@ package
             var outfs:FileStream = new FileStream();
             outfs.open(outf, FileMode.WRITE);
             var j2:Object = JsonTranslator.worldToJson(w);
-            var t2:String = JSON.encode(j2);
+            var t2:String = JSON.stringify(j2);
             outfs.writeUTFBytes(t2);
             outfs.close();
         }
