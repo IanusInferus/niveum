@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0二进制通讯代码生成器
-//  Version:     2012.12.19.
+//  Version:     2013.03.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -67,6 +67,8 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
 
                 InnerWriter.FillEnumSet();
 
+                l.Add(GetFile("BinaryTranslator", GetBinaryTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray())));
+
                 var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Where(t => t.Version() == "").ToArray();
                 if (Commands.Length > 0)
                 {
@@ -92,6 +94,199 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
             public String[] GetXmlComment(String Description)
             {
                 return InnerWriter.GetXmlComment(Description);
+            }
+
+            public String[] GetBinaryTranslator(TypeDef[] Types)
+            {
+                return GetTemplate("BinaryTranslator").Substitute("Serializers", GetBinaryTranslatorSerializers(Types));
+            }
+
+            public String[] GetBinaryTranslatorSerializers(TypeDef[] Types)
+            {
+                List<String> l = new List<String>();
+
+                foreach (var c in Types)
+                {
+                    if (c.GenericParameters().Count() != 0)
+                    {
+                        continue;
+                    }
+                    if (c.OnPrimitive)
+                    {
+                        continue;
+                    }
+                    else if (c.OnAlias)
+                    {
+                        l.AddRange(GetBinaryTranslatorRecord(new RecordDef { Name = c.Alias.Name, Version = c.Alias.Version, GenericParameters = c.Alias.GenericParameters, Fields = new VariableDef[] { new VariableDef { Name = "Value", Type = c.Alias.Type, Description = "" } }, Description = "" }));
+                    }
+                    else if (c.OnRecord)
+                    {
+                        l.AddRange(GetBinaryTranslatorRecord(c.Record));
+                    }
+                    else if (c.OnTaggedUnion)
+                    {
+                        l.AddRange(GetBinaryTranslatorTaggedUnion(c.TaggedUnion));
+                    }
+                    else if (c.OnEnum)
+                    {
+                        l.AddRange(GetBinaryTranslatorEnum(c.Enum));
+                    }
+                    else if (c.OnClientCommand)
+                    {
+                        l.AddRange(GetBinaryTranslatorClientCommand(c.ClientCommand));
+                    }
+                    else if (c.OnServerCommand)
+                    {
+                        l.AddRange(GetBinaryTranslatorServerCommand(c.ServerCommand));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                    l.Add("");
+                }
+
+                var ltf = new TupleAndGenericTypeSpecFetcher();
+                ltf.PushTypeDefs(Types);
+                var Tuples = ltf.GetTuples();
+                var GenericTypeSpecs = ltf.GetGenericTypeSpecs();
+
+                foreach (var t in Tuples)
+                {
+                    l.AddRange(GetBinaryTranslatorRecord(new RecordDef { Name = t.TypeFriendlyName(), Version = "", GenericParameters = new VariableDef[] { }, Fields = t.Tuple.Types.Select((tp, i) => new VariableDef { Name = String.Format("Item{0}", i), Type = tp, Description = "" }).ToArray(), Description = "" }));
+                    l.Add("");
+                }
+
+                var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToArray();
+                TaggedUnionDef GenericOptionalType = null;
+                if (GenericOptionalTypes.Length > 0)
+                {
+                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new VariableDef[] { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new VariableDef[] { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
+                }
+                foreach (var gps in GenericTypeSpecs)
+                {
+                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    {
+                        var ElementType = gps.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                        var Name = "Opt" + ElementType.TypeFriendlyName();
+                        var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToArray();
+                        l.AddRange(GetBinaryTranslatorTaggedUnion(new TaggedUnionDef { Name = Name, Version = "", GenericParameters = new VariableDef[] { }, Alternatives = Alternatives, Description = GenericOptionalType.Description }));
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    {
+                        l.AddRange(GetBinaryTranslatorList(gps));
+                        l.Add("");
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    {
+                        l.AddRange(GetBinaryTranslatorSet(gps));
+                        l.Add("");
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gps.GenericTypeSpec.GenericParameterValues.Length == 2)
+                    {
+                        l.AddRange(GetBinaryTranslatorMap(gps));
+                        l.Add("");
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(String.Format("GenericTypeNotSupported: {0}", gps.GenericTypeSpec.TypeSpec.TypeRef.VersionedName()));
+                    }
+                }
+
+                if (l.Count > 0)
+                {
+                    l = l.Take(l.Count - 1).ToList();
+                }
+
+                return l.ToArray();
+            }
+            public String[] GetBinaryTranslatorRecord(RecordDef r)
+            {
+                return GetBinaryTranslatorRecord(r.TypeFriendlyName(), r.Fields);
+            }
+            public String[] GetBinaryTranslatorRecord(String Name, VariableDef[] Fields)
+            {
+                List<String> l = new List<String>();
+                l.AddRange(GetTemplate("BinaryTranslator_Record").Substitute("Name", Name).Substitute("FieldFroms", GetBinaryTranslatorFieldFroms(Fields)).Substitute("FieldTos", GetBinaryTranslatorFieldTos(Fields)));
+                return l.ToArray();
+            }
+            public String[] GetBinaryTranslatorFieldFroms(VariableDef[] Fields)
+            {
+                List<String> l = new List<String>();
+                foreach (var a in Fields)
+                {
+                    l.AddRange(GetTemplate("BinaryTranslator_FieldFrom").Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
+            public String[] GetBinaryTranslatorFieldTos(VariableDef[] Fields)
+            {
+                List<String> l = new List<String>();
+                foreach (var a in Fields)
+                {
+                    l.AddRange(GetTemplate("BinaryTranslator_FieldTo").Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
+            public String[] GetBinaryTranslatorTaggedUnion(TaggedUnionDef tu)
+            {
+                return GetBinaryTranslatorTaggedUnion(tu.TypeFriendlyName(), tu.Alternatives);
+            }
+            public String[] GetBinaryTranslatorTaggedUnion(String Name, VariableDef[] Alternatives)
+            {
+                var TagName = Name + "Tag";
+                List<String> l = new List<String>();
+                l.AddRange(GetTemplate("BinaryTranslator_Enum").Substitute("Name", TagName));
+                l.AddRange(GetTemplate("BinaryTranslator_TaggedUnion").Substitute("Name", Name).Substitute("AlternativeFroms", GetBinaryTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetBinaryTranslatorAlternativeTos(Name, Alternatives)));
+                return l.ToArray();
+            }
+            public String[] GetBinaryTranslatorAlternativeFroms(String TaggedUnionName, VariableDef[] Alternatives)
+            {
+                List<String> l = new List<String>();
+                foreach (var a in Alternatives)
+                {
+                    l.AddRange(GetTemplate("BinaryTranslator_AlternativeFrom").Substitute("TaggedUnionName", TaggedUnionName).Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
+            public String[] GetBinaryTranslatorAlternativeTos(String TaggedUnionName, VariableDef[] Alternatives)
+            {
+                List<String> l = new List<String>();
+                foreach (var a in Alternatives)
+                {
+                    l.AddRange(GetTemplate("BinaryTranslator_AlternativeTo").Substitute("TaggedUnionName", TaggedUnionName).Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
+            public String[] GetBinaryTranslatorEnum(EnumDef e)
+            {
+                return GetTemplate("BinaryTranslator_Enum").Substitute("Name", e.TypeFriendlyName());
+            }
+            public String[] GetBinaryTranslatorClientCommand(ClientCommandDef c)
+            {
+                List<String> l = new List<String>();
+                l.AddRange(GetBinaryTranslatorRecord(c.TypeFriendlyName() + "Request", c.OutParameters));
+                l.AddRange(GetBinaryTranslatorTaggedUnion(c.TypeFriendlyName() + "Reply", c.InParameters));
+                return l.ToArray();
+            }
+            public String[] GetBinaryTranslatorServerCommand(ServerCommandDef c)
+            {
+                List<String> l = new List<String>();
+                return GetBinaryTranslatorRecord(c.TypeFriendlyName() + "Event", c.OutParameters);
+            }
+            public String[] GetBinaryTranslatorList(TypeSpec c)
+            {
+                return GetTemplate("BinaryTranslator_List").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+            }
+            public String[] GetBinaryTranslatorSet(TypeSpec c)
+            {
+                return GetTemplate("BinaryTranslator_Set").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+            }
+            public String[] GetBinaryTranslatorMap(TypeSpec c)
+            {
+                var KeyTypeFriendlyName = c.GenericTypeSpec.GenericParameterValues[0].TypeSpec.TypeFriendlyName();
+                var ValueTypeFriendlyName = c.GenericTypeSpec.GenericParameterValues[1].TypeSpec.TypeFriendlyName();
+                return GetTemplate("BinaryTranslator_Map").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("KeyTypeFriendlyName", KeyTypeFriendlyName).Substitute("ValueTypeFriendlyName", ValueTypeFriendlyName);
             }
 
             public String[] GetClient(TypeDef[] Commands)
@@ -174,6 +369,10 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
             }
         }
 
+        private static String TypeFriendlyName(this TypeSpec Type)
+        {
+            return Yuki.ObjectSchema.ActionScript.Common.CodeGenerator.TypeFriendlyName(Type);
+        }
         private static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
             return ActionScript.Common.CodeGenerator.Substitute(Lines, Parameter, Value);

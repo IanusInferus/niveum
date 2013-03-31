@@ -7,6 +7,7 @@ Yuki.Core:
 修正Map的JSON序列化时的Value类型错误的问题。
 修改一处写法。
 将ActionScript的序列化代码集中，不再保留每个对象的单独序列化代码。
+将ActionScript的序列化代码分离到Binary和JSON代码生成中。
 Yuki.SchemaManipulator:
 动态编译时增加System.dll和System.Core.dll的引用。
 Yuki.Relation:
@@ -14,6 +15,7 @@ Yuki.Relation:
 Examples:
 在序列化示例中增加Set和Map的使用。
 将ActionScript升级到Flex 4.6和Flash Player 11。
+修正序列化示例ActionScript代码生成脚本。
 
 2013.03.29
 Yuki.Relation:
