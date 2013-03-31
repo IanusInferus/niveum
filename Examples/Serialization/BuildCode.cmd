@@ -23,6 +23,8 @@ SchemaManipulator.exe /loadtyperef:Schema /t2cppb:CPP\Src\WorldBinary.h,World
 :: ActionScript
 @if not exist ActionScript\src\world @md ActionScript\src\world
 SchemaManipulator.exe /loadtype:Schema /t2as:ActionScript\Src\world,world
+SchemaManipulator.exe /loadtype:Schema /t2asb:ActionScript\Src\world,world
+SchemaManipulator.exe /loadtype:Schema /t2asj:ActionScript\Src\world,world
 
 ::Haxe
 SchemaManipulator.exe /loadtype:Schema /t2hx:Haxe\src\World.hx
