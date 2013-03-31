@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构ActionScript3.0 JSON通讯模板数据
-      Version:     2012.12.19.
+      Version:     2013.03.31.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -35,7 +35,6 @@ ObjectSchemaTemplate
                         import flash.utils.IDataOutput;
                         import flash.utils.ByteArray;
                         import flash.utils.Endian;
-                        import com.utils.json.JSON;
                         import ${Imports};
 
                         ${Type}
@@ -117,7 +116,7 @@ ObjectSchemaTemplate
                         {
                             if ([[${name}Handler]] != null)
                             {
-                                [[${name}Handler]](JsonTranslator.[[${name}EventFromJson]](JSON.decode(parameters)));
+                                [[${name}Handler]](JsonTranslator.[[${name}EventFromJson]](JSON.parse(parameters)));
                             }
                             return;
                         }
@@ -130,7 +129,7 @@ ObjectSchemaTemplate
                     case "${Name}":
                         if (commandHash == 0x${CommandHash})
                         {
-                            callback(JsonTranslator.[[${name}ReplyFromJson]](JSON.decode(parameters)));
+                            callback(JsonTranslator.[[${name}ReplyFromJson]](JSON.parse(parameters)));
                             return;
                         }
                         break;
@@ -150,7 +149,7 @@ ObjectSchemaTemplate
                     public function [[${name}]](r:[[${Name}Request]], callback:Function):void
                     {
                         var ra:Vector.<Function> = requests[${ClientCommandIndex}];
-                        s.send("${Name}", 0x${CommandHash}, JSON.encode(JsonTranslator.[[${name}RequestToJson]](r)));
+                        s.send("${Name}", 0x${CommandHash}, JSON.stringify(JsonTranslator.[[${name}RequestToJson]](r)));
                         ra.push(callback);
                     }
         Template

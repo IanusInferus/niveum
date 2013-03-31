@@ -721,12 +721,67 @@ ObjectSchemaTemplate
                         }
                         return a;
                     }
-                    public static JArray [[${TypeFriendlyName}ToJson]]([[${TypeString}]] l)
+                    public static JArray [[${TypeFriendlyName}ToJson]]([[${TypeString}]] c)
                     {
                         var ja = new JArray();
-                        foreach (var e in l)
+                        foreach (var e in c)
                         {
                             ja.Add([[${ElementTypeFriendlyName}ToJson]](e));
+                        }
+                        return ja;
+                    }
+        Template
+            Name JsonTranslator_Set
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
+            Value
+                $String
+                    public static [[${TypeString}]] [[${TypeFriendlyName}FromJson]](JToken j)
+                    {
+                        if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
+                        var ja = j as JArray;
+                        var a = new [[${TypeString}]]();
+                        foreach (var e in ja.Children())
+                        {
+                            a.Add([[${ElementTypeFriendlyName}FromJson]](e));
+                        }
+                        return a;
+                    }
+                    public static JArray [[${TypeFriendlyName}ToJson]]([[${TypeString}]] c)
+                    {
+                        var ja = new JArray();
+                        foreach (var e in c)
+                        {
+                            ja.Add([[${ElementTypeFriendlyName}ToJson]](e));
+                        }
+                        return ja;
+                    }
+        Template
+            Name JsonTranslator_Map
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${KeyTypeFriendlyName}, ${ValueTypeFriendlyName}
+            Value
+                $String
+                    public static [[${TypeString}]] [[${TypeFriendlyName}FromJson]](JToken j)
+                    {
+                        if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
+                        var ja = j as JArray;
+                        var a = new [[${TypeString}]]();
+                        foreach (var e in ja.Children())
+                        {
+                            var Key = [[${KeyTypeFriendlyName}FromJson]](e[@"key"]);
+                            var Value = [[${ValueTypeFriendlyName}FromJson]](e[@"value"]);
+                            a.Add(Key, Value);
+                        }
+                        return a;
+                    }
+                    public static JArray [[${TypeFriendlyName}ToJson]]([[${TypeString}]] c)
+                    {
+                        var ja = new JArray();
+                        foreach (var e in c)
+                        {
+                            var je = new JObject();
+                            je.Add(@"key", [[${KeyTypeFriendlyName}ToJson]](e.Key));
+                            je.Add(@"value", [[${ValueTypeFriendlyName}ToJson]](e.Value));
+                            ja.Add(je);
                         }
                         return ja;
                     }

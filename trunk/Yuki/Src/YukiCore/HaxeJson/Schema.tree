@@ -574,12 +574,66 @@ ObjectSchemaTemplate
                         }
                         return a;
                     }
-                    public static function [[${typeFriendlyName}ToJson]](l : [[${TypeString}]]) : Dynamic
+                    public static function [[${typeFriendlyName}ToJson]](c : [[${TypeString}]]) : Dynamic
                     {
                         var ja = new Array<Dynamic>();
-                        for (e in l)
+                        for (e in c)
                         {
                             ja.push([[${elementTypeFriendlyName}ToJson]](e));
+                        }
+                        return ja;
+                    }
+        Template
+            Name JsonTranslator_Set
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
+            Value
+                $String
+                    public static function [[${typeFriendlyName}FromJson]](j : Dynamic) : [[${TypeString}]]
+                    {
+                        var ja = cast(j, Array<Dynamic>);
+                        var a = new [[${TypeString}]]();
+                        for (e in ja)
+                        {
+                            a.set([[${elementTypeFriendlyName}FromJson]](e), {});
+                        }
+                        return a;
+                    }
+                    public static function [[${typeFriendlyName}ToJson]](c : [[${TypeString}]]) : Dynamic
+                    {
+                        var ja = new Array<Dynamic>();
+                        for (e in c.keys())
+                        {
+                            ja.push([[${elementTypeFriendlyName}ToJson]](e));
+                        }
+                        return ja;
+                    }
+        Template
+            Name JsonTranslator_Map
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${KeyTypeFriendlyName}, ${ValueTypeFriendlyName}
+            Value
+                $String
+                    public static function [[${typeFriendlyName}FromJson]](j : Dynamic) : [[${TypeString}]]
+                    {
+                        var ja = cast(j, Array<Dynamic>);
+                        var a = new [[${TypeString}]]();
+                        for (e in ja)
+                        {
+                            var key = [[${keyTypeFriendlyName}FromJson]](getField(e, "key"));
+                            var value = [[${valueTypeFriendlyName}FromJson]](getField(e, "value"));
+                            a.set(key, value);
+                        }
+                        return a;
+                    }
+                    public static function [[${typeFriendlyName}ToJson]](c : [[${TypeString}]]) : Dynamic
+                    {
+                        var ja = new Array<Dynamic>();
+                        for (key in c.keys())
+                        {
+                            var value = c.get(key);
+                            var jp : Dynamic = {};
+                            setField(jp, "key", [[${keyTypeFriendlyName}ToJson]](key));
+                            setField(jp, "value", [[${valueTypeFriendlyName}ToJson]](value));
+                            ja.push(jp);
                         }
                         return ja;
                     }
