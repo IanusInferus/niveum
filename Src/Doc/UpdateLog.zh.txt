@@ -1,6 +1,8 @@
 ﻿2013.03.31
 Yuki.Core:
 修正VB代码生成中Optional类型的Boolean Equals(Object obj)方法调用时会栈溢出的问题。
+修改List和Type类型的比较方法，固定为List和Type名称。
+修改List和Optional类型的顺序。
 
 2013.03.29
 Yuki.Relation:

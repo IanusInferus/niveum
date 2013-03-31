@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java代码生成器
-//  Version:     2012.12.13.
+//  Version:     2013.03.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -61,7 +61,7 @@ namespace Yuki.ObjectSchema.Java.Common
             {
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
-                    if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && TemplateInfo.PrimitiveMappings.ContainsKey(gp.Type.TypeRef.Name) && TemplateInfo.PrimitiveMappings[gp.Type.TypeRef.Name].PlatformName == "java.lang.reflect.Type"))
+                    if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && gp.Type.TypeRef.Name == "Type"))
                     {
                         throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                     }

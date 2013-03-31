@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2012.12.21.
+      Version:     2013.03.31.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -686,6 +686,26 @@ ObjectSchemaTemplate
                 $String
                     ja.Add([[${TypeFriendlyName}ToJson]](t.[[Item${NameIndex}]]));
         Template
+            Name JsonTranslator_Optional
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${AlternativeFroms}, ${AlternativeTos}
+            Value
+                $String
+                    public static [[${TypeString}]] [[${TypeFriendlyName}FromJson]](JToken j)
+                    {
+                        if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
+                        var jo = j as JObject;
+                        var o = new [[${TypeString}]]();
+                        var d = (IDictionary<string, JToken>)(jo);
+                        ${AlternativeFroms}
+                        throw new InvalidOperationException();
+                    }
+                    public static JObject [[${TypeFriendlyName}ToJson]]([[${TypeString}]] o)
+                    {
+                        var jo = new JObject();
+                        ${AlternativeTos}
+                        throw new InvalidOperationException();
+                    }
+        Template
             Name JsonTranslator_List
             //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
             Value
@@ -709,24 +729,4 @@ ObjectSchemaTemplate
                             ja.Add([[${ElementTypeFriendlyName}ToJson]](e));
                         }
                         return ja;
-                    }
-        Template
-            Name JsonTranslator_Optional
-            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${AlternativeFroms}, ${AlternativeTos}
-            Value
-                $String
-                    public static [[${TypeString}]] [[${TypeFriendlyName}FromJson]](JToken j)
-                    {
-                        if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
-                        var jo = j as JObject;
-                        var o = new [[${TypeString}]]();
-                        var d = (IDictionary<string, JToken>)(jo);
-                        ${AlternativeFroms}
-                        throw new InvalidOperationException();
-                    }
-                    public static JObject [[${TypeFriendlyName}ToJson]]([[${TypeString}]] o)
-                    {
-                        var jo = new JObject();
-                        ${AlternativeTos}
-                        throw new InvalidOperationException();
                     }
