@@ -4,6 +4,7 @@ Yuki.Core:
 修改List和Type类型的比较方法，固定为List和Type名称。
 修改List和Optional类型的顺序。
 增加C#、Haxe、ActionScript的JSON序列化代码生成对Set、Map的支持。其中ActionScript中Set和Map均用Vector代替。
+修正Map的JSON序列化时的Value类型错误的问题。
 Yuki.SchemaManipulator:
 动态编译时增加System.dll和System.Core.dll的引用。
 Yuki.Relation:
