@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构VB.Net模板数据
-      Version:     2012.12.13.
+      Version:     2013.03.31.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -375,7 +375,10 @@ ObjectSchemaTemplate
                             Return Not Equals(Left, Right)
                         End Operator
                         Public Overrides Function Equals(ByVal obj As Object) As Boolean
-                            Return Equals(Me, obj)
+                            If obj Is Nothing Then Return Equals(Me, Nothing)
+                            If obj.GetType() <> GetType([Optional](Of T)) Then Return False
+                            Dim o = CType(obj, [Optional](Of T))
+                            Return Equals(Me, o)
                         End Function
                         Public Overrides Function GetHashCode() As Int32
                             If OnNotHasValue Then Return 0
