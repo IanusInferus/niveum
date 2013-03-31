@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构ActionScript3.0模板数据
-      Version:     2012.12.21.
+      Version:     2013.03.31.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -151,7 +151,7 @@ ObjectSchemaTemplate
                 $End
         Template
             Name Alias
-            //Parameters: ${Name}, ${Type}, ${TypeFriendlyName}, ${XmlComment}
+            //Parameters: ${Name}, ${Type}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
@@ -162,28 +162,6 @@ ObjectSchemaTemplate
                         public function [[${Name}]]()
                         {
                         }
-                        public static function fromBinary(ba:IDataInput):[[${Name}]]
-                        {
-                            var o:[[${Name}]] = new [[${Name}]]();
-                            o.value = BinaryTranslator.[[${typeFriendlyName}FromBinary]](ba);
-                            return o;
-                        }
-                        public static function toBinary(ba:IDataOutput, o:[[${Name}]]):void
-                        {
-                            BinaryTranslator.[[${typeFriendlyName}ToBinary]](ba, o.value);
-                        }
-                        public static function fromJson(j:Object):[[${Name}]]
-                        {
-                            var o:[[${Name}]] = new [[${Name}]]();
-                            o.value = JsonTranslator.[[${typeFriendlyName}FromJson]](j);
-                            return o;
-                        }
-                        public static function toJson(o:[[${Name}]]):Object
-                        {
-                            var j:Object;
-                            j = JsonTranslator.[[${typeFriendlyName}ToJson]](o.value);
-                            return j;
-                        }
                     }
         Template
             Name TupleElement
@@ -193,7 +171,7 @@ ObjectSchemaTemplate
                     public var [[item${NameIndex}]]:[[${Type}]];
         Template
             Name Tuple
-            //Parameters: ${Name}, ${TupleElements}, ${BinaryTupleElementFroms}, ${BinaryTupleElementTos}, ${JsonTupleElementFroms}, ${JsonTupleElementTos}
+            //Parameters: ${Name}, ${TupleElements}
             Value
                 $String
                     /* Tuple */
@@ -203,29 +181,6 @@ ObjectSchemaTemplate
 
                         public function [[${Name}]]()
                         {
-                        }
-                        public static function fromBinary(ba:IDataInput):[[${Name}]]
-                        {
-                            var o:[[${Name}]] = new [[${Name}]]();
-                            ${BinaryTupleElementFroms}
-                            return o;
-                        }
-                        public static function toBinary(ba:IDataOutput, o:[[${Name}]]):void
-                        {
-                            ${BinaryTupleElementTos}
-                        }
-                        public static function fromJson(j:Object):[[${Name}]]
-                        {
-                            var ja:Array = j as Array;
-                            var o:[[${Name}]] = new [[${Name}]]();
-                            ${JsonTupleElementFroms}
-                            return o;
-                        }
-                        public static function toJson(o:[[${Name}]]):Object
-                        {
-                            var ja:Array = new Array();
-                            ${JsonTupleElementTos}
-                            return ja;
                         }
                     }
         Template
@@ -237,7 +192,7 @@ ObjectSchemaTemplate
                     public var [[${name}]]:[[${Type}]];
         Template
             Name Record
-            //Parameters: ${Name}, ${Fields}, ${BinaryFieldFroms}, ${BinaryFieldTos}, ${JsonFieldFroms}, ${JsonFieldTos}, ${XmlComment}
+            //Parameters: ${Name}, ${Fields}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
@@ -247,28 +202,6 @@ ObjectSchemaTemplate
 
                         public function [[${Name}]]()
                         {
-                        }
-                        public static function fromBinary(ba:IDataInput):[[${Name}]]
-                        {
-                            var o:[[${Name}]] = new [[${Name}]]();
-                            ${BinaryFieldFroms}
-                            return o;
-                        }
-                        public static function toBinary(ba:IDataOutput, o:[[${Name}]]):void
-                        {
-                            ${BinaryFieldTos}
-                        }
-                        public static function fromJson(j:Object):[[${Name}]]
-                        {
-                            var o:[[${Name}]] = new [[${Name}]]();
-                            ${JsonFieldFroms}
-                            return o;
-                        }
-                        public static function toJson(o:[[${Name}]]):Object
-                        {
-                            var j:Object = new Object();
-                            ${JsonFieldTos}
-                            return j;
                         }
                     }
         Template
@@ -313,7 +246,7 @@ ObjectSchemaTemplate
                     public function get [[on${Name}]]():Boolean { return _tag == [[${TaggedUnionName}Tag.${NAME}]]; }
         Template
             Name TaggedUnion
-            //Parameters: ${Name}, ${Alternatives}, ${AlternativeCreates}, ${AlternativePredicates}, ${BinaryAlternativeFroms}, ${BinaryAlternativeTos}, ${JsonAlternativeFroms}, ${JsonAlternativeTos}, ${XmlComment}
+            //Parameters: ${Name}, ${Alternatives}, ${AlternativeCreates}, ${AlternativePredicates}, ${XmlComment}
             Value
                 $String
                     ${XmlComment}
@@ -329,31 +262,6 @@ ObjectSchemaTemplate
 
                         public function [[${Name}]]()
                         {
-                        }
-                        public static function fromBinary(ba:IDataInput):[[${Name}]]
-                        {
-                            var o:[[${Name}]] = new [[${Name}]]();
-                            o._tag = BinaryTranslator.[[${name}TagFromBinary]](ba);
-                            ${BinaryAlternativeFroms}
-                            throw new flash.errors.IllegalOperationError();
-                        }
-                        public static function toBinary(ba:IDataOutput, o:[[${Name}]]):void
-                        {
-                            BinaryTranslator.[[${name}TagToBinary]](ba, o._tag);
-                            ${BinaryAlternativeTos}
-                            throw new flash.errors.IllegalOperationError();
-                        }
-                        public static function fromJson(j:Object):[[${Name}]]
-                        {
-                            var o:[[${Name}]] = new [[${Name}]]();
-                            ${JsonAlternativeFroms}
-                            throw new flash.errors.IllegalOperationError();
-                        }
-                        public static function toJson(o:[[${Name}]]):Object
-                        {
-                            var j:Object = new Object();
-                            ${JsonAlternativeTos}
-                            throw new flash.errors.IllegalOperationError();
                         }
                     }
         Template
@@ -590,11 +498,19 @@ ObjectSchemaTemplate
                     }
         Template
             Name BinaryTranslator_Record
-            //Parameters: ${Name}
+            //Parameters: ${Name}, ${FieldFroms}, ${FieldTos}
             Value
                 $String
-                    public static function [[${name}FromBinary]](ba:IDataInput):[[${Name}]] { return [[${Name}]].fromBinary(ba); }
-                    public static function [[${name}ToBinary]](ba:IDataOutput, o:[[${Name}]]):void { [[${Name}]].toBinary(ba, o); }
+                    public static function [[${name}FromBinary]](ba:IDataInput):[[${Name}]]
+                    {
+                        var o:[[${Name}]] = new [[${Name}]]();
+                        ${FieldFroms}
+                        return o;
+                    }
+                    public static function [[${name}ToBinary]](ba:IDataOutput, o:[[${Name}]]):void
+                    {
+                        ${FieldTos}
+                    }
         Template
             Name BinaryTranslator_FieldFrom
             //Parameters: ${Name}, ${TypeFriendlyName}
@@ -609,11 +525,22 @@ ObjectSchemaTemplate
                     BinaryTranslator.[[${typeFriendlyName}ToBinary]](ba, o.[[${name}]]);
         Template
             Name BinaryTranslator_TaggedUnion
-            //Parameters: ${Name}
+            //Parameters: ${Name}, ${AlternativeFroms}, ${AlternativeTos}
             Value
                 $String
-                    public static function [[${name}FromBinary]](ba:IDataInput):[[${Name}]] { return [[${Name}]].fromBinary(ba); }
-                    public static function [[${name}ToBinary]](ba:IDataOutput, o:[[${Name}]]):void { [[${Name}]].toBinary(ba, o); }
+                    public static function [[${name}FromBinary]](ba:IDataInput):[[${Name}]]
+                    {
+                        var o:[[${Name}]] = new [[${Name}]]();
+                        o._tag = BinaryTranslator.[[${name}TagFromBinary]](ba);
+                        ${AlternativeFroms}
+                        throw new flash.errors.IllegalOperationError();
+                    }
+                    public static function [[${name}ToBinary]](ba:IDataOutput, o:[[${Name}]]):void
+                    {
+                        BinaryTranslator.[[${name}TagToBinary]](ba, o._tag);
+                        ${AlternativeTos}
+                        throw new flash.errors.IllegalOperationError();
+                    }
         Template
             Name BinaryTranslator_AlternativeFrom
             //Parameters: ${TaggedUnionName}, ${Name}, ${TypeFriendlyName}
@@ -768,23 +695,21 @@ ObjectSchemaTemplate
                     }
         Template
             Name JsonTranslator_Record
-            //Parameters: ${Name}
+            //Parameters: ${Name}, ${FieldFroms}, ${FieldTos}
             Value
                 $String
-                    public static function [[${name}FromJson]](j:Object):[[${Name}]] { return [[${Name}]].fromJson(j); }
-                    public static function [[${name}ToJson]](o:[[${Name}]]):Object { return [[${Name}]].toJson(o); }
-        Template
-            Name JsonTranslator_TupleElementFrom
-            //Parameters: ${NameIndex}, ${TypeFriendlyName}
-            Value
-                $String
-                    o.[[item${NameIndex}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](ja[${NameIndex}]);
-        Template
-            Name JsonTranslator_TupleElementTo
-            //Parameters: ${NameIndex}, ${TypeFriendlyName}
-            Value
-                $String
-                    ja[${NameIndex}] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[item${NameIndex}]]);
+                    public static function [[${name}FromJson]](j:Object):[[${Name}]]
+                    {
+                        var o:[[${Name}]] = new [[${Name}]]();
+                        ${FieldFroms}
+                        return o;
+                    }
+                    public static function [[${name}ToJson]](o:[[${Name}]]):Object
+                    {
+                        var j:Object = new Object();
+                        ${FieldTos}
+                        return j;
+                    }
         Template
             Name JsonTranslator_FieldFrom
             //Parameters: ${Name}, ${TypeFriendlyName}
@@ -799,11 +724,21 @@ ObjectSchemaTemplate
                     j["${name}"] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[${name}]]);
         Template
             Name JsonTranslator_TaggedUnion
-            //Parameters: ${Name}
+            //Parameters: ${Name}, ${AlternativeFroms}, ${AlternativeTos}
             Value
                 $String
-                    public static function [[${name}FromJson]](j:Object):[[${Name}]] { return [[${Name}]].fromJson(j); }
-                    public static function [[${name}ToJson]](o:[[${Name}]]):Object { return [[${Name}]].toJson(o); }
+                    public static function [[${name}FromJson]](j:Object):[[${Name}]]
+                    {
+                        var o:[[${Name}]] = new [[${Name}]]();
+                        ${AlternativeFroms}
+                        throw new flash.errors.IllegalOperationError();
+                    }
+                    public static function [[${name}ToJson]](o:[[${Name}]]):Object
+                    {
+                        var j:Object = new Object();
+                        ${AlternativeTos}
+                        throw new flash.errors.IllegalOperationError();
+                    }
         Template
             Name JsonTranslator_AlternativeFrom
             //Parameters: ${TaggedUnionName}, ${Name}, ${TypeFriendlyName}
