@@ -266,7 +266,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
             {
                 var TupleElements = GetTupleElements(t.Types);
                 var Fields = t.Types.Select((tp, i) => new VariableDef { Name = String.Format("Item{0}", i), Type = tp, Description = "" }).ToArray();
-                return GetTemplate("Tuple").Substitute("Name", Name).Substitute("TupleElements", TupleElements).Substitute("BinaryTupleElementFroms", GetBinaryTranslatorFieldFroms(Fields)).Substitute("BinaryTupleElementTos", GetBinaryTranslatorFieldTos(Fields)).Substitute("JsonTupleElementFroms", GetJsonTranslatorTupleElementFroms(t.Types)).Substitute("JsonTupleElementTos", GetJsonTranslatorTupleElementTos(t.Types));
+                return GetTemplate("Tuple").Substitute("Name", Name).Substitute("TupleElements", TupleElements);
             }
             public String[] GetField(VariableDef f)
             {
@@ -296,7 +296,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
             public String[] GetRecord(RecordDef r)
             {
                 var Fields = GetFields(r.Fields);
-                return GetTemplate("Record").Substitute("Name", r.TypeFriendlyName()).Substitute("Fields", Fields).Substitute("BinaryFieldFroms", GetBinaryTranslatorFieldFroms(r.Fields)).Substitute("BinaryFieldTos", GetBinaryTranslatorFieldTos(r.Fields)).Substitute("JsonFieldFroms", GetJsonTranslatorFieldFroms(r.Fields)).Substitute("JsonFieldTos", GetJsonTranslatorFieldTos(r.Fields)).Substitute("XmlComment", GetXmlComment(r.Description));
+                return GetTemplate("Record").Substitute("Name", r.TypeFriendlyName()).Substitute("Fields", Fields).Substitute("XmlComment", GetXmlComment(r.Description));
             }
             public String[] GetAlternativeCreate(TaggedUnionDef tu, VariableDef a)
             {
@@ -362,7 +362,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                 var AlternativeCreates = GetAlternativeCreates(tu);
                 var AlternativePredicates = GetAlternativePredicates(tu);
                 var Name = tu.TypeFriendlyName();
-                return GetTemplate("TaggedUnion").Substitute("Name", Name).Substitute("Alternatives", Alternatives).Substitute("AlternativeCreates", AlternativeCreates).Substitute("AlternativePredicates", AlternativePredicates).Substitute("BinaryAlternativeFroms", GetBinaryTranslatorAlternativeFroms(Name, tu.Alternatives)).Substitute("BinaryAlternativeTos", GetBinaryTranslatorAlternativeTos(Name, tu.Alternatives)).Substitute("JsonAlternativeFroms", GetJsonTranslatorAlternativeFroms(Name, tu.Alternatives)).Substitute("JsonAlternativeTos", GetJsonTranslatorAlternativeTos(Name, tu.Alternatives)).Substitute("XmlComment", GetXmlComment(tu.Description));
+                return GetTemplate("TaggedUnion").Substitute("Name", Name).Substitute("Alternatives", Alternatives).Substitute("AlternativeCreates", AlternativeCreates).Substitute("AlternativePredicates", AlternativePredicates).Substitute("XmlComment", GetXmlComment(tu.Description));
             }
             public String[] GetLiteral(LiteralDef lrl)
             {
@@ -526,14 +526,14 @@ namespace Yuki.ObjectSchema.ActionScript.Common
 
                 return l.ToArray();
             }
-            public String[] GetBinaryTranslatorRecord(RecordDef a)
+            public String[] GetBinaryTranslatorRecord(RecordDef r)
             {
-                return GetBinaryTranslatorRecord(a.TypeFriendlyName(), a.Fields);
+                return GetBinaryTranslatorRecord(r.TypeFriendlyName(), r.Fields);
             }
             public String[] GetBinaryTranslatorRecord(String Name, VariableDef[] Fields)
             {
                 List<String> l = new List<String>();
-                l.AddRange(GetTemplate("BinaryTranslator_Record").Substitute("Name", Name));
+                l.AddRange(GetTemplate("BinaryTranslator_Record").Substitute("Name", Name).Substitute("FieldFroms", GetBinaryTranslatorFieldFroms(Fields)).Substitute("FieldTos", GetBinaryTranslatorFieldTos(Fields)));
                 return l.ToArray();
             }
             public String[] GetBinaryTranslatorFieldFroms(VariableDef[] Fields)
@@ -563,7 +563,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                 var TagName = Name + "Tag";
                 List<String> l = new List<String>();
                 l.AddRange(GetTemplate("BinaryTranslator_Enum").Substitute("Name", TagName));
-                l.AddRange(GetTemplate("BinaryTranslator_TaggedUnion").Substitute("Name", Name));
+                l.AddRange(GetTemplate("BinaryTranslator_TaggedUnion").Substitute("Name", Name).Substitute("AlternativeFroms", GetBinaryTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetBinaryTranslatorAlternativeTos(Name, Alternatives)));
                 return l.ToArray();
             }
             public String[] GetBinaryTranslatorAlternativeFroms(String TaggedUnionName, VariableDef[] Alternatives)
@@ -719,36 +719,14 @@ namespace Yuki.ObjectSchema.ActionScript.Common
 
                 return l.ToArray();
             }
-            public String[] GetJsonTranslatorRecord(RecordDef a)
+            public String[] GetJsonTranslatorRecord(RecordDef r)
             {
-                return GetJsonTranslatorRecord(a.TypeFriendlyName(), a.Fields);
+                return GetJsonTranslatorRecord(r.TypeFriendlyName(), r.Fields);
             }
             public String[] GetJsonTranslatorRecord(String Name, VariableDef[] Fields)
             {
                 List<String> l = new List<String>();
-                l.AddRange(GetTemplate("JsonTranslator_Record").Substitute("Name", Name));
-                return l.ToArray();
-            }
-            public String[] GetJsonTranslatorTupleElementFroms(TypeSpec[] Types)
-            {
-                List<String> l = new List<String>();
-                var n = 0;
-                foreach (var e in Types)
-                {
-                    l.AddRange(GetTemplate("JsonTranslator_TupleElementFrom").Substitute("NameIndex", n.ToInvariantString()).Substitute("TypeFriendlyName", e.TypeFriendlyName()));
-                    n += 1;
-                }
-                return l.ToArray();
-            }
-            public String[] GetJsonTranslatorTupleElementTos(TypeSpec[] Types)
-            {
-                List<String> l = new List<String>();
-                var n = 0;
-                foreach (var e in Types)
-                {
-                    l.AddRange(GetTemplate("JsonTranslator_TupleElementTo").Substitute("NameIndex", n.ToInvariantString()).Substitute("TypeFriendlyName", e.TypeFriendlyName()));
-                    n += 1;
-                }
+                l.AddRange(GetTemplate("JsonTranslator_Record").Substitute("Name", Name).Substitute("FieldFroms", GetJsonTranslatorFieldFroms(Fields)).Substitute("FieldTos", GetJsonTranslatorFieldTos(Fields)));
                 return l.ToArray();
             }
             public String[] GetJsonTranslatorFieldFroms(VariableDef[] Fields)
@@ -778,7 +756,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                 var TagName = Name + "Tag";
                 List<String> l = new List<String>();
                 l.AddRange(GetTemplate("JsonTranslator_Enum").Substitute("Name", TagName));
-                l.AddRange(GetTemplate("JsonTranslator_TaggedUnion").Substitute("Name", Name));
+                l.AddRange(GetTemplate("JsonTranslator_TaggedUnion").Substitute("Name", Name).Substitute("AlternativeFroms", GetJsonTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetJsonTranslatorAlternativeTos(Name, Alternatives)));
                 return l.ToArray();
             }
             public String[] GetJsonTranslatorAlternativeFroms(String TaggedUnionName, VariableDef[] Alternatives)
