@@ -3,6 +3,14 @@ Yuki.Core:
 修正VB代码生成中Optional类型的Boolean Equals(Object obj)方法调用时会栈溢出的问题。
 修改List和Type类型的比较方法，固定为List和Type名称。
 修改List和Optional类型的顺序。
+增加C#、Haxe、ActionScript的JSON序列化代码生成对Set、Map的支持。其中ActionScript中Set和Map均用Vector代替。
+Yuki.SchemaManipulator:
+动态编译时增加System.dll和System.Core.dll的引用。
+Yuki.Relation:
+修改一处写法。
+Examples:
+在序列化示例中增加Set和Map的使用。
+将ActionScript升级到Flex 4.6和Flash Player 11。
 
 2013.03.29
 Yuki.Relation:

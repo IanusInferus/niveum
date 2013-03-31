@@ -205,7 +205,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                                 {
                                     return TypeString;
                                 }
-                                if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
+                                if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && Type.GenericTypeSpec.GenericParameterValues.Length == 1)
                                 {
                                     return TypeString;
                                 }

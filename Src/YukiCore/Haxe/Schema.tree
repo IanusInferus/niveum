@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Haxe模板数据
-      Version:     2013.03.11.
+      Version:     2013.03.31.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -118,10 +118,10 @@ ObjectSchemaTemplate
             PlatformName Array
         PrimitiveMapping
             Name Set
-            PlatformName Error
+            PlatformName Set
         PrimitiveMapping
             Name Map
-            PlatformName Error
+            PlatformName Map
     Templates
         Template
             Name Main
@@ -147,6 +147,8 @@ ObjectSchemaTemplate
             Value
                 $String
                     typedef Unit = {}
+
+                    typedef Set<T> = Map<T, Unit>
 
                 $End
         Template
