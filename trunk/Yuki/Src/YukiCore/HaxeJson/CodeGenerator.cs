@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Haxe JSON通讯代码生成器
-//  Version:     2012.12.21.
+//  Version:     2013.03.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -241,14 +241,14 @@ namespace Yuki.ObjectSchema.HaxeJson
 
                 foreach (var gps in GenericTypeSpecs)
                 {
-                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List")
-                    {
-                        l.AddRange(GetJsonTranslatorList(gps));
-                        l.Add("");
-                    }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
+                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
                     {
                         l.AddRange(GetJsonTranslatorOptional(gps));
+                        l.Add("");
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List")
+                    {
+                        l.AddRange(GetJsonTranslatorList(gps));
                         l.Add("");
                     }
                     else
@@ -382,10 +382,6 @@ namespace Yuki.ObjectSchema.HaxeJson
                 }
                 return l.ToArray();
             }
-            public String[] GetJsonTranslatorList(TypeSpec l)
-            {
-                return GetTemplate("JsonTranslator_List").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
-            }
             public String[] GetJsonTranslatorOptional(TypeSpec o)
             {
                 var ElementType = o.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
@@ -395,6 +391,10 @@ namespace Yuki.ObjectSchema.HaxeJson
                 var ElementTypeFriendlyName = ElementType.TypeFriendlyName();
                 var ElementTypeString = GetTypeString(ElementType);
                 return GetTemplate("JsonTranslator_Optional").Substitute("TypeFriendlyName", TypeFriendlyName).Substitute("TypeString", TypeString).Substitute("ElementTypeFriendlyName", ElementTypeFriendlyName).Substitute("ElementTypeString", ElementTypeString);
+            }
+            public String[] GetJsonTranslatorList(TypeSpec l)
+            {
+                return GetTemplate("JsonTranslator_List").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
             }
 
             public String[] GetTypes(Schema Schema)
