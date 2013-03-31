@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#模板数据
-      Version:     2012.12.31.
+      Version:     2013.03.29.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -311,7 +311,10 @@ ObjectSchemaTemplate
                         }
                         public override Boolean Equals(Object obj)
                         {
-                            return Equals(this, obj);
+                            if (obj == null) { return Equals(this, null); }
+                            if (obj.GetType() != typeof(Optional<T>)) { return false; }
+                            var o = (Optional<T>)(obj);
+                            return Equals(this, o);
                         }
                         public override Int32 GetHashCode()
                         {
