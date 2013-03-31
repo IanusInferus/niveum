@@ -326,19 +326,29 @@ namespace Yuki.ObjectSchema.CSharpJson
                 }
                 foreach (var gps in GenericTypeSpecs)
                 {
-                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
+                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
                     {
                         l.AddRange(GetJsonTranslatorOptional(gps, GenericOptionalType));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List")
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
                     {
                         l.AddRange(GetJsonTranslatorList(gps));
                         l.Add("");
                     }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    {
+                        l.AddRange(GetJsonTranslatorSet(gps));
+                        l.Add("");
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gps.GenericTypeSpec.GenericParameterValues.Length == 2)
+                    {
+                        l.AddRange(GetJsonTranslatorMap(gps));
+                        l.Add("");
+                    }
                     else
                     {
-                        throw new InvalidOperationException(String.Format("NonListGenericTypeNotSupported: {0}", gps.GenericTypeSpec.TypeSpec.TypeRef.VersionedName()));
+                        throw new InvalidOperationException(String.Format("GenericTypeNotSupported: {0}", gps.GenericTypeSpec.TypeSpec.TypeRef.VersionedName()));
                     }
                 }
 
@@ -465,9 +475,19 @@ namespace Yuki.ObjectSchema.CSharpJson
                 var Name = "Optional";
                 return GetTemplate("JsonTranslator_Optional").Substitute("TypeFriendlyName", TypeFriendlyName).Substitute("TypeString", TypeString).Substitute("AlternativeFroms", GetJsonTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetJsonTranslatorAlternativeTos(Name, Alternatives));
             }
-            public String[] GetJsonTranslatorList(TypeSpec l)
+            public String[] GetJsonTranslatorList(TypeSpec c)
             {
-                return GetTemplate("JsonTranslator_List").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+                return GetTemplate("JsonTranslator_List").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+            }
+            public String[] GetJsonTranslatorSet(TypeSpec c)
+            {
+                return GetTemplate("JsonTranslator_Set").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+            }
+            public String[] GetJsonTranslatorMap(TypeSpec c)
+            {
+                var KeyTypeFriendlyName = c.GenericTypeSpec.GenericParameterValues[0].TypeSpec.TypeFriendlyName();
+                var ValueTypeFriendlyName = c.GenericTypeSpec.GenericParameterValues[0].TypeSpec.TypeFriendlyName();
+                return GetTemplate("JsonTranslator_Map").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("KeyTypeFriendlyName", KeyTypeFriendlyName).Substitute("ValueTypeFriendlyName", ValueTypeFriendlyName);
             }
 
             public String[] GetComplexTypes(Schema Schema)

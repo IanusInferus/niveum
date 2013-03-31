@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2012.12.18.
+//  Version:     2013.03.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -299,24 +299,24 @@ namespace Yuki.ObjectSchema.CppBinary
                 }
                 foreach (var gps in GenericTypeSpecs)
                 {
-                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List")
+                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    {
+                        l.AddRange(GetBinaryTranslatorOptional(gps, GenericOptionalType));
+                        l.Add("");
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
                     {
                         l.AddRange(GetBinaryTranslatorList(gps));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set")
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
                     {
                         l.AddRange(GetBinaryTranslatorSet(gps));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map")
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gps.GenericTypeSpec.GenericParameterValues.Length == 2)
                     {
                         l.AddRange(GetBinaryTranslatorMap(gps));
-                        l.Add("");
-                    }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
-                    {
-                        l.AddRange(GetBinaryTranslatorOptional(gps, GenericOptionalType));
                         l.Add("");
                     }
                     else
@@ -438,23 +438,6 @@ namespace Yuki.ObjectSchema.CppBinary
                 }
                 return l.ToArray();
             }
-            public String[] GetBinaryTranslatorList(TypeSpec l)
-            {
-                return GetTemplate("BinaryTranslator_List").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l, true)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
-            }
-            public String[] GetBinaryTranslatorSet(TypeSpec l)
-            {
-                return GetTemplate("BinaryTranslator_Set").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l, true)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
-            }
-            public String[] GetBinaryTranslatorMap(TypeSpec l)
-            {
-                var gp = l.GenericTypeSpec.GenericParameterValues.ToArray();
-                if (gp.Length != 2)
-                {
-                    throw new ArgumentException();
-                }
-                return GetTemplate("BinaryTranslator_Map").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l, true)).Substitute("KeyTypeFriendlyName", gp[0].TypeSpec.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", gp[1].TypeSpec.TypeFriendlyName());
-            }
             public String[] GetBinaryTranslatorOptionalAlternativeFroms(String TaggedUnionName, VariableDef[] Alternatives)
             {
                 List<String> l = new List<String>();
@@ -482,6 +465,23 @@ namespace Yuki.ObjectSchema.CppBinary
                 var TypeString = GetTypeString(o, true);
                 var Name = "Optional";
                 return GetTemplate("BinaryTranslator_Optional").Substitute("TypeFriendlyName", TypeFriendlyName).Substitute("TypeString", TypeString).Substitute("AlternativeFroms", GetBinaryTranslatorOptionalAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetBinaryTranslatorOptionalAlternativeTos(Name, Alternatives));
+            }
+            public String[] GetBinaryTranslatorList(TypeSpec l)
+            {
+                return GetTemplate("BinaryTranslator_List").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l, true)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+            }
+            public String[] GetBinaryTranslatorSet(TypeSpec l)
+            {
+                return GetTemplate("BinaryTranslator_Set").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l, true)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+            }
+            public String[] GetBinaryTranslatorMap(TypeSpec l)
+            {
+                var gp = l.GenericTypeSpec.GenericParameterValues.ToArray();
+                if (gp.Length != 2)
+                {
+                    throw new ArgumentException();
+                }
+                return GetTemplate("BinaryTranslator_Map").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l, true)).Substitute("KeyTypeFriendlyName", gp[0].TypeSpec.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", gp[1].TypeSpec.TypeFriendlyName());
             }
 
             public String[] GetComplexTypes(Schema Schema)

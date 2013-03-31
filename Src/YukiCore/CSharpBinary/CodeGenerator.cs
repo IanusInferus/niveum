@@ -336,24 +336,24 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 }
                 foreach (var gps in GenericTypeSpecs)
                 {
-                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List")
+                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    {
+                        l.AddRange(GetBinaryTranslatorOptional(gps, GenericOptionalType));
+                        l.Add("");
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
                     {
                         l.AddRange(GetBinaryTranslatorList(gps));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set")
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
                     {
                         l.AddRange(GetBinaryTranslatorSet(gps));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map")
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gps.GenericTypeSpec.GenericParameterValues.Length == 2)
                     {
                         l.AddRange(GetBinaryTranslatorMap(gps));
-                        l.Add("");
-                    }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
-                    {
-                        l.AddRange(GetBinaryTranslatorOptional(gps, GenericOptionalType));
                         l.Add("");
                     }
                     else
@@ -475,6 +475,16 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 }
                 return l.ToArray();
             }
+            public String[] GetBinaryTranslatorOptional(TypeSpec o, TaggedUnionDef GenericOptionalType)
+            {
+                var ElementType = o.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToArray();
+
+                var TypeFriendlyName = o.TypeFriendlyName();
+                var TypeString = GetTypeString(o);
+                var Name = "Optional";
+                return GetTemplate("BinaryTranslator_Optional").Substitute("TypeFriendlyName", TypeFriendlyName).Substitute("TypeString", TypeString).Substitute("AlternativeFroms", GetBinaryTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetBinaryTranslatorAlternativeTos(Name, Alternatives));
+            }
             public String[] GetBinaryTranslatorList(TypeSpec l)
             {
                 return GetTemplate("BinaryTranslator_List").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
@@ -491,16 +501,6 @@ namespace Yuki.ObjectSchema.CSharpBinary
                     throw new ArgumentException();
                 }
                 return GetTemplate("BinaryTranslator_Map").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("KeyTypeFriendlyName", gp[0].TypeSpec.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", gp[1].TypeSpec.TypeFriendlyName());
-            }
-            public String[] GetBinaryTranslatorOptional(TypeSpec o, TaggedUnionDef GenericOptionalType)
-            {
-                var ElementType = o.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
-                var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToArray();
-
-                var TypeFriendlyName = o.TypeFriendlyName();
-                var TypeString = GetTypeString(o);
-                var Name = "Optional";
-                return GetTemplate("BinaryTranslator_Optional").Substitute("TypeFriendlyName", TypeFriendlyName).Substitute("TypeString", TypeString).Substitute("AlternativeFroms", GetBinaryTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetBinaryTranslatorAlternativeTos(Name, Alternatives));
             }
 
             public String[] GetComplexTypes(Schema Schema)
