@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0 JSON通讯代码生成器
-//  Version:     2012.12.19.
+//  Version:     2013.03.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
+using Yuki.ObjectSchema.ActionScript.Common;
 
 namespace Yuki.ObjectSchema.ActionScriptJson
 {
@@ -46,7 +47,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
 
             public Writer(Schema Schema, String PackageName)
             {
-                this.Schema = Schema.Reduce();
+                this.Schema = Schema;
                 this.PackageName = PackageName;
                 this.Hash = this.Schema.Hash();
             }
@@ -66,6 +67,8 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                 List<ActionScript.FileResult> l = new List<ActionScript.FileResult>();
 
                 InnerWriter.FillEnumSet();
+
+                l.Add(GetFile("JsonTranslator", GetJsonTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray())));
 
                 var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Where(t => t.Version() == "").ToArray();
                 if (Commands.Length > 0)
@@ -92,6 +95,199 @@ namespace Yuki.ObjectSchema.ActionScriptJson
             public String[] GetXmlComment(String Description)
             {
                 return InnerWriter.GetXmlComment(Description);
+            }
+
+            public String[] GetJsonTranslator(TypeDef[] Types)
+            {
+                return GetTemplate("JsonTranslator").Substitute("Serializers", GetJsonTranslatorSerializers(Types));
+            }
+
+            public String[] GetJsonTranslatorSerializers(TypeDef[] Types)
+            {
+                List<String> l = new List<String>();
+
+                foreach (var c in Types)
+                {
+                    if (c.GenericParameters().Count() != 0)
+                    {
+                        continue;
+                    }
+                    if (c.OnPrimitive)
+                    {
+                        continue;
+                    }
+                    else if (c.OnAlias)
+                    {
+                        l.AddRange(GetJsonTranslatorRecord(new RecordDef { Name = c.Alias.Name, Version = c.Alias.Version, GenericParameters = c.Alias.GenericParameters, Fields = new VariableDef[] { new VariableDef { Name = "Value", Type = c.Alias.Type, Description = "" } }, Description = "" }));
+                    }
+                    else if (c.OnRecord)
+                    {
+                        l.AddRange(GetJsonTranslatorRecord(c.Record));
+                    }
+                    else if (c.OnTaggedUnion)
+                    {
+                        l.AddRange(GetJsonTranslatorTaggedUnion(c.TaggedUnion));
+                    }
+                    else if (c.OnEnum)
+                    {
+                        l.AddRange(GetJsonTranslatorEnum(c.Enum));
+                    }
+                    else if (c.OnClientCommand)
+                    {
+                        l.AddRange(GetJsonTranslatorClientCommand(c.ClientCommand));
+                    }
+                    else if (c.OnServerCommand)
+                    {
+                        l.AddRange(GetJsonTranslatorServerCommand(c.ServerCommand));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                    l.Add("");
+                }
+
+                var ltf = new TupleAndGenericTypeSpecFetcher();
+                ltf.PushTypeDefs(Types);
+                var Tuples = ltf.GetTuples();
+                var GenericTypeSpecs = ltf.GetGenericTypeSpecs();
+
+                foreach (var t in Tuples)
+                {
+                    l.AddRange(GetJsonTranslatorRecord(new RecordDef { Name = t.TypeFriendlyName(), Version = "", GenericParameters = new VariableDef[] { }, Fields = t.Tuple.Types.Select((tp, i) => new VariableDef { Name = String.Format("Item{0}", i), Type = tp, Description = "" }).ToArray(), Description = "" }));
+                    l.Add("");
+                }
+
+                var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToArray();
+                TaggedUnionDef GenericOptionalType = null;
+                if (GenericOptionalTypes.Length > 0)
+                {
+                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new VariableDef[] { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new VariableDef[] { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
+                }
+                foreach (var gps in GenericTypeSpecs)
+                {
+                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    {
+                        var ElementType = gps.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                        var Name = "Opt" + ElementType.TypeFriendlyName();
+                        var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToArray();
+                        l.AddRange(GetJsonTranslatorTaggedUnion(new TaggedUnionDef { Name = Name, Version = "", GenericParameters = new VariableDef[] { }, Alternatives = Alternatives, Description = GenericOptionalType.Description }));
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    {
+                        l.AddRange(GetJsonTranslatorList(gps));
+                        l.Add("");
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    {
+                        l.AddRange(GetJsonTranslatorSet(gps));
+                        l.Add("");
+                    }
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gps.GenericTypeSpec.GenericParameterValues.Length == 2)
+                    {
+                        l.AddRange(GetJsonTranslatorMap(gps));
+                        l.Add("");
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(String.Format("NonListGenericTypeNotSupported: {0}", gps.GenericTypeSpec.TypeSpec.TypeRef.VersionedName()));
+                    }
+                }
+
+                if (l.Count > 0)
+                {
+                    l = l.Take(l.Count - 1).ToList();
+                }
+
+                return l.ToArray();
+            }
+            public String[] GetJsonTranslatorRecord(RecordDef r)
+            {
+                return GetJsonTranslatorRecord(r.TypeFriendlyName(), r.Fields);
+            }
+            public String[] GetJsonTranslatorRecord(String Name, VariableDef[] Fields)
+            {
+                List<String> l = new List<String>();
+                l.AddRange(GetTemplate("JsonTranslator_Record").Substitute("Name", Name).Substitute("FieldFroms", GetJsonTranslatorFieldFroms(Fields)).Substitute("FieldTos", GetJsonTranslatorFieldTos(Fields)));
+                return l.ToArray();
+            }
+            public String[] GetJsonTranslatorFieldFroms(VariableDef[] Fields)
+            {
+                List<String> l = new List<String>();
+                foreach (var a in Fields)
+                {
+                    l.AddRange(GetTemplate("JsonTranslator_FieldFrom").Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
+            public String[] GetJsonTranslatorFieldTos(VariableDef[] Fields)
+            {
+                List<String> l = new List<String>();
+                foreach (var a in Fields)
+                {
+                    l.AddRange(GetTemplate("JsonTranslator_FieldTo").Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
+            public String[] GetJsonTranslatorTaggedUnion(TaggedUnionDef tu)
+            {
+                return GetJsonTranslatorTaggedUnion(tu.TypeFriendlyName(), tu.Alternatives);
+            }
+            public String[] GetJsonTranslatorTaggedUnion(String Name, VariableDef[] Alternatives)
+            {
+                var TagName = Name + "Tag";
+                List<String> l = new List<String>();
+                l.AddRange(GetTemplate("JsonTranslator_Enum").Substitute("Name", TagName));
+                l.AddRange(GetTemplate("JsonTranslator_TaggedUnion").Substitute("Name", Name).Substitute("AlternativeFroms", GetJsonTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetJsonTranslatorAlternativeTos(Name, Alternatives)));
+                return l.ToArray();
+            }
+            public String[] GetJsonTranslatorAlternativeFroms(String TaggedUnionName, VariableDef[] Alternatives)
+            {
+                List<String> l = new List<String>();
+                foreach (var a in Alternatives)
+                {
+                    l.AddRange(GetTemplate("JsonTranslator_AlternativeFrom").Substitute("TaggedUnionName", TaggedUnionName).Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
+            public String[] GetJsonTranslatorAlternativeTos(String TaggedUnionName, VariableDef[] Alternatives)
+            {
+                List<String> l = new List<String>();
+                foreach (var a in Alternatives)
+                {
+                    l.AddRange(GetTemplate("JsonTranslator_AlternativeTo").Substitute("TaggedUnionName", TaggedUnionName).Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                }
+                return l.ToArray();
+            }
+            public String[] GetJsonTranslatorEnum(EnumDef e)
+            {
+                return GetTemplate("JsonTranslator_Enum").Substitute("Name", e.TypeFriendlyName());
+            }
+            public String[] GetJsonTranslatorClientCommand(ClientCommandDef c)
+            {
+                List<String> l = new List<String>();
+                l.AddRange(GetJsonTranslatorRecord(c.TypeFriendlyName() + "Request", c.OutParameters));
+                l.AddRange(GetJsonTranslatorTaggedUnion(c.TypeFriendlyName() + "Reply", c.InParameters));
+                return l.ToArray();
+            }
+            public String[] GetJsonTranslatorServerCommand(ServerCommandDef c)
+            {
+                List<String> l = new List<String>();
+                return GetJsonTranslatorRecord(c.TypeFriendlyName() + "Event", c.OutParameters);
+            }
+            public String[] GetJsonTranslatorList(TypeSpec c)
+            {
+                return GetTemplate("JsonTranslator_List").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+            }
+            public String[] GetJsonTranslatorSet(TypeSpec c)
+            {
+                return GetTemplate("JsonTranslator_Set").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+            }
+            public String[] GetJsonTranslatorMap(TypeSpec c)
+            {
+                var KeyTypeFriendlyName = c.GenericTypeSpec.GenericParameterValues[0].TypeSpec.TypeFriendlyName();
+                var ValueTypeFriendlyName = c.GenericTypeSpec.GenericParameterValues[0].TypeSpec.TypeFriendlyName();
+                return GetTemplate("JsonTranslator_Map").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("KeyTypeFriendlyName", KeyTypeFriendlyName).Substitute("ValueTypeFriendlyName", ValueTypeFriendlyName);
             }
 
             public String[] GetClient(TypeDef[] Commands)
@@ -174,6 +370,10 @@ namespace Yuki.ObjectSchema.ActionScriptJson
             }
         }
 
+        private static String TypeFriendlyName(this TypeSpec Type)
+        {
+            return Yuki.ObjectSchema.ActionScript.Common.CodeGenerator.TypeFriendlyName(Type);
+        }
         private static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
             return ActionScript.Common.CodeGenerator.Substitute(Lines, Parameter, Value);

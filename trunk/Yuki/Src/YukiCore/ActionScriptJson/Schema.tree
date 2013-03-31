@@ -30,17 +30,217 @@ ObjectSchemaTemplate
                     package [[${PackageName}]]
                     {
                         import flash.errors.IllegalOperationError;
-                        import flash.utils.Dictionary;
-                        import flash.utils.IDataInput;
-                        import flash.utils.IDataOutput;
-                        import flash.utils.ByteArray;
-                        import flash.utils.Endian;
                         import ${Imports};
 
                         ${Type}
                     }
 
                 $End
+        Template
+            Name JsonTranslator
+            //Parameters: ${Serializers}
+            Value
+                $String
+                    public class JsonTranslator
+                    {
+                        public static function unitFromJson(j:Object):Unit { return new Unit(); }
+                        public static function unitToJson(v:Unit):Object { return v; }
+
+                        public static function booleanFromJson(j:Object):Boolean { return (Boolean)(j); }
+                        public static function booleanToJson(v:Boolean):Object { return v; }
+
+                        public static function stringFromJson(j:Object):String { return (String)(j); }
+                        public static function stringToJson(v:String):Object { return v; }
+
+                        public static function intFromJson(j:Object):int { return (int)(j); }
+                        public static function intToJson(v:int):Object { return v; }
+
+                        public static function realFromJson(j:Object):Number { return (Number)(j); }
+                        public static function realToJson(v:Number):Object { return v; }
+
+                        public static function byteFromJson(j:Object):uint { return (uint)(j); }
+                        public static function byteToJson(v:uint):Object { return v; }
+
+                        public static function uint8FromJson(j:Object):uint { return (uint)(j); }
+                        public static function uint8ToJson(v:uint):Object { return v; }
+
+                        public static function uint16FromJson(j:Object):uint { return (uint)(j); }
+                        public static function uint16ToJson(v:uint):Object { return v; }
+
+                        public static function uint32FromJson(j:Object):uint { return (uint)(j); }
+                        public static function uint32ToJson(v:uint):Object { return v; }
+
+                        public static function int8FromJson(j:Object):int { return (int)(j); }
+                        public static function int8ToJson(v:int):Object { return v; }
+
+                        public static function int16FromJson(j:Object):int { return (int)(j); }
+                        public static function int16ToJson(v:int):Object { return v; }
+
+                        public static function int32FromJson(j:Object):int { return (int)(j); }
+                        public static function int32ToJson(v:int):Object { return v; }
+
+                        public static function float32FromJson(j:Object):Number { return (Number)(j); }
+                        public static function float32ToJson(v:Number):Object { return v; }
+
+                        public static function float64FromJson(j:Object):Number { return (Number)(j); }
+                        public static function float64ToJson(v:Number):Object { return v; }
+
+                        ${Serializers}
+                    }
+        Template
+            Name JsonTranslator_Record
+            //Parameters: ${Name}, ${FieldFroms}, ${FieldTos}
+            Value
+                $String
+                    public static function [[${name}FromJson]](j:Object):[[${Name}]]
+                    {
+                        var o:[[${Name}]] = new [[${Name}]]();
+                        ${FieldFroms}
+                        return o;
+                    }
+                    public static function [[${name}ToJson]](o:[[${Name}]]):Object
+                    {
+                        var j:Object = new Object();
+                        ${FieldTos}
+                        return j;
+                    }
+        Template
+            Name JsonTranslator_FieldFrom
+            //Parameters: ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    o.[[${name}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](j["${name}"]);
+        Template
+            Name JsonTranslator_FieldTo
+            //Parameters: ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    j["${name}"] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[${name}]]);
+        Template
+            Name JsonTranslator_TaggedUnion
+            //Parameters: ${Name}, ${AlternativeFroms}, ${AlternativeTos}
+            Value
+                $String
+                    public static function [[${name}FromJson]](j:Object):[[${Name}]]
+                    {
+                        var o:[[${Name}]] = new [[${Name}]]();
+                        ${AlternativeFroms}
+                        throw new flash.errors.IllegalOperationError();
+                    }
+                    public static function [[${name}ToJson]](o:[[${Name}]]):Object
+                    {
+                        var j:Object = new Object();
+                        ${AlternativeTos}
+                        throw new flash.errors.IllegalOperationError();
+                    }
+        Template
+            Name JsonTranslator_AlternativeFrom
+            //Parameters: ${TaggedUnionName}, ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    if (j.hasOwnProperty("${name}"))
+                    {
+                        o._tag = [[${TaggedUnionName}Tag.${NAME}]];
+                        o.[[${name}]] = JsonTranslator.[[${typeFriendlyName}FromJson]](j["${name}"]);
+                        return o;
+                    }
+        Template
+            Name JsonTranslator_AlternativeTo
+            //Parameters: ${TaggedUnionName}, ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    if (o._tag == [[${TaggedUnionName}Tag.${NAME}]])
+                    {
+                        j["${name}"] = JsonTranslator.[[${typeFriendlyName}ToJson]](o.[[${name}]]);
+                        return j;
+                    }
+        Template
+            Name JsonTranslator_Enum
+            //Parameters: ${Name}
+            Value
+                $String
+                    public static function [[${name}FromJson]](j:Object):int { return (int)(j); }
+                    public static function [[${name}ToJson]](v:int):Object { return v; }
+        Template
+            Name JsonTranslator_List
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
+            Value
+                $String
+                    public static function [[${typeFriendlyName}FromJson]](j:Object):[[${TypeString}]]
+                    {
+                        var jc:Array = j as Array;
+                        var c:[[${TypeString}]] = new [[${TypeString}]]();
+                        for (var k:int = 0; k < jc.length; k += 1)
+                        {
+                            c.push([[${elementTypeFriendlyName}FromJson]](jc[k]));
+                        }
+                        return c;
+                    }
+                    public static function [[${typeFriendlyName}ToJson]](c:[[${TypeString}]]):Object
+                    {
+                        var jc:Array = new Array();
+                        for (var k:int = 0; k < c.length; k += 1)
+                        {
+                            jc.push([[${elementTypeFriendlyName}ToJson]](c[k]));
+                        }
+                        return jc;
+                    }
+        Template
+            Name JsonTranslator_Set
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
+            Value
+                $String
+                    public static function [[${typeFriendlyName}FromJson]](j:Object):[[${TypeString}]]
+                    {
+                        var jc:Array = j as Array;
+                        var c:[[${TypeString}]] = new [[${TypeString}]]();
+                        for (var k:int = 0; k < jc.length; k += 1)
+                        {
+                            c.push([[${elementTypeFriendlyName}FromJson]](jc[k]));
+                        }
+                        return c;
+                    }
+                    public static function [[${typeFriendlyName}ToJson]](c:[[${TypeString}]]):Object
+                    {
+                        var jc:Array = new Array();
+                        for (var k:int = 0; k < c.length; k += 1)
+                        {
+                            jc.push([[${elementTypeFriendlyName}ToJson]](c[k]));
+                        }
+                        return jc;
+                    }
+        Template
+            Name JsonTranslator_Map
+            //Parameters: ${TypeFriendlyName}, ${TypeString}, ${KeyTypeFriendlyName}, ${ValueTypeFriendlyName}
+            Value
+                $String
+                    public static function [[${typeFriendlyName}FromJson]](j:Object):[[${TypeString}]]
+                    {
+                        var jc:Array = j as Array;
+                        var c:[[${TypeString}]] = new [[${TypeString}]]();
+                        for (var k:int = 0; k < jc.length; k += 1)
+                        {
+                            var jp:Object = jc[k];
+                            var p:[[KeyValuePairOf${KeyTypeFriendlyName}And${ValueTypeFriendlyName}]] = new [[KeyValuePairOf${KeyTypeFriendlyName}And${ValueTypeFriendlyName}]]();
+                            p.key = [[${keyTypeFriendlyName}FromJson]](jp["key"]);
+                            p.value = [[${valueTypeFriendlyName}FromJson]](jp["value"]);
+                            c.push(p);
+                        }
+                        return c;
+                    }
+                    public static function [[${typeFriendlyName}ToJson]](c:[[${TypeString}]]):Object
+                    {
+                        var jc:Array = new Array();
+                        for (var k:int = 0; k < c.length; k += 1)
+                        {
+                            var jp:Object = new Object();
+                            var p:[[KeyValuePairOf${KeyTypeFriendlyName}And${ValueTypeFriendlyName}]] = c[k];
+                            jp["key"] = [[${keyTypeFriendlyName}FromJson]](p.key);
+                            jp["value"] = [[${valueTypeFriendlyName}FromJson]](p.value);
+                            jc.push(jp);
+                        }
+                        return jc;
+                    }
         Template
             Name IJsonSender
             Value
