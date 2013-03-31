@@ -373,9 +373,9 @@ namespace Yuki.ObjectSchema.CSharpBinary
             {
                 return GetTemplate("BinaryTranslator_Alias").Substitute("Name", a.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", a.Type.TypeFriendlyName());
             }
-            public String[] GetBinaryTranslatorRecord(RecordDef a)
+            public String[] GetBinaryTranslatorRecord(RecordDef r)
             {
-                return GetBinaryTranslatorRecord(a.TypeFriendlyName(), a.Fields);
+                return GetBinaryTranslatorRecord(r.TypeFriendlyName(), r.Fields);
             }
             public String[] GetBinaryTranslatorRecord(String Name, VariableDef[] Fields)
             {

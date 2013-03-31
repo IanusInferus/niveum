@@ -278,9 +278,9 @@ namespace Yuki.ObjectSchema.HaxeJson
             {
                 return GetTemplate("JsonTranslator_Alias").Substitute("Name", a.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", a.Type.TypeFriendlyName());
             }
-            public String[] GetJsonTranslatorRecord(RecordDef a)
+            public String[] GetJsonTranslatorRecord(RecordDef r)
             {
-                return GetJsonTranslatorRecord(a.TypeFriendlyName(), a.Fields);
+                return GetJsonTranslatorRecord(r.TypeFriendlyName(), r.Fields);
             }
             public String[] GetJsonTranslatorRecord(String Name, VariableDef[] Fields)
             {
