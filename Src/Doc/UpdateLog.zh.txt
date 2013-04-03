@@ -1,4 +1,8 @@
-﻿2013.03.31
+﻿2013.04.03
+Yuki.DatabaseRegenerator:
+增加生成带Schema的Memory数据库文件的功能。
+
+2013.03.31
 Yuki.Core:
 修正VB代码生成中Optional类型的Boolean Equals(Object obj)方法调用时会栈溢出的问题。
 修改List和Type类型的比较方法，固定为List和Type名称。
@@ -31,11 +35,11 @@ Yuki.Relation:
 增加C# Memory、C# SqlServer、C# PostgreSQL、C# MySQL获得Hash的功能。
 Yuki.Core, Yuki.Relation, Yuki.Expression:
 将公共类型提到Yuki.Core中。
-Yuki.Relation, DatabaseRegenerator:
+Yuki.Relation, Yuki.DatabaseRegenerator:
 增加RelationValue，用于将数据库数据进行二进制和Tree序列化。将C# Memory只读内存数据库文件读写代码改用该序列化代码。
-Yuki.Core, Yuki.Relation, Yuki.Expression, DatabaseRegenerator:
+Yuki.Core, Yuki.Relation, Yuki.Expression, Yuki.DatabaseRegenerator:
 修改写法。
-DatabaseRegenerator:
+Yuki.DatabaseRegenerator:
 加载数据时使用对象结构代替原来的Tree结构。
 
 2013.03.27
@@ -53,7 +57,7 @@ Yuki.Relation:
 增加C# Memory代码生成结果中判断Hash的功能。
 Yuki.Expression:
 增加C#表达式计算二进制程序集加载代码中判断Hash的功能。
-DatabaseRegenerator:
+Yuki.DatabaseRegenerator:
 增加C# Memory数据生成时产生Hash的功能。
 
 2013.03.21
