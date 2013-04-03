@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2013.03.28.
+//  Version:     2013.04.03.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -176,6 +176,19 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
+                else if (opt.Name.ToLower() == "regenms")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length >= 0)
+                    {
+                        RegenMemoryWithSchema(Schema(), ConnectionString, args);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (opt.Name.ToLower() == "regenmssql")
                 {
                     var args = opt.Arguments;
@@ -243,6 +256,8 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/database:<DatabaseName>");
             Console.WriteLine(@"重建Memory数据库");
             Console.WriteLine(@"/regenm:<DataDir>*");
+            Console.WriteLine(@"重建Memory数据库(包含Schema)");
+            Console.WriteLine(@"/regenms:<DataDir>*");
             Console.WriteLine(@"重建SQL Server数据库");
             Console.WriteLine(@"/regenmssql:<DataDir>*");
             Console.WriteLine(@"重建PostgreSQL数据库");
@@ -308,6 +323,31 @@ namespace Yuki.DatabaseRegenerator
             Byte[] Bytes;
             using (var ms = Streams.CreateMemoryStream())
             {
+                rvs.Write(ms, Value);
+                ms.Position = 0;
+                Bytes = ms.Read((int)(ms.Length));
+            }
+
+            var Dir = FileNameHandling.GetFileDirectory(ConnectionString);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            using (var fs = Streams.CreateWritable(ConnectionString))
+            {
+                fs.WriteUInt64(s.Hash());
+                fs.Write(Bytes);
+            }
+        }
+
+        public static void RegenMemoryWithSchema(RelationSchema.Schema s, String ConnectionString, String[] DataDirs)
+        {
+            var Value = LoadData(s, DataDirs);
+
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+
+            var rvs = new RelationValueSerializer(s);
+            Byte[] Bytes;
+            using (var ms = Streams.CreateMemoryStream())
+            {
+                bs.Write(ms, s);
                 rvs.Write(ms, Value);
                 ms.Position = 0;
                 Bytes = ms.Read((int)(ms.Length));
