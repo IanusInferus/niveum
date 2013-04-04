@@ -1,4 +1,6 @@
-﻿2013.04.03
+﻿2013.04.04.0
+
+2013.04.03
 Yuki.DatabaseRegenerator:
 增加生成带Schema的Memory数据库文件的功能。
 
