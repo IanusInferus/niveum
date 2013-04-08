@@ -6,22 +6,22 @@ namespace Database.Linq
 {
     public partial class LinqDataAccess : IDataAccess
     {
-        public List<UserProfile> SelectAllUserProfileOrderById()
+        public List<UserProfile> FromUserProfileSelectAllOrderById()
         {
             return dbr.UserProfiles.OrderBy(u => u.Id).ToList();
         }
 
-        public int SelectCountUserProfileById(int Id)
+        public int FromUserProfileSelectCountById(int Id)
         {
             return dbr.UserProfiles.WhereIdIs(Id).Count();
         }
 
-        public UserProfile SelectOneUserProfileById(int Id)
+        public UserProfile FromUserProfileSelectOneById(int Id)
         {
             return dbr.UserProfiles.ById(Id);
         }
 
-        public Optional<UserProfile> SelectOptionalUserProfileByName(string Name)
+        public Optional<UserProfile> FromUserProfileSelectOptionalByName(string Name)
         {
             var l = dbr.UserProfiles.WhereNameIs(Name).ToArray();
             if (l.Length == 0)
@@ -31,7 +31,7 @@ namespace Database.Linq
             return l.Single();
         }
 
-        public Optional<DirectUserAuthentication> SelectOptionalDirectUserAuthenticationByName(String Name)
+        public Optional<DirectUserAuthentication> FromDirectUserAuthenticationSelectOptionalByName(String Name)
         {
             var l = dbr.DirectUserAuthentication.WhereNameIs(Name).ToArray();
             if (l.Length == 0)
@@ -41,63 +41,63 @@ namespace Database.Linq
             return l.Single();
         }
 
-        public Mail SelectOneMailById(int Id)
+        public Mail FromMailSelectOneById(int Id)
         {
             return dbr.Mails.ById(Id);
         }
 
-        public List<MailTo> SelectManyMailToById(int Id)
+        public List<MailTo> FromMailToSelectManyById(int Id)
         {
             return dbr.MailTos.WhereIdIs(Id).ToList();
         }
 
-        public MailOwner SelectOneMailOwnerByIdAndOwnerId(int Id, int OwnerId)
+        public MailOwner FromMailOwnerSelectOneByIdAndOwnerId(int Id, int OwnerId)
         {
             return dbr.MailOwners.ByIdAndOwnerId(Id, OwnerId);
         }
 
-        public int SelectCountMailOwnerById(int Id)
+        public int FromMailOwnerSelectCountById(int Id)
         {
             return dbr.MailOwners.WhereIdIs(Id).Count();
         }
 
-        public int SelectCountMailOwnerByIdAndOwnerId(int Id, int OwnerId)
+        public int FromMailOwnerSelectCountByIdAndOwnerId(int Id, int OwnerId)
         {
             return dbr.MailOwners.WhereIdAndOwnerIdIs(Id, OwnerId).Count();
         }
 
-        public List<MailOwner> SelectManyMailOwnerById(int Id)
+        public List<MailOwner> FromMailOwnerSelectManyById(int Id)
         {
             return dbr.MailOwners.WhereIdIs(Id).ToList();
         }
 
-        public int SelectCountMailOwnerByOwnerId(int OwnerId)
+        public int FromMailOwnerSelectCountByOwnerId(int OwnerId)
         {
             return dbr.MailOwners.WhereOwnerIdIs(OwnerId).Count();
         }
 
-        public List<MailOwner> SelectRangeMailOwnerByOwnerIdOrderByOwnerIdAndTimeDesc(int OwnerId, int Skip, int Take)
+        public List<MailOwner> FromMailOwnerSelectRangeByOwnerIdOrderByOwnerIdAndTimeDesc(int OwnerId, int Skip, int Take)
         {
             return dbr.MailOwners.WhereOwnerIdIs(OwnerId).OrderBy(mo => mo.OwnerId).ThenByDescending(mo => mo.Time).Skip(Skip).Take(Take).ToList();
         }
 
-        public List<String> SelectManyMailAttachmentNameById(int Id)
+        public List<String> FromMailAttachmentSelectManyForNameById(int Id)
         {
             return dbr.MailAttachments.WhereIdIs(Id).Select(ma => ma.Name).ToList();
         }
 
-        public List<MailAttachment> SelectManyMailAttachmentById(int Id)
+        public List<MailAttachment> FromMailAttachmentSelectManyById(int Id)
         {
             return dbr.MailAttachments.WhereIdIs(Id).ToList();
         }
 
-        public void InsertOneMail(Mail v)
+        public void FromMailInsertOne(Mail v)
         {
             dbr.Mails.Add(v);
             dbr.SaveChanges();
         }
 
-        public void InsertManyMailTo(List<MailTo> l)
+        public void FromMailToInsertMany(List<MailTo> l)
         {
             foreach (var v in l)
             {
@@ -106,7 +106,7 @@ namespace Database.Linq
             dbr.SaveChanges();
         }
 
-        public void InsertManyMailOwner(List<MailOwner> l)
+        public void FromMailOwnerInsertMany(List<MailOwner> l)
         {
             foreach (var v in l)
             {
@@ -115,7 +115,7 @@ namespace Database.Linq
             dbr.SaveChanges();
         }
 
-        public void InsertManyMailAttachment(List<MailAttachment> l)
+        public void FromMailAttachmentInsertMany(List<MailAttachment> l)
         {
             foreach (var v in l)
             {
@@ -124,12 +124,12 @@ namespace Database.Linq
             dbr.SaveChanges();
         }
 
-        public void UpdateOneMailOwner(MailOwner v)
+        public void FromMailOwnerUpdateOne(MailOwner v)
         {
             dbr.SaveChanges();
         }
 
-        public void DeleteOneMailById(int Id)
+        public void FromMailDeleteOneById(int Id)
         {
             foreach (var Mail in dbr.Mails.Where(m => m.Id == Id))
             {
@@ -138,7 +138,7 @@ namespace Database.Linq
             dbr.SaveChanges();
         }
 
-        public void DeleteManyMailToById(int Id)
+        public void FromMailDeleteManyToById(int Id)
         {
             foreach (var MailTo in dbr.MailTos.Where(m => m.Id == Id))
             {
@@ -147,7 +147,7 @@ namespace Database.Linq
             dbr.SaveChanges();
         }
 
-        public void DeleteOneMailOwnerByIdAndOwnerId(int Id, int OwnerId)
+        public void FromMailOwnerDeleteOneByIdAndOwnerId(int Id, int OwnerId)
         {
             foreach (var MailOwner in dbr.MailOwners.Where(m => m.Id == Id && m.OwnerId == OwnerId))
             {
@@ -156,7 +156,7 @@ namespace Database.Linq
             dbr.SaveChanges();
         }
 
-        public void DeleteManyMailAttachmentById(int Id)
+        public void FromMailAttachmentDeleteManyById(int Id)
         {
             foreach (var MailAttachment in dbr.MailAttachments.Where(m => m.Id == Id))
             {
