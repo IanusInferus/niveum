@@ -17,7 +17,7 @@ namespace Database
         {
             using (var da = dam.Create())
             {
-                da.UpsertOneTestRecord(new DB.TestRecord { SessionIndex = SessionIndex, Value = Value });
+                da.FromTestRecordUpsertOne(new DB.TestRecord { SessionIndex = SessionIndex, Value = Value });
                 da.Complete();
             }
         }
@@ -26,7 +26,7 @@ namespace Database
         {
             using (var da = dam.Create())
             {
-                var v = da.SelectOptionalTestRecordBySessionIndex(SessionIndex);
+                var v = da.FromTestRecordSelectOptionalBySessionIndex(SessionIndex);
                 if (v.OnHasValue)
                 {
                     return v.HasValue.Value;
@@ -42,7 +42,7 @@ namespace Database
         {
             using (var da = dam.Create())
             {
-                da.UpsertOneTestLockRecord(new DB.TestLockRecord { Id = 1, Value = Value });
+                da.FromTestLockRecordUpsertOne(new DB.TestLockRecord { Id = 1, Value = Value });
                 da.Complete();
             }
         }
@@ -51,7 +51,7 @@ namespace Database
         {
             using (var da = dam.Create())
             {
-                var ov = da.LockOptionalTestLockRecordById(1);
+                var ov = da.FromTestLockRecordLockOptionalById(1);
                 DB.TestLockRecord v;
                 if (ov.OnHasValue)
                 {
@@ -62,7 +62,7 @@ namespace Database
                     v = new DB.TestLockRecord { Id = 1, Value = 0 };
                 }
                 v.Value += Value;
-                da.UpsertOneTestLockRecord(v);
+                da.FromTestLockRecordUpsertOne(v);
                 da.Complete();
             }
         }
@@ -71,7 +71,7 @@ namespace Database
         {
             using (var da = dam.Create())
             {
-                var ov = da.SelectOptionalTestLockRecordById(1);
+                var ov = da.FromTestLockRecordSelectOptionalById(1);
                 DB.TestLockRecord v;
                 if (ov.OnHasValue)
                 {

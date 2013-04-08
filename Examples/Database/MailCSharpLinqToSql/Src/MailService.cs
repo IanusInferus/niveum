@@ -20,7 +20,7 @@ namespace Database
         {
             using (var da = dam.Create())
             {
-                return da.SelectAllUserProfileOrderById().Select(u => u.Name).ToList();
+                return da.FromUserProfileSelectAllOrderById().Select(u => u.Name).ToList();
             }
         }
 
@@ -28,10 +28,10 @@ namespace Database
         {
             using (var da = dam.Create())
             {
-                var u = da.SelectOptionalUserProfileByName(Name);
+                var u = da.FromUserProfileSelectOptionalByName(Name);
                 if (u == null) { return false; }
 
-                var dua = da.SelectOptionalDirectUserAuthenticationByName(u.HasValue.Name);
+                var dua = da.FromDirectUserAuthenticationSelectOptionalByName(u.HasValue.Name);
                 if (dua.OnNotHasValue) { return false; }
 
                 UserId = u.HasValue.Id;
@@ -44,7 +44,7 @@ namespace Database
             using (var da = dam.Create())
             {
                 if (UserId == -1) { throw new InvalidOperationException(); }
-                return da.SelectCountMailOwnerByOwnerId(UserId);
+                return da.FromMailOwnerSelectCountByOwnerId(UserId);
             }
         }
 
@@ -53,12 +53,12 @@ namespace Database
             using (var da = dam.Create())
             {
                 if (UserId == -1) { throw new InvalidOperationException(); }
-                var l = da.SelectRangeMailOwnerByOwnerIdOrderByOwnerIdAndTimeDesc(UserId, Skip, Take);
+                var l = da.FromMailOwnerSelectRangeByOwnerIdOrderByOwnerIdAndTimeDesc(UserId, Skip, Take);
                 var lh = new List<MailHeader>();
                 foreach (var mo in l)
                 {
-                    var m = da.SelectOneMailById(mo.Id);
-                    var From = da.SelectOneUserProfileById(m.FromId);
+                    var m = da.FromMailSelectOneById(mo.Id);
+                    var From = da.FromUserProfileSelectOneById(m.FromId);
                     lh.Add
                     (
                         new MailHeader
@@ -80,12 +80,12 @@ namespace Database
             using (var da = dam.Create())
             {
                 if (UserId == -1) { throw new InvalidOperationException(); }
-                if (da.SelectCountMailOwnerByIdAndOwnerId(MailId, UserId) == 0) { throw new InvalidOperationException(); }
-                var mo = da.SelectOneMailOwnerByIdAndOwnerId(MailId, UserId);
-                var m = da.SelectOneMailById(MailId);
-                var From = da.SelectOneUserProfileById(m.FromId);
-                var Tos = da.SelectManyMailToById(m.Id).Select(mt => da.SelectOneUserProfileById(mt.ToId)).ToList();
-                var Attachments = da.SelectManyMailAttachmentNameById(m.Id).ToList();
+                if (da.FromMailOwnerSelectCountByIdAndOwnerId(MailId, UserId) == 0) { throw new InvalidOperationException(); }
+                var mo = da.FromMailOwnerSelectOneByIdAndOwnerId(MailId, UserId);
+                var m = da.FromMailSelectOneById(MailId);
+                var From = da.FromUserProfileSelectOneById(m.FromId);
+                var Tos = da.FromMailToSelectManyById(m.Id).Select(mt => da.FromUserProfileSelectOneById(mt.ToId)).ToList();
+                var Attachments = da.FromMailAttachmentSelectManyForNameById(m.Id).ToList();
                 var v = new MailDetail
                 {
                     Id = m.Id,
@@ -97,7 +97,7 @@ namespace Database
                     Attachments = Attachments
                 };
                 mo.IsNew = false;
-                da.UpdateOneMailOwner(mo);
+                da.FromMailOwnerUpdateOne(mo);
                 da.Complete();
                 return v;
             }
@@ -108,8 +108,8 @@ namespace Database
             using (var da = dam.Create())
             {
                 if (UserId == -1) { throw new InvalidOperationException(); }
-                if (da.SelectCountMailOwnerByIdAndOwnerId(MailId, UserId) == 0) { throw new InvalidOperationException(); }
-                var Attachments = da.SelectManyMailAttachmentById(MailId).ToList();
+                if (da.FromMailOwnerSelectCountByIdAndOwnerId(MailId, UserId) == 0) { throw new InvalidOperationException(); }
+                var Attachments = da.FromMailAttachmentSelectManyById(MailId).ToList();
                 var l = Attachments.Select(a => new MailAttachment { Name = a.Name, Content = new List<Byte>(a.Content) }).ToList();
                 return l;
             }
@@ -120,14 +120,14 @@ namespace Database
             using (var da = dam.Create())
             {
                 if (UserId == -1) { throw new InvalidOperationException(); }
-                if (da.SelectCountMailOwnerByIdAndOwnerId(MailId, UserId) == 0) { throw new InvalidOperationException(); }
-                var mo = da.SelectOneMailOwnerByIdAndOwnerId(MailId, UserId);
-                da.DeleteOneMailOwnerByIdAndOwnerId(MailId, UserId);
-                if (da.SelectCountMailOwnerById(MailId) == 0)
+                if (da.FromMailOwnerSelectCountByIdAndOwnerId(MailId, UserId) == 0) { throw new InvalidOperationException(); }
+                var mo = da.FromMailOwnerSelectOneByIdAndOwnerId(MailId, UserId);
+                da.FromMailOwnerDeleteOneByIdAndOwnerId(MailId, UserId);
+                if (da.FromMailOwnerSelectCountById(MailId) == 0)
                 {
-                    da.DeleteManyMailAttachmentById(MailId);
-                    da.DeleteManyMailToById(MailId);
-                    da.DeleteOneMailById(MailId);
+                    da.FromMailAttachmentDeleteManyById(MailId);
+                    da.FromMailDeleteManyToById(MailId);
+                    da.FromMailDeleteOneById(MailId);
                 }
                 da.Complete();
             }
@@ -137,7 +137,7 @@ namespace Database
         {
             using (var da = dam.Create())
             {
-                var u = da.SelectOptionalUserProfileByName(Name);
+                var u = da.FromUserProfileSelectOptionalByName(Name);
                 if (u == null) { return null; }
                 return u.HasValue.Id;
             }
@@ -150,15 +150,15 @@ namespace Database
                 if (UserId == -1) { throw new InvalidOperationException(); }
                 foreach (var mt in m.ToIds)
                 {
-                    if (da.SelectCountUserProfileById(mt) == 0) { throw new InvalidOperationException(); }
+                    if (da.FromUserProfileSelectCountById(mt) == 0) { throw new InvalidOperationException(); }
                 }
                 var Time = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
                 var v = new DB.Mail { Title = m.Title, FromId = UserId, Time = Time, Content = m.Content };
-                da.InsertOneMail(v);
+                da.FromMailInsertOne(v);
                 var Id = v.Id;
-                da.InsertManyMailTo(m.ToIds.Select(mt => new DB.MailTo { Id = Id, ToId = mt }).ToList());
-                da.InsertManyMailOwner(m.ToIds.Select(mt => new DB.MailOwner { Id = Id, OwnerId = mt, IsNew = true, Time = Time }).ToList());
-                da.InsertManyMailAttachment(m.Attachments.Select(ma => new DB.MailAttachment { Id = Id, Name = ma.Name, Content = ma.Content.ToArray() }).ToList());
+                da.FromMailToInsertMany(m.ToIds.Select(mt => new DB.MailTo { Id = Id, ToId = mt }).ToList());
+                da.FromMailOwnerInsertMany(m.ToIds.Select(mt => new DB.MailOwner { Id = Id, OwnerId = mt, IsNew = true, Time = Time }).ToList());
+                da.FromMailAttachmentInsertMany(m.Attachments.Select(ma => new DB.MailAttachment { Id = Id, Name = ma.Name, Content = ma.Content.ToArray() }).ToList());
                 da.Complete();
             }
         }

@@ -36,7 +36,7 @@ namespace Database
 			}
 
 		public:
-			void UpsertOneTestRecord(shared_ptr<TestRecord> v)
+			void FromTestRecordUpsertOne(shared_ptr<TestRecord> v)
 			{
 				auto cmd = CreateTextCommand(L"INSERT INTO TestRecords (SessionIndex, Value) VALUES (@SessionIndex, @Value) ON DUPLICATE KEY UPDATE Value = @Value");
 				Add(L"SessionIndex", v->SessionIndex);
@@ -44,7 +44,7 @@ namespace Database
 				cmd->execute();
 			}
 
-			virtual Optional<std::shared_ptr<TestRecord>> SelectOptionalTestRecordBySessionIndex(int SessionIndex)
+			virtual Optional<std::shared_ptr<TestRecord>> FromTestRecordSelectOptionalBySessionIndex(int SessionIndex)
 			{
 				auto cmd = CreateTextCommand(L"SELECT SessionIndex, Value FROM TestRecords WHERE SessionIndex = @SessionIndex");
 				Add(L"SessionIndex", SessionIndex);
@@ -64,14 +64,14 @@ namespace Database
 				return ov;
 			}
 
-			void UpsertOneTestLockRecord(shared_ptr<TestLockRecord> v)
+			void FromTestLockRecordUpsertOne(shared_ptr<TestLockRecord> v)
 			{
 				auto cmd = CreateTextCommand(L"INSERT INTO TestLockRecords (Id, Value) VALUES (1, @Value) ON DUPLICATE KEY UPDATE Value = @Value");
 				Add(L"Value", v->Value);
 				cmd->execute();
 			}
 
-			Optional<std::shared_ptr<TestLockRecord>> SelectOptionalTestLockRecordById(int Id)
+			Optional<std::shared_ptr<TestLockRecord>> FromTestLockRecordSelectOptionalById(int Id)
 			{
 				auto cmd = CreateTextCommand(L"SELECT Id, Value FROM TestLockRecords WHERE Id = @Id");
                 Add(L"Id", Id);
@@ -91,7 +91,7 @@ namespace Database
 				return ov;
 			}
 
-			Optional<std::shared_ptr<TestLockRecord>> LockOptionalTestLockRecordById(int Id)
+			Optional<std::shared_ptr<TestLockRecord>> FromTestLockRecordLockOptionalById(int Id)
 			{
 				auto cmd = CreateTextCommand(L"SELECT Id, Value FROM TestLockRecords WHERE Id = @Id FOR UPDATE");
                 Add(L"Id", Id);
