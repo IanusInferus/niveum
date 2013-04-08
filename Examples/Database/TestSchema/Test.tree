@@ -4,7 +4,7 @@
       File:        Test.tree
       Location:    Yuki.Examples <Tree>
       Description: 测试
-      Version:     2013.02.27.
+      Version:     2014.04.08.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -24,8 +24,8 @@
     B                   Int
 
 #Query
-    Upsert One TestRecord
-    Select Optional TestRecord By SessionIndex
-    Upsert One TestLockRecord
-    Select Optional TestLockRecord By Id
-    Lock Optional TestLockRecord By Id
+    From TestRecord Upsert One
+    From TestRecord Select Optional By SessionIndex
+    From TestLockRecord Upsert One
+    From TestLockRecord Select Optional By Id
+    From TestLockRecord Lock Optional By Id

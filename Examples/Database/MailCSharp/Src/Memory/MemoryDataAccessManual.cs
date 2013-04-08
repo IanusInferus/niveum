@@ -13,9 +13,9 @@ namespace Database.Memory
 {
     public partial class MemoryDataAccess : IDataAccess
     {
-        public List<String> SelectManyMailAttachmentForNameById(Int Id)
+        public List<String> FromMailAttachmentSelectManyForNameById(Int Id)
         {
-            return MemoryDataManipulate.SelectManyMailAttachmentById(this.Tables, this.Indices, Id).Select(e => e.Name).ToList();
+            return MemoryDataManipulate.FromMailAttachmentSelectManyById(this.Tables, this.Indices, Id).Select(e => e.Name).ToList();
         }
     }
 }

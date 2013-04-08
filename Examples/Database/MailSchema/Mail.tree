@@ -4,7 +4,7 @@
       File:        Mail.tree
       Location:    Yuki.Examples <Tree>
       Description: 邮件
-      Version:     2012.11.27.
+      Version:     2013.04.08.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -48,22 +48,22 @@
     Mail                Mail                        [FK:Id=Id]邮件
 
 #Query
-    Select One Mail By Id
-    Select Many MailTo By Id
-    Select One MailOwner By (Id OwnerId)
-    Select Count MailOwner By Id
-    Select Count MailOwner By (Id OwnerId)
-    Select Many MailOwner By Id
-    Select Count MailOwner By OwnerId
-    Select Range MailOwner By OwnerId OrderBy (OwnerId Time-)
-    Select Many MailAttachment By Id
+    From Mail Select One By Id
+    From MailTo Select Many By Id
+    From MailOwner Select One By (Id OwnerId)
+    From MailOwner Select Count By Id
+    From MailOwner Select Count By (Id OwnerId)
+    From MailOwner Select Many By Id
+    From MailOwner Select Count By OwnerId
+    From MailOwner Select Range By OwnerId OrderBy (OwnerId Time-)
+    From MailAttachment Select Many By Id
 
-    Insert One Mail
-    Insert Many MailTo
-    Insert Many MailOwner
-    Insert Many MailAttachment
-    Update One MailOwner
-    Delete One Mail By Id
-    Delete Many MailTo By Id
-    Delete One MailOwner By (Id OwnerId)
-    Delete Many MailAttachment By Id
+    From Mail Insert One
+    From MailTo Insert Many
+    From MailOwner Insert Many
+    From MailAttachment Insert Many
+    From MailOwner Update One
+    From Mail Delete One By Id
+    From MailTo Delete Many By Id
+    From MailOwner Delete One By (Id OwnerId)
+    From MailAttachment Delete Many By Id

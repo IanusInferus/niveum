@@ -4,7 +4,7 @@
       File:        User.tree
       Location:    Yuki.Examples <Tree>
       Description: 用户
-      Version:     2013.03.27.
+      Version:     2014.04.08.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -26,10 +26,10 @@
     Name                String                      [P:32]用户名
 
 #Query
-    Select All UserProfile OrderBy Id
-    Select Count UserProfile By Id
-    Select One UserProfile By Id
-    Select Optional UserProfile By Name
-    Select Optional UserProfile By EmailAddress
-    Select Optional DirectUserAuthentication By Name
-    Insert One UserProfile
+    From UserProfile Select All OrderBy Id
+    From UserProfile Select Count By Id
+    From UserProfile Select One By Id
+    From UserProfile Select Optional By Name
+    From UserProfile Select Optional By EmailAddress
+    From DirectUserAuthentication Select Optional By Name
+    From UserProfile Insert One

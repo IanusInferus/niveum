@@ -14,7 +14,7 @@ namespace Database.MySql
 {
     public partial class MySqlDataAccess : IDataAccess
     {
-        public List<String> SelectManyMailAttachmentForNameById(Int Id)
+        public List<String> FromMailAttachmentSelectManyForNameById(Int Id)
         {
             var cmd = CreateTextCommand();
             cmd.CommandText = @"SELECT `Name` FROM `MailAttachments` WHERE `Id` = @Id";
