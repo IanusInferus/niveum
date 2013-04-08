@@ -1,4 +1,12 @@
-﻿2013.04.04.0
+﻿2013.04.08
+Yuki.Relation:
+修正索引超过数据库字符数限制的问题。对于超过字符数限制的索引，其名字改为CRC32的散列。
+
+2013.04.07
+Yuki.Relation:
+增加加载Schema时对By和OrderBy的检查，首先检查每个列是否存在。
+
+2013.04.04.0
 
 2013.04.03
 Yuki.DatabaseRegenerator:
