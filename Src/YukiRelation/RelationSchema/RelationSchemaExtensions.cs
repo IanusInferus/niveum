@@ -397,21 +397,21 @@ namespace Yuki.RelationSchema
 
         // 查询支持的语法如下
         //
-        // {Select, Lock} Optional <EntityName> By <Index>
-        // {Select, Lock} One <EntityName> By <Index>
-        // {Select, Lock} Many <EntityName> By <Index>
-        // {Select, Lock} Many <EntityName> By <Index> OrderBy <Index>
-        // {Select, Lock} All <EntityName>
-        // {Select, Lock} All <EntityName> OrderBy <Index>
-        // {Select, Lock} Range <EntityName> OrderBy <Index>
-        // {Select, Lock} Range <EntityName> By <Index> OrderBy <Index>
-        // {Select, Lock} Count <EntityName>
-        // {Select, Lock} Count <EntityName> By <Index>
+        // From <EntityName> {Select, Lock} Optional By <Index>
+        // From <EntityName> {Select, Lock} One By <Index>
+        // From <EntityName> {Select, Lock} Many By <Index>
+        // From <EntityName> {Select, Lock} Many By <Index> OrderBy <Index>
+        // From <EntityName> {Select, Lock} All
+        // From <EntityName> {Select, Lock} All OrderBy <Index>
+        // From <EntityName> {Select, Lock} Range OrderBy <Index>
+        // From <EntityName> {Select, Lock} Range By <Index> OrderBy <Index>
+        // From <EntityName> {Select, Lock} Count
+        // From <EntityName> {Select, Lock} Count By <Index>
         // 
-        // {Insert, Update, Upsert} {One, Many} <EntityName>
+        // From <EntityName> {Insert, Update, Upsert} {One, Many}
         // 
-        // Delete {Optional, One, Many} <EntityName> By <Index>
-        // Delete All <EntityName>
+        // From <EntityName> Delete {Optional, One, Many} By <Index>
+        // From <EntityName> Delete All
         // 
         // <Index> ::=
         //     | <ColumnName> "-"?
@@ -636,9 +636,10 @@ namespace Yuki.RelationSchema
         private static String GetQueryLine(QueryDef q)
         {
             var QueryStrings = new List<String>();
+            QueryStrings.Add("From");
+            QueryStrings.Add(q.EntityName);
             QueryStrings.Add(q.Verb._Tag.ToString());
             QueryStrings.Add(q.Numeral._Tag.ToString());
-            QueryStrings.Add(q.EntityName);
             if (q.By.Count != 0)
             {
                 QueryStrings.Add("By");
@@ -658,9 +659,10 @@ namespace Yuki.RelationSchema
         public static String FriendlyName(this QueryDef q)
         {
             var QueryStrings = new List<String>();
+            QueryStrings.Add("From");
+            QueryStrings.Add(q.EntityName);
             QueryStrings.Add(q.Verb._Tag.ToString());
             QueryStrings.Add(q.Numeral._Tag.ToString());
-            QueryStrings.Add(q.EntityName);
             if (q.By.Count != 0)
             {
                 QueryStrings.Add("By");

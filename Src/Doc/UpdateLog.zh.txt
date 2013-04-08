@@ -1,6 +1,9 @@
 ﻿2013.04.08
 Yuki.Relation:
 修正索引超过数据库字符数限制的问题。对于超过字符数限制的索引，其名字改为CRC32的散列。
+修改查询格式，由Select One Mail By Id改为From Mail Select One By Id。
+Examples:
+按照Yuki.Relation的修改进行变更。
 
 2013.04.07
 Yuki.Relation:

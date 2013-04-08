@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Memory代码生成器
-//  Version:     2013.03.28.
+//  Version:     2013.04.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -179,7 +179,7 @@ namespace Yuki.RelationSchema.CSharpMemory
                             if (h.Contains(Key)) { continue; }
                             h.Add(Key);
                             var Remain = k.Skip(j).ToArray();
-                            var PartialIndexName = e.Name + "By" + String.Join("And", Key);
+                            var PartialIndexName = "By" + String.Join("And", Key);
                             var IndexName = e.Name + "By" + String.Join("And", k);
                             var ParameterDeclarations = String.Join(", ", Key.Select(c => "{0} {1}".Formats(GetEscapedIdentifier(GetTypeString(d[c].Type)), GetEscapedIdentifier(c))).ToArray());
                             var Fetches = new List<String>();
@@ -276,7 +276,7 @@ namespace Yuki.RelationSchema.CSharpMemory
                 var e = TypeDict[q.EntityName].Entity;
 
                 var Signature = InnerWriter.GetQuerySignature(q);
-                var ManyName = (new QueryDef { Verb = q.Verb, Numeral = Numeral.CreateMany(), EntityName = q.EntityName, By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
+                var ManyName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateMany(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
                 var Parameters = String.Join(", ", q.By);
                 var OrderBys = GetOrderBy(q);
                 String[] Content;

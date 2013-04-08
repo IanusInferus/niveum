@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Memory代码模板数据
-      Version:     2013.03.28.
+      Version:     2013.04.08.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -160,7 +160,7 @@ ObjectSchemaTemplate
             //Parameters: ${EntityName}, ${PartialIndexName}, ${IndexName}, ${ParameterDeclarations}, ${Fetches}, ${ByIndex}, ${Filters}
             Value
                 $String
-                    public static IEnumerable<[[${EntityName}]]> [[SelectMany${PartialIndexName}]](MemoryDataTables _Tables_, MemoryDataIndices _Indices_, ${ParameterDeclarations})
+                    public static IEnumerable<[[${EntityName}]]> [[From${EntityName}SelectMany${PartialIndexName}]](MemoryDataTables _Tables_, MemoryDataIndices _Indices_, ${ParameterDeclarations})
                     {
                         var _Index_ = _Indices_.[[${IndexName}]];
                         ${Fetches}
@@ -181,7 +181,7 @@ ObjectSchemaTemplate
             //Parameters: ${EntityName}
             Value
                 $String
-                    public static IEnumerable<[[${EntityName}]]> [[SelectAll${EntityName}]](MemoryDataTables _Tables_, MemoryDataIndices _Indices_)
+                    public static IEnumerable<[[${EntityName}]]> [[From${EntityName}SelectAll]](MemoryDataTables _Tables_, MemoryDataIndices _Indices_)
                     {
                         return _Tables_.[[${EntityName}]];
                     }
