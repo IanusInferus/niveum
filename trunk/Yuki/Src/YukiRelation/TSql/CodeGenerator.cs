@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构T-SQL(SQL Server)数据库代码生成器
-//  Version:     2013.03.28.
+//  Version:     2013.04.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -31,6 +31,7 @@ namespace Yuki.RelationSchema.TSql
         {
 
             private static OS.ObjectSchemaTemplateInfo TemplateInfo;
+            private const int MaxNameLength = 128;
 
             public Schema Schema;
             public String DatabaseName;
@@ -106,7 +107,7 @@ namespace Yuki.RelationSchema.TSql
                                     var fk = new ForeignKey { ThisTableName = ThisTable.CollectionName, ThisKeyColumns = f.Attribute.Navigation.OtherKey, OtherTableName = t.Entity.CollectionName, OtherKeyColumns = f.Attribute.Navigation.ThisKey };
                                     if (!h.Contains(fk))
                                     {
-                                        var Name = String.Format("FK_{0}_{1}_{2}_{3}", fk.ThisTableName, String.Join("And", fk.ThisKeyColumns), fk.OtherTableName, String.Join("And", fk.OtherKeyColumns));
+                                        var Name = fk.GetLimitedName(MaxNameLength);
                                         l.AddRange(GetForeignKey(Name, fk.ThisTableName, fk.ThisKeyColumns, fk.OtherTableName, fk.OtherKeyColumns));
                                         h.Add(fk);
                                     }
@@ -116,7 +117,7 @@ namespace Yuki.RelationSchema.TSql
                                     var fk = new ForeignKey { ThisTableName = t.Entity.CollectionName, ThisKeyColumns = f.Attribute.Navigation.ThisKey, OtherTableName = Records[f.Type.TypeRef.Value].CollectionName, OtherKeyColumns = f.Attribute.Navigation.OtherKey };
                                     if (!h.Contains(fk))
                                     {
-                                        var Name = String.Format("FK_{0}_{1}_{2}_{3}", fk.ThisTableName, String.Join("And", fk.ThisKeyColumns), fk.OtherTableName, String.Join("And", fk.OtherKeyColumns));
+                                        var Name = fk.GetLimitedName(MaxNameLength);
                                         l.AddRange(GetForeignKey(Name, fk.ThisTableName, fk.ThisKeyColumns, fk.OtherTableName, fk.OtherKeyColumns));
                                         h.Add(fk);
                                     }
@@ -139,19 +140,19 @@ namespace Yuki.RelationSchema.TSql
                     }
                 }
                 {
-                    var Name = String.Format("PK_{0}_{1}", r.CollectionName, r.PrimaryKey.Columns.FriendlyName());
+                    var Name = RelationSchemaExtensions.GetLimitedKeyName("PK", String.Format("{0}_{1}", r.CollectionName, r.PrimaryKey.Columns.FriendlyName()), MaxNameLength);
                     FieldsAndKeys.Add(GetPrimaryKey(r.PrimaryKey, Name));
                 }
                 foreach (var k in r.UniqueKeys)
                 {
-                    var Name = String.Format("UQ_{0}_{1}", r.CollectionName, k.Columns.FriendlyName());
+                    var Name = RelationSchemaExtensions.GetLimitedKeyName("UQ", String.Format("{0}_{1}", r.CollectionName, k.Columns.FriendlyName()), MaxNameLength);
                     FieldsAndKeys.Add(GetUniqueKey(k, Name));
                 }
 
                 var NonUniqueKeys = new List<String>();
                 foreach (var k in r.NonUniqueKeys)
                 {
-                    var Name = String.Format("IX_{0}_{1}", r.CollectionName, k.Columns.FriendlyName());
+                    var Name = RelationSchemaExtensions.GetLimitedKeyName("IX", String.Format("{0}_{1}", r.CollectionName, k.Columns.FriendlyName()), MaxNameLength);
                     NonUniqueKeys.AddRange(GetNonUniqueKey(k, Name, r.CollectionName));
                 }
 
