@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2013.03.28.
+//  Version:     2013.04.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -15,6 +15,7 @@ using System.Security.Cryptography;
 using Firefly;
 using Firefly.Mapping.Binary;
 using Firefly.Streaming;
+using Firefly.TextEncoding;
 
 namespace Yuki.RelationSchema
 {
@@ -42,6 +43,24 @@ namespace Yuki.RelationSchema
         {
             Func<String, int> h = StringComparer.OrdinalIgnoreCase.GetHashCode;
             return h(ThisTableName) ^ h(OtherTableName) ^ ThisKeyColumns.Select(k => h(k)).Aggregate((a, b) => a ^ b) ^ OtherKeyColumns.Select(k => h(k)).Aggregate((a, b) => a ^ b);
+        }
+
+        private String GetIdentifier()
+        {
+            return String.Format("{0}_{1}_{2}_{3}", ThisTableName, String.Join("And", ThisKeyColumns), OtherTableName, String.Join("And", OtherKeyColumns));
+        }
+
+        public String Name
+        {
+            get
+            {
+                return "FK_" + GetIdentifier();
+            }
+        }
+
+        public String GetLimitedName(int MaxLength)
+        {
+            return RelationSchemaExtensions.GetLimitedKeyName("FK", GetIdentifier(), MaxLength);
         }
     }
 
@@ -88,7 +107,7 @@ namespace Yuki.RelationSchema
             else if (t.OnEntity)
             {
                 var r = t.Entity;
-                return TypeDef.CreateEntity(new EntityDef { Name = r.Name, CollectionName = r.CollectionName, Fields = r.Fields.Select(gp => MapWithoutDescription(gp)).ToList(), Description = "", PrimaryKey = r.PrimaryKey, UniqueKeys= r.UniqueKeys, NonUniqueKeys=r.NonUniqueKeys });
+                return TypeDef.CreateEntity(new EntityDef { Name = r.Name, CollectionName = r.CollectionName, Fields = r.Fields.Select(gp => MapWithoutDescription(gp)).ToList(), Description = "", PrimaryKey = r.PrimaryKey, UniqueKeys = r.UniqueKeys, NonUniqueKeys = r.NonUniqueKeys });
             }
             else if (t.OnEnum)
             {
@@ -461,12 +480,14 @@ namespace Yuki.RelationSchema
 
         // EntityName必须对应于Entity
         // Upsert对应的Entity不得含有Identity列，不得有多个PrimaryKey或UniqueKey
+        // By索引和OrderBy索引中的名称必须是Entity中的列
         // By索引必须和Entity已经声明的Key一致但可以不用考虑列的顺序和每个列里数据的排列方法
         // OrderBy索引必须和Entity已经声明的Key一致
         public static void VerifyQuerySemantics(this Schema s)
         {
             var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
             var EntityDict = Entities.ToDictionary(e => e.Name);
+            var ColumnDict = Entities.ToDictionary(e => e.Name, e => e.Fields.Where(f => f.Attribute.OnColumn).ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase));
             var ByIndexDict = new Dictionary<String, HashSet<ByIndex>>(StringComparer.OrdinalIgnoreCase);
             var OrderByIndexDict = new Dictionary<String, HashSet<OrderByIndex>>(StringComparer.OrdinalIgnoreCase);
             foreach (var e in Entities)
@@ -526,6 +547,14 @@ namespace Yuki.RelationSchema
 
                         if (q.By.Count != 0)
                         {
+                            var cd = ColumnDict[q.EntityName];
+                            foreach (var Column in q.By)
+                            {
+                                if (!cd.ContainsKey(Column))
+                                {
+                                    throw new InvalidOperationException(String.Format("ColumnNotExist: '{0}.{1}' in {2}", q.EntityName, Column, GetQueryLine(q)));
+                                }
+                            }
                             var bih = ByIndexDict[q.EntityName];
                             var bi = new ByIndex { Columns = q.By };
                             if (!bih.Contains(bi))
@@ -535,6 +564,14 @@ namespace Yuki.RelationSchema
                         }
                         if (q.OrderBy.Count != 0)
                         {
+                            var cd = ColumnDict[q.EntityName];
+                            foreach (var Column in q.OrderBy)
+                            {
+                                if (!cd.ContainsKey(Column.Name))
+                                {
+                                    throw new InvalidOperationException(String.Format("ColumnNotExist: '{0}.{1}' in {2}", q.EntityName, Column.Name, GetQueryLine(q)));
+                                }
+                            }
                             var obih = OrderByIndexDict[q.EntityName];
                             var obi = new OrderByIndex { Columns = q.OrderBy };
                             if (!obih.Contains(obi))
@@ -642,6 +679,27 @@ namespace Yuki.RelationSchema
         public static String FriendlyName(this IEnumerable<KeyColumn> Key)
         {
             return String.Join("And", Key.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name).ToArray());
+        }
+
+        public static String GetLimitedKeyName(String KeyType, String Identifier, int MaxLength)
+        {
+            var Name = KeyType + "_" + Identifier;
+            if (Name.Length > MaxLength)
+            {
+                var Bytes = TextEncoding.UTF8.GetBytes(Name);
+                var c = new CRC32();
+                foreach (var b in Bytes)
+                {
+                    c.PushData(b);
+                }
+                var Hash = c.GetCRC32();
+                Name = KeyType + "_" + Hash.ToString("X8");
+                if (Name.Length > MaxLength)
+                {
+                    throw new InvalidOperationException("MaxLengthTooSmall");
+                }
+            }
+            return Name;
         }
     }
 }
