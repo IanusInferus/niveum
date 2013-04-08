@@ -3,7 +3,7 @@
 //  File:        RelationSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构加载器
-//  Version:     2013.03.28.
+//  Version:     2013.04.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -290,82 +290,84 @@ namespace Yuki.RelationSchema
 
                 if (l.Count == 0) { return new Semantics.Node[] { }; }
 
-                if (l.Count != 3 && l.Count != 5 && l.Count != 7)
+                if (l.Count != 4 && l.Count != 6 && l.Count != 8)
                 {
                     throw new Syntax.InvalidSyntaxException("InvalidQuery", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                 }
-                var VerbName = GetLeafNodeValue(l[0], nm, "InvalidVerb");
-                if (!Verbs.Contains(VerbName)) { throw new Syntax.InvalidTokenException("InvalidVerb", nm.GetFileRange(l[0]), VerbName); }
-                var NumeralName = GetLeafNodeValue(l[1], nm, "InvalidNumeral");
-                if (!Numerals.Contains(NumeralName)) { throw new Syntax.InvalidTokenException("InvalidNumeral", nm.GetFileRange(l[1]), NumeralName); }
-                var EntityName = GetLeafNodeValue(l[2], nm, "InvalidEntityName");
+                var From = GetLeafNodeValue(l[0], nm, "InvalidFrom");
+                if (From != "From") { throw new Syntax.InvalidTokenException("InvalidFrom", nm.GetFileRange(l[0]), From); }
+                var EntityName = GetLeafNodeValue(l[1], nm, "InvalidEntityName");
+                var VerbName = GetLeafNodeValue(l[2], nm, "InvalidVerb");
+                if (!Verbs.Contains(VerbName)) { throw new Syntax.InvalidTokenException("InvalidVerb", nm.GetFileRange(l[2]), VerbName); }
+                var NumeralName = GetLeafNodeValue(l[3], nm, "InvalidNumeral");
+                if (!Numerals.Contains(NumeralName)) { throw new Syntax.InvalidTokenException("InvalidNumeral", nm.GetFileRange(l[3]), NumeralName); }
 
                 var ByIndex = new String[] { };
                 var OrderByIndex = new String[] { };
 
-                if (l.Count >= 5)
+                if (l.Count >= 6)
                 {
-                    var ByOrOrderByName = GetLeafNodeValue(l[3], nm, "InvalidByOrOrderBy");
+                    var ByOrOrderByName = GetLeafNodeValue(l[4], nm, "InvalidByOrOrderBy");
                     if (ByOrOrderByName == "By")
                     {
-                        if (l[4].OnLeaf)
+                        if (l[5].OnLeaf)
                         {
-                            ByIndex = new String[] { l[4].Leaf };
+                            ByIndex = new String[] { l[5].Leaf };
                         }
-                        else if (l[4].OnStem)
+                        else if (l[5].OnStem)
                         {
-                            ByIndex = l[4].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
+                            ByIndex = l[5].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
                         }
                         else
                         {
-                            throw new Syntax.InvalidSyntaxException("InvalidBy", nm.GetFileRange(l[4]));
+                            throw new Syntax.InvalidSyntaxException("InvalidBy", nm.GetFileRange(l[5]));
                         }
                     }
                     else if (ByOrOrderByName == "OrderBy")
                     {
-                        if (l[4].OnLeaf)
+                        if (l[5].OnLeaf)
                         {
-                            OrderByIndex = new String[] { l[4].Leaf };
+                            OrderByIndex = new String[] { l[5].Leaf };
                         }
-                        else if (l[4].OnStem)
+                        else if (l[5].OnStem)
                         {
-                            OrderByIndex = l[4].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
+                            OrderByIndex = l[5].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
                         }
                         else
                         {
-                            throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[4]));
+                            throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[5]));
                         }
                     }
                     else
                     {
-                        throw new Syntax.InvalidSyntaxException("InvalidByOrOrderBy", nm.GetFileRange(l[4]));
+                        throw new Syntax.InvalidSyntaxException("InvalidByOrOrderBy", nm.GetFileRange(l[5]));
                     }
                 }
-                if (l.Count >= 7)
+                if (l.Count >= 8)
                 {
                     if (OrderByIndex.Length != 0)
                     {
-                        throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[5]));
+                        throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[6]));
                     }
-                    var OrderByName = GetLeafNodeValue(l[5], nm, "InvalidOrderBy");
+                    var OrderByName = GetLeafNodeValue(l[6], nm, "InvalidOrderBy");
                     if (OrderByName == "OrderBy")
                     {
-                        if (l[6].OnLeaf)
+                        if (l[7].OnLeaf)
                         {
-                            OrderByIndex = new String[] { l[6].Leaf };
+                            OrderByIndex = new String[] { l[7].Leaf };
                         }
-                        else if (l[6].OnStem)
+                        else if (l[7].OnStem)
                         {
-                            OrderByIndex = l[6].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
+                            OrderByIndex = l[7].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
                         }
                         else
                         {
-                            throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[4]));
+                            throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[7]));
                         }
                     }
                     else
                     {
-                        throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[4]));
+                        throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[7]));
                     }
                 }
 
@@ -374,9 +376,9 @@ namespace Yuki.RelationSchema
                 return new Semantics.Node[]
                 {
                     MakeStemNode("QueryDef",
+                        MakeStemNode("EntityName", MakeLeafNode(EntityName)),
                         MakeStemNode("Verb", MakeStemNode(VerbName)),
                         MakeStemNode("Numeral", MakeStemNode(NumeralName)),
-                        MakeStemNode("EntityName", MakeLeafNode(EntityName)),
                         MakeStemNode("By", ByIndex.Select(c => MakeStemNode("StringLiteral", MakeLeafNode(c))).ToArray()),
                         MakeStemNode("OrderBy", OrderByIndexColumns)
                     )
