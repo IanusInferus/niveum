@@ -1,4 +1,4 @@
-#include "DataAccessManager.h"
+﻿#include "DataAccessManager.h"
 
 #include "MySql/DataAccessImplementation.h"
 

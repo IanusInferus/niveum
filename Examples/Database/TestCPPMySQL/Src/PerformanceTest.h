@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "AutoResetEvent.h"
 #include "LockedVariable.h"
