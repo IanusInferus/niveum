@@ -7,13 +7,13 @@
 
 namespace Database
 {
-	class DataAccessManager
-	{
-	private:
-		std::wstring ConnectionString;
-	public:
-		DataAccessManager(std::wstring ConnectionString);
+    class DataAccessManager
+    {
+    private:
+        std::wstring ConnectionString;
+    public:
+        DataAccessManager(std::wstring ConnectionString);
 
-		std::shared_ptr<IDataAccess> Create();
-	};
+        std::shared_ptr<IDataAccess> Create();
+    };
 }
