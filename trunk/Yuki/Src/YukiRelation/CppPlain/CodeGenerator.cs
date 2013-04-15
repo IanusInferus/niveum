@@ -59,6 +59,8 @@ namespace Yuki.RelationSchema.CppPlain
             {
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Int").Any()) { throw new InvalidOperationException("PrimitiveMissing: Int"); }
 
+                InnerWriter.FillEnumSet();
+
                 var Header = GetHeader();
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
                 var Primitives = GetPrimitives();
@@ -185,7 +187,11 @@ namespace Yuki.RelationSchema.CppPlain
 
             public String[] GetTemplate(String Name)
             {
-                return GetLines(TemplateInfo.Templates[Name].Value);
+                if (TemplateInfo.Templates.ContainsKey(Name))
+                {
+                    return GetLines(TemplateInfo.Templates[Name].Value);
+                }
+                return InnerWriter.GetTemplate(Name);
             }
             public String[] GetLines(String Value)
             {
