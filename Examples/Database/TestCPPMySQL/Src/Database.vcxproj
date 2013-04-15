@@ -104,8 +104,7 @@ if exist "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.pdb" 
   <ItemGroup>
     <ClInclude Include="AutoResetEvent.h" />
     <ClInclude Include="DataAccessManager.h" />
-    <ClInclude Include="DatabaseEntities.h" />
-    <ClInclude Include="IDataAccess.h" />
+    <ClInclude Include="Database.h" />
     <ClInclude Include="LoadTest.h" />
     <ClInclude Include="LockedVariable.h" />
     <ClInclude Include="MySql\DataAccessBase.h" />
