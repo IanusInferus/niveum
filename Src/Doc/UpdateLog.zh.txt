@@ -1,4 +1,12 @@
-﻿2013.04.08
+﻿2013.04.15
+Examples:
+修正C++ MySQL示例的空格和编码。
+修正C++ MySQL示例对空密码的支持。
+修改C++ MySQL示例部分写法。
+Yuki.Relation, Yuki.RelationSchemaManipulator:
+增加C++数据库简单类型代码生成。
+
+2013.04.08
 Yuki.Relation:
 修正索引超过数据库字符数限制的问题。对于超过字符数限制的索引，其名字改为CRC32的散列。
 修改查询格式，由Select One Mail By Id改为From Mail Select One By Id。
