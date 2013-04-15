@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2013.02.16.
+//  Version:     2013.04.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -74,7 +74,6 @@ namespace Yuki.ObjectSchema.Cpp.Common
 
                 var Header = GetHeader();
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
-                var Imports = Schema.Imports.Where(i => !IsInclude(i)).ToArray();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes(Schema);
                 var Contents = ComplexTypes;
@@ -85,7 +84,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                         Contents = GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", Contents);
                     }
                 }
-                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Imports", Imports).Substitute("Primitives", Primitives).Substitute("Contents", Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Primitives", Primitives).Substitute("Contents", Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
             
             public Boolean IsInclude(String s)
