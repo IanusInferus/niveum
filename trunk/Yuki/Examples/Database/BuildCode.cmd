@@ -29,6 +29,6 @@ RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2
 
 :: C++2011 MySQL
 @if not exist TestCPPMySQL\Src @md TestCPPMySQL\Src
-RelationSchemaManipulator.exe /loadtype:CommonSchema /loadtype:TestSchema /t2cppdp:TestCPPMySQL\Src\DatabaseEntities.h,Database
+RelationSchemaManipulator.exe /loadtype:CommonSchema /loadtype:TestSchema /t2cppdp:TestCPPMySQL\Src\Database.h,Database
 
 @pause
