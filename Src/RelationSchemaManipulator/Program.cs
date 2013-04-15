@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2013.02.26.
+//  Version:     2013.04.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -35,6 +35,7 @@ using Yuki.RelationSchema.CSharpMemory;
 using Yuki.RelationSchema.CSharpSqlServer;
 using Yuki.RelationSchema.CSharpPostgreSql;
 using Yuki.RelationSchema.CSharpMySql;
+using Yuki.RelationSchema.CppPlain;
 
 namespace Yuki.RelationSchemaManipulator
 {
@@ -596,8 +597,8 @@ namespace Yuki.RelationSchemaManipulator
 
         public static void RelationSchemaToCppDatabasePlainCode(String CppCodePath, String EntityNamespaceName)
         {
-            var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCpp(EntityNamespaceName);
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToCppPlain(EntityNamespaceName);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);
