@@ -1,4 +1,4 @@
-#include "Utility.h"
+﻿#include "Utility.h"
 #include "DataAccessBase.h"
 
 #include <exception>
