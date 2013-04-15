@@ -2,8 +2,8 @@
 //
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
-//  Description: 邮件管理程序
-//  Version:     2012.07.04.
+//  Description: 数据库示例程序
+//  Version:     2013.04.15.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -34,24 +34,24 @@ namespace Database
 
             if (argc == 3)
             {
-				auto ConnectionString = s2w(argv[1]);
-				auto Option = s2w(argv[2]);
-				boost::algorithm::to_lower(Option);
+                auto ConnectionString = s2w(argv[1]);
+                auto Option = s2w(argv[2]);
+                boost::algorithm::to_lower(Option);
 
-				auto dam = std::make_shared<DataAccessManager>(ConnectionString);
-				if (Option == L"/load")
-				{
-					LoadTest::DoTest(dam);
-				}
-				else if (Option == L"/perf")
-				{
-					PerformanceTest::DoTest(dam);
-				}
-				else
-				{
-					DisplayInfo();
-					return -1;
-				}
+                auto dam = std::make_shared<DataAccessManager>(ConnectionString);
+                if (Option == L"/load")
+                {
+                    LoadTest::DoTest(dam);
+                }
+                else if (Option == L"/perf")
+                {
+                    PerformanceTest::DoTest(dam);
+                }
+                else
+                {
+                    DisplayInfo();
+                    return -1;
+                }
             }
             else
             {

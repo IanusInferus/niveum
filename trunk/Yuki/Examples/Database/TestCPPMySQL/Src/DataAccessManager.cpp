@@ -4,14 +4,14 @@
 
 namespace Database
 {
-	DataAccessManager::DataAccessManager(std::wstring ConnectionString)
-		: ConnectionString(ConnectionString)
-	{
-	}
+    DataAccessManager::DataAccessManager(std::wstring ConnectionString)
+        : ConnectionString(ConnectionString)
+    {
+    }
 
-	std::shared_ptr<IDataAccess> DataAccessManager::Create()
-	{
-		auto da = std::make_shared<DataAccessImplementation>(ConnectionString);
-		return da;
-	}
+    std::shared_ptr<IDataAccess> DataAccessManager::Create()
+    {
+        auto da = std::make_shared<DataAccessImplementation>(ConnectionString);
+        return da;
+    }
 }
