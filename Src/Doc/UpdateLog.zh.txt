@@ -5,6 +5,8 @@ Examples:
 修改C++ MySQL示例部分写法。
 Yuki.Relation, Yuki.RelationSchemaManipulator:
 增加C++数据库简单类型代码生成。
+Yuki.Core, Yuki.Relation:
+删除C++代码生成中的using namespace。
 
 2013.04.08
 Yuki.Relation:

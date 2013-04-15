@@ -61,7 +61,6 @@ namespace Yuki.RelationSchema.CppPlain
 
                 var Header = GetHeader();
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
-                var Imports = Schema.Imports.Where(i => !IsInclude(i)).ToArray();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes();
                 var Contents = ComplexTypes;
@@ -72,7 +71,7 @@ namespace Yuki.RelationSchema.CppPlain
                         Contents = InnerWriter.GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", Contents);
                     }
                 }
-                return EvaluateEscapedIdentifiers(InnerWriter.GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Imports", Imports).Substitute("Primitives", Primitives).Substitute("Contents", Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return EvaluateEscapedIdentifiers(InnerWriter.GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Primitives", Primitives).Substitute("Contents", Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
 
             public Boolean IsInclude(String s)
@@ -204,11 +203,11 @@ namespace Yuki.RelationSchema.CppPlain
 
         private static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
-            return OS.CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            return OS.Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
         private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
         {
-            return OS.CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            return OS.Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
     }
 }
