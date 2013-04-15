@@ -7,6 +7,8 @@ Yuki.Relation, Yuki.RelationSchemaManipulator:
 增加C++数据库简单类型代码生成。
 Yuki.Core, Yuki.Relation:
 删除C++代码生成中的using namespace。
+Yuki.Relation:
+修正C++数据库简单类型代码生成没有判断枚举类型的问题。
 
 2013.04.08
 Yuki.Relation:
