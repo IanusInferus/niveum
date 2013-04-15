@@ -9,30 +9,30 @@
 
 namespace Database
 {
-	class TestService
-	{
-	private:
-		DataAccessManager &dam;
-	public:
-		TestService(DataAccessManager &dam)
-			: dam(dam)
-		{
-		}
+    class TestService
+    {
+    private:
+        DataAccessManager &dam;
+    public:
+        TestService(DataAccessManager &dam)
+            : dam(dam)
+        {
+        }
 
-		void SaveData(int SessionIndex, int Value)
-		{
-			auto da = dam.Create();
-			auto tr = std::make_shared<TestRecord>();
-			tr->SessionIndex = SessionIndex;
-			tr->Value = Value;
-			da->FromTestRecordUpsertOne(tr);
-			da->Complete();
-		}
+        void SaveData(int SessionIndex, int Value)
+        {
+            auto da = dam.Create();
+            auto tr = std::make_shared<TestRecord>();
+            tr->SessionIndex = SessionIndex;
+            tr->Value = Value;
+            da->FromTestRecordUpsertOne(tr);
+            da->Complete();
+        }
 
-		int LoadData(int SessionIndex)
-		{
-			auto da = dam.Create();
-			auto v = da->FromTestRecordSelectOptionalBySessionIndex(SessionIndex);
+        int LoadData(int SessionIndex)
+        {
+            auto da = dam.Create();
+            auto v = da->FromTestRecordSelectOptionalBySessionIndex(SessionIndex);
             if (v.OnHasValue())
             {
                 return v.HasValue->Value;
@@ -41,22 +41,22 @@ namespace Database
             {
                 throw std::logic_error("InvalidOperationException");
             }
-		}
-		
-		void SaveLockData(int Value)
-		{
-			auto da = dam.Create();
-			auto tlr = std::make_shared<TestLockRecord>();
-			tlr->Id = 1;
-			tlr->Value = Value;
-			da->FromTestLockRecordUpsertOne(tlr);
-			da->Complete();
-		}
-		
-		void AddLockData(int Value)
-		{
-			auto da = dam.Create();
-			auto ov = da->FromTestLockRecordLockOptionalById(1);
+        }
+        
+        void SaveLockData(int Value)
+        {
+            auto da = dam.Create();
+            auto tlr = std::make_shared<TestLockRecord>();
+            tlr->Id = 1;
+            tlr->Value = Value;
+            da->FromTestLockRecordUpsertOne(tlr);
+            da->Complete();
+        }
+        
+        void AddLockData(int Value)
+        {
+            auto da = dam.Create();
+            auto ov = da->FromTestLockRecordLockOptionalById(1);
             std::shared_ptr<TestLockRecord> v;
             if (ov.OnHasValue())
             {
@@ -68,25 +68,25 @@ namespace Database
                 v->Id = 1;
                 v->Value = 0;
             }
-			v->Value += Value;
-			da->FromTestLockRecordUpsertOne(v);
-			da->Complete();
-		}
-		
-		int LoadLockData()
-		{
-			auto da = dam.Create();
-			auto ov = da->FromTestLockRecordSelectOptionalById(1);
+            v->Value += Value;
+            da->FromTestLockRecordUpsertOne(v);
+            da->Complete();
+        }
+        
+        int LoadLockData()
+        {
+            auto da = dam.Create();
+            auto ov = da->FromTestLockRecordSelectOptionalById(1);
             std::shared_ptr<TestLockRecord> v;
             if (ov.OnHasValue())
             {
                 v = ov.HasValue;
-			    return v->Value;
+                return v->Value;
             }
             else
             {
                 throw std::logic_error("InvalidOperationException");
             }
-		}
-	};
+        }
+    };
 }
