@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "IDataAccess.h"
+#include "Database.h"
 #include "DataAccessManager.h"
 
 #include <memory>

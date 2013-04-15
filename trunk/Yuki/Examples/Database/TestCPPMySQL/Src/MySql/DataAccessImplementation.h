@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "IDataAccess.h"
+#include "Database.h"
 #include "MySql/DataAccessBase.h"
 
 #include <exception>

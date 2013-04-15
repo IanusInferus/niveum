@@ -32,12 +32,13 @@ namespace Database
 
         DataAccessBase::DataAccessBase(wstring ConnectionString)
         {
-            boost::wregex rField(L"[^;]+");
-            boost::wregex rPart(L"\\s*[^=]+\\s*");
+            boost::wregex rFieldDelimiter(L";");
+            boost::wregex rPartDelimiter(L"=");
+            boost::wregex rWhitespace(L"\\A\\s+|\\s+\\Z");
             boost::wregex rPort(L"\\d+");
 
             vector<wstring> Fields;
-            copy(boost::wsregex_token_iterator(ConnectionString.begin(), ConnectionString.end(), rField), boost::wsregex_token_iterator(), back_inserter(Fields));
+            boost::regex_split(back_inserter(Fields), std::wstring(ConnectionString), rFieldDelimiter);
 
             wstring Server;
             wstring Port = L"3306";
@@ -49,12 +50,24 @@ namespace Database
             {
                 auto f = Fields[i];
                 vector<wstring> Parts;
-                copy(boost::wsregex_token_iterator(f.begin(), f.end(), rPart), boost::wsregex_token_iterator(), back_inserter(Parts));
+                boost::regex_split(back_inserter(Parts), std::wstring(f), rPartDelimiter);
 
+                if (boost::regex_search(f, rPartDelimiter))
+                {
+                    if (Parts.size() == 0)
+                    {
+                        Parts.push_back(L"");
+                        Parts.push_back(L"");
+                    }
+                    else if (Parts.size() == 1)
+                    {
+                        Parts.push_back(L"");
+                    }
+                }
                 if (Parts.size() != 2) { throw logic_error("ConnectionStringInvalid: " + w2s(f)); }
 
-                auto Name = Parts[0];
-                auto Value = Parts[1];
+                auto Name = boost::regex_replace(Parts[0], rWhitespace, L"");
+                auto Value = boost::regex_replace(Parts[1], rWhitespace, L"");
                 boost::algorithm::to_lower(Name);
 
                 if (Name == L"server")

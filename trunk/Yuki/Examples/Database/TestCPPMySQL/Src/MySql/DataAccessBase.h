@@ -8,7 +8,7 @@
 #include <cppconn/connection.h>
 #include <cppconn/prepared_statement.h>
 
-#include "DatabaseEntities.h"
+#include "Database.h"
 
 namespace Database
 {
