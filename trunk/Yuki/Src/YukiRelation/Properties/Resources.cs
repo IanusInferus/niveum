@@ -27,6 +27,7 @@ namespace Yuki.RelationSchema.Properties
             }
         }
 
+        public static Byte[] CppMemory { get { return GetResource("CppMemory"); } }
         public static Byte[] CppPlain { get { return GetResource("CppPlain"); } }
         public static Byte[] CSharpLinqToEntities { get { return GetResource("CSharpLinqToEntities"); } }
         public static Byte[] CSharpLinqToSql { get { return GetResource("CSharpLinqToSql"); } }

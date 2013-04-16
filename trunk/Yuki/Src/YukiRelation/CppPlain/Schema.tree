@@ -26,7 +26,7 @@ ObjectSchemaTemplate
                         virtual ~IDataAccess() {}
                         virtual void Complete() = 0;
 
-                        ${Queries}
+                        virtual ${Queries} = 0;
                     };
         Template
             Name IDataAccessPool
@@ -45,4 +45,4 @@ ObjectSchemaTemplate
             //Parameters: ${Name}, ${ParameterList}, ${Type}
             Value
                 $String
-                    virtual ${Type} [[${Name}]](${ParameterList}) = 0;
+                    ${Type} [[${Name}]](${ParameterList})

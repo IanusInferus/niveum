@@ -51,6 +51,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CppMemory\CodeGenerator.cs" />
     <Compile Include="CppPlain\CodeGenerator.cs" />
     <Compile Include="CSharpLinqToEntities\CodeGenerator.cs" />
     <Compile Include="CSharpMemory\CodeGenerator.cs" />
@@ -88,6 +89,7 @@
     <EmbeddedResource Include="PostgreSql\Schema.tree" />
     <EmbeddedResource Include="CSharpMemory\Schema.tree" />
     <EmbeddedResource Include="CppPlain\Schema.tree" />
+    <EmbeddedResource Include="CppMemory\Schema.tree" />
     <None Include="RelationSchema\RelationSchema.tree" />
     <EmbeddedResource Include="CSharpLinqToSql\Schema.tree" />
     <EmbeddedResource Include="TSql\Schema.tree" />

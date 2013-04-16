@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to SQL数据库代码生成器
-//  Version:     2013.03.28.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -55,17 +55,17 @@ namespace Yuki.RelationSchema.CSharpLinqToSql
                 this.EntityNamespaceName = EntityNamespaceName;
                 this.ContextNamespaceName = ContextNamespaceName;
                 this.ContextClassName = ContextClassName;
+
+                Dbml = Schema.CompileToDbmlDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
+
+                Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
+                Records = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
             }
 
             private Dictionary<String, EnumDef> Enums;
             private Dictionary<String, EntityDef> Records;
             public String[] GetSchema()
             {
-                Dbml = Schema.CompileToDbmlDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
-
-                Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
-                Records = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
-
                 var Primitives = GetPrimitives();
                 var EntityComplexTypes = GetEntityComplexTypes(Schema);
                 var ContextComplexTypes = GetContextComplexTypes(Schema);
@@ -764,11 +764,11 @@ namespace Yuki.RelationSchema.CSharpLinqToSql
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
                 return Value.UnifyNewLineToLf().Split('\n');
             }
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
                 if (TemplateInfo.Keywords.Contains(Identifier))
                 {
@@ -779,7 +779,7 @@ namespace Yuki.RelationSchema.CSharpLinqToSql
                     return Identifier;
                 }
             }
-            private Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
+            private static Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
             private String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
                 return Lines.Select(Line => rIdentifier.Replace(Line, s => GetEscapedIdentifier(s.Result("${Identifier}"))).Replace("[[[[", "[[").Replace("]]]]", "]]")).ToArray();

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++简单类型代码生成器
-//  Version:     2013.04.15.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -53,27 +53,29 @@ namespace Yuki.RelationSchema.CppPlain
                 InnerSchema = PlainObjectSchemaGenerator.Generate(Schema);
                 TypeDict = OS.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
                 InnerWriter = new OS.Cpp.Common.CodeGenerator.Writer(InnerSchema, NamespaceName);
+
+                if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Int").Any()) { throw new InvalidOperationException("PrimitiveMissing: Int"); }
             }
 
             public String[] GetSchema()
             {
-                if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Int").Any()) { throw new InvalidOperationException("PrimitiveMissing: Int"); }
-
-                InnerWriter.FillEnumSet();
-
                 var Header = GetHeader();
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes();
                 var Contents = ComplexTypes;
-                if (NamespaceName != "")
-                {
-                    foreach (var nn in NamespaceName.Split('.').Reverse())
-                    {
-                        Contents = InnerWriter.GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", Contents);
-                    }
-                }
-                return EvaluateEscapedIdentifiers(InnerWriter.GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Primitives", Primitives).Substitute("Contents", Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                Contents = WrapContents(NamespaceName, Contents);
+                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+            }
+
+            public String[] GetMain(String[] Header, String[] Includes, String[] Primitives, String[] Contents)
+            {
+                return InnerWriter.GetMain(Header, Includes, Primitives, Contents);
+            }
+
+            public String[] WrapContents(String Namespace, String[] Contents)
+            {
+                return InnerWriter.WrapContents(Namespace, Contents);
             }
 
             public Boolean IsInclude(String s)
@@ -109,7 +111,7 @@ namespace Yuki.RelationSchema.CppPlain
                     }
                     else if (q.Numeral.OnMany)
                     {
-                        pl.Add("{0} {1}".Formats(GetEscapedIdentifier("std::shared_ptr<std::vector<class {0}>>".Formats(q.EntityName)), GetEscapedIdentifier("l")));
+                        pl.Add("{0} {1}".Formats(GetEscapedIdentifier("std::shared_ptr<std::vector<std::shared_ptr<class {0}>>>".Formats(q.EntityName)), GetEscapedIdentifier("l")));
                     }
                     else
                     {
@@ -136,15 +138,15 @@ namespace Yuki.RelationSchema.CppPlain
                     }
                     else if (q.Numeral.OnMany)
                     {
-                        Type = GetEscapedIdentifier("std::shared_ptr<std::vector<class {0}>>".Formats(q.EntityName));
+                        Type = GetEscapedIdentifier("std::shared_ptr<std::vector<std::shared_ptr<class {0}>>>".Formats(q.EntityName));
                     }
                     else if (q.Numeral.OnAll)
                     {
-                        Type = GetEscapedIdentifier("std::shared_ptr<std::vector<class {0}>>".Formats(q.EntityName));
+                        Type = GetEscapedIdentifier("std::shared_ptr<std::vector<std::shared_ptr<class {0}>>>".Formats(q.EntityName));
                     }
                     else if (q.Numeral.OnRange)
                     {
-                        Type = GetEscapedIdentifier("std::shared_ptr<std::vector<class {0}>>".Formats(q.EntityName));
+                        Type = GetEscapedIdentifier("std::shared_ptr<std::vector<std::shared_ptr<class {0}>>>".Formats(q.EntityName));
                     }
                     else if (q.Numeral.OnCount)
                     {
@@ -171,7 +173,7 @@ namespace Yuki.RelationSchema.CppPlain
                 var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToArray();
                 if (Queries.Length > 0)
                 {
-                    l.AddRange(GetTemplate("IDataAccess").Substitute("Queries", Queries.Select(q => GetQuerySignature(q) + ";").ToArray()));
+                    l.AddRange(GetTemplate("IDataAccess").Substitute("Queries", Queries.Select(q => GetQuerySignature(q)).ToArray()));
                     l.Add("");
                     l.AddRange(GetTemplate("IDataAccessPool"));
                     l.Add("");
@@ -187,23 +189,19 @@ namespace Yuki.RelationSchema.CppPlain
 
             public String[] GetTemplate(String Name)
             {
-                if (TemplateInfo.Templates.ContainsKey(Name))
-                {
-                    return GetLines(TemplateInfo.Templates[Name].Value);
-                }
-                return InnerWriter.GetTemplate(Name);
+                return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
-                return Value.UnifyNewLineToLf().Split('\n');
+                return OS.Cpp.Common.CodeGenerator.Writer.GetLines(Value);
             }
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
-                return InnerWriter.GetEscapedIdentifier(Identifier);
+                return OS.Cpp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
-            public String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
-                return InnerWriter.EvaluateEscapedIdentifiers(Lines);
+                return OS.Cpp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 

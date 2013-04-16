@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0代码生成器
-//  Version:     2013.03.31.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -54,15 +54,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
             {
                 this.Schema = Schema;
                 this.PackageName = PackageName;
-            }
 
-            public void FillEnumSet()
-            {
-                EnumSet = new HashSet<String>(Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).Select(c => c.VersionedName()).Distinct());
-            }
-
-            public ActionScript.FileResult[] GetFiles()
-            {
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
                     if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && gp.Type.TypeRef.Name == "Type"))
@@ -71,9 +63,13 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                     }
                 }
 
+                EnumSet = new HashSet<String>(Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).Select(c => c.VersionedName()).Distinct());
+            }
+
+            public ActionScript.FileResult[] GetFiles()
+            {
                 List<ActionScript.FileResult> l = new List<ActionScript.FileResult>();
 
-                FillEnumSet();
                 var ltf = new TupleAndGenericTypeSpecFetcher();
                 ltf.PushTypeDefs(Schema.TypeRefs.Concat(Schema.Types));
                 var Tuples = ltf.GetTuples();
@@ -423,11 +419,11 @@ namespace Yuki.ObjectSchema.ActionScript.Common
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
                 return Value.UnifyNewLineToLf().Split('\n');
             }
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
                 var l = new List<String>();
                 foreach (var IdentifierPart in Identifier.Split('.'))
@@ -443,8 +439,8 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                 }
                 return String.Join(".", l.ToArray());
             }
-            private Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
-            public String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private static Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
+            public static String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
                 return Lines.Select(Line => rIdentifier.Replace(Line, s => GetEscapedIdentifier(s.Result("${Identifier}"))).Replace("[[[[", "[[").Replace("]]]]", "]]")).ToArray();
             }

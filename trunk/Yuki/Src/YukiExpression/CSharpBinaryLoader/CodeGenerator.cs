@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式结构C#二进制加载器代码生成器
-//  Version:     2013.03.27.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -36,8 +36,6 @@ namespace Yuki.ExpressionSchema.CSharpBinaryLoader
         {
             private static ObjectSchemaTemplateInfo TemplateInfo;
 
-            private CSharp.Common.CodeGenerator.Writer InnerWriter;
-
             private Schema Schema;
             private String NamespaceName;
 
@@ -57,8 +55,6 @@ namespace Yuki.ExpressionSchema.CSharpBinaryLoader
 
             public String[] GetSchema()
             {
-                InnerWriter = new CSharp.Common.CodeGenerator.Writer(null, NamespaceName, true);
-
                 var Header = GetHeader();
                 var ComplexTypes = GetComplexTypes(Schema);
 
@@ -137,17 +133,17 @@ namespace Yuki.ExpressionSchema.CSharpBinaryLoader
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
-                return Value.UnifyNewLineToLf().Split('\n');
+                return CSharp.Common.CodeGenerator.Writer.GetLines(Value);
             }
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
-                return InnerWriter.GetEscapedIdentifier(Identifier);
+                return CSharp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
             private String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
-                return InnerWriter.EvaluateEscapedIdentifiers(Lines);
+                return CSharp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
