@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构PostgreSQL数据库代码生成器
-//  Version:     2013.04.08.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,7 +22,7 @@ namespace Yuki.RelationSchema.PostgreSql
     {
         public static String CompileToPostgreSql(this Schema Schema, String DatabaseName, Boolean WithComment = false)
         {
-            Writer w = new Writer() { Schema = Schema, DatabaseName = DatabaseName, WithComment = WithComment };
+            Writer w = new Writer(Schema, DatabaseName, WithComment);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -33,13 +33,24 @@ namespace Yuki.RelationSchema.PostgreSql
             private static OS.ObjectSchemaTemplateInfo TemplateInfo;
             private const int MaxNameLength = 63;
 
-            public Schema Schema;
-            public String DatabaseName;
-            public Boolean WithComment;
+            private Schema Schema;
+            private String DatabaseName;
+            private Boolean WithComment;
 
             static Writer()
             {
                 TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.PostgreSql);
+            }
+
+            public Writer(Schema Schema, String DatabaseName, Boolean WithComment)
+            {
+                this.Schema = Schema;
+                this.DatabaseName = DatabaseName;
+                this.WithComment = WithComment;
+
+                Primitives = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive).Select(t => t.Primitive).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+                Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
+                Records = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
             }
 
             private Dictionary<String, PrimitiveDef> Primitives;
@@ -47,10 +58,6 @@ namespace Yuki.RelationSchema.PostgreSql
             private Dictionary<String, EntityDef> Records;
             public String[] GetSchema()
             {
-                Primitives = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive).Select(t => t.Primitive).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
-                Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
-                Records = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
-
                 var Tables = GetTables(Schema);
                 var ForeignKeys = GetForeignKeys(Schema);
                 var Comments = GetComments(Schema, WithComment);
@@ -354,7 +361,7 @@ namespace Yuki.RelationSchema.PostgreSql
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
                 return Value.UnifyNewLineToLf().Split('\n');
             }

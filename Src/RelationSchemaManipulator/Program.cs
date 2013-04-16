@@ -36,6 +36,7 @@ using Yuki.RelationSchema.CSharpSqlServer;
 using Yuki.RelationSchema.CSharpPostgreSql;
 using Yuki.RelationSchema.CSharpMySql;
 using Yuki.RelationSchema.CppPlain;
+using Yuki.RelationSchema.CppMemory;
 
 namespace Yuki.RelationSchemaManipulator
 {
@@ -305,6 +306,19 @@ namespace Yuki.RelationSchemaManipulator
                     if (args.Length == 2)
                     {
                         RelationSchemaToCppDatabasePlainCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "t2cppm")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 3)
+                    {
+                        RelationSchemaToCppDatabaseMemoryCode(args[0], args[1], args[2]);
                     }
                     else
                     {
@@ -599,6 +613,23 @@ namespace Yuki.RelationSchemaManipulator
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCppPlain(EntityNamespaceName);
+            if (File.Exists(CppCodePath))
+            {
+                var Original = Txt.ReadFile(CppCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CppCodePath, Compiled);
+        }
+
+        public static void RelationSchemaToCppDatabaseMemoryCode(String CppCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        {
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToCppMemory(EntityNamespaceName, ContextNamespaceName);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java二进制代码生成器
-//  Version:     2013.03.31.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -52,10 +52,7 @@ namespace Yuki.ObjectSchema.JavaBinary
                 this.Schema = Schema;
                 this.ClassName = ClassName;
                 this.PackageName = PackageName;
-            }
 
-            public String[] GetSchema()
-            {
                 InnerWriter = new Java.Common.CodeGenerator.Writer(Schema, ClassName, PackageName);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
@@ -65,7 +62,10 @@ namespace Yuki.ObjectSchema.JavaBinary
                         throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                     }
                 }
+            }
 
+            public String[] GetSchema()
+            {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes(Schema);
@@ -531,27 +531,27 @@ namespace Yuki.ObjectSchema.JavaBinary
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
-                return Value.UnifyNewLineToLf().Split('\n');
+                return Java.Common.CodeGenerator.Writer.GetLines(Value);
             }
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
-                return InnerWriter.GetEscapedIdentifier(Identifier);
+                return Java.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
             private String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
-                return InnerWriter.EvaluateEscapedIdentifiers(Lines);
+                return Java.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
         private static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
-            return Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            return Java.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
         private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
         {
-            return Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            return Java.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
     }
 }

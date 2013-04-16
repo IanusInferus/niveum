@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2013.03.31.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -54,10 +54,7 @@ namespace Yuki.ObjectSchema.CSharp.Common
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
                 this.WithFirefly = WithFirefly;
-            }
 
-            public String[] GetSchema()
-            {
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
                     if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && gp.Type.TypeRef.Name == "Type"))
@@ -65,7 +62,10 @@ namespace Yuki.ObjectSchema.CSharp.Common
                         throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                     }
                 }
+            }
 
+            public String[] GetSchema()
+            {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes(Schema);
@@ -509,12 +509,12 @@ namespace Yuki.ObjectSchema.CSharp.Common
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
                 return Value.UnifyNewLineToLf().Split('\n');
             }
             private static Regex rIdentifierPart = new Regex(@"[^\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F]+");
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
                 return rIdentifierPart.Replace(Identifier, m =>
                 {
@@ -529,8 +529,8 @@ namespace Yuki.ObjectSchema.CSharp.Common
                     }
                 });
             }
-            private Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
-            public String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private static Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
+            public static String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
                 return Lines.Select(Line => rIdentifier.Replace(Line, s => GetEscapedIdentifier(s.Result("${Identifier}"))).Replace("[[[[", "[[").Replace("]]]]", "]]")).ToArray();
             }

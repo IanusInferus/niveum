@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2013.02.16.
+      Version:     2013.04.16.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -15,28 +15,6 @@ ObjectSchemaTemplate
     PrimitiveMappings
     $End
     Templates
-        Template
-            Name Main
-            //Parameters: ${Header}, ${Imports}, ${Includes}, ${Primitives}, ${Contents}
-            Value
-                $String
-                    ${Header}
-                    #include ${Includes}
-                    using namespace ${Imports};
-                    ${Primitives}
-
-                    ${Contents}
-
-                $End
-        Template
-            Name Namespace
-            //Parameters: ${NamespaceName}, ${Contents}
-            Value
-                $String
-                    namespace [[${NamespaceName}]]
-                    {
-                        ${Contents}
-                    }
         Template
             Name Header
             //Parameters:

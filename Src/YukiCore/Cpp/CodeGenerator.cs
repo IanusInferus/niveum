@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2013.04.15.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -53,15 +53,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
             {
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
-            }
 
-            public void FillEnumSet()
-            {
-                EnumSet = new HashSet<String>(Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).Select(c => c.VersionedName()).Distinct());
-            }
-
-            public String[] GetSchema()
-            {
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
                     if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && TemplateInfo.PrimitiveMappings.ContainsKey(gp.Type.TypeRef.Name) && gp.Type.TypeRef.Name == "Type"))
@@ -70,21 +62,36 @@ namespace Yuki.ObjectSchema.Cpp.Common
                     }
                 }
 
-                FillEnumSet();
+                EnumSet = new HashSet<String>(Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).Select(c => c.VersionedName()).Distinct());
+            }
 
+            public String[] GetSchema()
+            {
                 var Header = GetHeader();
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes(Schema);
                 var Contents = ComplexTypes;
+                Contents = WrapContents(NamespaceName, Contents);
+                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+            }
+
+            public String[] GetMain(String[] Header, String[] Includes, String[] Primitives, String[] Contents)
+            {
+                return GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Primitives", Primitives).Substitute("Contents", Contents);
+            }
+
+            public String[] WrapContents(String Namespace, String[] Contents)
+            {
+                var c = Contents;
                 if (NamespaceName != "")
                 {
                     foreach (var nn in NamespaceName.Split('.').Reverse())
                     {
-                        Contents = GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", Contents);
+                        c = GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", Contents);
                     }
                 }
-                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Primitives", Primitives).Substitute("Contents", Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return c;
             }
             
             public Boolean IsInclude(String s)
@@ -580,12 +587,12 @@ namespace Yuki.ObjectSchema.Cpp.Common
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
                 return Value.UnifyNewLineToLf().Split('\n');
             }
             private static Regex rIdentifierPart = new Regex(@"typename |class |struct |union |enum |[^\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F]+");
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
                 return rIdentifierPart.Replace(Identifier, m =>
                 {
@@ -600,8 +607,8 @@ namespace Yuki.ObjectSchema.Cpp.Common
                     }
                 });
             }
-            private Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
-            public String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private static Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
+            public static String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
                 return Lines.Select(Line => rIdentifier.Replace(Line, s => GetEscapedIdentifier(s.Result("${Identifier}"))).Replace("[[[[", "[[").Replace("]]]]", "]]")).ToArray();
             }

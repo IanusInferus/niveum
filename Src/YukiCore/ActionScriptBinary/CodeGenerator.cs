@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0二进制通讯代码生成器
-//  Version:     2013.03.31.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -49,10 +49,7 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
                 this.Schema = Schema;
                 this.PackageName = PackageName;
                 this.Hash = Schema.Hash();
-            }
 
-            public ActionScript.FileResult[] GetFiles()
-            {
                 InnerWriter = new ActionScript.Common.CodeGenerator.Writer(Schema, PackageName);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
@@ -62,10 +59,11 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
                         throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                     }
                 }
+            }
 
+            public ActionScript.FileResult[] GetFiles()
+            {
                 List<ActionScript.FileResult> l = new List<ActionScript.FileResult>();
-
-                InnerWriter.FillEnumSet();
 
                 l.Add(GetFile("BinaryTranslator", GetBinaryTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray())));
 
@@ -355,23 +353,23 @@ namespace Yuki.ObjectSchema.ActionScriptBinary
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
-                return Value.UnifyNewLineToLf().Split('\n');
+                return ActionScript.Common.CodeGenerator.Writer.GetLines(Value);
             }
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
-                return InnerWriter.GetEscapedIdentifier(Identifier);
+                return ActionScript.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
             private String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
-                return InnerWriter.EvaluateEscapedIdentifiers(Lines);
+                return ActionScript.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
         private static String TypeFriendlyName(this TypeSpec Type)
         {
-            return Yuki.ObjectSchema.ActionScript.Common.CodeGenerator.TypeFriendlyName(Type);
+            return ActionScript.Common.CodeGenerator.TypeFriendlyName(Type);
         }
         private static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
