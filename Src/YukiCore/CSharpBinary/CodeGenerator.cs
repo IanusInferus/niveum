@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#二进制通讯代码生成器
-//  Version:     2013.03.31.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -55,10 +55,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 this.NamespaceName = NamespaceName;
                 this.WithFirefly = WithFirefly;
                 this.Hash = Schema.Hash();
-            }
 
-            public String[] GetSchema()
-            {
                 InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, WithFirefly);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
@@ -68,7 +65,10 @@ namespace Yuki.ObjectSchema.CSharpBinary
                         throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                     }
                 }
+            }
 
+            public String[] GetSchema()
+            {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes(Schema);
@@ -554,17 +554,17 @@ namespace Yuki.ObjectSchema.CSharpBinary
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
-                return Value.UnifyNewLineToLf().Split('\n');
+                return CSharp.Common.CodeGenerator.Writer.GetLines(Value);
             }
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
-                return InnerWriter.GetEscapedIdentifier(Identifier);
+                return CSharp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
             private String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
-                return InnerWriter.EvaluateEscapedIdentifiers(Lines);
+                return CSharp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 

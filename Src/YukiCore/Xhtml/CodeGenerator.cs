@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2012.07.26.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -49,19 +49,7 @@ namespace Yuki.ObjectSchema.Xhtml
                 this.Schema = Schema;
                 this.Title = Title;
                 this.CopyrightText = CopyrightText;
-            }
 
-            public class TypeInfo
-            {
-                public TypeDef Def;
-                public String FriendlyPath;
-                public String DocFilePath;
-                public String DocPath;
-            }
-            private Dictionary<String, TypeInfo> TypeInfoDict;
-
-            public FileResult[] GetFiles()
-            {
                 TypeInfoDict = new Dictionary<String, TypeInfo>(StringComparer.OrdinalIgnoreCase);
 
                 String Root = "";
@@ -96,7 +84,19 @@ namespace Yuki.ObjectSchema.Xhtml
                     var tli = new TypeInfo { Def = Map[p.Name], FriendlyPath = PathWithoutExt.Replace(@"\", @"/"), DocFilePath = DocFilePath, DocPath = String.Format("{0}#{1}", DocFilePath, p.Name) };
                     TypeInfoDict.Add(p.Name, tli);
                 }
+            }
 
+            public class TypeInfo
+            {
+                public TypeDef Def;
+                public String FriendlyPath;
+                public String DocFilePath;
+                public String DocPath;
+            }
+            private Dictionary<String, TypeInfo> TypeInfoDict;
+
+            public FileResult[] GetFiles()
+            {
                 var Types = Schema.GetMap();
                 var Files = Types.GroupBy(Type => CollectionOperations.CreatePair(TypeInfoDict[Type.Key].FriendlyPath, TypeInfoDict[Type.Key].DocFilePath), (Pair, gt) => new { FriendlyPath = Pair.Key, DocFilePath = Pair.Value, Types = gt.Select(t => t.Value).ToArray() }).ToArray();
 
@@ -351,7 +351,7 @@ namespace Yuki.ObjectSchema.Xhtml
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
                 return Value.UnifyNewLineToLf().Split('\n');
             }

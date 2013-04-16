@@ -1,4 +1,10 @@
-﻿2013.04.15
+﻿2013.04.16
+Yuki.Core, Yuki.Relation, Yuki.Expression:
+将所有代码生成器的初始化代码放到构造器中。
+Yuki.Relation, Yuki.RelationSchemaManipulator:
+增加C++ Memory数据库代码生成。使用cpplinq作为Linq库。
+
+2013.04.15
 Examples:
 修正C++ MySQL示例的空格和编码。
 修正C++ MySQL示例对空密码的支持。

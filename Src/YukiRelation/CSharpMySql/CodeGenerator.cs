@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# MySQL代码生成器
-//  Version:     2013.03.28.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -54,10 +54,7 @@ namespace Yuki.RelationSchema.CSharpMySql
                 this.NamespaceName = NamespaceName;
                 InnerSchema = PlainObjectSchemaGenerator.Generate(Schema);
                 TypeDict = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
-            }
 
-            public String[] GetSchema()
-            {
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Unit").Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Boolean").Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "String").Any()) { throw new InvalidOperationException("PrimitiveMissing: String"); }
@@ -68,7 +65,10 @@ namespace Yuki.RelationSchema.CSharpMySql
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "List").Any()) { throw new InvalidOperationException("PrimitiveMissing: List"); }
 
                 InnerWriter = new CSharpPlain.CodeGenerator.Writer(Schema, NamespaceName);
+            }
 
+            public String[] GetSchema()
+            {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes();
@@ -438,17 +438,17 @@ namespace Yuki.RelationSchema.CSharpMySql
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
-                return Value.UnifyNewLineToLf().Split('\n');
+                return OS.CSharp.Common.CodeGenerator.Writer.GetLines(Value);
             }
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
-                return InnerWriter.GetEscapedIdentifier(Identifier);
+                return OS.CSharp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
-            public String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
-                return InnerWriter.EvaluateEscapedIdentifiers(Lines);
+                return OS.CSharp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 

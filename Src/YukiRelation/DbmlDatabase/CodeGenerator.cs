@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构Dbml数据库代码生成器
-//  Version:     2013.03.28.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -61,15 +61,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                 this.EntityNamespaceName = EntityNamespaceName;
                 this.ContextNamespaceName = ContextNamespaceName;
                 this.ContextClassName = ContextClassName;
-            }
 
-            private XNamespace ns = XNamespace.Get(@"http://schemas.microsoft.com/linqtosql/dbml/2007");
-            private Dictionary<String, PrimitiveDef> Primitives;
-            private Dictionary<String, EnumDef> Enums;
-            private Dictionary<String, EntityDef> Records;
-            private Dictionary<ForeignKey, String> AssociationNames;
-            public XElement GetSchema()
-            {
                 Primitives = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive).Select(t => t.Primitive).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
                 Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
                 Records = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
@@ -122,7 +114,15 @@ namespace Yuki.RelationSchema.DbmlDatabase
                         }
                     }
                 }
+            }
 
+            private XNamespace ns = XNamespace.Get(@"http://schemas.microsoft.com/linqtosql/dbml/2007");
+            private Dictionary<String, PrimitiveDef> Primitives;
+            private Dictionary<String, EnumDef> Enums;
+            private Dictionary<String, EntityDef> Records;
+            private Dictionary<ForeignKey, String> AssociationNames;
+            public XElement GetSchema()
+            {
                 var x = new XElement(ns + "Database");
                 x.SetAttributeValue("Name", DatabaseName);
                 x.SetAttributeValue("EntityNamespace", EntityNamespaceName);

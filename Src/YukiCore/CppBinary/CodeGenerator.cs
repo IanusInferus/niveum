@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2013.03.31.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -53,10 +53,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
                 this.Hash = Schema.Hash();
-            }
 
-            public String[] GetSchema()
-            {
                 InnerWriter = new Cpp.Common.CodeGenerator.Writer(Schema, NamespaceName);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
@@ -66,30 +63,32 @@ namespace Yuki.ObjectSchema.CppBinary
                         throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                     }
                 }
+            }
 
-                InnerWriter.FillEnumSet();
-
+            public String[] GetSchema()
+            {
                 var Header = GetHeader();
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
-                var Imports = Schema.Imports.Where(i => !IsInclude(i)).ToArray();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes(Schema);
                 var Contents = ComplexTypes;
-                if (NamespaceName != "")
-                {
-                    foreach (var nn in NamespaceName.Split('.').Reverse())
-                    {
-                        Contents = GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", Contents);
-                    }
-                }
-                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Imports", Imports).Substitute("Primitives", Primitives).Substitute("Contents", Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                Contents = WrapContents(NamespaceName, Contents);
+                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+            }
+
+            public String[] GetMain(String[] Header, String[] Includes, String[] Primitives, String[] Contents)
+            {
+                return InnerWriter.GetMain(Header, Includes, Primitives, Contents);
+            }
+
+            public String[] WrapContents(String Namespace, String[] Contents)
+            {
+                return InnerWriter.WrapContents(Namespace, Contents);
             }
 
             public Boolean IsInclude(String s)
             {
-                if (s.StartsWith("<") && s.EndsWith(">")) { return true; }
-                if (s.StartsWith(@"""") && s.EndsWith(@"""")) { return true; }
-                return false;
+                return InnerWriter.IsInclude(s);
             }
 
             public String[] GetHeader()
@@ -532,17 +531,17 @@ namespace Yuki.ObjectSchema.CppBinary
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
-                return Value.UnifyNewLineToLf().Split('\n');
+                return Cpp.Common.CodeGenerator.Writer.GetLines(Value);
             }
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
-                return InnerWriter.GetEscapedIdentifier(Identifier);
+                return Cpp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
             private String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
-                return InnerWriter.EvaluateEscapedIdentifiers(Lines);
+                return Cpp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java代码生成器
-//  Version:     2013.03.31.
+//  Version:     2013.04.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -55,10 +55,7 @@ namespace Yuki.ObjectSchema.Java.Common
                 this.Schema = Schema;
                 this.ClassName = ClassName;
                 this.PackageName = PackageName;
-            }
 
-            public String[] GetSchema()
-            {
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
                     if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && gp.Type.TypeRef.Name == "Type"))
@@ -66,7 +63,10 @@ namespace Yuki.ObjectSchema.Java.Common
                         throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                     }
                 }
+            }
 
+            public String[] GetSchema()
+            {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes(Schema);
@@ -475,12 +475,12 @@ namespace Yuki.ObjectSchema.Java.Common
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public String[] GetLines(String Value)
+            public static String[] GetLines(String Value)
             {
                 return Value.UnifyNewLineToLf().Split('\n');
             }
             private static Regex rIdentifierPart = new Regex(@"[^\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F]+");
-            public String GetEscapedIdentifier(String Identifier)
+            public static String GetEscapedIdentifier(String Identifier)
             {
                 return rIdentifierPart.Replace(Identifier, m =>
                 {
@@ -496,7 +496,7 @@ namespace Yuki.ObjectSchema.Java.Common
                 });
             }
             private static HashSet<String> TypeKeywords = new HashSet<String>(new String[] { "boolean", "byte", "short", "int", "long", "float", "double" });
-            public String GetEscapedType(String Identifier)
+            public static String GetEscapedType(String Identifier)
             {
                 return rIdentifierPart.Replace(Identifier, m =>
                 {
@@ -515,9 +515,9 @@ namespace Yuki.ObjectSchema.Java.Common
                     }
                 });
             }
-            private Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
-            private Regex rType = new Regex(@"(?<!\[\[)\[\[\((?<Type>.*?)\)\]\](?!\]\])", RegexOptions.ExplicitCapture);
-            public String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private static Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
+            private static Regex rType = new Regex(@"(?<!\[\[)\[\[\((?<Type>.*?)\)\]\](?!\]\])", RegexOptions.ExplicitCapture);
+            public static String[] EvaluateEscapedIdentifiers(String[] Lines)
             {
                 return Lines.Select(Line => rType.Replace(Line, s => GetEscapedType(s.Result("${Type}")))).Select(Line => rIdentifier.Replace(Line, s => GetEscapedIdentifier(s.Result("${Identifier}"))).Replace("[[[[", "[[").Replace("]]]]", "]]")).ToArray();
             }
