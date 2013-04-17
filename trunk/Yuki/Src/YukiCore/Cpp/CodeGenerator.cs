@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.04.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -88,7 +88,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 {
                     foreach (var nn in NamespaceName.Split('.').Reverse())
                     {
-                        c = GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", Contents);
+                        c = GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", c);
                     }
                 }
                 return c;
