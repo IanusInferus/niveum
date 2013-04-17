@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2013.01.29.
+//  Version:     2013.04.17.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -117,8 +117,8 @@ namespace Client
         static void Run(boost::asio::ip::tcp::endpoint RemoteEndPoint)
         {
             boost::asio::io_service IoService;
-            auto bsc = std::make_shared<BinarySocketClient>(IoService, RemoteEndPoint);
-            bsc->Connect();
+            auto bsc = std::make_shared<BinarySocketClient>(IoService);
+            bsc->Connect(RemoteEndPoint);
             std::wprintf(L"%ls\n", L"连接成功。");
 
             boost::mutex Lockee;
@@ -127,7 +127,7 @@ namespace Client
                 boost::unique_lock<boost::mutex> Lock(Lockee);
                 a();
             };
-            bsc->Receive(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
+            bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
             
             boost::thread t([&]() { IoService.run(); });
 
