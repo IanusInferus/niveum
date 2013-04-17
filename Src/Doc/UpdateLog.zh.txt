@@ -1,6 +1,8 @@
 ﻿2013.04.17
 Yuki.Core:
 修正C++代码生成中的命名空间代码生成错误。
+Examples:
+修改C++通讯示例，明确异步连接。
 
 2013.04.16
 Yuki.Core, Yuki.Relation, Yuki.Expression:
