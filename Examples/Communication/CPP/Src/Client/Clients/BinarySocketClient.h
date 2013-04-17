@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "Communication.h"
-#include "UtfEncoding.h"
 #include "CommunicationBinary.h"
 
 #include <memory>
@@ -23,7 +22,6 @@ namespace Client
         std::shared_ptr<Communication::IApplicationClient> InnerClient;
     private:
         std::shared_ptr<Communication::Binary::BinarySerializationClient> bc;
-        boost::asio::ip::tcp::endpoint RemoteEndPoint;
         boost::asio::ip::tcp::socket sock;
 
         std::vector<uint8_t> Buffer;
@@ -55,10 +53,9 @@ namespace Client
         std::shared_ptr<BinarySender> bs;
 
     public:
-        BinarySocketClient(boost::asio::io_service& io_service, boost::asio::ip::tcp::endpoint RemoteEndPoint)
+        BinarySocketClient(boost::asio::io_service& io_service)
             : sock(io_service), BufferLength(0)
         {
-            this->RemoteEndPoint = RemoteEndPoint;
             bs = std::make_shared<BinarySender>(sock);
             bc = std::make_shared<Communication::Binary::BinarySerializationClient>(bs);
             InnerClient = bc->GetApplicationClient();
@@ -66,9 +63,31 @@ namespace Client
             Buffer.resize(8 * 1024, 0);
         }
 
-        void Connect()
+        void Connect(boost::asio::ip::tcp::endpoint RemoteEndPoint)
         {
             sock.connect(RemoteEndPoint);
+        }
+
+        /// <summary>异步连接</summary>
+        /// <param name="Completed">正常连接处理函数</param>
+        /// <param name="UnknownFaulted">未知错误处理函数</param>
+        void ConnectAsync(boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(void)> Completed, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+        {
+            auto ConnectHandler = [=](const boost::system::error_code &se)
+            {
+                if (se == boost::system::errc::success)
+                {
+                    Completed();
+                }
+                else
+                {
+                    if (!IsSocketErrorKnown(se))
+                    {
+                        UnknownFaulted(se);
+                    }
+                }
+            };
+            sock.async_connect(RemoteEndPoint, ConnectHandler);
         }
 
     private:
@@ -266,14 +285,14 @@ namespace Client
                 }
                 BufferLength = CopyLength;
             }
-            Receive(DoResultHandle, UnknownFaulted);
+            ReceiveAsync(DoResultHandle, UnknownFaulted);
         }
 
     public:
         /// <summary>接收消息</summary>
         /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
         /// <param name="UnknownFaulted">未知错误处理函数</param>
-        void Receive(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+        void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
         {
             auto ReadHandler = [=](const boost::system::error_code &se, size_t Count)
             {
