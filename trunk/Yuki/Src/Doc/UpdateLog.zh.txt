@@ -1,4 +1,8 @@
-﻿2013.04.17
+﻿2013.04.18
+Yuki.Core, Yuki.Relation:
+修正C++代码生成中对Optional<T>的std::map的比较函数的支持问题。
+
+2013.04.17
 Yuki.Core:
 修正C++代码生成中的命名空间代码生成错误。
 Examples:
