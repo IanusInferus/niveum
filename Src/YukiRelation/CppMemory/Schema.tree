@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Memory代码模板数据
-      Version:     2013.04.16.
+      Version:     2013.04.18.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -62,15 +62,6 @@ ObjectSchemaTemplate
                     public:
                         ${Tables}
                     };
-
-                    template <typename T>
-                    Boolean operator <(Optional<T> x, Optional<T> y)
-                    {
-                        if ((x == nullptr) && (y == nullptr)) { return false; }
-                        if (x == nullptr) { return true; }
-                        if (y == nullptr) { return false; }
-                        return x.HasValue < y.HasValue;
-                    }
 
                     class MemoryDataIndices
                     {
