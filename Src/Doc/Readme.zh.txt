@@ -87,10 +87,22 @@ Xhtml               √              无需                无需            无
 查询 Query
 表示Select、Lock、Insert、Update、Upsert、Delete等6种基本操作。
 
-这部分的代码生成主要是SQL的代码生成，目前支持SQL Server、PostgreSQL和MySQL。
+这部分的代码生成主要分成四个部分：类型定义、内存只读数据库、SQL Server、PostgreSQL和MySQL。
+下面列出各语言代码生成支持的部分。
+
+                    内存只读数据库  SQL Server          PostgreSQL      MySQL
+C#                  √              √                  √              √
+C++2011             √              ×                  ×              ×
 
 
-4 环境要求
+4 基于表达式数据结构的代码生成
+
+基于表达式数据结构的代码生成表达式逻辑代码。
+详情参见Doc/Expression。
+目前仅支持C#。
+
+
+5 环境要求
 
 本框架使用 Visual C# 3.0 编写，开发时需要 Microsoft .Net Framework 4.0 编译器 或 Visual Studio 2012 支持。
 本框架运行时需要 Microsoft .Net Framework 4 运行库支持。
@@ -98,7 +110,7 @@ Microsoft .Net Framework 4 (x86/x64，48.1MB)
 http://download.microsoft.com/download/9/5/A/95A9616B-7A37-4AF6-BC36-D6EA96C8DAAE/dotNetFx40_Full_x86_x64.exe
 
 
-5 用户使用协议
+6 用户使用协议
 
 以下协议不针对示例(Examples文件夹)：
 本框架是免费自由软件，所有源代码和可执行程序按照BSD许可证授权，详见License.zh.txt。
