@@ -90,9 +90,9 @@ Xhtml               √              无需                无需            无
 这部分的代码生成主要分成四个部分：类型定义、内存只读数据库、SQL Server、PostgreSQL和MySQL。
 下面列出各语言代码生成支持的部分。
 
-                    内存只读数据库  SQL Server          PostgreSQL      MySQL
-C#                  √              √                  √              √
-C++2011             √              ×                  ×              ×
+                    类型定义        内存只读数据库  SQL Server          PostgreSQL      MySQL
+C#                  √              √              √                  √              √
+C++2011             √              √              ×                  ×              ×
 
 
 4 基于表达式数据结构的代码生成
