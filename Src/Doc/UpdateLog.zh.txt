@@ -1,5 +1,6 @@
 ﻿2013.04.27.0
 修改说明文档。
+修正Firefly强名称问题。
 
 2013.04.18
 Yuki.Core, Yuki.Relation:
