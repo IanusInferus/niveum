@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2013.04.17.
+//  Version:     2013.04.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -93,7 +93,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 }
                 return c;
             }
-            
+
             public Boolean IsInclude(String s)
             {
                 if (s.StartsWith("<") && s.EndsWith(">")) { return true; }
@@ -272,7 +272,18 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 {
                     return new String[] { };
                 }
-                return GetTypePredefinition(Name, MetaType, GenericParameterLine);
+                if (t.OnClientCommand)
+                {
+                    return GetTypePredefinition(Name + "Request", MetaType, GenericParameterLine).Concat(GetTypePredefinition(Name + "Reply", MetaType, GenericParameterLine)).ToArray();
+                }
+                else if (t.OnServerCommand)
+                {
+                    return GetTypePredefinition(Name + "Event", MetaType, GenericParameterLine);
+                }
+                else
+                {
+                    return GetTypePredefinition(Name, MetaType, GenericParameterLine);
+                }
             }
             public String[] GetAlias(AliasDef a)
             {
