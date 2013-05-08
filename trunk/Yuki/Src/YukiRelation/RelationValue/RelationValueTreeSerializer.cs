@@ -3,7 +3,7 @@
 //  File:        RelationValueTreeSerializer.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构数据Tree序列化器
-//  Version:     2013.03.28.
+//  Version:     2013.05.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -215,8 +215,15 @@ namespace Yuki.RelationValue
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
-                        var v = Boolean.Parse(cv);
-                        return ColumnVal.CreatePrimitive(PrimitiveVal.CreateBooleanValue(v));
+                        try
+                        {
+                            var v = Boolean.Parse(cv);
+                            return ColumnVal.CreatePrimitive(PrimitiveVal.CreateBooleanValue(v));
+                        }
+                        catch (FormatException)
+                        {
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                        }
                     };
                 }
                 else if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
@@ -252,8 +259,15 @@ namespace Yuki.RelationValue
                             }
                             else
                             {
-                                var v = NumericStrings.InvariantParseInt32(cv);
-                                return ColumnVal.CreatePrimitive(PrimitiveVal.CreateIntValue(v));
+                                try
+                                {
+                                    var v = NumericStrings.InvariantParseInt32(cv);
+                                    return ColumnVal.CreatePrimitive(PrimitiveVal.CreateIntValue(v));
+                                }
+                                catch (FormatException)
+                                {
+                                    throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                                }
                             }
                         };
                     }
@@ -267,8 +281,15 @@ namespace Yuki.RelationValue
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
                             var cv = cvs.Single().Stem.Children.Single().Leaf;
-                            var v = NumericStrings.InvariantParseInt32(cv);
-                            return ColumnVal.CreatePrimitive(PrimitiveVal.CreateIntValue(v));
+                            try
+                            {
+                                var v = NumericStrings.InvariantParseInt32(cv);
+                                return ColumnVal.CreatePrimitive(PrimitiveVal.CreateIntValue(v));
+                            }
+                            catch (FormatException)
+                            {
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            }
                         };
                     }
                 }
@@ -282,8 +303,15 @@ namespace Yuki.RelationValue
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
-                        var v = NumericStrings.InvariantParseFloat64(cv);
-                        return ColumnVal.CreatePrimitive(PrimitiveVal.CreateRealValue(v));
+                        try
+                        {
+                            var v = NumericStrings.InvariantParseFloat64(cv);
+                            return ColumnVal.CreatePrimitive(PrimitiveVal.CreateRealValue(v));
+                        }
+                        catch (FormatException)
+                        {
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                        }
                     };
                 }
                 else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase))
@@ -296,8 +324,15 @@ namespace Yuki.RelationValue
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
-                        var v = Regex.Split(cv.Trim(" \t\r\n".ToCharArray()), "( |\t|\r|\n)+", RegexOptions.ExplicitCapture).Select(s => Byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToList();
-                        return ColumnVal.CreatePrimitive(PrimitiveVal.CreateBinaryValue(v));
+                        try
+                        {
+                            var v = Regex.Split(cv.Trim(" \t\r\n".ToCharArray()), "( |\t|\r|\n)+", RegexOptions.ExplicitCapture).Select(s => Byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToList();
+                            return ColumnVal.CreatePrimitive(PrimitiveVal.CreateBinaryValue(v));
+                        }
+                        catch (FormatException)
+                        {
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                        }
                     };
                 }
                 else
@@ -318,8 +353,15 @@ namespace Yuki.RelationValue
                         }
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
                         if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
-                        var v = Boolean.Parse(cv);
-                        return ColumnVal.CreateOptional(PrimitiveVal.CreateBooleanValue(v));
+                        try
+                        {
+                            var v = Boolean.Parse(cv);
+                            return ColumnVal.CreateOptional(PrimitiveVal.CreateBooleanValue(v));
+                        }
+                        catch (FormatException)
+                        {
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                        }
                     };
                 }
                 else if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
@@ -348,8 +390,15 @@ namespace Yuki.RelationValue
                         }
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
                         if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
-                        var v = NumericStrings.InvariantParseInt32(cv);
-                        return ColumnVal.CreateOptional(PrimitiveVal.CreateIntValue(v));
+                        try
+                        {
+                            var v = NumericStrings.InvariantParseInt32(cv);
+                            return ColumnVal.CreateOptional(PrimitiveVal.CreateIntValue(v));
+                        }
+                        catch (FormatException)
+                        {
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                        }
                     };
                 }
                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))
@@ -363,8 +412,15 @@ namespace Yuki.RelationValue
                         }
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
                         if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
-                        var v = NumericStrings.InvariantParseFloat64(cv);
-                        return ColumnVal.CreateOptional(PrimitiveVal.CreateRealValue(v));
+                        try
+                        {
+                            var v = NumericStrings.InvariantParseFloat64(cv);
+                            return ColumnVal.CreateOptional(PrimitiveVal.CreateRealValue(v));
+                        }
+                        catch (FormatException)
+                        {
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                        }
                     };
                 }
                 else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase))
@@ -378,8 +434,15 @@ namespace Yuki.RelationValue
                         }
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
                         if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
-                        var v = Regex.Split(cv.Trim(" \t\r\n".ToCharArray()), "( |\t|\r|\n)+", RegexOptions.ExplicitCapture).Select(s => Byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToList();
-                        return ColumnVal.CreateOptional(PrimitiveVal.CreateBinaryValue(v));
+                        try
+                        {
+                            var v = Regex.Split(cv.Trim(" \t\r\n".ToCharArray()), "( |\t|\r|\n)+", RegexOptions.ExplicitCapture).Select(s => Byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToList();
+                            return ColumnVal.CreateOptional(PrimitiveVal.CreateBinaryValue(v));
+                        }
+                        catch (FormatException)
+                        {
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                        }
                     };
                 }
                 else
