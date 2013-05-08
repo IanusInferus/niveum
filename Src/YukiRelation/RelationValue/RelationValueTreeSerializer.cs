@@ -381,25 +381,58 @@ namespace Yuki.RelationValue
                 }
                 else if (TypeName.Equals("Int", StringComparison.OrdinalIgnoreCase))
                 {
-                    Reader = TreeRow =>
+                    if (EnumParser != null)
                     {
-                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                        if (cvs.Length != 1)
+                        Reader = TreeRow =>
                         {
-                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
-                        }
-                        var cv = cvs.Single().Stem.Children.Single().Leaf;
-                        if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
-                        try
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
+                            if (cvs.Length != 1)
+                            {
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            }
+                            var cv = cvs.Single().Stem.Children.Single().Leaf;
+                            if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                            if (EnumParser.ContainsKey(cv))
+                            {
+                                var v = (int)(EnumParser[cv]);
+                                return ColumnVal.CreateOptional(PrimitiveVal.CreateIntValue(v));
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    var v = NumericStrings.InvariantParseInt32(cv);
+                                    return ColumnVal.CreateOptional(PrimitiveVal.CreateIntValue(v));
+                                }
+                                catch (FormatException)
+                                {
+                                    throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                                }
+                            }
+                        };
+                    }
+                    else
+                    {
+                        Reader = TreeRow =>
                         {
-                            var v = NumericStrings.InvariantParseInt32(cv);
-                            return ColumnVal.CreateOptional(PrimitiveVal.CreateIntValue(v));
-                        }
-                        catch (FormatException)
-                        {
-                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
-                        }
-                    };
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
+                            if (cvs.Length != 1)
+                            {
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            }
+                            var cv = cvs.Single().Stem.Children.Single().Leaf;
+                            if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                            try
+                            {
+                                var v = NumericStrings.InvariantParseInt32(cv);
+                                return ColumnVal.CreateOptional(PrimitiveVal.CreateIntValue(v));
+                            }
+                            catch (FormatException)
+                            {
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            }
+                        };
+                    }
                 }
                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))
                 {
