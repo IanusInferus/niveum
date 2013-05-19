@@ -1,4 +1,10 @@
-﻿2013.05.08
+﻿2013.05.19
+Yuki.Core:
+修改Xhtml生成代码结构。
+Yuki.Relation, Yuki.RelationSchemaManipulator:
+增加Xhtml代码生成。
+
+2013.05.08
 Yuki.Relation:
 增加解析数据出错时的错误位置提示。
 修正Optional<Enum>无法正确读取的问题。

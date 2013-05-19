@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.05.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -16,22 +16,27 @@ using Firefly.TextEncoding;
 
 namespace Yuki.ObjectSchema.Xhtml
 {
+    public class FileResult
+    {
+        public String Path;
+        public String Content;
+    }
     public static class CodeGenerator
     {
-        public class FileResult
-        {
-            public String Path;
-            public String Content;
-        }
-
         public static FileResult[] CompileToXhtml(this Schema Schema, String Title, String CopyrightText)
         {
-            Writer w = new Writer(Schema, Title, CopyrightText);
+            var w = new Common.CodeGenerator.Writer(Schema, Title, CopyrightText);
             var Files = w.GetFiles();
             return Files;
         }
+    }
+}
 
-        private class Writer
+namespace Yuki.ObjectSchema.Xhtml.Common
+{
+    public static class CodeGenerator
+    {
+        public class Writer
         {
             private static ObjectSchemaTemplateInfo TemplateInfo;
 
@@ -130,7 +135,7 @@ namespace Yuki.ObjectSchema.Xhtml
                         }
                         else if (c.OnAlias)
                         {
-                            var Lines = GetTemplate("Alias").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "别名").Substitute("GenericParameters", GetGenericParameters(c.Alias.GenericParameters)).Substitute("TypeSpec", GetTypeString(c.Alias.Type, true)).Substitute("Description", GetEscaped(c.Alias.Description));
+                            var Lines = GetTemplate("Alias").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "别名").Substitute("GenericParameters", GetGenericParameters(c.Alias.GenericParameters)).Substitute("TypeSpec", GetTypeString(c.Alias.Type, true)).Substitute("Description", GetEscaped(c.Description()));
                             Content.AddRange(Lines);
 
                             IndexPageTypeContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "别名").Substitute("Description", GetEscaped(c.Description())));
@@ -139,7 +144,7 @@ namespace Yuki.ObjectSchema.Xhtml
                         else if (c.OnRecord)
                         {
                             var Fields = GetVariables(c.Record.Fields);
-                            var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "记录").Substitute("GenericParameters", GetGenericParameters(c.Record.GenericParameters)).Substitute("Fields", Fields).Substitute("Description", GetEscaped(c.Record.Description));
+                            var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "记录").Substitute("GenericParameters", GetGenericParameters(c.Record.GenericParameters)).Substitute("Fields", Fields).Substitute("Description", GetEscaped(c.Description()));
                             Content.AddRange(Lines);
 
                             IndexPageTypeContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "记录").Substitute("Description", GetEscaped(c.Description())));
@@ -148,7 +153,7 @@ namespace Yuki.ObjectSchema.Xhtml
                         else if (c.OnTaggedUnion)
                         {
                             var Alternatives = GetVariables(c.TaggedUnion.Alternatives);
-                            var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "标签联合").Substitute("GenericParameters", GetGenericParameters(c.TaggedUnion.GenericParameters)).Substitute("Fields", Alternatives).Substitute("Description", GetEscaped(c.TaggedUnion.Description));
+                            var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "标签联合").Substitute("GenericParameters", GetGenericParameters(c.TaggedUnion.GenericParameters)).Substitute("Fields", Alternatives).Substitute("Description", GetEscaped(c.Description()));
                             Content.AddRange(Lines);
 
                             IndexPageTypeContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "标签联合").Substitute("Description", GetEscaped(c.Description())));
@@ -157,7 +162,7 @@ namespace Yuki.ObjectSchema.Xhtml
                         else if (c.OnEnum)
                         {
                             var Literals = c.Enum.Literals.SelectMany(f => GetTemplate("Literal").Substitute("Name", GetEscaped(f.Name)).Substitute("Value", GetEscaped(f.Value.ToInvariantString())).Substitute("Description", GetEscaped(f.Description))).ToArray();
-                            var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "枚举").Substitute("GenericParameters", GetGenericParameters(new VariableDef[] { })).Substitute("Fields", Literals).Substitute("Description", GetEscaped(c.Enum.Description));
+                            var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "枚举").Substitute("GenericParameters", GetGenericParameters(new VariableDef[] { })).Substitute("Fields", Literals).Substitute("Description", GetEscaped(c.Description()));
                             Content.AddRange(Lines);
 
                             IndexPageTypeContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "枚举").Substitute("Description", GetEscaped(c.Description())));
@@ -167,7 +172,7 @@ namespace Yuki.ObjectSchema.Xhtml
                         {
                             var OutParameters = GetVariables(c.ClientCommand.OutParameters);
                             var InParameters = GetVariables(c.ClientCommand.InParameters);
-                            var Lines = GetTemplate("ClientCommand").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "客户端方法").Substitute("OutParameters", OutParameters).Substitute("InParameters", InParameters).Substitute("Description", GetEscaped(c.ClientCommand.Description));
+                            var Lines = GetTemplate("ClientCommand").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "客户端方法").Substitute("OutParameters", OutParameters).Substitute("InParameters", InParameters).Substitute("Description", GetEscaped(c.Description()));
                             Content.AddRange(Lines);
 
                             IndexPageCommandContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "客户端方法").Substitute("Description", GetEscaped(c.Description())));
@@ -176,7 +181,7 @@ namespace Yuki.ObjectSchema.Xhtml
                         else if (c.OnServerCommand)
                         {
                             var OutParameters = GetVariables(c.ServerCommand.OutParameters);
-                            var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "服务端事件").Substitute("GenericParameters", GetGenericParameters(new VariableDef[] { })).Substitute("Fields", OutParameters).Substitute("Description", GetEscaped(c.ServerCommand.Description));
+                            var Lines = GetTemplate("Type").Substitute("Name", GetEscaped(c.VersionedName())).Substitute("MetaType", "服务端事件").Substitute("GenericParameters", GetGenericParameters(new VariableDef[] { })).Substitute("Fields", OutParameters).Substitute("Description", GetEscaped(c.Description()));
                             Content.AddRange(Lines);
 
                             IndexPageCommandContentByFile.AddRange(GetTemplate("TypeBrief").Substitute("TypeSpec", GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Name = c.Name(), Version = c.Version() }), false)).Substitute("MetaType", "服务端事件").Substitute("Description", GetEscaped(c.Description())));
@@ -355,13 +360,13 @@ namespace Yuki.ObjectSchema.Xhtml
             {
                 return Value.UnifyNewLineToLf().Split('\n');
             }
-            public String GetEscaped(String v)
+            public static String GetEscaped(String v)
             {
                 return v.Replace(@"&", @"&amp;").Replace(@"""", @"&quot;").Replace(@"'", @"&#39;").Replace(@"<", @"&lt;").Replace(@">", @"&gt;").Replace("\r", "&#13;").Replace("\n", "&#10;");
             }
         }
 
-        private static String[] Substitute(this String[] Lines, String Parameter, String Value)
+        public static String[] Substitute(this String[] Lines, String Parameter, String Value)
         {
             var ParameterString = "${" + Parameter + "}";
 
@@ -379,7 +384,7 @@ namespace Yuki.ObjectSchema.Xhtml
             }
             return l.ToArray();
         }
-        private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
+        public static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
         {
             List<String> l = new List<String>();
             foreach (var Line in Lines)

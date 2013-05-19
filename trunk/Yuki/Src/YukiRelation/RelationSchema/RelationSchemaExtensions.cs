@@ -616,6 +616,21 @@ namespace Yuki.RelationSchema
             }
         }
 
+        public static String Description(this TypeDef t)
+        {
+            switch (t._Tag)
+            {
+                case TypeDefTag.Primitive:
+                    return t.Primitive.Description;
+                case TypeDefTag.Entity:
+                    return t.Entity.Description;
+                case TypeDefTag.Enum:
+                    return t.Enum.Description;
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
         private static String GetByKeyString(IEnumerable<String> ByKey)
         {
             if (ByKey.Count() == 1)
