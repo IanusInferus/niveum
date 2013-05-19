@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2013.04.15.
+//  Version:     2013.05.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -37,6 +37,7 @@ using Yuki.RelationSchema.CSharpPostgreSql;
 using Yuki.RelationSchema.CSharpMySql;
 using Yuki.RelationSchema.CppPlain;
 using Yuki.RelationSchema.CppMemory;
+using Yuki.RelationSchema.Xhtml;
 
 namespace Yuki.RelationSchemaManipulator
 {
@@ -319,6 +320,19 @@ namespace Yuki.RelationSchemaManipulator
                     if (args.Length == 3)
                     {
                         RelationSchemaToCppDatabaseMemoryCode(args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (opt.Name.ToLower() == "t2xhtml")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 3)
+                    {
+                        RelationSchemaToXhtml(args[0], args[1], args[2]);
                     }
                     else
                     {
@@ -641,6 +655,28 @@ namespace Yuki.RelationSchemaManipulator
             var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CppCodePath, Compiled);
+        }
+
+        public static void RelationSchemaToXhtml(String XhtmlDir, String Title, String CopyrightText)
+        {
+            var RelationSchema = GetRelationSchema();
+            var CompiledFiles = RelationSchema.CompileToXhtml(Title, CopyrightText);
+            foreach (var f in CompiledFiles)
+            {
+                var Compiled = f.Content;
+                var Path = FileNameHandling.GetPath(XhtmlDir, f.Path);
+                if (File.Exists(Path))
+                {
+                    var Original = Txt.ReadFile(Path);
+                    if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+                }
+                var Dir = FileNameHandling.GetFileDirectory(Path);
+                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+                Txt.WriteFile(Path, TextEncoding.UTF8, Compiled);
+            }
         }
     }
 }

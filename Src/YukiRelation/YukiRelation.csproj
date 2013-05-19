@@ -78,6 +78,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="TSql\CodeGenerator.cs" />
+    <Compile Include="Xhtml\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="CSharpLinqToEntities\Schema.tree" />
