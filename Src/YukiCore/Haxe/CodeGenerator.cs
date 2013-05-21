@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Haxe代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -43,6 +43,8 @@ namespace Yuki.ObjectSchema.Haxe.Common
             private Schema Schema;
             private String PackageName;
 
+            private Dictionary<String, EnumDef> EnumDict;
+
             static Writer()
             {
                 TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.Haxe);
@@ -60,6 +62,8 @@ namespace Yuki.ObjectSchema.Haxe.Common
                         throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                     }
                 }
+
+                EnumDict = Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).ToDictionary(c => c.VersionedName(), c => c.Enum, StringComparer.OrdinalIgnoreCase);
             }
 
             public String[] GetSchema()
@@ -94,6 +98,10 @@ namespace Yuki.ObjectSchema.Haxe.Common
                                 var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Name].PlatformName;
                                 return PlatformName;
                             }
+                        }
+                        else if (EnumDict.ContainsKey(Type.TypeRef.VersionedName()))
+                        {
+                            return GetTypeString(EnumDict[Type.TypeRef.VersionedName()].UnderlyingType);
                         }
                         return Type.TypeRef.TypeFriendlyName();
                     case TypeSpecTag.GenericParameterRef:
