@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Haxe JSON通讯模板数据
-      Version:     2013.05.21.
+      Version:     2013.05.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -555,7 +555,7 @@ ObjectSchemaTemplate
                         }
                         else
                         {
-                            setField(j, "hasValue", [[${elementTypeFriendlyName}ToJson]](cast(o, [[${ElementTypeString}]])));
+                            setField(j, "hasValue", [[${elementTypeFriendlyName}ToJson]](o));
                         }
                         return j;
                     }
