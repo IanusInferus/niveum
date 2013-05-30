@@ -1,4 +1,8 @@
-﻿2013.05.28
+﻿2013.05.30
+Yuki.Relation:
+修正Schema转换中对Optional<String>长度没有要求的问题。
+
+2013.05.28
 Yuki.Core:
 修正Haxe的JSON代码生成中Optional类型序列化生成错误的问题。
 
