@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2013.03.31.
+//  Version:     2013.05.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -371,7 +371,7 @@ namespace Yuki.RelationSchema
                     if (f.Attribute.OnColumn && f.Attribute.Column.TypeParameters == "")
                     {
                         //如果一个String类型的列上没有标记P，则报错
-                        if (f.Type.OnTypeRef && f.Type.TypeRef.Value.Equals("String"))
+                        if ((f.Type.OnTypeRef && f.Type.TypeRef.Value.Equals("String")) || (f.Type.OnOptional && f.Type.Optional.Value.Equals("String")))
                         {
                             throw new InvalidOperationException(String.Format("字符串没有标明长度，请添加[P:max]等: {0}.{1}", r.Name, f.Name));
                         }
