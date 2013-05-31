@@ -368,6 +368,17 @@ ObjectSchemaTemplate
                             }
 
                         public:
+                            T Value() const
+                            {
+                                if (OnHasValue())
+                                {
+                                    return HasValue;
+                                }
+                                else
+                                {
+                                    throw std::logic_error("InvalidOperationException");
+                                }
+                            }
                             T ValueOrDefault(T Default) const
                             {
                                 if (OnHasValue())
@@ -431,6 +442,7 @@ ObjectSchemaTemplate
                     #include <unordered_map>
                     #include <memory>
                     #include <functional>
+                    #include <stdexcept>
         Template
             Name Primitive
             //Parameters: ${Name}, ${PlatformName}
