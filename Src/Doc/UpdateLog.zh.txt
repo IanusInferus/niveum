@@ -3,6 +3,8 @@ Yuki.Relation:
 修正生成数据时对名称和注释重复的枚举的处理，此时以名称为准。
 修正内存数据库生成中的Range只有OrderBy没有By时取得数据集的代码生成问题。
 修正C# MySQL代码生成中Optional<Boolean>读取错误的问题。
+Yuki.Core:
+增加C#和C++代码生成的Optional类型的带异常获取值函数。
 
 2013.05.30
 Yuki.Relation:
