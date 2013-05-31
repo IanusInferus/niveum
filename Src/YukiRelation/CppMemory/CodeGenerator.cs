@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.05.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -273,6 +273,7 @@ namespace Yuki.RelationSchema.CppMemory
 
                 var Signature = InnerWriter.GetQuerySignature(q);
                 var ManyName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateMany(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
+                var AllName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateAll(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
                 var Parameters = String.Join(", ", q.By);
                 var OrderBys = GetOrderBy(q, e.Name);
                 String[] Content;
@@ -296,13 +297,19 @@ namespace Yuki.RelationSchema.CppMemory
                     }
                     else if (q.Numeral.OnAll)
                     {
-                        var AllName = (new QueryDef { Verb = q.Verb, Numeral = q.Numeral, EntityName = q.EntityName, By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
                         Content = GetTemplate("SelectLock_All").Substitute("AllName", AllName).Substitute("OrderBys", OrderBys);
                         WhenEmpty = null;
                     }
                     else if (q.Numeral.OnRange)
                     {
-                        Content = GetTemplate("SelectLock_Range").Substitute("ManyName", ManyName).Substitute("Parameters", Parameters).Substitute("OrderBys", OrderBys);
+                        if (q.By.Count == 0)
+                        {
+                            Content = GetTemplate("SelectLock_RangeAll").Substitute("AllName", AllName).Substitute("OrderBys", OrderBys);
+                        }
+                        else
+                        {
+                            Content = GetTemplate("SelectLock_Range").Substitute("ManyName", ManyName).Substitute("Parameters", Parameters).Substitute("OrderBys", OrderBys);
+                        }
                         WhenEmpty = GetTemplate("SelectLock_ManyRange_WhenEmpty").Substitute("EntityName", e.Name);
                     }
                     else if (q.Numeral.OnCount)

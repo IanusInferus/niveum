@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Memory代码模板数据
-      Version:     2013.04.08.
+      Version:     2013.05.31.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -263,6 +263,12 @@ ObjectSchemaTemplate
             Value
                 $String
                     return MemoryDataManipulate.${ManyName}(this.Tables, this.Indices, ${Parameters})${OrderBys}.Skip(_Skip_).Take(_Take_).ToList();
+        Template
+            Name SelectLock_RangeAll
+            //Parameters: ${AllName}, ${OrderBys}
+            Value
+                $String
+                    return MemoryDataManipulate.${AllName}(this.Tables, this.Indices)${OrderBys}.Skip(_Skip_).Take(_Take_).ToList();
         Template
             Name SelectLock_Count
             //Parameters: ${ManyName}, ${Parameters}
