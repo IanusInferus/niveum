@@ -3,7 +3,7 @@
 //  File:        RelationValueTreeSerializer.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构数据Tree序列化器
-//  Version:     2013.05.08.
+//  Version:     2013.05.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -50,18 +50,6 @@ namespace Yuki.RelationValue
                         var eh = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
                         foreach (var l in t.Enum.Literals)
                         {
-                            if (!eh.Contains(l.Name))
-                            {
-                                if (d.ContainsKey(l.Name))
-                                {
-                                    eh.Add(l.Name);
-                                    d.Remove(l.Name);
-                                }
-                                else
-                                {
-                                    d.Add(l.Name, l.Value);
-                                }
-                            }
                             if (!eh.Contains(l.Description))
                             {
                                 if (d.ContainsKey(l.Description))
@@ -74,6 +62,14 @@ namespace Yuki.RelationValue
                                     d.Add(l.Description, l.Value);
                                 }
                             }
+                        }
+                        foreach (var l in t.Enum.Literals)
+                        {
+                            if (d.ContainsKey(l.Name))
+                            {
+                                d.Remove(l.Name);
+                            }
+                            d.Add(l.Name, l.Value);
                         }
                         EnumParsers.Add(t.Enum.Name, d);
                     }
