@@ -277,6 +277,7 @@ namespace Yuki.RelationSchema.CSharpMemory
 
                 var Signature = InnerWriter.GetQuerySignature(q);
                 var ManyName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateMany(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
+                var AllName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateAll(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
                 var Parameters = String.Join(", ", q.By);
                 var OrderBys = GetOrderBy(q);
                 String[] Content;
@@ -296,12 +297,18 @@ namespace Yuki.RelationSchema.CSharpMemory
                     }
                     else if (q.Numeral.OnAll)
                     {
-                        var AllName = (new QueryDef { Verb = q.Verb, Numeral = q.Numeral, EntityName = q.EntityName, By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
                         Content = GetTemplate("SelectLock_All").Substitute("AllName", AllName).Substitute("OrderBys", OrderBys);
                     }
                     else if (q.Numeral.OnRange)
                     {
-                        Content = GetTemplate("SelectLock_Range").Substitute("ManyName", ManyName).Substitute("Parameters", Parameters).Substitute("OrderBys", OrderBys);
+                        if (q.By.Count == 0)
+                        {
+                            Content = GetTemplate("SelectLock_RangeAll").Substitute("AllName", AllName).Substitute("OrderBys", OrderBys);
+                        }
+                        else
+                        {
+                            Content = GetTemplate("SelectLock_Range").Substitute("ManyName", ManyName).Substitute("Parameters", Parameters).Substitute("OrderBys", OrderBys);
+                        }
                     }
                     else if (q.Numeral.OnCount)
                     {
