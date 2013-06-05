@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2013.05.31.
+//  Version:     2013.06.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -143,7 +143,7 @@ namespace Yuki.RelationSchema.CppMemory
                 }
             }
 
-            public String GetIndexType(EntityDef e, String[] Key)
+            public String GetIndexType(EntityDef e, String[] Key, Boolean AsValueType = false)
             {
                 var or = InnerTypeDict[e.Name].Record;
                 var d = or.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
@@ -151,7 +151,12 @@ namespace Yuki.RelationSchema.CppMemory
                 l.AddLast("std::vector<Int>");
                 foreach (var c in Key.Reverse())
                 {
-                    l.AddFirst("std::map<" + GetTypeString(d[c].Type) + ", ");
+                    l.AddFirst("std::map<" + GetTypeString(d[c].Type) + ", std::shared_ptr<");
+                    l.AddLast(">>");
+                }
+                if (!AsValueType)
+                {
+                    l.AddFirst("std::shared_ptr<");
                     l.AddLast(">");
                 }
                 return String.Join("", l.ToArray());
@@ -213,7 +218,7 @@ namespace Yuki.RelationSchema.CppMemory
                     foreach (var k in NondirectionalKeys)
                     {
                         var IndexName = e.Name + "By" + String.Join("And", k);
-                        var IndexType = GetIndexType(e, k);
+                        var IndexType = GetIndexType(e, k, true);
                         var Fetches = new List<String>();
                         for (var n = 0; n < k.Length; n += 1)
                         {
@@ -222,7 +227,7 @@ namespace Yuki.RelationSchema.CppMemory
                             {
                                 ParentByIndex = "By" + String.Join("And", k.Take(n).ToArray());
                             }
-                            var RemainIndexType = GetIndexType(e, k.Skip(n + 1).ToArray());
+                            var RemainIndexType = GetIndexType(e, k.Skip(n + 1).ToArray(), true);
                             var Column = k[n];
                             var ByIndex = "By" + String.Join("And", k.Take(n + 1).ToArray());
                             Fetches.AddRange(GetTemplate("DataAccessBase_Generate_Fetch").Substitute("ParentByIndex", ParentByIndex).Substitute("RemainIndexType", RemainIndexType).Substitute("Column", Column).Substitute("ByIndex", ByIndex));
@@ -363,7 +368,7 @@ namespace Yuki.RelationSchema.CppMemory
                         var Filters = new List<String>();
                         for (var n = Key.Length; n < k.Length; n += 1)
                         {
-                            Filters.Add(@">>select_many([](" + GetIndexType(e, k.Skip(n).ToArray()) + @"::value_type _d_) { return from(std::get<1>(_d_)); })");
+                            Filters.Add(@">>select_many([](" + GetIndexType(e, k.Skip(n).ToArray(), true) + @"::value_type _d_) { return from(*std::get<1>(_d_)); })");
                         }
                         Content = Content.Substitute("EntityName", e.Name).Substitute("IndexName", IndexName).Substitute("Fetches", Fetches.ToArray()).Substitute("ByIndex", "By" + String.Join("And", Key.ToArray())).Substitute("Filters", String.Join("", Filters.ToArray()));
                     }
