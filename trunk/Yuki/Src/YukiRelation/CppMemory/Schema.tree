@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Memory代码模板数据
-      Version:     2013.05.31.
+      Version:     2013.06.05.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -123,7 +123,8 @@ ObjectSchemaTemplate
             Value
                 $String
                     {
-                        auto &Table = Indices->[[${IndexName}]];
+                        Indices->[[${IndexName}]] = std::make_shared<${IndexType}>();
+                        auto &Table = *Indices->[[${IndexName}]];
                         for (int k = 0; k < (int)(Tables->[[${EntityName}]]->size()); k += 1)
                         {
                             auto r = (*Tables->[[${EntityName}]])[k];
@@ -136,8 +137,8 @@ ObjectSchemaTemplate
             //Parameters: ${ParentByIndex}, ${RemainIndexType}, ${Column}, ${ByIndex}
             Value
                 $String
-                    if ([[Table${ParentByIndex}]].count(r->[[${Column}]]) <= 0) { [[Table${ParentByIndex}]][r->[[${Column}]]] = [[${RemainIndexType}]](); }
-                    auto &[[Table${ByIndex}]] = [[Table${ParentByIndex}]][r->[[${Column}]]];
+                    if ([[Table${ParentByIndex}]].count(r->[[${Column}]]) <= 0) { [[Table${ParentByIndex}]][r->[[${Column}]]] = std::make_shared<[[${RemainIndexType}]]>(); }
+                    auto &[[Table${ByIndex}]] = *[[Table${ParentByIndex}]][r->[[${Column}]]];
         Template
             Name DataAccessBase_Generate_Add
             //Parameters: ${ByIndex}
@@ -162,13 +163,13 @@ ObjectSchemaTemplate
                     {
                         ${WhenEmpty}
                     }
-                    auto &[[_Index${ByIndex}_]] = [[_Index${ParentByIndex}_]][${Column}];
+                    auto &[[_Index${ByIndex}_]] = *[[_Index${ParentByIndex}_]][${Column}];
         Template
             Name SelectLock_Optional
             //Parameters: ${ManyName}, ${Parameters}, ${EntityName}, ${IndexName}, ${Fetches}, ${ByIndex}, ${Filters}
             Value
                 $String
-                    auto &_Index_ = this->Indices->[[${IndexName}]];
+                    auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
                     auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return (*this->Tables->[[${EntityName}]])[_i_]; })>>to_vector();
                     if (_l_.size() == 0) { return nullptr; }
@@ -185,7 +186,7 @@ ObjectSchemaTemplate
             //Parameters: ${ManyName}, ${Parameters}, ${EntityName}, ${IndexName}, ${Fetches}, ${ByIndex}, ${Filters}
             Value
                 $String
-                    auto &_Index_ = this->Indices->[[${IndexName}]];
+                    auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
                     auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return (*this->Tables->[[${EntityName}]])[_i_]; })>>to_vector();
                     if (_l_.size() != 1) { throw std::logic_error("NotSingle"); }
@@ -201,7 +202,7 @@ ObjectSchemaTemplate
             //Parameters: ${ManyName}, ${Parameters}, ${OrderBys}, ${EntityName}, ${IndexName}, ${Fetches}, ${ByIndex}, ${Filters}
             Value
                 $String
-                    auto &_Index_ = this->Indices->[[${IndexName}]];
+                    auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
                     auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return (*this->Tables->[[${EntityName}]])[_i_]; })${OrderBys}>>to_vector();
                     return std::make_shared<std::vector<std::shared_ptr<class [[${EntityName}]]>>>(std::move(_l_));
@@ -217,7 +218,7 @@ ObjectSchemaTemplate
             //Parameters: ${ManyName}, ${Parameters}, ${OrderBys}, ${EntityName}, ${IndexName}, ${Fetches}, ${ByIndex}, ${Filters}
             Value
                 $String
-                    auto &_Index_ = this->Indices->[[${IndexName}]];
+                    auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
                     auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return (*this->Tables->[[${EntityName}]])[_i_]; })${OrderBys}>>skip(_Skip_)>>take(_Take_)>>to_vector();
                     return std::make_shared<std::vector<std::shared_ptr<class [[${EntityName}]]>>>(std::move(_l_));
@@ -239,7 +240,7 @@ ObjectSchemaTemplate
             //Parameters: ${ManyName}, ${Parameters}, ${EntityName}, ${IndexName}, ${Fetches}, ${ByIndex}, ${Filters}
             Value
                 $String
-                    auto &_Index_ = this->Indices->[[${IndexName}]];
+                    auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
                     auto _c_ = from([[_Index${ByIndex}_]]${Filters})>>select([&](Int _i_) { return (*this->Tables->[[${EntityName}]])[_i_]; })${OrderBys}>>count();
                     return _c_;
