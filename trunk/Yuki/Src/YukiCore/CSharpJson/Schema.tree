@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2013.03.31.
+      Version:     2013.06.18.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -576,6 +576,7 @@ ObjectSchemaTemplate
                     {
                         if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
                         var jo = j as JObject;
+                        if (jo == null) { throw new InvalidOperationException(); }
                         var o = new [[${Name}]]();
                         ${FieldFroms}
                         return o;
@@ -607,6 +608,7 @@ ObjectSchemaTemplate
                     {
                         if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
                         var jo = j as JObject;
+                        if (jo == null) { throw new InvalidOperationException(); }
                         var o = new [[${Name}]]();
                         var d = (IDictionary<string, JToken>)(jo);
                         ${AlternativeFroms}
@@ -694,6 +696,7 @@ ObjectSchemaTemplate
                     {
                         if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
                         var jo = j as JObject;
+                        if (jo == null) { throw new InvalidOperationException(); }
                         var o = new [[${TypeString}]]();
                         var d = (IDictionary<string, JToken>)(jo);
                         ${AlternativeFroms}
