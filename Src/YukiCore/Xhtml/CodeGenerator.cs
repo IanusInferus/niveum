@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2013.05.19.
+//  Version:     2013.06.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -88,6 +88,18 @@ namespace Yuki.ObjectSchema.Xhtml.Common
                     var DocFilePath = PathWithoutExt.Replace(@"\", @"_").Replace(@"/", @"_").Replace(@".", "_").Replace(@":", @"_").Replace(@"#", @"_") + @".html";
                     var tli = new TypeInfo { Def = Map[p.Name], FriendlyPath = PathWithoutExt.Replace(@"\", @"/"), DocFilePath = DocFilePath, DocPath = String.Format("{0}#{1}", DocFilePath, p.Name) };
                     TypeInfoDict.Add(p.Name, tli);
+                }
+                foreach (var t in Schema.Types)
+                {
+                    if (!TypeInfoDict.ContainsKey(t.VersionedName()))
+                    {
+                        var p = new TypePath { Name = t.VersionedName(), Path = "Default.tree" };
+                        var Path = FileNameHandling.GetRelativePath(p.Path, Root);
+                        var PathWithoutExt = FileNameHandling.GetPath(FileNameHandling.GetFileDirectory(Path), FileNameHandling.GetMainFileName(Path));
+                        var DocFilePath = PathWithoutExt.Replace(@"\", @"_").Replace(@"/", @"_").Replace(@".", "_").Replace(@":", @"_").Replace(@"#", @"_") + @".html";
+                        var tli = new TypeInfo { Def = Map[p.Name], FriendlyPath = PathWithoutExt.Replace(@"\", @"/"), DocFilePath = DocFilePath, DocPath = String.Format("{0}#{1}", DocFilePath, p.Name) };
+                        TypeInfoDict.Add(p.Name, tli);
+                    }
                 }
             }
 
