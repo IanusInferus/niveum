@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2013.05.30.
+//  Version:     2013.06.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -71,6 +71,8 @@ namespace Yuki.RelationSchema
             {
                 var TypeRefs = new List<RS.TypeDef>();
                 var Types = new List<RS.TypeDef>();
+                var TypePathDict = Schema.TypePaths.ToDictionary(tp => tp.Name);
+                var TypePaths = Schema.TypePaths.Select(tp => new RS.TypePath { Name = tp.Name, Path = tp.Path }).ToList();
 
                 foreach (var t in Schema.TypeRefs)
                 {
@@ -117,6 +119,10 @@ namespace Yuki.RelationSchema
                                 {
                                     OPrimitives.Add("Binary");
                                     TypeRefs.Add(RS.TypeDef.CreatePrimitive(new PrimitiveDef { Name = "Binary", Description = "二进制数据" }));
+                                    if (TypePathDict.ContainsKey("Byte"))
+                                    {
+                                        TypePaths.Add(new TypePath { Name = "Binary", Path = TypePathDict["Byte"].Path });
+                                    }
                                 }
                             }
                         }
@@ -139,6 +145,10 @@ namespace Yuki.RelationSchema
                                 {
                                     OPrimitives.Add("Binary");
                                     Types.Add(RS.TypeDef.CreatePrimitive(new PrimitiveDef { Name = "Binary", Description = "二进制数据" }));
+                                    if (TypePathDict.ContainsKey("Byte"))
+                                    {
+                                        TypePaths.Add(new TypePath { Name = "Binary", Path = TypePathDict["Byte"].Path });
+                                    }
                                 }
                             }
                         }
@@ -190,7 +200,7 @@ namespace Yuki.RelationSchema
                     FillRecordNavigations(r);
                 }
 
-                return new RS.Schema { Types = Types, TypeRefs = TypeRefs, Imports = Schema.Imports.ToList(), TypePaths = Schema.TypePaths.Select(tp => new RS.TypePath { Name = tp.Name, Path = tp.Path }).ToList() };
+                return new RS.Schema { Types = Types, TypeRefs = TypeRefs, Imports = Schema.Imports.ToList(), TypePaths = TypePaths };
             }
 
             private RS.PrimitiveDef TranslatePrimitive(OS.PrimitiveDef e)
