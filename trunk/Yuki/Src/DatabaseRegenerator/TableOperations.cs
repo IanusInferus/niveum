@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2013.02.28.
+//  Version:     2013.06.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -236,13 +236,13 @@ namespace Yuki.DatabaseRegenerator
                                         else
                                         {
                                             if (!cv.Optional.HasValue.OnBinaryValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
-                                            p.Value = cv.Optional.HasValue.BinaryValue;
+                                            p.Value = cv.Optional.HasValue.BinaryValue.ToArray();
                                         }
                                     }
                                     else
                                     {
                                         if (!cv.Primitive.OnBinaryValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
-                                        p.Value = cv.Primitive.BinaryValue;
+                                        p.Value = cv.Primitive.BinaryValue.ToArray();
                                     }
                                 }
                                 else
