@@ -1,6 +1,8 @@
 ﻿2013.06.30
 Yuki.DatabaseRegenerator:
 修正导入Binary类型的问题。
+Yuki.Core, Yuki.Relation:
+修正Xhtml生成的路径问题。
 
 2013.06.23.0
 更新Firefly库并发布版本。
