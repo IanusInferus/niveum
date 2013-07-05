@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2013.06.18.
+      Version:     2013.07.05.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -380,7 +380,7 @@ ObjectSchemaTemplate
                 $String
                     public static Real RealFromJson(JToken j)
                     {
-                        if ((j.Type != JTokenType.Float) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+                        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.Float) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
                         var jv = j as JValue;
                         return Convert.ToDouble(jv.Value);
                     }

@@ -1,4 +1,8 @@
-﻿2013.06.30
+﻿2013.07.05
+Yuki.Core:
+修正JSON反序列化中浮点数的解析问题。
+
+2013.06.30
 Yuki.DatabaseRegenerator:
 修正导入Binary类型的问题。
 Yuki.Core, Yuki.Relation:
