@@ -3,7 +3,7 @@
 //  File:        RelationValueTreeSerializer.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构数据Tree序列化器
-//  Version:     2013.05.31.
+//  Version:     2013.07.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -218,7 +218,7 @@ namespace Yuki.RelationValue
                         }
                         catch (FormatException)
                         {
-                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
                         }
                     };
                 }
@@ -262,7 +262,7 @@ namespace Yuki.RelationValue
                                 }
                                 catch (FormatException)
                                 {
-                                    throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                                    throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
                                 }
                             }
                         };
@@ -284,7 +284,7 @@ namespace Yuki.RelationValue
                             }
                             catch (FormatException)
                             {
-                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
                             }
                         };
                     }
@@ -306,7 +306,7 @@ namespace Yuki.RelationValue
                         }
                         catch (FormatException)
                         {
-                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
                         }
                     };
                 }
@@ -327,7 +327,7 @@ namespace Yuki.RelationValue
                         }
                         catch (FormatException)
                         {
-                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
                         }
                     };
                 }
@@ -356,7 +356,7 @@ namespace Yuki.RelationValue
                         }
                         catch (FormatException)
                         {
-                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
                         }
                     };
                 }
@@ -402,7 +402,7 @@ namespace Yuki.RelationValue
                                 }
                                 catch (FormatException)
                                 {
-                                    throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                                    throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
                                 }
                             }
                         };
@@ -425,7 +425,7 @@ namespace Yuki.RelationValue
                             }
                             catch (FormatException)
                             {
-                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
                             }
                         };
                     }
@@ -448,7 +448,7 @@ namespace Yuki.RelationValue
                         }
                         catch (FormatException)
                         {
-                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
                         }
                     };
                 }
@@ -470,7 +470,7 @@ namespace Yuki.RelationValue
                         }
                         catch (FormatException)
                         {
-                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
                         }
                     };
                 }
