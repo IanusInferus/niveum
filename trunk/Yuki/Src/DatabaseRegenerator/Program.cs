@@ -279,6 +279,11 @@ namespace Yuki.DatabaseRegenerator
         public static RelationVal LoadData(RelationSchema.Schema s, String[] DataDirs)
         {
             var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
+            var DuplicatedCollectionNames = Entities.GroupBy(e => e.CollectionName).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+            if (DuplicatedCollectionNames.Count > 0)
+            {
+                throw new InvalidOperationException("DuplicatedCollectionNames: {0}".Formats(String.Join(" ", DuplicatedCollectionNames)));
+            }
             var CollectionNameToEntity = Entities.ToDictionary(e => e.CollectionName, StringComparer.OrdinalIgnoreCase);
             var Tables = new Dictionary<String, List<Node>>();
             foreach (var DataDir in DataDirs)
