@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Haxe模板数据
-      Version:     2013.03.31.
+      Version:     2013.09.12.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -58,6 +58,7 @@ ObjectSchemaTemplate
             using
             var
             while
+            Dynamic
     PrimitiveMappings
         PrimitiveMapping
             Name Unit

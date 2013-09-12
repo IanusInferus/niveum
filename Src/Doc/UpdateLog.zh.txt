@@ -1,4 +1,8 @@
-﻿2013.09.05
+﻿2013.09.12
+Yuki.Core:
+增加Haxe关键字Dynamic。
+
+2013.09.05
 Yuki.DatabaseRegenerator:
 增加表名重复的错误说明。
 
