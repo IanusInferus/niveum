@@ -37,6 +37,7 @@ ObjectSchemaTemplate
                     #include <cstdlib>
                     #include <string>
                     #include <codecvt>
+                    #include <locale>
                     #include <vector>
                     #include <queue>
                     #include <unordered_set>
