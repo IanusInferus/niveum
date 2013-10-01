@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Memory代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.10.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -39,6 +39,7 @@ namespace Yuki.RelationSchema.CSharpMemory
             private OS.Schema InnerSchema;
             private Dictionary<String, TypeDef> TypeDict;
             private Dictionary<String, OS.TypeDef> InnerTypeDict;
+            private Dictionary<String, Dictionary<ByIndex, ByIndex>> ByIndexDict;
 
             static Writer()
             {
@@ -56,6 +57,32 @@ namespace Yuki.RelationSchema.CSharpMemory
                 InnerSchema = PlainObjectSchemaGenerator.Generate(Schema);
                 TypeDict = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
                 InnerTypeDict = Yuki.ObjectSchema.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+
+                ByIndexDict = new Dictionary<String, Dictionary<ByIndex, ByIndex>>(StringComparer.OrdinalIgnoreCase);
+                foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
+                {
+                    var h = new Dictionary<ByIndex, ByIndex>();
+                    foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
+                    {
+                        var SubIndex = new ByIndex { Columns = k.Columns.Select(c => c.Name).ToList() };
+                        if (!h.ContainsKey(SubIndex))
+                        {
+                            h.Add(SubIndex, SubIndex);
+                        }
+                    }
+                    foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
+                    {
+                        for (int i = 1; i < k.Columns.Count; i += 1)
+                        {
+                            var SubIndex = new ByIndex { Columns = k.Columns.Take(i).Select(c => c.Name).ToList() };
+                            if (!h.ContainsKey(SubIndex))
+                            {
+                                h.Add(SubIndex, SubIndex);
+                            }
+                        }
+                    }
+                    ByIndexDict.Add(e.Name, h);
+                }
 
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Unit").Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Boolean").Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
@@ -271,14 +298,41 @@ namespace Yuki.RelationSchema.CSharpMemory
                 return String.Join("", l.ToArray());
             }
 
+            private class ByIndex
+            {
+                public List<String> Columns;
+
+                public override bool Equals(object obj)
+                {
+                    var o = obj as ByIndex;
+                    if (o == null) { return false; }
+                    if (Columns.Count != o.Columns.Count) { return false; }
+                    if (Columns.Intersect(o.Columns, StringComparer.OrdinalIgnoreCase).Count() != Columns.Count) { return false; }
+                    return true;
+                }
+
+                public override int GetHashCode()
+                {
+                    if (Columns.Count == 0) { return 0; }
+                    Func<String, int> h = StringComparer.OrdinalIgnoreCase.GetHashCode;
+                    return Columns.Select(k => h(k)).Aggregate((a, b) => a ^ b);
+                }
+            }
+
             public String[] GetQuery(QueryDef q)
             {
                 var e = TypeDict[q.EntityName].Entity;
+                var bih = ByIndexDict[q.EntityName];
 
                 var Signature = InnerWriter.GetQuerySignature(q);
-                var ManyName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateMany(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
-                var AllName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateAll(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
-                var Parameters = String.Join(", ", q.By);
+                var By = q.By;
+                if (q.By.Count > 0)
+                {
+                    By = bih[new ByIndex { Columns = q.By }].Columns.ToList();
+                }
+                var ManyName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateMany(), By = By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
+                var AllName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateAll(), By = By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
+                var Parameters = String.Join(", ", By.ToArray());
                 var OrderBys = GetOrderBy(q);
                 String[] Content;
                 if (q.Verb.OnSelect || q.Verb.OnLock)
@@ -301,7 +355,7 @@ namespace Yuki.RelationSchema.CSharpMemory
                     }
                     else if (q.Numeral.OnRange)
                     {
-                        if (q.By.Count == 0)
+                        if (By.Count == 0)
                         {
                             Content = GetTemplate("SelectLock_RangeAll").Substitute("AllName", AllName).Substitute("OrderBys", OrderBys);
                         }
@@ -330,6 +384,21 @@ namespace Yuki.RelationSchema.CSharpMemory
                 return GetTemplate("Query").Substitute("Signature", Signature).Substitute("Content", Content);
             }
 
+            public String[] GetQueries()
+            {
+                var l = new List<String>();
+                foreach (var q in Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries))
+                {
+                    l.AddRange(GetQuery(q));
+                    l.Add("");
+                }
+                if (l.Count > 0)
+                {
+                    l = l.Take(l.Count - 1).ToList();
+                }
+                return l.ToArray();
+            }
+
             public String[] GetComplexTypes()
             {
                 var l = new List<String>();
@@ -342,18 +411,8 @@ namespace Yuki.RelationSchema.CSharpMemory
                 l.AddRange(GetTemplate("DataAccessBase").Substitute("Tables", Tables).Substitute("Indices", Indices).Substitute("Selects", Selects).Substitute("Generates", Generates).Substitute("Hash", Hash));
                 l.Add("");
 
-                var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToArray();
-                var ql = new List<String>();
-                foreach (var q in Queries)
-                {
-                    ql.AddRange(GetQuery(q));
-                    ql.Add("");
-                }
-                if (ql.Count > 0)
-                {
-                    ql = ql.Take(ql.Count - 1).ToList();
-                }
-                l.AddRange(GetTemplate("DataAccess").Substitute("Queries", ql.ToArray()));
+                var Queries = GetQueries();
+                l.AddRange(GetTemplate("DataAccess").Substitute("Queries", Queries));
                 l.Add("");
                 l.AddRange(GetTemplate("DataAccessPool").Substitute("Hash", Hash));
                 l.Add("");
