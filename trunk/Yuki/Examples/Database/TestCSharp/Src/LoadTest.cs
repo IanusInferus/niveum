@@ -34,6 +34,28 @@ namespace Database
             s.AddLockData(1);
         }
 
+        private static int SumValue;
+        private static Object Lockee = new Object();
+        public static void TestAddDeleteLockData(int NumUser, int n, TestService s)
+        {
+            //测试锁定不存在的行
+            //目前只有SQL Server能够通过
+            //MySQL和PostgreSQL均无法通过该测试
+
+            if (n % 2 == 0)
+            {
+                s.AddLockData(1);
+            }
+            else
+            {
+                var v = s.DeleteLockData();
+                lock (Lockee)
+                {
+                    SumValue += v + 1;
+                }
+            }
+        }
+
         public static void TestForNumUser(DataAccessManager dam, int NumUser, String Title, Action<int, int, TestService> Test)
         {
             ThreadLocal<TestService> t = new ThreadLocal<TestService>(() => new TestService(dam));
@@ -57,6 +79,11 @@ namespace Database
             t.SaveLockData(0);
             TestForNumUser(dam, 64, "TestAddLockData", TestAddLockData);
             Trace.Assert(t.LoadLockData() == 64);
+
+            SumValue = 0;
+            t.SaveLockData(0);
+            TestForNumUser(dam, 64, "TestAddDeleteLockData", TestAddDeleteLockData);
+            Trace.Assert(SumValue + t.LoadLockData() == 64);
 
             Thread.Sleep(5000);
             for (int k = 0; k < 8; k += 1)
@@ -83,6 +110,16 @@ namespace Database
                 t.SaveLockData(0);
                 TestForNumUser(dam, NumUser, "TestAddLockData", TestAddLockData);
                 Trace.Assert(t.LoadLockData() == NumUser);
+            }
+
+            Thread.Sleep(5000);
+            for (int k = 0; k < 8; k += 1)
+            {
+                SumValue = 0;
+                var NumUser = 1 << (2 * k);
+                t.SaveLockData(0);
+                TestForNumUser(dam, NumUser, "TestAddDeleteLockData", TestAddDeleteLockData);
+                Trace.Assert(SumValue + t.LoadLockData() == NumUser);
             }
 
             return 0;
