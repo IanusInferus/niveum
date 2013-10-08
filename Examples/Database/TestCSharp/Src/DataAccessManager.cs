@@ -21,7 +21,7 @@ namespace Database
         private static readonly String SqlServerType = "Database.SqlServer.SqlServerDataAccessPool";
         private static readonly String PostgreSqlType = "Database.PostgreSql.PostgreSqlDataAccessPool";
         private static readonly String MySqlType = "Database.MySql.MySqlDataAccessPool";
-        private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Test";
+        private static readonly String SqlServerConnectionString = "Data Source=(LocalDB)\v11.0;Integrated Security=True;Database=Test";
         private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=test;";
         private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Test;";
 
