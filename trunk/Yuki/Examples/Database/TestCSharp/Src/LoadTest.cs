@@ -39,8 +39,12 @@ namespace Database
         public static void TestAddDeleteLockData(int NumUser, int n, TestService s)
         {
             //测试锁定不存在的行
-            //目前只有SQL Server能够通过
-            //MySQL和PostgreSQL均无法通过该测试
+            //目前测试的数据库
+            //SQL Server 2012 通过
+            //MySQL 5.5.29 通过
+            //MySQL 5.6.14 死锁
+            //MySQL 5.7.2 死锁
+            //PostgreSQL 异常
 
             if (n % 2 == 0)
             {
