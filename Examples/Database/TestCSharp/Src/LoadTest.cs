@@ -44,7 +44,7 @@ namespace Database
             //MySQL 5.5.29 较难出现死锁
             //MySQL 5.6.14 死锁
             //MySQL 5.7.2 死锁
-            //PostgreSQL 异常
+            //PostgreSQL 9.1 异常
 
             if (n % 2 == 0)
             {
