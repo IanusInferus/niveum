@@ -1,6 +1,8 @@
 ﻿2013.10.09
 Yuki.DatabaseRegenerator:
 修正SQL Server数据导入时表名没有使用CollectionName，而使用了EntityName的问题。
+Examples:
+数据库示例增加对锁定不存在的行的测试。目前只有SQL Server能够通过测试，MySQL和PostgreSQL均无法通过该测试。
 
 2013.10.01
 Yuki.Relation:
