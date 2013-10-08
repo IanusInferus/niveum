@@ -67,6 +67,27 @@ namespace Database
             }
         }
 
+        public int DeleteLockData()
+        {
+            using (var da = dam.Create())
+            {
+                var ov = da.FromTestLockRecordLockOptionalById(1);
+                DB.TestLockRecord v;
+                if (ov.OnHasValue)
+                {
+                    v = ov.HasValue;
+                }
+                else
+                {
+                    v = new DB.TestLockRecord { Id = 1, Value = 0 };
+                }
+                da.FromTestLockRecordDeleteOptionalById(1);
+                da.Complete();
+
+                return v.Value;
+            }
+        }
+
         public int LoadLockData()
         {
             using (var da = dam.Create())
@@ -80,7 +101,7 @@ namespace Database
                 }
                 else
                 {
-                    throw new InvalidOperationException();
+                    return 0;
                 }
             }
         }

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 数据库示例程序
-//  Version:     2012.06.29.
+//  Version:     2013.10.09.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
