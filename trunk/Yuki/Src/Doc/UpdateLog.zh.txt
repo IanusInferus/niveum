@@ -1,4 +1,8 @@
-﻿2013.10.01
+﻿2013.10.09
+Yuki.DatabaseRegenerator:
+修正SQL Server数据导入时表名没有使用CollectionName，而使用了EntityName的问题。
+
+2013.10.01
 Yuki.Relation:
 修正C#和C++ Memory数据库代码生成中查询的By索引与数据表索引顺序不一致时生成代码错误的问题。
 
