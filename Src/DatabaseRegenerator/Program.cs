@@ -417,7 +417,7 @@ namespace Yuki.DatabaseRegenerator
                         {
                             foreach (var t in EntityMetas)
                             {
-                                var CollectionName = t.Key;
+                                var CollectionName = t.Value.CollectionName;
 
                                 {
                                     IDbCommand cmd = c.CreateCommand();
@@ -433,7 +433,7 @@ namespace Yuki.DatabaseRegenerator
                             }
                             foreach (var t in EntityMetas)
                             {
-                                var CollectionName = t.Key;
+                                var CollectionName = t.Value.CollectionName;
 
                                 {
                                     IDbCommand cmd = c.CreateCommand();
