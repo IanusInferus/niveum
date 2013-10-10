@@ -47,22 +47,42 @@ namespace Database
             }
         }
 
+        private static int ConcurrentWriteNotBlocked = 0;
+        private static Object Lockee = new Object();
         public void AddLockData(int Value)
         {
             using (var da = dam.Create())
             {
                 var ov = da.FromTestLockRecordLockOptionalById(1);
+                lock (Lockee)
+                {
+                    if (ConcurrentWriteNotBlocked >= 1)
+                    {
+                        throw new InvalidOperationException("LockingFailed");
+                    }
+                    ConcurrentWriteNotBlocked += 1;
+                }
                 DB.TestLockRecord v;
-                if (ov.OnHasValue)
+                try
                 {
-                    v = ov.HasValue;
+                    if (ov.OnHasValue)
+                    {
+                        v = ov.HasValue;
+                    }
+                    else
+                    {
+                        v = new DB.TestLockRecord { Id = 1, Value = 0 };
+                    }
+                    v.Value += Value;
+                    da.FromTestLockRecordUpsertOne(v);
                 }
-                else
+                finally
                 {
-                    v = new DB.TestLockRecord { Id = 1, Value = 0 };
+                    lock (Lockee)
+                    {
+                        ConcurrentWriteNotBlocked -= 1;
+                    }
                 }
-                v.Value += Value;
-                da.FromTestLockRecordUpsertOne(v);
                 da.Complete();
             }
         }
@@ -72,16 +92,34 @@ namespace Database
             using (var da = dam.Create())
             {
                 var ov = da.FromTestLockRecordLockOptionalById(1);
+                lock (Lockee)
+                {
+                    if (ConcurrentWriteNotBlocked >= 1)
+                    {
+                        throw new InvalidOperationException("LockingFailed");
+                    }
+                    ConcurrentWriteNotBlocked += 1;
+                }
                 DB.TestLockRecord v;
-                if (ov.OnHasValue)
+                try
                 {
-                    v = ov.HasValue;
+                    if (ov.OnHasValue)
+                    {
+                        v = ov.HasValue;
+                    }
+                    else
+                    {
+                        v = new DB.TestLockRecord { Id = 1, Value = 0 };
+                    }
+                    da.FromTestLockRecordDeleteOptionalById(1);
                 }
-                else
+                finally
                 {
-                    v = new DB.TestLockRecord { Id = 1, Value = 0 };
+                    lock (Lockee)
+                    {
+                        ConcurrentWriteNotBlocked -= 1;
+                    }
                 }
-                da.FromTestLockRecordDeleteOptionalById(1);
                 da.Complete();
 
                 return v.Value;
