@@ -1,4 +1,8 @@
-﻿2013.10.09
+﻿2013.10.10
+Examples:
+数据库示例增加对锁定不存在的行的加锁失败判断。
+
+2013.10.09
 Yuki.DatabaseRegenerator:
 修正SQL Server数据导入时表名没有使用CollectionName，而使用了EntityName的问题。
 Examples:
