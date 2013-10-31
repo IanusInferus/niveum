@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# PostgreSQL代码模板数据
-      Version:     2013.03.28.
+      Version:     2013.10.31.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -72,18 +72,30 @@ ObjectSchemaTemplate
                     {
                         private NpgsqlConnection Connection;
                         private NpgsqlTransaction Transaction;
+                        private ITransactionLock TransactionLock;
                         public PostgreSqlDataAccess(String ConnectionString)
                         {
                             Connection = new NpgsqlConnection(ConnectionString);
                             Connection.Open();
                             Transaction = Connection.BeginTransaction();
                         }
-                        
+                        public PostgreSqlDataAccess(String ConnectionString, ITransactionLock TransactionLock)
+                        {
+                            Connection = new NpgsqlConnection(ConnectionString);
+                            Connection.Open();
+                            Transaction = Connection.BeginTransaction();
+                            this.TransactionLock = TransactionLock;
+                        }
+
                         public static IDataAccess Create(String ConnectionString)
                         {
                             return new PostgreSqlDataAccess(ConnectionString);
                         }
-                        
+                        public static IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
+                        {
+                            return new PostgreSqlDataAccess(ConnectionString, TransactionLock);
+                        }
+
                         public void Dispose()
                         {
                             if (Transaction != null)
@@ -92,13 +104,18 @@ ObjectSchemaTemplate
                                 Transaction.Dispose();
                                 Transaction = null;
                             }
+                            if (TransactionLock != null)
+                            {
+                                TransactionLock.ExitAll();
+                                TransactionLock = null;
+                            }
                             if (Connection != null)
                             {
                                 Connection.Dispose();
                                 Connection = null;
                             }
                         }
-                        
+
                         public void Complete()
                         {
                             if (Transaction != null)
@@ -111,6 +128,11 @@ ObjectSchemaTemplate
                             {
                                 throw new InvalidOperationException();
                             }
+                            if (TransactionLock != null)
+                            {
+                                TransactionLock.ExitAll();
+                                TransactionLock = null;
+                            }
                             if (Connection != null)
                             {
                                 Connection.Dispose();
@@ -121,7 +143,7 @@ ObjectSchemaTemplate
                                 throw new InvalidOperationException();
                             }
                         }
-                        
+
                         private NpgsqlCommand CreateTextCommand()
                         {
                             var cmd = Connection.CreateCommand();
@@ -129,7 +151,7 @@ ObjectSchemaTemplate
                             cmd.CommandType = CommandType.Text;
                             return cmd;
                         }
-                        
+
                         private static void Add(NpgsqlCommand cmd, String ParameterName, Boolean Value)
                         {
                             var p = cmd.CreateParameter();
@@ -359,9 +381,10 @@ ObjectSchemaTemplate
                     }
         Template
             Name SelectLock_Optional
-            //Parameters: ${EntityName}, ${SQL}, ${ParameterAdds}, ${ResultSets}
+            //Parameters: ${EntityName}, ${LockingStatement}, ${SQL}, ${ParameterAdds}, ${ResultSets}
             Value
                 $String
+                    ${LockingStatement}
                     var cmd = CreateTextCommand();
                     cmd.CommandText = @"${SQL}";
                     ${ParameterAdds}
@@ -383,9 +406,10 @@ ObjectSchemaTemplate
                     return v;
         Template
             Name SelectLock_One
-            //Parameters: ${EntityName}, ${SQL}, ${ParameterAdds}, ${ResultSets}
+            //Parameters: ${EntityName}, ${LockingStatement}, ${SQL}, ${ParameterAdds}, ${ResultSets}
             Value
                 $String
+                    ${LockingStatement}
                     var cmd = CreateTextCommand();
                     cmd.CommandText = @"${SQL}";
                     ${ParameterAdds}
@@ -408,9 +432,10 @@ ObjectSchemaTemplate
                     return v;
         Template
             Name SelectLock_ManyAllRange
-            //Parameters: ${EntityName}, ${SQL}, ${ParameterAdds}, ${ResultSets}
+            //Parameters: ${EntityName}, ${LockingStatement}, ${SQL}, ${ParameterAdds}, ${ResultSets}
             Value
                 $String
+                    ${LockingStatement}
                     var cmd = CreateTextCommand();
                     cmd.CommandText = @"${SQL}";
                     ${ParameterAdds}
@@ -429,9 +454,10 @@ ObjectSchemaTemplate
                     return l;
         Template
             Name SelectLock_Count
-            //Parameters: ${EntityName}, ${SQL}, ${ParameterAdds}
+            //Parameters: ${EntityName}, ${LockingStatement}, ${SQL}, ${ParameterAdds}
             Value
                 $String
+                    ${LockingStatement}
                     var cmd = CreateTextCommand();
                     cmd.CommandText = @"${SQL}";
                     ${ParameterAdds}
@@ -539,6 +565,12 @@ ObjectSchemaTemplate
                     ${ParameterAdds}
                     cmd.ExecuteNonQuery();
         Template
+            Name Lock_LockingStatement
+            //Parameters: ${EntityNameAndParameterAndValues}
+            Value
+                $String
+                    if (TransactionLock != null) { TransactionLock.Enter(new Object[] { ${EntityNameAndParameterAndValues} }); }
+        Template
             Name SelectLockDelete_ParameterAdd
             //Parameters: ${ParameterName}
             Value
@@ -586,6 +618,10 @@ ObjectSchemaTemplate
                         public IDataAccess Create(String ConnectionString)
                         {
                             return PostgreSqlDataAccess.Create(ConnectionString);
+                        }
+                        public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
+                        {
+                            return PostgreSqlDataAccess.Create(ConnectionString, TransactionLock);
                         }
                         public void Dispose()
                         {
