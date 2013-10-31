@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 数据库示例程序
-//  Version:     2013.10.09.
+//  Version:     2013.10.31.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -12,6 +12,7 @@
 using System;
 using System.Reflection;
 using Firefly;
+using BaseSystem;
 
 namespace Database
 {
@@ -71,7 +72,8 @@ namespace Database
 
             var ConnectionString = argv[0];
 
-            var dam = new DataAccessManager(ConnectionString);
+            var cl = new CascadeLock();
+            var dam = new DataAccessManager(ConnectionString, cl);
             if (UseLoadTest)
             {
                 LoadTest.DoTest(dam);
