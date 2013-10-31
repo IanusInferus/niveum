@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CascadeLock.cs" />
     <Compile Include="DataAccessManager.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="LoadTest.cs" />
@@ -54,6 +55,7 @@
     <Compile Include="SqlServer\SqlServerDataAccess.cs" />
     <Compile Include="TestService.cs" />
     <Compile Include="PerformanceTest.cs" />
+    <Compile Include="TransactionLock.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BaseSystem;
 using Database.Database;
 
 namespace Database
@@ -41,10 +42,35 @@ namespace Database
             }
             return Types.Single();
         }
-        private static Func<String, IDataAccess> GetConstructor(Type t)
+
+        private class TransactionLock : Database.ITransactionLock
+        {
+            private BaseSystem.TransactionLock InnerLock;
+            public TransactionLock(BaseSystem.TransactionLock InnerLock)
+            {
+                this.InnerLock = InnerLock;
+            }
+            public void Enter(IEnumerable<object> LockPath)
+            {
+                InnerLock.Enter(LockPath);
+            }
+            public void Exit(IEnumerable<object> LockPath)
+            {
+                InnerLock.Exit(LockPath);
+            }
+            public void ExitAll()
+            {
+                InnerLock.ExitAll();
+            }
+            public void Dispose()
+            {
+                InnerLock.Dispose();
+            }
+        }
+        private static Func<String, ICascadeLock, IDataAccess> GetConstructor(Type t)
         {
             var c = (IDataAccessPool)(Activator.CreateInstance(t));
-            return c.Create;
+            return (ConnectionString, CascadeLock) => c.Create(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
         }
 
         public static String GetConnectionStringExample()
@@ -96,14 +122,14 @@ namespace Database
             }
         }
 
-        public DataAccessManager(String ConnectionString)
+        public DataAccessManager(String ConnectionString, ICascadeLock CascadeLock)
         {
             {
                 var t = GetType(SqlServerType);
                 if (t != null)
                 {
                     var c = GetConstructor(t);
-                    ConnectionFactory = () => c(ConnectionString);
+                    ConnectionFactory = () => c(ConnectionString, CascadeLock);
                     return;
                 }
             }
@@ -112,7 +138,7 @@ namespace Database
                 if (t != null)
                 {
                     var c = GetConstructor(t);
-                    ConnectionFactory = () => c(ConnectionString);
+                    ConnectionFactory = () => c(ConnectionString, CascadeLock);
                     return;
                 }
             }
@@ -121,31 +147,31 @@ namespace Database
                 if (t != null)
                 {
                     var c = GetConstructor(t);
-                    ConnectionFactory = () => c(ConnectionString);
+                    ConnectionFactory = () => c(ConnectionString, CascadeLock);
                     return;
                 }
             }
             throw new InvalidOperationException();
         }
-        public DataAccessManager(DatabaseType Type, String ConnectionString)
+        public DataAccessManager(DatabaseType Type, String ConnectionString, ICascadeLock CascadeLock)
         {
             if (Type == DatabaseType.SqlServer)
             {
                 var t = GetType(SqlServerType, true);
                 var c = GetConstructor(t);
-                ConnectionFactory = () => c(ConnectionString);
+                ConnectionFactory = () => c(ConnectionString, CascadeLock);
             }
             else if (Type == DatabaseType.PostgreSQL)
             {
                 var t = GetType(PostgreSqlType, true);
                 var c = GetConstructor(t);
-                ConnectionFactory = () => c(ConnectionString);
+                ConnectionFactory = () => c(ConnectionString, CascadeLock);
             }
             else if (Type == DatabaseType.MySQL)
             {
                 var t = GetType(MySqlType, true);
                 var c = GetConstructor(t);
-                ConnectionFactory = () => c(ConnectionString);
+                ConnectionFactory = () => c(ConnectionString, CascadeLock);
             }
             else
             {

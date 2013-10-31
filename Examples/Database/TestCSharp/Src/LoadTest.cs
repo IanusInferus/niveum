@@ -38,6 +38,14 @@ namespace Database
         private static Object Lockee = new Object();
         public static void TestAddDeleteLockData(int NumUser, int n, TestService s)
         {
+            //如果在不使用CascadeLock和TransactionLock的情况下
+            //(将Program.cs中的
+            //var dam = new DataAccessManager(ConnectionString, cl);
+            //替换为
+            //var dam = new DataAccessManager(ConnectionString, null);
+            //)
+            //部分数据库会出现死锁问题
+
             //测试锁定不存在的行
             //目前测试的数据库
             //SQL Server 2012 通过
@@ -108,7 +116,7 @@ namespace Database
             }
 
             Thread.Sleep(5000);
-            for (int k = 0; k < 8; k += 1)
+            for (int k = 0; k < 7; k += 1)
             {
                 var NumUser = 1 << (2 * k);
                 t.SaveLockData(0);
@@ -117,7 +125,7 @@ namespace Database
             }
 
             Thread.Sleep(5000);
-            for (int k = 0; k < 8; k += 1)
+            for (int k = 0; k < 7; k += 1)
             {
                 SumValue = 0;
                 var NumUser = 1 << (2 * k);
