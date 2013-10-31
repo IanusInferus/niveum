@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# MySQL代码模板数据
-      Version:     2013.05.31.
+      Version:     2013.10.31.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -70,16 +70,28 @@ ObjectSchemaTemplate
                     {
                         private MySqlConnection Connection;
                         private MySqlTransaction Transaction;
+                        private ITransactionLock TransactionLock;
                         public MySqlDataAccess(String ConnectionString)
                         {
                             Connection = new MySqlConnection(ConnectionString);
                             Connection.Open();
                             Transaction = Connection.BeginTransaction();
                         }
+                        public MySqlDataAccess(String ConnectionString, ITransactionLock TransactionLock)
+                        {
+                            Connection = new MySqlConnection(ConnectionString);
+                            Connection.Open();
+                            Transaction = Connection.BeginTransaction();
+                            this.TransactionLock = TransactionLock;
+                        }
 
                         public static IDataAccess Create(String ConnectionString)
                         {
                             return new MySqlDataAccess(ConnectionString);
+                        }
+                        public static IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
+                        {
+                            return new MySqlDataAccess(ConnectionString, TransactionLock);
                         }
 
                         public void Dispose()
@@ -89,6 +101,11 @@ ObjectSchemaTemplate
                                 Transaction.Rollback();
                                 Transaction.Dispose();
                                 Transaction = null;
+                            }
+                            if (TransactionLock != null)
+                            {
+                                TransactionLock.ExitAll();
+                                TransactionLock = null;
                             }
                             if (Connection != null)
                             {
@@ -108,6 +125,11 @@ ObjectSchemaTemplate
                             else
                             {
                                 throw new InvalidOperationException();
+                            }
+                            if (TransactionLock != null)
+                            {
+                                TransactionLock.ExitAll();
+                                TransactionLock = null;
                             }
                             if (Connection != null)
                             {
@@ -357,9 +379,10 @@ ObjectSchemaTemplate
                     }
         Template
             Name SelectLock_Optional
-            //Parameters: ${EntityName}, ${SQL}, ${ParameterAdds}, ${ResultSets}
+            //Parameters: ${EntityName}, ${LockingStatement}, ${SQL}, ${ParameterAdds}, ${ResultSets}
             Value
                 $String
+                    ${LockingStatement}
                     var cmd = CreateTextCommand();
                     cmd.CommandText = @"${SQL}";
                     ${ParameterAdds}
@@ -381,9 +404,10 @@ ObjectSchemaTemplate
                     return v;
         Template
             Name SelectLock_One
-            //Parameters: ${EntityName}, ${SQL}, ${ParameterAdds}, ${ResultSets}
+            //Parameters: ${EntityName}, ${LockingStatement}, ${SQL}, ${ParameterAdds}, ${ResultSets}
             Value
                 $String
+                    ${LockingStatement}
                     var cmd = CreateTextCommand();
                     cmd.CommandText = @"${SQL}";
                     ${ParameterAdds}
@@ -406,9 +430,10 @@ ObjectSchemaTemplate
                     return v;
         Template
             Name SelectLock_ManyAllRange
-            //Parameters: ${EntityName}, ${SQL}, ${ParameterAdds}, ${ResultSets}
+            //Parameters: ${EntityName}, ${LockingStatement}, ${SQL}, ${ParameterAdds}, ${ResultSets}
             Value
                 $String
+                    ${LockingStatement}
                     var cmd = CreateTextCommand();
                     cmd.CommandText = @"${SQL}";
                     ${ParameterAdds}
@@ -427,9 +452,10 @@ ObjectSchemaTemplate
                     return l;
         Template
             Name SelectLock_Count
-            //Parameters: ${EntityName}, ${SQL}, ${ParameterAdds}
+            //Parameters: ${EntityName}, ${LockingStatement}, ${SQL}, ${ParameterAdds}
             Value
                 $String
+                    ${LockingStatement}
                     var cmd = CreateTextCommand();
                     cmd.CommandText = @"${SQL}";
                     ${ParameterAdds}
@@ -566,6 +592,12 @@ ObjectSchemaTemplate
                     ${ParameterAdds}
                     cmd.ExecuteNonQuery();
         Template
+            Name Lock_LockingStatement
+            //Parameters: ${EntityNameAndParameterAndValues}
+            Value
+                $String
+                    if (TransactionLock != null) { TransactionLock.Enter(new Object[] { ${EntityNameAndParameterAndValues} }); }
+        Template
             Name SelectLockDelete_ParameterAdd
             //Parameters: ${ParameterName}
             Value
@@ -613,6 +645,10 @@ ObjectSchemaTemplate
                         public IDataAccess Create(String ConnectionString)
                         {
                             return MySqlDataAccess.Create(ConnectionString);
+                        }
+                        public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
+                        {
+                            return MySqlDataAccess.Create(ConnectionString, TransactionLock);
                         }
                         public void Dispose()
                         {

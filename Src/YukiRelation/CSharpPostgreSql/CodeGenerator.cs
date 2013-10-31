@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# PostgreSQL代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.10.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -249,6 +249,18 @@ namespace Yuki.RelationSchema.CSharpPostgreSql
                     {
                         throw new InvalidOperationException();
                     }
+                    var LockingStatement = new String[] { };
+                    if (q.Verb.OnLock)
+                    {
+                        var EntityNameAndParameterAndValues = new List<String>();
+                        EntityNameAndParameterAndValues.Add(@"""" + q.EntityName + @"""");
+                        foreach (var c in q.By)
+                        {
+                            EntityNameAndParameterAndValues.Add(@"""" + c + @"""");
+                            EntityNameAndParameterAndValues.Add("[[" + c + "]]");
+                        }
+                        LockingStatement = GetTemplate("Lock_LockingStatement").Substitute("EntityNameAndParameterAndValues", String.Join(", ", EntityNameAndParameterAndValues.ToArray()));
+                    }
                     var SQL = GetQueryString(q);
                     var ParameterAdds = new List<String>();
                     var ResultSets = new List<String>();
@@ -275,7 +287,7 @@ namespace Yuki.RelationSchema.CSharpPostgreSql
                         }
                         k += 1;
                     }
-                    Content = Template.Substitute("EntityName", q.EntityName).Substitute("SQL", SQL.Replace(@"""", @"""""")).Substitute("ParameterAdds", ParameterAdds.ToArray()).Substitute("ResultSets", ResultSets.ToArray());
+                    Content = Template.Substitute("EntityName", q.EntityName).Substitute("LockingStatement", LockingStatement).Substitute("SQL", SQL.Replace(@"""", @"""""")).Substitute("ParameterAdds", ParameterAdds.ToArray()).Substitute("ResultSets", ResultSets.ToArray());
                 }
                 else if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert)
                 {
