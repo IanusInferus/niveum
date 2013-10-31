@@ -51,6 +51,8 @@
     <Compile Include="DataAccessManager.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="LoadTest.cs" />
+    <Compile Include="CascadeLock.cs" />
+    <Compile Include="TransactionLock.cs" />
     <Compile Include="MySql\MySqlDataAccess.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
