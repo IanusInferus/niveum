@@ -205,6 +205,7 @@ namespace Server
             private AutoResetEvent CommandQueueCompleted = new AutoResetEvent(false);
             private void ExecuteCommandQueue()
             {
+                int Count = 0;
                 while (true)
                 {
                     Action a = null;
@@ -228,6 +229,12 @@ namespace Server
                         return;
                     }
                     a();
+                    Count += 1;
+                    if (Count >= 256)
+                    {
+                        ThreadPool.QueueUserWorkItem(o => ExecuteCommandQueue());
+                        break;
+                    }
                 }
             }
 
@@ -390,6 +397,19 @@ namespace Server
                         return;
                     }
                     var ByteArrays = vts.TakeWriteBuffer();
+                    if (ByteArrays.Length == 0)
+                    {
+                        IsOnWrite.Update(b =>
+                        {
+                            if (!b)
+                            {
+                                throw new InvalidOperationException();
+                            }
+                            return false;
+                        });
+                        ReleaseSessionCommand();
+                        return;
+                    }
                     var TotalLength = ByteArrays.Sum(b => b.Length);
                     if ((WriteBuffer == null) || (TotalLength > WriteBuffer.Length))
                     {
