@@ -15,7 +15,8 @@ namespace Server.Services
                 return SendMessageReply.CreateTooLong();
             }
             SessionContext.SendMessageCount += 1;
-            foreach (var rc in ServerContext.Sessions)
+            var Sessions = ServerContext.Sessions.ToList();
+            foreach (var rc in Sessions)
             {
                 rc.SessionLock.AcquireWriterLock(int.MaxValue);
                 try

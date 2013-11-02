@@ -31,7 +31,7 @@ namespace Server.Services
 
         public TestMessageReply TestMessage(TestMessageRequest r)
         {
-            var Sessions = ServerContext.Sessions;
+            var Sessions = ServerContext.Sessions.ToList();
             var m = new TestMessageReceivedEvent { Message = r.Message };
             SessionContext.SendMessageCount += 1;
             foreach (var rc in Sessions)
