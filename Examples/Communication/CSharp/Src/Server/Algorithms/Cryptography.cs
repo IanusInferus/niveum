@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 
-namespace Server.Algorithms
+namespace Algorithms
 {
     public static class Cryptography
     {

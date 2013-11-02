@@ -9,8 +9,7 @@ import js.Lib.alert;
 import jQuery.JQuery;
 
 import Common;
-import Communication;
-import CommunicationJson;
+import communication.Communication;
 import JsonHttpClient;
 
 using Lambda;
@@ -63,7 +62,7 @@ class Main
                 });
             });
 
-            var c = new JsonHttpClient("http://localhost/", "cmd", true);
+            var c = new JsonHttpClient("http://localhost/", "cmd", true, false);
             var jc = c.InnerClient;
             Q("#button_servertime").click(function(e)
             {

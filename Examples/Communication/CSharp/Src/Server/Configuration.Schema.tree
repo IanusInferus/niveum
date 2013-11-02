@@ -1,6 +1,13 @@
 ﻿#Record Configuration
     Servers                     List<VirtualServerConfiguration>
+    EnableLogNormalIn           Boolean
+    EnableLogNormalOut          Boolean
+    EnableLogUnknownError       Boolean
+    EnableLogCriticalError      Boolean
+    EnableLogPerformance        Boolean
+    EnableLogSystem             Boolean
     EnableLogConsole            Boolean
+    ServerDebug                 Boolean
     ClientDebug                 Boolean
 
 #TaggedUnion VirtualServerConfiguration
@@ -9,12 +16,6 @@
 
 #Record TcpServerConfiguration
     Bindings                    List<TcpBinding>
-    EnableLogNormalIn           Boolean
-    EnableLogNormalOut          Boolean
-    EnableLogUnknownError       Boolean
-    EnableLogCriticalError      Boolean
-    EnableLogPerformance        Boolean
-    EnableLogSystem             Boolean
     SessionIdleTimeout          Int
     MaxConnections              Int
     MaxConnectionsPerIP         Int
@@ -33,12 +34,6 @@
 
 #Record HttpServerConfiguration
     Bindings                    List<HttpBinding>
-    EnableLogNormalIn           Boolean
-    EnableLogNormalOut          Boolean
-    EnableLogUnknownError       Boolean
-    EnableLogCriticalError      Boolean
-    EnableLogPerformance        Boolean
-    EnableLogSystem             Boolean
     SessionIdleTimeout          Int
     MaxConnections              Int
     MaxConnectionsPerIP         Int

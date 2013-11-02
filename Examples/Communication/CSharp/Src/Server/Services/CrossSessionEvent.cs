@@ -9,29 +9,29 @@ namespace Server.Services
     {
         public void RegisterCrossSessionEvents()
         {
-            c.SessionLock.AcquireWriterLock(int.MaxValue);
+            SessionContext.SessionLock.AcquireWriterLock(int.MaxValue);
             try
             {
-                c.MessageReceived = e => { if (MessageReceived != null) { MessageReceived(e); } };
-                c.TestMessageReceived = e => { if (TestMessageReceived != null) { TestMessageReceived(e); } };
+                SessionContext.MessageReceived = e => { if (MessageReceived != null) { MessageReceived(e); } };
+                SessionContext.TestMessageReceived = e => { if (TestMessageReceived != null) { TestMessageReceived(e); } };
             }
             finally
             {
-                c.SessionLock.ReleaseWriterLock();
+                SessionContext.SessionLock.ReleaseWriterLock();
             }
         }
 
         public void UnregisterCrossSessionEvents()
         {
-            c.SessionLock.AcquireWriterLock(int.MaxValue);
+            SessionContext.SessionLock.AcquireWriterLock(int.MaxValue);
             try
             {
-                c.MessageReceived = null;
-                c.TestMessageReceived = null;
+                SessionContext.MessageReceived = null;
+                SessionContext.TestMessageReceived = null;
             }
             finally
             {
-                c.SessionLock.ReleaseWriterLock();
+                SessionContext.SessionLock.ReleaseWriterLock();
             }
         }
     }
