@@ -1,8 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN"
+    "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8" />
     <title>Client Example</title>
     <meta name="description" content="" />
     <script id="tmpl_template" type="text/haxe-template">
@@ -13,9 +14,14 @@
     <script id="tmpl_paragraph" type="text/haxe-template">
         <p>::Content::</p>
     </script>
-    <script src="jquery-1.8.3.min.js"></script>
-    <script src="Client.js"></script>
+    <script type="text/javascript" src="jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="Client.js"></script>
 </head>
+<!--
+    为了与HTML兼容，以下Tag必须使用自闭合语法（如<meta />）
+        area, base, br, col, embed, hr, img, input, keygen, link, menuitem, meta, param, source, track, wbr
+    其他Tag不得使用自闭合语法（使用如<script></script>）
+-->
 <body>
     <div>测试</div>
 

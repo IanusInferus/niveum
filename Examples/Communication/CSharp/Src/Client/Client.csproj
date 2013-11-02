@@ -50,10 +50,12 @@
   <ItemGroup>
     <Compile Include="Clients\BinaryCountPacketClient.cs" />
     <Compile Include="Clients\HttpClient.cs" />
+    <Compile Include="Clients\ISerializationClient.cs" />
     <Compile Include="Clients\JsonHttpPacketClient.cs" />
     <Compile Include="Clients\JsonLinePacketClient.cs" />
     <Compile Include="Clients\TcpClient.cs" />
     <Compile Include="Clients\Concept.cs" />
+    <Compile Include="Context\SerializationClientAdapter.cs" />
     <Compile Include="Generated\Common.cs" />
     <Compile Include="Generated\Communication.cs" />
     <Compile Include="Generated\CommunicationBinary.cs" />

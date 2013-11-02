@@ -1,269 +1,264 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Firefly;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
-using Communication;
-using Communication.Binary;
-using ByteArrayStream = Firefly.Streaming.ByteArrayStream;
 
 namespace Server
 {
-    public class BinaryCountPacketServer : ITcpVirtualTransportServer
+    public partial class Tcp<TServerContext>
     {
-        private class Context
+        public class BinaryCountPacketServer : ITcpVirtualTransportServer
         {
-            public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
-            public Object WriteBufferLockee = new Object();
-            public List<Byte> WriteBuffer = new List<Byte>();
-
-            public int State = 0;
-            // 0 初始状态
-            // 1 已读取NameLength
-            // 2 已读取CommandHash
-            // 3 已读取Name
-            // 4 已读取ParametersLength
-
-            public Int32 CommandNameLength = 0;
-            public String CommandName = "";
-            public UInt32 CommandHash = 0;
-            public Int32 ParametersLength = 0;
-        }
-
-        public delegate Boolean CheckCommandAllowedDelegate(String CommandName);
-
-        private IApplicationServer s;
-        private static ThreadLocal<BinarySerializationServer> sss = new ThreadLocal<BinarySerializationServer>(() => new BinarySerializationServer());
-        private BinarySerializationServer ss = sss.Value;
-        private BinarySerializationServerEventDispatcher ssed;
-        private Context c;
-        private CheckCommandAllowedDelegate CheckCommandAllowed;
-        public BinaryCountPacketServer(IApplicationServer ApplicationServer, CheckCommandAllowedDelegate CheckCommandAllowed)
-        {
-            this.s = ApplicationServer;
-            this.ssed = new BinarySerializationServerEventDispatcher(ApplicationServer);
-            this.c = new Context();
-            this.CheckCommandAllowed = CheckCommandAllowed;
-            this.ssed.ServerEvent += (CommandName, CommandHash, Parameters) =>
+            private class Context
             {
-                var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
-                Byte[] Bytes;
-                using (var ms = Streams.CreateMemoryStream())
+                public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
+                public Object WriteBufferLockee = new Object();
+                public List<Byte[]> WriteBuffer = new List<Byte[]>();
+
+                public int State = 0;
+                // 0 初始状态
+                // 1 已读取NameLength
+                // 2 已读取CommandHash
+                // 3 已读取Name
+                // 4 已读取ParametersLength
+
+                public Int32 CommandNameLength = 0;
+                public String CommandName = "";
+                public UInt32 CommandHash = 0;
+                public Int32 ParametersLength = 0;
+            }
+
+            public delegate Boolean CheckCommandAllowedDelegate(String CommandName);
+
+            private IBinarySerializationServerAdapter ss;
+            private Context c;
+            private CheckCommandAllowedDelegate CheckCommandAllowed;
+            public BinaryCountPacketServer(IBinarySerializationServerAdapter SerializationServerAdapter, CheckCommandAllowedDelegate CheckCommandAllowed)
+            {
+                this.ss = SerializationServerAdapter;
+                this.c = new Context();
+                this.CheckCommandAllowed = CheckCommandAllowed;
+                this.ss.ServerEvent += (CommandName, CommandHash, Parameters) =>
                 {
-                    ms.WriteInt32(CommandNameBytes.Length);
-                    ms.Write(CommandNameBytes);
-                    ms.WriteUInt32(CommandHash);
-                    ms.WriteInt32(Parameters.Length);
-                    ms.Write(Parameters);
-                    ms.Position = 0;
-                    Bytes = ms.Read((int)(ms.Length));
-                }
+                    var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
+                    Byte[] Bytes;
+                    using (var ms = Streams.CreateMemoryStream())
+                    {
+                        ms.WriteInt32(CommandNameBytes.Length);
+                        ms.Write(CommandNameBytes);
+                        ms.WriteUInt32(CommandHash);
+                        ms.WriteInt32(Parameters.Length);
+                        ms.Write(Parameters);
+                        ms.Position = 0;
+                        Bytes = ms.Read((int)(ms.Length));
+                    }
+                    lock (c.WriteBufferLockee)
+                    {
+                        c.WriteBuffer.Add(Bytes);
+                    }
+                    if (this.ServerEvent != null)
+                    {
+                        this.ServerEvent();
+                    }
+                };
+            }
+
+            public ArraySegment<Byte> GetReadBuffer()
+            {
+                return c.ReadBuffer;
+            }
+
+            public Byte[][] TakeWriteBuffer()
+            {
                 lock (c.WriteBufferLockee)
                 {
-                    c.WriteBuffer.AddRange(Bytes);
+                    var WriteBuffer = c.WriteBuffer.ToArray();
+                    c.WriteBuffer = new List<Byte[]>();
+                    return WriteBuffer;
                 }
-                if (this.ServerEvent != null)
-                {
-                    this.ServerEvent();
-                }
-            };
-        }
-
-        public ArraySegment<Byte> GetReadBuffer()
-        {
-            return c.ReadBuffer;
-        }
-
-        public Byte[] TakeWriteBuffer()
-        {
-            lock (c.WriteBufferLockee)
-            {
-                var r = c.WriteBuffer.ToArray();
-                c.WriteBuffer = new List<Byte>();
-                return r;
             }
-        }
 
-        public TcpVirtualTransportServerHandleResult Handle(int Count)
-        {
-            var ret = TcpVirtualTransportServerHandleResult.CreateContinue();
-
-            var Buffer = c.ReadBuffer.Array;
-            var FirstPosition = c.ReadBuffer.Offset;
-            var BufferLength = c.ReadBuffer.Offset + c.ReadBuffer.Count;
-            BufferLength += Count;
-
-            while (true)
+            public TcpVirtualTransportServerHandleResult Handle(int Count)
             {
-                var r = TryShift(c, Buffer, FirstPosition, BufferLength - FirstPosition);
-                if (r == null)
-                {
-                    break;
-                }
-                FirstPosition = r.Position;
+                var ret = TcpVirtualTransportServerHandleResult.CreateContinue();
 
-                if (r.Command != null)
+                var Buffer = c.ReadBuffer.Array;
+                var FirstPosition = c.ReadBuffer.Offset;
+                var BufferLength = c.ReadBuffer.Offset + c.ReadBuffer.Count;
+                BufferLength += Count;
+
+                while (true)
                 {
-                    var CommandName = r.Command.CommandName;
-                    var CommandHash = r.Command.CommandHash;
-                    var Parameters = r.Command.Parameters;
-                    if (ss.HasCommand(CommandName, CommandHash) && (CheckCommandAllowed != null ? CheckCommandAllowed(CommandName) : true))
+                    var r = TryShift(c, Buffer, FirstPosition, BufferLength - FirstPosition);
+                    if (r == null)
                     {
-                        ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
+                        break;
+                    }
+                    FirstPosition = r.Position;
+
+                    if (r.Command != null)
+                    {
+                        var CommandName = r.Command.CommandName;
+                        var CommandHash = r.Command.CommandHash;
+                        var Parameters = r.Command.Parameters;
+                        if (ss.HasCommand(CommandName, CommandHash) && (CheckCommandAllowed != null ? CheckCommandAllowed(CommandName) : true))
                         {
-                            CommandName = CommandName,
-                            ExecuteCommand = () =>
+                            ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
                             {
-                                var OutputParameters = ss.ExecuteCommand(s, CommandName, CommandHash, Parameters);
-                                var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
-                                Byte[] Bytes;
-                                using (var ms = Streams.CreateMemoryStream())
+                                CommandName = CommandName,
+                                ExecuteCommand = () =>
                                 {
-                                    ms.WriteInt32(CommandNameBytes.Length);
-                                    ms.Write(CommandNameBytes);
-                                    ms.WriteUInt32(CommandHash);
-                                    ms.WriteInt32(OutputParameters.Length);
-                                    ms.Write(OutputParameters);
-                                    ms.Position = 0;
-                                    Bytes = ms.Read((int)(ms.Length));
+                                    var OutputParameters = ss.ExecuteCommand(CommandName, CommandHash, Parameters);
+                                    var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
+                                    Byte[] Bytes;
+                                    using (var ms = Streams.CreateMemoryStream())
+                                    {
+                                        ms.WriteInt32(CommandNameBytes.Length);
+                                        ms.Write(CommandNameBytes);
+                                        ms.WriteUInt32(CommandHash);
+                                        ms.WriteInt32(OutputParameters.Length);
+                                        ms.Write(OutputParameters);
+                                        ms.Position = 0;
+                                        Bytes = ms.Read((int)(ms.Length));
+                                    }
+                                    lock (c.WriteBufferLockee)
+                                    {
+                                        c.WriteBuffer.Add(Bytes);
+                                    }
                                 }
-                                lock (c.WriteBufferLockee)
-                                {
-                                    c.WriteBuffer.AddRange(Bytes);
-                                }
-                            }
-                        });
+                            });
+                        }
+                        else
+                        {
+                            ret = TcpVirtualTransportServerHandleResult.CreateBadCommand(new TcpVirtualTransportServerHandleResultBadCommand { CommandName = CommandName });
+                        }
+                        break;
                     }
-                    else
-                    {
-                        ret = TcpVirtualTransportServerHandleResult.CreateBadCommand(new TcpVirtualTransportServerHandleResultBadCommand { CommandName = CommandName });
-                    }
-                    break;
                 }
+
+                if (BufferLength >= Buffer.Length && FirstPosition > 0)
+                {
+                    var CopyLength = BufferLength - FirstPosition;
+                    for (int i = 0; i < CopyLength; i += 1)
+                    {
+                        Buffer[i] = Buffer[FirstPosition + i];
+                    }
+                    BufferLength = CopyLength;
+                    FirstPosition = 0;
+                }
+                if (FirstPosition >= BufferLength)
+                {
+                    c.ReadBuffer = new ArraySegment<Byte>(Buffer, 0, 0);
+                }
+                else
+                {
+                    c.ReadBuffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
+                }
+
+                return ret;
             }
 
-            if (BufferLength >= Buffer.Length && FirstPosition > 0)
+            public UInt64 Hash { get { return ss.Hash; } }
+            public event Action ServerEvent;
+
+            private class Command
             {
-                var CopyLength = BufferLength - FirstPosition;
-                for (int i = 0; i < CopyLength; i += 1)
-                {
-                    Buffer[i] = Buffer[FirstPosition + i];
-                }
-                BufferLength = CopyLength;
-                FirstPosition = 0;
+                public String CommandName;
+                public UInt32 CommandHash;
+                public Byte[] Parameters;
             }
-            if (FirstPosition >= BufferLength)
+            private class TryShiftResult
             {
-                c.ReadBuffer = new ArraySegment<Byte>(Buffer, 0, 0);
-            }
-            else
-            {
-                c.ReadBuffer = new ArraySegment<Byte>(Buffer, FirstPosition, BufferLength - FirstPosition);
+                public Command Command;
+                public int Position;
             }
 
-            return ret;
-        }
-
-        public UInt64 Hash { get { return ss.Hash; } }
-        public event Action ServerEvent;
-
-        private class Command
-        {
-            public String CommandName;
-            public UInt32 CommandHash;
-            public Byte[] Parameters;
-        }
-        private class TryShiftResult
-        {
-            public Command Command;
-            public int Position;
-        }
-
-        private static TryShiftResult TryShift(Context bc, Byte[] Buffer, int Position, int Length)
-        {
-            if (bc.State == 0)
+            private static TryShiftResult TryShift(Context bc, Byte[] Buffer, int Position, int Length)
             {
-                if (Length >= 4)
+                if (bc.State == 0)
                 {
-                    using (var s = new ByteArrayStream(Buffer, Position, Length))
+                    if (Length >= 4)
                     {
-                        bc.CommandNameLength = s.ReadInt32();
+                        using (var s = new ByteArrayStream(Buffer, Position, Length))
+                        {
+                            bc.CommandNameLength = s.ReadInt32();
+                        }
+                        if (bc.CommandNameLength < 0 || bc.CommandNameLength > 128) { throw new InvalidOperationException("CommandNameLengthOutOfBound"); }
+                        var r = new TryShiftResult { Command = null, Position = Position + 4 };
+                        bc.State = 1;
+                        return r;
                     }
-                    if (bc.CommandNameLength < 0 || bc.CommandNameLength > 128) { throw new InvalidOperationException(); }
-                    var r = new TryShiftResult { Command = null, Position = Position + 4 };
-                    bc.State = 1;
-                    return r;
+                    return null;
                 }
-                return null;
-            }
-            else if (bc.State == 1)
-            {
-                if (Length >= bc.CommandNameLength)
+                else if (bc.State == 1)
                 {
-                    using (var s = new ByteArrayStream(Buffer, Position, Length))
+                    if (Length >= bc.CommandNameLength)
                     {
-                        bc.CommandName = TextEncoding.UTF16.GetString(s.Read(bc.CommandNameLength));
+                        using (var s = new ByteArrayStream(Buffer, Position, Length))
+                        {
+                            bc.CommandName = TextEncoding.UTF16.GetString(s.Read(bc.CommandNameLength));
+                        }
+                        var r = new TryShiftResult { Command = null, Position = Position + bc.CommandNameLength };
+                        bc.State = 2;
+                        return r;
                     }
-                    var r = new TryShiftResult { Command = null, Position = Position + bc.CommandNameLength };
-                    bc.State = 2;
-                    return r;
+                    return null;
                 }
-                return null;
-            }
-            else if (bc.State == 2)
-            {
-                if (Length >= 4)
+                else if (bc.State == 2)
                 {
-                    using (var s = new ByteArrayStream(Buffer, Position, Length))
+                    if (Length >= 4)
                     {
-                        bc.CommandHash = s.ReadUInt32();
+                        using (var s = new ByteArrayStream(Buffer, Position, Length))
+                        {
+                            bc.CommandHash = s.ReadUInt32();
+                        }
+                        var r = new TryShiftResult { Command = null, Position = Position + 4 };
+                        bc.State = 3;
+                        return r;
                     }
-                    var r = new TryShiftResult { Command = null, Position = Position + 4 };
-                    bc.State = 3;
-                    return r;
+                    return null;
                 }
-                return null;
-            }
-            if (bc.State == 3)
-            {
-                if (Length >= 4)
+                if (bc.State == 3)
                 {
-                    using (var s = new ByteArrayStream(Buffer, Position, Length))
+                    if (Length >= 4)
                     {
-                        bc.ParametersLength = s.ReadInt32();
+                        using (var s = new ByteArrayStream(Buffer, Position, Length))
+                        {
+                            bc.ParametersLength = s.ReadInt32();
+                        }
+                        if (bc.ParametersLength < 0 || bc.ParametersLength > Buffer.Length) { throw new InvalidOperationException("ParametersLengthOutOfBound"); }
+                        var r = new TryShiftResult { Command = null, Position = Position + 4 };
+                        bc.State = 4;
+                        return r;
                     }
-                    if (bc.ParametersLength < 0 || bc.ParametersLength > Buffer.Length) { throw new InvalidOperationException(); }
-                    var r = new TryShiftResult { Command = null, Position = Position + 4 };
-                    bc.State = 4;
-                    return r;
+                    return null;
                 }
-                return null;
-            }
-            else if (bc.State == 4)
-            {
-                if (Length >= bc.ParametersLength)
+                else if (bc.State == 4)
                 {
-                    Byte[] Parameters;
-                    using (var s = new ByteArrayStream(Buffer, Position, Length))
+                    if (Length >= bc.ParametersLength)
                     {
-                        Parameters = s.Read(bc.ParametersLength);
+                        Byte[] Parameters;
+                        using (var s = new ByteArrayStream(Buffer, Position, Length))
+                        {
+                            Parameters = s.Read(bc.ParametersLength);
+                        }
+                        var cmd = new Command { CommandName = bc.CommandName, CommandHash = bc.CommandHash, Parameters = Parameters };
+                        var r = new TryShiftResult { Command = cmd, Position = Position + bc.ParametersLength };
+                        bc.CommandNameLength = 0;
+                        bc.CommandName = null;
+                        bc.CommandHash = 0;
+                        bc.ParametersLength = 0;
+                        bc.State = 0;
+                        return r;
                     }
-                    var cmd = new Command { CommandName = bc.CommandName, CommandHash = bc.CommandHash, Parameters = Parameters };
-                    var r = new TryShiftResult { Command = cmd, Position = Position + bc.ParametersLength };
-                    bc.CommandNameLength = 0;
-                    bc.CommandName = null;
-                    bc.CommandHash = 0;
-                    bc.ParametersLength = 0;
-                    bc.State = 0;
-                    return r;
+                    return null;
                 }
-                return null;
-            }
-            else
-            {
-                throw new InvalidOperationException();
+                else
+                {
+                    throw new InvalidOperationException();
+                }
             }
         }
     }
