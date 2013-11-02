@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="Algorithms\Cryptography.cs" />
     <Compile Include="Configuration.cs" />
+    <Compile Include="Context\SerializationServerAdapter.cs" />
     <Compile Include="Generated\Common.cs" />
     <Compile Include="Generated\Communication.cs" />
     <Compile Include="Generated\CommunicationBinary.cs" />
@@ -62,6 +63,8 @@
     </Compile>
     <Compile Include="Servers\HttpServer.cs" />
     <Compile Include="Servers\HttpSession.cs" />
+    <Compile Include="Servers\IContext.cs" />
+    <Compile Include="Servers\ISerializationServer.cs" />
     <Compile Include="Servers\JsonHttpPacketServer.cs" />
     <Compile Include="Servers\JsonLinePacketServer.cs" />
     <Compile Include="Servers\TcpServer.cs" />

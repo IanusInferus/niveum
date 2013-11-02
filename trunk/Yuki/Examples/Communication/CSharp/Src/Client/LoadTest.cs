@@ -116,7 +116,7 @@ namespace Client
             Console.Out.Flush();
 
             var tl = new List<Task>();
-            var bcl = new List<TcpClient>();
+            var bcl = new List<Tcp.TcpClient>();
             var ccl = new List<ClientContext>();
             var tmrl = new List<Timer>();
             var vConnected = new LockedVariable<int>(0);
@@ -131,7 +131,25 @@ namespace Client
             {
                 var n = k;
                 var Lockee = new Object();
-                var bc = new TcpClient(RemoteEndPoint, ProtocolType);
+                IApplicationClient ac;
+                Tcp.ITcpVirtualTransportClient vtc;
+                if (ProtocolType == SerializationProtocolType.Binary)
+                {
+                    var a = new BinarySerializationClientAdapter();
+                    ac = a.GetApplicationClient();
+                    vtc = new Tcp.BinaryCountPacketClient(a);
+                }
+                else if (ProtocolType == SerializationProtocolType.Json)
+                {
+                    var a = new JsonSerializationClientAdapter();
+                    ac = a.GetApplicationClient();
+                    vtc = new Tcp.JsonLinePacketClient(a);
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+                var bc = new Tcp.TcpClient(RemoteEndPoint, vtc);
                 var cc = new ClientContext();
                 var bCompleted = new LockedVariable<Boolean>(false);
                 Action Completed = () =>
@@ -141,14 +159,14 @@ namespace Client
                     Check.Set();
                 };
 
-                bc.InnerClient.Error += e =>
+                ac.Error += e =>
                 {
                     var m = e.Message;
                     Console.WriteLine(m);
                 };
-                if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, cc, bc.InnerClient, Completed); }
+                if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, cc, ac, Completed); }
                 bc.Connect();
-                Action<SocketError> HandleError = se =>
+                Action<Exception> UnknownFaulted = ex =>
                 {
                     int OldValue = 0;
                     vError.Update(v =>
@@ -158,7 +176,7 @@ namespace Client
                     });
                     if (OldValue <= 10)
                     {
-                        Console.WriteLine(String.Format("{0}:{1}", n, (new SocketException((int)se)).Message));
+                        Console.WriteLine(String.Format("{0}:{1}", n, ex.Message));
                     }
                     Completed();
                 };
@@ -171,11 +189,11 @@ namespace Client
                             a();
                         }
                     },
-                    HandleError
+                    UnknownFaulted
                 );
                 lock (Lockee)
                 {
-                    bc.InnerClient.ServerTime(new ServerTimeRequest { }, r =>
+                    ac.ServerTime(new ServerTimeRequest { }, r =>
                     {
                         vConnected.Update(i => i + 1);
                         Check.Set();
@@ -187,7 +205,7 @@ namespace Client
                     {
                         lock (Lockee)
                         {
-                            Test(NumUser, n, cc, bc.InnerClient, Completed);
+                            Test(NumUser, n, cc, ac, Completed);
                         }
                     }
                 );
@@ -199,7 +217,7 @@ namespace Client
                         if (bCompleted.Check(b => b)) { return; }
                         lock (Lockee)
                         {
-                            bc.InnerClient.ServerTime(new ServerTimeRequest { }, r => { });
+                            ac.ServerTime(new ServerTimeRequest { }, r => { });
                         }
                     },
                     null,

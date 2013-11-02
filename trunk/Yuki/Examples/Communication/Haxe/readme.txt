@@ -1,15 +1,15 @@
 ﻿Haxe示例配置指南
 
 Windows平台下需要软件
-.Net Framework 4.5
-Haxe 3.0.0 RC以上
+.Net Framework 4.0
+Haxe 3.0.0
 nginx
 FlashDevelop，可选，编辑环境
 Chrome，可选，调试环境，支持Source map功能，可以直接调试Haxe代码
 
 1)配置Haxe
 从下面地址下载安装包安装，然后
-http://haxe.org/file/Haxe-2.10-Windows.exe
+http://haxe.org/file/haxe-3.0.0-win.exe
 
 *可选，从下面地址下载最新版，覆盖安装目录
 http://94.142.242.48/builds/windows/?C=M;O=D

@@ -18,7 +18,7 @@ namespace Server.Services
 
         public QuitReply Quit(QuitRequest r)
         {
-            c.RaiseQuit();
+            SessionContext.RaiseQuit();
             return QuitReply.CreateSuccess();
         }
     }

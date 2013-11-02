@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2013.01.29.
+//  Version:     2013.11.02.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -18,6 +18,18 @@ using Communication;
 
 namespace Client
 {
+    public enum ServerProtocolType
+    {
+        Binary,
+        Json,
+        Http
+    }
+    public enum SerializationProtocolType
+    {
+        Binary,
+        Json
+    }
+
     public static class Program
     {
         public static int Main(String[] args)
@@ -38,13 +50,6 @@ namespace Client
                     return -1;
                 }
             }
-        }
-
-        private enum ServerProtocolType
-        {
-            Binary,
-            Json,
-            Http
         }
 
         public static int MainInner()
@@ -206,7 +211,25 @@ namespace Client
             {
                 Console.WriteLine("协议不能识别：" + ProtocolType.ToString());
             }
-            using (var bc = new TcpClient(RemoteEndPoint, ProtocolType))
+            IApplicationClient ac;
+            Tcp.ITcpVirtualTransportClient vtc;
+            if (ProtocolType == SerializationProtocolType.Binary)
+            {
+                var a = new BinarySerializationClientAdapter();
+                ac = a.GetApplicationClient();
+                vtc = new Tcp.BinaryCountPacketClient(a);
+            }
+            else if (ProtocolType == SerializationProtocolType.Json)
+            {
+                var a = new JsonSerializationClientAdapter();
+                ac = a.GetApplicationClient();
+                vtc = new Tcp.JsonLinePacketClient(a);
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+            using (var bc = new Tcp.TcpClient(RemoteEndPoint, vtc))
             {
                 bc.Connect();
                 Console.WriteLine("连接成功。");
@@ -219,8 +242,8 @@ namespace Client
                         a();
                     }
                 };
-                bc.ReceiveAsync(DoHandle, se => Console.WriteLine((new SocketException((int)se)).Message));
-                ReadLineAndSendLoop(bc.InnerClient, UseOld, Lockee);
+                bc.ReceiveAsync(DoHandle, ex => Console.WriteLine(ex.Message));
+                ReadLineAndSendLoop(ac, UseOld, Lockee);
             }
         }
 

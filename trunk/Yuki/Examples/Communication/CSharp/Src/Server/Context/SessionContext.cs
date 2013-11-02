@@ -5,12 +5,12 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Net;
-using Server.Algorithms;
+using Algorithms;
 using Communication;
 
 namespace Server
 {
-    public class SessionContext : IDisposable
+    public class SessionContext : ISessionContext
     {
         //单线程访问
         public void Dispose()
@@ -48,6 +48,7 @@ namespace Server
 
         //单线程访问
 
+        public DateTime RequestTime { get; set; }
         public int SendMessageCount = 0;
     }
 }

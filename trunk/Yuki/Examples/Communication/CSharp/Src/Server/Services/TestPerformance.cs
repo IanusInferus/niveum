@@ -33,10 +33,10 @@ namespace Server.Services
         {
             var Sessions = ServerContext.Sessions;
             var m = new TestMessageReceivedEvent { Message = r.Message };
-            c.SendMessageCount += 1;
+            SessionContext.SendMessageCount += 1;
             foreach (var rc in Sessions)
             {
-                if (rc == c) { continue; }
+                if (rc == SessionContext) { continue; }
                 rc.SessionLock.AcquireWriterLock(int.MaxValue);
                 try
                 {

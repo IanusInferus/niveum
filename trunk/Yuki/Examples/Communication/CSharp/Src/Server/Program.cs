@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2013.03.08.
+//  Version:     2013.11.02.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -12,13 +12,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Reflection;
 using System.Net;
-using System.Threading.Tasks;
 using Firefly;
 using Firefly.Mapping.XmlText;
 using Firefly.Texting.TreeFormat;
+using BaseSystem;
 
 namespace Server
 {
@@ -32,16 +34,38 @@ namespace Server
             }
             else
             {
+                AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+                TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
                 try
                 {
                     return MainInner();
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
+                    var Message = Times.DateTimeUtcToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
+                    Console.WriteLine(Message);
+                    FileLoggerSync.WriteLog("Crash.log", Message);
                     return -1;
                 }
             }
+        }
+
+        private static void CurrentDomain_UnhandledException(Object sender, UnhandledExceptionEventArgs e)
+        {
+            var ex = (Exception)(e.ExceptionObject);
+            var Message = Times.DateTimeUtcToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex, null);
+            Console.WriteLine(Message);
+            FileLoggerSync.WriteLog("Crash.log", Message);
+            Environment.Exit(-1);
+        }
+
+        private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            var ex = e.Exception;
+            var Message = Times.DateTimeUtcToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
+            Console.WriteLine(Message);
+            FileLoggerSync.WriteLog("Crash.log", Message);
+            Environment.Exit(-1);
         }
 
         public static int MainInner()
@@ -60,33 +84,8 @@ namespace Server
             }
 
             var c = LoadConfiguration();
-
-            if (System.Diagnostics.Debugger.IsAttached)
-            {
-                Run(c);
-                return 0;
-            }
-            else
-            {
-                while (true)
-                {
-                    try
-                    {
-                        Run(c);
-                        return 0;
-                    }
-                    catch (Exception ex)
-                    {
-                        var TimeNow = DateTime.UtcNow;
-                        var LocalTime = TimeNow.ToLocalTime();
-                        var TimeOffset = LocalTime - TimeNow;
-                        var Time = LocalTime.ToString("yyyy-MM-dd HH:mm:ss.fff" + String.Format(" (UTC+{0})", TimeOffset.TotalHours));
-                        var Message = Time + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
-                        Console.WriteLine(Message);
-                    }
-                    Thread.Sleep(10000);
-                }
-            }
+            Run(c);
+            return 0;
         }
 
         public static void DisplayTitle()
@@ -157,6 +156,15 @@ namespace Server
                 {
                     using (var ServerContext = new ServerContext())
                     {
+                        ServerContext.EnableLogNormalIn = c.EnableLogNormalIn;
+                        ServerContext.EnableLogNormalOut = c.EnableLogNormalOut;
+                        ServerContext.EnableLogUnknownError = c.EnableLogUnknownError;
+                        ServerContext.EnableLogCriticalError = c.EnableLogCriticalError;
+                        ServerContext.EnableLogPerformance = c.EnableLogPerformance;
+                        ServerContext.EnableLogSystem = c.EnableLogSystem;
+                        ServerContext.ServerDebug = c.ServerDebug;
+                        ServerContext.ClientDebug = c.ClientDebug;
+
                         ServerContext.Shutdown += () =>
                         {
                             Console.WriteLine("远程命令退出。");
@@ -200,7 +208,9 @@ namespace Server
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
+                                    var Message = Times.DateTimeUtcToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
+                                    Console.WriteLine(Message);
+                                    FileLoggerSync.WriteLog("Error.log", Message);
                                 }
                             }
 
@@ -247,7 +257,7 @@ namespace Server
                     throw new InvalidOperationException("未知协议类型: " + s.SerializationProtocolType.ToString());
                 }
 
-                var Server = new TcpServer(ServerContext);
+                var Server = new Tcp<ServerContext>.TcpServer(ServerContext);
                 var Success = false;
 
                 try
@@ -265,13 +275,6 @@ namespace Server
                     Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
                     Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
                     Server.MaxBadCommands = s.MaxBadCommands;
-                    Server.ClientDebug = c.ClientDebug;
-                    Server.EnableLogNormalIn = s.EnableLogNormalIn;
-                    Server.EnableLogNormalOut = s.EnableLogNormalOut;
-                    Server.EnableLogUnknownError = s.EnableLogUnknownError;
-                    Server.EnableLogCriticalError = s.EnableLogCriticalError;
-                    Server.EnableLogPerformance = s.EnableLogPerformance;
-                    Server.EnableLogSystem = s.EnableLogSystem;
 
                     Server.Start();
 
@@ -295,7 +298,7 @@ namespace Server
             {
                 var s = vsc.Http;
 
-                var Server = new HttpServer(ServerContext);
+                var Server = new Http<ServerContext>.HttpServer(ServerContext);
                 var Success = false;
 
                 try
@@ -309,15 +312,8 @@ namespace Server
                     Server.SessionIdleTimeout = s.SessionIdleTimeout;
                     Server.MaxConnections = s.MaxConnections;
                     Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
-                    Server.MaxBadCommands = s.MaxBadCommands;
                     Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
-                    Server.ClientDebug = c.ClientDebug;
-                    Server.EnableLogNormalIn = s.EnableLogNormalIn;
-                    Server.EnableLogNormalOut = s.EnableLogNormalOut;
-                    Server.EnableLogUnknownError = s.EnableLogUnknownError;
-                    Server.EnableLogCriticalError = s.EnableLogCriticalError;
-                    Server.EnableLogPerformance = s.EnableLogPerformance;
-                    Server.EnableLogSystem = s.EnableLogSystem;
+                    Server.MaxBadCommands = s.MaxBadCommands;
 
                     Server.TimeoutCheckPeriod = s.TimeoutCheckPeriod;
                     Server.ServiceVirtualPath = s.ServiceVirtualPath;

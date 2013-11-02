@@ -8,15 +8,16 @@ namespace Server.Services
     /// <summary>
     /// 本类的所有公共成员均是线程安全的。
     /// </summary>
-    public partial class ServerImplementation : IApplicationServer
+    public partial class ServerImplementation : IApplicationServer, IServerImplementation, IDisposable
     {
         private ServerContext ServerContext;
-        private SessionContext c;
+        private SessionContext SessionContext;
 
-        public ServerImplementation(ServerContext ServerContext, SessionContext c)
+        public ServerImplementation(ServerContext ServerContext, SessionContext SessionContext)
         {
             this.ServerContext = ServerContext;
-            this.c = c;
+            this.SessionContext = SessionContext;
+            RegisterCrossSessionEvents();
         }
 
         public void RaiseError(String CommandName, String Message)
@@ -30,6 +31,11 @@ namespace Server.Services
             {
                 if (Error != null) { Error(new ErrorEvent { Message = Message }); }
             }
+        }
+
+        public void Dispose()
+        {
+            UnregisterCrossSessionEvents();
         }
     }
 }
