@@ -1,12 +1,12 @@
 ﻿$Comment
     ==========================================================================
-    
+
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构PostgreSQL数据库模板数据
       Version:     2013.11.10.
       Copyright(C) F.R.C.
-    
+
     ==========================================================================
 
 ObjectSchemaTemplate
@@ -46,10 +46,10 @@ ObjectSchemaTemplate
 
                     DROP DATABASE IF EXISTS "${databasename}"
                     ;
-                    
+
                     CREATE DATABASE "${databasename}"
                     ;
-                    
+
                     --USE "${databasename}"
                     ;
 
