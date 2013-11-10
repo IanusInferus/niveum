@@ -1,4 +1,10 @@
-﻿2013.11.02
+﻿2013.11.10
+Yuki.RelationSchemaManipulator:
+增加t2pgsql和t2mysql选项的说明。
+Yuki.Relation:
+修正PostgreSQL和MySQL数据库生成脚本的注释代码生成错误。
+
+2013.11.02
 Examples:
 修改C#和Haxe通讯示例，使得部分代码更通用。
 修复新代码引入的群发消息性能问题。
