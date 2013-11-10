@@ -51,7 +51,7 @@ ObjectSchemaTemplate
                     {
                         public var s : IJsonSender;
                         public var clientCommandCallbacks : Map<String, Array<{commandHash : String, _callback : String -> Void}>>;
-                    
+
                         public function new()
                         {
                         }
@@ -61,12 +61,12 @@ ObjectSchemaTemplate
                         {
                             return "${Hash}";
                         }
-                    
+
                         public function dequeueCallback(commandName : String) : Void
                         {
                             clientCommandCallbacks.get(commandName).shift();
                         }
-                    
+
                         private function addCallback(commandName : String, commandHash : String, _callback : String -> Void) : Void
                         {
                             if (clientCommandCallbacks.exists(commandName))
@@ -80,7 +80,7 @@ ObjectSchemaTemplate
                                 clientCommandCallbacks.set(commandName, q);
                             }
                         }
-                    
+
                         ${ApplicationCommands}
                     }
 
@@ -90,10 +90,10 @@ ObjectSchemaTemplate
                         {
                             return c;
                         }
-                    
+
                         private var c : ApplicationClient;
                         private var serverCommands : Map<String, {commandHash : String, _callback : String -> Void}>;
-                    
+
                         public function new(s : IJsonSender)
                         {
                             c = new ApplicationClient();
@@ -102,7 +102,7 @@ ObjectSchemaTemplate
                             serverCommands = new Map<String, {commandHash : String, _callback : String -> Void}>();
                             ${ServerCommands}
                         }
-                    
+
                         public function handleResult(commandName : String, commandHash : String, parameters : String) : Void
                         {
                             if (c.clientCommandCallbacks.exists(commandName))
@@ -122,7 +122,7 @@ ObjectSchemaTemplate
                                 _callback(parameters);
                                 return;
                             }
-                    
+
                             if (serverCommands.exists(commandName))
                             {
                                 var callbackPair = serverCommands.get(commandName);
@@ -134,7 +134,7 @@ ObjectSchemaTemplate
                                 _callback(parameters);
                                 return;
                             }
-                    
+
                             throw "InvalidOperationException: " + commandName + "@" + commandHash;
                         }
                     }

@@ -1,12 +1,12 @@
 ﻿$Comment
     ==========================================================================
-    
+
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Java模板数据
       Version:     2012.12.13.
       Copyright(C) F.R.C.
-    
+
     ==========================================================================
 
 ObjectSchemaTemplate
