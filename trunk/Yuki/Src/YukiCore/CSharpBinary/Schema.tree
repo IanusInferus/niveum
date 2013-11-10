@@ -160,7 +160,7 @@ ObjectSchemaTemplate
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    s.${Name} += e => 
+                    s.${Name} += e =>
                     {
                         using (var bas = new ByteArrayStream())
                         {
