@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2013.05.19.
+//  Version:     2013.11.10.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -366,6 +366,10 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/import:<NamespaceName>");
             Console.WriteLine(@"生成T-SQL(SQL Server)数据库DROP和CREATE脚本");
             Console.WriteLine(@"/t2tsql:<SqlCodePath>,<DatabaseName>");
+            Console.WriteLine(@"生成PostgreSQL数据库DROP和CREATE脚本");
+            Console.WriteLine(@"/t2pgsql:<SqlCodePath>,<DatabaseName>");
+            Console.WriteLine(@"生成MySQL数据库DROP和CREATE脚本");
+            Console.WriteLine(@"/t2mysql:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成Dbml文件");
             Console.WriteLine(@"/t2dbml:<DbmlCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库Linq to SQL类型");
