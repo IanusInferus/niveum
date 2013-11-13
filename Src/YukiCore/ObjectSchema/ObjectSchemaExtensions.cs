@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2013.03.27.
+//  Version:     2013.11.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
+using System.Threading;
 using Firefly;
 using Firefly.Mapping.Binary;
 using Firefly.Streaming;
@@ -29,18 +30,25 @@ namespace Yuki.ObjectSchema
             return s.TypeRefs.Concat(s.Types).Select(t => CollectionOperations.CreatePair(t.VersionedName(), t));
         }
 
+        private static ThreadLocal<BinarySerializer> bs = new ThreadLocal<BinarySerializer>
+        (
+            () =>
+            {
+                return BinarySerializerWithString.Create();
+            }
+        );
+
         public static UInt64 Hash(this Schema s)
         {
             var Types = s.GetMap().OrderBy(t => t.Key, StringComparer.Ordinal).Select(t => t.Value).ToArray();
             var TypesWithoutDescription = Types.Select(t => MapWithoutDescription(t)).ToArray();
 
-            var bs = BinarySerializerWithString.Create();
             var sha = new SHA1CryptoServiceProvider();
             Byte[] result;
 
             using (var ms = Streams.CreateMemoryStream())
             {
-                bs.Write(TypesWithoutDescription, ms);
+                bs.Value.Write(TypesWithoutDescription, ms);
                 ms.Position = 0;
 
                 result = sha.ComputeHash(ms.ToUnsafeStream());
