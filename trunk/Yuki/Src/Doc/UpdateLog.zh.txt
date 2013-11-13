@@ -1,4 +1,8 @@
-﻿2013.11.10
+﻿2013.11.13
+Yuki.Core, Yuki.Relation:
+缓存类型Hash计算时产生的序列化器，提高代码生成的性能。
+
+2013.11.10
 Yuki.RelationSchemaManipulator:
 增加t2pgsql和t2mysql选项的说明。
 Yuki.Relation:

@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2013.04.08.
+//  Version:     2013.11.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 using Firefly;
 using Firefly.Mapping.Binary;
 using Firefly.Streaming;
@@ -71,18 +72,25 @@ namespace Yuki.RelationSchema
             return s.TypeRefs.Concat(s.Types).Where(t => !t.OnQueryList).Select(t => CollectionOperations.CreatePair(t.Name(), t));
         }
 
+        private static ThreadLocal<BinarySerializer> bs = new ThreadLocal<BinarySerializer>
+        (
+            () =>
+            {
+                return Yuki.ObjectSchema.BinarySerializerWithString.Create();
+            }
+        );
+
         public static UInt64 Hash(this Schema s)
         {
             var Types = s.GetMap().OrderBy(t => t.Key, StringComparer.Ordinal).Select(t => t.Value).ToArray();
             var TypesWithoutDescription = Types.Select(t => MapWithoutDescription(t)).ToArray();
 
-            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
             var sha = new SHA1CryptoServiceProvider();
             Byte[] result;
 
             using (var ms = Streams.CreateMemoryStream())
             {
-                bs.Write(TypesWithoutDescription, ms);
+                bs.Value.Write(TypesWithoutDescription, ms);
                 ms.Position = 0;
 
                 result = sha.ComputeHash(ms.ToUnsafeStream());
