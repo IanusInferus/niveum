@@ -31,7 +31,7 @@ ObjectSchemaTemplate
     Templates
         Template
             Name Main
-            //Parameters: ${DatabaseName}, ${Tables}, ${ForeignKeys}, ${Comments}
+            //Parameters: ${DatabaseName}, ${Tables}, ${ForeignKeys}
             Value
                 $String
                     -- ==========================================================================
@@ -55,17 +55,17 @@ ObjectSchemaTemplate
 
                     ${Tables}
                     ${ForeignKeys}
-                    ${Comments}
                 $End
         Template
             Name Table
-            //Parameters: ${Name}, ${FieldsAndKeys}, ${NonUniqueKeys}
+            //Parameters: ${Name}, ${FieldsAndKeys}, ${Options}, ${NonUniqueKeys}
             Value
                 $String
                     CREATE TABLE `${Name}`
                     (
                         ${FieldsAndKeys}
                     )
+                    ${Options}
                     ;
 
                     ${NonUniqueKeys}
@@ -106,24 +106,6 @@ ObjectSchemaTemplate
                     (
                         ${OtherKeyColumns}
                     )
-                    ;
-
-                $End
-        Template
-            Name TableComment
-            //Parameters: ${Name}, ${Description}
-            Value
-                $String
-                    COMMENT ON TABLE `${Name}` IS ${Description}
-                    ;
-
-                $End
-        Template
-            Name ColumnComment
-            //Parameters: ${TableName}, ${ColumnName}, ${Description}
-            Value
-                $String
-                    COMMENT ON TABLE `${TableName}`.`${ColumnName}` IS ${Description}
                     ;
 
                 $End

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构MySQL数据库代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.11.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -60,9 +60,8 @@ namespace Yuki.RelationSchema.MySql
             {
                 var Tables = GetTables(Schema);
                 var ForeignKeys = GetForeignKeys(Schema);
-                var Comments = GetComments(Schema, WithComment);
 
-                return GetTemplate("Main").Substitute("DatabaseName", DatabaseName).Substitute("Tables", Tables).Substitute("ForeignKeys", ForeignKeys).Substitute("Comments", Comments).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return GetTemplate("Main").Substitute("DatabaseName", DatabaseName).Substitute("Tables", Tables).Substitute("ForeignKeys", ForeignKeys).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
 
             public String[] GetTables(Schema s)
@@ -156,6 +155,15 @@ namespace Yuki.RelationSchema.MySql
                     FieldsAndKeys.Add(GetUniqueKey(k, Name));
                 }
 
+                var Options = new List<String[]>();
+                if (WithComment)
+                {
+                    if (r.Description != "")
+                    {
+                        Options.Add(new String[] { "COMMENT " + GetSqlStringLiteral(r.Description) });
+                    }
+                }
+
                 var NonUniqueKeys = new List<String>();
                 foreach (var k in r.NonUniqueKeys)
                 {
@@ -163,7 +171,7 @@ namespace Yuki.RelationSchema.MySql
                     NonUniqueKeys.AddRange(GetNonUniqueKey(k, Name, r.CollectionName));
                 }
 
-                return GetTemplate("Table").Substitute("Name", r.CollectionName).Substitute("FieldsAndKeys", JoinWithComma(FieldsAndKeys.ToArray())).Substitute("NonUniqueKeys", NonUniqueKeys.ToArray());
+                return GetTemplate("Table").Substitute("Name", r.CollectionName).Substitute("FieldsAndKeys", JoinWithComma(FieldsAndKeys.ToArray())).Substitute("Options", JoinWithComma(Options.ToArray())).Substitute("NonUniqueKeys", NonUniqueKeys.ToArray());
             }
 
             public String[] GetColumnDef(VariableDef f)
@@ -254,6 +262,14 @@ namespace Yuki.RelationSchema.MySql
                     l.Add("NOT NULL");
                 }
 
+                if (WithComment)
+                {
+                    if (f.Description != "")
+                    {
+                        l.Add("COMMENT " + GetSqlStringLiteral(f.Description));
+                    }
+                }
+
                 return new String[] { String.Join(" ", l.ToArray()) };
             }
 
@@ -296,21 +312,6 @@ namespace Yuki.RelationSchema.MySql
             public String[] GetColumns(IEnumerable<KeyColumn> Columns)
             {
                 return JoinWithComma(Columns.Select(c => new String[] { c.IsDescending ? String.Format("`{0}`", c.Name) : String.Format("`{0}`", c.Name) }).ToArray());
-            }
-
-            public String[] GetComments(Schema s, Boolean WithComment)
-            {
-                if (!WithComment) { return new String[] { }; }
-                var l = new List<String>();
-                foreach (var t in s.Types.Where(Type => Type.OnEntity).Select(Type => Type.Entity))
-                {
-                    l.AddRange(GetTemplate("TableComment").Substitute("Name", t.CollectionName).Substitute("Description", GetSqlStringLiteral(t.Description)));
-                    foreach (var c in t.Fields.Where(Field => Field.Attribute.OnColumn))
-                    {
-                        l.AddRange(GetTemplate("ColumnComment").Substitute("TableName", t.CollectionName).Substitute("ColumnName", c.Name).Substitute("Description", GetSqlStringLiteral(c.Description)));
-                    }
-                }
-                return l.ToArray();
             }
 
             private Regex rControlChar = new Regex(@"[\u0000-\u001F]");

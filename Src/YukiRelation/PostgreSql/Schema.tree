@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构PostgreSQL数据库模板数据
-      Version:     2013.11.10.
+      Version:     2013.11.15.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -123,7 +123,7 @@ ObjectSchemaTemplate
             //Parameters: ${TableName}, ${ColumnName}, ${Description}
             Value
                 $String
-                    COMMENT ON TABLE "${tablename}"."${columnname}" IS ${Description}
+                    COMMENT ON COLUMN "${tablename}"."${columnname}" IS ${Description}
                     ;
 
                 $End
