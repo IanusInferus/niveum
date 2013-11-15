@@ -1,6 +1,8 @@
 ﻿2013.11.15
 Yuki.DatabaseRegenerator:
 修正数据库结构生成时没有自动增加注释的问题。
+Yuki.Relation:
+修正MySQL数据库生成脚本的注释代码生成错误。
 
 2013.11.13
 Yuki.Core, Yuki.Relation:
