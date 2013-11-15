@@ -58,9 +58,31 @@ namespace BaseSystem
                 return t;
             }
         }
+        public static DateTime AddIntMilliseconds(this DateTime t, int Milliseconds)
+        {
+            return t.AddTicks((long)(Milliseconds) * 1000L * 10L);
+        }
+        public static DateTime AddIntSeconds(this DateTime t, int Seconds)
+        {
+            return t.AddTicks((long)(Seconds) * 1000L * 1000L * 10L);
+        }
+        public static DateTime AddIntMinutes(this DateTime t, int Minutes)
+        {
+            return t.AddTicks((long)(Minutes) * 60L * 1000L * 1000L * 10L);
+        }
+        public static DateTime AddIntHours(this DateTime t, int Hours)
+        {
+            return t.AddTicks((long)(Hours) * (60L * 60L * 1000L * 1000L * 10L));
+        }
+        public static DateTime AddIntDays(this DateTime t, int Days)
+        {
+            return t.AddTicks((long)(Days) * (24L * 60L * 60L * 1000L * 1000L * 10L));
+        }
         public static DateTime GetPreviousTime(this DateTime t, TimeSpan TimeOfDay)
         {
             if (t.Kind != DateTimeKind.Utc) { throw new ArgumentException(); }
+            var TotalHours = TimeOfDay.TotalHours;
+            if ((TotalHours < 0) || (TotalHours > 24)) { throw new ArgumentException(); }
             Func<DateTime> TodayTime = () =>
             {
                 var nt = t;

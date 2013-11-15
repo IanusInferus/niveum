@@ -735,7 +735,7 @@ namespace Server
 
                                         if (SessionIdleTimeout.HasValue)
                                         {
-                                            var CheckTime = DateTime.UtcNow.AddSeconds(-SessionIdleTimeoutValue.Value);
+                                            var CheckTime = DateTime.UtcNow.AddIntSeconds(-SessionIdleTimeoutValue.Value);
                                             SessionSets.DoAction
                                             (
                                                 ss =>
