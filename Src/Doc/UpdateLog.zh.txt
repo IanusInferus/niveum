@@ -1,4 +1,8 @@
-﻿2013.11.13
+﻿2013.11.15
+Yuki.DatabaseRegenerator:
+修正数据库结构生成时没有自动增加注释的问题。
+
+2013.11.13
 Yuki.Core, Yuki.Relation:
 缓存类型Hash计算时产生的序列化器，提高代码生成的性能。
 
