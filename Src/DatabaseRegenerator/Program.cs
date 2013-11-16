@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2013.11.15.
+//  Version:     2013.11.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -472,7 +472,7 @@ namespace Yuki.DatabaseRegenerator
             RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToArray();
             var CreateDatabases = new String[] { String.Format("DROP DATABASE IF EXISTS \"{0}\"", DatabaseName.ToLowerInvariant()), String.Format("CREATE DATABASE \"{0}\"", DatabaseName.ToLowerInvariant()) };
             var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToArray();
-            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER")).ToArray();
+            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER") || q.StartsWith("COMMENT")).ToArray();
 
             var cf = GetConnectionFactory(DatabaseType.PostgreSQL);
             using (var c = cf(ConnectionString))
