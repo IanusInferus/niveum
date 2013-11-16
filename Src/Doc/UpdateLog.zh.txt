@@ -1,4 +1,8 @@
-﻿2013.11.15
+﻿2013.11.16
+Yuki.DatabaseRegenerator:
+修正PostgreSQL数据库结构生成时没有自动增加注释的问题。
+
+2013.11.15
 Yuki.DatabaseRegenerator:
 修正数据库结构生成时没有自动增加注释的问题。
 Yuki.Relation:
