@@ -64,6 +64,8 @@
     <Compile Include="Haxe\CodeGenerator.cs" />
     <Compile Include="JavaBinary\CodeGenerator.cs" />
     <Compile Include="Java\CodeGenerator.cs" />
+    <Compile Include="ObjectSchema\ObjectSchemaDiffGenerator.cs" />
+    <Compile Include="ObjectSchema\ObjectSchemaWriter.cs" />
     <Compile Include="ObjectSchema\TreeBinaryConverter.cs" />
     <Compile Include="ObjectSchema\TupleAndGenericTypeSpecFetcher.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaExtensions.cs" />
