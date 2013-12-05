@@ -445,6 +445,19 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "gencom")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 3)
+                    {
+                        GenerateCompatibilityTreeFile(args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else
                 {
                     throw (new ArgumentException(opt.Name));
@@ -505,6 +518,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2hxj:<HaxeCodePath>,<PackageName>");
             Console.WriteLine(@"生成XHTML文档");
             Console.WriteLine(@"/t2xhtml:<XhtmlDir>,<Title>,<CopyrightText>");
+            Console.WriteLine(@"生成兼容类型结构Tree文件");
+            Console.WriteLine(@"/gencom:<CookedObjectSchemaFile>,<CompatibilityObjectSchemaFile>,<Version>");
             Console.WriteLine(@"CookedObjectSchemaFile 已编译过的对象类型结构Tree文件路径。");
             Console.WriteLine(@"ObjectSchemaDir|ObjectSchemaFile 对象类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"TreeFile Tree文件路径。");
@@ -523,6 +538,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"XhtmlDir XHTML文件夹路径。");
             Console.WriteLine(@"Title 标题。");
             Console.WriteLine(@"CopyrightText 版权文本。");
+            Console.WriteLine(@"CompatibilityObjectSchemaFile 兼容用对象类型结构Tree文件。");
+            Console.WriteLine(@"Version 兼容用对象类型结构Tree中类型所用版本号。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
             Console.WriteLine(@"SchemaManipulator /loadtype:Schema /t2cs:Src\Generated\Communication.cs,Communication");
@@ -868,6 +885,33 @@ namespace Yuki.SchemaManipulator
                 if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
                 Txt.WriteFile(Path, TextEncoding.UTF8, Compiled);
             }
+        }
+
+        public static void GenerateCompatibilityTreeFile(String CookedObjectSchemaFile, String CompatibilityObjectSchemaFile, String Version)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var oosl = new ObjectSchemaLoader();
+            oosl.LoadSchema(CookedObjectSchemaFile);
+            var OldObjectSchema = oosl.GetResult();
+            OldObjectSchema.Verify();
+
+            var DiffGenerator = new ObjectSchemaDiffGenerator();
+            var Result = DiffGenerator.Generate(ObjectSchema, OldObjectSchema).Patch.GetTypesVersioned(Version);
+
+            var osw = new ObjectSchemaWriter();
+            var Compiled = osw.Write(Result.Types);
+
+            if (File.Exists(CompatibilityObjectSchemaFile))
+            {
+                var Original = Txt.ReadFile(CompatibilityObjectSchemaFile);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CompatibilityObjectSchemaFile);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CompatibilityObjectSchemaFile, TextEncoding.UTF8, Compiled);
         }
     }
 }

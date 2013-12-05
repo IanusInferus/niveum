@@ -1,6 +1,10 @@
 ﻿2013.12.05
 *:
 修正一处程序参数的写法。
+Yuki.Core, Yuki.SchemaManipulator:
+增加对象数据结构比较。
+Examples:
+修改通讯代码tree文件和生成脚本。
 
 2013.11.16
 Yuki.DatabaseRegenerator:
