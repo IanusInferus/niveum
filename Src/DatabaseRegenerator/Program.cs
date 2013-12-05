@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2013.11.16.
+//  Version:     2013.12.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -82,12 +82,13 @@ namespace Yuki.DatabaseRegenerator
             String DatabaseName = null;
             foreach (var opt in CmdLine.Options)
             {
-                if ((opt.Name.ToLower() == "?") || (opt.Name.ToLower() == "help"))
+                var optNameLower = opt.Name.ToLower();
+                if ((optNameLower == "?") || (optNameLower == "help"))
                 {
                     DisplayInfo();
                     return 0;
                 }
-                else if (opt.Name.ToLower() == "loadtyperef")
+                else if (optNameLower == "loadtyperef")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -112,7 +113,7 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "loadtype")
+                else if (optNameLower == "loadtype")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -137,7 +138,7 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "connect")
+                else if (optNameLower == "connect")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -150,7 +151,7 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "database")
+                else if (optNameLower == "database")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -163,7 +164,7 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "regenm")
+                else if (optNameLower == "regenm")
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)
@@ -176,7 +177,7 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "regenms")
+                else if (optNameLower == "regenms")
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)
@@ -189,7 +190,7 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "regenmssql")
+                else if (optNameLower == "regenmssql")
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)
@@ -202,7 +203,7 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "regenpgsql")
+                else if (optNameLower == "regenpgsql")
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)
@@ -215,7 +216,7 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "regenmysql")
+                else if (optNameLower == "regenmysql")
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)

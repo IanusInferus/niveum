@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2013.02.15.
+//  Version:     2013.12.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -83,12 +83,13 @@ namespace Yuki.SchemaManipulator
             var xs = new XmlSerializer();
             foreach (var opt in CmdLine.Options)
             {
-                if ((opt.Name.ToLower() == "?") || (opt.Name.ToLower() == "help"))
+                var optNameLower = opt.Name.ToLower();
+                if ((optNameLower == "?") || (optNameLower == "help"))
                 {
                     DisplayInfo();
                     return 0;
                 }
-                else if (opt.Name.ToLower() == "load")
+                else if (optNameLower == "load")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -103,7 +104,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "save")
+                else if (optNameLower == "save")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -119,7 +120,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "loadtyperef")
+                else if (optNameLower == "loadtyperef")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -145,7 +146,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "loadtype")
+                else if (optNameLower == "loadtype")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -171,7 +172,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "import")
+                else if (optNameLower == "import")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -184,7 +185,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2b")
+                else if (optNameLower == "t2b")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 3)
@@ -197,7 +198,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "b2t")
+                else if (optNameLower == "b2t")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 3)
@@ -210,7 +211,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2vb")
+                else if (optNameLower == "t2vb")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -231,7 +232,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2cs")
+                else if (optNameLower == "t2cs")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -252,7 +253,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2csb")
+                else if (optNameLower == "t2csb")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -273,7 +274,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2csj")
+                else if (optNameLower == "t2csj")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -290,7 +291,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2jv")
+                else if (optNameLower == "t2jv")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
@@ -307,7 +308,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2jvb")
+                else if (optNameLower == "t2jvb")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
@@ -324,7 +325,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2cpp")
+                else if (optNameLower == "t2cpp")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -341,7 +342,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2cppb")
+                else if (optNameLower == "t2cppb")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -358,7 +359,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2as")
+                else if (optNameLower == "t2as")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
@@ -371,7 +372,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2asb")
+                else if (optNameLower == "t2asb")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
@@ -384,7 +385,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2asj")
+                else if (optNameLower == "t2asj")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
@@ -397,7 +398,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2hx")
+                else if (optNameLower == "t2hx")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -414,7 +415,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2hxj")
+                else if (optNameLower == "t2hxj")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -431,7 +432,7 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2xhtml")
+                else if (optNameLower == "t2xhtml")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 3)
