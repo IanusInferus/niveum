@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2013.11.13.
+//  Version:     2013.12.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -38,22 +38,26 @@ namespace Yuki.ObjectSchema
             }
         );
 
-        public static UInt64 Hash(this Schema s)
+        public static Byte[] GetUnifiedBinaryRepresentation(this Schema s)
         {
             var Types = s.GetMap().OrderBy(t => t.Key, StringComparer.Ordinal).Select(t => t.Value).ToArray();
             var TypesWithoutDescription = Types.Select(t => MapWithoutDescription(t)).ToArray();
-
-            var sha = new SHA1CryptoServiceProvider();
-            Byte[] result;
 
             using (var ms = Streams.CreateMemoryStream())
             {
                 bs.Value.Write(TypesWithoutDescription, ms);
                 ms.Position = 0;
 
-                result = sha.ComputeHash(ms.ToUnsafeStream());
+                var Bytes = ms.Read((int)(ms.Length));
+                return Bytes;
             }
+        }
 
+        public static UInt64 Hash(this Schema s)
+        {
+            var sha = new SHA1CryptoServiceProvider();
+            var Bytes = GetUnifiedBinaryRepresentation(s);
+            var result = sha.ComputeHash(Bytes);
             using (var ms = Streams.CreateMemoryStream())
             {
                 ms.Write(result.Skip(result.Length - 8).ToArray());
@@ -63,57 +67,57 @@ namespace Yuki.ObjectSchema
             }
         }
 
-        private static TypeDef MapWithoutVersion(TypeDef t)
+        private static TypeDef MapWithVersion(TypeDef t, Func<String, String, String> GetVersionFromNameAndVersion)
         {
             if (t.OnPrimitive)
             {
                 var p = t.Primitive;
-                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters.Select(gp => MapWithoutVersion(gp)).ToArray(), Description = p.Description });
+                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Description = p.Description });
             }
             else if (t.OnAlias)
             {
                 var a = t.Alias;
-                return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = "", GenericParameters = a.GenericParameters.Select(gp => MapWithoutVersion(gp)).ToArray(), Type = MapWithoutVersion(a.Type), Description = a.Description });
+                return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = GetVersionFromNameAndVersion(a.Name, a.Version), GenericParameters = a.GenericParameters.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Type = MapWithVersion(a.Type, GetVersionFromNameAndVersion), Description = a.Description });
             }
             else if (t.OnRecord)
             {
                 var r = t.Record;
-                return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = "", GenericParameters = r.GenericParameters.Select(gp => MapWithoutVersion(gp)).ToArray(), Fields = r.Fields.Select(gp => MapWithoutVersion(gp)).ToArray(), Description = r.Description });
+                return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = GetVersionFromNameAndVersion(r.Name, r.Version), GenericParameters = r.GenericParameters.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Fields = r.Fields.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Description = r.Description });
             }
             else if (t.OnTaggedUnion)
             {
                 var tu = t.TaggedUnion;
-                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = "", GenericParameters = tu.GenericParameters.Select(gp => MapWithoutVersion(gp)).ToArray(), Alternatives = tu.Alternatives.Select(gp => MapWithoutVersion(gp)).ToArray(), Description = tu.Description });
+                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = GetVersionFromNameAndVersion(tu.Name, tu.Version), GenericParameters = tu.GenericParameters.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Alternatives = tu.Alternatives.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Description = tu.Description });
             }
             else if (t.OnEnum)
             {
                 var e = t.Enum;
-                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = "", UnderlyingType = MapWithoutVersion(e.UnderlyingType), Literals = e.Literals, Description = e.Description });
+                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = GetVersionFromNameAndVersion(e.Name, e.Version), UnderlyingType = MapWithVersion(e.UnderlyingType, GetVersionFromNameAndVersion), Literals = e.Literals, Description = e.Description });
             }
             else if (t.OnClientCommand)
             {
                 var cc = t.ClientCommand;
-                return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = "", OutParameters = cc.OutParameters.Select(p => MapWithoutVersion(p)).ToArray(), InParameters = cc.InParameters.Select(p => MapWithoutVersion(p)).ToArray(), Description = cc.Description });
+                return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = GetVersionFromNameAndVersion(cc.Name, cc.Version), OutParameters = cc.OutParameters.Select(p => MapWithVersion(p, GetVersionFromNameAndVersion)).ToArray(), InParameters = cc.InParameters.Select(p => MapWithVersion(p, GetVersionFromNameAndVersion)).ToArray(), Description = cc.Description });
             }
             else if (t.OnServerCommand)
             {
                 var sc = t.ServerCommand;
-                return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = "", OutParameters = sc.OutParameters.Select(p => MapWithoutVersion(p)).ToArray(), Description = sc.Description });
+                return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = GetVersionFromNameAndVersion(sc.Name, sc.Version), OutParameters = sc.OutParameters.Select(p => MapWithVersion(p, GetVersionFromNameAndVersion)).ToArray(), Description = sc.Description });
             }
             else
             {
                 throw new InvalidOperationException();
             }
         }
-        private static VariableDef MapWithoutVersion(VariableDef v)
+        private static VariableDef MapWithVersion(VariableDef v, Func<String, String, String> GetVersionFromName)
         {
-            return new VariableDef { Name = v.Name, Type = MapWithoutVersion(v.Type), Description = v.Description };
+            return new VariableDef { Name = v.Name, Type = MapWithVersion(v.Type, GetVersionFromName), Description = v.Description };
         }
-        private static TypeSpec MapWithoutVersion(TypeSpec t)
+        private static TypeSpec MapWithVersion(TypeSpec t, Func<String, String, String> GetVersionFromName)
         {
             if (t.OnTypeRef)
             {
-                return TypeSpec.CreateTypeRef(new TypeRef { Name = t.TypeRef.Name, Version = "" });
+                return TypeSpec.CreateTypeRef(new TypeRef { Name = t.TypeRef.Name, Version = GetVersionFromName(t.TypeRef.Name, t.TypeRef.Version) });
             }
             else if (t.OnGenericParameterRef)
             {
@@ -121,19 +125,19 @@ namespace Yuki.ObjectSchema
             }
             else if (t.OnTuple)
             {
-                return TypeSpec.CreateTuple(new TupleDef { Types = t.Tuple.Types.Select(tt => MapWithoutVersion(tt)).ToArray() });
+                return TypeSpec.CreateTuple(new TupleDef { Types = t.Tuple.Types.Select(tt => MapWithVersion(tt, GetVersionFromName)).ToArray() });
             }
             else if (t.OnGenericTypeSpec)
             {
                 var gts = t.GenericTypeSpec;
-                return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = MapWithoutVersion(gts.TypeSpec), GenericParameterValues = gts.GenericParameterValues.Select(gpv => MapWithoutVersion(gpv)).ToArray() });
+                return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = MapWithVersion(gts.TypeSpec, GetVersionFromName), GenericParameterValues = gts.GenericParameterValues.Select(gpv => MapWithVersion(gpv, GetVersionFromName)).ToArray() });
             }
             else
             {
                 throw new InvalidOperationException();
             }
         }
-        private static GenericParameterValue MapWithoutVersion(GenericParameterValue gpv)
+        private static GenericParameterValue MapWithVersion(GenericParameterValue gpv, Func<String, String, String> GetVersionFromName)
         {
             if (gpv.OnLiteral)
             {
@@ -141,7 +145,7 @@ namespace Yuki.ObjectSchema
             }
             else if (gpv.OnTypeSpec)
             {
-                return GenericParameterValue.CreateTypeSpec(MapWithoutVersion(gpv.TypeSpec));
+                return GenericParameterValue.CreateTypeSpec(MapWithVersion(gpv.TypeSpec, GetVersionFromName));
             }
             else
             {
@@ -202,33 +206,61 @@ namespace Yuki.ObjectSchema
 
         public static Schema GetNonversioned(this Schema s)
         {
-            var Types = s.Types.Select(t => new { Original = t, Current = MapWithoutVersion(t) }).ToArray();
-            var TypeRefs = s.TypeRefs.Select(t => new { Original = t, Current = MapWithoutVersion(t) }).ToArray();
+            var Types = s.Types.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => "") }).ToArray();
+            var TypeRefs = s.TypeRefs.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => "") }).ToArray();
             var Dict = Types.Concat(TypeRefs).ToDictionary(t => t.Original.VersionedName(), t => t.Current.VersionedName(), StringComparer.OrdinalIgnoreCase);
             var TypePaths = s.TypePaths.Select(tp => new TypePath { Name = Dict[tp.Name], Path = tp.Path }).ToArray();
-            return new Schema { Types = Types.Select(t => t.Current).ToArray(), TypeRefs = TypeRefs.Select(t => t.Current).ToArray(), Imports = s.Imports, TypePaths = TypePaths };
+            return new Schema { Types = Types.Select(t => t.Current).ToArray(), TypeRefs = TypeRefs.Select(t => t.Current).ToArray(), Imports = s.Imports.ToArray(), TypePaths = TypePaths };
+        }
+
+        public static Schema GetTypesVersioned(this Schema s, String NewVersion)
+        {
+            var TypeRefNames = new HashSet<String>(s.TypeRefs.Select(t => t.VersionedName()), StringComparer.OrdinalIgnoreCase);
+            var Types = s.Types.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => TypeRefNames.Contains((new TypeRef { Name = Name, Version = Version }).VersionedName()) ? Version : NewVersion) }).ToArray();
+            var TypeRefs = s.TypeRefs.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => Version) }).ToArray();
+            var Dict = Types.Concat(TypeRefs).ToDictionary(t => t.Original.VersionedName(), t => t.Current.VersionedName(), StringComparer.OrdinalIgnoreCase);
+            var TypePaths = s.TypePaths.Select(tp => new TypePath { Name = Dict[tp.Name], Path = tp.Path }).ToArray();
+            return new Schema { Types = Types.Select(t => t.Current).ToArray(), TypeRefs = TypeRefs.Select(t => t.Current).ToArray(), Imports = s.Imports.ToArray(), TypePaths = TypePaths };
+        }
+
+        private class SubSchemaGenerator
+        {
+            private Schema s;
+            private Dictionary<String, TypeDef> Types;
+            public SubSchemaGenerator(Schema s)
+            {
+                this.s = s;
+                Types = s.GetMap().ToDictionary(t => t.Key, t => t.Value, StringComparer.OrdinalIgnoreCase);
+            }
+
+            public Schema Generate(IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs)
+            {
+                var m = new Marker { Types = Types };
+                foreach (var t in TypeDefs)
+                {
+                    if (!(Types.ContainsKey(t.VersionedName()) && Types[t.VersionedName()] == t))
+                    {
+                        throw new InvalidOperationException("TypeDefNotInSchema");
+                    }
+                    m.Mark(t);
+                }
+                foreach (var t in TypeSpecs)
+                {
+                    m.Mark(t);
+                }
+
+                var MarkedNames = new HashSet<String>(Types.Where(p => m.Marked.Contains(p.Value)).Select(p => p.Key), StringComparer.OrdinalIgnoreCase);
+
+                return new Schema { Types = s.Types.Where(t => m.Marked.Contains(t)).ToArray(), TypeRefs = s.TypeRefs.Where(t => m.Marked.Contains(t)).ToArray(), Imports = s.Imports, TypePaths = s.TypePaths.Where(tp => MarkedNames.Contains(tp.Name)).ToArray() };
+            }
+        }
+        public static Func<IEnumerable<TypeDef>, IEnumerable<TypeSpec>, Schema> GetSubSchemaGenerator(this Schema s)
+        {
+            return (TypeDefs, TypeSpecs) => (new SubSchemaGenerator(s)).Generate(TypeDefs, TypeSpecs);
         }
         public static Schema GetSubSchema(this Schema s, IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs)
         {
-            var Types = s.GetMap().ToDictionary(t => t.Key, t => t.Value, StringComparer.OrdinalIgnoreCase);
-
-            var m = new Marker { Types = Types };
-            foreach (var t in TypeDefs)
-            {
-                if (!(Types.ContainsKey(t.VersionedName()) && Types[t.VersionedName()] == t))
-                {
-                    throw new InvalidOperationException("TypeDefNotInSchema");
-                }
-                m.Mark(t);
-            }
-            foreach (var t in TypeSpecs)
-            {
-                m.Mark(t);
-            }
-
-            var MarkedNames = new HashSet<String>(Types.Where(p => m.Marked.Contains(p.Value)).Select(p => p.Key), StringComparer.OrdinalIgnoreCase);
-
-            return new Schema { Types = s.Types.Where(t => m.Marked.Contains(t)).ToArray(), TypeRefs = s.TypeRefs.Where(t => m.Marked.Contains(t)).ToArray(), Imports = s.Imports, TypePaths = s.TypePaths.Where(tp => MarkedNames.Contains(tp.Name)).ToArray() };
+            return s.GetSubSchemaGenerator()(TypeDefs, TypeSpecs);
         }
 
         public static Schema Reduce(this Schema s)
