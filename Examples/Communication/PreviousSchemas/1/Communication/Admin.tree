@@ -1,0 +1,15 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Admin.tree
+      Location:    Yuki.Examples <Tree>
+      Description: 管理
+      Version:     2012.05.14.
+      Author:      F.R.C.
+      Copyright(C) Public Domain
+
+    ==========================================================================
+
+#ClientCommand Shutdown                             关闭服务器
+    >
+    Success             Unit                        成功

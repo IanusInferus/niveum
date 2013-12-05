@@ -1,0 +1,11 @@
+﻿#ClientCommand SendMessage[1] 发送消息
+    Title                       String                      标题
+    Lines                       List<String>                内容
+    >
+    Success                     Unit                        成功
+    TitleTooLong                Unit                        标题过长
+    LinesTooLong                Unit                        内容过长
+    LineTooLong                 List<Int>                   行过长，返回值为过长的列号
+#ServerCommand MessageReceived[1] 接收到消息
+    Title                       String                      标题
+    Lines                       List<String>                内容
