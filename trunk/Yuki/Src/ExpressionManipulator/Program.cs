@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.ExpressionManipulator <Visual C#>
 //  Description: 表达式结构处理工具
-//  Version:     2013.03.13.
+//  Version:     2013.12.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -72,12 +72,13 @@ namespace Yuki.ExpressionManipulator
 
             foreach (var opt in CmdLine.Options)
             {
-                if ((opt.Name.ToLower() == "?") || (opt.Name.ToLower() == "help"))
+                var optNameLower = opt.Name.ToLower();
+                if ((optNameLower == "?") || (optNameLower == "help"))
                 {
                     DisplayInfo();
                     return 0;
                 }
-                else if (opt.Name.ToLower() == "loadtype")
+                else if (optNameLower == "loadtype")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -103,7 +104,7 @@ namespace Yuki.ExpressionManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "import")
+                else if (optNameLower == "import")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -116,7 +117,7 @@ namespace Yuki.ExpressionManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2b")
+                else if (optNameLower == "t2b")
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 2)
@@ -129,7 +130,7 @@ namespace Yuki.ExpressionManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2csbl")
+                else if (optNameLower == "t2csbl")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
