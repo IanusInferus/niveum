@@ -1,16 +1,16 @@
 ﻿$Comment
     ==========================================================================
 
-      File:        MessageOld.tree
+      File:        Message.tree
       Location:    Yuki.Examples <Tree>
-      Description: 消息 - 历史版本
-      Version:     2012.04.15.
+      Description: 消息
+      Version:     2013.12.15.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
     ==========================================================================
 
-#ClientCommand SendMessage[1]                       发送消息
+#ClientCommand SendMessage                          发送消息
     Title               String                      标题
     Lines               List<String>                内容
     >
@@ -19,6 +19,6 @@
     LinesTooLong        Unit                        内容过长
     LineTooLong         List<Int>                   行过长，返回值为过长的列号
 
-#ServerCommand MessageReceived[1]                   接收到消息
+#ServerCommand MessageReceived                      接收到消息
     Title               String                      标题
     Lines               List<String>                内容
