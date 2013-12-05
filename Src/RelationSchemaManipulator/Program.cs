@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2013.11.10.
+//  Version:     2013.12.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -84,12 +84,13 @@ namespace Yuki.RelationSchemaManipulator
 
             foreach (var opt in CmdLine.Options)
             {
-                if ((opt.Name.ToLower() == "?") || (opt.Name.ToLower() == "help"))
+                var optNameLower = opt.Name.ToLower();
+                if ((optNameLower == "?") || (optNameLower == "help"))
                 {
                     DisplayInfo();
                     return 0;
                 }
-                else if (opt.Name.ToLower() == "loadtyperef")
+                else if (optNameLower == "loadtyperef")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -115,7 +116,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "loadtype")
+                else if (optNameLower == "loadtype")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -141,7 +142,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "import")
+                else if (optNameLower == "import")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 1)
@@ -154,7 +155,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2tsql")
+                else if (optNameLower == "t2tsql")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
@@ -167,7 +168,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2pgsql")
+                else if (optNameLower == "t2pgsql")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
@@ -180,7 +181,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2mysql")
+                else if (optNameLower == "t2mysql")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
@@ -193,7 +194,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2dbml")
+                else if (optNameLower == "t2dbml")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 5)
@@ -206,7 +207,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2csd")
+                else if (optNameLower == "t2csd")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 5)
@@ -219,7 +220,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2cse")
+                else if (optNameLower == "t2cse")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 5)
@@ -232,7 +233,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2csdp")
+                else if (optNameLower == "t2csdp")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
@@ -249,7 +250,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2csm")
+                else if (optNameLower == "t2csm")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 3)
@@ -262,7 +263,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2csmssql")
+                else if (optNameLower == "t2csmssql")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 3)
@@ -275,7 +276,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2cspgsql")
+                else if (optNameLower == "t2cspgsql")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 3)
@@ -288,7 +289,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2csmysql")
+                else if (optNameLower == "t2csmysql")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 3)
@@ -301,7 +302,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2cppdp")
+                else if (optNameLower == "t2cppdp")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
@@ -314,7 +315,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2cppm")
+                else if (optNameLower == "t2cppm")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 3)
@@ -327,7 +328,7 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (opt.Name.ToLower() == "t2xhtml")
+                else if (optNameLower == "t2xhtml")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 3)
