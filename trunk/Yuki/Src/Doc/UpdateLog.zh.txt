@@ -1,4 +1,8 @@
-﻿2013.12.05
+﻿2013.12.06
+Yuki.SchemaManipulator:
+对象数据结构比较增加无关类型排除。
+
+2013.12.05
 *:
 修正一处程序参数的写法。
 Yuki.Core, Yuki.SchemaManipulator:
