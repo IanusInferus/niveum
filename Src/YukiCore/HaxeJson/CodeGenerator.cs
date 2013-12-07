@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Haxe JSON通讯代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.12.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -37,6 +37,7 @@ namespace Yuki.ObjectSchema.HaxeJson
             private Haxe.Common.CodeGenerator.Writer InnerWriter;
 
             private Schema Schema;
+            private Func<IEnumerable<TypeDef>, IEnumerable<TypeSpec>, Schema> SubSchemaGen;
             private String PackageName;
             private UInt64 Hash;
 
@@ -51,8 +52,9 @@ namespace Yuki.ObjectSchema.HaxeJson
             public Writer(Schema Schema, String NamespaceName)
             {
                 this.Schema = Schema;
+                this.SubSchemaGen = Schema.GetSubSchemaGenerator();
                 this.PackageName = NamespaceName;
-                this.Hash = Schema.Hash();
+                this.Hash = SubSchemaGen(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
 
                 InnerWriter = new Haxe.Common.CodeGenerator.Writer(Schema, PackageName);
 
@@ -99,7 +101,7 @@ namespace Yuki.ObjectSchema.HaxeJson
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("JsonSerializationClient_ApplicationClientCommand").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                     else if (c.OnServerCommand)
@@ -116,7 +118,7 @@ namespace Yuki.ObjectSchema.HaxeJson
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("JsonSerializationClient_ServerCommand").Substitute("CommandName", c.ServerCommand.Name).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }

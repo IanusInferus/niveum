@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaWriter.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构写入器
-//  Version:     2013.12.05.
+//  Version:     2013.12.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -26,9 +26,9 @@ namespace Yuki.ObjectSchema
         {
         }
 
-        public String Write(TypeDef[] Types)
+        public String Write(TypeDef[] Types, String Comment = null)
         {
-            var f = WriteToForest(Types);
+            var f = WriteToForest(Types, Comment);
 
             String Compiled;
             using (var ms = Streams.CreateMemoryStream())
@@ -47,9 +47,14 @@ namespace Yuki.ObjectSchema
             return Compiled;
         }
 
-        private Syntax.Forest WriteToForest(TypeDef[] Types)
+        private Syntax.Forest WriteToForest(TypeDef[] Types, String Comment)
         {
             var MultiNodesList = new List<Syntax.MultiNodes>();
+            if (Comment != "")
+            {
+                var mlc = new Syntax.MultiLineComment { SingleLineComment = Opt<Syntax.SingleLineComment>.Empty, Content = new Syntax.FreeContent { Text = Comment }, EndDirective = Opt<Syntax.EndDirective>.Empty };
+                MultiNodesList.Add(Syntax.MultiNodes.CreateNode(Syntax.Node.CreateMultiLineComment(mlc)));
+            }
             foreach (var t in Types)
             {
                 var LineTokens = new List<String[]>();

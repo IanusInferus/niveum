@@ -1,4 +1,11 @@
-﻿2013.12.06
+﻿2013.12.07
+Yuki.Core, Yuki.SchemaManipulator:
+增加对象数据结构比较的Hash注释。
+修改Schema Hash计算方法，排除无关类型。
+Examples:
+修改通讯示例。
+
+2013.12.06
 Yuki.SchemaManipulator:
 对象数据结构比较增加无关类型排除。
 
