@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0 JSON通讯代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.12.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -34,6 +34,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
             private ActionScript.Common.CodeGenerator.Writer InnerWriter;
 
             private Schema Schema;
+            private Func<IEnumerable<TypeDef>, IEnumerable<TypeSpec>, Schema> SubSchemaGen;
             private String PackageName;
             private UInt64 Hash;
 
@@ -48,8 +49,9 @@ namespace Yuki.ObjectSchema.ActionScriptJson
             public Writer(Schema Schema, String PackageName)
             {
                 this.Schema = Schema;
+                this.SubSchemaGen = Schema.GetSubSchemaGenerator();
                 this.PackageName = PackageName;
-                this.Hash = this.Schema.Hash();
+                this.Hash = SubSchemaGen(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
 
                 InnerWriter = new ActionScript.Common.CodeGenerator.Writer(Schema, PackageName);
 
@@ -304,7 +306,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                 List<String> l = new List<String>();
                 foreach (var c in ServerCommands)
                 {
-                    var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                    var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                     l.AddRange(GetTemplate("JsonSerializationClient_ServerCommandHandle").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                 }
                 return l.ToArray();
@@ -314,7 +316,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                 List<String> l = new List<String>();
                 foreach (var c in ClientCommands)
                 {
-                    var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                    var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                     l.AddRange(GetTemplate("JsonSerializationClient_ClientCommandHandle").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                 }
                 return l.ToArray();
@@ -338,7 +340,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("JsonSerializationClient_ClientCommand").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommandIndex", k.ToInvariantString()));
                         k += 1;
                     }
