@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.12.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -37,6 +37,7 @@ namespace Yuki.ObjectSchema.CppBinary
             private Cpp.Common.CodeGenerator.Writer InnerWriter;
 
             private Schema Schema;
+            private Func<IEnumerable<TypeDef>, IEnumerable<TypeSpec>, Schema> SubSchemaGen;
             private String NamespaceName;
             private UInt64 Hash;
 
@@ -51,8 +52,9 @@ namespace Yuki.ObjectSchema.CppBinary
             public Writer(Schema Schema, String NamespaceName)
             {
                 this.Schema = Schema;
+                this.SubSchemaGen = Schema.GetSubSchemaGenerator();
                 this.NamespaceName = NamespaceName;
-                this.Hash = Schema.Hash();
+                this.Hash = SubSchemaGen(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
 
                 InnerWriter = new Cpp.Common.CodeGenerator.Writer(Schema, NamespaceName);
 
@@ -121,7 +123,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("BinarySerializationServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
@@ -134,7 +136,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("BinarySerializationServer_ServerCommand").Substitute("CommandName", c.ServerCommand.Name.Escape()).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
@@ -152,7 +154,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("BinarySerializationClient_ApplicationClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
                     }
                 }
@@ -165,7 +167,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandHash = (UInt32)(Schema.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("BinarySerializationClient_ServerCommand").Substitute("CommandName", c.ServerCommand.Name.Escape()).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
