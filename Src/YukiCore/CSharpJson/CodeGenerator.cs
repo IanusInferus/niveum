@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2013.12.07.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -37,7 +37,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             private CSharp.Common.CodeGenerator.Writer InnerWriter;
 
             private Schema Schema;
-            private Func<IEnumerable<TypeDef>, IEnumerable<TypeSpec>, Schema> SubSchemaGen;
+            private ISchemaClosureGenerator SchemaClosureGenerator;
             private String NamespaceName;
             private UInt64 Hash;
 
@@ -52,9 +52,9 @@ namespace Yuki.ObjectSchema.CSharpJson
             public Writer(Schema Schema, String NamespaceName)
             {
                 this.Schema = Schema;
-                this.SubSchemaGen = Schema.GetSubSchemaGenerator();
+                this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.NamespaceName = NamespaceName;
-                this.Hash = SubSchemaGen(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
+                this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
 
                 InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, false);
 
@@ -71,7 +71,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
-                var ComplexTypes = GetComplexTypes(Schema);
+                var ComplexTypes = GetComplexTypes();
 
                 if (NamespaceName != "")
                 {
@@ -117,7 +117,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                         {
                             l.AddRange(GetTemplate("JsonSerializationServer_ClientCommandWithoutHash").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()));
                         }
-                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("JsonSerializationServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
@@ -130,7 +130,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("JsonSerializationServer_ServerCommand").Substitute("CommandName", c.ServerCommand.Name).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
@@ -148,7 +148,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("JsonSerializationClient_ApplicationClientCommand").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                     else if (c.OnServerCommand)
@@ -165,7 +165,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("JsonSerializationClient_ServerCommand").Substitute("CommandName", c.ServerCommand.Name).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
@@ -307,10 +307,10 @@ namespace Yuki.ObjectSchema.CSharpJson
                     l.Add("");
                 }
 
-                var ltf = new TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Types);
-                var Tuples = ltf.GetTuples();
-                var GenericTypeSpecs = ltf.GetGenericTypeSpecs();
+                var scg = Schema.GetSchemaClosureGenerator();
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
+                var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
 
                 foreach (var t in Tuples)
                 {
@@ -492,7 +492,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 return GetTemplate("JsonTranslator_Map").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("KeyTypeFriendlyName", KeyTypeFriendlyName).Substitute("ValueTypeFriendlyName", ValueTypeFriendlyName);
             }
 
-            public String[] GetComplexTypes(Schema Schema)
+            public String[] GetComplexTypes()
             {
                 List<String> l = new List<String>();
 

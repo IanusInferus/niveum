@@ -1,4 +1,11 @@
-﻿2013.12.07
+﻿2013.12.08
+Yuki.Core, Yuki.Relation:
+整理类型引用闭包计算相关函数。
+去除部分无用参数。
+Examples:
+修正数据库C++ MySQL示例遗漏更改的问题。
+
+2013.12.07
 Yuki.Core, Yuki.SchemaManipulator:
 增加对象数据结构比较的Hash注释。
 修改Schema Hash计算方法，排除无关类型。

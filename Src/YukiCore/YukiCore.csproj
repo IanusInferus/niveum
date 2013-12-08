@@ -67,7 +67,6 @@
     <Compile Include="ObjectSchema\ObjectSchemaDiffGenerator.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaWriter.cs" />
     <Compile Include="ObjectSchema\TreeBinaryConverter.cs" />
-    <Compile Include="ObjectSchema\TupleAndGenericTypeSpecFetcher.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaExtensions.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaLoader.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaTemplate.cs" />

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2013.04.30.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -70,7 +70,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 var Header = GetHeader();
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
                 var Primitives = GetPrimitives();
-                var ComplexTypes = GetComplexTypes(Schema);
+                var ComplexTypes = GetComplexTypes();
                 var Contents = ComplexTypes;
                 Contents = WrapContents(NamespaceName, Contents);
                 return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
@@ -489,15 +489,15 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 return l.ToArray();
             }
 
-            public String[] GetComplexTypes(Schema Schema)
+            public String[] GetComplexTypes()
             {
                 List<String> l = new List<String>();
 
                 List<TypeDef> cl = new List<TypeDef>();
 
-                var ltf = new TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Schema.Types);
-                var Tuples = ltf.GetTuples();
+                var scg = Schema.GetSchemaClosureGenerator();
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
 
                 foreach (var c in Schema.Types)
                 {

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Haxe代码生成器
-//  Version:     2013.05.21.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -341,9 +341,9 @@ namespace Yuki.ObjectSchema.Haxe.Common
                     l.Add("");
                 }
 
-                var ltf = new TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Schema.Types);
-                var Tuples = ltf.GetTuples();
+                var scg = Schema.GetSchemaClosureGenerator();
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
                 foreach (var t in Tuples)
                 {
                     l.AddRange(GetTuple(t.TypeFriendlyName(), t.Tuple));
