@@ -4,9 +4,10 @@ Yuki.Core, Yuki.Relation:
 去除部分无用参数。
 修改拼写错误。
 Yuki.Core, Yuki.SchemaManipulator:
-初步实现C#对象数据结构通讯兼容代码生成。
+实现C#对象数据结构通讯兼容代码生成。
 Examples:
 修正数据库C++ MySQL示例遗漏更改的问题。
+修改C#通讯示例，增加通讯兼容代码。
 
 2013.12.07
 Yuki.Core, Yuki.SchemaManipulator:
