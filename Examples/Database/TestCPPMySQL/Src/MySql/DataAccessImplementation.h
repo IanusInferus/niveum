@@ -71,6 +71,13 @@ namespace Database
                 cmd->execute();
             }
 
+            void FromTestLockRecordDeleteOptionalById(Int Id)
+            {
+                auto cmd = CreateTextCommand(L"DELETE FROM TestLockRecords WHERE Id = @Id");
+                Add(L"Id", Id);
+                cmd->execute();
+            }
+
             Optional<std::shared_ptr<TestLockRecord>> FromTestLockRecordSelectOptionalById(int Id)
             {
                 auto cmd = CreateTextCommand(L"SELECT Id, Value FROM TestLockRecords WHERE Id = @Id");
