@@ -36,16 +36,5 @@ namespace Server.Services
         }
 
         public event Action<MessageReceivedEvent> MessageReceived;
-
-        public SendMessageAt1Reply SendMessageAt1(SendMessageAt1Request r)
-        {
-            if (MessageReceivedAt1 != null)
-            {
-                MessageReceivedAt1(new MessageReceivedAt1Event { Title = "System Updated", Lines = new List<String> { "Please update your client to a recent version." } });
-            }
-            return SendMessageAt1Reply.CreateSuccess();
-        }
-
-        public event Action<MessageReceivedAt1Event> MessageReceivedAt1;
     }
 }
