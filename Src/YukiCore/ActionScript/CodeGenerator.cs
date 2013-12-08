@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -70,10 +70,10 @@ namespace Yuki.ObjectSchema.ActionScript.Common
             {
                 List<ActionScript.FileResult> l = new List<ActionScript.FileResult>();
 
-                var ltf = new TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Schema.TypeRefs.Concat(Schema.Types));
-                var Tuples = ltf.GetTuples();
-                var GenericTypeSpecs = ltf.GetGenericTypeSpecs();
+                var scg = Schema.GetSchemaClosureGenerator();
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
+                var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
 
                 foreach (var c in Schema.Types)
                 {

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C#简单类型代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -157,7 +157,7 @@ namespace Yuki.RelationSchema.CSharpPlain
             public String[] GetComplexTypes()
             {
                 List<String> l = new List<String>();
-                l.AddRange(InnerWriter.GetComplexTypes(InnerSchema));
+                l.AddRange(InnerWriter.GetComplexTypes());
                 l.Add("");
 
                 var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToArray();

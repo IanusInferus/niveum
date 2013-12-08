@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java二进制代码生成器
-//  Version:     2013.04.16.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -68,7 +68,7 @@ namespace Yuki.ObjectSchema.JavaBinary
             {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
-                var ComplexTypes = GetComplexTypes(Schema);
+                var ComplexTypes = GetComplexTypes();
 
                 return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("ClassName", ClassName).Substitute("PackageName", PackageName == "" ? new String[] { } : new String[] { PackageName }).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
@@ -246,10 +246,10 @@ namespace Yuki.ObjectSchema.JavaBinary
                     l.Add("");
                 }
 
-                var ltf = new TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Types);
-                var Tuples = ltf.GetTuples();
-                var GenericTypeSpecs = ltf.GetGenericTypeSpecs();
+                var scg = Schema.GetSchemaClosureGenerator();
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
+                var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
 
                 foreach (var t in Tuples)
                 {
@@ -436,7 +436,7 @@ namespace Yuki.ObjectSchema.JavaBinary
                 return GetTemplate("BinaryTranslator_Map").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("KeyTypeFriendlyName", kt.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", gp[1].TypeSpec.TypeFriendlyName()).Substitute("KeyTypeString", GetTypeString(kt));
             }
 
-            public String[] GetComplexTypes(Schema Schema)
+            public String[] GetComplexTypes()
             {
                 List<String> l = new List<String>();
 
@@ -486,10 +486,10 @@ namespace Yuki.ObjectSchema.JavaBinary
                     l.Add("");
                 }
 
-                var ltf = new TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Schema.Types);
-                var Tuples = ltf.GetTuples();
-                var GenericTypeSpecs = ltf.GetGenericTypeSpecs();
+                var scg = Schema.GetSchemaClosureGenerator();
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
+                var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
                 foreach (var t in Tuples)
                 {
                     l.AddRange(GetTuple(t.TypeFriendlyName(), t.Tuple));

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2013.10.01.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -95,7 +95,28 @@ namespace Yuki.RelationSchema.CppMemory
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "List").Any()) { throw new InvalidOperationException("PrimitiveMissing: List"); }
 
                 InnerWriter = new CppPlain.CodeGenerator.Writer(Schema, NamespaceName);
-                InnerBinaryWriter = new OS.CppBinary.CodeGenerator.Writer(InnerSchema, NamespaceName);
+                var Types = new List<OS.TypeDef>();
+                Types.AddRange(InnerSchema.Types);
+                var TableFields = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).Select
+                (
+                    e => new OS.VariableDef
+                    {
+                        Name = e.Name,
+                        Type = OS.TypeSpec.CreateGenericTypeSpec
+                        (
+                            new OS.GenericTypeSpec
+                            {
+                                TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "List", Version = "" }),
+                                GenericParameterValues = new OS.GenericParameterValue[]
+                                {
+                                    OS.GenericParameterValue.CreateTypeSpec(OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = e.Name , Version = ""}))
+                                }
+                            }
+                         )
+                    }
+                ).ToArray();
+                Types.Add(OS.TypeDef.CreateRecord(new OS.RecordDef { Name = "MemoryDataTables", Version = "", GenericParameters = new OS.VariableDef[] { }, Fields = TableFields, Description = "" }));
+                InnerBinaryWriter = new OS.CppBinary.CodeGenerator.Writer(new OS.Schema { Types = Types.ToArray(), TypeRefs = InnerSchema.TypeRefs, Imports = InnerSchema.Imports, TypePaths = InnerSchema.TypePaths }, NamespaceName);
             }
 
             public String[] GetSchema()
@@ -203,34 +224,6 @@ namespace Yuki.RelationSchema.CppMemory
                     }
                 }
                 return l.ToArray();
-            }
-
-            public String[] GetBinaryTranslator()
-            {
-                var Types = new List<OS.TypeDef>();
-                Types.AddRange(InnerSchema.TypeRefs);
-                Types.AddRange(InnerSchema.Types);
-                var TableFields = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).Select
-                (
-                    e => new OS.VariableDef
-                    {
-                        Name = e.Name,
-                        Type = OS.TypeSpec.CreateGenericTypeSpec
-                        (
-                            new OS.GenericTypeSpec
-                            {
-                                TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "List", Version = "" }),
-                                GenericParameterValues = new OS.GenericParameterValue[]
-                                {
-                                    OS.GenericParameterValue.CreateTypeSpec(OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = e.Name , Version = ""}))
-                                }
-                            }
-                         )
-                    }
-                ).ToArray();
-                Types.Add(OS.TypeDef.CreateRecord(new OS.RecordDef { Name = "MemoryDataTables", Version = "", GenericParameters = new OS.VariableDef[] { }, Fields = TableFields, Description = "" }));
-
-                return InnerBinaryWriter.GetBinaryTranslator(Types.ToArray());
             }
 
             public String[] GetGenerates()
@@ -460,7 +453,7 @@ namespace Yuki.RelationSchema.CppMemory
                 var Tables = GetTables();
                 var Indices = GetIndices();
                 var Streams = InnerBinaryWriter.GetTemplate("Streams");
-                var BinaryTranslator = GetBinaryTranslator();
+                var BinaryTranslator = InnerBinaryWriter.GetBinaryTranslator();
                 var Generates = GetGenerates();
                 var Hash = Schema.Hash().ToString("X16", System.Globalization.CultureInfo.InvariantCulture);
                 var Queries = GetQueries();
