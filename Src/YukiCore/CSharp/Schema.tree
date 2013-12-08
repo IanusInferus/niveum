@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#模板数据
-      Version:     2013.05.31.
+      Version:     2013.12.07.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -634,3 +634,19 @@ ObjectSchemaTemplate
                 $String
                     ${XmlComment}
                     event Action<[[${Name}Event]]> [[${Name}]];
+        Template
+            Name IEventPump
+            //Parameters: ${Commands}
+            Value
+                $String
+                    public interface IEventPump
+                    {
+                        ${Commands}
+                    }
+        Template
+            Name IEventPump_ServerCommand
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    Action<[[${Name}Event]]> [[${Name}]] { get; }

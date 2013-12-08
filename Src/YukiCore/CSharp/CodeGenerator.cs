@@ -411,6 +411,24 @@ namespace Yuki.ObjectSchema.CSharp.Common
                 }
                 return l.ToArray();
             }
+            public String[] GetIEventPump(TypeDef[] Commands)
+            {
+                return GetTemplate("IEventPump").Substitute("Commands", GetIEventPumpCommands(Commands));
+            }
+            public String[] GetIEventPumpCommands(TypeDef[] Commands)
+            {
+                List<String> l = new List<String>();
+                foreach (var c in Commands)
+                {
+                    if (c.OnServerCommand)
+                    {
+                        var sc = c.ServerCommand;
+                        if (sc.Version != "") { continue; }
+                        l.AddRange(GetTemplate("IEventPump_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
+                    }
+                }
+                return l.ToArray();
+            }
 
             public String[] GetComplexTypes()
             {
@@ -494,6 +512,8 @@ namespace Yuki.ObjectSchema.CSharp.Common
                     l.AddRange(GetIApplicationServer(ca));
                     l.Add("");
                     l.AddRange(GetIApplicationClient(ca));
+                    l.Add("");
+                    l.AddRange(GetIEventPump(ca));
                     l.Add("");
                 }
 

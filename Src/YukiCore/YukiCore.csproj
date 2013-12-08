@@ -58,6 +58,7 @@
     <Compile Include="CppBinary\CodeGenerator.cs" />
     <Compile Include="Cpp\CodeGenerator.cs" />
     <Compile Include="CSharpBinary\CodeGenerator.cs" />
+    <Compile Include="CSharpCompatible\CodeGenerator.cs" />
     <Compile Include="CSharpJson\CodeGenerator.cs" />
     <Compile Include="CSharp\CodeGenerator.cs" />
     <Compile Include="HaxeJson\CodeGenerator.cs" />
@@ -90,6 +91,7 @@
     <EmbeddedResource Include="Haxe\Schema.tree" />
     <EmbeddedResource Include="HaxeJson\Schema.tree" />
     <None Include="Common\Common.tree" />
+    <EmbeddedResource Include="CSharpCompatible\Schema.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
     <EmbeddedResource Include="VB\Schema.tree" />
     <EmbeddedResource Include="Xhtml\Schema.tree" />
