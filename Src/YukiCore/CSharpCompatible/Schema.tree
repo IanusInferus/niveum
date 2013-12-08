@@ -1,0 +1,403 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Schema.tree
+      Location:    Yuki.Core <Tree>
+      Description: 对象类型结构C#通讯兼容模板数据
+      Version:     2013.12.08.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+ObjectSchemaTemplate
+    Keywords
+    $End
+    PrimitiveMappings
+    $End
+    Templates
+        Template
+            Name MainWithNamespace
+            //Parameters: ${Header}, ${NamespaceName}, ${Imports}, ${ClassName}, ${EventPump}, ${Translators}
+            Value
+                $String
+                    ${Header}
+                    using ${Imports};
+
+                    namespace [[${NamespaceName}]]
+                    {
+                        public partial class [[${ClassName}]]
+                        {
+                            ${EventPump}
+
+                            ${Translators}
+                        }
+                    }
+
+                $End
+        Template
+            Name MainWithoutNamespace
+            //Parameters: ${Header}, ${Imports}, ${ClassName}, ${EventPump}, ${Translators}
+            Value
+                $String
+                    ${Header}
+                    using ${Imports};
+
+                    public partial class [[${ClassName}]]
+                    {
+                        ${EventPump}
+
+                        ${Translators}
+                    }
+
+                $End
+        Template
+            Name Header
+            //Parameters:
+            Value
+                $String
+                    //==========================================================================
+                    //
+                    //  Notice:      This file is varmatically generated.
+                    //               Please don't modify this file.
+                    //
+                    //==========================================================================
+
+                    //Reference:
+
+                    using System;
+                    using System.Collections.Generic;
+                    using System.Linq;
+        Template
+            Name EventPump
+            //Parameters: ${ServerCommands}, ${ServerCommandInitializers}
+            Value
+                $String
+                    private class EventPump : IEventPump
+                    {
+                        ${ServerCommands}
+                    }
+                    private IEventPump CreateEventPump(Func<String> GetVersion)
+                    {
+                        var ep = new EventPump();
+                        ${ServerCommandInitializers}
+                        return ep;
+                    }
+        Template
+            Name EventPump_ServerCommand
+            //Parameters: ${Name}
+            Value
+                $String
+                    public Action<[[${Name}Event]]> [[${Name}]] { get; set; }
+        Template
+            Name EventPump_ServerCommandInitializer_HeadOnly
+            //Parameters: ${Name}
+            Value
+                $String
+                    [[ep.${Name}]] = e => { if ([[${Name}]] != null) { [[${Name}]](e); } };
+        Template
+            Name EventPump_ServerCommandInitializer_Multiple
+            //Parameters: ${Name}, ${Versions}
+            Value
+                $String
+                    [[ep.${Name}]] = eHead =>
+                    {
+                        var Version = GetVersion();
+                        if (Version == "")
+                        {
+                            if ([[${Name}]] != null) { [[${Name}]](eHead); }
+                            return;
+                        }
+                        ${Versions}
+                        throw new InvalidOperationException();
+                    };
+        Template
+            Name EventPump_ServerCommandInitializer_Multiple_Version
+            //Parameters: ${VersionedName}, ${Version}
+            Value
+                $String
+                        if (Version == "${Version}")
+                        {
+                            var e = [[${VersionedName}EventFromHead]](eHead);
+                            if ([[${VersionedName}Event]] != null) { [[${VersionedName}Event]](e); }
+                            return;
+                        }
+        Template
+            Name Translator_RecordFrom
+            //Parameters: ${Name}, ${VersionedName}, ${FieldFroms}
+            Value
+                $String
+                    public [[${VersionedName}]] [[${VersionedName}FromHead]]([[${Name}]] ho)
+                    {
+                        var o = new [[${VersionedName}]]();
+                        ${FieldFroms}
+                        return o;
+                    }
+        Template
+            Name Translator_RecordTo
+            //Parameters: ${Name}, ${VersionedName}, ${FieldTos}
+            Value
+                $String
+                    public [[${Name}]] [[${VersionedName}ToHead]]([[${VersionedName}]] o)
+                    {
+                        var ho = new [[${Name}]]();
+                        ${FieldTos}
+                        return ho;
+                    }
+        Template
+            Name Translator_FieldFrom_Unit
+            //Parameters: ${Name}
+            Value
+                $String
+                    o.[[${Name}]] = new Unit();
+        Template
+            Name Translator_FieldTo_Unit
+            //Parameters: ${Name}
+            Value
+                $String
+                    ho.[[${Name}]] = new Unit();
+        Template
+            Name Translator_FieldFrom_Identity
+            //Parameters: ${Name}
+            Value
+                $String
+                    o.[[${Name}]] = ho.[[${Name}]];
+        Template
+            Name Translator_FieldTo_Identity
+            //Parameters: ${Name}
+            Value
+                $String
+                    ho.[[${Name}]] = o.[[${Name}]];
+        Template
+            Name Translator_FieldFrom_Function
+            //Parameters: ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    o.[[${Name}]] = [[${TypeFriendlyName}FromHead]](ho.[[${Name}]]);
+        Template
+            Name Translator_FieldTo_Function
+            //Parameters: ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    ho.[[${Name}]] = [[${TypeFriendlyName}ToHead]](o.[[${Name}]]);
+        Template
+            Name Translator_TaggedUnionFrom
+            //Parameters: ${VersionedName}, ${TypeString}, ${VersionedTypeString}, ${AlternativeFroms}
+            Value
+                $String
+                    public [[${VersionedTypeString}]] [[${VersionedName}FromHead]]([[${TypeString}]] ho)
+                    {
+                        ${AlternativeFroms}
+                        throw new InvalidOperationException();
+                    }
+        Template
+            Name Translator_TaggedUnionTo
+            //Parameters: ${VersionedName}, ${TypeString}, ${VersionedTypeString}, ${AlternativeTos}
+            Value
+                $String
+                    public [[$${TypeString}]] [[${VersionedName}ToHead]]([[${VersionedTypeString}]] o)
+                    {
+                        ${AlternativeTos}
+                        throw new InvalidOperationException();
+                    }
+        Template
+            Name Translator_AlternativeFrom_Unit
+            //Parameters: ${VersionedTypeString}, ${Name}
+            Value
+                $String
+                    if (ho.[[On${Name}]])
+                    {
+                        return [[${VersionedTypeString}.Create${Name}]]();
+                    }
+        Template
+            Name Translator_AlternativeTo_Unit
+            //Parameters: ${TypeString}, ${Name}
+            Value
+                $String
+                    if (o.[[On${Name}]])
+                    {
+                        return [[${TypeString}.Create${Name}]]();
+                    }
+        Template
+            Name Translator_AlternativeFrom_Identity
+            //Parameters: ${VersionedTypeString}, ${Name}
+            Value
+                $String
+                    if (ho.[[On${Name}]])
+                    {
+                        return [[${VersionedTypeString}.Create${Name}]](ho.[[${Name}]]);
+                    }
+        Template
+            Name Translator_AlternativeTo_Identity
+            //Parameters: ${TypeString}, ${Name}
+            Value
+                $String
+                    if (o.[[On${Name}]])
+                    {
+                        return [[${TypeString}.Create${Name}]](o.[[${Name}]]);
+                    }
+        Template
+            Name Translator_AlternativeFrom_Function
+            //Parameters: ${VersionedTypeString}, ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    if (ho.[[On${Name}]])
+                    {
+                        return [[${VersionedTypeString}.Create${Name}]]([[${TypeFriendlyName}FromHead]](ho.[[${Name}]]));
+                    }
+        Template
+            Name Translator_AlternativeTo_Function
+            //Parameters: ${TypeString}, ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    if (o.[[On${Name}]])
+                    {
+                        return [[${TypeString}.Create${Name}]]([[${TypeFriendlyName}ToHead]](o.[[${Name}]]));
+                    }
+        Template
+            Name Translator_EnumFrom
+            //Parameters: ${Name}, ${VersionedName}, ${LiteralFroms}
+            Value
+                $String
+                    public [[${VersionedName}]] [[${VersionedName}FromHead]]([[${Name}]] ho)
+                    {
+                        ${LiteralFroms}
+                        throw new InvalidOperationException();
+                    }
+        Template
+            Name Translator_EnumTo
+            //Parameters: ${Name}, ${VersionedName}, ${LiteralTos}
+            Value
+                $String
+                    public [[${Name}]] [[${VersionedName}ToHead]]([[${VersionedName}]] o)
+                    {
+                        ${LiteralTos}
+                        throw new InvalidOperationException();
+                    }
+        Template
+            Name Translator_LiteralFrom
+            //Parameters: ${TaggedUnionName}, ${VersionedTaggedUnionName}, ${Name}
+            Value
+                $String
+                    if (ho == [[${TaggedUnionName}.${Name}]])
+                    {
+                        return [[${VersionedTaggedUnionName}.${Name}]];
+                    }
+        Template
+            Name Translator_LiteralTo
+            //Parameters: ${TaggedUnionName}, ${VersionedTaggedUnionName}, ${Name}
+            Value
+                $String
+                    if (o == [[${VersionedTaggedUnionName}.${Name}]])
+                    {
+                        return [[${TaggedUnionName}.${Name}]];
+                    }
+        Template
+            Name Translator_ListFrom
+            //Parameters: ${VersionedTypeFriendlyName}, ${TypeString}, ${VersionedTypeString}, ${VersionedElementTypeFriendlyName}
+            Value
+                $String
+                    public [[${VersionedTypeString}]] [[${VersionedTypeFriendlyName}FromHead]]([[${TypeString}]] ho)
+                    {
+                        return ho.Select(he => [[${VersionedElementTypeFriendlyName}FromHead]](he)).ToList();
+                    }
+        Template
+            Name Translator_ListTo
+            //Parameters: ${VersionedTypeFriendlyName}, ${TypeString}, ${VersionedTypeString}, ${VersionedElementTypeFriendlyName}
+            Value
+                $String
+                    public [[${TypeString}]] [[${VersionedTypeFriendlyName}ToHead]]([[${VersionedTypeString}]] o)
+                    {
+                        return o.Select(e => [[${VersionedElementTypeFriendlyName}ToHead]](e)).ToList();
+                    }
+        Template
+            Name Translator_SetFrom
+            //Parameters: ${VersionedTypeFriendlyName}, ${TypeString}, ${VersionedTypeString}, ${VersionedElementTypeFriendlyName}
+            Value
+                $String
+                    public [[${VersionedTypeString}]] [[${VersionedTypeFriendlyName}FromHead]]([[${TypeString}]] ho)
+                    {
+                        return new [[${VersionedTypeString}]](ho.Select(he => [[${VersionedElementTypeFriendlyName}FromHead]](he)));
+                    }
+        Template
+            Name Translator_SetTo
+            //Parameters: ${VersionedTypeFriendlyName}, ${TypeString}, ${VersionedTypeString}, ${VersionedElementTypeFriendlyName}
+            Value
+                $String
+                    public [[${TypeString}]] [[${VersionedTypeFriendlyName}ToHead]]([[${VersionedTypeString}]] o)
+                    {
+                        return new [[${TypeString}]](o.Select(e => [[${VersionedElementTypeFriendlyName}ToHead]](e)));
+                    }
+        Template
+            Name Translator_MapFrom
+            //Parameters: ${VersionedTypeFriendlyName}, ${TypeString}, ${VersionedTypeString}, ${KeyFrom}, ${ValueFrom}
+            Value
+                $String
+                    public [[${VersionedTypeString}]] [[${VersionedTypeFriendlyName}FromHead]]([[${TypeString}]] ho)
+                    {
+                        var o = new [[${VersionedTypeString}]]();
+                        foreach (var hp in ho)
+                        {
+                            var Key = ${KeyFrom};
+                            var Value = ${ValueFrom};
+                            o.Add(Key, Value);
+                        }
+                        return o;
+                    }
+        Template
+            Name Translator_MapTo
+            //Parameters: ${VersionedTypeFriendlyName}, ${TypeString}, ${VersionedTypeString}, ${KeyTo}, ${ValueTo}
+            Value
+                $String
+                    public [[${TypeString}]] [[${VersionedTypeFriendlyName}ToHead]]([[${VersionedTypeString}]] o)
+                    {
+                        var ho = new [[${TypeString}]]();
+                        foreach (var p in o)
+                        {
+                            var Key = ${KeyTo};
+                            var Value = ${ValueTo};
+                            ho.Add(Key, Value);
+                        }
+                        return ho;
+                    }
+        Template
+            Name Translator_KeyValueFrom_Identity
+            //Parameters: ${Name}
+            Value
+                $String
+                    hp.[[${Name}]]
+        Template
+            Name Translator_KeyValueTo_Identity
+            //Parameters: ${Name}
+            Value
+                $String
+                    p.[[${Name}]]
+        Template
+            Name Translator_KeyValueFrom_Function
+            //Parameters: ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    [[${TypeFriendlyName}FromHead]](hp.[[${Name}]])
+        Template
+            Name Translator_KeyValueTo_Function
+            //Parameters: ${Name}, ${TypeFriendlyName}
+            Value
+                $String
+                    [[${TypeFriendlyName}ToHead]](p.[[${Name}]])
+        Template
+            Name Translator_ClientCommand
+            //Parameters: ${Name}, ${VersionedName}
+            Value
+                $String
+                    public [[${VersionedName}Reply]] [[${VersionedName}]]([[${VersionedName}Request]] r)
+                    {
+                        var HeadRequest = [[${VersionedName}RequestToHead]](r);
+                        var HeadReply = [[${Name}]](HeadRequest);
+                        var Reply = [[${VersionedName}ReplyFromHead]](HeadReply);
+                        return Reply;
+                    }
+        Template
+            Name Translator_ServerCommand
+            //Parameters: ${VersionedName}
+            Value
+                $String
+                    public event Action<[[${VersionedName}Event]]> [[${VersionedName}]];
