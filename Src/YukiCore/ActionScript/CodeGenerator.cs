@@ -140,11 +140,11 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                 {
                     var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new VariableDef[] { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new VariableDef[] { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
                     var GenericKeyValuePairType = new RecordDef { Name = "KeyValuePair", Version = "", GenericParameters = new VariableDef[] { new VariableDef { Name = "TKey", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" }, new VariableDef { Name = "TValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Fields = new VariableDef[] { new VariableDef { Name = "Key", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "TKey" }), Description = "" }, new VariableDef { Name = "Value", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "TValue" }), Description = "" } }, Description = "" };
-                    foreach (var gps in GenericTypeSpecs)
+                    foreach (var gts in GenericTypeSpecs)
                     {
-                        if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                        if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.GenericParameterValues.Length == 1)
                         {
-                            var ElementType = gps.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                            var ElementType = gts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
                             var Name = "Opt" + ElementType.TypeFriendlyName();
                             var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToArray();
                             var tut = new EnumDef { Name = Name + "Tag", Version = "", UnderlyingType = TypeSpec.CreateTypeRef(new TypeRef { Name = "Int", Version = "" }), Literals = Alternatives.Select((a, i) => new LiteralDef { Name = a.Name, Value = i, Description = a.Description }).ToArray(), Description = GenericOptionalType.Description };
@@ -152,10 +152,10 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                             l.Add(GetFile(tut.TypeFriendlyName(), GetEnum(tut)));
                             l.Add(GetFile(tu.TypeFriendlyName(), GetTaggedUnion(tu)));
                         }
-                        else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gps.GenericTypeSpec.GenericParameterValues.Length == 2)
+                        else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gts.GenericTypeSpec.GenericParameterValues.Length == 2)
                         {
-                            var KeyType = gps.GenericTypeSpec.GenericParameterValues[0].TypeSpec;
-                            var ValueType = gps.GenericTypeSpec.GenericParameterValues[1].TypeSpec;
+                            var KeyType = gts.GenericTypeSpec.GenericParameterValues[0].TypeSpec;
+                            var ValueType = gts.GenericTypeSpec.GenericParameterValues[1].TypeSpec;
                             var Name = "KeyValuePairOf" + KeyType.TypeFriendlyName() + "And" + ValueType.TypeFriendlyName();
                             var Fields = GenericKeyValuePairType.Fields.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef && a.Type.GenericParameterRef.Value == "TKey" ? KeyType : a.Type.OnGenericParameterRef && a.Type.GenericParameterRef.Value == "TValue" ? ValueType : a.Type, Description = a.Description }).ToArray();
                             var r = new RecordDef { Name = Name, Version = "", GenericParameters = new VariableDef[] { }, Fields = Fields, Description = GenericOptionalType.Description };

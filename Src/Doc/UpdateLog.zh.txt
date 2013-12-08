@@ -2,6 +2,7 @@
 Yuki.Core, Yuki.Relation:
 整理类型引用闭包计算相关函数。
 去除部分无用参数。
+修改拼写错误。
 Examples:
 修正数据库C++ MySQL示例遗漏更改的问题。
 
