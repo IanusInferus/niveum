@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2013.06.30.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -103,10 +103,10 @@ namespace Yuki.RelationSchema
                     }
                 }
 
-                var ltfRefs = new OS.TupleAndGenericTypeSpecFetcher();
-                ltfRefs.PushTypeDefs(Schema.TypeRefs);
-                var GenericTypeSpecsRefs = ltfRefs.GetGenericTypeSpecs();
-                foreach (var t in GenericTypeSpecsRefs)
+                var scg = ObjectSchema.ObjectSchemaExtensions.GetSchemaClosureGenerator(Schema);
+                var scRef = scg.GetClosure(Schema.TypeRefs, new OS.TypeSpec[] { });
+                var GenericTypeSpecRefs = scRef.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
+                foreach (var t in GenericTypeSpecRefs)
                 {
                     if (t.OnGenericTypeSpec)
                     {
@@ -129,10 +129,9 @@ namespace Yuki.RelationSchema
                     }
                 }
 
-                var ltf = new OS.TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Schema.Types);
-                var GenericTypeSpecss = ltf.GetGenericTypeSpecs();
-                foreach (var t in GenericTypeSpecss)
+                var sc = scg.GetClosure(Schema.Types, new OS.TypeSpec[] { });
+                var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
+                foreach (var t in GenericTypeSpecs)
                 {
                     if (t.OnGenericTypeSpec)
                     {

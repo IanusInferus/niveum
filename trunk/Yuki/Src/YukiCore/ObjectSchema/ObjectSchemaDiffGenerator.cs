@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaDiffGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构差异生成器
-//  Version:     2013.12.05.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -39,8 +39,8 @@ namespace Yuki.ObjectSchema
 
             Func<Schema, Func<TypeDef, Schema>> GetGen = s =>
             {
-                var g = s.GetSubSchemaGenerator();
-                return t => g(new TypeDef[] { t }, new TypeSpec[] { });
+                var g = s.GetSchemaClosureGenerator();
+                return t => g.GetSubSchema(new TypeDef[] { t }, new TypeSpec[] { });
             };
 
             var LeftGen = GetGen(Left);

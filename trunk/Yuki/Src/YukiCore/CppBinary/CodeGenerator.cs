@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2013.12.07.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -37,7 +37,7 @@ namespace Yuki.ObjectSchema.CppBinary
             private Cpp.Common.CodeGenerator.Writer InnerWriter;
 
             private Schema Schema;
-            private Func<IEnumerable<TypeDef>, IEnumerable<TypeSpec>, Schema> SubSchemaGen;
+            private ISchemaClosureGenerator SchemaClosureGenerator;
             private String NamespaceName;
             private UInt64 Hash;
 
@@ -52,9 +52,9 @@ namespace Yuki.ObjectSchema.CppBinary
             public Writer(Schema Schema, String NamespaceName)
             {
                 this.Schema = Schema;
-                this.SubSchemaGen = Schema.GetSubSchemaGenerator();
+                this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.NamespaceName = NamespaceName;
-                this.Hash = SubSchemaGen(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
+                this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
 
                 InnerWriter = new Cpp.Common.CodeGenerator.Writer(Schema, NamespaceName);
 
@@ -72,7 +72,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 var Header = GetHeader();
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
                 var Primitives = GetPrimitives();
-                var ComplexTypes = GetComplexTypes(Schema);
+                var ComplexTypes = GetComplexTypes();
                 var Contents = ComplexTypes;
                 Contents = WrapContents(NamespaceName, Contents);
                 return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
@@ -123,7 +123,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("BinarySerializationServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
@@ -136,7 +136,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("BinarySerializationServer_ServerCommand").Substitute("CommandName", c.ServerCommand.Name.Escape()).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
@@ -154,7 +154,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("BinarySerializationClient_ApplicationClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
                     }
                 }
@@ -167,23 +167,23 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("BinarySerializationClient_ServerCommand").Substitute("CommandName", c.ServerCommand.Name.Escape()).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
                 return l.ToArray();
             }
 
-            public String[] GetBinaryTranslator(TypeDef[] Types)
+            public String[] GetBinaryTranslator()
             {
-                return GetTemplate("BinaryTranslator").Substitute("Serializers", GetBinaryTranslatorSerializers(Types));
+                return GetTemplate("BinaryTranslator").Substitute("Serializers", GetBinaryTranslatorSerializers());
             }
 
-            public String[] GetBinaryTranslatorSerializers(TypeDef[] Types)
+            public String[] GetBinaryTranslatorSerializers()
             {
                 List<String> l = new List<String>();
 
-                foreach (var c in Types)
+                foreach (var c in Schema.TypeRefs.Concat(Schema.Types))
                 {
                     if (c.GenericParameters().Count() != 0)
                     {
@@ -279,10 +279,10 @@ namespace Yuki.ObjectSchema.CppBinary
                     l.Add("");
                 }
 
-                var ltf = new TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Types);
-                var Tuples = ltf.GetTuples();
-                var GenericTypeSpecs = ltf.GetGenericTypeSpecs();
+                var scg = Schema.GetSchemaClosureGenerator();
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
+                var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
 
                 foreach (var t in Tuples)
                 {
@@ -485,7 +485,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 return GetTemplate("BinaryTranslator_Map").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l, true)).Substitute("KeyTypeFriendlyName", gp[0].TypeSpec.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", gp[1].TypeSpec.TypeFriendlyName());
             }
 
-            public String[] GetComplexTypes(Schema Schema)
+            public String[] GetComplexTypes()
             {
                 List<String> l = new List<String>();
 
@@ -506,7 +506,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 l.AddRange(GetTemplate("Streams"));
                 l.Add("");
 
-                l.AddRange(GetBinaryTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray()));
+                l.AddRange(GetBinaryTranslator());
                 l.Add("");
 
                 if (cl.Count > 0)

@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2013.12.05.
+//  Version:     2013.12.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,6 +23,18 @@ using Firefly.Texting.TreeFormat;
 
 namespace Yuki.ObjectSchema
 {
+    public class SchemaClosure
+    {
+        public List<TypeDef> TypeDefs;
+        public List<TypeSpec> TypeSpecs;
+    }
+    public interface ISchemaClosureGenerator
+    {
+        void Mark(IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs);
+        SchemaClosure GetClosure(IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs);
+        Schema GetSubSchema(IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs);
+    }
+
     public static class ObjectSchemaExtensions
     {
         public static IEnumerable<KeyValuePair<String, TypeDef>> GetMap(this Schema s)
@@ -223,154 +235,185 @@ namespace Yuki.ObjectSchema
             return new Schema { Types = Types.Select(t => t.Current).ToArray(), TypeRefs = TypeRefs.Select(t => t.Current).ToArray(), Imports = s.Imports.ToArray(), TypePaths = TypePaths };
         }
 
-        private class SubSchemaGenerator
+        private class SchemaClosureGenerator : ISchemaClosureGenerator
         {
             private Schema s;
             private Dictionary<String, TypeDef> Types;
-            public SubSchemaGenerator(Schema s)
+            public SchemaClosureGenerator(Schema s)
             {
                 this.s = s;
                 Types = s.GetMap().ToDictionary(t => t.Key, t => t.Value, StringComparer.OrdinalIgnoreCase);
             }
 
-            public Schema Generate(IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs)
+            private class Marker
             {
-                var m = new Marker { Types = Types };
+                public Dictionary<String, TypeDef> SchemaTypes;
+                public List<TypeDef> TypeDefs = new List<TypeDef>();
+                public HashSet<TypeDef> TypeDefSet = new HashSet<TypeDef>();
+                public List<TypeSpec> TypeSpecs = new List<TypeSpec>();
+                public HashSet<String> TypeSpecSet = new HashSet<String>();
+                public void Mark(TypeDef t)
+                {
+                    if (TypeDefSet.Contains(t)) { return; }
+                    TypeDefs.Add(t);
+                    TypeDefSet.Add(t);
+                    switch (t._Tag)
+                    {
+                        case TypeDefTag.Primitive:
+                            foreach (var gp in t.Primitive.GenericParameters)
+                            {
+                                MarkAndGetTypeString(gp.Type);
+                            }
+                            break;
+                        case TypeDefTag.Alias:
+                            foreach (var gp in t.Alias.GenericParameters)
+                            {
+                                MarkAndGetTypeString(gp.Type);
+                            }
+                            MarkAndGetTypeString(t.Alias.Type);
+                            break;
+                        case TypeDefTag.Record:
+                            foreach (var gp in t.Record.GenericParameters)
+                            {
+                                MarkAndGetTypeString(gp.Type);
+                            }
+                            foreach (var f in t.Record.Fields)
+                            {
+                                MarkAndGetTypeString(f.Type);
+                            }
+                            break;
+                        case TypeDefTag.TaggedUnion:
+                            foreach (var gp in t.TaggedUnion.GenericParameters)
+                            {
+                                MarkAndGetTypeString(gp.Type);
+                            }
+                            foreach (var a in t.TaggedUnion.Alternatives)
+                            {
+                                MarkAndGetTypeString(a.Type);
+                            }
+                            break;
+                        case TypeDefTag.Enum:
+                            MarkAndGetTypeString(t.Enum.UnderlyingType);
+                            break;
+                        case TypeDefTag.ClientCommand:
+                            foreach (var p in t.ClientCommand.InParameters)
+                            {
+                                MarkAndGetTypeString(p.Type);
+                            }
+                            foreach (var p in t.ClientCommand.OutParameters)
+                            {
+                                MarkAndGetTypeString(p.Type);
+                            }
+                            break;
+                        case TypeDefTag.ServerCommand:
+                            foreach (var p in t.ServerCommand.OutParameters)
+                            {
+                                MarkAndGetTypeString(p.Type);
+                            }
+                            break;
+                        default:
+                            throw new InvalidOperationException();
+                    }
+                }
+                public String MarkAndGetTypeString(TypeSpec t)
+                {
+                    String TypeString;
+                    switch (t._Tag)
+                    {
+                        case TypeSpecTag.TypeRef:
+                            var VersionedName = t.TypeRef.VersionedName();
+                            if (SchemaTypes.ContainsKey(VersionedName))
+                            {
+                                Mark(SchemaTypes[VersionedName]);
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException(String.Format("TypeNotExist: {0}", VersionedName));
+                            }
+                            TypeString = VersionedName;
+                            break;
+                        case TypeSpecTag.GenericParameterRef:
+                            TypeString = t.GenericParameterRef.Value;
+                            break;
+                        case TypeSpecTag.Tuple:
+                            TypeString = "Tuple<" + String.Join(", ", t.Tuple.Types.Select(tt => MarkAndGetTypeString(tt)).ToArray()) + ">";
+                            break;
+                        case TypeSpecTag.GenericTypeSpec:
+                            TypeString = MarkAndGetTypeString(t.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", t.GenericTypeSpec.GenericParameterValues.Select(p => MarkAndGetTypeString(p)).ToArray()) + ">";
+                            break;
+                        default:
+                            throw new InvalidOperationException();
+                    }
+                    if (!TypeSpecSet.Contains(TypeString))
+                    {
+                        TypeSpecs.Add(t);
+                        TypeSpecSet.Add(TypeString);
+                    }
+                    return TypeString;
+                }
+                public String MarkAndGetTypeString(GenericParameterValue Value)
+                {
+                    if (Value.OnLiteral)
+                    {
+                        return Value.Literal.Replace(@"\", @"\\").Replace("<", @"\<").Replace(">", @"\>").Replace(",", @"\,");
+                    }
+                    else if (Value.OnTypeSpec)
+                    {
+                        return MarkAndGetTypeString(Value.TypeSpec);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
+            }
+
+            private Marker CreateMarker(IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs)
+            {
+                var m = new Marker { SchemaTypes = Types };
                 foreach (var t in TypeDefs)
                 {
                     if (!(Types.ContainsKey(t.VersionedName()) && Types[t.VersionedName()] == t))
                     {
-                        throw new InvalidOperationException("TypeDefNotInSchema");
+                        throw new InvalidOperationException("TypeDefNotInSchema: " + t.VersionedName());
                     }
                     m.Mark(t);
                 }
                 foreach (var t in TypeSpecs)
                 {
-                    m.Mark(t);
+                    m.MarkAndGetTypeString(t);
                 }
-
-                var MarkedNames = new HashSet<String>(Types.Where(p => m.Marked.Contains(p.Value)).Select(p => p.Key), StringComparer.OrdinalIgnoreCase);
-
-                return new Schema { Types = s.Types.Where(t => m.Marked.Contains(t)).ToArray(), TypeRefs = s.TypeRefs.Where(t => m.Marked.Contains(t)).ToArray(), Imports = s.Imports, TypePaths = s.TypePaths.Where(tp => MarkedNames.Contains(tp.Name)).ToArray() };
+                return m;
+            }
+            public void Mark(IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs)
+            {
+                CreateMarker(TypeDefs, TypeSpecs);
+            }
+            public SchemaClosure GetClosure(IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs)
+            {
+                var m = CreateMarker(TypeDefs, TypeSpecs);
+                return new SchemaClosure { TypeDefs = m.TypeDefs.ToList(), TypeSpecs = m.TypeSpecs.ToList() };
+            }
+            public Schema GetSubSchema(IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs)
+            {
+                var m = CreateMarker(TypeDefs, TypeSpecs);
+                var TypeDefSet = m.TypeDefSet;
+                var MarkedNames = new HashSet<String>(m.TypeDefs.Select(t => t.VersionedName()));
+                return new Schema { Types = s.Types.Where(t => TypeDefSet.Contains(t)).ToArray(), TypeRefs = s.TypeRefs.Where(t => TypeDefSet.Contains(t)).ToArray(), Imports = s.Imports, TypePaths = s.TypePaths.Where(tp => MarkedNames.Contains(tp.Name)).ToArray() };
             }
         }
-        public static Func<IEnumerable<TypeDef>, IEnumerable<TypeSpec>, Schema> GetSubSchemaGenerator(this Schema s)
+        public static ISchemaClosureGenerator GetSchemaClosureGenerator(this Schema s)
         {
-            return (TypeDefs, TypeSpecs) => (new SubSchemaGenerator(s)).Generate(TypeDefs, TypeSpecs);
+            return new SchemaClosureGenerator(s);
         }
         public static Schema GetSubSchema(this Schema s, IEnumerable<TypeDef> TypeDefs, IEnumerable<TypeSpec> TypeSpecs)
         {
-            return s.GetSubSchemaGenerator()(TypeDefs, TypeSpecs);
+            return s.GetSchemaClosureGenerator().GetSubSchema(TypeDefs, TypeSpecs);
         }
 
         public static Schema Reduce(this Schema s)
         {
             return GetSubSchema(s, s.TypeRefs.Concat(s.Types).Where(t => t.OnClientCommand || t.OnServerCommand), new TypeSpec[] { });
-        }
-
-        private class Marker
-        {
-            public Dictionary<String, TypeDef> Types;
-            public HashSet<TypeDef> Marked = new HashSet<TypeDef>();
-            public void Mark(TypeDef t)
-            {
-                if (Marked.Contains(t)) { return; }
-                Marked.Add(t);
-                switch (t._Tag)
-                {
-                    case TypeDefTag.Primitive:
-                        foreach (var gp in t.Primitive.GenericParameters)
-                        {
-                            Mark(gp.Type);
-                        }
-                        break;
-                    case TypeDefTag.Alias:
-                        foreach (var gp in t.Alias.GenericParameters)
-                        {
-                            Mark(gp.Type);
-                        }
-                        Mark(t.Alias.Type);
-                        break;
-                    case TypeDefTag.Record:
-                        foreach (var gp in t.Record.GenericParameters)
-                        {
-                            Mark(gp.Type);
-                        }
-                        foreach (var f in t.Record.Fields)
-                        {
-                            Mark(f.Type);
-                        }
-                        break;
-                    case TypeDefTag.TaggedUnion:
-                        foreach (var gp in t.TaggedUnion.GenericParameters)
-                        {
-                            Mark(gp.Type);
-                        }
-                        foreach (var a in t.TaggedUnion.Alternatives)
-                        {
-                            Mark(a.Type);
-                        }
-                        break;
-                    case TypeDefTag.Enum:
-                        Mark(t.Enum.UnderlyingType);
-                        break;
-                    case TypeDefTag.ClientCommand:
-                        foreach (var p in t.ClientCommand.InParameters)
-                        {
-                            Mark(p.Type);
-                        }
-                        foreach (var p in t.ClientCommand.OutParameters)
-                        {
-                            Mark(p.Type);
-                        }
-                        break;
-                    case TypeDefTag.ServerCommand:
-                        foreach (var p in t.ServerCommand.OutParameters)
-                        {
-                            Mark(p.Type);
-                        }
-                        break;
-                    default:
-                        throw new InvalidOperationException();
-                }
-            }
-            public void Mark(TypeSpec t)
-            {
-                switch (t._Tag)
-                {
-                    case TypeSpecTag.TypeRef:
-                        var VersionedName = t.TypeRef.VersionedName();
-                        if (Types.ContainsKey(VersionedName))
-                        {
-                            Mark(Types[VersionedName]);
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException(String.Format("TypeNotExist: {0}", VersionedName));
-                        }
-                        break;
-                    case TypeSpecTag.GenericParameterRef:
-                        break;
-                    case TypeSpecTag.Tuple:
-                        foreach (var ts in t.Tuple.Types)
-                        {
-                            Mark(ts);
-                        }
-                        break;
-                    case TypeSpecTag.GenericTypeSpec:
-                        Mark(t.GenericTypeSpec.TypeSpec);
-                        foreach (var gpv in t.GenericTypeSpec.GenericParameterValues)
-                        {
-                            if (gpv.OnTypeSpec)
-                            {
-                                Mark(gpv.TypeSpec);
-                            }
-                        }
-                        break;
-                    default:
-                        throw new InvalidOperationException();
-                }
-            }
         }
 
         public static void Verify(this Schema s)
@@ -430,11 +473,8 @@ namespace Yuki.ObjectSchema
         {
             var Types = s.GetMap().ToDictionary(t => t.Key, t => t.Value, StringComparer.OrdinalIgnoreCase);
 
-            var m = new Marker { Types = Types };
-            foreach (var t in s.Types)
-            {
-                m.Mark(t);
-            }
+            var Gen = new SchemaClosureGenerator(s);
+            Gen.Mark(s.Types, new TypeSpec[] { });
         }
 
         private static void CheckDuplicatedNames<T>(IEnumerable<T> Values, Func<T, String> NameSelector, Func<T, String> ErrorMessageSelector)

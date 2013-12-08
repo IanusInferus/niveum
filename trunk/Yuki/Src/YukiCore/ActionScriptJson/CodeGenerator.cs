@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0 JSON通讯代码生成器
-//  Version:     2013.12.07.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -34,7 +34,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
             private ActionScript.Common.CodeGenerator.Writer InnerWriter;
 
             private Schema Schema;
-            private Func<IEnumerable<TypeDef>, IEnumerable<TypeSpec>, Schema> SubSchemaGen;
+            private ISchemaClosureGenerator SchemaClosureGenerator;
             private String PackageName;
             private UInt64 Hash;
 
@@ -49,9 +49,9 @@ namespace Yuki.ObjectSchema.ActionScriptJson
             public Writer(Schema Schema, String PackageName)
             {
                 this.Schema = Schema;
-                this.SubSchemaGen = Schema.GetSubSchemaGenerator();
+                this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.PackageName = PackageName;
-                this.Hash = SubSchemaGen(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
+                this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
 
                 InnerWriter = new ActionScript.Common.CodeGenerator.Writer(Schema, PackageName);
 
@@ -68,7 +68,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
             {
                 List<ActionScript.FileResult> l = new List<ActionScript.FileResult>();
 
-                l.Add(GetFile("JsonTranslator", GetJsonTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray())));
+                l.Add(GetFile("JsonTranslator", GetJsonTranslator()));
 
                 var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Where(t => t.Version() == "").ToArray();
                 if (Commands.Length > 0)
@@ -97,16 +97,16 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                 return InnerWriter.GetXmlComment(Description);
             }
 
-            public String[] GetJsonTranslator(TypeDef[] Types)
+            public String[] GetJsonTranslator()
             {
-                return GetTemplate("JsonTranslator").Substitute("Serializers", GetJsonTranslatorSerializers(Types));
+                return GetTemplate("JsonTranslator").Substitute("Serializers", GetJsonTranslatorSerializers());
             }
 
-            public String[] GetJsonTranslatorSerializers(TypeDef[] Types)
+            public String[] GetJsonTranslatorSerializers()
             {
                 List<String> l = new List<String>();
 
-                foreach (var c in Types)
+                foreach (var c in Schema.TypeRefs.Concat(Schema.Types))
                 {
                     if (c.GenericParameters().Count() != 0)
                     {
@@ -147,10 +147,10 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                     l.Add("");
                 }
 
-                var ltf = new TupleAndGenericTypeSpecFetcher();
-                ltf.PushTypeDefs(Types);
-                var Tuples = ltf.GetTuples();
-                var GenericTypeSpecs = ltf.GetGenericTypeSpecs();
+                var scg = Schema.GetSchemaClosureGenerator();
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
+                var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
 
                 foreach (var t in Tuples)
                 {
@@ -306,7 +306,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                 List<String> l = new List<String>();
                 foreach (var c in ServerCommands)
                 {
-                    var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                    var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                     l.AddRange(GetTemplate("JsonSerializationClient_ServerCommandHandle").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                 }
                 return l.ToArray();
@@ -316,7 +316,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                 List<String> l = new List<String>();
                 foreach (var c in ClientCommands)
                 {
-                    var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                    var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                     l.AddRange(GetTemplate("JsonSerializationClient_ClientCommandHandle").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                 }
                 return l.ToArray();
@@ -340,7 +340,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandHash = (UInt32)(SubSchemaGen(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("JsonSerializationClient_ClientCommand").Substitute("Name", c.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ClientCommandIndex", k.ToInvariantString()));
                         k += 1;
                     }
