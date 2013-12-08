@@ -111,8 +111,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     return GetTemplate("EventPump_ServerCommandInitializer_HeadOnly").Substitute("Name", Name);
                 }
 
-                var SortedServerCommands = ServerCommands.OrderByDescending(sc => new NumericString(sc.Version)).ToList();
-                var Versions = SortedServerCommands.SelectMany(sc => GetTemplate("EventPump_ServerCommandInitializer_Multiple_Version").Substitute("VersionedName", sc.VersionedName()).Substitute("Version", sc.Version)).ToArray();
+                var SortedServerCommands = ServerCommands.Where(sc => sc.Version != "").OrderByDescending(sc => new NumericString(sc.Version)).ToList();
+                var Versions = SortedServerCommands.SelectMany(sc => GetTemplate("EventPump_ServerCommandInitializer_Multiple_Version").Substitute("VersionedTypeFriendlyName", sc.TypeFriendlyName()).Substitute("Version", sc.Version)).ToArray();
                 return GetTemplate("EventPump_ServerCommandInitializer_Multiple").Substitute("Name", Name).Substitute("Versions", Versions);
             }
             public class NumericString : IComparable<NumericString>
@@ -428,6 +428,31 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 }
                 return false;
             }
+            private Boolean IsExistentType(TypeSpec ts)
+            {
+                if (ts.OnTypeRef)
+                {
+                    var r = ts.TypeRef;
+                    return VersionedNameToType.ContainsKey(r.VersionedName());
+                }
+                else if (ts.OnGenericParameterRef)
+                {
+                    return true;
+                }
+                else if (ts.OnTuple)
+                {
+                    return ts.Tuple.Types.All(t => IsExistentType(t));
+                }
+                else if (ts.OnGenericTypeSpec)
+                {
+                    var gts = ts.GenericTypeSpec;
+                    return IsExistentType(gts.TypeSpec) && gts.GenericParameterValues.All(gpv => !gpv.OnTypeSpec || IsExistentType(gpv.TypeSpec));
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
 
             public void FillTranslatorAliasFrom(AliasDef a, List<String> l)
             {
@@ -444,11 +469,11 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedName = a.TypeFriendlyName();
                 if (aHead == null)
                 {
-                    FillTranslatorRecordFrom(Name, VersionedName, new VariableDef[] { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new VariableDef[] { }, l);
+                    FillTranslatorRecordFrom(Name, VersionedName, new VariableDef[] { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new VariableDef[] { }, l, true);
                 }
                 else
                 {
-                    FillTranslatorRecordFrom(Name, VersionedName, new VariableDef[] { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new VariableDef[] { new VariableDef { Name = "Value", Type = aHead.Type, Description = "" } }, l);
+                    FillTranslatorRecordFrom(Name, VersionedName, new VariableDef[] { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new VariableDef[] { new VariableDef { Name = "Value", Type = aHead.Type, Description = "" } }, l, false);
                 }
             }
             public void FillTranslatorAliasTo(AliasDef a, List<String> l)
@@ -466,11 +491,11 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedName = a.TypeFriendlyName();
                 if (aHead == null)
                 {
-                    FillTranslatorRecordTo(Name, VersionedName, new VariableDef[] { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new VariableDef[] { }, l);
+                    FillTranslatorRecordTo(Name, VersionedName, new VariableDef[] { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new VariableDef[] { }, l, true);
                 }
                 else
                 {
-                    FillTranslatorRecordTo(Name, VersionedName, new VariableDef[] { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new VariableDef[] { new VariableDef { Name = "Value", Type = aHead.Type, Description = "" } }, l);
+                    FillTranslatorRecordTo(Name, VersionedName, new VariableDef[] { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new VariableDef[] { new VariableDef { Name = "Value", Type = aHead.Type, Description = "" } }, l, false);
                 }
             }
             public void FillTranslatorRecordFrom(RecordDef r, List<String> l)
@@ -488,18 +513,18 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedName = r.TypeFriendlyName();
                 if (aHead == null)
                 {
-                    FillTranslatorRecordFrom(Name, VersionedName, r.Fields, new VariableDef[] { }, l);
+                    FillTranslatorRecordFrom(Name, VersionedName, r.Fields, new VariableDef[] { }, l, true);
                 }
                 else
                 {
-                    FillTranslatorRecordFrom(Name, VersionedName, r.Fields, aHead.Fields, l);
+                    FillTranslatorRecordFrom(Name, VersionedName, r.Fields, aHead.Fields, l, false);
                 }
             }
-            public void FillTranslatorRecordFrom(String Name, String VersionedName, VariableDef[] Fields, VariableDef[] HeadFields, List<String> l)
+            public void FillTranslatorRecordFrom(String Name, String VersionedName, VariableDef[] Fields, VariableDef[] HeadFields, List<String> l, Boolean InitialHasError)
             {
                 var FieldFroms = new List<String>();
                 var d = HeadFields.ToDictionary(f => f.Name);
-                var HasError = false;
+                var HasError = InitialHasError;
                 foreach (var f in Fields)
                 {
                     if (f.Type.OnTypeRef && (f.Type.TypeRef.Name == "Unit") && f.Type.TypeRef.Version == "")
@@ -546,18 +571,18 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedName = r.TypeFriendlyName();
                 if (aHead == null)
                 {
-                    FillTranslatorRecordTo(Name, VersionedName, r.Fields, new VariableDef[] { }, l);
+                    FillTranslatorRecordTo(Name, VersionedName, r.Fields, new VariableDef[] { }, l, true);
                 }
                 else
                 {
-                    FillTranslatorRecordTo(Name, VersionedName, r.Fields, aHead.Fields, l);
+                    FillTranslatorRecordTo(Name, VersionedName, r.Fields, aHead.Fields, l, false);
                 }
             }
-            public void FillTranslatorRecordTo(String Name, String VersionedName, VariableDef[] Fields, VariableDef[] HeadFields, List<String> l)
+            public void FillTranslatorRecordTo(String Name, String VersionedName, VariableDef[] Fields, VariableDef[] HeadFields, List<String> l, Boolean InitialHasError)
             {
                 var FieldTos = new List<String>();
                 var d = Fields.ToDictionary(f => f.Name);
-                var HasError = false;
+                var HasError = InitialHasError;
                 foreach (var fHead in HeadFields)
                 {
                     if (fHead.Type.OnTypeRef && (fHead.Type.TypeRef.Name == "Unit") && fHead.Type.TypeRef.Version == "")
@@ -570,12 +595,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                         var f = d[fHead.Name];
                         if (IsSameType(f.Type, fHead.Type, false))
                         {
-                            FieldTos.AddRange(GetTemplate("Translator_FieldTo_Identity").Substitute("Name", fHead.Name));
+                            FieldTos.AddRange(GetTemplate("Translator_FieldTo_Identity").Substitute("Name", f.Name));
                             continue;
                         }
                         else if (IsSameType(f.Type, fHead.Type, true))
                         {
-                            FieldTos.AddRange(GetTemplate("Translator_FieldTo_Function").Substitute("Name", fHead.Name).Substitute("TypeFriendlyName", f.Type.TypeFriendlyName()));
+                            FieldTos.AddRange(GetTemplate("Translator_FieldTo_Function").Substitute("Name", f.Name).Substitute("TypeFriendlyName", f.Type.TypeFriendlyName()));
                             continue;
                         }
                     }
@@ -604,28 +629,28 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedName = tu.TypeFriendlyName();
                 if (tuHead == null)
                 {
-                    FillTranslatorTaggedUnionFrom(VersionedName, Name, VersionedName, tu.Alternatives, new VariableDef[] { }, l);
+                    FillTranslatorTaggedUnionFrom(VersionedName, Name, VersionedName, tu.Alternatives, new VariableDef[] { }, l, true);
                 }
                 else
                 {
-                    FillTranslatorTaggedUnionFrom(VersionedName, Name, VersionedName, tu.Alternatives, tuHead.Alternatives, l);
+                    FillTranslatorTaggedUnionFrom(VersionedName, Name, VersionedName, tu.Alternatives, tuHead.Alternatives, l, false);
                 }
             }
-            public void FillTranslatorTaggedUnionFrom(String VersionedName, String TypeString, String VersionedTypeString, VariableDef[] Alternatives, VariableDef[] HeadAlternatives, List<String> l)
+            public void FillTranslatorTaggedUnionFrom(String VersionedName, String TypeString, String VersionedTypeString, VariableDef[] Alternatives, VariableDef[] HeadAlternatives, List<String> l, Boolean InitialHasError)
             {
                 var AlternativeFroms = new List<String>();
-                var d = HeadAlternatives.ToDictionary(a => a.Name);
-                var HasError = false;
-                foreach (var a in Alternatives)
+                var d = Alternatives.ToDictionary(a => a.Name);
+                var HasError = InitialHasError;
+                foreach (var aHead in HeadAlternatives)
                 {
-                    if (d.ContainsKey(a.Name))
+                    if (d.ContainsKey(aHead.Name))
                     {
+                        var a = d[aHead.Name];
                         if (a.Type.OnTypeRef && (a.Type.TypeRef.Name == "Unit") && a.Type.TypeRef.Version == "")
                         {
                             AlternativeFroms.AddRange(GetTemplate("Translator_AlternativeFrom_Unit").Substitute("VersionedTypeString", VersionedTypeString).Substitute("Name", a.Name));
                             continue;
                         }
-                        var aHead = d[a.Name];
                         if (IsSameType(a.Type, aHead.Type, false))
                         {
                             AlternativeFroms.AddRange(GetTemplate("Translator_AlternativeFrom_Identity").Substitute("VersionedTypeString", VersionedTypeString).Substitute("Name", a.Name));
@@ -637,7 +662,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                             continue;
                         }
                     }
-                    AlternativeFroms.AddRange(GetTemplate("Translator_AlternativeFrom_Identity").Substitute("VersionedTypeString", VersionedTypeString).Substitute("Name", a.Name));
+                    AlternativeFroms.AddRange(GetTemplate("Translator_AlternativeFrom_Identity").Substitute("VersionedTypeString", VersionedTypeString).Substitute("Name", aHead.Name));
                     HasError = true;
                 }
                 var Result = GetTemplate("Translator_TaggedUnionFrom").Substitute("VersionedName", VersionedName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("AlternativeFroms", AlternativeFroms.ToArray());
@@ -662,40 +687,40 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedName = tu.TypeFriendlyName();
                 if (tuHead == null)
                 {
-                    FillTranslatorTaggedUnionTo(VersionedName, Name, VersionedName, tu.Alternatives, new VariableDef[] { }, l);
+                    FillTranslatorTaggedUnionTo(VersionedName, Name, VersionedName, tu.Alternatives, new VariableDef[] { }, l, true);
                 }
                 else
                 {
-                    FillTranslatorTaggedUnionTo(VersionedName, Name, VersionedName, tu.Alternatives, tuHead.Alternatives, l);
+                    FillTranslatorTaggedUnionTo(VersionedName, Name, VersionedName, tu.Alternatives, tuHead.Alternatives, l, false);
                 }
             }
-            public void FillTranslatorTaggedUnionTo(String VersionedName, String TypeString, String VersionedTypeString, VariableDef[] Alternatives, VariableDef[] HeadAlternatives, List<String> l)
+            public void FillTranslatorTaggedUnionTo(String VersionedName, String TypeString, String VersionedTypeString, VariableDef[] Alternatives, VariableDef[] HeadAlternatives, List<String> l, Boolean InitialHasError)
             {
                 var AlternativeTos = new List<String>();
-                var d = Alternatives.ToDictionary(a => a.Name);
-                var HasError = false;
-                foreach (var aHead in HeadAlternatives)
+                var d = HeadAlternatives.ToDictionary(a => a.Name);
+                var HasError = InitialHasError;
+                foreach (var a in Alternatives)
                 {
-                    if (d.ContainsKey(aHead.Name))
+                    if (d.ContainsKey(a.Name))
                     {
+                        var aHead = d[a.Name];
                         if (aHead.Type.OnTypeRef && (aHead.Type.TypeRef.Name == "Unit") && aHead.Type.TypeRef.Version == "")
                         {
-                            AlternativeTos.AddRange(GetTemplate("Translator_AlternativeTo_Unit").Substitute("VersionedTypeString", VersionedTypeString).Substitute("Name", aHead.Name));
+                            AlternativeTos.AddRange(GetTemplate("Translator_AlternativeTo_Unit").Substitute("VersionedTypeString", VersionedTypeString).Substitute("Name", a.Name));
                             continue;
                         }
-                        var a = d[aHead.Name];
                         if (IsSameType(a.Type, aHead.Type, false))
                         {
-                            AlternativeTos.AddRange(GetTemplate("Translator_AlternativeTo_Identity").Substitute("TypeString", TypeString).Substitute("Name", aHead.Name));
+                            AlternativeTos.AddRange(GetTemplate("Translator_AlternativeTo_Identity").Substitute("TypeString", TypeString).Substitute("Name", a.Name));
                             continue;
                         }
                         else if (IsSameType(a.Type, aHead.Type, true))
                         {
-                            AlternativeTos.AddRange(GetTemplate("Translator_AlternativeTo_Function").Substitute("TypeString", TypeString).Substitute("Name", aHead.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
+                            AlternativeTos.AddRange(GetTemplate("Translator_AlternativeTo_Function").Substitute("TypeString", TypeString).Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
                             continue;
                         }
                     }
-                    AlternativeTos.AddRange(GetTemplate("Translator_AlternativeTo_Identity").Substitute("TypeString", TypeString).Substitute("Name", aHead.Name));
+                    AlternativeTos.AddRange(GetTemplate("Translator_AlternativeTo_Identity").Substitute("TypeString", TypeString).Substitute("Name", a.Name));
                     HasError = true;
                 }
                 var Result = GetTemplate("Translator_TaggedUnionTo").Substitute("VersionedName", VersionedName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("AlternativeTos", AlternativeTos.ToArray());
@@ -789,31 +814,32 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 else
                 {
                     l.AddRange(GetTemplate("Translator_ClientCommand").Substitute("Name", Name).Substitute("VersionedName", VersionedName));
-                    FillTranslatorRecordTo(Name + "Request", VersionedName + "Request", c.OutParameters, cHead.OutParameters, l);
-                    FillTranslatorTaggedUnionFrom(VersionedName + "Reply", Name + "Reply", VersionedName + "Reply", c.InParameters, cHead.InParameters, l);
+                    FillTranslatorRecordTo(Name + "Request", VersionedName + "Request", c.OutParameters, cHead.OutParameters, l, false);
+                    FillTranslatorTaggedUnionFrom(VersionedName + "Reply", Name + "Reply", VersionedName + "Reply", c.InParameters, cHead.InParameters, l, false);
                 }
             }
             public void FillTranslatorServerCommand(ServerCommandDef c, List<String> l)
             {
                 var Name = c.Name;
-                ClientCommandDef cHead = null;
+                ServerCommandDef cHead = null;
                 if (VersionedNameToType.ContainsKey(Name))
                 {
                     var tHead = VersionedNameToType[Name];
-                    if (tHead.OnClientCommand)
+                    if (tHead.OnServerCommand)
                     {
-                        cHead = tHead.ClientCommand;
+                        cHead = tHead.ServerCommand;
                     }
                 }
                 var VersionedName = c.TypeFriendlyName();
                 if (cHead == null)
                 {
                     l.AddRange(GetTemplate("Translator_ServerCommand").Substitute("VersionedName", VersionedName));
+                    FillTranslatorRecordFrom(Name + "Event", VersionedName + "Event", c.OutParameters, cHead.OutParameters, l, true);
                 }
                 else
                 {
                     l.AddRange(GetTemplate("Translator_ServerCommand").Substitute("VersionedName", VersionedName));
-                    FillTranslatorRecordFrom(Name + "Event", VersionedName + "Event", c.OutParameters, cHead.OutParameters, l);
+                    FillTranslatorRecordFrom(Name + "Event", VersionedName + "Event", c.OutParameters, cHead.OutParameters, l, false);
                 }
             }
             public void FillTranslatorTupleFrom(TypeSpec ts, List<String> l)
@@ -823,7 +849,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var Fields = ts.Tuple.Types.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
                 var HeadFields = nts.Tuple.Types.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
                 var VersionedName = ts.TypeFriendlyName();
-                FillTranslatorRecordFrom(Name, VersionedName, Fields.ToArray(), HeadFields.ToArray(), l);
+                FillTranslatorRecordFrom(Name, VersionedName, Fields.ToArray(), HeadFields.ToArray(), l, false);
             }
             public void FillTranslatorTupleTo(TypeSpec ts, List<String> l)
             {
@@ -832,7 +858,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var Fields = ts.Tuple.Types.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
                 var HeadFields = nts.Tuple.Types.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
                 var VersionedName = ts.TypeFriendlyName();
-                FillTranslatorRecordTo(Name, VersionedName, Fields.ToArray(), HeadFields.ToArray(), l);
+                FillTranslatorRecordTo(Name, VersionedName, Fields.ToArray(), HeadFields.ToArray(), l, false);
             }
             public void FillTranslatorOptionalFrom(TypeSpec ts, List<String> l)
             {
@@ -852,7 +878,14 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" },
                     new VariableDef { Name = "HasValue", Type = HeadElementTypeSpec, Description = "" }
                 };
-                FillTranslatorTaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, l);
+                if (!IsExistentType(HeadElementTypeSpec))
+                {
+                    FillTranslatorTaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, l, true);
+                }
+                else
+                {
+                    FillTranslatorTaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, l, false);
+                }
             }
             public void FillTranslatorOptionalTo(TypeSpec ts, List<String> l)
             {
@@ -872,7 +905,14 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" },
                     new VariableDef { Name = "HasValue", Type = HeadElementTypeSpec, Description = "" }
                 };
-                FillTranslatorTaggedUnionTo(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, l);
+                if (!IsExistentType(HeadElementTypeSpec))
+                {
+                    FillTranslatorTaggedUnionTo(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, l, true);
+                }
+                else
+                {
+                    FillTranslatorTaggedUnionTo(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, l, false);
+                }
             }
             public void FillTranslatorListFrom(TypeSpec ts, List<String> l)
             {
@@ -883,7 +923,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var ElementTypeSpec = ts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
                 var HeadElementTypeSpec = nts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
                 var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
-                l.AddRange(GetTemplate("Translator_ListFrom").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName));
+                var Result = GetTemplate("Translator_ListFrom").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName);
+                if (!IsExistentType(HeadElementTypeSpec))
+                {
+                    Result = Result.AsComment();
+                }
+                l.AddRange(Result);
             }
             public void FillTranslatorListTo(TypeSpec ts, List<String> l)
             {
@@ -894,7 +939,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var ElementTypeSpec = ts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
                 var HeadElementTypeSpec = nts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
                 var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
-                l.AddRange(GetTemplate("Translator_ListTo").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName));
+                var Result = GetTemplate("Translator_ListTo").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName);
+                if (!IsExistentType(HeadElementTypeSpec))
+                {
+                    Result = Result.AsComment();
+                }
+                l.AddRange(Result);
             }
             public void FillTranslatorSetFrom(TypeSpec ts, List<String> l)
             {
@@ -905,7 +955,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var ElementTypeSpec = ts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
                 var HeadElementTypeSpec = nts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
                 var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
-                l.AddRange(GetTemplate("Translator_SetFrom").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName));
+                var Result = GetTemplate("Translator_SetFrom").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName);
+                if (!IsExistentType(HeadElementTypeSpec))
+                {
+                    Result = Result.AsComment();
+                }
+                l.AddRange(Result);
             }
             public void FillTranslatorSetTo(TypeSpec ts, List<String> l)
             {
@@ -916,7 +971,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var ElementTypeSpec = ts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
                 var HeadElementTypeSpec = nts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
                 var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
-                l.AddRange(GetTemplate("Translator_SetTo").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName));
+                var Result = GetTemplate("Translator_SetTo").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName);
+                if (!IsExistentType(HeadElementTypeSpec))
+                {
+                    Result = Result.AsComment();
+                }
+                l.AddRange(Result);
             }
             public void FillTranslatorMapFrom(TypeSpec ts, List<String> l)
             {
@@ -946,7 +1006,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 {
                     ValueFrom = GetTemplate("Translator_KeyValueFrom_Identity").Substitute("Name", "Value").Substitute("TypeFriendlyName", ValueTypeSpec.TypeFriendlyName());
                 }
-                l.AddRange(GetTemplate("Translator_MapFrom").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("KeyFrom", KeyFrom).Substitute("ValueFrom", ValueFrom));
+                var Result = GetTemplate("Translator_MapFrom").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("KeyFrom", KeyFrom).Substitute("ValueFrom", ValueFrom);
+                if (!(IsExistentType(HeadKeyTypeSpec) && IsExistentType(HeadValueTypeSpec)))
+                {
+                    Result = Result.AsComment();
+                }
+                l.AddRange(Result);
             }
             public void FillTranslatorMapTo(TypeSpec ts, List<String> l)
             {
@@ -976,7 +1041,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 {
                     ValueTo = GetTemplate("Translator_KeyValueTo_Identity").Substitute("Name", "Value").Substitute("TypeFriendlyName", ValueTypeSpec.TypeFriendlyName());
                 }
-                l.AddRange(GetTemplate("Translator_MapTo").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("KeyTo", KeyTo).Substitute("ValueTo", ValueTo));
+                var Result = GetTemplate("Translator_MapTo").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("KeyTo", KeyTo).Substitute("ValueTo", ValueTo);
+                if (!(IsExistentType(HeadKeyTypeSpec) && IsExistentType(HeadValueTypeSpec)))
+                {
+                    Result = Result.AsComment();
+                }
+                l.AddRange(Result);
             }
 
             public String[] GetTemplate(String Name)

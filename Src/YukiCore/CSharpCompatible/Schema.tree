@@ -112,15 +112,15 @@ ObjectSchemaTemplate
                     };
         Template
             Name EventPump_ServerCommandInitializer_Multiple_Version
-            //Parameters: ${VersionedName}, ${Version}
+            //Parameters: ${VersionedTypeFriendlyName}, ${Version}
             Value
                 $String
-                        if (Version == "${Version}")
-                        {
-                            var e = [[${VersionedName}EventFromHead]](eHead);
-                            if ([[${VersionedName}Event]] != null) { [[${VersionedName}Event]](e); }
-                            return;
-                        }
+                    if (Version == "${Version}")
+                    {
+                        var e = [[${VersionedTypeFriendlyName}EventFromHead]](eHead);
+                        if ([[${VersionedTypeFriendlyName}]] != null) { [[${VersionedTypeFriendlyName}]](e); }
+                        return;
+                    }
         Template
             Name Translator_RecordFrom
             //Parameters: ${Name}, ${VersionedName}, ${FieldFroms}
