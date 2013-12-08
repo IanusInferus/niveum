@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2013.12.07.
+//  Version:     2013.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -26,6 +26,7 @@ using Yuki.ObjectSchema.VB;
 using Yuki.ObjectSchema.CSharp;
 using Yuki.ObjectSchema.CSharpBinary;
 using Yuki.ObjectSchema.CSharpJson;
+using Yuki.ObjectSchema.CSharpCompatible;
 using Yuki.ObjectSchema.Java;
 using Yuki.ObjectSchema.JavaBinary;
 using Yuki.ObjectSchema.Cpp;
@@ -291,6 +292,23 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "t2csc")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        ObjectSchemaToCSharpCompatibleCode(args[0], args[1], "");
+                    }
+                    else if (args.Length == 3)
+                    {
+                        ObjectSchemaToCSharpCompatibleCode(args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "t2jv")
                 {
                     var args = opt.Arguments;
@@ -498,6 +516,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2csb:<CsCodePath>[,<NamespaceName>[,<WithFirefly=true>]]");
             Console.WriteLine(@"生成C# JSON通讯类型");
             Console.WriteLine(@"/t2csj:<CsCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"生成C#通讯兼容类型");
+            Console.WriteLine(@"/t2csc:<CsCodePath>,<ClassName>[,<NamespaceName>]");
             Console.WriteLine(@"生成Java类型");
             Console.WriteLine(@"/t2jv:<JavaCodePath>,<ClassName>[,<PackageName>]");
             Console.WriteLine(@"生成Java二进制类型");
@@ -684,6 +704,23 @@ namespace Yuki.SchemaManipulator
         {
             var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCSharpJson(NamespaceName);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToCSharpCompatibleCode(String CsCodePath, String ClassName, String NamespaceName)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ClassName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
