@@ -20,6 +20,7 @@ namespace Server.Services
         {
             public Action<ErrorEvent> Error { get; set; }
             public Action<ErrorCommandEvent> ErrorCommand { get; set; }
+            public Action<ServerShutdownEvent> ServerShutdown { get; set; }
             public Action<MessageReceivedEvent> MessageReceived { get; set; }
             public Action<TestMessageReceivedEvent> TestMessageReceived { get; set; }
         }
@@ -28,6 +29,7 @@ namespace Server.Services
             var ep = new EventPump();
             ep.Error = e => { if (Error != null) { Error(e); } };
             ep.ErrorCommand = e => { if (ErrorCommand != null) { ErrorCommand(e); } };
+            ep.ServerShutdown = e => { if (ServerShutdown != null) { ServerShutdown(e); } };
             ep.MessageReceived = eHead =>
             {
                 var Version = GetVersion();

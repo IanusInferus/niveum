@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2013.11.02.
+//  Version:     2013.12.09.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -258,6 +258,12 @@ namespace Client
 
         public static void ReadLineAndSendLoop(IApplicationClient InnerClient, Boolean UseOld, Object Lockee)
         {
+            var Shutdown = false;
+            InnerClient.ServerShutdown += e =>
+            {
+                Console.WriteLine("服务器已关闭。");
+                Shutdown = true;
+            };
             InnerClient.Error += e =>
             {
                 var m = e.Message;
@@ -266,15 +272,45 @@ namespace Client
             InnerClient.MessageReceived += e => Console.WriteLine(e.Content);
             InnerClient.MessageReceivedAt1 += e =>
             {
-                Console.WriteLine(e.Title);
+                if (e.Title != "")
+                {
+                    Console.WriteLine(e.Title);
+                }
                 foreach (var Line in e.Lines)
                 {
                     Console.WriteLine(Line);
                 }
             };
+            Action<CheckSchemaVersionReply> CheckSchemaVersionHandler = r =>
+            {
+                if (r.OnHead)
+                {
+                }
+                else if (r.OnSupported)
+                {
+                    Console.WriteLine("客户端不是最新版本，但服务器可以支持。");
+                }
+                else if (r.OnNotSupported)
+                {
+                    Console.WriteLine("客户端版本不受支持。");
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            };
+            if (UseOld)
+            {
+                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = "98301A7C877EDA6E" }, CheckSchemaVersionHandler);
+            }
+            else
+            {
+                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = InnerClient.Hash.ToString("X16") }, CheckSchemaVersionHandler);
+            }
             while (true)
             {
                 var Line = Console.ReadLine();
+                if (Shutdown) { break; }
                 lock (Lockee)
                 {
                     if (Line == "exit")
@@ -288,7 +324,7 @@ namespace Client
                         {
                             if (r.OnSuccess)
                             {
-                                Console.WriteLine("服务器关闭。");
+                                Console.WriteLine("服务器正在关闭。");
                             }
                         });
                         break;

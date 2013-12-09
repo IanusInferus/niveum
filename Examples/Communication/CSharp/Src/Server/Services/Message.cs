@@ -22,9 +22,9 @@ namespace Server.Services
                 try
                 {
                     rc.ReceivedMessageCount += 1;
-                    if (rc.MessageReceived != null)
+                    if (rc.EventPump != null)
                     {
-                        rc.MessageReceived(new MessageReceivedEvent { Content = r.Content });
+                        rc.EventPump.MessageReceived(new MessageReceivedEvent { Content = r.Content });
                     }
                 }
                 finally

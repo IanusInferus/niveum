@@ -635,11 +635,6 @@ namespace Server
                             AcceptingTaskTokenSource.Cancel();
                             AcceptingTaskNotifier.Set();
                         }
-                        if (PurifieringTask != null)
-                        {
-                            PurifieringTaskTokenSource.Cancel();
-                            PurifieringTaskNotifier.Set();
-                        }
                         if (AcceptingTask != null)
                         {
                             AcceptingTask.Wait();
@@ -647,14 +642,6 @@ namespace Server
                             AcceptingTaskTokenSource.Dispose();
                             AcceptingTaskTokenSource = null;
                             AcceptingTask = null;
-                        }
-                        if (PurifieringTask != null)
-                        {
-                            PurifieringTask.Wait();
-                            PurifieringTask.Dispose();
-                            PurifieringTaskTokenSource.Dispose();
-                            PurifieringTaskTokenSource = null;
-                            PurifieringTask = null;
                         }
 
                         Sessions.DoAction
@@ -675,6 +662,20 @@ namespace Server
                                 iss.Clear();
                             }
                         );
+
+                        if (PurifieringTask != null)
+                        {
+                            PurifieringTaskTokenSource.Cancel();
+                            PurifieringTaskNotifier.Set();
+                        }
+                        if (PurifieringTask != null)
+                        {
+                            PurifieringTask.Wait();
+                            PurifieringTask.Dispose();
+                            PurifieringTaskTokenSource.Dispose();
+                            PurifieringTaskTokenSource = null;
+                            PurifieringTask = null;
+                        }
 
                         if (AcceptingTaskNotifier != null)
                         {
