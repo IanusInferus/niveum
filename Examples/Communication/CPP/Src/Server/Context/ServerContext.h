@@ -12,6 +12,10 @@ namespace Server
     class ServerContext
     {
     public:
+        ServerContext();
+
+        std::wstring HeadCommunicationSchemaHash;
+
         std::function<void()> Shutdown; //跨线程事件(订阅者需要保证线程安全)
         void RaiseShutdown()
         {
