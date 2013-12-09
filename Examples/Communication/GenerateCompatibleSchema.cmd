@@ -6,6 +6,4 @@
   del "%%a\Communication.tree"
 )
 
-SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /import:Communication /t2csc:CSharp\Src\Server\Services\Compatibility.cs,ServerImplementation,Server.Services
-
 @pause
