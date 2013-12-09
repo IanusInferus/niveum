@@ -39,7 +39,7 @@ namespace Server.Services
         public MessageReceivedAt1Event MessageReceivedAt1EventFromHead(MessageReceivedEvent ho)
         {
             var o = new MessageReceivedAt1Event();
-            o.Title = "<Title>";
+            o.Title = "";
             o.Lines = ho.Content.UnifyNewLineToLf().Split('\n').ToList();
             return o;
         }

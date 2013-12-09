@@ -21,5 +21,39 @@ namespace Server.Services
             SessionContext.RaiseQuit();
             return QuitReply.CreateSuccess();
         }
+
+        public CheckSchemaVersionReply CheckSchemaVersion(CheckSchemaVersionRequest r)
+        {
+            if (r.Hash == ServerContext.HeadCommunicationSchemaHash)
+            {
+                SessionContext.SessionLock.AcquireWriterLock(int.MaxValue);
+                try
+                {
+                    SessionContext.Version = "";
+                }
+                finally
+                {
+                    SessionContext.SessionLock.ReleaseWriterLock();
+                }
+                return CheckSchemaVersionReply.CreateHead();
+            }
+            if (ServerContext.CommunicationSchemaHashToVersion.ContainsKey(r.Hash))
+            {
+                String Version = ServerContext.CommunicationSchemaHashToVersion[r.Hash];
+                SessionContext.SessionLock.AcquireWriterLock(int.MaxValue);
+                try
+                {
+                    SessionContext.Version = Version;
+                }
+                finally
+                {
+                    SessionContext.SessionLock.ReleaseWriterLock();
+                }
+                return CheckSchemaVersionReply.CreateSupported();
+            }
+            return CheckSchemaVersionReply.CreateNotSupported();
+        }
+
+        public event Action<ServerShutdownEvent> ServerShutdown;
     }
 }

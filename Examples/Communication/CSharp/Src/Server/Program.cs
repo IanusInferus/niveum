@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2013.11.02.
+//  Version:     2013.12.09.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -189,6 +189,22 @@ namespace Server
                             ExitEvent.WaitOne();
                             Console.CancelKeyPress -= CancelKeyPress;
 
+                            foreach (var s in ServerContext.Sessions.AsParallel())
+                            {
+                                s.SessionLock.AcquireReaderLock(int.MaxValue);
+                                try
+                                {
+                                    if (s.EventPump != null)
+                                    {
+                                        s.EventPump.ServerShutdown(new Communication.ServerShutdownEvent { });
+                                    }
+                                }
+                                finally
+                                {
+                                    s.SessionLock.ReleaseLock();
+                                }
+                            }
+
                             foreach (var s in c.Servers)
                             {
                                 if (ServerDict.ContainsKey(s))
@@ -216,6 +232,22 @@ namespace Server
 
                             ExitEvent.WaitOne();
                             Console.CancelKeyPress -= CancelKeyPress;
+
+                            foreach (var s in ServerContext.Sessions.AsParallel())
+                            {
+                                s.SessionLock.AcquireReaderLock(int.MaxValue);
+                                try
+                                {
+                                    if (s.EventPump != null)
+                                    {
+                                        s.EventPump.ServerShutdown(new Communication.ServerShutdownEvent { });
+                                    }
+                                }
+                                finally
+                                {
+                                    s.SessionLock.ReleaseLock();
+                                }
+                            }
 
                             foreach (var s in c.Servers)
                             {

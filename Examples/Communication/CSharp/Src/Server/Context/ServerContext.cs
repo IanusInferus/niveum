@@ -13,11 +13,22 @@ namespace Server
     public class ServerContext : IServerContext
     {
         //单线程访问
+        public ServerContext()
+        {
+            HeadCommunicationSchemaHash = (new Communication.Binary.BinarySerializationServer()).Hash.ToString("X16");
+            CommunicationSchemaHashToVersion = new Dictionary<String, String>()
+            {
+                {HeadCommunicationSchemaHash, ""},
+                {"98301A7C877EDA6E", "1"}
+            };
+        }
         public void Dispose()
         {
         }
 
         //跨线程共享只读访问
+        public String HeadCommunicationSchemaHash;
+        public Dictionary<String, String> CommunicationSchemaHashToVersion; //只读的Dictionary是线程安全的
 
         public Boolean EnableLogNormalIn { get; set; }
         public Boolean EnableLogNormalOut { get; set; }

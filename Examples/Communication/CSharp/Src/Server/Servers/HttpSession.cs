@@ -100,6 +100,11 @@ namespace Server
                 bool Done = false;
                 IsExitingValue.Update(b =>
                 {
+                    if (!IsRunningValue.Check(bb => bb))
+                    {
+                        Done = true;
+                        return b;
+                    }
                     Done = b;
                     return true;
                 });
