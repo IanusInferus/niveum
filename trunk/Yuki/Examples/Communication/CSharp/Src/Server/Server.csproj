@@ -57,6 +57,7 @@
     <Compile Include="Generated\Common.cs" />
     <Compile Include="Generated\Communication.cs" />
     <Compile Include="Generated\CommunicationBinary.cs" />
+    <Compile Include="Generated\CommunicationCompatibility.cs" />
     <Compile Include="Generated\CommunicationJson.cs" />
     <Compile Include="Servers\Concept.cs">
       <SubType>Code</SubType>
@@ -71,7 +72,6 @@
     <Compile Include="Servers\TcpSession.cs" />
     <Compile Include="Servers\BinaryCountPacketServer.cs" />
     <Compile Include="Services\Admin.cs" />
-    <Compile Include="Services\Compatibility.cs" />
     <Compile Include="Services\Compatibility_1.cs" />
     <Compile Include="Services\CrossSessionEvent.cs" />
     <Compile Include="Services\TestPerformance.cs" />
