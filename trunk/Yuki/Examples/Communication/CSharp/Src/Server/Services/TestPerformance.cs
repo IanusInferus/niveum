@@ -41,9 +41,9 @@ namespace Server.Services
                 try
                 {
                     rc.ReceivedMessageCount += 1;
-                    if (rc.TestMessageReceived != null)
+                    if (rc.EventPump != null)
                     {
-                        rc.TestMessageReceived(m);
+                        rc.EventPump.TestMessageReceived(m);
                     }
                 }
                 finally

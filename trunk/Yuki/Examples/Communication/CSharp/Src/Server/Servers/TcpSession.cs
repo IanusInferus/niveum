@@ -122,10 +122,9 @@ namespace Server
             //线程安全
             private void StopAsync()
             {
-                bool Done = false;
                 IsExitingValue.Update(b =>
                 {
-                    Done = b;
+                    if (!IsRunningValue.Check(bb => bb)) { return b; }
                     if (!b)
                     {
                         Socket.Shutdown(SocketShutdown.Receive);
@@ -137,7 +136,6 @@ namespace Server
                     }
                     return true;
                 });
-                if (Done) { return; }
             }
 
             public void Start()

@@ -12,8 +12,7 @@ namespace Server.Services
             SessionContext.SessionLock.AcquireWriterLock(int.MaxValue);
             try
             {
-                SessionContext.MessageReceived = e => { if (MessageReceived != null) { MessageReceived(e); } };
-                SessionContext.TestMessageReceived = e => { if (TestMessageReceived != null) { TestMessageReceived(e); } };
+                SessionContext.EventPump = CreateEventPump(() => SessionContext.Version);
             }
             finally
             {
@@ -26,8 +25,7 @@ namespace Server.Services
             SessionContext.SessionLock.AcquireWriterLock(int.MaxValue);
             try
             {
-                SessionContext.MessageReceived = null;
-                SessionContext.TestMessageReceived = null;
+                SessionContext.EventPump = null;
             }
             finally
             {

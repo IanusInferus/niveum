@@ -4,7 +4,7 @@
       File:        Base.tree
       Location:    Yuki.Examples <Tree>
       Description: 基础
-      Version:     2013.01.29.
+      Version:     2013.12.09.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -23,3 +23,12 @@
 #ClientCommand Quit                                 退出
     >
     Success             Unit                        成功
+
+#ClientCommand CheckSchemaVersion                   检测类型结构版本
+    Hash                String                      版本散列
+    >
+    Head                Unit                        最新
+    Supported           Unit                        支持
+    NotSupported        Unit                        不支持
+
+#ServerCommand ServerShutdown                       服务器关闭
