@@ -33,17 +33,3 @@ shared_ptr<SendMessageReply> ServerImplementation::SendMessage(shared_ptr<SendMe
     }
     return SendMessageReply::CreateSuccess();
 }
-
-/// <summary>发送消息</summary>
-shared_ptr<SendMessageAt1Reply> ServerImplementation::SendMessageAt1(shared_ptr<SendMessageAt1Request> r)
-{
-    if (MessageReceivedAt1 != nullptr)
-    {
-        auto e = make_shared<MessageReceivedAt1Event>();
-        e->Title = L"System Updated";
-        e->Lines = make_shared<vector<wstring>>();
-        e->Lines->push_back(L"Please update your client to a recent version.");
-        MessageReceivedAt1(e);
-    }
-    return SendMessageAt1Reply::CreateSuccess();
-}

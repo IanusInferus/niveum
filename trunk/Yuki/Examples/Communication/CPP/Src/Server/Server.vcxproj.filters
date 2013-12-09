@@ -92,5 +92,11 @@
     <ClCompile Include="Services\Admin.cpp">
       <Filter>Services</Filter>
     </ClCompile>
+    <ClCompile Include="Context\ServerContext.cpp">
+      <Filter>Context</Filter>
+    </ClCompile>
+    <ClCompile Include="Services\Compatibility.cpp">
+      <Filter>Services</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

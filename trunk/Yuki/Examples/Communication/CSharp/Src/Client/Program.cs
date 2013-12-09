@@ -11,6 +11,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 using Firefly;
@@ -258,11 +259,16 @@ namespace Client
 
         public static void ReadLineAndSendLoop(IApplicationClient InnerClient, Boolean UseOld, Object Lockee)
         {
-            var Shutdown = false;
+            var NeedToExit = false;
+            AutoResetEvent NeedToCheck = new AutoResetEvent(false);
             InnerClient.ServerShutdown += e =>
             {
                 Console.WriteLine("服务器已关闭。");
-                Shutdown = true;
+                lock(Lockee)
+                {
+                    NeedToExit = true;
+                }
+                NeedToCheck.Set();
             };
             InnerClient.Error += e =>
             {
@@ -293,6 +299,11 @@ namespace Client
                 else if (r.OnNotSupported)
                 {
                     Console.WriteLine("客户端版本不受支持。");
+                    lock (Lockee)
+                    {
+                        NeedToExit = true;
+                    }
+                    NeedToCheck.Set();
                 }
                 else
                 {
@@ -309,8 +320,27 @@ namespace Client
             }
             while (true)
             {
-                var Line = Console.ReadLine();
-                if (Shutdown) { break; }
+                String Line = null;
+                ThreadPool.QueueUserWorkItem(o =>
+                {
+                    var l = Console.ReadLine();
+                    lock (Lockee)
+                    {
+                        Line = l;
+                    }
+                    NeedToCheck.Set();
+                });
+                while (true)
+                {
+                    if (NeedToExit) { return; }
+                    String l;
+                    lock (Lockee)
+                    {
+                        l = Line;
+                    }
+                    if (l != null) { break; }
+                    NeedToCheck.WaitOne();
+                }
                 lock (Lockee)
                 {
                     if (Line == "exit")
