@@ -3,7 +3,7 @@
 //  File:        Utility.h
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 工具函数
-//  Version:     2012.05.04.
+//  Version:     2013.12.09.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -29,6 +29,17 @@ std::wstring ToString(T value)
     std::wstringstream s;
     s << value;
     return std::wstring(s.str());
+}
+
+template<typename T>
+std::wstring ToHexString(T value)
+{
+    std::wstringstream s;
+    s << std::hex << std::uppercase << value;
+    auto tail = std::wstring(s.str());
+    if (tail.size() >= sizeof(T) * 2) { return tail; }
+    auto head = std::wstring(sizeof(T) * 2 - tail.size(), L'0');
+    return head + tail;
 }
 
 template<typename T>

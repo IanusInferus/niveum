@@ -80,6 +80,8 @@ namespace Server
             std::shared_ptr<ServerTimeReply> ServerTime(std::shared_ptr<ServerTimeRequest> r);
             /// <summary>退出</summary>
             std::shared_ptr<QuitReply> Quit(std::shared_ptr<QuitRequest> r);
+            /// <summary>检测类型结构版本</summary>
+            std::shared_ptr<CheckSchemaVersionReply> CheckSchemaVersion(std::shared_ptr<CheckSchemaVersionRequest> r);
             /// <summary>发送消息</summary>
             std::shared_ptr<SendMessageReply> SendMessage(std::shared_ptr<SendMessageRequest> r);
             /// <summary>发送消息</summary>
