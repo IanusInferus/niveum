@@ -144,7 +144,6 @@ namespace Server
 
             private int TimeoutCheckPeriodValue = 30;
             private String ServiceVirtualPathValue = null;
-            private Optional<HttpStaticContentPath> StaticContentPathValue = Optional<HttpStaticContentPath>.Empty;
 
             /// <summary>只能在启动前修改，以保证线程安全</summary>
             public CheckCommandAllowedDelegate CheckCommandAllowed
@@ -303,25 +302,6 @@ namespace Server
                         {
                             if (b) { throw new InvalidOperationException(); }
                             ServiceVirtualPathValue = value;
-                        }
-                    );
-                }
-            }
-            /// <summary>只能在启动前修改，以保证线程安全</summary>
-            public Optional<HttpStaticContentPath> StaticContentPath
-            {
-                get
-                {
-                    return StaticContentPathValue;
-                }
-                set
-                {
-                    IsRunningValue.DoAction
-                    (
-                        b =>
-                        {
-                            if (b) { throw new InvalidOperationException(); }
-                            StaticContentPathValue = value;
                         }
                     );
                 }
