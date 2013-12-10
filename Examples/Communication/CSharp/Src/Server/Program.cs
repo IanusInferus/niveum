@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2013.12.09.
+//  Version:     2013.12.10.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -294,7 +294,18 @@ namespace Server
 
                 try
                 {
-                    Server.SerializationProtocolType = s.SerializationProtocolType;
+                    if (s.SerializationProtocolType == SerializationProtocolType.Binary)
+                    {
+                        Server.SerializationProtocolType = Tcp<ServerContext>.SerializationProtocolType.Binary;
+                    }
+                    else if (s.SerializationProtocolType == SerializationProtocolType.Json)
+                    {
+                        Server.SerializationProtocolType = Tcp<ServerContext>.SerializationProtocolType.Json;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
 
                     Server.CheckCommandAllowed = (sc, CommandName) =>
                     {
@@ -349,7 +360,6 @@ namespace Server
 
                     Server.TimeoutCheckPeriod = s.TimeoutCheckPeriod;
                     Server.ServiceVirtualPath = s.ServiceVirtualPath;
-                    Server.StaticContentPath = s.StaticContentPath;
 
                     Server.Start();
 

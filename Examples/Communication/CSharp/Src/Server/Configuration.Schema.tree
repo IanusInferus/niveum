@@ -42,7 +42,6 @@
 
     TimeoutCheckPeriod          Int
     ServiceVirtualPath          String
-    StaticContentPath           Optional<HttpStaticContentPath>
 
 #Record HttpBinding
     Prefix                      String

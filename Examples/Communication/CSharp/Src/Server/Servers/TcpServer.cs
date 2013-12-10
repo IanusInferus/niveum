@@ -67,6 +67,12 @@ namespace Server
             event Action ServerEvent;
         }
 
+        public enum SerializationProtocolType
+        {
+            Binary,
+            Json
+        }
+
         /// <summary>
         /// 本类的所有非继承的公共成员均是线程安全的。
         /// </summary>
