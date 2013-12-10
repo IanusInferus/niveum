@@ -36,7 +36,6 @@
                 MaxBadCommands 8
                 TimeoutCheckPeriod 30
                 ServiceVirtualPath cmd
-                StaticContentPath NotHasValue $Empty
     EnableLogNormalIn True
     EnableLogNormalOut True
     EnableLogUnknownError True
