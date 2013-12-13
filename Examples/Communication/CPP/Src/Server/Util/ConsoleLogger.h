@@ -43,7 +43,7 @@ namespace Server
                         break;
                     }
 
-                    auto Line = L"\"" + boost::posix_time::to_iso_extended_wstring(e->Time) + L"Z" + L"\"" + L"\t" + L"\"" + e->Type + L"\"" + L"\t" + L"\"" + e->Message + L"\"";
+                    auto Line = boost::posix_time::to_iso_extended_wstring(e->Time) + L"Z" + L" " + e->Token + L" " + e->Type + L" " + e->Name + L" " + e->Message;
                     std::wprintf(L"%ls\n", Line.c_str());
                 }
             }
