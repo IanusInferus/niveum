@@ -15,7 +15,7 @@ namespace Server
         public static void WriteLog(String Path, String Text)
         {
             var Dir = FileNameHandling.GetFileDirectory(Path);
-            if (!Directory.Exists(Dir))
+            if (Dir != "" && !Directory.Exists(Dir))
             {
                 Directory.CreateDirectory(Dir);
             }
@@ -104,7 +104,7 @@ namespace Server
         {
             var LocalTime = Entry.Time.ToLocalTime();
             var Dir = FileNameHandling.GetPath(LogDir, LocalTime.Date.ToString("yyyyMMdd"));
-            if (!Directory.Exists(Dir))
+            if (Dir != "" && !Directory.Exists(Dir))
             {
                 Directory.CreateDirectory(Dir);
             }
