@@ -16,6 +16,7 @@ namespace Server
         std::wstring Token;
         boost::posix_time::ptime Time;
         std::wstring Type;
+        std::wstring Name;
         std::wstring Message;
     };
 }

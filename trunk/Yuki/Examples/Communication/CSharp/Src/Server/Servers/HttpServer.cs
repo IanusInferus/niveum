@@ -408,12 +408,12 @@ namespace Server
                                         {
                                             Message = ExceptionInfo.GetExceptionInfo(ex);
                                         }
-                                        ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0), Time = DateTime.UtcNow, Type = "Sys", Message = Message });
+                                        ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0), Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = Message });
                                         return;
                                     }
                                     catch (Exception ex)
                                     {
-                                        ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0), Time = DateTime.UtcNow, Type = "Sys", Message = ExceptionInfo.GetExceptionInfo(ex) });
+                                        ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0), Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = ExceptionInfo.GetExceptionInfo(ex) });
                                         return;
                                     }
                                     Boolean ListenerStopped = false;
@@ -529,7 +529,7 @@ namespace Server
                                             {
                                                 if (ServerContext.EnableLogSystem)
                                                 {
-                                                    ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Message = "RequestIn" });
+                                                    ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Name = "RequestIn", Message = "" });
                                                 }
 
                                                 if (a.Request.ContentLength64 < 0)
@@ -693,7 +693,7 @@ namespace Server
                                             {
                                                 if (ServerContext.EnableLogSystem)
                                                 {
-                                                    ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Message = ExceptionInfo.GetExceptionInfo(ex) });
+                                                    ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = ExceptionInfo.GetExceptionInfo(ex) });
                                                 }
                                             }
                                         }

@@ -49,14 +49,34 @@ namespace Server
             }
         }
 
+        private static String DecorateWithQoutesIfComplex(String s)
+        {
+            if (s.Any(c => c == ' ' || c == '\"' || Char.IsControl(c)))
+            {
+                return @"""" + s.Escape().Replace(@"""", @"""""") + @"""";
+            }
+            return s;
+        }
+        private static String ExtendToMultipleOf(String s, int Multiple)
+        {
+            return s + new String(' ', (Multiple - (s.Length % Multiple)) % Multiple);
+        }
         public static String[] GetLines(SessionLogEntry Entry)
         {
             var Time = Entry.Time.DateTimeUtcWithMillisecondsToString();
-            var Start = String.Join("\t", new String[] { Time, Entry.Token, Entry.Type }.Select(m => @"""" + m.Replace(@"""", @"""""") + @"""").ToArray());
+            String Start;
+            {
+                var l = new List<String>();
+                l.Add(DecorateWithQoutesIfComplex(Time));
+                l.Add(DecorateWithQoutesIfComplex(Entry.Token));
+                l.Add(ExtendToMultipleOf(DecorateWithQoutesIfComplex(Entry.Type), 4));
+                l.Add(DecorateWithQoutesIfComplex(Entry.Name));
+                Start = String.Join(" ", l.ToArray());
+            }
             String[] Lines;
             if (!(Entry.Message.StartsWith(" ") || Entry.Message.Contains('\n')))
             {
-                Lines = new String[] { Start + "\t" + Entry.Message };
+                Lines = new String[] { Start + " " + Entry.Message };
             }
             else
             {

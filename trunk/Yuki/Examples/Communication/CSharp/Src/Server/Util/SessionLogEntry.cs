@@ -11,6 +11,7 @@ namespace Server
         public String Token;
         public DateTime Time;
         public String Type;
+        public String Name;
         public String Message;
     }
 }

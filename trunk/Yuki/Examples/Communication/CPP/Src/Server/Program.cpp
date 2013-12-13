@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2013.12.09.
+//  Version:     2013.12.13.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //

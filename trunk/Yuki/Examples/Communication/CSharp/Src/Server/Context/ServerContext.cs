@@ -96,24 +96,21 @@ namespace Server
             {
                 if (EnableLogNormalIn)
                 {
-                    var CommandLine = String.Format(@"{0} {1}", CommandName, Parameters);
-                    RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = Context.RemoteEndPoint, Time = DateTime.UtcNow, Type = "In", Message = CommandLine });
+                    RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = Context.RemoteEndPoint, Time = DateTime.UtcNow, Type = "In", Name = CommandName, Message = Parameters });
                 }
             };
             law.ClientCommandOut += (CommandName, Parameters) =>
             {
                 if (EnableLogNormalOut)
                 {
-                    var CommandLine = String.Format(@"svr {0} {1}", CommandName, Parameters);
-                    RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = Context.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
+                    RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = Context.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Name = CommandName, Message = Parameters });
                 }
             };
             law.ServerCommand += (CommandName, Parameters) =>
             {
                 if (EnableLogNormalOut)
                 {
-                    var CommandLine = String.Format(@"svr {0} {1}", CommandName, Parameters);
-                    RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = Context.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Message = CommandLine });
+                    RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = Context.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Name = CommandName, Message = Parameters });
                 }
             };
         }

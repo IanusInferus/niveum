@@ -134,7 +134,8 @@ namespace Server
                 e->Token = Context->GetSessionTokenString();
                 e->Time = boost::posix_time::second_clock::universal_time();
                 e->Type = L"Sys";
-                e->Message = L"SessionEnter";
+                e->Name = L"SessionEnter";
+                e->Message = L"";
                 Server->RaiseSessionLog(e);
             }
             PushCommand(SessionCommand::CreateReadRaw());
@@ -162,7 +163,8 @@ namespace Server
                 e->Token = Context->GetSessionTokenString();
                 e->Time = boost::posix_time::second_clock::universal_time();
                 e->Type = L"Sys";
-                e->Message = L"SessionExit";
+                e->Name = L"SessionExit";
+                e->Message = L"";
                 Server->RaiseSessionLog(e);
             }
             Server->SessionMappings.DoAction([&](const std::shared_ptr<BinarySocketServer::TSessionMapping> &Mappings)
@@ -614,7 +616,8 @@ namespace Server
             e->Token = Context->GetSessionTokenString();
             e->Time = boost::posix_time::second_clock::universal_time();
             e->Type = L"In";
-            e->Message = L"/" + cmd->CommandName + L" {...}";
+            e->Name = cmd->CommandName;
+            e->Message = L"{...}";
             Server->RaiseSessionLog(e);
         }
         if (Server->GetMaxBadCommands() != 0 && (NumBadCommands > Server->GetMaxBadCommands()))
@@ -676,7 +679,8 @@ namespace Server
             e->Token = Context->GetSessionTokenString();
             e->Time = boost::posix_time::second_clock::universal_time();
             e->Type = L"Out";
-            e->Message = L"/svr " + CommandName + L" {...}";
+            e->Name = CommandName;
+            e->Message = L"{...}";
             Server->RaiseSessionLog(e);
         }
         auto cmd = std::make_shared<CommandBody>();
@@ -709,6 +713,7 @@ namespace Server
             e->Token = Context->GetSessionTokenString();
             e->Time = boost::posix_time::second_clock::universal_time();
             e->Type = L"Unk";
+            e->Name = L"Exception";
             e->Message = Info;
             Server->RaiseSessionLog(e);
         }
@@ -725,6 +730,7 @@ namespace Server
             e->Token = Context->GetSessionTokenString();
             e->Time = boost::posix_time::second_clock::universal_time();
             e->Type = L"Unk";
+            e->Name = L"Exception";
             e->Message = Info;
             Server->RaiseSessionLog(e);
         }
