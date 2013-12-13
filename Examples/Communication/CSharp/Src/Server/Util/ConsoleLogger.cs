@@ -23,9 +23,15 @@ namespace Server
                 e =>
                 {
                     if (e == null) { return false; }
-                    foreach (var Line in FileLoggerSync.GetLines(e))
+                    try
                     {
-                        Console.WriteLine(Line);
+                        foreach (var Line in FileLoggerSync.GetLines(e))
+                        {
+                            Console.WriteLine(Line);
+                        }
+                    }
+                    catch
+                    {
                     }
                     return true;
                 }

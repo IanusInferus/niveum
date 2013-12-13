@@ -32,7 +32,13 @@ namespace Server
                 e =>
                 {
                     if (e == null) { return false; }
-                    FileLoggerSync.WriteLog(Path, e);
+                    try
+                    {
+                        FileLoggerSync.WriteLog(Path, e);
+                    }
+                    catch
+                    {
+                    }
                     return true;
                 }
             );
