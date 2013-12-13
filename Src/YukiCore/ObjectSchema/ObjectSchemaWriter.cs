@@ -101,7 +101,7 @@ namespace Yuki.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
-                var LineLiterals = LineTokens.Select(l => l.Select(Token => TreeFormatLiteralWriter.GetLiteral(Token, true, false).SingleLine).ToArray()).ToArray();
+                var LineLiterals = LineTokens.Select(l => (l.Length == 1 && l.Single() == ">") ? l : l.Select(Token => TreeFormatLiteralWriter.GetLiteral(Token, true, false).SingleLine).ToArray()).ToArray();
                 var NumColumn = 0;
                 foreach (var l in LineLiterals)
                 {
@@ -122,7 +122,7 @@ namespace Yuki.ObjectSchema
                     ColumnWidths.Add(Width);
                 }
                 var Lines = new List<Syntax.TextLine>();
-                foreach (var l in LineTokens)
+                foreach (var l in LineLiterals)
                 {
                     var Line = new List<String>();
                     for (int k = 0; k < l.Length; k += 1)
