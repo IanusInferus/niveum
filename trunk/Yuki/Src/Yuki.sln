@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchemaManipulator", "SchemaManipulator\SchemaManipulator.csproj", "{D9D1181E-2141-4CE7-80F5-73F3B8620247}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseRegenerator", "DatabaseRegenerator\DatabaseRegenerator.csproj", "{8EA3C197-8B12-4A72-8C91-E22DB8039E51}"
