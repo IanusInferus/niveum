@@ -19,6 +19,8 @@
 )
 @cd Src
 attrib -H Communication.suo
+attrib -H Communication.v11.suo
+attrib -H Communication.v12.suo
 del *.suo /F /Q
 del *.cache /F /Q
 pause
