@@ -9,6 +9,8 @@ del *.user /F /Q
 cd..
 cd Src
 attrib -H DataConv.suo
+attrib -H DataConv.v11.suo
+attrib -H DataConv.v12.suo
 del *.suo /F /Q
 del *.cache /F /Q
 pause
