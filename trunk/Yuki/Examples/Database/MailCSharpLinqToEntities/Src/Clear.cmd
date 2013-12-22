@@ -9,6 +9,8 @@ del *.user /F /Q
 cd..
 cd Src
 attrib -H Database.suo
+attrib -H Database.v11.suo
+attrib -H Database.v12.suo
 del *.suo /F /Q
 del *.cache /F /Q
 pause
