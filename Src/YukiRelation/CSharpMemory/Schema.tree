@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Memory代码模板数据
-      Version:     2013.10.31.
+      Version:     2014.01.09.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -238,13 +238,26 @@ ObjectSchemaTemplate
                 $String
                     var _l_ = MemoryDataManipulate.${ManyName}(this.Tables, this.Indices, ${Parameters}).ToList();
                     if (_l_.Count == 0) { return null; }
+                    if (_l_.Count > 1)
+                    {
+                        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                    }
                     return _l_.Single();
         Template
             Name SelectLock_One
             //Parameters: ${ManyName}, ${Parameters}
             Value
                 $String
-                    return MemoryDataManipulate.${ManyName}(this.Tables, this.Indices, ${Parameters}).Single();
+                    var _l_ = MemoryDataManipulate.${ManyName}(this.Tables, this.Indices, ${Parameters}).ToList();
+                    if (_l_.Count == 0)
+                    {
+                        throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                    }
+                    if (_l_.Count > 1)
+                    {
+                        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                    }
+                    return _l_.Single();
         Template
             Name SelectLock_Many
             //Parameters: ${ManyName}, ${Parameters}, ${OrderBys}
