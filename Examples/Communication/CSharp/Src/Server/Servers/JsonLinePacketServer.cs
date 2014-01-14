@@ -34,6 +34,10 @@ namespace Server
                     {
                         c.WriteBuffer.Add(Bytes);
                     }
+                    if (OutputByteLengthReport != null)
+                    {
+                        OutputByteLengthReport(CommandName, Bytes.Length);
+                    }
                     if (this.ServerEvent != null)
                     {
                         this.ServerEvent();
@@ -86,6 +90,10 @@ namespace Server
                         var CommandName = cmd.HasValue.CommandName;
                         var CommandHash = cmd.HasValue.CommandHash;
                         var Parameters = cmd.HasValue.Parameters;
+                        if (InputByteLengthReport != null)
+                        {
+                            InputByteLengthReport(CommandName, LineBytes.Length);
+                        }
                         if ((CommandHash.OnHasValue ? ss.HasCommand(CommandName, CommandHash.HasValue) : ss.HasCommand(CommandName)) && (CheckCommandAllowed != null ? CheckCommandAllowed(CommandName) : true))
                         {
                             if (CommandHash.OnHasValue)
@@ -100,6 +108,10 @@ namespace Server
                                         lock (c.WriteBufferLockee)
                                         {
                                             c.WriteBuffer.Add(Bytes);
+                                        }
+                                        if (OutputByteLengthReport != null)
+                                        {
+                                            OutputByteLengthReport(CommandName, Bytes.Length);
                                         }
                                     }
                                 });
@@ -116,6 +128,10 @@ namespace Server
                                         lock (c.WriteBufferLockee)
                                         {
                                             c.WriteBuffer.Add(Bytes);
+                                        }
+                                        if (OutputByteLengthReport != null)
+                                        {
+                                            OutputByteLengthReport(CommandName, Bytes.Length);
                                         }
                                     }
                                 });
@@ -162,6 +178,8 @@ namespace Server
 
             public UInt64 Hash { get { return ss.Hash; } }
             public event Action ServerEvent;
+            public event Action<String, int> InputByteLengthReport;
+            public event Action<String, int> OutputByteLengthReport;
 
             private static Regex r = new Regex(@"^/(?<Name>\S+)(\s+(?<Params>.*))?$", RegexOptions.ExplicitCapture); //Regex是线程安全的
             private static Regex rName = new Regex(@"^(?<CommandName>.*?)@(?<CommandHash>.*)$", RegexOptions.ExplicitCapture); //Regex是线程安全的
