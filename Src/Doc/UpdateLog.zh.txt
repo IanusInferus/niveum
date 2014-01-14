@@ -1,4 +1,8 @@
-﻿2014.01.09
+﻿2014.01.14
+Examples:
+调整C#通讯示例，增加字节输入输出。
+
+2014.01.09
 Yuki.Core:
 增加C#代码生成的Optional的字符串显示。
 Yuki.Relation:
