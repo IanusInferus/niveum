@@ -73,6 +73,8 @@ namespace Server
                     throw new InvalidOperationException("InvalidSerializationProtocol: " + Server.SerializationProtocolType.ToString());
                 }
                 vts.ServerEvent += WriteCommand;
+                vts.InputByteLengthReport += (CommandName, ByteLength) => Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "InBytes", Name = CommandName, Message = ByteLength.ToInvariantString() });
+                vts.OutputByteLengthReport += (CommandName, ByteLength) => Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "OutBytes", Name = CommandName, Message = ByteLength.ToInvariantString() });
             }
 
             public void Dispose()

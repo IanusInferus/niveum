@@ -695,6 +695,7 @@ namespace Server
                                                 {
                                                     ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = ExceptionInfo.GetExceptionInfo(ex) });
                                                 }
+                                                NotifyListenerContextQuit(a);
                                             }
                                         }
                                     }
@@ -740,7 +741,13 @@ namespace Server
                                         HttpListenerContext ListenerContext;
                                         while (StoppingListenerContexts.TryDequeue(out ListenerContext))
                                         {
-                                            ListenerContext.Response.Close();
+                                            try
+                                            {
+                                                ListenerContext.Response.Close();
+                                            }
+                                            catch
+                                            {
+                                            }
                                         }
                                     }
                                 },

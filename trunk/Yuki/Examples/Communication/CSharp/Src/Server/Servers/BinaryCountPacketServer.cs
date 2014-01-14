@@ -28,6 +28,7 @@ namespace Server
                 public String CommandName = "";
                 public UInt32 CommandHash = 0;
                 public Int32 ParametersLength = 0;
+                public Int32 InputCommandByteLength = 0;
             }
 
             public delegate Boolean CheckCommandAllowedDelegate(String CommandName);
@@ -57,6 +58,10 @@ namespace Server
                     lock (c.WriteBufferLockee)
                     {
                         c.WriteBuffer.Add(Bytes);
+                    }
+                    if (OutputByteLengthReport != null)
+                    {
+                        OutputByteLengthReport(CommandName, Bytes.Length);
                     }
                     if (this.ServerEvent != null)
                     {
@@ -103,6 +108,10 @@ namespace Server
                         var CommandName = r.Command.CommandName;
                         var CommandHash = r.Command.CommandHash;
                         var Parameters = r.Command.Parameters;
+                        if (InputByteLengthReport != null)
+                        {
+                            InputByteLengthReport(CommandName, r.Command.ByteLength);
+                        }
                         if (ss.HasCommand(CommandName, CommandHash) && (CheckCommandAllowed != null ? CheckCommandAllowed(CommandName) : true))
                         {
                             ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
@@ -126,6 +135,10 @@ namespace Server
                                     lock (c.WriteBufferLockee)
                                     {
                                         c.WriteBuffer.Add(Bytes);
+                                    }
+                                    if (OutputByteLengthReport != null)
+                                    {
+                                        OutputByteLengthReport(CommandName, Bytes.Length);
                                     }
                                 }
                             });
@@ -162,12 +175,15 @@ namespace Server
 
             public UInt64 Hash { get { return ss.Hash; } }
             public event Action ServerEvent;
+            public event Action<String, int> InputByteLengthReport;
+            public event Action<String, int> OutputByteLengthReport;
 
             private class Command
             {
                 public String CommandName;
                 public UInt32 CommandHash;
                 public Byte[] Parameters;
+                public Int32 ByteLength;
             }
             private class TryShiftResult
             {
@@ -187,6 +203,7 @@ namespace Server
                         }
                         if (bc.CommandNameLength < 0 || bc.CommandNameLength > 128) { throw new InvalidOperationException("CommandNameLengthOutOfBound"); }
                         var r = new TryShiftResult { Command = null, Position = Position + 4 };
+                        bc.InputCommandByteLength += 4;
                         bc.State = 1;
                         return r;
                     }
@@ -201,6 +218,7 @@ namespace Server
                             bc.CommandName = TextEncoding.UTF16.GetString(s.Read(bc.CommandNameLength));
                         }
                         var r = new TryShiftResult { Command = null, Position = Position + bc.CommandNameLength };
+                        bc.InputCommandByteLength += bc.CommandNameLength;
                         bc.State = 2;
                         return r;
                     }
@@ -215,6 +233,7 @@ namespace Server
                             bc.CommandHash = s.ReadUInt32();
                         }
                         var r = new TryShiftResult { Command = null, Position = Position + 4 };
+                        bc.InputCommandByteLength += 4;
                         bc.State = 3;
                         return r;
                     }
@@ -230,6 +249,7 @@ namespace Server
                         }
                         if (bc.ParametersLength < 0 || bc.ParametersLength > Buffer.Length) { throw new InvalidOperationException("ParametersLengthOutOfBound"); }
                         var r = new TryShiftResult { Command = null, Position = Position + 4 };
+                        bc.InputCommandByteLength += 4;
                         bc.State = 4;
                         return r;
                     }
@@ -244,12 +264,14 @@ namespace Server
                         {
                             Parameters = s.Read(bc.ParametersLength);
                         }
-                        var cmd = new Command { CommandName = bc.CommandName, CommandHash = bc.CommandHash, Parameters = Parameters };
+                        bc.InputCommandByteLength += bc.ParametersLength;
+                        var cmd = new Command { CommandName = bc.CommandName, CommandHash = bc.CommandHash, Parameters = Parameters, ByteLength = bc.InputCommandByteLength };
                         var r = new TryShiftResult { Command = cmd, Position = Position + bc.ParametersLength };
                         bc.CommandNameLength = 0;
                         bc.CommandName = null;
                         bc.CommandHash = 0;
                         bc.ParametersLength = 0;
+                        bc.InputCommandByteLength = 0;
                         bc.State = 0;
                         return r;
                     }
