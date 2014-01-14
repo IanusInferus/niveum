@@ -65,6 +65,8 @@ namespace Server
             TcpVirtualTransportServerHandleResult Handle(int Count);
             UInt64 Hash { get; }
             event Action ServerEvent;
+            event Action<String, int> InputByteLengthReport;
+            event Action<String, int> OutputByteLengthReport;
         }
 
         public enum SerializationProtocolType
