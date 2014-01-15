@@ -1,0 +1,53 @@
+﻿主机到主机负载测试
+
+测试环境
+主板        MSI B75MA-P45
+CPU         Intel i3 3220
+内存        16GB
+主机系统    Windows 7 64 bit
+测试方法    打开命令行输出(C#的Configuration.tree中选项EnableLogConsole设为True)
+
+
+C#/Binary/.Net 4.5/x64/Windows 7 64 bit
+
+TestQuit: 64 Users, 31 ms
+TestAdd: 64 Users, 47 ms
+TestMultiply: 64 Users, 125 ms
+TestText: 64 Users, 93 ms
+TestMessage: 64 Users, 171 ms
+TestQuit: 1 Users, 0 ms
+TestQuit: 4 Users, 0 ms
+TestQuit: 16 Users, 0 ms
+TestQuit: 64 Users, 0 ms
+TestQuit: 256 Users, 16 ms
+TestQuit: 1024 Users, 109 ms
+TestQuit: 4096 Users, 422 ms
+TestQuit: 16384 Users, 1763 ms
+TestAdd: 1 Users, 0 ms
+TestAdd: 4 Users, 0 ms
+TestAdd: 16 Users, 0 ms
+TestAdd: 64 Users, 16 ms
+TestAdd: 256 Users, 31 ms
+TestAdd: 1024 Users, 109 ms
+TestAdd: 4096 Users, 655 ms
+TestAdd: 16384 Users, 1997 ms
+TestMultiply: 1 Users, 0 ms
+TestMultiply: 4 Users, 16 ms
+TestMultiply: 16 Users, 32 ms
+TestMultiply: 64 Users, 94 ms
+TestMultiply: 256 Users, 359 ms
+TestMultiply: 1024 Users, 1514 ms
+TestMultiply: 4096 Users, 5725 ms
+TestText: 1 Users, 0 ms
+TestText: 4 Users, 16 ms
+TestText: 16 Users, 31 ms
+TestText: 64 Users, 47 ms
+TestText: 256 Users, 234 ms
+TestText: 1024 Users, 2137 ms
+TestText: 4096 Users, 3369 ms
+TestMessage: 1 Users, 0 ms
+TestMessage: 4 Users, 0 ms
+TestMessage: 16 Users, 15 ms
+TestMessage: 64 Users, 218 ms
+TestMessage: 256 Users, 3167 ms
+TestMessage: 1024 Users, 22371 ms

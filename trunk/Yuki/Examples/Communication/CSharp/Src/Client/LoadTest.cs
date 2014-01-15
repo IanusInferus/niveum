@@ -421,6 +421,13 @@ namespace Client
 
         public static int DoTestTcp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
         {
+            //如果在Windows测试提示“由于系统缓冲区空间不足或队列已满，不能执行套接字上的操作。”（WSAENOBUFS 10055），表示系统的TCP端口数不足
+            //可以使用下述命令查看动态端口范围
+            //netsh int ipv4 show dynamicport tcp
+            //可以在管理员权限下使用下述命令设置
+            //netsh int ipv4 set dynamicport tcp start=16384 num=49152
+            //参见：http://support.microsoft.com/kb/929851/en-us
+
             TestTcpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestQuit", TestQuit);
             TestTcpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestAdd", TestAdd);
             TestTcpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMultiply", TestMultiply);

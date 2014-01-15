@@ -1,0 +1,27 @@
+﻿主机到主机性能测试
+
+测试环境
+主板        MSI B75MA-P45
+CPU         Intel i3 3220
+内存        16GB
+主机系统    Windows 7 64 bit
+测试方法    打开命令行输出(C#的Configuration.tree中选项EnableLogConsole设为True)
+
+
+C#/Binary/.Net 4.5/x64/Windows 7 64 bit
+
+TestAdd: 1 Users, 8 Request/User, 32 ms
+TestMultiply: 1 Users, 8 Request/User, 63 ms
+TestText: 1 Users, 8 Request/User, 46 ms
+TestAdd: 4096 Users, 1 Request/User, 904 ms
+TestAdd: 4096 Users, 4 Request/User, 2777 ms
+TestAdd: 4096 Users, 16 Request/User, 24711 ms
+TestAdd: 4096 Users, 64 Request/User, 56738 ms
+TestMultiply: 4096 Users, 1 Request/User, 11356 ms
+TestMultiply: 4096 Users, 4 Request/User, 28424 ms
+TestMultiply: 4096 Users, 16 Request/User, 151134 ms
+TestMultiply: 4096 Users, 64 Request/User, 370206 ms
+TestText: 4096 Users, 1 Request/User, 14774 ms
+TestText: 4096 Users, 4 Request/User, 39655 ms
+TestText: 4096 Users, 16 Request/User, 76878 ms
+TestText: 4096 Users, 64 Request/User, 478315 ms
