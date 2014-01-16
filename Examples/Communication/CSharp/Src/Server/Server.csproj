@@ -68,6 +68,7 @@
     <Compile Include="Servers\ISerializationServer.cs" />
     <Compile Include="Servers\JsonHttpPacketServer.cs" />
     <Compile Include="Servers\JsonLinePacketServer.cs" />
+    <Compile Include="Servers\SessionStateMachine.cs" />
     <Compile Include="Servers\TcpServer.cs" />
     <Compile Include="Servers\TcpSession.cs" />
     <Compile Include="Servers\BinaryCountPacketServer.cs" />
