@@ -123,40 +123,37 @@ namespace Server
                         {
                             var sw = new Stopwatch();
                             sw.Start();
-                            r.Command.ExecuteCommand();
-                            sw.Stop();
-                            Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Name = CommandName, Message = String.Format("{0}ms", sw.ElapsedMilliseconds) });
+                            Action OnSuccessInner = () =>
+                            {
+                                sw.Stop();
+                                Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Name = CommandName, Message = String.Format("{0}ms", sw.ElapsedMilliseconds) });
+                                ssm.NotifyWrite(new Unit());
+                                OnSuccess();
+                            };
+                            Action<Exception> OnFailureInner = ex =>
+                            {
+                                RaiseUnknownError(CommandName, ex, new StackTrace(true));
+                                OnSuccess();
+                            };
+                            r.Command.ExecuteCommand(OnSuccessInner, OnFailureInner);
                         }
                         else
                         {
-                            r.Command.ExecuteCommand();
-                        }
-                        ssm.NotifyWrite(new Unit());
-                    };
-
-                    if (Debugger.IsAttached)
-                    {
-                        ssm.AddToActionQueue(() =>
-                        {
-                            a();
-                            OnSuccess();
-                        });
-                    }
-                    else
-                    {
-                        ssm.AddToActionQueue(() =>
-                        {
-                            try
+                            Action OnSuccessInner = () =>
                             {
-                                a();
-                            }
-                            catch (Exception ex)
+                                ssm.NotifyWrite(new Unit());
+                                OnSuccess();
+                            };
+                            Action<Exception> OnFailureInner = ex =>
                             {
                                 RaiseUnknownError(CommandName, ex, new StackTrace(true));
-                            }
-                            OnSuccess();
-                        });
-                    }
+                                OnSuccess();
+                            };
+                            r.Command.ExecuteCommand(OnSuccessInner, OnFailureInner);
+                        }
+                    };
+
+                    ssm.AddToActionQueue(a);
                 }
                 else if (r.OnBadCommand)
                 {
