@@ -17,7 +17,7 @@ namespace Server
         public class TcpVirtualTransportServerHandleResultCommand
         {
             public String CommandName;
-            public Action ExecuteCommand;
+            public Action<Action, Action<Exception>> ExecuteCommand;
         }
 
         public class TcpVirtualTransportServerHandleResultBadCommand

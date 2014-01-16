@@ -101,18 +101,22 @@ namespace Server
                                 ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
                                 {
                                     CommandName = CommandName,
-                                    ExecuteCommand = () =>
+                                    ExecuteCommand = (OnSuccess, OnFailure) =>
                                     {
-                                        var OutputParameters = ss.ExecuteCommand(CommandName, CommandHash.HasValue, Parameters);
-                                        var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName + "@" + CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), OutputParameters));
-                                        lock (c.WriteBufferLockee)
+                                        Action<String> OnSuccessInner = OutputParameters =>
                                         {
-                                            c.WriteBuffer.Add(Bytes);
-                                        }
-                                        if (OutputByteLengthReport != null)
-                                        {
-                                            OutputByteLengthReport(CommandName, Bytes.Length);
-                                        }
+                                            var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName + "@" + CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), OutputParameters));
+                                            lock (c.WriteBufferLockee)
+                                            {
+                                                c.WriteBuffer.Add(Bytes);
+                                            }
+                                            if (OutputByteLengthReport != null)
+                                            {
+                                                OutputByteLengthReport(CommandName, Bytes.Length);
+                                            }
+                                            OnSuccess();
+                                        };
+                                        ss.ExecuteCommand(CommandName, CommandHash.HasValue, Parameters, OnSuccessInner, OnFailure);
                                     }
                                 });
                             }
@@ -121,18 +125,22 @@ namespace Server
                                 ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
                                 {
                                     CommandName = CommandName,
-                                    ExecuteCommand = () =>
+                                    ExecuteCommand = (OnSuccess, OnFailure) =>
                                     {
-                                        var OutputParameters = ss.ExecuteCommand(CommandName, Parameters);
-                                        var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName, OutputParameters));
-                                        lock (c.WriteBufferLockee)
+                                        Action<String> OnSuccessInner = OutputParameters =>
                                         {
-                                            c.WriteBuffer.Add(Bytes);
-                                        }
-                                        if (OutputByteLengthReport != null)
-                                        {
-                                            OutputByteLengthReport(CommandName, Bytes.Length);
-                                        }
+                                            var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName, OutputParameters));
+                                            lock (c.WriteBufferLockee)
+                                            {
+                                                c.WriteBuffer.Add(Bytes);
+                                            }
+                                            if (OutputByteLengthReport != null)
+                                            {
+                                                OutputByteLengthReport(CommandName, Bytes.Length);
+                                            }
+                                            OnSuccess();
+                                        };
+                                        ss.ExecuteCommand(CommandName, Parameters, OnSuccessInner, OnFailure);
                                     }
                                 });
                             }

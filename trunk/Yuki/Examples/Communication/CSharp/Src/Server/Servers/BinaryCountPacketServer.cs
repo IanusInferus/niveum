@@ -117,29 +117,33 @@ namespace Server
                             ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
                             {
                                 CommandName = CommandName,
-                                ExecuteCommand = () =>
+                                ExecuteCommand = (OnSuccess, OnFailure) =>
                                 {
-                                    var OutputParameters = ss.ExecuteCommand(CommandName, CommandHash, Parameters);
-                                    var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
-                                    Byte[] Bytes;
-                                    using (var ms = Streams.CreateMemoryStream())
+                                    Action<Byte[]> OnSuccessInner = OutputParameters =>
                                     {
-                                        ms.WriteInt32(CommandNameBytes.Length);
-                                        ms.Write(CommandNameBytes);
-                                        ms.WriteUInt32(CommandHash);
-                                        ms.WriteInt32(OutputParameters.Length);
-                                        ms.Write(OutputParameters);
-                                        ms.Position = 0;
-                                        Bytes = ms.Read((int)(ms.Length));
-                                    }
-                                    lock (c.WriteBufferLockee)
-                                    {
-                                        c.WriteBuffer.Add(Bytes);
-                                    }
-                                    if (OutputByteLengthReport != null)
-                                    {
-                                        OutputByteLengthReport(CommandName, Bytes.Length);
-                                    }
+                                        var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
+                                        Byte[] Bytes;
+                                        using (var ms = Streams.CreateMemoryStream())
+                                        {
+                                            ms.WriteInt32(CommandNameBytes.Length);
+                                            ms.Write(CommandNameBytes);
+                                            ms.WriteUInt32(CommandHash);
+                                            ms.WriteInt32(OutputParameters.Length);
+                                            ms.Write(OutputParameters);
+                                            ms.Position = 0;
+                                            Bytes = ms.Read((int)(ms.Length));
+                                        }
+                                        lock (c.WriteBufferLockee)
+                                        {
+                                            c.WriteBuffer.Add(Bytes);
+                                        }
+                                        if (OutputByteLengthReport != null)
+                                        {
+                                            OutputByteLengthReport(CommandName, Bytes.Length);
+                                        }
+                                        OnSuccess();
+                                    };
+                                    ss.ExecuteCommand(CommandName, CommandHash, Parameters, OnSuccessInner, OnFailure);
                                 }
                             });
                         }
