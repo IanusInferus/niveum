@@ -227,7 +227,24 @@ namespace Server
                     var c = Count;
                     while (true)
                     {
-                        var Result = vts.Handle(c);
+                        TcpVirtualTransportServerHandleResult Result;
+                        try
+                        {
+                            Result = vts.Handle(c);
+                        }
+                        catch(Exception ex)
+                        {
+                            if ((ex is InvalidOperationException) && (ex.Message != ""))
+                            {
+                                Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Known", Name = "Exception", Message = ex.Message });
+                            }
+                            else if (!IsSocketErrorKnown(ex))
+                            {
+                                OnCriticalError(ex, new StackTrace(true));
+                            }
+                            ssm.NotifyStartRawReadFailure();
+                            return;
+                        }
                         c = 0;
                         if (Result.OnContinue)
                         {
