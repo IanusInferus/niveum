@@ -86,16 +86,21 @@ namespace Server
                         ret = HttpVirtualTransportServerHandleResult.CreateCommand(new HttpVirtualTransportServerHandleResultCommand
                         {
                             CommandName = CommandName,
-                            ExecuteCommand = () =>
+                            ExecuteCommand = (OnSuccess, OnFailure) =>
                             {
-                                var rjo = new JObject();
-                                rjo["commandName"] = CommandName;
-                                rjo["commandHash"] = CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                                rjo["parameters"] = ss.ExecuteCommand(CommandName, CommandHash.HasValue, Parameters);
-                                lock (c.WriteBufferLockee)
+                                Action<String> OnSuccessInner = OutputParameters =>
                                 {
-                                    c.WriteBuffer.Add(rjo);
-                                }
+                                    var rjo = new JObject();
+                                    rjo["commandName"] = CommandName;
+                                    rjo["commandHash"] = CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                                    rjo["parameters"] = OutputParameters;
+                                    lock (c.WriteBufferLockee)
+                                    {
+                                        c.WriteBuffer.Add(rjo);
+                                    }
+                                    OnSuccess();
+                                };
+                                ss.ExecuteCommand(CommandName, CommandHash.HasValue, Parameters, OnSuccessInner, OnFailure);
                             }
                         });
                     }
@@ -104,15 +109,20 @@ namespace Server
                         ret = HttpVirtualTransportServerHandleResult.CreateCommand(new HttpVirtualTransportServerHandleResultCommand
                         {
                             CommandName = CommandName,
-                            ExecuteCommand = () =>
+                            ExecuteCommand = (OnSuccess, OnFailure) =>
                             {
-                                var rjo = new JObject();
-                                rjo["commandName"] = CommandName;
-                                rjo["parameters"] = ss.ExecuteCommand(CommandName, Parameters);
-                                lock (c.WriteBufferLockee)
+                                Action<String> OnSuccessInner = OutputParameters =>
                                 {
-                                    c.WriteBuffer.Add(rjo);
-                                }
+                                    var rjo = new JObject();
+                                    rjo["commandName"] = CommandName;
+                                    rjo["parameters"] = OutputParameters;
+                                    lock (c.WriteBufferLockee)
+                                    {
+                                        c.WriteBuffer.Add(rjo);
+                                    }
+                                    OnSuccess();
+                                };
+                                ss.ExecuteCommand(CommandName, Parameters, OnSuccessInner, OnFailure);
                             }
                         });
                     }

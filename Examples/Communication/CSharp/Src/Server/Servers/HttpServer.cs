@@ -18,7 +18,7 @@ namespace Server
         public class HttpVirtualTransportServerHandleResultCommand
         {
             public String CommandName;
-            public Action ExecuteCommand;
+            public Action<Action, Action<Exception>> ExecuteCommand;
         }
 
         public class HttpVirtualTransportServerHandleResultBadCommand
