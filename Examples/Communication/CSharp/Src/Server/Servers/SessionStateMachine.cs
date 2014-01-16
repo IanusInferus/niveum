@@ -44,10 +44,10 @@ namespace Server
         private Action OnShutdownWrite;
         private Action<TWrite, Action, Action> OnWrite;
         private Action<TRead, Action, Action> OnExecute;
-        private Action OnStartRawRead;
+        private Action<Action<TRead[]>, Action> OnStartRawRead;
         private Action OnExit;
 
-        public SessionStateMachine(Func<Exception, Boolean> IsKnownException, Action<Exception, StackTrace> OnCriticalError, Action OnShutdownRead, Action OnShutdownWrite, Action<TWrite, Action, Action> OnWrite, Action<TRead, Action, Action> OnExecute, Action OnStartRawRead, Action OnExit)
+        public SessionStateMachine(Func<Exception, Boolean> IsKnownException, Action<Exception, StackTrace> OnCriticalError, Action OnShutdownRead, Action OnShutdownWrite, Action<TWrite, Action, Action> OnWrite, Action<TRead, Action, Action> OnExecute, Action<Action<TRead[]>, Action> OnStartRawRead, Action OnExit)
         {
             this.IsKnownException = IsKnownException;
             this.OnCriticalError = OnCriticalError;
@@ -110,7 +110,7 @@ namespace Server
                         if (!cc.IsInRawRead)
                         {
                             cc.IsInRawRead = true;
-                            AfterAction = OnStartRawRead;
+                            AfterAction = () => OnStartRawRead(NotifyStartRawReadSuccess, NotifyStartRawReadFailure);
                             return;
                         }
                     }
@@ -119,7 +119,11 @@ namespace Server
                         if (!cc.IsReadShutDown)
                         {
                             cc.IsReadShutDown = true;
-                            AfterAction = OnShutdownRead;
+                            AfterAction = () =>
+                            {
+                                OnShutdownRead();
+                                AddToActionQueue(Check);
+                            };
                             return;
                         }
                         if (cc.IsWriteEnabled)
@@ -128,7 +132,11 @@ namespace Server
                             {
                                 cc.IsWriteEnabled = false;
                                 cc.IsWriteShutDown = true;
-                                AfterAction = OnShutdownWrite;
+                                AfterAction = () =>
+                                {
+                                    OnShutdownWrite();
+                                    AddToActionQueue(Check);
+                                };
                                 return;
                             }
                         }
@@ -183,14 +191,6 @@ namespace Server
             Action OnFailure = NotifyFailure;
             OnExecute(r, OnSuccess, OnFailure);
         }
-        public void NotifyShutdownReadSuccess()
-        {
-            AddToActionQueue(Check);
-        }
-        public void NotifyShutdownWriteSuccess()
-        {
-            AddToActionQueue(Check);
-        }
         public void NotifyWrite(TWrite w)
         {
             c.DoAction(cc =>
@@ -202,7 +202,7 @@ namespace Server
             });
             AddToActionQueue(Check);
         }
-        public void NotifyStartRawReadSuccess(TRead[] Reads)
+        private void NotifyStartRawReadSuccess(TRead[] Reads)
         {
             c.DoAction(cc =>
             {
@@ -245,7 +245,7 @@ namespace Server
             }
             AddToActionQueue(Check);
         }
-        public void NotifyStartRawReadFailure()
+        private void NotifyStartRawReadFailure()
         {
             var IsReadShutDown = false;
             var IsWriteShutDown = false;

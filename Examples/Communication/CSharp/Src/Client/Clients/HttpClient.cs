@@ -84,8 +84,6 @@ namespace Client
                         var ResultBytes = Read(InputStream, Length);
                         ResultString = e.GetString(ResultBytes);
                     }
-
-                    resp.Close();
                 }
 
                 var Result = (JObject)(JToken.Parse(ResultString));
