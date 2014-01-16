@@ -32,14 +32,32 @@ namespace Server
             private int NumBadCommands = 0;
             private Boolean IsDisposed = false;
 
+            private class HttpReadContext
+            {
+                public HttpListenerContext ListenerContext;
+                public String NewSessionId;
+                public Action<HttpVirtualTransportServerHandleResult[]> OnSuccess;
+                public Action OnFailure;
+            }
+            private class HttpWriteContext
+            {
+                public HttpListenerContext ListenerContext;
+                public String NewSessionId;
+                public Dictionary<String, String> Query;
+            }
+            private LockedVariable<HttpReadContext> ReadContext = new LockedVariable<HttpReadContext>(null);
+            private LockedVariable<HttpWriteContext> WriteContext = new LockedVariable<HttpWriteContext>(null);
+            private SessionStateMachine<HttpVirtualTransportServerHandleResult, Unit> ssm;
+
             public HttpSession(HttpServer Server, IPEndPoint RemoteEndPoint)
             {
                 this.Server = Server;
                 this.RemoteEndPoint = RemoteEndPoint;
                 this.LastActiveTimeValue = new LockedVariable<DateTime>(DateTime.UtcNow);
+                ssm = new SessionStateMachine<HttpVirtualTransportServerHandleResult, Unit>(ex => false, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit);
 
                 Context = Server.ServerContext.CreateSessionContext();
-                Context.Quit += Quit;
+                Context.Quit += ssm.NotifyExit;
                 Context.Authenticated += () => Server.NotifySessionAuthenticated(this);
 
                 var p = Server.ServerContext.CreateServerImplementationWithJsonAdapter(Context);
@@ -51,6 +69,321 @@ namespace Server
                     return Server.CheckCommandAllowed(Context, CommandName);
                 };
                 vts = new JsonHttpPacketServer(a, cca);
+            }
+
+            private void OnShutdownRead()
+            {
+                HttpReadContext PairContext = null;
+                ReadContext.Update(c =>
+                {
+                    PairContext = c;
+                    return null;
+                });
+                if (PairContext != null)
+                {
+                    if (PairContext.ListenerContext != null)
+                    {
+                        PairContext.ListenerContext.Response.StatusCode = 400;
+                        PairContext.ListenerContext.Response.Close();
+                    }
+                    if (PairContext.OnFailure != null)
+                    {
+                        PairContext.OnFailure();
+                    }
+                }
+            }
+            private void OnShutdownWrite()
+            {
+                HttpWriteContext PairWriteContext = null;
+                WriteContext.Update(c =>
+                {
+                    PairWriteContext = c;
+                    return null;
+                });
+                if (PairWriteContext != null)
+                {
+                    HandleRawWrite(PairWriteContext.ListenerContext, PairWriteContext.NewSessionId, PairWriteContext.Query);
+                }
+            }
+            private void OnWrite(Unit w, Action OnSuccess, Action OnFailure)
+            {
+                OnSuccess();
+            }
+            private void OnExecute(HttpVirtualTransportServerHandleResult r, Action OnSuccess, Action OnFailure)
+            {
+                if (r.OnCommand)
+                {
+                    var CommandName = r.Command.CommandName;
+
+                    Action a = () =>
+                    {
+                        var CurrentTime = DateTime.UtcNow;
+                        Context.RequestTime = CurrentTime;
+                        if (Server.ServerContext.EnableLogPerformance)
+                        {
+                            var sw = new Stopwatch();
+                            sw.Start();
+                            r.Command.ExecuteCommand();
+                            sw.Stop();
+                            Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Name = CommandName, Message = String.Format("{0}ms", sw.ElapsedMilliseconds) });
+                        }
+                        else
+                        {
+                            r.Command.ExecuteCommand();
+                        }
+                        ssm.NotifyWrite(new Unit());
+                    };
+
+                    if (Debugger.IsAttached)
+                    {
+                        ssm.AddToActionQueue(() =>
+                        {
+                            a();
+                            OnSuccess();
+                        });
+                    }
+                    else
+                    {
+                        ssm.AddToActionQueue(() =>
+                        {
+                            try
+                            {
+                                a();
+                            }
+                            catch (Exception ex)
+                            {
+                                RaiseUnknownError(CommandName, ex, new StackTrace(true));
+                            }
+                            OnSuccess();
+                        });
+                    }
+                }
+                else if (r.OnBadCommand)
+                {
+                    var CommandName = r.BadCommand.CommandName;
+
+                    NumBadCommands += 1;
+
+                    // Maximum allowed bad commands exceeded.
+                    if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
+                    {
+                        RaiseError(CommandName, "Too many bad commands, closing transmission channel.");
+                        OnFailure();
+                    }
+                    else
+                    {
+                        RaiseError(CommandName, "Not recognized.");
+                        OnSuccess();
+                    }
+                }
+                else if (r.OnBadCommandLine)
+                {
+                    var CommandLine = r.BadCommandLine.CommandLine;
+
+                    NumBadCommands += 1;
+
+                    // Maximum allowed bad commands exceeded.
+                    if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
+                    {
+                        RaiseError("", String.Format(@"""{0}"": Too many bad commands, closing transmission channel.", CommandLine));
+                        OnFailure();
+                    }
+                    else
+                    {
+                        RaiseError("", String.Format(@"""{0}"":  recognized.", CommandLine));
+                        OnSuccess();
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+            private void OnStartRawRead(Action<HttpVirtualTransportServerHandleResult[]> OnSuccess, Action OnFailure)
+            {
+                HttpWriteContext PairWriteContext = null;
+                WriteContext.Update(c =>
+                {
+                    if (c != null)
+                    {
+                        PairWriteContext = c;
+                    }
+                    return null;
+                });
+                if (PairWriteContext != null)
+                {
+                    HandleRawWrite(PairWriteContext.ListenerContext, PairWriteContext.NewSessionId, PairWriteContext.Query);
+                }
+
+                HttpReadContext PairContext = null;
+                var Pushed = true;
+                ReadContext.Update(c =>
+                {
+                    if (c != null)
+                    {
+                        if (c.ListenerContext != null)
+                        {
+                            c.OnSuccess = OnSuccess;
+                            c.OnFailure = OnFailure;
+                            PairContext = c;
+                            Pushed = true;
+                            return null;
+                        }
+                        else
+                        {
+                            Pushed = false;
+                            return c;
+                        }
+                    }
+                    Pushed = true;
+                    return new HttpReadContext { ListenerContext = null, NewSessionId = null, OnSuccess = OnSuccess, OnFailure = OnFailure };
+                });
+
+                if (PairContext != null)
+                {
+                    HandleRawRead(PairContext.ListenerContext, PairContext.NewSessionId, PairContext.OnSuccess, PairContext.OnFailure);
+                }
+                if (!Pushed)
+                {
+                    OnFailure();
+                }
+            }
+
+            private void HandleRawRead(HttpListenerContext ListenerContext, String NewSessionId, Action<HttpVirtualTransportServerHandleResult[]> OnSuccess, Action OnFailure)
+            {
+                String Data;
+                using (var InputStream = ListenerContext.Request.InputStream.AsReadable())
+                {
+                    Byte[] Bytes;
+                    try
+                    {
+                        Bytes = InputStream.Read((int)(ListenerContext.Request.ContentLength64));
+                    }
+                    catch
+                    {
+                        OnFailure();
+                        return;
+                    }
+                    Data = ListenerContext.Request.ContentEncoding.GetString(Bytes);
+                }
+                var Query = HttpListenerRequestExtension.GetQuery(ListenerContext.Request);
+                if (Data == "")
+                {
+                    if (Query.ContainsKey("data"))
+                    {
+                        Data = Query["data"];
+                    }
+                }
+                JArray Objects;
+                try
+                {
+                    Objects = JToken.Parse(Data) as JArray;
+                }
+                catch
+                {
+                    ListenerContext.Response.StatusCode = 400;
+                    ListenerContext.Response.Close();
+                    OnFailure();
+                    return;
+                }
+                if (Objects == null || Objects.Any(j => j.Type != JTokenType.Object))
+                {
+                    ListenerContext.Response.StatusCode = 400;
+                    ListenerContext.Response.Close();
+                    OnFailure();
+                    return;
+                }
+
+                var Results = new List<HttpVirtualTransportServerHandleResult>();
+                foreach (var co in Objects)
+                {
+                    HttpVirtualTransportServerHandleResult Result;
+                    try
+                    {
+                        Result = vts.Handle(co as JObject);
+                    }
+                    catch (Exception ex)
+                    {
+                        if ((ex is InvalidOperationException) && (ex.Message != ""))
+                        {
+                            Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Known", Name = "Exception", Message = ex.Message });
+                        }
+                        else
+                        {
+                            OnCriticalError(ex, new StackTrace(true));
+                        }
+                        OnFailure();
+                        return;
+                    }
+                    if (Result.OnCommand || Result.OnBadCommand || Result.OnBadCommandLine)
+                    {
+                        Results.Add(Result);
+                    }
+                    else
+                    {
+                        OnFailure();
+                    }
+                }
+
+                var Success = false;
+                WriteContext.Update(c =>
+                {
+                    if (c != null)
+                    {
+                        Success = false;
+                        return c;
+                    }
+                    Success = true;
+                    return new HttpWriteContext { ListenerContext = ListenerContext, NewSessionId = NewSessionId, Query = Query };
+                });
+                if (!Success)
+                {
+                    OnFailure();
+                }
+                else
+                {
+                    OnSuccess(Results.ToArray());
+                }
+            }
+
+            private void HandleRawWrite(HttpListenerContext ListenerContext, String NewSessionId, Dictionary<String, String> Query)
+            {
+                var jo = new JObject();
+                jo["commands"] = new JArray(vts.TakeWriteBuffer());
+                jo["sessionid"] = NewSessionId;
+                var Result = jo.ToString(Newtonsoft.Json.Formatting.None);
+                {
+                    if (Query.ContainsKey("callback"))
+                    {
+                        var CallbackName = Query["callback"];
+                        Result = "{0}({1});".Formats(CallbackName, Result);
+                    }
+                }
+                var Bytes = TextEncoding.UTF8.GetBytes(Result);
+                ListenerContext.Response.StatusCode = 200;
+                ListenerContext.Response.AddHeader("Accept-Ranges", "none");
+                ListenerContext.Response.ContentEncoding = System.Text.Encoding.UTF8;
+                ListenerContext.Response.ContentLength64 = Bytes.Length;
+                ListenerContext.Response.ContentType = "application/json; charset=utf-8";
+                using (var OutputStream = ListenerContext.Response.OutputStream.AsWritable())
+                {
+                    try
+                    {
+                        OutputStream.Write(Bytes);
+                    }
+                    catch
+                    {
+                    }
+                }
+                try
+                {
+                    ListenerContext.Response.Close();
+                }
+                catch
+                {
+                }
+
+                LastActiveTimeValue.Update(v => DateTime.UtcNow);
             }
 
             public void Dispose()
@@ -72,17 +405,8 @@ namespace Server
                 si.Dispose();
 
                 IsRunningValue.Update(b => false);
-                while (NumSessionCommand.Check(n => n != 0))
-                {
-                    NumSessionCommandUpdated.WaitOne();
-                }
-                NumSessionCommandUpdated.Dispose();
 
-                while (CommandQueue.Check(q => q.IsRunning))
-                {
-                    CommandQueueCompleted.WaitOne();
-                }
-                CommandQueueCompleted.Dispose();
+                SpinWait.SpinUntil(() => ssm.IsExited());
 
                 Context.Dispose();
 
@@ -95,7 +419,7 @@ namespace Server
             }
 
             //线程安全
-            private void StopAsync()
+            private void OnExit()
             {
                 bool Done = false;
                 IsExitingValue.Update(b =>
@@ -110,10 +434,6 @@ namespace Server
                 });
                 if (Done) { return; }
 
-                if (Server.ServerContext.EnableLogSystem)
-                {
-                    Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Name = "SessionExitAsync", Message = "" });
-                }
                 Server.NotifySessionQuit(this);
             }
 
@@ -139,80 +459,45 @@ namespace Server
                     {
                         Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Sys", Name = "SessionEnter", Message = "" });
                     }
+                    ssm.Start();
                 }
                 catch (Exception ex)
                 {
                     OnCriticalError(ex, new StackTrace(true));
-                    StopAsync();
+                    ssm.NotifyFailure();
                 }
             }
 
             public Boolean Push(HttpListenerContext ListenerContext, String NewSessionId)
             {
+                HttpReadContext PairContext = null;
                 var Pushed = true;
-                IsExitingValue.DoAction
-                (
-                    b =>
+                ReadContext.Update(c =>
+                {
+                    if (c != null)
                     {
-                        if (b)
+                        if (c.ListenerContext != null)
                         {
                             Pushed = false;
-                            return;
+                            return c;
                         }
-                        IsRunningValue.DoAction
-                        (
-                            bb =>
-                            {
-                                if (!bb)
-                                {
-                                    Pushed = false;
-                                    return;
-                                }
-
-                                PushCommand(ListenerContext, NewSessionId);
-                            }
-                        );
-                    }
-                );
-
-                return Pushed;
-            }
-
-            private AutoResetEvent NumSessionCommandUpdated = new AutoResetEvent(false);
-            private LockedVariable<int> NumSessionCommand = new LockedVariable<int>(0);
-            private class SessionCommandQueue
-            {
-                public bool IsRunning;
-                public Queue<Action> Queue;
-            }
-            private LockedVariable<SessionCommandQueue> CommandQueue = new LockedVariable<SessionCommandQueue>(new SessionCommandQueue { IsRunning = false, Queue = new Queue<Action>() });
-            private AutoResetEvent CommandQueueCompleted = new AutoResetEvent(false);
-            private void ExecuteCommandQueue()
-            {
-                while (true)
-                {
-                    Action a = null;
-                    CommandQueue.DoAction
-                    (
-                        q =>
+                        else
                         {
-                            if (q.Queue.Count > 0)
-                            {
-                                a = q.Queue.Dequeue();
-                            }
-                            else
-                            {
-                                q.IsRunning = false;
-                                CommandQueueCompleted.Set();
-                            }
+                            c.ListenerContext = ListenerContext;
+                            c.NewSessionId = NewSessionId;
+                            PairContext = c;
+                            return null;
                         }
-                    );
-                    if (a == null)
-                    {
-                        return;
                     }
-                    a();
+                    Pushed = true;
+                    return new HttpReadContext { ListenerContext = ListenerContext, NewSessionId = NewSessionId, OnSuccess = null, OnFailure = null };
+                });
+
+                if (PairContext != null)
+                {
+                    HandleRawRead(PairContext.ListenerContext, PairContext.NewSessionId, PairContext.OnSuccess, PairContext.OnFailure);
                 }
+                return Pushed;
             }
 
             private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
@@ -222,245 +507,6 @@ namespace Server
                 get
                 {
                     return IsRunningValue.Check(b => b);
-                }
-            }
-
-            private void LockSessionCommand()
-            {
-                NumSessionCommand.Update(n => n + 1);
-                NumSessionCommandUpdated.Set();
-            }
-            private void ReleaseSessionCommand()
-            {
-                NumSessionCommand.Update(n =>
-                {
-                    NumSessionCommandUpdated.Set();
-                    return n - 1;
-                });
-            }
-
-            private void Quit()
-            {
-                LockSessionCommand();
-
-                Action a = () =>
-                {
-                    StopAsync();
-                };
-
-                CommandQueue.DoAction
-                (
-                    q =>
-                    {
-                        q.Queue.Enqueue(a);
-                        q.Queue.Enqueue(ReleaseSessionCommand);
-                        if (!q.IsRunning)
-                        {
-                            q.IsRunning = true;
-                            ThreadPool.QueueUserWorkItem(o => ExecuteCommandQueue());
-                        }
-                    }
-                );
-            }
-            private void PushCommand(HttpListenerContext ListenerContext, String NewSessionId)
-            {
-                LockSessionCommand();
-
-                Action a;
-                if (System.Diagnostics.Debugger.IsAttached)
-                {
-                    a = () =>
-                    {
-                        MessageLoop(ListenerContext, NewSessionId);
-                    };
-                }
-                else
-                {
-                    a = () =>
-                    {
-                        try
-                        {
-                            MessageLoop(ListenerContext, NewSessionId);
-                        }
-                        catch (Exception ex)
-                        {
-                            OnCriticalError(ex, new StackTrace(true));
-                            StopAsync();
-                        }
-                    };
-                }
-
-                CommandQueue.DoAction
-                (
-                    q =>
-                    {
-                        q.Queue.Enqueue(a);
-                        q.Queue.Enqueue(ReleaseSessionCommand);
-                        if (!q.IsRunning)
-                        {
-                            q.IsRunning = true;
-                            ThreadPool.QueueUserWorkItem(o => ExecuteCommandQueue());
-                        }
-                    }
-                );
-            }
-
-            private void MessageLoop(HttpListenerContext ListenerContext, String NewSessionId)
-            {
-                String Data;
-                using (var InputStream = ListenerContext.Request.InputStream.AsReadable())
-                {
-                    Data = ListenerContext.Request.ContentEncoding.GetString(InputStream.Read((int)(ListenerContext.Request.ContentLength64)));
-                }
-                var Query = HttpListenerRequestExtension.GetQuery(ListenerContext.Request);
-                if (Data == "")
-                {
-                    if (Query.ContainsKey("data"))
-                    {
-                        Data = Query["data"];
-                    }
-                }
-                JArray Objects;
-                try
-                {
-                    Objects = JToken.Parse(Data) as JArray;
-                }
-                catch
-                {
-                    ListenerContext.Response.StatusCode = 400;
-                    ListenerContext.Response.Close();
-                    StopAsync();
-                    return;
-                }
-                if (Objects == null || Objects.Any(j => j.Type != JTokenType.Object))
-                {
-                    ListenerContext.Response.StatusCode = 400;
-                    ListenerContext.Response.Close();
-                    StopAsync();
-                    return;
-                }
-
-                foreach (var co in Objects)
-                {
-                    var r = vts.Handle(co as JObject);
-                    if (r.OnCommand || r.OnBadCommand || r.OnBadCommandLine)
-                    {
-                        ReadCommand(r);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException();
-                    }
-                }
-
-                var jo = new JObject();
-                jo["commands"] = new JArray(vts.TakeWriteBuffer());
-                jo["sessionid"] = NewSessionId;
-                var Result = jo.ToString(Newtonsoft.Json.Formatting.None);
-                {
-                    if (Query.ContainsKey("callback"))
-                    {
-                        var CallbackName = Query["callback"];
-                        Result = "{0}({1});".Formats(CallbackName, Result);
-                    }
-                }
-                var Bytes = TextEncoding.UTF8.GetBytes(Result);
-                ListenerContext.Response.StatusCode = 200;
-                ListenerContext.Response.AddHeader("Accept-Ranges", "none");
-                ListenerContext.Response.ContentEncoding = System.Text.Encoding.UTF8;
-                ListenerContext.Response.ContentLength64 = Bytes.Length;
-                ListenerContext.Response.ContentType = "application/json; charset=utf-8";
-                using (var OutputStream = ListenerContext.Response.OutputStream.AsWritable())
-                {
-                    OutputStream.Write(Bytes);
-                }
-                ListenerContext.Response.Close();
-
-                LastActiveTimeValue.Update(v => DateTime.UtcNow);
-            }
-
-            private void ReadCommand(HttpVirtualTransportServerHandleResult r)
-            {
-                if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
-                {
-                    return;
-                }
-
-                if (r.OnCommand)
-                {
-                    var CommandName = r.Command.CommandName;
-
-                    Action a = () =>
-                    {
-                        var CurrentTime = DateTime.UtcNow;
-                        Context.RequestTime = CurrentTime;
-                        if (Server.ServerContext.EnableLogPerformance)
-                        {
-                            var sw = new Stopwatch();
-                            sw.Start();
-                            r.Command.ExecuteCommand();
-                            sw.Stop();
-                            Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Name = CommandName, Message = String.Format("{0}ms", sw.ElapsedMilliseconds) });
-                        }
-                        else
-                        {
-                            r.Command.ExecuteCommand();
-                        }
-                    };
-
-                    if (Debugger.IsAttached)
-                    {
-                        a();
-                    }
-                    else
-                    {
-                        try
-                        {
-                            a();
-                        }
-                        catch (Exception ex)
-                        {
-                            RaiseUnknownError(CommandName, ex, new StackTrace(true));
-                        }
-                    }
-                }
-                else if (r.OnBadCommand)
-                {
-                    var CommandName = r.BadCommand.CommandName;
-
-                    NumBadCommands += 1;
-
-                    // Maximum allowed bad commands exceeded.
-                    if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
-                    {
-                        RaiseError(CommandName, "Too many bad commands, closing transmission channel.");
-                        StopAsync();
-                    }
-                    else
-                    {
-                        RaiseError(CommandName, "Not recognized.");
-                    }
-                }
-                else if (r.OnBadCommandLine)
-                {
-                    var CommandLine = r.BadCommandLine.CommandLine;
-
-                    NumBadCommands += 1;
-
-                    // Maximum allowed bad commands exceeded.
-                    if (Server.MaxBadCommands != 0 && NumBadCommands > Server.MaxBadCommands)
-                    {
-                        RaiseError(String.Format(@"""{0}""", CommandLine), "Too many bad commands, closing transmission channel.");
-                        StopAsync();
-                    }
-                    else
-                    {
-                        RaiseError(String.Format(@"""{0}""", CommandLine), "Not recognized.");
-                    }
-                }
-                else
-                {
-                    throw new InvalidProgramException();
                 }
             }
 
