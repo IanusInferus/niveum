@@ -81,12 +81,10 @@ namespace Server
             private void OnShutdownRead()
             {
                 Socket.Shutdown(SocketShutdown.Receive);
-                ssm.NotifyShutdownReadSuccess();
             }
             private void OnShutdownWrite()
             {
                 Socket.Shutdown(SocketShutdown.Send);
-                ssm.NotifyShutdownWriteSuccess();
             }
             private void OnWrite(Unit w, Action OnSuccess, Action OnFailure)
             {
@@ -213,13 +211,13 @@ namespace Server
                     throw new InvalidOperationException();
                 }
             }
-            private void OnStartRawRead()
+            private void OnStartRawRead(Action<TcpVirtualTransportServerHandleResult[]> OnSuccess, Action OnFailure)
             {
                 Action<int> Completed = Count =>
                 {
                     if (Count <= 0)
                     {
-                        ssm.NotifyStartRawReadFailure();
+                        OnFailure();
                         return;
                     }
                     if (ssm.IsExited()) { return; }
@@ -242,7 +240,7 @@ namespace Server
                             {
                                 OnCriticalError(ex, new StackTrace(true));
                             }
-                            ssm.NotifyStartRawReadFailure();
+                            OnFailure();
                             return;
                         }
                         c = 0;
@@ -254,10 +252,10 @@ namespace Server
                     }
                     if (Results.Count == 0)
                     {
-                        OnStartRawRead();
+                        OnStartRawRead(OnSuccess, OnFailure);
                         return;
                     }
-                    ssm.NotifyStartRawReadSuccess(Results.ToArray());
+                    OnSuccess(Results.ToArray());
                 };
                 Action<Exception> Faulted = ex =>
                 {
@@ -265,7 +263,7 @@ namespace Server
                     {
                         OnCriticalError(ex, new StackTrace(true));
                     }
-                    ssm.NotifyStartRawReadFailure();
+                    OnFailure();
                 };
                 var Buffer = vts.GetReadBuffer();
                 var BufferLength = Buffer.Offset + Buffer.Count;
