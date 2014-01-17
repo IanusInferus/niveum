@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#二进制通讯代码生成器
-//  Version:     2013.12.08.
+//  Version:     2014.01.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,15 +19,15 @@ namespace Yuki.ObjectSchema.CSharpBinary
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpBinary(this Schema Schema, String NamespaceName, Boolean WithFirefly)
+        public static String CompileToCSharpBinary(this Schema Schema, String NamespaceName, HashSet<String> AsyncCommands, Boolean WithFirefly)
         {
-            Writer w = new Writer(Schema, NamespaceName, WithFirefly);
+            Writer w = new Writer(Schema, NamespaceName, AsyncCommands, WithFirefly);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
         public static String CompileToCSharpBinary(this Schema Schema)
         {
-            return CompileToCSharpBinary(Schema, "", true);
+            return CompileToCSharpBinary(Schema, "", new HashSet<String> { }, true);
         }
 
         public class Writer
@@ -39,6 +39,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             private Schema Schema;
             private ISchemaClosureGenerator SchemaClosureGenerator;
             private String NamespaceName;
+            private HashSet<String> AsyncCommands;
             private Boolean WithFirefly;
             private UInt64 Hash;
 
@@ -50,15 +51,16 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
-            public Writer(Schema Schema, String NamespaceName, Boolean WithFirefly)
+            public Writer(Schema Schema, String NamespaceName, HashSet<String> AsyncCommands, Boolean WithFirefly)
             {
                 this.Schema = Schema;
                 this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.NamespaceName = NamespaceName;
+                this.AsyncCommands = AsyncCommands;
                 this.WithFirefly = WithFirefly;
                 this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
 
-                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, WithFirefly);
+                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, AsyncCommands, WithFirefly);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
@@ -125,11 +127,25 @@ namespace Yuki.ObjectSchema.CSharpBinary
                         var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
                         if (WithFirefly)
                         {
-                            l.AddRange(GetTemplate("BinarySerializationServer_ClientCommand_WithFirefly").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                            if (AsyncCommands.Contains(c.ClientCommand.Name))
+                            {
+                                l.AddRange(GetTemplate("BinarySerializationServer_ClientCommandAsync_WithFirefly").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                            }
+                            else
+                            {
+                                l.AddRange(GetTemplate("BinarySerializationServer_ClientCommand_WithFirefly").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                            }
                         }
                         else
                         {
-                            l.AddRange(GetTemplate("BinarySerializationServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                            if (AsyncCommands.Contains(c.ClientCommand.Name))
+                            {
+                                l.AddRange(GetTemplate("BinarySerializationServer_ClientCommandAsync").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                            }
+                            else
+                            {
+                                l.AddRange(GetTemplate("BinarySerializationServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                            }
                         }
                     }
                 }

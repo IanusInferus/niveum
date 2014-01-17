@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2013.12.08.
+//  Version:     2014.01.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,15 +20,15 @@ namespace Yuki.ObjectSchema.CSharpCompatible
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpCompatible(this Schema Schema, String NamespaceName, String ClassName)
+        public static String CompileToCSharpCompatible(this Schema Schema, String NamespaceName, String ClassName, HashSet<String> AsyncCommands)
         {
-            Writer w = new Writer(Schema, NamespaceName, ClassName);
+            Writer w = new Writer(Schema, NamespaceName, ClassName, AsyncCommands);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
         public static String CompileToCSharpCompatible(this Schema Schema, String ClassName)
         {
-            return CompileToCSharpCompatible(Schema, "", ClassName);
+            return CompileToCSharpCompatible(Schema, "", ClassName, new HashSet<String> { });
         }
 
         public class Writer
@@ -42,6 +42,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             private Dictionary<String, TypeDef> VersionedNameToType;
             private String NamespaceName;
             private String ClassName;
+            private HashSet<String> AsyncCommands;
 
             static Writer()
             {
@@ -51,15 +52,16 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
-            public Writer(Schema Schema, String NamespaceName, String ClassName)
+            public Writer(Schema Schema, String NamespaceName, String ClassName, HashSet<String> AsyncCommands)
             {
                 this.Schema = Schema;
                 this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.VersionedNameToType = Schema.GetMap().ToDictionary(t => t.Key, t => t.Value, StringComparer.OrdinalIgnoreCase);
                 this.NamespaceName = NamespaceName;
                 this.ClassName = ClassName;
+                this.AsyncCommands = AsyncCommands;
 
-                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, false);
+                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, AsyncCommands, false);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
@@ -807,13 +809,16 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     }
                 }
                 var VersionedName = c.TypeFriendlyName();
-                if (cHead == null)
+                if (AsyncCommands.Contains(Name))
                 {
-                    l.AddRange(GetTemplate("Translator_ClientCommand").Substitute("Name", Name).Substitute("VersionedName", VersionedName));
+                    l.AddRange(GetTemplate("Translator_ClientCommandAsync").Substitute("Name", Name).Substitute("VersionedName", VersionedName));
                 }
                 else
                 {
                     l.AddRange(GetTemplate("Translator_ClientCommand").Substitute("Name", Name).Substitute("VersionedName", VersionedName));
+                }
+                if (cHead != null)
+                {
                     FillTranslatorRecordTo(Name + "Request", VersionedName + "Request", c.OutParameters, cHead.OutParameters, l, false);
                     FillTranslatorTaggedUnionFrom(VersionedName + "Reply", Name + "Reply", VersionedName + "Reply", c.InParameters, cHead.InParameters, l, false);
                 }
