@@ -99,8 +99,8 @@ namespace Server
         }
 
         public UInt64 Hash { get { return ss.Hash; } }
-        public Boolean HasCommand(String CommandName) { return ss.HasCommand(CommandName); }
-        public Boolean HasCommand(String CommandName, UInt32 CommandHash) { return ss.HasCommand(CommandName, CommandHash); }
+        public Boolean HasCommand(String CommandName) { return ss.HasCommand(CommandName) || ss.HasCommandAsync(CommandName); }
+        public Boolean HasCommand(String CommandName, UInt32 CommandHash) { return ss.HasCommand(CommandName, CommandHash) || ss.HasCommandAsync(CommandName); }
         public void ExecuteCommand(String CommandName, String Parameters, Action<String> OnSuccess, Action<Exception> OnFailure)
         {
             if (ss.HasCommand(CommandName))
