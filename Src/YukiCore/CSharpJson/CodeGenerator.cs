@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2013.12.08.
+//  Version:     2014.01.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,15 +19,15 @@ namespace Yuki.ObjectSchema.CSharpJson
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpJson(this Schema Schema, String NamespaceName)
+        public static String CompileToCSharpJson(this Schema Schema, String NamespaceName, HashSet<String> AsyncCommands)
         {
-            Writer w = new Writer(Schema, NamespaceName);
+            Writer w = new Writer(Schema, NamespaceName, AsyncCommands);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
         public static String CompileToCSharpJson(this Schema Schema)
         {
-            return CompileToCSharpJson(Schema, "");
+            return CompileToCSharpJson(Schema, "", new HashSet<String> { });
         }
 
         public class Writer
@@ -39,6 +39,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             private Schema Schema;
             private ISchemaClosureGenerator SchemaClosureGenerator;
             private String NamespaceName;
+            private HashSet<String> AsyncCommands;
             private UInt64 Hash;
 
             static Writer()
@@ -49,14 +50,15 @@ namespace Yuki.ObjectSchema.CSharpJson
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
-            public Writer(Schema Schema, String NamespaceName)
+            public Writer(Schema Schema, String NamespaceName, HashSet<String> AsyncCommands)
             {
                 this.Schema = Schema;
                 this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.NamespaceName = NamespaceName;
+                this.AsyncCommands = AsyncCommands;
                 this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
 
-                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, false);
+                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, AsyncCommands, false);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
@@ -115,10 +117,24 @@ namespace Yuki.ObjectSchema.CSharpJson
                     {
                         if (c.ClientCommand.Version == "")
                         {
-                            l.AddRange(GetTemplate("JsonSerializationServer_ClientCommandWithoutHash").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()));
+                            if (AsyncCommands.Contains(c.ClientCommand.Name))
+                            {
+                                l.AddRange(GetTemplate("JsonSerializationServer_ClientCommandAsyncWithoutHash").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()));
+                            }
+                            else
+                            {
+                                l.AddRange(GetTemplate("JsonSerializationServer_ClientCommandWithoutHash").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()));
+                            }
                         }
                         var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
-                        l.AddRange(GetTemplate("JsonSerializationServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                        if (AsyncCommands.Contains(c.ClientCommand.Name))
+                        {
+                            l.AddRange(GetTemplate("JsonSerializationServer_ClientCommandAsync").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                        }
+                        else
+                        {
+                            l.AddRange(GetTemplate("JsonSerializationServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                        }
                     }
                 }
                 return l.ToArray();
@@ -192,7 +208,14 @@ namespace Yuki.ObjectSchema.CSharpJson
                 {
                     if (c.OnClientCommand)
                     {
-                        l.AddRange(GetTemplate("JsonLogAspectWrapper_ClientCommandHook").Substitute("Name", c.ClientCommand.TypeFriendlyName()));
+                        if (AsyncCommands.Contains(c.ClientCommand.Name))
+                        {
+                            l.AddRange(GetTemplate("JsonLogAspectWrapper_ClientCommandAsyncHook").Substitute("Name", c.ClientCommand.TypeFriendlyName()));
+                        }
+                        else
+                        {
+                            l.AddRange(GetTemplate("JsonLogAspectWrapper_ClientCommandHook").Substitute("Name", c.ClientCommand.TypeFriendlyName()));
+                        }
                     }
                     else if (c.OnServerCommand)
                     {
