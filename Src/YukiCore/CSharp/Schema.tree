@@ -614,6 +614,13 @@ ObjectSchemaTemplate
                     ${XmlComment}
                     [[${Name}Reply]] [[${Name}]]([[${Name}Request]] r);
         Template
+            Name IApplicationServer_ClientCommandAsync
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback, Action<Exception> OnFailure);
+        Template
             Name IApplicationServer_ServerCommand
             //Parameters: ${Name}, ${XmlComment}
             Value

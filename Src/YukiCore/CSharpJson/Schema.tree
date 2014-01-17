@@ -70,11 +70,15 @@ ObjectSchemaTemplate
                     {
                         private Dictionary<String, Func<IApplicationServer, String, String>> ClientCommandsWithoutHash;
                         private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, String>> ClientCommands;
+                        private Dictionary<String, Action<IApplicationServer, String, Action<String>, Action<Exception>>> AsyncClientCommandsWithoutHash;
+                        private Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, String, Action<String>, Action<Exception>>> AsyncClientCommands;
 
                         public JsonSerializationServer()
                         {
                             ClientCommandsWithoutHash = new Dictionary<String, Func<IApplicationServer, String, String>>(StringComparer.OrdinalIgnoreCase);
                             ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, String>>();
+                            AsyncClientCommandsWithoutHash = new Dictionary<String, Action<IApplicationServer, String, Action<String>, Action<Exception>>>(StringComparer.OrdinalIgnoreCase);
+                            AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, String, Action<String>, Action<Exception>>>();
                             ${ClientCommands}
                         }
 
@@ -90,10 +94,18 @@ ObjectSchemaTemplate
                         {
                             return ClientCommandsWithoutHash.ContainsKey(CommandName);
                         }
+                        public Boolean HasCommandAsync(String CommandName)
+                        {
+                            return AsyncClientCommandsWithoutHash.ContainsKey(CommandName);
+                        }
 
                         public Boolean HasCommand(String CommandName, UInt32 CommandHash)
                         {
                             return ClientCommands.ContainsKey(new KeyValuePair<String, UInt32>(CommandName, CommandHash));
+                        }
+                        public Boolean HasCommandAsync(String CommandName, UInt32 CommandHash)
+                        {
+                            return AsyncClientCommands.ContainsKey(new KeyValuePair<String, UInt32>(CommandName, CommandHash));
                         }
 
                         public String ExecuteCommand(IApplicationServer s, String CommandName, String Parameters)
@@ -101,11 +113,21 @@ ObjectSchemaTemplate
                             var cmd = ClientCommandsWithoutHash[CommandName];
                             return cmd(s, Parameters);
                         }
+                        public void ExecuteCommandAsync(IApplicationServer s, String CommandName, String Parameters, Action<String> Callback, Action<Exception> OnFailure)
+                        {
+                            var cmd = AsyncClientCommandsWithoutHash[CommandName];
+                            cmd(s, Parameters, Callback, OnFailure);
+                        }
 
                         public String ExecuteCommand(IApplicationServer s, String CommandName, UInt32 CommandHash, String Parameters)
                         {
                             var cmd = ClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];
                             return cmd(s, Parameters);
+                        }
+                        public void ExecuteCommandAsync(IApplicationServer s, String CommandName, UInt32 CommandHash, String Parameters, Action<String> Callback, Action<Exception> OnFailure)
+                        {
+                            var cmd = AsyncClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];
+                            cmd(s, Parameters, Callback, OnFailure);
                         }
                     }
                     public sealed class JsonSerializationServerEventDispatcher
@@ -129,11 +151,23 @@ ObjectSchemaTemplate
                 $String
                     ClientCommandsWithoutHash.Add(@"${CommandName}", (s, p) => JsonTranslator.[[${Name}ReplyToJson]](s.[[${Name}]](JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
         Template
+            Name JsonSerializationServer_ClientCommandAsyncWithoutHash
+            //Parameters: ${CommandName}, ${Name}
+            Value
+                $String
+                    AsyncClientCommandsWithoutHash.Add(@"${CommandName}", (s, p, Callback, OnFailure) => s.[[${Name}]](JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)), Reply => Callback(JsonTranslator.[[${Name}ReplyToJson]](Reply).ToString(Formatting.None)), OnFailure));
+        Template
             Name JsonSerializationServer_ClientCommand
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
                     ClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (s, p) => JsonTranslator.[[${Name}ReplyToJson]](s.[[${Name}]](JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
+        Template
+            Name JsonSerializationServer_ClientCommandAsync
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}
+            Value
+                $String
+                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (s, p, Callback, OnFailure) => s.[[${Name}]](JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)), Reply => Callback(JsonTranslator.[[${Name}ReplyToJson]](Reply).ToString(Formatting.None)), OnFailure));
         Template
             Name JsonSerializationServer_ServerCommand
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
@@ -304,6 +338,21 @@ ObjectSchemaTemplate
                         var Reply = Inner.[[${Name}]](Request);
                         if (ClientCommandOut != null) { ClientCommandOut(@"${Name}", JsonTranslator.[[${Name}ReplyToJson]](Reply).ToString(Formatting.None)); }
                         return Reply;
+                    }
+        Template
+            Name JsonLogAspectWrapper_ClientCommandAsyncHook
+            //Parameters: ${Name}
+            Value
+                $String
+                    public void [[${Name}]]([[${Name}Request]] Request, Action<[[${Name}Reply]]> Callback, Action<Exception> OnFailure)
+                    {
+                        if (ClientCommandIn != null) { ClientCommandIn(@"${Name}", JsonTranslator.[[${Name}RequestToJson]](Request).ToString(Formatting.None)); }
+                        Action<[[${Name}Reply]]> CallbackInner = Reply =>
+                        {
+                            if (ClientCommandOut != null) { ClientCommandOut(@"${Name}", JsonTranslator.[[${Name}ReplyToJson]](Reply).ToString(Formatting.None)); }
+                            Callback(Reply);
+                        };
+                        Inner.[[${Name}]](Request, CallbackInner, OnFailure);
                     }
         Template
             Name JsonLogAspectWrapper_ServerCommand

@@ -396,6 +396,16 @@ ObjectSchemaTemplate
                         return Reply;
                     }
         Template
+            Name Translator_ClientCommandAsync
+            //Parameters: ${Name}, ${VersionedName}
+            Value
+                $String
+                    public void [[${VersionedName}]]([[${VersionedName}Request]] r, Action<[[${VersionedName}Reply]]> Callback, Action<Exception> OnFailure)
+                    {
+                        var HeadRequest = [[${VersionedName}RequestToHead]](r);
+                        [[${Name}]](HeadRequest, HeadReply => Callback([[${VersionedName}ReplyFromHead]](HeadReply)), OnFailure);
+                    }
+        Template
             Name Translator_ServerCommand
             //Parameters: ${VersionedName}
             Value
