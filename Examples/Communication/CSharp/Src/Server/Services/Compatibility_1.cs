@@ -43,5 +43,12 @@ namespace Server.Services
             o.Lines = ho.Content.UnifyNewLineToLf().Split('\n').ToList();
             return o;
         }
+        public TestAddRequest TestAddAt1RequestToHead(TestAddAt1Request o)
+        {
+            var ho = new TestAddRequest();
+            ho.Left = o.Operand1;
+            ho.Right = o.Operand2;
+            return ho;
+        }
     }
 }
