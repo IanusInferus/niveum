@@ -309,9 +309,9 @@ namespace Server
         }
         private void ExecuteActionQueue()
         {
+            int Count = 16;
             while (true)
             {
-                int Count = 16;
                 Action a = null;
                 ActionQueue.DoAction
                 (
