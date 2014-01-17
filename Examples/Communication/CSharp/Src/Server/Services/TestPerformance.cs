@@ -8,9 +8,9 @@ namespace Server.Services
 {
     public partial class ServerImplementation : IApplicationServer
     {
-        public TestAddReply TestAdd(TestAddRequest r)
+        public void TestAdd(TestAddRequest r, Action<TestAddReply> Callback, Action<Exception> OnFailure)
         {
-            return TestAddReply.CreateResult(r.Left + r.Right);
+            Callback(TestAddReply.CreateResult(r.Left + r.Right));
         }
 
         public TestMultiplyReply TestMultiply(TestMultiplyRequest r)

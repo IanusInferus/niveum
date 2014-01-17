@@ -29,25 +29,50 @@ namespace Server
         }
 
         public UInt64 Hash { get { return ss.Hash; } }
-        public Boolean HasCommand(String CommandName, UInt32 CommandHash) { return ss.HasCommand(CommandName, CommandHash); }
+        public Boolean HasCommand(String CommandName, UInt32 CommandHash) { return ss.HasCommand(CommandName, CommandHash) || ss.HasCommandAsync(CommandName, CommandHash); }
         public void ExecuteCommand(String CommandName, UInt32 CommandHash, Byte[] Parameters, Action<Byte[]> OnSuccess, Action<Exception> OnFailure)
         {
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (ss.HasCommand(CommandName, CommandHash))
             {
-                var OutParameters = ss.ExecuteCommand(s, CommandName, CommandHash, Parameters);
-                OnSuccess(OutParameters);
-            }
-            else
-            {
-                try
+                if (System.Diagnostics.Debugger.IsAttached)
                 {
                     var OutParameters = ss.ExecuteCommand(s, CommandName, CommandHash, Parameters);
                     OnSuccess(OutParameters);
                 }
-                catch (Exception ex)
+                else
                 {
-                    OnFailure(ex);
+                    try
+                    {
+                        var OutParameters = ss.ExecuteCommand(s, CommandName, CommandHash, Parameters);
+                        OnSuccess(OutParameters);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnFailure(ex);
+                    }
                 }
+            }
+            else if (ss.HasCommandAsync(CommandName, CommandHash))
+            {
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                }
+                else
+                {
+                    try
+                    {
+                        ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnFailure(ex);
+                    }
+                }
+            }
+            else
+            {
+                OnFailure(new InvalidOperationException());
             }
         }
         public event BinaryServerEventDelegate ServerEvent;
@@ -78,42 +103,92 @@ namespace Server
         public Boolean HasCommand(String CommandName, UInt32 CommandHash) { return ss.HasCommand(CommandName, CommandHash); }
         public void ExecuteCommand(String CommandName, String Parameters, Action<String> OnSuccess, Action<Exception> OnFailure)
         {
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (ss.HasCommand(CommandName))
             {
-                var OutParameters = ss.ExecuteCommand(s, CommandName, Parameters);
-                OnSuccess(OutParameters);
-            }
-            else
-            {
-                try
+                if (System.Diagnostics.Debugger.IsAttached)
                 {
                     var OutParameters = ss.ExecuteCommand(s, CommandName, Parameters);
                     OnSuccess(OutParameters);
                 }
-                catch (Exception ex)
+                else
                 {
-                    OnFailure(ex);
+                    try
+                    {
+                        var OutParameters = ss.ExecuteCommand(s, CommandName, Parameters);
+                        OnSuccess(OutParameters);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnFailure(ex);
+                    }
                 }
+            }
+            else if (ss.HasCommandAsync(CommandName))
+            {
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    ss.ExecuteCommandAsync(s, CommandName, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                }
+                else
+                {
+                    try
+                    {
+                        ss.ExecuteCommandAsync(s, CommandName, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnFailure(ex);
+                    }
+                }
+            }
+            else
+            {
+                OnFailure(new InvalidOperationException());
             }
         }
         public void ExecuteCommand(String CommandName, UInt32 CommandHash, String Parameters, Action<String> OnSuccess, Action<Exception> OnFailure)
         {
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (ss.HasCommand(CommandName, CommandHash))
             {
-                var OutParameters = ss.ExecuteCommand(s, CommandName, CommandHash, Parameters);
-                OnSuccess(OutParameters);
-            }
-            else
-            {
-                try
+                if (System.Diagnostics.Debugger.IsAttached)
                 {
                     var OutParameters = ss.ExecuteCommand(s, CommandName, CommandHash, Parameters);
                     OnSuccess(OutParameters);
                 }
-                catch (Exception ex)
+                else
                 {
-                    OnFailure(ex);
+                    try
+                    {
+                        var OutParameters = ss.ExecuteCommand(s, CommandName, CommandHash, Parameters);
+                        OnSuccess(OutParameters);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnFailure(ex);
+                    }
                 }
+            }
+            else if (ss.HasCommandAsync(CommandName, CommandHash))
+            {
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                }
+                else
+                {
+                    try
+                    {
+                        ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnFailure(ex);
+                    }
+                }
+            }
+            else
+            {
+                OnFailure(new InvalidOperationException());
             }
         }
         public event JsonServerEventDelegate ServerEvent;

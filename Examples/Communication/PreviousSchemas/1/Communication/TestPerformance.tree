@@ -4,15 +4,15 @@
       File:        TestPerformance.tree
       Location:    Yuki.Examples <Tree>
       Description: 性能测试
-      Version:     2012.05.02.
+      Version:     2014.01.17.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
     ==========================================================================
 
 #ClientCommand TestAdd                              加法
-    Left                Int                         操作数1
-    Right               Int                         操作数2
+    Operand1            Int                         操作数1
+    Operand2            Int                         操作数2
     >
     Result              Int                         结果
 
