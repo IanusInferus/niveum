@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Memory代码模板数据
-      Version:     2014.01.09.
+      Version:     2014.01.18.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -322,7 +322,7 @@ ObjectSchemaTemplate
                         }
                         public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
                         {
-                            return Create(ConnectionString, null);
+                            return Create(ConnectionString);
                         }
                         public void Dispose()
                         {
