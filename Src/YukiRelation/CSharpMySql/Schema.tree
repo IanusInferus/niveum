@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# MySQL代码模板数据
-      Version:     2013.10.31.
+      Version:     2014.01.18.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -84,6 +84,13 @@ ObjectSchemaTemplate
                             Transaction = Connection.BeginTransaction();
                             this.TransactionLock = TransactionLock;
                         }
+                        public MySqlDataAccess(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
+                        {
+                            Connection = new MySqlConnection(ConnectionString);
+                            Connection.Open();
+                            Transaction = Connection.BeginTransaction(IsolationLevel);
+                            this.TransactionLock = TransactionLock;
+                        }
 
                         public static IDataAccess Create(String ConnectionString)
                         {
@@ -92,6 +99,10 @@ ObjectSchemaTemplate
                         public static IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
                         {
                             return new MySqlDataAccess(ConnectionString, TransactionLock);
+                        }
+                        public static IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
+                        {
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLock);
                         }
 
                         public void Dispose()
@@ -649,6 +660,10 @@ ObjectSchemaTemplate
                         public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
                         {
                             return MySqlDataAccess.Create(ConnectionString, TransactionLock);
+                        }
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
+                        {
+                            return MySqlDataAccess.Create(ConnectionString, IsolationLevel, TransactionLock);
                         }
                         public void Dispose()
                         {
