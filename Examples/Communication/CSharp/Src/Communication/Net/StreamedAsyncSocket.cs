@@ -105,13 +105,15 @@ namespace Net
 
         private void LockAsyncOperation(SocketAsyncOperation OperationIdentifier)
         {
-            AsyncOperationLock.DoAction(h =>
+            var Success = false;
+            while (!Success)
             {
-                if (!h.Add(OperationIdentifier))
+                AsyncOperationLock.DoAction(h =>
                 {
-                    throw new SocketException((int)(SocketError.AlreadyInProgress));
-                }
-            });
+                    Success = h.Add(OperationIdentifier);
+                });
+                Thread.SpinWait(10);
+            }
             NumAsyncOperationUpdated.Set();
         }
         private void ReleaseAsyncOperation(SocketAsyncOperation OperationIdentifier)
