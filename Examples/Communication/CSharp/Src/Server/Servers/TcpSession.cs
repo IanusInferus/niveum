@@ -85,6 +85,7 @@ namespace Server
             private void OnShutdownWrite()
             {
                 Socket.Shutdown(SocketShutdown.Send);
+                Socket.Dispose();
             }
             private void OnWrite(Unit w, Action OnSuccess, Action OnFailure)
             {
@@ -290,7 +291,6 @@ namespace Server
 
                 SpinWait.SpinUntil(() => ssm.IsExited());
 
-                Socket.Dispose();
                 Context.Dispose();
 
                 IsExitingValue.Update(b => false);

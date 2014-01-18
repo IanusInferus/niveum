@@ -389,6 +389,7 @@ namespace Server
                 IsDisposed = true;
 
                 IsExitingValue.Update(b => true);
+                ssm.NotifyExit();
 
                 Server.SessionMappings.DoAction(Mappings =>
                 {
