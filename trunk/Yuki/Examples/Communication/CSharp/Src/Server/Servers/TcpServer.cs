@@ -460,7 +460,17 @@ namespace Server
                                                 break;
                                             }
 
-                                            var s = new TcpSession(this, new StreamedAsyncSocket(a, SessionIdleTimeoutValue), (IPEndPoint)(a.RemoteEndPoint));
+                                            IPEndPoint e;
+                                            try
+                                            {
+                                                e = (IPEndPoint)(a.RemoteEndPoint);
+                                            }
+                                            catch
+                                            {
+                                                a.Dispose();
+                                                continue;
+                                            }
+                                            var s = new TcpSession(this, new StreamedAsyncSocket(a, SessionIdleTimeoutValue), e);
 
                                             if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
                                             {
@@ -483,7 +493,6 @@ namespace Server
                                                 continue;
                                             }
 
-                                            IPEndPoint e = (IPEndPoint)(a.RemoteEndPoint);
                                             if (MaxConnectionsPerIPValue.HasValue && (IpSessions.Check(iss => iss.ContainsKey(e.Address) ? iss[e.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
                                             {
                                                 try
