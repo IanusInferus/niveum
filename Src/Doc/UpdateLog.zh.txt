@@ -1,4 +1,8 @@
-﻿2014.01.18
+﻿2014.01.26
+Yuki.Core:
+修正SchemaManipulator使用/load加载类型之后里面import为空，再添加import生成代码时会出错的问题。
+
+2014.01.18
 Yuki.Relation:
 调整C#数据库代码生成，增加指定事务隔离级别的重载。
 Examples:

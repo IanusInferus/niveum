@@ -198,8 +198,8 @@ namespace Yuki.ObjectSchema
                 var VersionedName = (new TypeRef { Name = Name, Version = Version }).VersionedName();
                 Parsed.Add(VersionedName);
             }
-            Imports.AddRange(SchemaContent.Single(n => n.OnStem && n.Stem.Name == "Imports").Stem.Children);
-            TypePaths.AddRange(SchemaContent.Single(n => n.OnStem && n.Stem.Name == "TypePaths").Stem.Children);
+            Imports.AddRange(SchemaContent.Single(n => n.OnStem && n.Stem.Name == "Imports").Stem.Children.Where(n => n.OnStem));
+            TypePaths.AddRange(SchemaContent.Single(n => n.OnStem && n.Stem.Name == "TypePaths").Stem.Children.Where(n => n.OnStem));
         }
 
         public void AddImport(String Import)
