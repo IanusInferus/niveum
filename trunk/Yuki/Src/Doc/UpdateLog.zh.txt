@@ -1,4 +1,8 @@
-﻿2014.01.26
+﻿2014.02.11
+Yuki.Core, Yuki.Expression:
+修正文字错误。
+
+2014.01.26
 Yuki.Core:
 修正SchemaManipulator使用/load加载类型之后里面import为空，再添加import生成代码时会出错的问题。
 
