@@ -11,11 +11,13 @@ namespace Net
 {
     public sealed class StreamedAsyncSocket : IDisposable
     {
-        private AutoResetEvent NumAsyncOperationUpdated = new AutoResetEvent(false);
-        private LockedVariable<HashSet<SocketAsyncOperation>> AsyncOperationLock = new LockedVariable<HashSet<SocketAsyncOperation>>(new HashSet<SocketAsyncOperation>());
+        private Object Lockee = new Object();
+        private HashSet<SocketAsyncOperation> AsyncOperations = new HashSet<SocketAsyncOperation>();
+        private Boolean IsDisposed = false;
+        private Boolean IsDisposingFinished = false;
+
         private Socket InnerSocket;
         private int? TimeoutSeconds;
-        private LockedVariable<Boolean> IsDisposed = new LockedVariable<Boolean>(false);
         public event Action TimedOut;
 
         private class AsyncOperationContext : IDisposable
@@ -103,39 +105,43 @@ namespace Net
             this.TimeoutSeconds = TimeoutSeconds;
         }
 
-        private void LockAsyncOperation(SocketAsyncOperation OperationIdentifier)
+        private Boolean TryLockAsyncOperation(SocketAsyncOperation OperationIdentifier)
         {
             var Success = false;
             while (!Success)
             {
-                AsyncOperationLock.DoAction(h =>
+                lock (Lockee)
                 {
-                    Success = h.Add(OperationIdentifier);
-                });
+                    if (IsDisposed) { return false; }
+                    Success = AsyncOperations.Add(OperationIdentifier);
+                }
                 Thread.SpinWait(10);
             }
-            NumAsyncOperationUpdated.Set();
+            return true;
         }
         private void ReleaseAsyncOperation(SocketAsyncOperation OperationIdentifier)
         {
-            AsyncOperationLock.DoAction(h =>
+            lock (Lockee)
             {
-                if (!h.Remove(OperationIdentifier))
+                if (!AsyncOperations.Remove(OperationIdentifier))
                 {
                     throw new InvalidOperationException();
                 }
-                NumAsyncOperationUpdated.Set();
-            });
+                if (IsDisposed && !IsDisposingFinished && (AsyncOperations.Count == 0))
+                {
+                    IsDisposingFinished = true;
+                    InnerDispose();
+                }
+            }
         }
 
         private void DoAsync(SocketAsyncOperation OperationIdentifier, Func<AsyncOperationContext> GetContext, Func<SocketAsyncEventArgs, Boolean> Operation, Func<SocketAsyncEventArgs, Action> ResultToCompleted, Action<Exception> Faulted)
         {
-            if (IsDisposed.Check(b => b))
+            if (!TryLockAsyncOperation(OperationIdentifier))
             {
                 Faulted(new SocketException((int)(SocketError.Shutdown)));
                 return;
             }
-            LockAsyncOperation(OperationIdentifier);
             var Success = false;
             AsyncOperationContext Context;
             try
@@ -310,46 +316,29 @@ namespace Net
 
         public void Shutdown(SocketShutdown How)
         {
-            if (IsDisposed.Check(b => b)) { return; }
-            try
+            lock (Lockee)
             {
-                if (!InnerSocket.Connected)
+                if (IsDisposed) { return; }
+                try
                 {
-                    InnerSocket.Shutdown(How);
+                    if (!InnerSocket.Connected)
+                    {
+                        InnerSocket.Shutdown(How);
+                    }
                 }
-            }
-            catch (SocketException ex)
-            {
-                //Mono上没有考虑到多线程的情况，所以在对方先Shutdown的时候Shutdown会抛出异常。
-                Console.WriteLine("****************");
-                Console.WriteLine("MonoSocketShutdownByRemote");
-                Console.WriteLine(ex.ToString());
-                Console.WriteLine("****************");
-            }
-            catch (ObjectDisposedException)
-            {
-                //有时候会有已经释放的问题，则捕捉异常
+                catch (SocketException ex)
+                {
+                    //Mono上没有考虑到多线程的情况，所以在对方先Shutdown的时候Shutdown会抛出异常。
+                    Console.WriteLine("****************");
+                    Console.WriteLine("MonoSocketShutdownByRemote");
+                    Console.WriteLine(ex.ToString());
+                    Console.WriteLine("****************");
+                }
             }
         }
 
-        public void Dispose()
+        private void InnerDispose()
         {
-            var Disposed = false;
-            IsDisposed.Update(b => { Disposed = b; return true; });
-            if (Disposed) { return; }
-            try
-            {
-                InnerSocket.Close();
-            }
-            finally
-            {
-                InnerSocket.Dispose();
-            }
-            while (AsyncOperationLock.Check(h => h.Count != 0))
-            {
-                NumAsyncOperationUpdated.WaitOne();
-            }
-            NumAsyncOperationUpdated.Dispose();
             if (ConnectContext != null)
             {
                 ConnectContext.Dispose();
@@ -374,6 +363,27 @@ namespace Net
             {
                 ReceiveContext.Dispose();
                 ReceiveContext = null;
+            }
+        }
+        public void Dispose()
+        {
+            lock (Lockee)
+            {
+                if (IsDisposed) { return; }
+                IsDisposed = true;
+                try
+                {
+                    InnerSocket.Close();
+                }
+                finally
+                {
+                    InnerSocket.Dispose();
+                }
+                if (!IsDisposingFinished && (AsyncOperations.Count == 0))
+                {
+                    IsDisposingFinished = true;
+                    InnerDispose();
+                }
             }
         }
     }
