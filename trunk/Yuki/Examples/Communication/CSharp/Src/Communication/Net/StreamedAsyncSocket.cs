@@ -22,6 +22,7 @@ namespace Net
 
         private class AsyncOperationContext : IDisposable
         {
+            private Object Lockee = new Object();
             public SocketAsyncEventArgs EventArgs;
             public Func<SocketAsyncEventArgs, Action> ResultToCompleted;
             public Action<Exception> Faulted;
@@ -35,51 +36,63 @@ namespace Net
 
             public void DoOnCompletion()
             {
-                Exception Exception = null;
-                Action Completed = null;
-                try
+                lock (Lockee)
                 {
-                    if (EventArgs.SocketError == SocketError.Success)
+                    if (this.ResultToCompleted == null) { return; }
+
+                    var ResultToCompleted = this.ResultToCompleted;
+                    var Faulted = this.Faulted;
+                    var ReleaseAsyncOperation = this.ReleaseAsyncOperation;
+                    this.ResultToCompleted = null;
+                    this.Faulted = null;
+                    this.ReleaseAsyncOperation = null;
+
+                    Exception Exception = null;
+                    Action Completed = null;
+                    try
                     {
-                        if (Debugger.IsAttached)
+                        if (EventArgs.SocketError == SocketError.Success)
                         {
-                            if (ResultToCompleted != null)
-                            {
-                                Completed = ResultToCompleted(EventArgs);
-                            }
-                        }
-                        else
-                        {
-                            try
+                            if (Debugger.IsAttached)
                             {
                                 if (ResultToCompleted != null)
                                 {
                                     Completed = ResultToCompleted(EventArgs);
                                 }
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                Exception = ex;
+                                try
+                                {
+                                    if (ResultToCompleted != null)
+                                    {
+                                        Completed = ResultToCompleted(EventArgs);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Exception = ex;
+                                }
                             }
                         }
+                        else
+                        {
+                            Exception = new SocketException((int)(EventArgs.SocketError));
+                        }
                     }
-                    else
+                    finally
                     {
-                        Exception = new SocketException((int)(EventArgs.SocketError));
+                        ReleaseAsyncOperation();
                     }
-                }
-                finally
-                {
-                    ReleaseAsyncOperation();
-                }
-                if (Exception != null)
-                {
-                    Faulted(Exception);
-                    return;
-                }
-                if (Completed != null)
-                {
-                    Completed();
+                    if (Exception != null)
+                    {
+                        Faulted(Exception);
+                        return;
+                    }
+                    if (Completed != null)
+                    {
+                        Completed();
+                    }
                 }
             }
 
@@ -90,11 +103,27 @@ namespace Net
 
             public void Dispose()
             {
-                if (EventArgs != null)
+                lock (Lockee)
                 {
-                    EventArgs.Completed -= EventArgs_Completed;
-                    EventArgs.Dispose();
-                    EventArgs = null;
+                    if (EventArgs != null)
+                    {
+                        EventArgs.Completed -= EventArgs_Completed;
+                        EventArgs.Dispose();
+                        EventArgs = null;
+                    }
+                    if (this.ResultToCompleted != null)
+                    {
+                        var ResultToCompleted = this.ResultToCompleted;
+                        var Faulted = this.Faulted;
+                        var ReleaseAsyncOperation = this.ReleaseAsyncOperation;
+                        this.ResultToCompleted = null;
+                        this.Faulted = null;
+                        this.ReleaseAsyncOperation = null;
+
+                        ReleaseAsyncOperation();
+                        var Exception = new SocketException((int)(SocketError.OperationAborted));
+                        Faulted(Exception);
+                    }
                 }
             }
         }
@@ -319,6 +348,7 @@ namespace Net
             lock (Lockee)
             {
                 if (IsDisposed) { return; }
+                //Mono（3.0.4）上在对方先Shutdown的时候后，某个时候Connected会变为False，但时机不确定，所以需要判断和捕捉异常。
                 try
                 {
                     if (!InnerSocket.Connected)
@@ -326,13 +356,8 @@ namespace Net
                         InnerSocket.Shutdown(How);
                     }
                 }
-                catch (SocketException ex)
+                catch (SocketException)
                 {
-                    //Mono上没有考虑到多线程的情况，所以在对方先Shutdown的时候Shutdown会抛出异常。
-                    Console.WriteLine("****************");
-                    Console.WriteLine("MonoSocketShutdownByRemote");
-                    Console.WriteLine(ex.ToString());
-                    Console.WriteLine("****************");
                 }
             }
         }

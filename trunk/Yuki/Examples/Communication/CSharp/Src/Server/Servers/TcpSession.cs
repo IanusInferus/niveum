@@ -38,7 +38,7 @@ namespace Server
                 this.Socket = Socket;
                 this.RemoteEndPoint = RemoteEndPoint;
                 ssm = new SessionStateMachine<TcpVirtualTransportServerHandleResult, Unit>(ex => ex is SocketException, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit);
-                Socket.TimedOut += ssm.NotifyExit;
+                Socket.TimedOut += ssm.NotifyFailure;
 
                 Context = Server.ServerContext.CreateSessionContext();
                 Context.Quit += ssm.NotifyExit;
