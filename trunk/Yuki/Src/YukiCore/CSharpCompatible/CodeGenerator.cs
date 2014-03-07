@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2014.01.17.
+//  Version:     2014.03.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -822,6 +822,11 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     FillTranslatorRecordTo(Name + "Request", VersionedName + "Request", c.OutParameters, cHead.OutParameters, l, false);
                     FillTranslatorTaggedUnionFrom(VersionedName + "Reply", Name + "Reply", VersionedName + "Reply", c.InParameters, cHead.InParameters, l, false);
                 }
+                else
+                {
+                    FillTranslatorRecordTo(Name + "Request", VersionedName + "Request", c.OutParameters, new VariableDef[] { }, l, true);
+                    FillTranslatorTaggedUnionFrom(VersionedName + "Reply", Name + "Reply", VersionedName + "Reply", c.InParameters, new VariableDef[] { }, l, true);
+                }
             }
             public void FillTranslatorServerCommand(ServerCommandDef c, List<String> l)
             {
@@ -836,15 +841,14 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     }
                 }
                 var VersionedName = c.TypeFriendlyName();
-                if (cHead == null)
+                l.AddRange(GetTemplate("Translator_ServerCommand").Substitute("VersionedName", VersionedName));
+                if (cHead != null)
                 {
-                    l.AddRange(GetTemplate("Translator_ServerCommand").Substitute("VersionedName", VersionedName));
-                    FillTranslatorRecordFrom(Name + "Event", VersionedName + "Event", c.OutParameters, cHead.OutParameters, l, true);
+                    FillTranslatorRecordFrom(Name + "Event", VersionedName + "Event", c.OutParameters, cHead.OutParameters, l, false);
                 }
                 else
                 {
-                    l.AddRange(GetTemplate("Translator_ServerCommand").Substitute("VersionedName", VersionedName));
-                    FillTranslatorRecordFrom(Name + "Event", VersionedName + "Event", c.OutParameters, cHead.OutParameters, l, false);
+                    FillTranslatorRecordFrom(Name + "Event", VersionedName + "Event", c.OutParameters, new VariableDef[] { }, l, true);
                 }
             }
             public void FillTranslatorTupleFrom(TypeSpec ts, List<String> l)
