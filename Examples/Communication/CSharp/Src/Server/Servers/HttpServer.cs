@@ -530,6 +530,31 @@ namespace Server
                                             }
 
                                             var e = (IPEndPoint)a.Request.RemoteEndPoint;
+                                            var XForwardedFor = a.Request.Headers["X-Forwarded-For"];
+                                            var Address = e.Address;
+                                            if (XForwardedFor != "")
+                                            {
+                                                try
+                                                {
+                                                    Address = IPAddress.Parse(XForwardedFor.Split(',')[0].Trim(' '));
+                                                }
+                                                catch
+                                                {
+                                                }
+                                            }
+                                            var XForwardedPort = a.Request.Headers["X-Forwarded-Port"];
+                                            var Port = e.Port;
+                                            if (XForwardedPort != "")
+                                            {
+                                                try
+                                                {
+                                                    Port = int.Parse(XForwardedPort.Split(',')[0].Trim(' '));
+                                                }
+                                                catch
+                                                {
+                                                }
+                                            }
+                                            e = new IPEndPoint(Address, Port);
 
                                             try
                                             {
