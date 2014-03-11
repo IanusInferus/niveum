@@ -314,11 +314,17 @@ namespace Server
                 ServerContext = sc;
             }
 
-            private static String GetBindingName(Uri Url)
+            private Boolean IsMatchBindingName(Uri Url)
             {
-                var p = Url.AbsolutePath;
-                if (p.StartsWith("/")) { return p.Substring(1); }
-                return p;
+                foreach (var b in Bindings)
+                {
+                    var u = new Uri((b + ServiceVirtualPathValue).Replace("*", "localhost").Replace("+", "localhost"));
+                    if (u.AbsolutePath.Equals(Url.AbsolutePath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             private static void SetTimer(HttpListener Listener, int Seconds)
@@ -546,8 +552,7 @@ namespace Server
                                                     continue;
                                                 }
 
-                                                var BindingName = GetBindingName(a.Request.Url);
-                                                if (!BindingName.Equals(ServiceVirtualPathValue, StringComparison.OrdinalIgnoreCase))
+                                                if (!IsMatchBindingName(a.Request.Url))
                                                 {
                                                     a.Response.StatusCode = 404;
                                                     NotifyListenerContextQuit(a);
