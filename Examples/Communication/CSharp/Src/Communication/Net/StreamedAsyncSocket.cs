@@ -113,7 +113,6 @@ namespace Net
                     }
                     if (this.ResultToCompleted != null)
                     {
-                        var ResultToCompleted = this.ResultToCompleted;
                         var Faulted = this.Faulted;
                         var ReleaseAsyncOperation = this.ReleaseAsyncOperation;
                         this.ResultToCompleted = null;
