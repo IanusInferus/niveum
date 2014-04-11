@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.ExpressionManipulator <Visual C#>
 //  Description: 表达式结构处理工具
-//  Version:     2013.12.05.
+//  Version:     2014.04.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -145,7 +145,7 @@ namespace Yuki.ExpressionManipulator
                 }
                 else
                 {
-                    throw (new ArgumentException(opt.Name));
+                    throw new ArgumentException(opt.Name);
                 }
             }
             return 0;
