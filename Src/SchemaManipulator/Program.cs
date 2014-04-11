@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2014.01.17.
+//  Version:     2014.04.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -491,7 +491,7 @@ namespace Yuki.SchemaManipulator
                 }
                 else
                 {
-                    throw (new ArgumentException(opt.Name));
+                    throw new ArgumentException(opt.Name);
                 }
             }
             return 0;
