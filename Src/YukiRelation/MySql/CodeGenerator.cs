@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构MySQL数据库代码生成器
-//  Version:     2013.11.15.
+//  Version:     2014.04.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -223,11 +223,11 @@ namespace Yuki.RelationSchema.MySql
                 {
                     if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase) && f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
                     {
-                        Type = "text";
+                        Type = "longtext";
                     }
                     else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase) && f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
                     {
-                        Type = "blob";
+                        Type = "longblob";
                     }
                     else
                     {
@@ -238,11 +238,11 @@ namespace Yuki.RelationSchema.MySql
                 {
                     if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
                     {
-                        Type = "text";
+                        Type = "longtext";
                     }
                     else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase))
                     {
-                        Type = "blob";
+                        Type = "longblob";
                     }
                 }
 

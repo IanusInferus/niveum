@@ -1,4 +1,8 @@
-﻿2014.04.11
+﻿2014.04.23
+Yuki.Relation:
+将MySQL代码生成的TEXT和BLOB类型替换为LONGTEXT和LONGBLOB。
+
+2014.04.11
 Yuki.*:
 修正命令行程序中的一处写法。
 
