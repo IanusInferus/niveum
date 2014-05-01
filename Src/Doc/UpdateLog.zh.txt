@@ -1,4 +1,10 @@
-﻿2014.04.23
+﻿2014.05.01
+Yuki.Core:
+修正ObjectSchema写入时如果泛型定义中有字面量会出错的问题。
+修正ObjectSchema写入时Alias没有写入泛型参数的问题。
+增加VB和C#的带字面量泛型代码生成。
+
+2014.04.23
 Yuki.Relation:
 将MySQL代码生成的TEXT和BLOB类型替换为LONGTEXT和LONGBLOB。
 

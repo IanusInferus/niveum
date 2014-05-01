@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构VB.Net代码生成器
-//  Version:     2013.12.08.
+//  Version:     2014.05.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -54,14 +54,6 @@ namespace Yuki.ObjectSchema.VB.Common
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
                 this.WithFirefly = WithFirefly;
-
-                foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
-                {
-                    if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && gp.Type.TypeRef.Name == "Type"))
-                    {
-                        throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
-                    }
-                }
             }
 
             public String[] GetSchema()
@@ -402,8 +394,27 @@ namespace Yuki.ObjectSchema.VB.Common
                     }
                 }
 
-                foreach (var c in Schema.Types)
+                var scg = Schema.GetSchemaClosureGenerator();
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
+                var GenericTypeSpecWithLiterals = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec && t.GenericTypeSpec.GenericParameterValues.Any(gpv => gpv.OnLiteral)).ToList();
+                var Map = Schema.GetMap().ToDictionary(t => t.Key, t => t.Value);
+                var GenericTypeSpecWithLiteralsSpecifications = new List<TypeDef>();
+                foreach (var gtsl in GenericTypeSpecWithLiterals)
                 {
+                    if (!gtsl.GenericTypeSpec.TypeSpec.OnTypeRef) { throw new InvalidOperationException(String.Format("GenericTypeSpecTypeSpecNotTypeRef: {0}", GetTypeString(gtsl))); }
+                    var g = Map[gtsl.GenericTypeSpec.TypeSpec.TypeRef.VersionedName()];
+                    var gt = g.MakeGenericType(GetTypeString(gtsl), gtsl.GenericTypeSpec.GenericParameterValues);
+                    GenericTypeSpecWithLiteralsSpecifications.Add(gt);
+                }
+
+                foreach (var c in Schema.Types.Concat(GenericTypeSpecWithLiteralsSpecifications))
+                {
+                    if (!c.GenericParameters().All(gp => gp.Type.OnTypeRef && gp.Type.TypeRef.Name == "Type"))
+                    {
+                        continue;
+                    }
+
                     if (c.OnPrimitive)
                     {
                         if (c.Name() == "Optional")
@@ -450,9 +461,6 @@ namespace Yuki.ObjectSchema.VB.Common
                     l.Add("");
                 }
 
-                var scg = Schema.GetSchemaClosureGenerator();
-                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
-                var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
                 foreach (var t in Tuples)
                 {
                     l.AddRange(GetTuple(t.TypeFriendlyName(), t.Tuple));
