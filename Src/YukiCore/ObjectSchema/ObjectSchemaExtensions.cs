@@ -79,57 +79,71 @@ namespace Yuki.ObjectSchema
             }
         }
 
-        private static TypeDef MapWithVersion(TypeDef t, Func<String, String, String> GetVersionFromNameAndVersion)
+        public static TypeDef MapType(this TypeDef d, Func<TypeDef, TypeDef> MapTypeDefKernel)
         {
+            return MapType(d, MapTypeDefKernel, s => s, v => v, l => l);
+        }
+        public static TypeDef MapType(this TypeDef d, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel)
+        {
+            return MapType(d, MapTypeDefKernel, MapTypeSpecKernel, v => v, l => l);
+        }
+        public static TypeSpec MapType(this TypeSpec s, Func<TypeDef, TypeDef> MapTypeDefKernel)
+        {
+            return MapType(s, MapTypeDefKernel, ss => ss, v => v, l => l);
+        }
+        public static TypeSpec MapType(this TypeSpec s, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel)
+        {
+            return MapType(s, MapTypeDefKernel, MapTypeSpecKernel, v => v, l => l);
+        }
+        public static TypeDef MapType(this TypeDef d, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel, Func<VariableDef, VariableDef> MapVariableKernel, Func<LiteralDef, LiteralDef> MapLiteralDefKernel)
+        {
+            var t = MapTypeDefKernel(d);
             if (t.OnPrimitive)
             {
                 var p = t.Primitive;
-                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Description = p.Description });
+                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Description = p.Description });
             }
             else if (t.OnAlias)
             {
                 var a = t.Alias;
-                return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = GetVersionFromNameAndVersion(a.Name, a.Version), GenericParameters = a.GenericParameters.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Type = MapWithVersion(a.Type, GetVersionFromNameAndVersion), Description = a.Description });
+                return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Type = MapType(a.Type, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), Description = a.Description });
             }
             else if (t.OnRecord)
             {
                 var r = t.Record;
-                return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = GetVersionFromNameAndVersion(r.Name, r.Version), GenericParameters = r.GenericParameters.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Fields = r.Fields.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Description = r.Description });
+                return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Fields = r.Fields.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Description = r.Description });
             }
             else if (t.OnTaggedUnion)
             {
                 var tu = t.TaggedUnion;
-                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = GetVersionFromNameAndVersion(tu.Name, tu.Version), GenericParameters = tu.GenericParameters.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Alternatives = tu.Alternatives.Select(gp => MapWithVersion(gp, GetVersionFromNameAndVersion)).ToArray(), Description = tu.Description });
+                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Alternatives = tu.Alternatives.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Description = tu.Description });
             }
             else if (t.OnEnum)
             {
                 var e = t.Enum;
-                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = GetVersionFromNameAndVersion(e.Name, e.Version), UnderlyingType = MapWithVersion(e.UnderlyingType, GetVersionFromNameAndVersion), Literals = e.Literals, Description = e.Description });
+                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = MapType(e.UnderlyingType, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), Literals = e.Literals.Select(l => MapLiteralDefKernel(l)).ToArray(), Description = e.Description });
             }
             else if (t.OnClientCommand)
             {
                 var cc = t.ClientCommand;
-                return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = GetVersionFromNameAndVersion(cc.Name, cc.Version), OutParameters = cc.OutParameters.Select(p => MapWithVersion(p, GetVersionFromNameAndVersion)).ToArray(), InParameters = cc.InParameters.Select(p => MapWithVersion(p, GetVersionFromNameAndVersion)).ToArray(), Description = cc.Description });
+                return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), InParameters = cc.InParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Description = cc.Description });
             }
             else if (t.OnServerCommand)
             {
                 var sc = t.ServerCommand;
-                return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = GetVersionFromNameAndVersion(sc.Name, sc.Version), OutParameters = sc.OutParameters.Select(p => MapWithVersion(p, GetVersionFromNameAndVersion)).ToArray(), Description = sc.Description });
+                return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Description = sc.Description });
             }
             else
             {
                 throw new InvalidOperationException();
             }
         }
-        private static VariableDef MapWithVersion(VariableDef v, Func<String, String, String> GetVersionFromName)
+        public static TypeSpec MapType(this TypeSpec s, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel, Func<VariableDef, VariableDef> MapVariableKernel, Func<LiteralDef, LiteralDef> MapLiteralDefKernel)
         {
-            return new VariableDef { Name = v.Name, Type = MapWithVersion(v.Type, GetVersionFromName), Description = v.Description };
-        }
-        private static TypeSpec MapWithVersion(TypeSpec t, Func<String, String, String> GetVersionFromName)
-        {
+            var t = MapTypeSpecKernel(s);
             if (t.OnTypeRef)
             {
-                return TypeSpec.CreateTypeRef(new TypeRef { Name = t.TypeRef.Name, Version = GetVersionFromName(t.TypeRef.Name, t.TypeRef.Version) });
+                return TypeSpec.CreateTypeRef(new TypeRef { Name = t.TypeRef.Name, Version = t.TypeRef.Version });
             }
             else if (t.OnGenericParameterRef)
             {
@@ -137,19 +151,24 @@ namespace Yuki.ObjectSchema
             }
             else if (t.OnTuple)
             {
-                return TypeSpec.CreateTuple(new TupleDef { Types = t.Tuple.Types.Select(tt => MapWithVersion(tt, GetVersionFromName)).ToArray() });
+                return TypeSpec.CreateTuple(new TupleDef { Types = t.Tuple.Types.Select(tt => MapType(tt, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray() });
             }
             else if (t.OnGenericTypeSpec)
             {
                 var gts = t.GenericTypeSpec;
-                return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = MapWithVersion(gts.TypeSpec, GetVersionFromName), GenericParameterValues = gts.GenericParameterValues.Select(gpv => MapWithVersion(gpv, GetVersionFromName)).ToArray() });
+                return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = MapType(gts.TypeSpec, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), GenericParameterValues = gts.GenericParameterValues.Select(gpv => MapType(gpv, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray() });
             }
             else
             {
                 throw new InvalidOperationException();
             }
         }
-        private static GenericParameterValue MapWithVersion(GenericParameterValue gpv, Func<String, String, String> GetVersionFromName)
+        private static VariableDef MapType(VariableDef v, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel, Func<VariableDef, VariableDef> MapVariableKernel, Func<LiteralDef, LiteralDef> MapLiteralDefKernel)
+        {
+            var vv = MapVariableKernel(v);
+            return new VariableDef { Name = vv.Name, Type = MapType(vv.Type, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), Description = vv.Description };
+        }
+        private static GenericParameterValue MapType(GenericParameterValue gpv, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel, Func<VariableDef, VariableDef> MapVariableKernel, Func<LiteralDef, LiteralDef> MapLiteralDefKernel)
         {
             if (gpv.OnLiteral)
             {
@@ -157,7 +176,7 @@ namespace Yuki.ObjectSchema
             }
             else if (gpv.OnTypeSpec)
             {
-                return GenericParameterValue.CreateTypeSpec(MapWithVersion(gpv.TypeSpec, GetVersionFromName));
+                return GenericParameterValue.CreateTypeSpec(MapType(gpv.TypeSpec, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel));
             }
             else
             {
@@ -165,55 +184,62 @@ namespace Yuki.ObjectSchema
             }
         }
 
-        private static TypeDef MapWithoutDescription(TypeDef t)
+        private static TypeDef MapWithoutDescription(TypeDef d)
         {
-            if (t.OnPrimitive)
+            Func<TypeDef, TypeDef> MapTypeDefKernel = t =>
             {
-                var p = t.Primitive;
-                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters.Select(gp => MapWithoutDescription(gp)).ToArray(), Description = "" });
-            }
-            else if (t.OnAlias)
+                if (t.OnPrimitive)
+                {
+                    var p = t.Primitive;
+                    return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters, Description = "" });
+                }
+                else if (t.OnAlias)
+                {
+                    var a = t.Alias;
+                    return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters, Type = a.Type, Description = "" });
+                }
+                else if (t.OnRecord)
+                {
+                    var r = t.Record;
+                    return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters, Fields = r.Fields, Description = "" });
+                }
+                else if (t.OnTaggedUnion)
+                {
+                    var tu = t.TaggedUnion;
+                    return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters, Alternatives = tu.Alternatives, Description = "" });
+                }
+                else if (t.OnEnum)
+                {
+                    var e = t.Enum;
+                    return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = e.UnderlyingType, Literals = e.Literals, Description = "" });
+                }
+                else if (t.OnClientCommand)
+                {
+                    var cc = t.ClientCommand;
+                    return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters, InParameters = cc.InParameters, Description = "" });
+                }
+                else if (t.OnServerCommand)
+                {
+                    var sc = t.ServerCommand;
+                    return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters, Description = "" });
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            };
+
+            Func<VariableDef, VariableDef> MapVariableDefKernel = v =>
             {
-                var a = t.Alias;
-                return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters.Select(gp => MapWithoutDescription(gp)).ToArray(), Type = a.Type, Description = "" });
-            }
-            else if (t.OnRecord)
+                return new VariableDef { Name = v.Name, Type = v.Type, Description = "" };
+            };
+
+            Func<LiteralDef, LiteralDef> MapLiteralDefKernel = l =>
             {
-                var r = t.Record;
-                return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters.Select(gp => MapWithoutDescription(gp)).ToArray(), Fields = r.Fields.Select(gp => MapWithoutDescription(gp)).ToArray(), Description = "" });
-            }
-            else if (t.OnTaggedUnion)
-            {
-                var tu = t.TaggedUnion;
-                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters.Select(gp => MapWithoutDescription(gp)).ToArray(), Alternatives = tu.Alternatives.Select(gp => MapWithoutDescription(gp)).ToArray(), Description = "" });
-            }
-            else if (t.OnEnum)
-            {
-                var e = t.Enum;
-                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = e.UnderlyingType, Literals = e.Literals.Select(l => MapWithoutDescription(l)).ToArray(), Description = "" });
-            }
-            else if (t.OnClientCommand)
-            {
-                var cc = t.ClientCommand;
-                return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters.Select(p => MapWithoutDescription(p)).ToArray(), InParameters = cc.InParameters.Select(p => MapWithoutDescription(p)).ToArray(), Description = "" });
-            }
-            else if (t.OnServerCommand)
-            {
-                var sc = t.ServerCommand;
-                return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters.Select(p => MapWithoutDescription(p)).ToArray(), Description = "" });
-            }
-            else
-            {
-                throw new InvalidOperationException();
-            }
-        }
-        private static VariableDef MapWithoutDescription(VariableDef v)
-        {
-            return new VariableDef { Name = v.Name, Type = v.Type, Description = "" };
-        }
-        private static LiteralDef MapWithoutDescription(LiteralDef l)
-        {
-            return new LiteralDef { Name = l.Name, Value = l.Value, Description = "" };
+                return new LiteralDef { Name = l.Name, Value = l.Value, Description = "" };
+            };
+
+            return MapType(d, MapTypeDefKernel, s => s, MapVariableDefKernel, MapLiteralDefKernel);
         }
 
         public static Schema GetNonversioned(this Schema s)
@@ -233,6 +259,135 @@ namespace Yuki.ObjectSchema
             var Dict = Types.Concat(TypeRefs).ToDictionary(t => t.Original.VersionedName(), t => t.Current.VersionedName(), StringComparer.OrdinalIgnoreCase);
             var TypePaths = s.TypePaths.Select(tp => new TypePath { Name = Dict[tp.Name], Path = tp.Path }).ToArray();
             return new Schema { Types = Types.Select(t => t.Current).ToArray(), TypeRefs = TypeRefs.Select(t => t.Current).ToArray(), Imports = s.Imports.ToArray(), TypePaths = TypePaths };
+        }
+        private static TypeDef MapWithVersion(TypeDef d, Func<String, String, String> GetVersionFromNameAndVersion)
+        {
+            Func<TypeDef, TypeDef> MapTypeDefKernel = t =>
+            {
+                if (t.OnPrimitive)
+                {
+                    var p = t.Primitive;
+                    return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters, Description = p.Description });
+                }
+                else if (t.OnAlias)
+                {
+                    var a = t.Alias;
+                    return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = GetVersionFromNameAndVersion(a.Name, a.Version), GenericParameters = a.GenericParameters, Type = a.Type, Description = a.Description });
+                }
+                else if (t.OnRecord)
+                {
+                    var r = t.Record;
+                    return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = GetVersionFromNameAndVersion(r.Name, r.Version), GenericParameters = r.GenericParameters, Fields = r.Fields, Description = r.Description });
+                }
+                else if (t.OnTaggedUnion)
+                {
+                    var tu = t.TaggedUnion;
+                    return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = GetVersionFromNameAndVersion(tu.Name, tu.Version), GenericParameters = tu.GenericParameters, Alternatives = tu.Alternatives, Description = tu.Description });
+                }
+                else if (t.OnEnum)
+                {
+                    var e = t.Enum;
+                    return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = GetVersionFromNameAndVersion(e.Name, e.Version), UnderlyingType = e.UnderlyingType, Literals = e.Literals, Description = e.Description });
+                }
+                else if (t.OnClientCommand)
+                {
+                    var cc = t.ClientCommand;
+                    return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = GetVersionFromNameAndVersion(cc.Name, cc.Version), OutParameters = cc.OutParameters, InParameters = cc.InParameters, Description = cc.Description });
+                }
+                else if (t.OnServerCommand)
+                {
+                    var sc = t.ServerCommand;
+                    return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = GetVersionFromNameAndVersion(sc.Name, sc.Version), OutParameters = sc.OutParameters, Description = sc.Description });
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            };
+
+            Func<TypeSpec, TypeSpec> MapTypeSpecKernel = t =>
+            {
+                if (t.OnTypeRef)
+                {
+                    return TypeSpec.CreateTypeRef(new TypeRef { Name = t.TypeRef.Name, Version = GetVersionFromNameAndVersion(t.TypeRef.Name, t.TypeRef.Version) });
+                }
+                else if (t.OnGenericParameterRef)
+                {
+                    return t;
+                }
+                else if (t.OnTuple)
+                {
+                    return t;
+                }
+                else if (t.OnGenericTypeSpec)
+                {
+                    return t;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            };
+
+            return MapType(d, MapTypeDefKernel, MapTypeSpecKernel, v => v, l => l);
+        }
+
+        public static TypeDef MakeGenericType(this TypeDef d, String Name, GenericParameterValue[] GenericParameterValues)
+        {
+            var gpvMap = d.GenericParameters().Zip(GenericParameterValues, (gp, gpv) => new { gp = gp, gpv = gpv }).Where(z => z.gpv.OnTypeSpec).ToDictionary(z => z.gp.Name, z => z.gpv.TypeSpec);
+            Func<TypeSpec, TypeSpec> MapTypeSpecKernel = s =>
+            {
+                if (s.OnGenericParameterRef)
+                {
+                    var ParameterName = s.GenericParameterRef.Value;
+                    if (gpvMap.ContainsKey(ParameterName))
+                    {
+                        return gpvMap[ParameterName];
+                    }
+                }
+                return s;
+            };
+
+            var t = d.MapType(dd => dd, MapTypeSpecKernel);
+            if (t.OnPrimitive)
+            {
+                var p = t.Primitive;
+                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = Name, GenericParameters = new VariableDef[] { }, Description = p.Description });
+            }
+            else if (t.OnAlias)
+            {
+                var a = t.Alias;
+                return TypeDef.CreateAlias(new AliasDef { Name = Name, Version = a.Version, GenericParameters = new VariableDef[] { }, Type = a.Type, Description = a.Description });
+            }
+            else if (t.OnRecord)
+            {
+                var r = t.Record;
+                return TypeDef.CreateRecord(new RecordDef { Name = Name, Version = r.Version, GenericParameters = new VariableDef[] { }, Fields = r.Fields, Description = r.Description });
+            }
+            else if (t.OnTaggedUnion)
+            {
+                var tu = t.TaggedUnion;
+                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = Name, Version = tu.Version, GenericParameters = new VariableDef[] { }, Alternatives = tu.Alternatives, Description = tu.Description });
+            }
+            else if (t.OnEnum)
+            {
+                var e = t.Enum;
+                return TypeDef.CreateEnum(new EnumDef { Name = Name, Version = e.Version, UnderlyingType = e.UnderlyingType, Literals = e.Literals, Description = e.Description });
+            }
+            else if (t.OnClientCommand)
+            {
+                var cc = t.ClientCommand;
+                return TypeDef.CreateClientCommand(new ClientCommandDef { Name = Name, Version = cc.Version, OutParameters = cc.OutParameters, InParameters = cc.InParameters, Description = cc.Description });
+            }
+            else if (t.OnServerCommand)
+            {
+                var sc = t.ServerCommand;
+                return TypeDef.CreateServerCommand(new ServerCommandDef { Name = Name, Version = sc.Version, OutParameters = sc.OutParameters, Description = sc.Description });
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
         }
 
         private class SchemaClosureGenerator : ISchemaClosureGenerator

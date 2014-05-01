@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaWriter.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构写入器
-//  Version:     2013.12.07.
+//  Version:     2014.05.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -66,6 +66,7 @@ namespace Yuki.ObjectSchema
                 else if (t.OnAlias)
                 {
                     var a = t.Alias;
+                    LineTokens.AddRange(a.GenericParameters.Select(v => WriteToTokens(v, true)));
                     LineTokens.Add(new String[] { GetTypeString(a.Type) });
                 }
                 else if (t.OnRecord)
@@ -208,7 +209,19 @@ namespace Yuki.ObjectSchema
                 case TypeSpecTag.Tuple:
                     return "Tuple<" + String.Join(", ", Type.Tuple.Types.Select(t => GetTypeString(t)).ToArray()) + ">";
                 case TypeSpecTag.GenericTypeSpec:
-                    return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p.TypeSpec)).ToArray()) + ">";
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p)).ToArray()) + ">";
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+        private String GetTypeString(GenericParameterValue gpv)
+        {
+            switch (gpv._Tag)
+            {
+                case GenericParameterValueTag.Literal:
+                    return gpv.Literal;
+                case GenericParameterValueTag.TypeSpec:
+                    return GetTypeString(gpv.TypeSpec);
                 default:
                     throw new InvalidOperationException();
             }
