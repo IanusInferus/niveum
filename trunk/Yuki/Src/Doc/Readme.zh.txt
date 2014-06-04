@@ -52,17 +52,17 @@
 泛型特化 GenericTypeSpec
 一个匿名的数据结构，表示将某个有泛型参数的类型代入参数的结果。
 
-这部分的代码生成主要分成四个部分：类型定义、二进制序列化、JSON序列化、通讯。
+这部分的代码生成主要分成五个部分：类型定义、二进制序列化、JSON序列化、通讯、版本兼容。
 下面列出各语言代码生成支持的部分。
 
-                    类型定义        二进制序列化        JSON序列化      二进制通讯  JSON通讯
-VB.Net              √              Firefly             ×              ×          ×
-C#                  √              √|Firefly          √              两端        两端
-Java                √              √                  ×              ×          ×
-C++2011             √              √                  ×              两端        ×
-ActionScript        √              √                  √              客户端      客户端
-Haxe                √              ×                  √              ×          客户端
-Xhtml               √              无需                无需            无需        无需
+                    类型定义        二进制序列化        JSON序列化      二进制通讯      JSON通讯        版本兼容
+VB.Net              √              Firefly             ×              ×              ×              ×
+C#                  √              √|Firefly          √              两端            两端            √
+Java                √              √                  ×              ×              ×              ×
+C++2011             √              √                  ×              两端            ×              ×
+ActionScript        √              √                  √              客户端          客户端          ×
+Haxe                √              ×                  √              ×              客户端          ×
+Xhtml               √              无需                无需            无需            无需            ×
 
 
 3 基于关系数据结构的代码生成
@@ -90,10 +90,10 @@ Xhtml               √              无需                无需            无
 这部分的代码生成主要分成四个部分：类型定义、内存只读数据库、SQL Server、PostgreSQL和MySQL。
 下面列出各语言代码生成支持的部分。
 
-                    类型定义        内存只读数据库  SQL Server          PostgreSQL      MySQL
-C#                  √              √              √                  √              √
-C++2011             √              √              ×                  ×              ×
-Xhtml               √              无需                无需            无需        无需
+                    类型定义        内存只读数据库  SQL Server      PostgreSQL      MySQL
+C#                  √              √              √              √              √
+C++2011             √              √              ×              ×              ×
+Xhtml               √              无需            无需            无需            无需
 
 
 4 基于表达式数据结构的代码生成
