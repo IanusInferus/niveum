@@ -51,7 +51,6 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Algorithms\Cryptography.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="Context\SerializationServerAdapter.cs" />
     <Compile Include="Generated\Common.cs" />
@@ -68,6 +67,7 @@
     <Compile Include="Servers\ISerializationServer.cs" />
     <Compile Include="Servers\JsonHttpPacketServer.cs" />
     <Compile Include="Servers\JsonLinePacketServer.cs" />
+    <Compile Include="Servers\Rc4PacketServerTransformer.cs" />
     <Compile Include="Servers\SessionStateMachine.cs" />
     <Compile Include="Servers\TcpServer.cs" />
     <Compile Include="Servers\TcpSession.cs" />

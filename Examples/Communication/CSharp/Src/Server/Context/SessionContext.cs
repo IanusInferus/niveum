@@ -29,8 +29,15 @@ namespace Server
         {
             if (Authenticated != null) { Authenticated(); }
         }
+        public event Action<SecureContext> SecureConnectionRequired; //跨线程事件(订阅者需要保证线程安全)
+        public void RaiseSecureConnectionRequired(SecureContext c)
+        {
+            if (SecureConnectionRequired != null) { SecureConnectionRequired(c); }
+            IsSecureConnection = true;
+        }
 
         public IPEndPoint RemoteEndPoint { get; set; }
+        public bool IsSecureConnection = false;
 
         public Byte[] SessionToken = { };
         public String SessionTokenString { get { return Cryptography.BytesToHexString(SessionToken); } }

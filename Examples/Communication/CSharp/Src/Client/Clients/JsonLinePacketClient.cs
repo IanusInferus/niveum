@@ -17,14 +17,20 @@ namespace Client
 
             private Context c;
             private IJsonSerializationClientAdapter jc;
-            public JsonLinePacketClient(IJsonSerializationClientAdapter jc)
+            private IBinaryTransformer Transformer;
+            public JsonLinePacketClient(IJsonSerializationClientAdapter jc, IBinaryTransformer Transformer = null)
             {
                 this.c = new Context();
                 this.jc = jc;
+                this.Transformer = Transformer;
                 jc.ClientEvent += (String CommandName, UInt32 CommandHash, String Parameters) =>
                 {
                     var Message = "/" + CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture) + " " + Parameters + "\r\n";
                     var Bytes = System.Text.Encoding.UTF8.GetBytes(Message);
+                    if (Transformer != null)
+                    {
+                        Transformer.Transform(Bytes, 0, Bytes.Length);
+                    }
                     c.WriteBuffer.Add(Bytes);
                     if (this.ClientMethod != null) { ClientMethod(); }
                 };
@@ -50,6 +56,10 @@ namespace Client
                 var FirstPosition = c.ReadBuffer.Offset;
                 var BufferLength = c.ReadBuffer.Offset + c.ReadBuffer.Count;
                 var CheckPosition = FirstPosition;
+                if (Transformer != null)
+                {
+                    Transformer.Inverse(Buffer, BufferLength, Count);
+                }
                 BufferLength += Count;
 
                 var LineFeedPosition = -1;
