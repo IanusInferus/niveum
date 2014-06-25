@@ -36,11 +36,13 @@ namespace Server
             private IBinarySerializationServerAdapter ss;
             private Context c;
             private CheckCommandAllowedDelegate CheckCommandAllowed;
-            public BinaryCountPacketServer(IBinarySerializationServerAdapter SerializationServerAdapter, CheckCommandAllowedDelegate CheckCommandAllowed)
+            private IBinaryTransformer Transformer;
+            public BinaryCountPacketServer(IBinarySerializationServerAdapter SerializationServerAdapter, CheckCommandAllowedDelegate CheckCommandAllowed, IBinaryTransformer Transformer = null)
             {
                 this.ss = SerializationServerAdapter;
                 this.c = new Context();
                 this.CheckCommandAllowed = CheckCommandAllowed;
+                this.Transformer = Transformer;
                 this.ss.ServerEvent += (CommandName, CommandHash, Parameters) =>
                 {
                     var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
@@ -57,6 +59,10 @@ namespace Server
                     }
                     lock (c.WriteBufferLockee)
                     {
+                        if (Transformer != null)
+                        {
+                            Transformer.Transform(Bytes, 0, Bytes.Length);
+                        }
                         c.WriteBuffer.Add(Bytes);
                     }
                     if (OutputByteLengthReport != null)
@@ -92,6 +98,10 @@ namespace Server
                 var Buffer = c.ReadBuffer.Array;
                 var FirstPosition = c.ReadBuffer.Offset;
                 var BufferLength = c.ReadBuffer.Offset + c.ReadBuffer.Count;
+                if (Transformer != null)
+                {
+                    Transformer.Inverse(Buffer, BufferLength, Count);
+                }
                 BufferLength += Count;
 
                 while (true)
@@ -135,6 +145,10 @@ namespace Server
                                         }
                                         lock (c.WriteBufferLockee)
                                         {
+                                            if (Transformer != null)
+                                            {
+                                                Transformer.Transform(Bytes, 0, Bytes.Length);
+                                            }
                                             c.WriteBuffer.Add(Bytes);
                                         }
                                         if (OutputByteLengthReport != null)

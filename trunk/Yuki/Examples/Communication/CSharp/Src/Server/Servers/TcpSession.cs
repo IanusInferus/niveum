@@ -54,8 +54,13 @@ namespace Server
                         if (Server.CheckCommandAllowed == null) { return true; }
                         return Server.CheckCommandAllowed(Context, CommandName);
                     };
-                    var bcps = new BinaryCountPacketServer(a, cca);
+                    var rpst = new Rc4PacketServerTransformer();
+                    var bcps = new BinaryCountPacketServer(a, cca, rpst);
                     vts = bcps;
+                    Context.SecureConnectionRequired += c =>
+                    {
+                        rpst.SetSecureContext(c);
+                    };
                 }
                 else if (Server.SerializationProtocolType == SerializationProtocolType.Json)
                 {
@@ -67,7 +72,12 @@ namespace Server
                         if (Server.CheckCommandAllowed == null) { return true; }
                         return Server.CheckCommandAllowed(Context, CommandName);
                     };
-                    vts = new JsonLinePacketServer(a, cca);
+                    var rpst = new Rc4PacketServerTransformer();
+                    vts = new JsonLinePacketServer(a, cca, rpst);
+                    Context.SecureConnectionRequired += c =>
+                    {
+                        rpst.SetSecureContext(c);
+                    };
                 }
                 else
                 {
@@ -228,7 +238,7 @@ namespace Server
                         {
                             Result = vts.Handle(c);
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             if ((ex is InvalidOperationException) && (ex.Message != ""))
                             {

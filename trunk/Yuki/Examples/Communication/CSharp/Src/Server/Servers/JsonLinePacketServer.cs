@@ -22,16 +22,22 @@ namespace Server
             private IJsonSerializationServerAdapter ss;
             private Context c;
             private CheckCommandAllowedDelegate CheckCommandAllowed;
-            public JsonLinePacketServer(IJsonSerializationServerAdapter SerializationServerAdapter, CheckCommandAllowedDelegate CheckCommandAllowed)
+            private IBinaryTransformer Transformer;
+            public JsonLinePacketServer(IJsonSerializationServerAdapter SerializationServerAdapter, CheckCommandAllowedDelegate CheckCommandAllowed, IBinaryTransformer Transformer = null)
             {
                 this.ss = SerializationServerAdapter;
                 this.c = new Context();
                 this.CheckCommandAllowed = CheckCommandAllowed;
+                this.Transformer = Transformer;
                 this.ss.ServerEvent += (CommandName, CommandHash, Parameters) =>
                 {
                     var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), Parameters));
                     lock (c.WriteBufferLockee)
                     {
+                        if (Transformer != null)
+                        {
+                            Transformer.Transform(Bytes, 0, Bytes.Length);
+                        }
                         c.WriteBuffer.Add(Bytes);
                     }
                     if (OutputByteLengthReport != null)
@@ -68,6 +74,10 @@ namespace Server
                 var FirstPosition = c.ReadBuffer.Offset;
                 var BufferLength = c.ReadBuffer.Offset + c.ReadBuffer.Count;
                 var CheckPosition = FirstPosition;
+                if (Transformer != null)
+                {
+                    Transformer.Inverse(Buffer, BufferLength, Count);
+                }
                 BufferLength += Count;
 
                 var LineFeedPosition = -1;
@@ -108,6 +118,10 @@ namespace Server
                                             var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName + "@" + CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), OutputParameters));
                                             lock (c.WriteBufferLockee)
                                             {
+                                                if (Transformer != null)
+                                                {
+                                                    Transformer.Transform(Bytes, 0, Bytes.Length);
+                                                }
                                                 c.WriteBuffer.Add(Bytes);
                                             }
                                             if (OutputByteLengthReport != null)

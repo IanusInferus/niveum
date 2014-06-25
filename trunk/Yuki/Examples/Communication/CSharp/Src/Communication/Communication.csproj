@@ -42,6 +42,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Algorithms\Cryptography.cs" />
     <Compile Include="BaseSystem\AsyncConsumer.cs" />
     <Compile Include="BaseSystem\Functional.cs" />
     <Compile Include="BaseSystem\LockedVariable.cs" />
