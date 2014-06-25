@@ -38,12 +38,19 @@ namespace Server
         public Byte[] ClientToken;
     }
 
+    public interface IBinaryTransformer
+    {
+        void Transform(Byte[] Buffer, int Start, int Count);
+        void Inverse(Byte[] Buffer, int Start, int Count);
+    }
+
     public interface ISessionContext : IDisposable
     {
         //跨线程共享只读访问
 
         event Action Quit; //跨线程事件(订阅者需要保证线程安全)
         event Action Authenticated; //跨线程事件(订阅者需要保证线程安全)
+        event Action<SecureContext> SecureConnectionRequired; //跨线程事件(订阅者需要保证线程安全)
 
         IPEndPoint RemoteEndPoint { get; set; }
         String SessionTokenString { get; }

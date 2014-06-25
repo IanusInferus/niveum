@@ -26,6 +26,53 @@ namespace Algorithms
             return Encoding.UTF8.GetBytes(s);
         }
 
+        public class RC4
+        {
+            private Byte[] S;
+            private int i;
+            private int j;
+
+            public RC4(Byte[] Key)
+            {
+                S = Enumerable.Range(0, 256).Select(k => (Byte)(k)).ToArray();
+                int b = 0;
+                for (int a = 0; a < 256; a += 1)
+                {
+                    b = (b + S[a] + Key[a % Key.Length]) % 256;
+                    Swap(ref S[a], ref S[b]);
+                }
+
+                i = 0;
+                j = 0;
+            }
+
+            public Byte NextByte()
+            {
+                i = (i + 1) % 256;
+                j = (j + S[i]) % 256;
+                Swap(ref S[i], ref S[j]);
+                var K = S[(S[i] + S[j]) % 256];
+                return K;
+            }
+
+            public void Skip(int n)
+            {
+                for (int k = 0; k < n; k += 1)
+                {
+                    i = (i + 1) % 256;
+                    j = (j + S[i]) % 256;
+                    Swap(ref S[i], ref S[j]);
+                }
+            }
+
+            private void Swap(ref Byte a, ref Byte b)
+            {
+                var t = a;
+                a = b;
+                b = t;
+            }
+        }
+
         public static String BytesToHexString(Byte[] Bytes)
         {
             return String.Join("", Bytes.Select(b => b.ToString("X2")).ToArray());
