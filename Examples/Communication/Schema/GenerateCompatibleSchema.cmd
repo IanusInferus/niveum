@@ -27,11 +27,12 @@ SchemaManipulator.exe /loadtype:Common /loadtype:Communication /save:Communicati
   @if not "!OldDir!"=="" (
     @set OldPath=..\PreviousSchemas\!OldDir!
     @if "!NewDir!"=="" (
+      @set NewDir=Head
       @set NewPath=.
     ) else (
       @set NewPath=..\PreviousSchemas\!NewDir!
     )
-    SchemaManipulator.exe /load:"!NewPath!\Communication.tree" /gencom:"!OldPath!\Communication.tree","Compatibility\!OldDir!.tree","!OldDir!"
+    SchemaManipulator.exe /load:"!NewPath!\Communication.tree" /gencom:"!OldPath!\Communication.tree","!OldDir!","!NewPath!\Communication.tree","!NewDir!","Compatibility\!OldDir!.tree"
   )
   @set OldDir=!NewDir!
 )
