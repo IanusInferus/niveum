@@ -16,14 +16,26 @@ namespace Algorithms
             rng.GetBytes(r);
             return r;
         }
+        public static Byte[] UTF8(String s)
+        {
+            return Encoding.UTF8.GetBytes(s);
+        }
         public static Byte[] SHA1(Byte[] Bytes)
         {
             SHA1 sha = new SHA1CryptoServiceProvider();
             return sha.ComputeHash(Bytes);
         }
-        public static Byte[] UTF8(String s)
+        /// <summary>
+        /// HMAC = H((K XOR opad) :: H((K XOR ipad) :: Inner))
+        /// H = SHA1
+        /// opad = 0x5C
+        /// ipad = 0x36
+        /// </summary>
+        public static Byte[] HMACSHA1(Byte[] Key, Byte[] Bytes)
         {
-            return Encoding.UTF8.GetBytes(s);
+            var InnerHash = SHA1(Key.Select(k => (Byte)(k ^ 0x36)).Concat(Bytes).ToArray());
+            var OuterHash = SHA1(Key.Select(k => (Byte)(k ^ 0x5C)).Concat(InnerHash).ToArray());
+            return OuterHash;
         }
 
         public class RC4

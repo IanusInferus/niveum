@@ -53,6 +53,8 @@ namespace Server
         event Action<SecureContext> SecureConnectionRequired; //跨线程事件(订阅者需要保证线程安全)
 
         IPEndPoint RemoteEndPoint { get; set; }
+        /// <summary>长度为4</summary>
+        Byte[] SessionToken { get; }
         String SessionTokenString { get; }
         DateTime RequestTime { get; set; }
     }

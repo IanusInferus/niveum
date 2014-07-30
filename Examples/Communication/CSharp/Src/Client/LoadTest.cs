@@ -298,6 +298,194 @@ namespace Client
             }
         }
 
+        public static void TestUdpForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test, Action<int, int, ClientContext, IApplicationClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
+        {
+            Console.Write("{0}: ", Title);
+            Console.Out.Flush();
+
+            var tl = new List<Task>();
+            var bcl = new List<Tcp.UdpClient>();
+            var ccl = new List<ClientContext>();
+            var tmrl = new List<Timer>();
+            var vConnected = new LockedVariable<int>(0);
+            var vCompleted = new LockedVariable<int>(0);
+            var Check = new AutoResetEvent(false);
+
+            var bAbondon = new LockedVariable<Boolean>(false);
+
+            var vError = new LockedVariable<int>(0);
+
+            for (int k = 0; k < NumUser; k += 1)
+            {
+                var n = k;
+                var Lockee = new Object();
+                IApplicationClient ac;
+                Tcp.ITcpVirtualTransportClient vtc;
+                if (ProtocolType == SerializationProtocolType.Binary)
+                {
+                    var a = new BinarySerializationClientAdapter();
+                    ac = a.GetApplicationClient();
+                    vtc = new Tcp.BinaryCountPacketClient(a);
+                }
+                else if (ProtocolType == SerializationProtocolType.Json)
+                {
+                    var a = new JsonSerializationClientAdapter();
+                    ac = a.GetApplicationClient();
+                    vtc = new Tcp.JsonLinePacketClient(a);
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+                var bc = new Tcp.UdpClient(RemoteEndPoint, vtc);
+                var cc = new ClientContext();
+                var bCompleted = new LockedVariable<Boolean>(false);
+                Action Completed = () =>
+                {
+                    bCompleted.Update(b => true);
+                    vCompleted.Update(i => i + 1);
+                    Check.Set();
+                };
+
+                ac.Error += e =>
+                {
+                    var m = e.Message;
+                    Console.WriteLine(m);
+                };
+                if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, cc, ac, Completed); }
+                bc.Connect();
+                Action<Exception> UnknownFaulted = ex =>
+                {
+                    int OldValue = 0;
+                    vError.Update(v =>
+                    {
+                        OldValue = v;
+                        return v + 1;
+                    });
+                    if (OldValue <= 10)
+                    {
+                        Console.WriteLine(String.Format("{0}:{1}", n, ex.Message));
+                    }
+                    Completed();
+                };
+                bc.ReceiveAsync
+                (
+                    a =>
+                    {
+                        lock (Lockee)
+                        {
+                            a();
+                        }
+                    },
+                    UnknownFaulted
+                );
+                lock (Lockee)
+                {
+                    ac.ServerTime(new ServerTimeRequest { }, r =>
+                    {
+                        vConnected.Update(i => i + 1);
+                        Check.Set();
+                    });
+                }
+                var t = new Task
+                (
+                    () =>
+                    {
+                        lock (Lockee)
+                        {
+                            Test(NumUser, n, cc, ac, Completed);
+                        }
+                    }
+                );
+                var tmr = new Timer
+                (
+                    o =>
+                    {
+                        if (!bAbondon.Check(b => b)) { return; }
+                        if (bCompleted.Check(b => b)) { return; }
+                        lock (Lockee)
+                        {
+                            ac.ServerTime(new ServerTimeRequest { }, r => { });
+                        }
+                    },
+                    null,
+                    10000,
+                    10000
+                );
+                tl.Add(t);
+                bcl.Add(bc);
+                ccl.Add(cc);
+                tmrl.Add(tmr);
+            }
+
+            while (vConnected.Check(i => i != NumUser))
+            {
+                Check.WaitOne();
+            }
+
+            var Time = Environment.TickCount;
+
+            foreach (var t in tl)
+            {
+                t.Start();
+            }
+
+            while (vCompleted.Check(i => i != NumUser))
+            {
+                if (!Check.WaitOne(10000))
+                {
+                    if (vCompleted.Check(i => i > 0))
+                    {
+                        bAbondon.Update(b => true);
+                        break;
+                    }
+                }
+            }
+
+            var NumMutualWaiting = NumUser - vCompleted.Check(i => i);
+
+            while (vCompleted.Check(i => i != NumUser))
+            {
+                Check.WaitOne();
+            }
+            foreach (var tmr in tmrl)
+            {
+                tmr.Dispose();
+            }
+
+            var TimeDiff = Environment.TickCount - Time;
+
+            Task.WaitAll(tl.ToArray());
+            foreach (var t in tl)
+            {
+                t.Dispose();
+            }
+
+            foreach (var bc in bcl)
+            {
+                bc.Dispose();
+            }
+
+            if (FinalCheck != null)
+            {
+                FinalCheck(ccl.ToArray());
+            }
+
+            var NumError = vError.Check(v => v);
+            if (NumError > 0)
+            {
+                Console.WriteLine("{0} Errors", NumError);
+            }
+            if (NumMutualWaiting > 0)
+            {
+                Console.WriteLine("{0} Users, {1} ms, {2} MutualWaiting", NumUser, TimeDiff, NumMutualWaiting);
+            }
+            else
+            {
+                Console.WriteLine("{0} Users, {1} ms", NumUser, TimeDiff);
+            }
+        }
+
         public static void TestHttpForNumUser(String UrlPrefix, String ServiceVirtualPath, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test, Action<int, int, ClientContext, IApplicationClient, Action> InitializeClientContext = null, Action<ClientContext[]> FinalCheck = null)
         {
             Console.Write("{0}: ", Title);
@@ -463,6 +651,50 @@ namespace Client
             for (int k = 0; k < 6; k += 1)
             {
                 TestTcpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestMessage", TestMessage, TestMessageInitializeClientContext, TestMessageFinalCheck);
+                Thread.Sleep(1000);
+            }
+
+            return 0;
+        }
+
+        public static int DoTestUdp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
+        {
+            TestUdpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestQuit", TestQuit);
+            TestUdpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestAdd", TestAdd);
+            TestUdpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMultiply", TestMultiply);
+            TestUdpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestText", TestText);
+            Thread.Sleep(1000);
+            return 0;
+            TestUdpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMessage", TestMessage, TestMessageInitializeClientContext, TestMessageFinalCheck);
+            Thread.Sleep(5000);
+
+            for (int k = 0; k < 8; k += 1)
+            {
+                TestUdpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestQuit", TestQuit);
+            }
+            Thread.Sleep(5000);
+
+            for (int k = 0; k < 8; k += 1)
+            {
+                TestUdpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestAdd", TestAdd);
+            }
+            Thread.Sleep(5000);
+
+            for (int k = 0; k < 7; k += 1)
+            {
+                TestUdpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestMultiply", TestMultiply);
+            }
+            Thread.Sleep(5000);
+
+            for (int k = 0; k < 7; k += 1)
+            {
+                TestUdpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestText", TestText);
+            }
+            Thread.Sleep(10000);
+
+            for (int k = 0; k < 6; k += 1)
+            {
+                TestUdpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), "TestMessage", TestMessage, TestMessageInitializeClientContext, TestMessageFinalCheck);
                 Thread.Sleep(1000);
             }
 

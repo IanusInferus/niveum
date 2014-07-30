@@ -56,6 +56,7 @@
     <Compile Include="Clients\JsonLinePacketClient.cs" />
     <Compile Include="Clients\Rc4PacketClientTransformer.cs" />
     <Compile Include="Clients\Streams.cs" />
+    <Compile Include="Clients\UdpClient.cs" />
     <Compile Include="Clients\TcpClient.cs" />
     <Compile Include="Clients\Concept.cs" />
     <Compile Include="Context\SerializationClientAdapter.cs" />
