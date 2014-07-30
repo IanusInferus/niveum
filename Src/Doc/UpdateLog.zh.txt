@@ -1,4 +1,8 @@
-﻿2014.07.15
+﻿2014.07.30
+Examples:
+调整C#通讯示例，增加UDP协议。
+
+2014.07.15
 Yuki.SchemaManipulator:
 修正通讯代码生成时某一个类型在相邻的两个Schema中没有变化，但在最新的Schema中变化时，生成的兼容类型文件错误的问题。
 Examples:
