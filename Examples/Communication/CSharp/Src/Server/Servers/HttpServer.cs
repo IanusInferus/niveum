@@ -192,6 +192,7 @@ namespace Server
                     );
                 }
             }
+            //TODO: SessionIdleTimeout改为已验证和未验证
             /// <summary>只能在启动前修改，以保证线程安全</summary>
             public int? SessionIdleTimeout
             {
