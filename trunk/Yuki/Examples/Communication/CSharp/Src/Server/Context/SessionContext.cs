@@ -39,7 +39,7 @@ namespace Server
         public IPEndPoint RemoteEndPoint { get; set; }
         public bool IsSecureConnection = false;
 
-        public Byte[] SessionToken = { };
+        public Byte[] SessionToken { get; set; }
         public String SessionTokenString { get { return Cryptography.BytesToHexString(SessionToken); } }
 
         public ReaderWriterLock SessionLock = new ReaderWriterLock(); //跨线程共享读写访问变量锁

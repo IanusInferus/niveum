@@ -25,6 +25,30 @@
                 MaxBadCommands 8
                 SerializationProtocolType Json
         VirtualServer
+            Udp
+                Bindings
+                    Binding
+                        IpAddress 0.0.0.0
+                        Port 8001
+                SessionIdleTimeout 600
+                MaxConnections 32768
+                MaxConnectionsPerIP 32768
+                MaxUnauthenticatedPerIP 32768
+                MaxBadCommands 8
+                SerializationProtocolType Binary
+        VirtualServer
+            Udp
+                Bindings
+                    Binding
+                        IpAddress 0.0.0.0
+                        Port 8002
+                SessionIdleTimeout 600
+                MaxConnections 32768
+                MaxConnectionsPerIP 32768
+                MaxUnauthenticatedPerIP 32768
+                MaxBadCommands 8
+                SerializationProtocolType Json
+        VirtualServer
             Http
                 Bindings
                     Binding

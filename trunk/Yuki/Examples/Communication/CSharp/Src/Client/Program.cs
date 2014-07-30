@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2013.12.09.
+//  Version:     2014.07.30.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -19,10 +19,10 @@ using Communication;
 
 namespace Client
 {
-    public enum ServerProtocolType
+    public enum TransportProtocolType
     {
-        Binary,
-        Json,
+        Tcp,
+        Udp,
         Http
     }
     public enum SerializationProtocolType
@@ -89,32 +89,52 @@ namespace Client
             }
 
             var argv = CmdLine.Arguments;
-            ServerProtocolType ProtocolType = ServerProtocolType.Binary;
+            TransportProtocolType TransportProtocolType = TransportProtocolType.Tcp;
             SerializationProtocolType SerializationProtocolType = SerializationProtocolType.Binary;
             int DefaultPort = 8001;
-            if (argv.Length > 0)
+            if (argv.Length >= 1)
             {
-                ProtocolType = (ServerProtocolType)Enum.Parse(typeof(ServerProtocolType), argv[0], true);
-                if (ProtocolType == ServerProtocolType.Binary)
+                TransportProtocolType = (TransportProtocolType)Enum.Parse(typeof(TransportProtocolType), argv[0], true);
+            }
+            if (TransportProtocolType == TransportProtocolType.Tcp)
+            {
+                if (argv.Length >= 2)
                 {
-                    SerializationProtocolType = SerializationProtocolType.Binary;
+                    SerializationProtocolType = (SerializationProtocolType)Enum.Parse(typeof(SerializationProtocolType), argv[1], true);
+                }
+                if (SerializationProtocolType == SerializationProtocolType.Binary)
+                {
                     DefaultPort = 8001;
                 }
-                else if (ProtocolType == ServerProtocolType.Json)
+                else if (SerializationProtocolType == SerializationProtocolType.Json)
                 {
-                    SerializationProtocolType = SerializationProtocolType.Json;
+                    DefaultPort = 8002;
+                }
+            }
+            else if (TransportProtocolType == TransportProtocolType.Udp)
+            {
+                if (argv.Length >= 2)
+                {
+                    SerializationProtocolType = (SerializationProtocolType)Enum.Parse(typeof(SerializationProtocolType), argv[1], true);
+                }
+                if (SerializationProtocolType == SerializationProtocolType.Binary)
+                {
+                    DefaultPort = 8001;
+                }
+                else if (SerializationProtocolType == SerializationProtocolType.Json)
+                {
                     DefaultPort = 8002;
                 }
             }
 
-            if (ProtocolType != ServerProtocolType.Http)
+            if (TransportProtocolType == TransportProtocolType.Tcp)
             {
                 IPEndPoint RemoteEndPoint;
-                if (argv.Length == 3)
+                if (argv.Length == 4)
                 {
-                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse(argv[1]), int.Parse(argv[2]));
+                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse(argv[2]), int.Parse(argv[3]));
                 }
-                else if (argv.Length == 1)
+                else if (argv.Length == 2)
                 {
                     RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), DefaultPort);
                 }
@@ -145,7 +165,41 @@ namespace Client
                     RunTcp(RemoteEndPoint, SerializationProtocolType, UseOld);
                 }
             }
-            else
+            else if (TransportProtocolType == TransportProtocolType.Udp)
+            {
+                IPEndPoint RemoteEndPoint;
+                if (argv.Length == 4)
+                {
+                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse(argv[2]), int.Parse(argv[3]));
+                }
+                else if (argv.Length == 2)
+                {
+                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), DefaultPort);
+                }
+                else
+                {
+                    DisplayInfo();
+                    return -1;
+                }
+
+                if (UseLoadTest)
+                {
+                    LoadTest.DoTestUdp(RemoteEndPoint, SerializationProtocolType);
+                }
+                else if (UsePerformanceTest)
+                {
+                    //PerformanceTest.DoTestTcp(RemoteEndPoint, SerializationProtocolType);
+                }
+                else if (UseStableTest)
+                {
+                    //StableTest.DoTestTcp(RemoteEndPoint, SerializationProtocolType);
+                }
+                else
+                {
+                    RunUdp(RemoteEndPoint, SerializationProtocolType, UseOld);
+                }
+            }
+            else if (TransportProtocolType == TransportProtocolType.Http)
             {
                 String UrlPrefix = "http://localhost:8003/";
                 String ServiceVirtualPath = "cmd";
@@ -180,6 +234,11 @@ namespace Client
                     RunHttp(UrlPrefix, ServiceVirtualPath, UseOld);
                 }
             }
+            else
+            {
+                DisplayInfo();
+                return -1;
+            }
 
             return 0;
         }
@@ -194,9 +253,11 @@ namespace Client
         public static void DisplayInfo()
         {
             Console.WriteLine(@"用法:");
-            Console.WriteLine(@"Client [<Protocol=Binary> [<IpAddress=127.0.0.1> <Port=8001>]] [/old|/load|/perf|/stable]");
-            Console.WriteLine(@"Client <Protocol=Json> [<IpAddress=127.0.0.1> <Port=8002>] [/old|/load|/perf|/stable]");
-            Console.WriteLine(@"Client <Protocol=Http> [<UrlPrefix=http://localhost:8003/> <ServiceVirtualPath=cmd>] [/old|/load|/perf|/stable]");
+            Console.WriteLine(@"Client [<TransportProtocol=Tcp> <SerializationProtocol=Binary>] [<IpAddress=127.0.0.1> <Port=8001>] [/old|/load|/perf|/stable]");
+            Console.WriteLine(@"Client <TransportProtocol=Tcp> <SerializationProtocol=Json> [<IpAddress=127.0.0.1> <Port=8002>] [/old|/load|/perf|/stable]");
+            Console.WriteLine(@"Client <TransportProtocol=Udp> <SerializationProtocol=Binary> [<IpAddress=127.0.0.1> <Port=8001>] [/old|/load|/perf|/stable]");
+            Console.WriteLine(@"Client <TransportProtocol=Udp> <SerializationProtocol=Json> [<IpAddress=127.0.0.1> <Port=8002>] [/old|/load|/perf|/stable]");
+            Console.WriteLine(@"Client <TransportProtocol=Http> [<UrlPrefix=http://localhost:8003/> <ServiceVirtualPath=cmd>] [/old|/load|/perf|/stable]");
             Console.WriteLine(@"Protocol 通讯协议，可为Binary|Json|Http，默认为Binary");
             Console.WriteLine(@"IpAddress 服务器IP地址");
             Console.WriteLine(@"Port 服务器端口");
@@ -248,6 +309,48 @@ namespace Client
             }
         }
 
+        public static void RunUdp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, Boolean UseOld)
+        {
+            if (!(ProtocolType == SerializationProtocolType.Binary || ProtocolType == SerializationProtocolType.Json))
+            {
+                Console.WriteLine("协议不能识别：" + ProtocolType.ToString());
+            }
+            IApplicationClient ac;
+            Tcp.ITcpVirtualTransportClient vtc;
+            if (ProtocolType == SerializationProtocolType.Binary)
+            {
+                var a = new BinarySerializationClientAdapter();
+                ac = a.GetApplicationClient();
+                vtc = new Tcp.BinaryCountPacketClient(a);
+            }
+            else if (ProtocolType == SerializationProtocolType.Json)
+            {
+                var a = new JsonSerializationClientAdapter();
+                ac = a.GetApplicationClient();
+                vtc = new Tcp.JsonLinePacketClient(a);
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+            using (var bc = new Tcp.UdpClient(RemoteEndPoint, vtc))
+            {
+                bc.Connect();
+                Console.WriteLine("连接成功。");
+
+                var Lockee = new Object();
+                Action<Action> DoHandle = a =>
+                {
+                    lock (Lockee)
+                    {
+                        a();
+                    }
+                };
+                bc.ReceiveAsync(DoHandle, ex => Console.WriteLine(ex.Message));
+                ReadLineAndSendLoop(ac, UseOld, Lockee);
+            }
+        }
+
         public static void RunHttp(String UrlPrefix, String ServiceVirtualPath, Boolean UseOld)
         {
             using (var bc = new HttpClient(UrlPrefix, ServiceVirtualPath))
@@ -264,7 +367,7 @@ namespace Client
             InnerClient.ServerShutdown += e =>
             {
                 Console.WriteLine("服务器已关闭。");
-                lock(Lockee)
+                lock (Lockee)
                 {
                     NeedToExit = true;
                 }

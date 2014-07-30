@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2013.12.10.
+//  Version:     2014.07.30.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -125,6 +125,11 @@ namespace Server
                     {
                         MinWorkThreadCount += 2 + s.Tcp.Bindings.Count();
                         MaxWorkThreadCount += 2 + s.Tcp.Bindings.Count();
+                    }
+                    else if (s.OnUdp)
+                    {
+                        MinWorkThreadCount += 2 + s.Udp.Bindings.Count();
+                        MaxWorkThreadCount += 2 + s.Udp.Bindings.Count();
                     }
                     else if (s.OnHttp)
                     {
@@ -321,9 +326,62 @@ namespace Server
 
                     Server.Start();
 
-                    Console.WriteLine(@"TCP服务器已启动。");
-                    Console.WriteLine(@"序列化协议类型: " + s.SerializationProtocolType.ToString());
-                    Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
+                    Console.WriteLine(@"TCP/{0}服务器已启动。结点: {1}".Formats(s.SerializationProtocolType.ToString(), String.Join(", ", Server.Bindings.Select(b => b.ToString() + "(TCP)"))));
+
+                    Success = true;
+                }
+                finally
+                {
+                    if (!Success)
+                    {
+                        Server.Dispose();
+                    }
+                }
+
+                return Server;
+            }
+            else if (vsc.OnUdp)
+            {
+                var s = vsc.Udp;
+
+                if (!(s.SerializationProtocolType == SerializationProtocolType.Binary || s.SerializationProtocolType == SerializationProtocolType.Json))
+                {
+                    throw new InvalidOperationException("未知协议类型: " + s.SerializationProtocolType.ToString());
+                }
+
+                var Server = new Tcp<ServerContext>.UdpServer(ServerContext);
+                var Success = false;
+
+                try
+                {
+                    if (s.SerializationProtocolType == SerializationProtocolType.Binary)
+                    {
+                        Server.SerializationProtocolType = Tcp<ServerContext>.SerializationProtocolType.Binary;
+                    }
+                    else if (s.SerializationProtocolType == SerializationProtocolType.Json)
+                    {
+                        Server.SerializationProtocolType = Tcp<ServerContext>.SerializationProtocolType.Json;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    Server.CheckCommandAllowed = (sc, CommandName) =>
+                    {
+                        return true;
+                    };
+
+                    Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
+                    Server.SessionIdleTimeout = s.SessionIdleTimeout;
+                    Server.MaxConnections = s.MaxConnections;
+                    Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
+                    Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
+                    Server.MaxBadCommands = s.MaxBadCommands;
+
+                    Server.Start();
+
+                    Console.WriteLine(@"UDP/{0}服务器已启动。结点: {1}".Formats(s.SerializationProtocolType.ToString(), String.Join(", ", Server.Bindings.Select(b => b.ToString() + "(UDP)"))));
 
                     Success = true;
                 }
@@ -363,9 +421,7 @@ namespace Server
 
                     Server.Start();
 
-                    Console.WriteLine(@"HTTP服务器已启动。");
-                    Console.WriteLine(@"序列化协议类型: Json");
-                    Console.WriteLine(@"服务结点: " + String.Join(", ", Server.Bindings.Select(b => b.ToString())));
+                    Console.WriteLine(@"HTTP/{0}服务器已启动。结点: {1}".Formats("Json", String.Join(", ", Server.Bindings.Select(b => b.ToString()))));
 
                     Success = true;
                 }
@@ -394,7 +450,22 @@ namespace Server
                 {
                     Server.Stop();
 
-                    Console.WriteLine(@"服务器已关闭。");
+                    Console.WriteLine(@"TCP/{0}服务器已关闭。".Formats(s.SerializationProtocolType.ToString()));
+                }
+                finally
+                {
+                    Server.Dispose();
+                }
+            }
+            else if (vsc.OnUdp)
+            {
+                var s = vsc.Udp;
+
+                try
+                {
+                    Server.Stop();
+
+                    Console.WriteLine(@"UDP/{0}服务器已关闭。".Formats(s.SerializationProtocolType.ToString()));
                 }
                 finally
                 {
@@ -409,7 +480,7 @@ namespace Server
                 {
                     Server.Stop();
 
-                    Console.WriteLine(@"服务器已关闭。");
+                    Console.WriteLine(@"HTTP/{0}服务器已关闭。".Formats("Json"));
                 }
                 finally
                 {

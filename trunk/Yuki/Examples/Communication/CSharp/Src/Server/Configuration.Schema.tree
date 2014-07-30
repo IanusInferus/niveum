@@ -12,6 +12,7 @@
 
 #TaggedUnion VirtualServerConfiguration
     Tcp                         TcpServerConfiguration
+    Udp                         UdpServerConfiguration
     Http                        HttpServerConfiguration
 
 #Record TcpServerConfiguration
@@ -31,6 +32,20 @@
 #Enum SerializationProtocolType
     Binary
     Json
+
+#Record UdpServerConfiguration
+    Bindings                    List<UdpBinding>
+    SessionIdleTimeout          Int
+    MaxConnections              Int
+    MaxConnectionsPerIP         Int
+    MaxUnauthenticatedPerIP     Int
+    MaxBadCommands              Int
+
+    SerializationProtocolType   SerializationProtocolType
+
+#Record UdpBinding
+    IpAddress                   String
+    Port                        Int
 
 #Record HttpServerConfiguration
     Bindings                    List<HttpBinding>
