@@ -55,7 +55,7 @@ namespace Client
             public const int ReadingWindowSize = 64;
             public const int WritingWindowSize = 16;
             public const int IndexSpace = 65536;
-            public const int PacketTimeoutMilliseconds = 1000;
+            public const int PacketTimeoutMilliseconds = 500;
 
             private class Part
             {
@@ -160,9 +160,10 @@ namespace Client
                     var Time = DateTime.UtcNow;
                     foreach (var p in Parts)
                     {
-                        if (p.Value.Time.AddIntMilliseconds(PacketTimeoutMilliseconds) > Time)
+                        if (p.Value.Time.AddIntMilliseconds(PacketTimeoutMilliseconds) <= Time)
                         {
                             f(p.Key, p.Value.Data);
+                            p.Value.Time = Time;
                         }
                     }
                 }
@@ -176,9 +177,10 @@ namespace Client
             {
                 public PartContext Parts;
                 public int WritenIndex;
+                public Timer Timer;
             }
             private LockedVariable<UdpReadContext> RawReadingContext = new LockedVariable<UdpReadContext>(new UdpReadContext { Parts = new PartContext(ReadingWindowSize) });
-            private LockedVariable<UdpWriteContext> CookedWritingContext = new LockedVariable<UdpWriteContext>(new UdpWriteContext { Parts = new PartContext(WritingWindowSize), WritenIndex = IndexSpace - 1 });
+            private LockedVariable<UdpWriteContext> CookedWritingContext = new LockedVariable<UdpWriteContext>(new UdpWriteContext { Parts = new PartContext(WritingWindowSize), WritenIndex = IndexSpace - 1, Timer = null });
 
             public UdpClient(IPEndPoint RemoteEndPoint, ITcpVirtualTransportClient VirtualTransportClient)
             {
@@ -335,6 +337,39 @@ namespace Client
                         SendPacket(RemoteEndPoint, Buffer);
                         c.WritenIndex = Index;
                     }
+                    if (c.Timer == null)
+                    {
+                        Action Check = null;
+                        Check = () =>
+                        {
+                            var IsRunning = this.IsRunning;
+                            CookedWritingContext.DoAction(cc =>
+                            {
+                                cc.Timer.Dispose();
+                                cc.Timer = null;
+                                if (!IsRunning) { return; }
+                                if (cc.Parts.Parts.Count == 0) { return; }
+                                var t = DateTime.UtcNow;
+                                var IsSuccess = true;
+                                cc.Parts.ForEachTimedoutPacket((i, d) =>
+                                {
+                                    try
+                                    {
+                                        SendPacket(this.RemoteEndPoint, d);
+                                    }
+                                    catch
+                                    {
+                                        IsSuccess = false;
+                                        return;
+                                    }
+                                });
+                                if (!IsSuccess) { return; }
+                                var Wait = Math.Max(Convert.ToInt32((cc.Parts.Parts.Min(p => p.Value.Time) - t).TotalMilliseconds) + PacketTimeoutMilliseconds, 0);
+                                cc.Timer = new Timer(o => Check(), null, Wait, Timeout.Infinite);
+                            });
+                        };
+                        c.Timer = new Timer(o => Check(), null, PacketTimeoutMilliseconds, Timeout.Infinite);
+                    }
                 });
                 if (!Success)
                 {
@@ -389,6 +424,7 @@ namespace Client
 
             private static Boolean IsSocketErrorKnown(Exception ex)
             {
+                if (ex is ObjectDisposedException) { return true; }
                 var sex = ex as SocketException;
                 if (sex == null) { return false; }
                 var se = sex.SocketErrorCode;
@@ -475,7 +511,6 @@ namespace Client
                             CookedWritingContext.DoAction(c =>
                             {
                                 c.Parts.Acknowledge(Indices.First(), Indices.Skip(1));
-                                c.Parts.ForEachTimedoutPacket((i, d) => SendPacket(RemoteEndPoint, d)); //TODO 重发需要另外处理
                             });
                         }
 
@@ -594,10 +629,18 @@ namespace Client
                     ae.RemoteEndPoint = RemoteEndPoint;
                     ae.SetBuffer(Buffer, 0, Buffer.Length);
                     ae.Completed += Completed;
-                    var willRaiseEvent = Socket.ReceiveFromAsync(ae);
-                    if (!willRaiseEvent)
+                    try
                     {
-                        ThreadPool.QueueUserWorkItem(o => Completed(null, ae));
+                        var willRaiseEvent = Socket.ReceiveFromAsync(ae);
+                        if (!willRaiseEvent)
+                        {
+                            ThreadPool.QueueUserWorkItem(o => Completed(null, ae));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Faulted(ex);
+                        return;
                     }
                 };
 

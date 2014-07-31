@@ -56,7 +56,7 @@ namespace Server
             public const int ReadingWindowSize = 16;
             public const int WritingWindowSize = 64;
             public const int IndexSpace = 65536;
-            public const int PacketTimeoutMilliseconds = 1000;
+            public const int PacketTimeoutMilliseconds = 500;
 
             private class Part
             {
@@ -161,9 +161,10 @@ namespace Server
                     var Time = DateTime.UtcNow;
                     foreach (var p in Parts)
                     {
-                        if (p.Value.Time.AddIntMilliseconds(PacketTimeoutMilliseconds) > Time)
+                        if (p.Value.Time.AddIntMilliseconds(PacketTimeoutMilliseconds) <= Time)
                         {
                             f(p.Key, p.Value.Data);
+                            p.Value.Time = Time;
                         }
                     }
                 }
@@ -185,9 +186,10 @@ namespace Server
 
             private SessionStateMachine<TcpVirtualTransportServerHandleResult, Unit> ssm;
 
-            public UdpSession(UdpServer Server)
+            public UdpSession(UdpServer Server, IPEndPoint RemoteEndPoint)
             {
                 this.Server = Server;
+                this.RemoteEndPoint = RemoteEndPoint;
                 this.LastActiveTimeValue = new LockedVariable<DateTime>(DateTime.UtcNow);
                 ssm = new SessionStateMachine<TcpVirtualTransportServerHandleResult, Unit>(ex => ex is SocketException, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit);
 
