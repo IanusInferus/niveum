@@ -14,6 +14,10 @@ namespace Server.Services
             {
                 return SendMessageReply.CreateTooLong();
             }
+            if (r.Content == "login")
+            {
+                SessionContext.RaiseAuthenticated();
+            }
             SessionContext.SendMessageCount += 1;
             var Sessions = ServerContext.Sessions.ToList();
             foreach (var rc in Sessions)

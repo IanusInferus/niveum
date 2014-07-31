@@ -18,6 +18,7 @@
 #Record TcpServerConfiguration
     Bindings                    List<TcpBinding>
     SessionIdleTimeout          Int
+    UnauthenticatedSessionIdleTimeout   Int
     MaxConnections              Int
     MaxConnectionsPerIP         Int
     MaxUnauthenticatedPerIP     Int
@@ -36,11 +37,13 @@
 #Record UdpServerConfiguration
     Bindings                    List<UdpBinding>
     SessionIdleTimeout          Int
+    UnauthenticatedSessionIdleTimeout   Int
     MaxConnections              Int
     MaxConnectionsPerIP         Int
     MaxUnauthenticatedPerIP     Int
     MaxBadCommands              Int
 
+    TimeoutCheckPeriod          Int
     SerializationProtocolType   SerializationProtocolType
 
 #Record UdpBinding
@@ -50,6 +53,7 @@
 #Record HttpServerConfiguration
     Bindings                    List<HttpBinding>
     SessionIdleTimeout          Int
+    UnauthenticatedSessionIdleTimeout   Int
     MaxConnections              Int
     MaxConnectionsPerIP         Int
     MaxUnauthenticatedPerIP     Int

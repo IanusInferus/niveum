@@ -42,7 +42,11 @@ namespace Server
 
                 Context = Server.ServerContext.CreateSessionContext();
                 Context.Quit += ssm.NotifyExit;
-                Context.Authenticated += () => Server.NotifySessionAuthenticated(this);
+                Context.Authenticated += () =>
+                {
+                    Socket.TimeoutSeconds = Server.SessionIdleTimeout;
+                    Server.NotifySessionAuthenticated(this);
+                };
 
                 if (Server.SerializationProtocolType == SerializationProtocolType.Binary)
                 {

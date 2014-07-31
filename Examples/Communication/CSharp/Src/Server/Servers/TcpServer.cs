@@ -121,6 +121,7 @@ namespace Server
             private int MaxBadCommandsValue = 8;
             private IPEndPoint[] BindingsValue = { };
             private int? SessionIdleTimeoutValue = null;
+            private int? UnauthenticatedSessionIdleTimeoutValue = null;
             private int? MaxConnectionsValue = null;
             private int? MaxConnectionsPerIPValue = null;
             private int? MaxUnauthenticatedPerIPValue = null;
@@ -188,6 +189,25 @@ namespace Server
                         {
                             if (b) { throw new InvalidOperationException(); }
                             SessionIdleTimeoutValue = value;
+                        }
+                    );
+                }
+            }
+            /// <summary>只能在启动前修改，以保证线程安全</summary>
+            public int? UnauthenticatedSessionIdleTimeout
+            {
+                get
+                {
+                    return UnauthenticatedSessionIdleTimeoutValue;
+                }
+                set
+                {
+                    IsRunningValue.DoAction
+                    (
+                        b =>
+                        {
+                            if (b) { throw new InvalidOperationException(); }
+                            UnauthenticatedSessionIdleTimeoutValue = value;
                         }
                     );
                 }
@@ -470,7 +490,7 @@ namespace Server
                                                 a.Dispose();
                                                 continue;
                                             }
-                                            var s = new TcpSession(this, new StreamedAsyncSocket(a, SessionIdleTimeoutValue), e);
+                                            var s = new TcpSession(this, new StreamedAsyncSocket(a, UnauthenticatedSessionIdleTimeoutValue), e);
 
                                             if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
                                             {
