@@ -138,6 +138,7 @@ namespace Server
             private int MaxBadCommandsValue = 8;
             private String[] BindingsValue = { };
             private int? SessionIdleTimeoutValue = null;
+            private int? UnauthenticatedSessionIdleTimeoutValue = null;
             private int? MaxConnectionsValue = null;
             private int? MaxConnectionsPerIPValue = null;
             private int? MaxUnauthenticatedPerIPValue = null;
@@ -192,7 +193,6 @@ namespace Server
                     );
                 }
             }
-            //TODO: SessionIdleTimeout改为已验证和未验证
             /// <summary>只能在启动前修改，以保证线程安全</summary>
             public int? SessionIdleTimeout
             {
@@ -208,6 +208,25 @@ namespace Server
                         {
                             if (b) { throw new InvalidOperationException(); }
                             SessionIdleTimeoutValue = value;
+                        }
+                    );
+                }
+            }
+            /// <summary>只能在启动前修改，以保证线程安全</summary>
+            public int? UnauthenticatedSessionIdleTimeout
+            {
+                get
+                {
+                    return UnauthenticatedSessionIdleTimeoutValue;
+                }
+                set
+                {
+                    IsRunningValue.DoAction
+                    (
+                        b =>
+                        {
+                            if (b) { throw new InvalidOperationException(); }
+                            UnauthenticatedSessionIdleTimeoutValue = value;
                         }
                     );
                 }
@@ -379,9 +398,9 @@ namespace Server
                             {
                                 Listener.Prefixes.Add(Binding);
                             }
-                            if (SessionIdleTimeoutValue.HasValue)
+                            if (UnauthenticatedSessionIdleTimeoutValue.HasValue)
                             {
-                                SetTimer(Listener, SessionIdleTimeoutValue.Value);
+                                SetTimer(Listener, UnauthenticatedSessionIdleTimeoutValue.Value);
                             }
                             ListeningTask = new Task
                             (
@@ -745,7 +764,30 @@ namespace Server
 
                                         PurifieringTaskNotifier.WaitOne();
 
-                                        if (SessionIdleTimeout.HasValue)
+                                        if (UnauthenticatedSessionIdleTimeoutValue.HasValue)
+                                        {
+                                            var CheckTime = DateTime.UtcNow.AddIntSeconds(-UnauthenticatedSessionIdleTimeoutValue.Value);
+                                            SessionSets.DoAction
+                                            (
+                                                ss =>
+                                                {
+                                                    foreach (var s in ss.Sessions)
+                                                    {
+                                                        var IpAddress = s.RemoteEndPoint.Address;
+                                                        var isi = ss.IpSessions[IpAddress];
+                                                        if (!isi.Authenticated.Contains(s))
+                                                        {
+                                                            if (s.LastActiveTime < CheckTime)
+                                                            {
+                                                                StoppingSessions.Enqueue(s);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            );
+                                        }
+
+                                        if (SessionIdleTimeoutValue.HasValue)
                                         {
                                             var CheckTime = DateTime.UtcNow.AddIntSeconds(-SessionIdleTimeoutValue.Value);
                                             SessionSets.DoAction
@@ -754,9 +796,14 @@ namespace Server
                                                 {
                                                     foreach (var s in ss.Sessions)
                                                     {
-                                                        if (s.LastActiveTime < CheckTime)
+                                                        var IpAddress = s.RemoteEndPoint.Address;
+                                                        var isi = ss.IpSessions[IpAddress];
+                                                        if (isi.Authenticated.Contains(s))
                                                         {
-                                                            StoppingSessions.Enqueue(s);
+                                                            if (s.LastActiveTime < CheckTime)
+                                                            {
+                                                                StoppingSessions.Enqueue(s);
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -786,7 +833,7 @@ namespace Server
                                 TaskCreationOptions.LongRunning
                             );
 
-                            if (SessionIdleTimeoutValue.HasValue)
+                            if (UnauthenticatedSessionIdleTimeoutValue.HasValue || SessionIdleTimeoutValue.HasValue)
                             {
                                 var TimePeriod = TimeSpan.FromSeconds(Math.Max(TimeoutCheckPeriodValue, 1));
                                 LastActiveTimeCheckTimer = new Timer(state => { PurifieringTaskNotifier.Set(); }, null, TimePeriod, TimePeriod);

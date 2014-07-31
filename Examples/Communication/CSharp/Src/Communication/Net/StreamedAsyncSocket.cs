@@ -17,7 +17,18 @@ namespace Net
         private Boolean IsDisposingFinished = false;
 
         private Socket InnerSocket;
-        private int? TimeoutSeconds;
+        private LockedVariable<int?> TimeoutSecondsValue = new LockedVariable<int?>(null);
+        public int? TimeoutSeconds
+        {
+            get
+            {
+                return TimeoutSecondsValue.Check(v => v);
+            }
+            set
+            {
+                TimeoutSecondsValue.Update(v => value);
+            }
+        }
         public event Action TimedOut;
 
         private class AsyncOperationContext : IDisposable
@@ -177,6 +188,7 @@ namespace Net
                 Context = GetContext();
                 Context.ResultToCompleted = ResultToCompleted;
                 Context.Faulted = Faulted;
+                var TimeoutSeconds = this.TimeoutSeconds;
                 if (TimeoutSeconds.HasValue)
                 {
                     var IsCompleted = new LockedVariable<Boolean>(false);
