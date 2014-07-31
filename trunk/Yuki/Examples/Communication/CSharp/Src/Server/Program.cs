@@ -319,6 +319,7 @@ namespace Server
 
                     Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
                     Server.SessionIdleTimeout = s.SessionIdleTimeout;
+                    Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
                     Server.MaxConnections = s.MaxConnections;
                     Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
                     Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
@@ -374,10 +375,13 @@ namespace Server
 
                     Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
                     Server.SessionIdleTimeout = s.SessionIdleTimeout;
+                    Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
                     Server.MaxConnections = s.MaxConnections;
                     Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
                     Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
                     Server.MaxBadCommands = s.MaxBadCommands;
+
+                    Server.TimeoutCheckPeriod = s.TimeoutCheckPeriod;
 
                     Server.Start();
 
@@ -411,6 +415,7 @@ namespace Server
 
                     Server.Bindings = s.Bindings.Select(b => b.Prefix).ToArray();
                     Server.SessionIdleTimeout = s.SessionIdleTimeout;
+                    Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
                     Server.MaxConnections = s.MaxConnections;
                     Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
                     Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;

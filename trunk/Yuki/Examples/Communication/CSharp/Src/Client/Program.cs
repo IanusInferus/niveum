@@ -336,7 +336,6 @@ namespace Client
             using (var bc = new Tcp.UdpClient(RemoteEndPoint, vtc))
             {
                 bc.Connect();
-                Console.WriteLine("连接成功。");
 
                 var Lockee = new Object();
                 Action<Action> DoHandle = a =>
