@@ -340,12 +340,36 @@ namespace Client
                 var bc = new Tcp.UdpClient(RemoteEndPoint, vtc);
                 var cc = new ClientContext();
                 var bCompleted = new LockedVariable<Boolean>(false);
-                Action Completed = () =>
+                Action Completed;
+                Action FaultedCompleted;
+                if (Test == TestQuit)
                 {
-                    bCompleted.Update(b => true);
-                    vCompleted.Update(i => i + 1);
-                    Check.Set();
-                };
+                    Completed = () =>
+                    {
+                        bCompleted.Update(b => true);
+                        vCompleted.Update(i => i + 1);
+                        Check.Set();
+                    };
+                    FaultedCompleted = Completed;
+                }
+                else
+                {
+                    Completed = () =>
+                    {
+                        ac.Quit(new QuitRequest { }, r =>
+                        {
+                            bCompleted.Update(b => true);
+                            vCompleted.Update(i => i + 1);
+                            Check.Set();
+                        });
+                    };
+                    FaultedCompleted = () =>
+                    {
+                        bCompleted.Update(b => true);
+                        vCompleted.Update(i => i + 1);
+                        Check.Set();
+                    };
+                }
 
                 ac.Error += e =>
                 {
@@ -366,7 +390,7 @@ namespace Client
                     {
                         Console.WriteLine(String.Format("{0}:{1}", n, ex.Message));
                     }
-                    Completed();
+                    FaultedCompleted();
                 };
                 bc.ReceiveAsync
                 (
@@ -405,7 +429,17 @@ namespace Client
                         if (bCompleted.Check(b => b)) { return; }
                         lock (Lockee)
                         {
-                            ac.ServerTime(new ServerTimeRequest { }, r => { });
+                            int OldValue = 0;
+                            vError.Update(v =>
+                            {
+                                OldValue = v;
+                                return v + 1;
+                            });
+                            if (OldValue <= 10)
+                            {
+                                Console.WriteLine(String.Format("{0}:{1}", n, "Timedout"));
+                            }
+                            FaultedCompleted();
                         }
                     },
                     null,
@@ -659,12 +693,18 @@ namespace Client
 
         public static int DoTestUdp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
         {
+            //如果在Windows测试提示“由于系统缓冲区空间不足或队列已满，不能执行套接字上的操作。”（WSAENOBUFS 10055），表示系统的UDP端口数不足
+            //可以使用下述命令查看动态端口范围
+            //netsh int ipv4 show dynamicport udp
+            //可以在管理员权限下使用下述命令设置
+            //netsh int ipv4 set dynamicport udp start=16384 num=49152
+            //参见：http://support.microsoft.com/kb/929851/en-us
+
             TestUdpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestQuit", TestQuit);
             TestUdpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestAdd", TestAdd);
             TestUdpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMultiply", TestMultiply);
             TestUdpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestText", TestText);
             Thread.Sleep(1000);
-            return 0;
             TestUdpForNumUser(RemoteEndPoint, ProtocolType, 64, "TestMessage", TestMessage, TestMessageInitializeClientContext, TestMessageFinalCheck);
             Thread.Sleep(5000);
 
