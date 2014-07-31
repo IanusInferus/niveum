@@ -208,6 +208,162 @@ namespace Client
             Console.WriteLine("{0} Users, {1} Request/User, {2} ms", NumUser, NumRequestPerUser, TimeDiff);
         }
 
+        public static void TestUdpForNumUser(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, int NumRequestPerUser, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test)
+        {
+            Console.Write("{0}: ", Title);
+            Console.Out.Flush();
+
+            var tll = new Object();
+            var tl = new List<Task>();
+            var bcl = new List<Tcp.UdpClient>();
+            var ccl = new List<ClientContext>();
+            var vConnected = new LockedVariable<int>(0);
+            var vCompleted = new LockedVariable<int>(0);
+            var Check = new AutoResetEvent(false);
+
+            var vError = new LockedVariable<int>(0);
+
+            for (int k = 0; k < NumUser; k += 1)
+            {
+                Action Completed = null;
+
+                var n = k;
+                var Lockee = new Object();
+                IApplicationClient ac;
+                Tcp.ITcpVirtualTransportClient vtc;
+                if (ProtocolType == SerializationProtocolType.Binary)
+                {
+                    var a = new BinarySerializationClientAdapter();
+                    ac = a.GetApplicationClient();
+                    vtc = new Tcp.BinaryCountPacketClient(a);
+                }
+                else if (ProtocolType == SerializationProtocolType.Json)
+                {
+                    var a = new JsonSerializationClientAdapter();
+                    ac = a.GetApplicationClient();
+                    vtc = new Tcp.JsonLinePacketClient(a);
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+                var bc = new Tcp.UdpClient(RemoteEndPoint, vtc);
+                var cc = new ClientContext();
+                ac.Error += e =>
+                {
+                    var m = e.Message;
+                    Console.WriteLine(m);
+                };
+                bc.Connect();
+                Action<Exception> UnknownFaulted = ex =>
+                {
+                    int OldValue = 0;
+                    vError.Update(v =>
+                    {
+                        OldValue = v;
+                        return v + 1;
+                    });
+                    if (OldValue <= 10)
+                    {
+                        Console.WriteLine(String.Format("{0}:{1}", n, ex.Message));
+                    }
+                    vCompleted.Update(i => i + 1);
+                    Check.Set();
+                };
+                bc.ReceiveAsync
+                (
+                    a =>
+                    {
+                        lock (Lockee)
+                        {
+                            a();
+                        }
+                    },
+                    UnknownFaulted
+                );
+                lock (Lockee)
+                {
+                    ac.ServerTime(new ServerTimeRequest { }, r =>
+                    {
+                        vConnected.Update(i => i + 1);
+                        Check.Set();
+                    });
+                }
+                Action f = () =>
+                {
+                    lock (Lockee)
+                    {
+                        Test(NumUser, n, cc, ac, Completed);
+                    }
+                };
+                var t = new Task(f);
+                lock (tll)
+                {
+                    tl.Add(t);
+                }
+                bcl.Add(bc);
+                ccl.Add(cc);
+
+                int RequestCount = NumRequestPerUser;
+                Completed = () =>
+                {
+                    if (RequestCount > 0)
+                    {
+                        RequestCount -= 1;
+                        var tt = new Task(f);
+                        lock (tll)
+                        {
+                            tl.Add(t);
+                        }
+                        tt.Start();
+                        return;
+                    }
+                    vCompleted.Update(i => i + 1);
+                    Check.Set();
+                };
+            }
+
+            while (vConnected.Check(i => i != NumUser))
+            {
+                Check.WaitOne();
+            }
+
+            var Time = Environment.TickCount;
+
+            lock (tll)
+            {
+                foreach (var t in tl)
+                {
+                    t.Start();
+                }
+            }
+
+            while (vCompleted.Check(i => i != NumUser))
+            {
+                Check.WaitOne();
+            }
+
+            var TimeDiff = Environment.TickCount - Time;
+
+            Task.WaitAll(tl.ToArray());
+            foreach (var t in tl)
+            {
+                t.Dispose();
+            }
+
+            foreach (var bc in bcl)
+            {
+                bc.Dispose();
+            }
+
+            var NumError = vError.Check(v => v);
+            if (NumError > 0)
+            {
+                Console.WriteLine("{0} Errors", NumError);
+            }
+            Console.WriteLine("{0} Users, {1} Request/User, {2} ms", NumUser, NumRequestPerUser, TimeDiff);
+        }
+
         public static void TestHttpForNumUser(String UrlPrefix, String ServiceVirtualPath, int NumRequestPerUser, int NumUser, String Title, Action<int, int, ClientContext, IApplicationClient, Action> Test)
         {
             Console.Write("{0}: ", Title);
@@ -377,6 +533,33 @@ namespace Client
             for (int k = 0; k < 4; k += 1)
             {
                 TestTcpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestText", TestText);
+            }
+
+            return 0;
+        }
+
+        public static int DoTestUdp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType)
+        {
+            TestUdpForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestAdd", TestAdd);
+            TestUdpForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestMultiply", TestMultiply);
+            TestUdpForNumUser(RemoteEndPoint, ProtocolType, 8, 1, "TestText", TestText);
+            Thread.Sleep(5000);
+
+            for (int k = 0; k < 4; k += 1)
+            {
+                TestUdpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestAdd", TestAdd);
+            }
+            Thread.Sleep(5000);
+
+            for (int k = 0; k < 4; k += 1)
+            {
+                TestUdpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestMultiply", TestMultiply);
+            }
+            Thread.Sleep(5000);
+
+            for (int k = 0; k < 4; k += 1)
+            {
+                TestUdpForNumUser(RemoteEndPoint, ProtocolType, 1 << (2 * k), 4096, "TestText", TestText);
             }
 
             return 0;
