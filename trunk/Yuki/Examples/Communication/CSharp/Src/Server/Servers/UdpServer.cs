@@ -489,7 +489,7 @@ namespace Server
                                                     if ((Flag & 2) != 0) { continue; }
                                                     var Offset = 12;
 
-                                                    s = new UdpSession(this);
+                                                    s = new UdpSession(this, e);
                                                     SessionId = s.SessionId;
 
                                                     if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
@@ -566,7 +566,7 @@ namespace Server
                                                             }
                                                             while (ss.SessionIdToSession.ContainsKey(SessionId))
                                                             {
-                                                                s = new UdpSession(this);
+                                                                s = new UdpSession(this, e);
                                                                 SessionId = s.SessionId;
                                                             }
                                                             ss.SessionIdToSession.Add(SessionId, s);
