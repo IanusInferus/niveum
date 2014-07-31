@@ -19,6 +19,7 @@ namespace Server
         public class UdpSession
         {
             public UdpServer Server { get; private set; }
+            private Socket ServerSocket;
             private LockedVariable<IPEndPoint> RemoteEndPointValue = new LockedVariable<IPEndPoint>(default(IPEndPoint));
             public IPEndPoint RemoteEndPoint
             {
@@ -156,9 +157,8 @@ namespace Server
                     }
                 }
 
-                public void ForEachTimedoutPacket(Action<int, Byte[]> f)
+                public void ForEachTimedoutPacket(DateTime Time, Action<int, Byte[]> f)
                 {
-                    var Time = DateTime.UtcNow;
                     foreach (var p in Parts)
                     {
                         if (p.Value.Time.AddIntMilliseconds(PacketTimeoutMilliseconds) <= Time)
@@ -186,9 +186,10 @@ namespace Server
 
             private SessionStateMachine<TcpVirtualTransportServerHandleResult, Unit> ssm;
 
-            public UdpSession(UdpServer Server, IPEndPoint RemoteEndPoint)
+            public UdpSession(UdpServer Server, Socket ServerSocket, IPEndPoint RemoteEndPoint)
             {
                 this.Server = Server;
+                this.ServerSocket = ServerSocket;
                 this.RemoteEndPoint = RemoteEndPoint;
                 this.LastActiveTimeValue = new LockedVariable<DateTime>(DateTime.UtcNow);
                 ssm = new SessionStateMachine<TcpVirtualTransportServerHandleResult, Unit>(ex => ex is SocketException, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit);
@@ -312,9 +313,9 @@ namespace Server
                     c.NotAcknowledgedIndices.Clear();
                 });
                 var Success = true;
+                var Parts = new List<Part>();
                 CookedWritingContext.DoAction(c =>
                 {
-                    var Parts = new List<Part>();
                     var Time = DateTime.UtcNow;
                     var WritingOffset = 0;
                     while (WritingOffset < TotalLength)
@@ -388,11 +389,15 @@ namespace Server
                             Success = false;
                             return;
                         }
+                        Parts.Add(Part);
 
-                        SendPacket(RemoteEndPoint, Buffer);
                         c.WritenIndex = Index;
                     }
                 });
+                foreach (var p in Parts)
+                {
+                    SendPacket(RemoteEndPoint, p.Data);
+                }
                 if (!Success)
                 {
                     OnFailure();
@@ -657,20 +662,18 @@ namespace Server
 
             private void SendPacket(IPEndPoint RemoteEndPoint, Byte[] Data)
             {
-                using (var s = new Socket(RemoteEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp))
-                {
-                    s.SendTo(Data, RemoteEndPoint);
-                }
+                ServerSocket.SendTo(Data, RemoteEndPoint);
             }
 
             public Boolean Push(IPEndPoint RemoteEndPoint, int Index, int[] Indices, Byte[] Buffer, int Offset, int Length)
             {
+                var Time = DateTime.UtcNow;
                 if ((Indices != null) && (Indices.Length > 0))
                 {
                     CookedWritingContext.DoAction(c =>
                     {
                         c.Parts.Acknowledge(Indices.First(), Indices.Skip(1));
-                        c.Parts.ForEachTimedoutPacket((i, d) => SendPacket(RemoteEndPoint, d));
+                        c.Parts.ForEachTimedoutPacket(Time, (i, d) => SendPacket(RemoteEndPoint, d));
                     });
                 }
                 this.RemoteEndPoint = RemoteEndPoint;

@@ -91,7 +91,7 @@ namespace Client
 
             ic.TestMessage(new TestMessageRequest { Message = s }, r =>
             {
-                Trace.Assert(r.Success == cc.NumOnline);
+                //Trace.Assert(r.Success == cc.NumOnline);
                 cc.Num -= 1;
                 if (cc.Num == 0)
                 {

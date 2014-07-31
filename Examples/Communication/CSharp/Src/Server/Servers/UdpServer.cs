@@ -58,6 +58,7 @@ namespace Server
 
             private class AcceptingInfo
             {
+                public Socket Socket;
                 public Byte[] ReadBuffer;
                 public IPEndPoint RemoteEndPoint;
             }
@@ -375,10 +376,11 @@ namespace Server
                                                 {
                                                     var RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
                                                     var EndPoint = (EndPoint)(RemoteEndPoint);
-                                                    var Count = BindingInfo.Socket.Check(s => s).ReceiveFrom(BindingInfo.ReadBuffer, ref EndPoint);
+                                                    var bs = BindingInfo.Socket.Check(s => s);
+                                                    var Count = bs.ReceiveFrom(BindingInfo.ReadBuffer, ref EndPoint);
                                                     var ReadBuffer = new Byte[Count];
                                                     Array.Copy(BindingInfo.ReadBuffer, ReadBuffer, Count);
-                                                    AcceptedSockets.Enqueue(new AcceptingInfo { ReadBuffer = ReadBuffer, RemoteEndPoint = (IPEndPoint)(EndPoint) });
+                                                    AcceptedSockets.Enqueue(new AcceptingInfo { Socket = bs, ReadBuffer = ReadBuffer, RemoteEndPoint = (IPEndPoint)(EndPoint) });
                                                     AcceptingTaskNotifier.Set();
                                                 }
                                                 catch (SocketException)
@@ -508,7 +510,7 @@ namespace Server
                                                     if ((Flag & 2) != 0) { continue; }
                                                     var Offset = 12;
 
-                                                    s = new UdpSession(this, e);
+                                                    s = new UdpSession(this, a.Socket, e);
                                                     SessionId = s.SessionId;
 
                                                     if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
@@ -585,7 +587,7 @@ namespace Server
                                                             }
                                                             while (ss.SessionIdToSession.ContainsKey(SessionId))
                                                             {
-                                                                s = new UdpSession(this, e);
+                                                                s = new UdpSession(this, a.Socket, e);
                                                                 SessionId = s.SessionId;
                                                             }
                                                             ss.SessionIdToSession.Add(SessionId, s);

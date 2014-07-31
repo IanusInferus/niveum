@@ -155,9 +155,8 @@ namespace Client
                     }
                 }
 
-                public void ForEachTimedoutPacket(Action<int, Byte[]> f)
+                public void ForEachTimedoutPacket(DateTime Time, Action<int, Byte[]> f)
                 {
-                    var Time = DateTime.UtcNow;
                     foreach (var p in Parts)
                     {
                         if (p.Value.Time.AddIntMilliseconds(PacketTimeoutMilliseconds) <= Time)
@@ -345,13 +344,14 @@ namespace Client
                             var IsRunning = this.IsRunning;
                             CookedWritingContext.DoAction(cc =>
                             {
+                                if (cc.Timer == null) { return; }
                                 cc.Timer.Dispose();
                                 cc.Timer = null;
                                 if (!IsRunning) { return; }
                                 if (cc.Parts.Parts.Count == 0) { return; }
                                 var t = DateTime.UtcNow;
                                 var IsSuccess = true;
-                                cc.Parts.ForEachTimedoutPacket((i, d) =>
+                                cc.Parts.ForEachTimedoutPacket(t, (i, d) =>
                                 {
                                     try
                                     {
@@ -616,13 +616,17 @@ namespace Client
                     {
                         if (e.SocketError != SocketError.Success)
                         {
+                            e.Dispose();
                             Faulted(new SocketException((int)(e.SocketError)));
                             return;
                         }
                         var Count = e.BytesTransferred;
                         var ReadBuffer = new Byte[Count];
                         Array.Copy(e.Buffer, ReadBuffer, Count);
+                        e.Dispose();
                         CompletedSocket((IPEndPoint)(RemoteEndPoint), ReadBuffer);
+                        Buffer = null;
+                        ReadBuffer = null;
                         Receive();
                     };
                     var ae = new SocketAsyncEventArgs();
@@ -639,6 +643,7 @@ namespace Client
                     }
                     catch (Exception ex)
                     {
+                        ae.Dispose();
                         Faulted(ex);
                         return;
                     }
@@ -662,6 +667,14 @@ namespace Client
                 catch
                 {
                 }
+                CookedWritingContext.DoAction(c =>
+                {
+                    if (c.Timer != null)
+                    {
+                        c.Timer.Dispose();
+                        c.Timer = null;
+                    }
+                });
             }
         }
     }
