@@ -294,7 +294,7 @@ namespace Client
             using (var bc = new Tcp.TcpClient(RemoteEndPoint, vtc))
             {
                 bc.Connect();
-                Console.WriteLine("连接成功。");
+                Console.WriteLine("连接成功。输入login登录。");
 
                 var Lockee = new Object();
                 Action<Action> DoHandle = a =>
@@ -336,6 +336,7 @@ namespace Client
             using (var bc = new Tcp.UdpClient(RemoteEndPoint, vtc))
             {
                 bc.Connect();
+                Console.WriteLine("输入login登录。");
 
                 var Lockee = new Object();
                 Action<Action> DoHandle = a =>
@@ -354,6 +355,8 @@ namespace Client
         {
             using (var bc = new HttpClient(UrlPrefix, ServiceVirtualPath))
             {
+                Console.WriteLine("输入login登录。");
+
                 var Lockee = new Object();
                 ReadLineAndSendLoop(bc.InnerClient, UseOld, Lockee);
             }

@@ -50,12 +50,13 @@ namespace Client
                 }
             }
             private Socket Socket;
+            private Byte[] ReadBuffer = new Byte[MaxPacketLength];
 
             public const int MaxPacketLength = 1400;
-            public const int ReadingWindowSize = 64;
+            public const int ReadingWindowSize = 1024;
             public const int WritingWindowSize = 16;
             public const int IndexSpace = 65536;
-            public const int PacketTimeoutMilliseconds = 500;
+            public const int PacketTimeoutMilliseconds = 200;
 
             private class Part
             {
@@ -214,11 +215,6 @@ namespace Client
             private void OnWrite(ITcpVirtualTransportClient vtc, Action OnSuccess, Action OnFailure)
             {
                 var ByteArrays = vtc.TakeWriteBuffer();
-                if (ByteArrays.Length == 0)
-                {
-                    OnSuccess();
-                    return;
-                }
                 var TotalLength = ByteArrays.Sum(b => b.Length);
                 var WriteBuffer = new Byte[GetMinNotLessPowerOfTwo(TotalLength)];
                 var Offset = 0;
@@ -250,10 +246,15 @@ namespace Client
                     Indices.AddRange(c.NotAcknowledgedIndices);
                     c.NotAcknowledgedIndices.Clear();
                 });
+                if ((ByteArrays.Length == 0) && (Indices.Count == 0))
+                {
+                    OnSuccess();
+                    return;
+                }
                 var Success = true;
+                var Parts = new List<Byte[]>();
                 CookedWritingContext.DoAction(c =>
                 {
-                    var Parts = new List<Part>();
                     var Time = DateTime.UtcNow;
                     var WritingOffset = 0;
                     while (WritingOffset < TotalLength)
@@ -332,8 +333,8 @@ namespace Client
                             Success = false;
                             return;
                         }
+                        Parts.Add(Part.Data);
 
-                        SendPacket(RemoteEndPoint, Buffer);
                         c.WritenIndex = Index;
                     }
                     if (c.Timer == null)
@@ -371,6 +372,10 @@ namespace Client
                         c.Timer = new Timer(o => Check(), null, PacketTimeoutMilliseconds, Timeout.Infinite);
                     }
                 });
+                foreach (var p in Parts)
+                {
+                    SendPacket(RemoteEndPoint, p);
+                }
                 if (!Success)
                 {
                     OnFailure();
@@ -448,7 +453,7 @@ namespace Client
                     UnknownFaulted(ex);
                 };
 
-                Action<IPEndPoint, Byte[]> CompletedSocket = (RemoteEndPoint, Buffer) =>
+                Action<Byte[]> CompletedSocket = Buffer =>
                 {
                     try
                     {
@@ -596,22 +601,7 @@ namespace Client
                 {
                     if (!IsRunning) { return; }
 
-                    var Buffer = new Byte[MaxPacketLength];
                     var ServerEndPoint = this.RemoteEndPoint;
-                    EndPoint RemoteEndPoint;
-                    if (ServerEndPoint.AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-                    }
-                    else if (ServerEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
-                    {
-                        RemoteEndPoint = new IPEndPoint(IPAddress.IPv6Any, 0);
-                    }
-                    else
-                    {
-                        Faulted(new InvalidOperationException());
-                        return;
-                    }
                     EventHandler<SocketAsyncEventArgs> Completed = (sender, e) =>
                     {
                         if (e.SocketError != SocketError.Success)
@@ -621,17 +611,16 @@ namespace Client
                             return;
                         }
                         var Count = e.BytesTransferred;
-                        var ReadBuffer = new Byte[Count];
-                        Array.Copy(e.Buffer, ReadBuffer, Count);
+                        var Buffer = new Byte[Count];
+                        Array.Copy(e.Buffer, Buffer, Count);
                         e.Dispose();
-                        CompletedSocket((IPEndPoint)(RemoteEndPoint), ReadBuffer);
+                        CompletedSocket(Buffer);
                         Buffer = null;
-                        ReadBuffer = null;
                         Receive();
                     };
                     var ae = new SocketAsyncEventArgs();
-                    ae.RemoteEndPoint = RemoteEndPoint;
-                    ae.SetBuffer(Buffer, 0, Buffer.Length);
+                    ae.RemoteEndPoint = ServerEndPoint;
+                    ae.SetBuffer(ReadBuffer, 0, ReadBuffer.Length);
                     ae.Completed += Completed;
                     try
                     {

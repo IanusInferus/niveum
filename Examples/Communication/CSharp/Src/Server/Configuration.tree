@@ -7,7 +7,7 @@
                         IpAddress 0.0.0.0
                         Port 8001
                 SessionIdleTimeout 600
-                UnauthenticatedSessionIdleTimeout 20
+                UnauthenticatedSessionIdleTimeout 60
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
@@ -20,7 +20,7 @@
                         IpAddress 0.0.0.0
                         Port 8002
                 SessionIdleTimeout 600
-                UnauthenticatedSessionIdleTimeout 20
+                UnauthenticatedSessionIdleTimeout 60
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
@@ -33,12 +33,12 @@
                         IpAddress 0.0.0.0
                         Port 8001
                 SessionIdleTimeout 600
-                UnauthenticatedSessionIdleTimeout 20
+                UnauthenticatedSessionIdleTimeout 60
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
                 MaxBadCommands 8
-                TimeoutCheckPeriod 20
+                TimeoutCheckPeriod 30
                 SerializationProtocolType Binary
         VirtualServer
             Udp
@@ -47,12 +47,12 @@
                         IpAddress 0.0.0.0
                         Port 8002
                 SessionIdleTimeout 600
-                UnauthenticatedSessionIdleTimeout 20
+                UnauthenticatedSessionIdleTimeout 60
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
                 MaxBadCommands 8
-                TimeoutCheckPeriod 20
+                TimeoutCheckPeriod 30
                 SerializationProtocolType Json
         VirtualServer
             Http
@@ -60,12 +60,12 @@
                     Binding
                         Prefix http://*:8003/
                 SessionIdleTimeout 600
-                UnauthenticatedSessionIdleTimeout 20
+                UnauthenticatedSessionIdleTimeout 60
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
                 MaxBadCommands 8
-                TimeoutCheckPeriod 20
+                TimeoutCheckPeriod 30
                 ServiceVirtualPath cmd
     EnableLogNormalIn True
     EnableLogNormalOut True
