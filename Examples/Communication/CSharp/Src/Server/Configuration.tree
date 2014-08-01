@@ -6,8 +6,8 @@
                     Binding
                         IpAddress 0.0.0.0
                         Port 8001
-                SessionIdleTimeout 600
-                UnauthenticatedSessionIdleTimeout 60
+                SessionIdleTimeout 3600
+                UnauthenticatedSessionIdleTimeout 600
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
@@ -19,8 +19,8 @@
                     Binding
                         IpAddress 0.0.0.0
                         Port 8002
-                SessionIdleTimeout 600
-                UnauthenticatedSessionIdleTimeout 60
+                SessionIdleTimeout 3600
+                UnauthenticatedSessionIdleTimeout 600
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
@@ -32,8 +32,8 @@
                     Binding
                         IpAddress 0.0.0.0
                         Port 8001
-                SessionIdleTimeout 600
-                UnauthenticatedSessionIdleTimeout 60
+                SessionIdleTimeout 3600
+                UnauthenticatedSessionIdleTimeout 600
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
@@ -46,8 +46,8 @@
                     Binding
                         IpAddress 0.0.0.0
                         Port 8002
-                SessionIdleTimeout 600
-                UnauthenticatedSessionIdleTimeout 60
+                SessionIdleTimeout 3600
+                UnauthenticatedSessionIdleTimeout 600
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
@@ -59,8 +59,8 @@
                 Bindings
                     Binding
                         Prefix http://*:8003/
-                SessionIdleTimeout 600
-                UnauthenticatedSessionIdleTimeout 60
+                SessionIdleTimeout 3600
+                UnauthenticatedSessionIdleTimeout 600
                 MaxConnections 32768
                 MaxConnectionsPerIP 32768
                 MaxUnauthenticatedPerIP 32768
