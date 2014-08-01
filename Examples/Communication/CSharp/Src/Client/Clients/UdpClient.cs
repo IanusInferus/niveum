@@ -230,6 +230,7 @@ namespace Client
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
                 {
+                    if (c.NotAcknowledgedIndices.Count == 0) { return; }
                     while (c.NotAcknowledgedIndices.Count > 0)
                     {
                         var First = c.NotAcknowledgedIndices.First();
@@ -339,36 +340,6 @@ namespace Client
                     }
                     if (c.Timer == null)
                     {
-                        Action Check = null;
-                        Check = () =>
-                        {
-                            var IsRunning = this.IsRunning;
-                            CookedWritingContext.DoAction(cc =>
-                            {
-                                if (cc.Timer == null) { return; }
-                                cc.Timer.Dispose();
-                                cc.Timer = null;
-                                if (!IsRunning) { return; }
-                                if (cc.Parts.Parts.Count == 0) { return; }
-                                var t = DateTime.UtcNow;
-                                var IsSuccess = true;
-                                cc.Parts.ForEachTimedoutPacket(t, (i, d) =>
-                                {
-                                    try
-                                    {
-                                        SendPacket(this.RemoteEndPoint, d);
-                                    }
-                                    catch
-                                    {
-                                        IsSuccess = false;
-                                        return;
-                                    }
-                                });
-                                if (!IsSuccess) { return; }
-                                var Wait = Math.Max(Convert.ToInt32((cc.Parts.Parts.Min(p => p.Value.Time) - t).TotalMilliseconds) + PacketTimeoutMilliseconds, 0);
-                                cc.Timer = new Timer(o => Check(), null, Wait, Timeout.Infinite);
-                            });
-                        };
                         c.Timer = new Timer(o => Check(), null, PacketTimeoutMilliseconds, Timeout.Infinite);
                     }
                 });
@@ -383,6 +354,121 @@ namespace Client
                 else
                 {
                     OnSuccess();
+                }
+            }
+
+            private void Check()
+            {
+                var IsRunning = this.IsRunning;
+
+                var RemoteEndPoint = this.RemoteEndPoint;
+                var SessionId = this.SessionId;
+                var Connected = this.Connected;
+                var IsSecureConnectionRequired = false; //TODO
+                var Indices = new List<int>();
+                RawReadingContext.DoAction(c =>
+                {
+                    if (c.NotAcknowledgedIndices.Count == 0) { return; }
+                    while (c.NotAcknowledgedIndices.Count > 0)
+                    {
+                        var First = c.NotAcknowledgedIndices.First();
+                        if (c.Parts.IsEqualOrAfter(c.Parts.MaxHandled, First))
+                        {
+                            c.NotAcknowledgedIndices.Remove(First);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    Indices.Add(c.Parts.MaxHandled);
+                    Indices.AddRange(c.NotAcknowledgedIndices);
+                });
+
+                var Parts = new List<Byte[]>();
+                CookedWritingContext.DoAction(cc =>
+                {
+                    if (cc.Timer == null) { return; }
+                    cc.Timer.Dispose();
+                    cc.Timer = null;
+                    if (!IsRunning) { return; }
+
+                    if (Indices.Count > 0)
+                    {
+                        var Index = Indices[0];
+
+                        var NumIndex = Indices.Count;
+                        if (NumIndex > 0xFFFF)
+                        {
+                            return;
+                        }
+
+                        var Flag = 8; //AUX
+
+                        var Length = 12 + 2 + NumIndex * 2;
+                        var Buffer = new Byte[Length];
+                        Buffer[0] = (Byte)(SessionId & 0xFF);
+                        Buffer[1] = (Byte)((SessionId >> 8) & 0xFF);
+                        Buffer[2] = (Byte)((SessionId >> 16) & 0xFF);
+                        Buffer[3] = (Byte)((SessionId >> 24) & 0xFF);
+
+                        Flag |= 1; //ACK
+                        Buffer[12] = (Byte)(NumIndex & 0xFF);
+                        Buffer[13] = (Byte)((NumIndex >> 8) & 0xFF);
+                        var j = 0;
+                        foreach (var i in Indices)
+                        {
+                            Buffer[14 + j * 2] = (Byte)(i & 0xFF);
+                            Buffer[14 + j * 2 + 1] = (Byte)((i >> 8) & 0xFF);
+                            j += 1;
+                        }
+                        Indices.Clear();
+
+                        var Verification = 0;
+                        if (IsSecureConnectionRequired)
+                        {
+                            Flag |= 2; //ENC
+                            //TODO
+                        }
+                        else
+                        {
+                            var CRC32 = new CRC32();
+                            for (int k = 12; k < Length; k += 1)
+                            {
+                                CRC32.PushData(Buffer[k]);
+                            }
+                            Verification = CRC32.GetCRC32();
+                        }
+
+                        Buffer[4] = (Byte)(Flag & 0xFF);
+                        Buffer[5] = (Byte)((Flag >> 8) & 0xFF);
+                        Buffer[6] = (Byte)(Index & 0xFF);
+                        Buffer[7] = (Byte)((Index >> 8) & 0xFF);
+                        Buffer[8] = (Byte)(Verification & 0xFF);
+                        Buffer[9] = (Byte)((Verification >> 8) & 0xFF);
+                        Buffer[10] = (Byte)((Verification >> 16) & 0xFF);
+                        Buffer[11] = (Byte)((Verification >> 24) & 0xFF);
+
+                        Parts.Add(Buffer);
+                    }
+
+                    if (cc.Parts.Parts.Count == 0) { return; }
+                    var t = DateTime.UtcNow;
+                    cc.Parts.ForEachTimedoutPacket(t, (i, d) => Parts.Add(d));
+                    var Wait = Math.Max(Convert.ToInt32((cc.Parts.Parts.Min(p => p.Value.Time) - t).TotalMilliseconds) + PacketTimeoutMilliseconds, 0);
+                    cc.Timer = new Timer(o => Check(), null, Wait, Timeout.Infinite);
+                });
+
+                foreach (var p in Parts)
+                {
+                    try
+                    {
+                        SendPacket(this.RemoteEndPoint, p);
+                    }
+                    catch
+                    {
+                        return;
+                    }
                 }
             }
 

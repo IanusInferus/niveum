@@ -291,6 +291,7 @@ namespace Server
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
                 {
+                    if (c.NotAcknowledgedIndices.Count == 0) { return; }
                     while (c.NotAcknowledgedIndices.Count > 0)
                     {
                         var First = c.NotAcknowledgedIndices.First();
@@ -663,6 +664,21 @@ namespace Server
             private void SendPacket(IPEndPoint RemoteEndPoint, Byte[] Data)
             {
                 ServerSocket.SendTo(Data, RemoteEndPoint);
+            }
+
+            public Boolean PushAux(IPEndPoint RemoteEndPoint, int[] Indices)
+            {
+                var Time = DateTime.UtcNow;
+                if ((Indices != null) && (Indices.Length > 0))
+                {
+                    CookedWritingContext.DoAction(c =>
+                    {
+                        c.Parts.Acknowledge(Indices.First(), Indices.Skip(1));
+                        c.Parts.ForEachTimedoutPacket(Time, (i, d) => SendPacket(RemoteEndPoint, d));
+                    });
+                }
+                this.RemoteEndPoint = RemoteEndPoint;
+                return true;
             }
 
             public Boolean Push(IPEndPoint RemoteEndPoint, int Index, int[] Indices, Byte[] Buffer, int Offset, int Length)
