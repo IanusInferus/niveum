@@ -55,9 +55,9 @@ namespace Server
 
             public const int MaxPacketLength = 1400;
             public const int ReadingWindowSize = 16;
-            public const int WritingWindowSize = 64;
+            public const int WritingWindowSize = 1024;
             public const int IndexSpace = 65536;
-            public const int PacketTimeoutMilliseconds = 500;
+            public const int PacketTimeoutMilliseconds = 200;
 
             private class Part
             {
@@ -277,11 +277,6 @@ namespace Server
             private void OnWrite(Unit w, Action OnSuccess, Action OnFailure)
             {
                 var ByteArrays = vts.TakeWriteBuffer();
-                if (ByteArrays.Length == 0)
-                {
-                    OnSuccess();
-                    return;
-                }
                 var TotalLength = ByteArrays.Sum(b => b.Length);
                 var WriteBuffer = new Byte[GetMinNotLessPowerOfTwo(TotalLength)];
                 var Offset = 0;
@@ -312,13 +307,18 @@ namespace Server
                     Indices.AddRange(c.NotAcknowledgedIndices);
                     c.NotAcknowledgedIndices.Clear();
                 });
+                if ((ByteArrays.Length == 0) && (Indices.Count == 0))
+                {
+                    OnSuccess();
+                    return;
+                }
                 var Success = true;
-                var Parts = new List<Part>();
+                var Parts = new List<Byte[]>();
                 CookedWritingContext.DoAction(c =>
                 {
                     var Time = DateTime.UtcNow;
                     var WritingOffset = 0;
-                    while (WritingOffset < TotalLength)
+                    while ((Indices.Count > 0) || (WritingOffset < TotalLength))
                     {
                         var Index = PartContext.GetSuccessor(c.WritenIndex);
 
@@ -389,14 +389,14 @@ namespace Server
                             Success = false;
                             return;
                         }
-                        Parts.Add(Part);
+                        Parts.Add(Part.Data);
 
                         c.WritenIndex = Index;
                     }
                 });
                 foreach (var p in Parts)
                 {
-                    SendPacket(RemoteEndPoint, p.Data);
+                    SendPacket(RemoteEndPoint, p);
                 }
                 if (!Success)
                 {
