@@ -318,8 +318,11 @@ namespace Client
                         tt.Start();
                         return;
                     }
-                    vCompleted.Update(i => i + 1);
-                    Check.Set();
+                    ac.Quit(new QuitRequest { }, r =>
+                    {
+                        vCompleted.Update(i => i + 1);
+                        Check.Set();
+                    });
                 };
             }
 

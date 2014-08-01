@@ -21,8 +21,8 @@ namespace Server
         /// Packet ::= SessionId:Int32 Flag:UInt16 Index:UInt16 Verification:Int32 Inner:Byte*
         /// 所有数据均为little-endian
         /// SessionId，当INI存在时，为初始包，服务器收到包后分配SessionId，建议初始包的SessionId和Index均为0
-        /// Flag，标记，1 ACK，表示Inner中包含确认收到的包索引，2 ENC，表示数据已加密，4 INI，表示初始化
-        /// Index，序列号
+        /// Flag，标记，1 ACK，表示Inner中包含确认收到的包索引，2 ENC，表示数据已加密，4 INI，表示初始化，8 AUX，表示从客户端发到服务器的包为没有数据的辅助确认包
+        /// Index，序列号，当AUX存在时，必须为LowerIndex
         /// Verification，当ENC存在时，为Inner的MAC验证码，否则为CRC32验证码，其中HMAC的验证码的计算方式为
         ///     Key = SessionKey XOR SHA1(Flag :: Index)
         ///     MAC = HMAC(Key, Inner).Take(4)
@@ -508,6 +508,7 @@ namespace Server
                                                 {
                                                     if ((Flag & 1) != 0) { continue; }
                                                     if ((Flag & 2) != 0) { continue; }
+                                                    if ((Flag & 8) != 0) { continue; }
                                                     var Offset = 12;
 
                                                     s = new UdpSession(this, a.Socket, e);
@@ -647,10 +648,26 @@ namespace Server
                                                         Offset += NumIndex * 2;
                                                     }
 
-                                                    if (!s.Push(e, Index, Indices, Buffer, Offset, Buffer.Length - Offset))
+                                                    //如果Flag中包含AUX，则判断
+                                                    if ((Flag & 8) != 0)
                                                     {
-                                                        StoppingSessions.Enqueue(s);
-                                                        PurifieringTaskNotifier.Set();
+                                                        if (Indices == null) { continue; }
+                                                        if (Indices.Length < 1) { continue; }
+                                                        if (Index != Indices[0]) { continue; }
+                                                        if (Offset != Buffer.Length) { continue; }
+                                                        if (!s.PushAux(e, Indices))
+                                                        {
+                                                            StoppingSessions.Enqueue(s);
+                                                            PurifieringTaskNotifier.Set();
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        if (!s.Push(e, Index, Indices, Buffer, Offset, Buffer.Length - Offset))
+                                                        {
+                                                            StoppingSessions.Enqueue(s);
+                                                            PurifieringTaskNotifier.Set();
+                                                        }
                                                     }
                                                 }
                                             }
