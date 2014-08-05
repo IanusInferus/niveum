@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using Firefly;
+using Algorithms;
 using BaseSystem;
 
 namespace Server
@@ -34,16 +35,28 @@ namespace Server
             }
             private LockedVariable<DateTime> LastActiveTimeValue;
             public DateTime LastActiveTime { get { return LastActiveTimeValue.Check(v => v); } }
-            private LockedVariable<Boolean> IsSecureConnectionRequiredValue = new LockedVariable<Boolean>(false);
-            public Boolean IsSecureConnectionRequired
+            private LockedVariable<SecureContext> NextSecureContextValue = new LockedVariable<SecureContext>(null);
+            public SecureContext NextSecureContext
             {
                 get
                 {
-                    return IsSecureConnectionRequiredValue.Check(v => v);
+                    return NextSecureContextValue.Check(v => v);
                 }
-                private set
+                set
                 {
-                    IsSecureConnectionRequiredValue.Update(v => value);
+                    NextSecureContextValue.Update(v => value);
+                }
+            }
+            private LockedVariable<SecureContext> SecureContextValue = new LockedVariable<SecureContext>(null);
+            public SecureContext SecureContext
+            {
+                get
+                {
+                    return SecureContextValue.Check(v => v);
+                }
+                set
+                {
+                    SecureContextValue.Update(v => value);
                 }
             }
 
@@ -223,7 +236,7 @@ namespace Server
                     Context.SecureConnectionRequired += c =>
                     {
                         rpst.SetSecureContext(c);
-                        IsSecureConnectionRequired = true;
+                        NextSecureContext = c;
                     };
                 }
                 else if (Server.SerializationProtocolType == SerializationProtocolType.Json)
@@ -241,7 +254,7 @@ namespace Server
                     Context.SecureConnectionRequired += c =>
                     {
                         rpst.SetSecureContext(c);
-                        IsSecureConnectionRequired = true;
+                        NextSecureContext = c;
                     };
                 }
                 else
@@ -296,7 +309,7 @@ namespace Server
                 }
                 var RemoteEndPoint = this.RemoteEndPoint;
                 var SessionId = this.SessionId;
-                var IsSecureConnectionRequired = this.IsSecureConnectionRequired;
+                var SecureContext = this.SecureContext;
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
                 {
@@ -368,26 +381,33 @@ namespace Server
                         Array.Copy(WriteBuffer, WritingOffset, Buffer, 12 + (IsACK ? 2 + NumIndex * 2 : 0), DataLength);
                         WritingOffset += DataLength;
 
-                        var Verification = 0;
-                        if (IsSecureConnectionRequired)
+                        var IsEncrypted = (SecureContext != null);
+                        if (SecureContext != null)
                         {
                             Flag |= 2; //ENC
-                            //TODO
+                        }
+                        Buffer[4] = (Byte)(Flag & 0xFF);
+                        Buffer[5] = (Byte)((Flag >> 8) & 0xFF);
+                        Buffer[6] = (Byte)(Index & 0xFF);
+                        Buffer[7] = (Byte)((Index >> 8) & 0xFF);
+
+                        var Verification = 0;
+                        if (SecureContext != null)
+                        {
+                            var Key = SecureContext.ClientToken.Concat(Cryptography.SHA1(Buffer.Skip(4).Take(4).ToArray()));
+                            var HMACBytes = Cryptography.HMACSHA1(Key, Buffer).Take(4).ToArray();
+                            Verification = HMACBytes[0] | ((Int32)(HMACBytes[1]) << 8) | ((Int32)(HMACBytes[2]) << 16) | ((Int32)(HMACBytes[3]) << 24);
                         }
                         else
                         {
                             var CRC32 = new CRC32();
-                            for (int k = 12; k < Length; k += 1)
+                            for (int k = 0; k < Length; k += 1)
                             {
                                 CRC32.PushData(Buffer[k]);
                             }
                             Verification = CRC32.GetCRC32();
                         }
 
-                        Buffer[4] = (Byte)(Flag & 0xFF);
-                        Buffer[5] = (Byte)((Flag >> 8) & 0xFF);
-                        Buffer[6] = (Byte)(Index & 0xFF);
-                        Buffer[7] = (Byte)((Index >> 8) & 0xFF);
                         Buffer[8] = (Byte)(Verification & 0xFF);
                         Buffer[9] = (Byte)((Verification >> 8) & 0xFF);
                         Buffer[10] = (Byte)((Verification >> 16) & 0xFF);
