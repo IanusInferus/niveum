@@ -59,6 +59,10 @@ namespace Server
                 Context = Server.ServerContext.CreateSessionContext();
                 Context.Quit += ssm.NotifyExit;
                 Context.Authenticated += () => Server.NotifySessionAuthenticated(this);
+                Context.SecureConnectionRequired += c =>
+                {
+                    throw new NotImplementedException();
+                };
 
                 var p = Server.ServerContext.CreateServerImplementationWithJsonAdapter(Context);
                 si = p.Key;
