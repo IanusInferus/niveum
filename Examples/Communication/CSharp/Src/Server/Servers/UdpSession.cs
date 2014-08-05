@@ -57,13 +57,21 @@ namespace Server
             public const int ReadingWindowSize = 16;
             public const int WritingWindowSize = 1024;
             public const int IndexSpace = 65536;
-            public const int PacketTimeoutMilliseconds = 200;
+            public const int InitialPacketTimeoutMilliseconds = 90;
+            public const int MaxSquaredPacketResentCount = 4;
+            public const int MaxLinearPacketResentCount = 10;
+            private static int GetTimeoutMilliseconds(int ResentCount)
+            {
+                if (ResentCount <= MaxSquaredPacketResentCount) { return InitialPacketTimeoutMilliseconds * (1 << ResentCount); }
+                return InitialPacketTimeoutMilliseconds * (1 << MaxSquaredPacketResentCount) * (Math.Min(ResentCount, MaxLinearPacketResentCount) - MaxSquaredPacketResentCount + 1);
+            }
 
             private class Part
             {
                 public int Index;
                 public Byte[] Data;
-                public DateTime Time;
+                public DateTime ResendTime;
+                public int ResentCount;
             }
             private class PartContext
             {
@@ -119,7 +127,7 @@ namespace Server
                     }
                     var b = new Byte[Length];
                     Array.Copy(Data, Offset, b, 0, Length);
-                    Parts.Add(Index, new Part { Index = Index, Data = b, Time = DateTime.UtcNow });
+                    Parts.Add(Index, new Part { Index = Index, Data = b, ResendTime = DateTime.UtcNow.AddIntMilliseconds(GetTimeoutMilliseconds(0)), ResentCount = 0 });
                     return true;
                 }
                 public Boolean TryPushPart(int Index, Byte[] Data)
@@ -128,7 +136,7 @@ namespace Server
                     {
                         return false;
                     }
-                    Parts.Add(Index, new Part { Index = Index, Data = Data, Time = DateTime.UtcNow });
+                    Parts.Add(Index, new Part { Index = Index, Data = Data, ResendTime = DateTime.UtcNow.AddIntMilliseconds(GetTimeoutMilliseconds(0)), ResentCount = 0 });
                     return true;
                 }
 
@@ -161,10 +169,11 @@ namespace Server
                 {
                     foreach (var p in Parts)
                     {
-                        if (p.Value.Time.AddIntMilliseconds(PacketTimeoutMilliseconds) <= Time)
+                        if (p.Value.ResendTime <= Time)
                         {
                             f(p.Key, p.Value.Data);
-                            p.Value.Time = Time;
+                            p.Value.ResendTime = Time.AddIntMilliseconds(GetTimeoutMilliseconds(p.Value.ResentCount));
+                            p.Value.ResentCount += 1;
                         }
                     }
                 }
@@ -384,7 +393,7 @@ namespace Server
                         Buffer[10] = (Byte)((Verification >> 16) & 0xFF);
                         Buffer[11] = (Byte)((Verification >> 24) & 0xFF);
 
-                        var Part = new Part { Index = Index, Time = Time, Data = Buffer };
+                        var Part = new Part { Index = Index, ResendTime = Time.AddIntMilliseconds(GetTimeoutMilliseconds(0)), Data = Buffer, ResentCount = 0 };
                         if (!c.Parts.TryPushPart(Index, Buffer))
                         {
                             Success = false;
