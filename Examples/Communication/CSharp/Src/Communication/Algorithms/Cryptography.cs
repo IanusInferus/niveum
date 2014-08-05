@@ -31,7 +31,7 @@ namespace Algorithms
         /// opad = 0x5C
         /// ipad = 0x36
         /// </summary>
-        public static Byte[] HMACSHA1(Byte[] Key, Byte[] Bytes)
+        public static Byte[] HMACSHA1(IEnumerable<Byte> Key, IEnumerable<Byte> Bytes)
         {
             var InnerHash = SHA1(Key.Select(k => (Byte)(k ^ 0x36)).Concat(Bytes).ToArray());
             var OuterHash = SHA1(Key.Select(k => (Byte)(k ^ 0x5C)).Concat(InnerHash).ToArray());

@@ -17,6 +17,15 @@ namespace Server.Services
             if (r.Content == "login")
             {
                 SessionContext.RaiseAuthenticated();
+                return SendMessageReply.CreateSuccess();
+            }
+            else if (r.Content == "secure")
+            {
+                //生成测试用确定Key
+                var ServerToken = Enumerable.Range(0, 41).Select(i => (Byte)(i)).ToArray();
+                var ClientToken = Enumerable.Range(0, 41).Select(i => (Byte)(40 - i)).ToArray();
+                SessionContext.RaiseSecureConnectionRequired(new SecureContext { ServerToken = ServerToken, ClientToken = ClientToken });
+                return SendMessageReply.CreateSuccess();
             }
             SessionContext.SendMessageCount += 1;
             var Sessions = ServerContext.Sessions.ToList();
