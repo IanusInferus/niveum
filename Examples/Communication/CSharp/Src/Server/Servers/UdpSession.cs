@@ -400,12 +400,7 @@ namespace Server
                         }
                         else
                         {
-                            var CRC32 = new CRC32();
-                            for (int k = 0; k < Length; k += 1)
-                            {
-                                CRC32.PushData(Buffer[k]);
-                            }
-                            Verification = CRC32.GetCRC32();
+                            Verification = Cryptography.CRC32(Buffer);
                         }
 
                         Buffer[8] = (Byte)(Verification & 0xFF);

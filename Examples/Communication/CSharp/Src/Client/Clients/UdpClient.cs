@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
-using Firefly;
 using Algorithms;
 using BaseSystem;
 
@@ -342,12 +341,7 @@ namespace Client
                         }
                         else
                         {
-                            var CRC32 = new CRC32();
-                            for (int k = 0; k < Length; k += 1)
-                            {
-                                CRC32.PushData(Buffer[k]);
-                            }
-                            Verification = CRC32.GetCRC32();
+                            Verification = Cryptography.CRC32(Buffer);
                         }
 
                         Buffer[8] = (Byte)(Verification & 0xFF);
@@ -469,12 +463,7 @@ namespace Client
                         }
                         else
                         {
-                            var CRC32 = new CRC32();
-                            for (int k = 0; k < Length; k += 1)
-                            {
-                                CRC32.PushData(Buffer[k]);
-                            }
-                            Verification = CRC32.GetCRC32();
+                            Verification = Cryptography.CRC32(Buffer);
                         }
 
                         Buffer[8] = (Byte)(Verification & 0xFF);
@@ -606,12 +595,7 @@ namespace Client
                         else
                         {
                             //如果Flag中不包含ENC，则验证CRC32
-                            var CRC32 = new CRC32();
-                            for (int k = 0; k < Buffer.Length; k += 1)
-                            {
-                                CRC32.PushData(Buffer[k]);
-                            }
-                            if (CRC32.GetCRC32() != Verification) { return; }
+                            if (Cryptography.CRC32(Buffer) != Verification) { return; }
 
                             //只有尚未加密时可以设定
                             this.SessionId = SessionId;
