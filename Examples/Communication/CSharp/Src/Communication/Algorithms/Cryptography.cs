@@ -20,6 +20,15 @@ namespace Algorithms
         {
             return Encoding.UTF8.GetBytes(s);
         }
+        public static Int32 CRC32(IEnumerable<Byte> Bytes)
+        {
+            var c = new Firefly.CRC32();
+            foreach (var b in Bytes)
+            {
+                c.PushData(b);
+            }
+            return c.GetCRC32();
+        }
         public static Byte[] SHA1(Byte[] Bytes)
         {
             SHA1 sha = new SHA1CryptoServiceProvider();

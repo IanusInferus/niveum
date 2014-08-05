@@ -497,12 +497,7 @@ namespace Server
                                                 //如果Flag中不包含ENC，则验证CRC32
                                                 if ((Flag & 2) == 0)
                                                 {
-                                                    var CRC32 = new CRC32();
-                                                    for (int k = 0; k < Buffer.Length; k += 1)
-                                                    {
-                                                        CRC32.PushData(Buffer[k]);
-                                                    }
-                                                    if (CRC32.GetCRC32() != Verification) { continue; }
+                                                    if (Cryptography.CRC32(Buffer) != Verification) { continue; }
                                                 }
 
                                                 //如果Flag中包含INI，则初始化
