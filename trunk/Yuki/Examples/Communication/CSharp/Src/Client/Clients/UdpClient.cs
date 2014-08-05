@@ -5,8 +5,8 @@ using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 using Firefly;
+using Algorithms;
 using BaseSystem;
-using Net;
 
 namespace Client
 {
@@ -47,6 +47,18 @@ namespace Client
                 private set
                 {
                     ConnectedValue.Update(v => value);
+                }
+            }
+            private LockedVariable<SecureContext> SecureContextValue = new LockedVariable<SecureContext>(null);
+            public SecureContext SecureContext
+            {
+                get
+                {
+                    return SecureContextValue.Check(v => v);
+                }
+                set
+                {
+                    SecureContextValue.Update(v => value);
                 }
             }
             private Socket Socket;
@@ -235,7 +247,7 @@ namespace Client
                 var RemoteEndPoint = this.RemoteEndPoint;
                 var SessionId = this.SessionId;
                 var Connected = this.Connected;
-                var IsSecureConnectionRequired = false; //TODO
+                var SecureContext = this.SecureContext;
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
                 {
@@ -312,26 +324,32 @@ namespace Client
                         Array.Copy(WriteBuffer, WritingOffset, Buffer, 12 + (IsACK ? 2 + NumIndex * 2 : 0), DataLength);
                         WritingOffset += DataLength;
 
-                        var Verification = 0;
-                        if (IsSecureConnectionRequired)
+                        if (SecureContext != null)
                         {
                             Flag |= 2; //ENC
-                            //TODO
+                        }
+                        Buffer[4] = (Byte)(Flag & 0xFF);
+                        Buffer[5] = (Byte)((Flag >> 8) & 0xFF);
+                        Buffer[6] = (Byte)(Index & 0xFF);
+                        Buffer[7] = (Byte)((Index >> 8) & 0xFF);
+
+                        var Verification = 0;
+                        if (SecureContext != null)
+                        {
+                            var Key = SecureContext.ServerToken.Concat(Cryptography.SHA1(Buffer.Skip(4).Take(4).ToArray()));
+                            var HMACBytes = Cryptography.HMACSHA1(Key, Buffer).Take(4).ToArray();
+                            Verification = HMACBytes[0] | ((Int32)(HMACBytes[1]) << 8) | ((Int32)(HMACBytes[2]) << 16) | ((Int32)(HMACBytes[3]) << 24);
                         }
                         else
                         {
                             var CRC32 = new CRC32();
-                            for (int k = 12; k < Length; k += 1)
+                            for (int k = 0; k < Length; k += 1)
                             {
                                 CRC32.PushData(Buffer[k]);
                             }
                             Verification = CRC32.GetCRC32();
                         }
 
-                        Buffer[4] = (Byte)(Flag & 0xFF);
-                        Buffer[5] = (Byte)((Flag >> 8) & 0xFF);
-                        Buffer[6] = (Byte)(Index & 0xFF);
-                        Buffer[7] = (Byte)((Index >> 8) & 0xFF);
                         Buffer[8] = (Byte)(Verification & 0xFF);
                         Buffer[9] = (Byte)((Verification >> 8) & 0xFF);
                         Buffer[10] = (Byte)((Verification >> 16) & 0xFF);
@@ -373,7 +391,7 @@ namespace Client
                 var RemoteEndPoint = this.RemoteEndPoint;
                 var SessionId = this.SessionId;
                 var Connected = this.Connected;
-                var IsSecureConnectionRequired = false; //TODO
+                var SecureContext = this.SecureContext;
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
                 {
@@ -433,26 +451,32 @@ namespace Client
                         }
                         Indices.Clear();
 
-                        var Verification = 0;
-                        if (IsSecureConnectionRequired)
+                        if (SecureContext != null)
                         {
                             Flag |= 2; //ENC
-                            //TODO
+                        }
+                        Buffer[4] = (Byte)(Flag & 0xFF);
+                        Buffer[5] = (Byte)((Flag >> 8) & 0xFF);
+                        Buffer[6] = (Byte)(Index & 0xFF);
+                        Buffer[7] = (Byte)((Index >> 8) & 0xFF);
+
+                        var Verification = 0;
+                        if (SecureContext != null)
+                        {
+                            var Key = SecureContext.ServerToken.Concat(Cryptography.SHA1(Buffer.Skip(4).Take(4).ToArray()));
+                            var HMACBytes = Cryptography.HMACSHA1(Key, Buffer).Take(4).ToArray();
+                            Verification = HMACBytes[0] | ((Int32)(HMACBytes[1]) << 8) | ((Int32)(HMACBytes[2]) << 16) | ((Int32)(HMACBytes[3]) << 24);
                         }
                         else
                         {
                             var CRC32 = new CRC32();
-                            for (int k = 12; k < Length; k += 1)
+                            for (int k = 0; k < Length; k += 1)
                             {
                                 CRC32.PushData(Buffer[k]);
                             }
                             Verification = CRC32.GetCRC32();
                         }
 
-                        Buffer[4] = (Byte)(Flag & 0xFF);
-                        Buffer[5] = (Byte)((Flag >> 8) & 0xFF);
-                        Buffer[6] = (Byte)(Index & 0xFF);
-                        Buffer[7] = (Byte)((Index >> 8) & 0xFF);
                         Buffer[8] = (Byte)(Verification & 0xFF);
                         Buffer[9] = (Byte)((Verification >> 8) & 0xFF);
                         Buffer[10] = (Byte)((Verification >> 16) & 0xFF);
@@ -560,31 +584,44 @@ namespace Client
                         var Flag = Buffer[4] | ((Int32)(Buffer[5]) << 8);
                         var Index = Buffer[6] | ((Int32)(Buffer[7]) << 8);
                         var Verification = Buffer[8] | ((Int32)(Buffer[9]) << 8) | ((Int32)(Buffer[10]) << 16) | ((Int32)(Buffer[11]) << 24);
+                        Buffer[8] = 0;
+                        Buffer[9] = 0;
+                        Buffer[10] = 0;
+                        Buffer[11] = 0;
 
-                        //如果Flag中不包含ENC，则验证CRC32
-                        if ((Flag & 2) == 0)
+                        var IsEncrypted = (Flag & 2) != 0;
+                        var SecureContext = this.SecureContext;
+                        if ((SecureContext != null) != IsEncrypted)
                         {
+                            return;
+                        }
+
+                        if (IsEncrypted)
+                        {
+                            var Key = SecureContext.ClientToken.Concat(Cryptography.SHA1(Buffer.Skip(4).Take(4).ToArray()));
+                            var HMACBytes = Cryptography.HMACSHA1(Key, Buffer).Take(4).ToArray();
+                            var HMAC = HMACBytes[0] | ((Int32)(HMACBytes[1]) << 8) | ((Int32)(HMACBytes[2]) << 16) | ((Int32)(HMACBytes[3]) << 24);
+                            if (HMAC != Verification) { return; }
+                        }
+                        else
+                        {
+                            //如果Flag中不包含ENC，则验证CRC32
                             var CRC32 = new CRC32();
-                            for (int k = 12; k < Buffer.Length; k += 1)
+                            for (int k = 0; k < Buffer.Length; k += 1)
                             {
                                 CRC32.PushData(Buffer[k]);
                             }
-                            if (CRC32.GetCRC32() != Verification)
-                            {
-                                return;
-                            }
-                        }
+                            if (CRC32.GetCRC32() != Verification) { return; }
 
-                        if (true) //TODO 如果加密则只能设定一次
-                        {
+                            //只有尚未加密时可以设定
                             this.SessionId = SessionId;
+                            var Connected = false;
+                            ConnectedValue.Update(v =>
+                            {
+                                Connected = v;
+                                return true;
+                            });
                         }
-                        var Connected = false;
-                        ConnectedValue.Update(v =>
-                        {
-                            Connected = v;
-                            return true;
-                        });
 
                         var Offset = 12;
                         int[] Indices = null;

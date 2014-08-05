@@ -25,15 +25,13 @@ namespace Server
         /// Index，序列号，当AUX存在时，必须为LowerIndex
         /// Verification，当ENC存在时，为Inner的MAC验证码，否则为CRC32验证码，其中HMAC的验证码的计算方式为
         ///     Key = SessionKey XOR SHA1(Flag :: Index)
-        ///     MAC = HMAC(Key, Inner).Take(4)
+        ///     MAC = HMAC(Key, SessionId :: Flag :: Index :: 0 :: Inner).Take(4)
         ///     HMAC = H((K XOR opad) :: H((K XOR ipad) :: Inner))
         ///     H = SHA1
         ///     opad = 0x5C
         ///     ipad = 0x36
-        /// Inner ::= RC4(Key, InnerData)，当ENC存在时
-        ///        |= InnerData
-        /// InnerData ::= NumIndex:UInt16 LowerIndex:UInt16 Index:UInt16{NumIndex - 1} Payload:Byte*，当ACK存在时
-        ///            |= Payload:Byte*
+        /// Inner ::= NumIndex:UInt16 LowerIndex:UInt16 Index:UInt16{NumIndex - 1} Payload:Byte*，当ACK存在时
+        ///         |= Payload:Byte*
         /// </summary>
         public class UdpServer : IServer
         {
@@ -491,12 +489,16 @@ namespace Server
                                                 var Flag = Buffer[4] | ((Int32)(Buffer[5]) << 8);
                                                 var Index = Buffer[6] | ((Int32)(Buffer[7]) << 8);
                                                 var Verification = Buffer[8] | ((Int32)(Buffer[9]) << 8) | ((Int32)(Buffer[10]) << 16) | ((Int32)(Buffer[11]) << 24);
+                                                Buffer[8] = 0;
+                                                Buffer[9] = 0;
+                                                Buffer[10] = 0;
+                                                Buffer[11] = 0;
 
                                                 //如果Flag中不包含ENC，则验证CRC32
                                                 if ((Flag & 2) == 0)
                                                 {
                                                     var CRC32 = new CRC32();
-                                                    for (int k = 12; k < Buffer.Length; k += 1)
+                                                    for (int k = 0; k < Buffer.Length; k += 1)
                                                     {
                                                         CRC32.PushData(Buffer[k]);
                                                     }
@@ -622,15 +624,26 @@ namespace Server
                                                         continue;
                                                     }
 
-                                                    var IsEncrypted = false;
-                                                    if ((Flag & 2) != 0)
+                                                    var IsEncrypted = (Flag & 2) != 0;
+                                                    var NextSecureContext = s.NextSecureContext;
+                                                    var SecureContext = s.SecureContext;
+                                                    if ((SecureContext == null) && (NextSecureContext != null))
                                                     {
-                                                        IsEncrypted = true;
-                                                        //TODO
+                                                        s.SecureContext = NextSecureContext;
+                                                        s.NextSecureContext = null;
+                                                        SecureContext = NextSecureContext;
+                                                        NextSecureContext = null;
                                                     }
-                                                    if (s.IsSecureConnectionRequired != IsEncrypted)
+                                                    if ((SecureContext != null) != IsEncrypted)
                                                     {
                                                         continue;
+                                                    }
+                                                    if (IsEncrypted)
+                                                    {
+                                                        var Key = SecureContext.ServerToken.Concat(Cryptography.SHA1(Buffer.Skip(4).Take(4).ToArray()));
+                                                        var HMACBytes = Cryptography.HMACSHA1(Key, Buffer).Take(4).ToArray();
+                                                        var HMAC = HMACBytes[0] | ((Int32)(HMACBytes[1]) << 8) | ((Int32)(HMACBytes[2]) << 16) | ((Int32)(HMACBytes[3]) << 24);
+                                                        if (HMAC != Verification) { continue; }
                                                     }
 
                                                     var Offset = 12;

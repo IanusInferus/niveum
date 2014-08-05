@@ -11,6 +11,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
@@ -275,17 +276,18 @@ namespace Client
             }
             IApplicationClient ac;
             Tcp.ITcpVirtualTransportClient vtc;
+            var bt = new Rc4PacketClientTransformer();
             if (ProtocolType == SerializationProtocolType.Binary)
             {
                 var a = new BinarySerializationClientAdapter();
                 ac = a.GetApplicationClient();
-                vtc = new Tcp.BinaryCountPacketClient(a);
+                vtc = new Tcp.BinaryCountPacketClient(a, bt);
             }
             else if (ProtocolType == SerializationProtocolType.Json)
             {
                 var a = new JsonSerializationClientAdapter();
                 ac = a.GetApplicationClient();
-                vtc = new Tcp.JsonLinePacketClient(a);
+                vtc = new Tcp.JsonLinePacketClient(a, bt);
             }
             else
             {
@@ -294,7 +296,7 @@ namespace Client
             using (var bc = new Tcp.TcpClient(RemoteEndPoint, vtc))
             {
                 bc.Connect();
-                Console.WriteLine("连接成功。输入login登录。");
+                Console.WriteLine("连接成功。输入login登录，输入secure启用安全连接。");
 
                 var Lockee = new Object();
                 Action<Action> DoHandle = a =>
@@ -305,7 +307,11 @@ namespace Client
                     }
                 };
                 bc.ReceiveAsync(DoHandle, ex => Console.WriteLine(ex.Message));
-                ReadLineAndSendLoop(ac, UseOld, Lockee);
+                Action<SecureContext> SetSecureContext = c =>
+                {
+                    bt.SetSecureContext(c);
+                };
+                ReadLineAndSendLoop(ac, SetSecureContext, UseOld, Lockee);
             }
         }
 
@@ -317,17 +323,18 @@ namespace Client
             }
             IApplicationClient ac;
             Tcp.ITcpVirtualTransportClient vtc;
+            var bt = new Rc4PacketClientTransformer();
             if (ProtocolType == SerializationProtocolType.Binary)
             {
                 var a = new BinarySerializationClientAdapter();
                 ac = a.GetApplicationClient();
-                vtc = new Tcp.BinaryCountPacketClient(a);
+                vtc = new Tcp.BinaryCountPacketClient(a, bt);
             }
             else if (ProtocolType == SerializationProtocolType.Json)
             {
                 var a = new JsonSerializationClientAdapter();
                 ac = a.GetApplicationClient();
-                vtc = new Tcp.JsonLinePacketClient(a);
+                vtc = new Tcp.JsonLinePacketClient(a, bt);
             }
             else
             {
@@ -336,7 +343,7 @@ namespace Client
             using (var bc = new Tcp.UdpClient(RemoteEndPoint, vtc))
             {
                 bc.Connect();
-                Console.WriteLine("输入login登录。");
+                Console.WriteLine("输入login登录，输入secure启用安全连接。");
 
                 var Lockee = new Object();
                 Action<Action> DoHandle = a =>
@@ -347,7 +354,12 @@ namespace Client
                     }
                 };
                 bc.ReceiveAsync(DoHandle, ex => Console.WriteLine(ex.Message));
-                ReadLineAndSendLoop(ac, UseOld, Lockee);
+                Action<SecureContext> SetSecureContext = c =>
+                {
+                    bt.SetSecureContext(c);
+                    bc.SecureContext = c;
+                };
+                ReadLineAndSendLoop(ac, SetSecureContext, UseOld, Lockee);
             }
         }
 
@@ -358,11 +370,15 @@ namespace Client
                 Console.WriteLine("输入login登录。");
 
                 var Lockee = new Object();
-                ReadLineAndSendLoop(bc.InnerClient, UseOld, Lockee);
+                Action<SecureContext> SetSecureContext = c =>
+                {
+                    throw new InvalidOperationException();
+                };
+                ReadLineAndSendLoop(bc.InnerClient, SetSecureContext, UseOld, Lockee);
             }
         }
 
-        public static void ReadLineAndSendLoop(IApplicationClient InnerClient, Boolean UseOld, Object Lockee)
+        public static void ReadLineAndSendLoop(IApplicationClient InnerClient, Action<SecureContext> SetSecureContext, Boolean UseOld, Object Lockee)
         {
             var NeedToExit = false;
             AutoResetEvent NeedToCheck = new AutoResetEvent(false);
@@ -463,6 +479,17 @@ namespace Client
                             }
                         });
                         break;
+                    }
+                    if (Line == "secure")
+                    {
+                        InnerClient.SendMessage(new SendMessageRequest { Content = Line }, r =>
+                        {
+                            //生成测试用确定Key
+                            var ServerToken = Enumerable.Range(0, 41).Select(i => (Byte)(i)).ToArray();
+                            var ClientToken = Enumerable.Range(0, 41).Select(i => (Byte)(40 - i)).ToArray();
+                            SetSecureContext(new SecureContext { ServerToken = ServerToken, ClientToken = ClientToken });
+                        });
+                        continue;
                     }
                     if (UseOld)
                     {
