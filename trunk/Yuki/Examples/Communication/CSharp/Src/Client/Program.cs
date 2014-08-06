@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2014.08.05.
+//  Version:     2014.08.06.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -365,7 +365,12 @@ namespace Client
 
         public static void RunHttp(String UrlPrefix, String ServiceVirtualPath, Boolean UseOld)
         {
-            using (var bc = new HttpClient(UrlPrefix, ServiceVirtualPath))
+            IApplicationClient ac;
+            Http.IHttpVirtualTransportClient vtc;
+            var a = new JsonSerializationClientAdapter();
+            ac = a.GetApplicationClient();
+            vtc = new Http.JsonHttpPacketClient(a);
+            using (var bc = new Http.HttpClient(UrlPrefix, ServiceVirtualPath, vtc))
             {
                 Console.WriteLine("输入login登录。");
 
@@ -374,7 +379,7 @@ namespace Client
                 {
                     throw new InvalidOperationException();
                 };
-                ReadLineAndSendLoop(bc.InnerClient, SetSecureContext, UseOld, Lockee);
+                ReadLineAndSendLoop(ac, SetSecureContext, UseOld, Lockee);
             }
         }
 
