@@ -356,12 +356,15 @@ namespace Client
                 {
                     Completed = () =>
                     {
-                        ac.Quit(new QuitRequest { }, r =>
+                        lock (Lockee)
                         {
-                            bCompleted.Update(b => true);
-                            vCompleted.Update(i => i + 1);
-                            Check.Set();
-                        });
+                            ac.Quit(new QuitRequest { }, r =>
+                            {
+                                bCompleted.Update(b => true);
+                                vCompleted.Update(i => i + 1);
+                                Check.Set();
+                            });
+                        }
                     };
                     FaultedCompleted = () =>
                     {
@@ -526,17 +529,11 @@ namespace Client
             Console.Out.Flush();
 
             var tl = new List<Task>();
-            var bcl = new List<HttpClient>();
+            var bcl = new List<Http.HttpClient>();
             var ccl = new List<ClientContext>();
             var vConnected = new LockedVariable<int>(0);
             var vCompleted = new LockedVariable<int>(0);
             var Check = new AutoResetEvent(false);
-
-            Action Completed = () =>
-            {
-                vCompleted.Update(i => i + 1);
-                Check.Set();
-            };
 
             var vError = new LockedVariable<int>(0);
 
@@ -544,19 +541,45 @@ namespace Client
             {
                 var n = k;
                 var Lockee = new Object();
-                var bc = new HttpClient(UrlPrefix, ServiceVirtualPath);
+                var a = new JsonSerializationClientAdapter();
+                var ac = a.GetApplicationClient();
+                var vtc = new Http.JsonHttpPacketClient(a);
+                var bc = new Http.HttpClient(UrlPrefix, ServiceVirtualPath, vtc);
                 var cc = new ClientContext();
-                bc.InnerClient.Error += e =>
+                ac.Error += e =>
                 {
                     var m = e.Message;
                     Console.WriteLine(m);
                 };
-                if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, cc, bc.InnerClient, Completed); }
+                Action Completed;
+                if (Test == TestQuit)
+                {
+                    Completed = () =>
+                    {
+                        vCompleted.Update(i => i + 1);
+                        Check.Set();
+                    };
+                }
+                else
+                {
+                    Completed = () =>
+                    {
+                        lock (Lockee)
+                        {
+                            ac.Quit(new QuitRequest { }, r =>
+                            {
+                                vCompleted.Update(i => i + 1);
+                                Check.Set();
+                            });
+                        }
+                    };
+                }
+                if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, cc, ac, Completed); }
                 lock (Lockee)
                 {
                     try
                     {
-                        bc.InnerClient.ServerTime(new ServerTimeRequest { }, r =>
+                        ac.ServerTime(new ServerTimeRequest { }, r =>
                         {
                             vConnected.Update(i => i + 1);
                             Check.Set();
@@ -576,7 +599,7 @@ namespace Client
                         {
                             try
                             {
-                                Test(NumUser, n, cc, bc.InnerClient, Completed);
+                                Test(NumUser, n, cc, ac, Completed);
                             }
                             catch (Exception ex)
                             {
@@ -618,13 +641,6 @@ namespace Client
 
             foreach (var bc in bcl)
             {
-                try
-                {
-                    bc.InnerClient.Quit(new QuitRequest { }, r => { });
-                }
-                catch
-                {
-                }
                 bc.Dispose();
             }
 
