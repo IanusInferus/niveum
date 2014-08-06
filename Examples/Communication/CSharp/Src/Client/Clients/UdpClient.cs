@@ -67,8 +67,8 @@ namespace Client
             public const int ReadingWindowSize = 1024;
             public const int WritingWindowSize = 16;
             public const int IndexSpace = 65536;
-            public const int InitialPacketTimeoutMilliseconds = 100;
-            public const int MaxSquaredPacketResentCount = 4;
+            public const int InitialPacketTimeoutMilliseconds = 500;
+            public const int MaxSquaredPacketResentCount = 3;
             public const int MaxLinearPacketResentCount = 10;
             private static int GetTimeoutMilliseconds(int ResentCount)
             {
