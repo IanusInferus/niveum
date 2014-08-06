@@ -70,8 +70,8 @@ namespace Server
             public const int ReadingWindowSize = 16;
             public const int WritingWindowSize = 1024;
             public const int IndexSpace = 65536;
-            public const int InitialPacketTimeoutMilliseconds = 90;
-            public const int MaxSquaredPacketResentCount = 4;
+            public const int InitialPacketTimeoutMilliseconds = 400;
+            public const int MaxSquaredPacketResentCount = 3;
             public const int MaxLinearPacketResentCount = 10;
             private static int GetTimeoutMilliseconds(int ResentCount)
             {
