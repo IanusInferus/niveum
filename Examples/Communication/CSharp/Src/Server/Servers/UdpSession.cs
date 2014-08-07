@@ -421,7 +421,15 @@ namespace Server
                 });
                 foreach (var p in Parts)
                 {
-                    SendPacket(RemoteEndPoint, p);
+                    try
+                    {
+                        SendPacket(RemoteEndPoint, p);
+                    }
+                    catch
+                    {
+                        Success = false;
+                        break;
+                    }
                 }
                 if (!Success)
                 {
@@ -695,11 +703,23 @@ namespace Server
                 var Time = DateTime.UtcNow;
                 if ((Indices != null) && (Indices.Length > 0))
                 {
+                    var l = new List<Byte[]>();
                     CookedWritingContext.DoAction(c =>
                     {
                         c.Parts.Acknowledge(Indices.First(), Indices.Skip(1));
-                        c.Parts.ForEachTimedoutPacket(Time, (i, d) => SendPacket(RemoteEndPoint, d));
+                        c.Parts.ForEachTimedoutPacket(Time, (i, d) => l.Add(d));
                     });
+                    foreach (var p in l)
+                    {
+                        try
+                        {
+                            SendPacket(RemoteEndPoint, p);
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    }
                 }
                 this.RemoteEndPoint = RemoteEndPoint;
                 return true;
@@ -710,11 +730,23 @@ namespace Server
                 var Time = DateTime.UtcNow;
                 if ((Indices != null) && (Indices.Length > 0))
                 {
+                    var l = new List<Byte[]>();
                     CookedWritingContext.DoAction(c =>
                     {
                         c.Parts.Acknowledge(Indices.First(), Indices.Skip(1));
-                        c.Parts.ForEachTimedoutPacket(Time, (i, d) => SendPacket(RemoteEndPoint, d));
+                        c.Parts.ForEachTimedoutPacket(Time, (i, d) => l.Add(d));
                     });
+                    foreach (var p in l)
+                    {
+                        try
+                        {
+                            SendPacket(RemoteEndPoint, p);
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    }
                 }
                 this.RemoteEndPoint = RemoteEndPoint;
 

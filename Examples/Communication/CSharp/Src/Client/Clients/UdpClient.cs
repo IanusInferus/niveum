@@ -366,7 +366,15 @@ namespace Client
                 });
                 foreach (var p in Parts)
                 {
-                    SendPacket(RemoteEndPoint, p);
+                    try
+                    {
+                        SendPacket(RemoteEndPoint, p);
+                    }
+                    catch
+                    {
+                        Success = false;
+                        break;
+                    }
                 }
                 if (!Success)
                 {
@@ -485,11 +493,11 @@ namespace Client
                 {
                     try
                     {
-                        SendPacket(this.RemoteEndPoint, p);
+                        SendPacket(RemoteEndPoint, p);
                     }
                     catch
                     {
-                        return;
+                        break;
                     }
                 }
             }
