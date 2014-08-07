@@ -9,3 +9,8 @@ shared_ptr<SendMessageAt1Reply> ServerImplementation::SendMessageAt1(shared_ptr<
 {
     throw std::logic_error("NotSupported");
 }
+
+std::shared_ptr<TestAddAt1Reply> ServerImplementation::TestAddAt1(std::shared_ptr<TestAddAt1Request> r)
+{
+    return TestAddAt1Reply::CreateResult(r->Operand1 + r->Operand2);
+}
