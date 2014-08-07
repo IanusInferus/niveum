@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2013.04.17.
+//  Version:     2014.08.07.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -14,6 +14,7 @@
 #include "UtfEncoding.h"
 #include "CommunicationBinary.h"
 #include "Clients/BinarySocketClient.h"
+#include "Clients/SerializationClientAdapter.h"
 
 #include <exception>
 #include <stdexcept>
@@ -117,7 +118,9 @@ namespace Client
         static void Run(boost::asio::ip::tcp::endpoint RemoteEndPoint)
         {
             boost::asio::io_service IoService;
-            auto bsc = std::make_shared<BinarySocketClient>(IoService);
+            auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>();
+            auto ac = bsca->GetApplicationClient();
+            auto bsc = std::make_shared<BinarySocketClient>(IoService, bsca);
             bsc->Connect(RemoteEndPoint);
             std::wprintf(L"%ls\n", L"连接成功。");
 
@@ -131,7 +134,7 @@ namespace Client
             
             boost::thread t([&]() { IoService.run(); });
 
-            ReadLineAndSendLoop(bsc->InnerClient, Lockee);
+            ReadLineAndSendLoop(ac, Lockee);
 
             bsc->Close();
             t.join();

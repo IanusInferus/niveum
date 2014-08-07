@@ -1,15 +1,20 @@
 ﻿#pragma once
 
-#include "Communication.h"
+#include "ISerializationClient.h"
+
 #include "CommunicationBinary.h"
 
 #include <memory>
 #include <cstdint>
 #include <vector>
+#include <queue>
+#include <unordered_map>
 #include <string>
 #include <exception>
 #include <stdexcept>
+#include <functional>
 #include <boost/asio.hpp>
+#include <boost/date_time.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -19,26 +24,90 @@ namespace Client
     class BinarySocketClient
     {
     public:
-        std::shared_ptr<Communication::IApplicationClient> InnerClient;
+        std::function<void(std::wstring, int)> ClientCommandReceived;
+        std::function<void(std::wstring, int)> ClientCommandFailed;
+        std::function<void(std::wstring)> ServerCommandReceived;
     private:
-        std::shared_ptr<Communication::Binary::BinarySerializationClient> bc;
+        std::shared_ptr<IBinarySerializationClientAdapter> bc;
+        boost::asio::io_service &io_service;
         boost::asio::ip::tcp::socket sock;
 
+        static const int BufferMemorySize = 128 * 1024;
+        static const int NumTimeoutMilliseconds = 20000;
         std::vector<uint8_t> Buffer;
         int BufferLength;
+        bool NeedShutdown;
 
-        class BinarySender : public Communication::Binary::IBinarySender
+        struct CommandRequest
         {
-        private:
-            boost::asio::ip::tcp::socket &sock;
-        public:
-            BinarySender(boost::asio::ip::tcp::socket &sock)
-                : sock(sock)
-            {
-            }
+            std::wstring Name;
+            boost::posix_time::ptime Time;
+            std::shared_ptr<boost::asio::deadline_timer> Timer;
+            std::shared_ptr<bool> Finished;
+        };
 
-            void Send(std::wstring CommandName, uint32_t CommandHash, std::shared_ptr<std::vector<uint8_t>> Parameters)
+        std::shared_ptr<std::unordered_map<std::wstring, std::shared_ptr<std::queue<CommandRequest>>>> CommandRequests;
+
+    public:
+        BinarySocketClient(boost::asio::io_service& io_service, std::shared_ptr<IBinarySerializationClientAdapter> bc)
+            : io_service(io_service), sock(io_service), BufferLength(0), NeedShutdown(false)
+        {
+            CommandRequests = std::make_shared<std::unordered_map<std::wstring, std::shared_ptr<std::queue<CommandRequest>>>>();
+            this->bc = bc;
+            bc->DequeuedCallbackEvent = [=](std::wstring CommandName)
             {
+                if (CommandRequests->count(CommandName) > 0)
+                {
+                    auto q = (*CommandRequests)[CommandName];
+                    auto &cq = q->front();
+
+                    *cq.Finished = true;
+                    auto TimeSpan = boost::posix_time::microsec_clock::universal_time() - cq.Time;
+                    auto Milliseconds = (int)(TimeSpan.total_milliseconds());
+                    if (ClientCommandFailed != nullptr)
+                    {
+                        ClientCommandFailed(cq.Name, Milliseconds);
+                    }
+                    q->pop();
+                    if (q->size() == 0)
+                    {
+                        CommandRequests->erase(CommandName);
+                    }
+                }
+            };
+            bc->ClientEvent = [=](std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
+            {
+                CommandRequest cq = {};
+                cq.Name = CommandName;
+                auto Time = boost::posix_time::microsec_clock::universal_time();
+                cq.Time = Time;
+                auto Finished = std::make_shared<bool>(false);
+                auto Timer = std::make_shared<boost::asio::deadline_timer>(this->io_service);
+                Timer->expires_from_now(boost::posix_time::milliseconds(NumTimeoutMilliseconds));
+                Timer->async_wait([=](const boost::system::error_code& error)
+                {
+                    if (error == boost::system::errc::success)
+                    {
+                        if (!*Finished)
+                        {
+                            throw boost::system::system_error(boost::system::errc::timed_out, boost::system::generic_category());
+                        }
+                    }
+                });
+                cq.Timer = Timer;
+                cq.Finished = Finished;
+                if (CommandRequests->count(CommandName) > 0)
+                {
+                    auto q = (*CommandRequests)[CommandName];
+                    q->push(cq);
+                }
+                else
+                {
+                    auto q = std::make_shared<std::queue<CommandRequest>>();
+                    q->push(cq);
+                    (*CommandRequests)[CommandName] = q;
+                }
+
                 Communication::Binary::ByteArrayStream s;
                 s.WriteString(CommandName);
                 s.WriteUInt32(CommandHash);
@@ -46,25 +115,47 @@ namespace Client
                 s.WriteBytes(Parameters);
                 s.SetPosition(0);
                 auto Bytes = s.ReadBytes(s.GetLength());
-                sock.send(boost::asio::buffer(Bytes->data(), Bytes->size()));
-            }
-        };
 
-        std::shared_ptr<BinarySender> bs;
+                auto WriteHandler = [=](const boost::system::error_code &se, size_t Count)
+                {
+                    if (se == boost::system::errc::success)
+                    {
+                    }
+                    else
+                    {
+                        Timer->cancel();
+                        throw boost::system::system_error(se);
+                    }
+                };
+                boost::asio::async_write(sock, boost::asio::buffer(Bytes->data(), Bytes->size()), WriteHandler);
+            };
+            Buffer.resize(BufferMemorySize, 0);
+        }
 
-    public:
-        BinarySocketClient(boost::asio::io_service& io_service)
-            : sock(io_service), BufferLength(0)
+        virtual ~BinarySocketClient()
         {
-            bs = std::make_shared<BinarySender>(sock);
-            bc = std::make_shared<Communication::Binary::BinarySerializationClient>(bs);
-            InnerClient = bc->GetApplicationClient();
-            InnerClient->ErrorCommand = [=](std::shared_ptr<Communication::ErrorCommandEvent> e) { InnerClient->DequeueCallback(e->CommandName); };
-            Buffer.resize(8 * 1024, 0);
+            Close();
+        }
+
+        void ClearRequests()
+        {
+            for (auto p : *CommandRequests)
+            {
+                auto q = std::get<1>(p);
+                while (!q->empty())
+                {
+                    auto &cq = q->front();
+                    *cq.Finished = true;
+                    bc->DequeueCallback(cq.Name);
+                    q->pop();
+                }
+            }
+            CommandRequests->clear();
         }
 
         void Connect(boost::asio::ip::tcp::endpoint RemoteEndPoint)
         {
+            NeedShutdown = true;
             sock.connect(RemoteEndPoint);
         }
 
@@ -73,6 +164,7 @@ namespace Client
         /// <param name="UnknownFaulted">未知错误处理函数</param>
         void ConnectAsync(boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(void)> Completed, std::function<void(const boost::system::error_code &)> UnknownFaulted)
         {
+            NeedShutdown = true;
             auto ConnectHandler = [=](const boost::system::error_code &se)
             {
                 if (se == boost::system::errc::success)
@@ -199,7 +291,7 @@ namespace Client
                         }
                         s.SetPosition(0);
                         ParametersLength = s.ReadInt32();
-                        if (ParametersLength < 0 || ParametersLength > 8 * 1024) { throw std::logic_error("InvalidOperationException"); }
+                        if (ParametersLength < 0 || ParametersLength > BufferMemorySize) { throw std::logic_error("InvalidOperationException"); }
                         auto r = std::make_shared<TryShiftResult>();
                         r->Command = nullptr;
                         r->Position = Position + 4;
@@ -273,7 +365,35 @@ namespace Client
                 if (r->Command != nullptr)
                 {
                     auto cmd = r->Command;
-                    DoResultHandle([=]() { bc->HandleResult(cmd->CommandName, cmd->CommandHash, cmd->Parameters); });
+                    auto CommandName = cmd->CommandName;
+                    auto CommandHash = cmd->CommandHash;
+                    auto Parameters = cmd->Parameters;
+                    if (CommandRequests->count(CommandName) > 0)
+                    {
+                        auto q = (*CommandRequests)[CommandName];
+                        auto &cq = q->front();
+
+                        *cq.Finished = true;
+                        auto TimeSpan = boost::posix_time::microsec_clock::universal_time() - cq.Time;
+                        auto Milliseconds = (int)(TimeSpan.total_milliseconds());
+                        if (ClientCommandReceived != nullptr)
+                        {
+                            ClientCommandReceived(cq.Name, Milliseconds);
+                        }
+                        q->pop();
+                        if (q->size() == 0)
+                        {
+                            CommandRequests->erase(CommandName);
+                        }
+                    }
+                    else
+                    {
+                        if (ServerCommandReceived != nullptr)
+                        {
+                            ServerCommandReceived(CommandName);
+                        }
+                    }
+                    DoResultHandle([=]() { bc->HandleResult(CommandName, CommandHash, Parameters); });
                 }
             }
             if (FirstPosition > 0)
@@ -313,7 +433,16 @@ namespace Client
 
         void Close()
         {
-            sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+            try
+            {
+                if (NeedShutdown)
+                {
+                    sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+                }
+            }
+            catch (...)
+            {
+            }
             sock.close();
         }
     };

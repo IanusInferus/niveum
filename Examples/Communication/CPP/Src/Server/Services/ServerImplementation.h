@@ -94,6 +94,8 @@ namespace Server
             std::shared_ptr<TestTextReply> TestText(std::shared_ptr<TestTextRequest> r);
             /// <summary>群发消息</summary>
             std::shared_ptr<TestMessageReply> TestMessage(std::shared_ptr<TestMessageRequest> r);
+            /// <summary>加法</summary>
+            std::shared_ptr<TestAddAt1Reply> TestAddAt1(std::shared_ptr<TestAddAt1Request> r);
         };
     }
     typedef _Impl::ServerImplementation ServerImplementation;

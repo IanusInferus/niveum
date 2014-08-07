@@ -83,6 +83,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Clients\ISerializationClient.h" />
+    <ClInclude Include="Clients\SerializationClientAdapter.h" />
     <ClInclude Include="UtfEncoding.h" />
     <ClInclude Include="Clients\BinarySocketClient.h" />
     <ClInclude Include="Communication.h" />

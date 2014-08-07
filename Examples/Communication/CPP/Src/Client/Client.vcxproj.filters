@@ -8,6 +8,12 @@
       <Filter>Clients</Filter>
     </ClInclude>
     <ClInclude Include="UtfEncoding.h" />
+    <ClInclude Include="Clients\ISerializationClient.h">
+      <Filter>Clients</Filter>
+    </ClInclude>
+    <ClInclude Include="Clients\SerializationClientAdapter.h">
+      <Filter>Clients</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />

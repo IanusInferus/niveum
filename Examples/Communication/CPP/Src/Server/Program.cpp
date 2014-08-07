@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2013.12.13.
+//  Version:     2014.08.07.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -130,9 +130,7 @@ namespace Server
 
             Server->Start();
 
-            std::wprintf(L"%ls\n", L"服务器已启动。");
-            std::wprintf(L"%ls\n", L"协议类型: Binary");
-            std::wprintf(L"%ls\n", (L"服务结点: " +  s2w(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port())).c_str());
+            std::wprintf(L"%ls\n", (L"TCP/Binary服务器已启动。结点: " + s2w(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port()) + L"(TCP)").c_str());
 
             std::vector<std::shared_ptr<boost::thread>> Threads;
             for (int i = 0; i < ProcessorCount; i += 1)
