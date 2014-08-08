@@ -32,7 +32,7 @@ namespace Server
             private Byte[] WriteBuffer;
             private SessionStateMachine<StreamedVirtualTransportServerHandleResult, Unit> ssm;
 
-            public TcpSession(TcpServer Server, StreamedAsyncSocket Socket, IPEndPoint RemoteEndPoint)
+            public TcpSession(TcpServer Server, StreamedAsyncSocket Socket, IPEndPoint RemoteEndPoint, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory)
             {
                 this.Server = Server;
                 this.Socket = Socket;
@@ -48,45 +48,14 @@ namespace Server
                     Server.NotifySessionAuthenticated(this);
                 };
 
-                if (Server.SerializationProtocolType == SerializationProtocolType.Binary)
+                var rpst = new Rc4PacketServerTransformer();
+                var Pair = VirtualTransportServerFactory(Context, rpst);
+                si = Pair.Key;
+                vts = Pair.Value;
+                Context.SecureConnectionRequired += c =>
                 {
-                    var p = Server.ServerContext.CreateServerImplementationWithBinaryAdapter(Context);
-                    si = p.Key;
-                    var a = p.Value;
-                    BinaryCountPacketServer.CheckCommandAllowedDelegate cca = CommandName =>
-                    {
-                        if (Server.CheckCommandAllowed == null) { return true; }
-                        return Server.CheckCommandAllowed(Context, CommandName);
-                    };
-                    var rpst = new Rc4PacketServerTransformer();
-                    var bcps = new BinaryCountPacketServer(a, cca, rpst);
-                    vts = bcps;
-                    Context.SecureConnectionRequired += c =>
-                    {
-                        rpst.SetSecureContext(c);
-                    };
-                }
-                else if (Server.SerializationProtocolType == SerializationProtocolType.Json)
-                {
-                    var p = Server.ServerContext.CreateServerImplementationWithJsonAdapter(Context);
-                    si = p.Key;
-                    var a = p.Value;
-                    JsonLinePacketServer.CheckCommandAllowedDelegate cca = CommandName =>
-                    {
-                        if (Server.CheckCommandAllowed == null) { return true; }
-                        return Server.CheckCommandAllowed(Context, CommandName);
-                    };
-                    var rpst = new Rc4PacketServerTransformer();
-                    vts = new JsonLinePacketServer(a, cca, rpst);
-                    Context.SecureConnectionRequired += c =>
-                    {
-                        rpst.SetSecureContext(c);
-                    };
-                }
-                else
-                {
-                    throw new InvalidOperationException("InvalidSerializationProtocol: " + Server.SerializationProtocolType.ToString());
-                }
+                    rpst.SetSecureContext(c);
+                };
                 vts.ServerEvent += () => ssm.NotifyWrite(new Unit());
                 vts.InputByteLengthReport += (CommandName, ByteLength) => Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "InBytes", Name = CommandName, Message = ByteLength.ToInvariantString() });
                 vts.OutputByteLengthReport += (CommandName, ByteLength) => Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "OutBytes", Name = CommandName, Message = ByteLength.ToInvariantString() });

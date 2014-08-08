@@ -85,9 +85,8 @@ namespace Server
             private LockedVariable<ServerSessionSets> SessionSets = new LockedVariable<ServerSessionSets>(new ServerSessionSets());
 
             public TServerContext ServerContext { get; private set; }
+            private Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
 
-            public delegate Boolean CheckCommandAllowedDelegate(ISessionContext c, String CommandName);
-            private CheckCommandAllowedDelegate CheckCommandAllowedValue = null;
             private int MaxBadCommandsValue = 8;
             private IPEndPoint[] BindingsValue = { };
             private int? SessionIdleTimeoutValue = null;
@@ -97,21 +96,6 @@ namespace Server
             private int? MaxUnauthenticatedPerIPValue = null;
 
             private int TimeoutCheckPeriodValue = 30;
-            private SerializationProtocolType ProtocolTypeValue = SerializationProtocolType.Binary;
-
-            /// <summary>只能在启动前修改，以保证线程安全</summary>
-            public CheckCommandAllowedDelegate CheckCommandAllowed
-            {
-                get
-                {
-                    return CheckCommandAllowedValue;
-                }
-                set
-                {
-                    if (IsRunning) { throw new InvalidOperationException(); }
-                    CheckCommandAllowedValue = value;
-                }
-            }
 
             /// <summary>只能在启动前修改，以保证线程安全</summary>
             public int MaxBadCommands
@@ -260,25 +244,13 @@ namespace Server
                     );
                 }
             }
-            /// <summary>只能在启动前修改，以保证线程安全</summary>
-            public SerializationProtocolType SerializationProtocolType
-            {
-                get
-                {
-                    return ProtocolTypeValue;
-                }
-                set
-                {
-                    if (IsRunning) { throw new InvalidOperationException(); }
-                    ProtocolTypeValue = value;
-                }
-            }
 
             public LockedVariable<Dictionary<ISessionContext, UdpSession>> SessionMappings = new LockedVariable<Dictionary<ISessionContext, UdpSession>>(new Dictionary<ISessionContext, UdpSession>());
 
-            public UdpServer(TServerContext sc)
+            public UdpServer(TServerContext sc, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory)
             {
                 ServerContext = sc;
+                this.VirtualTransportServerFactory = VirtualTransportServerFactory;
 
                 this.MaxConnectionsExceeded += OnMaxConnectionsExceeded;
                 this.MaxConnectionsPerIPExceeded += OnMaxConnectionsPerIPExceeded;
@@ -508,7 +480,7 @@ namespace Server
                                                     if ((Flag & 8) != 0) { continue; }
                                                     var Offset = 12;
 
-                                                    s = new UdpSession(this, a.Socket, e);
+                                                    s = new UdpSession(this, a.Socket, e, VirtualTransportServerFactory);
                                                     SessionId = s.SessionId;
 
                                                     if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
@@ -585,7 +557,7 @@ namespace Server
                                                             }
                                                             while (ss.SessionIdToSession.ContainsKey(SessionId))
                                                             {
-                                                                s = new UdpSession(this, a.Socket, e);
+                                                                s = new UdpSession(this, a.Socket, e, VirtualTransportServerFactory);
                                                                 SessionId = s.SessionId;
                                                             }
                                                             ss.SessionIdToSession.Add(SessionId, s);
