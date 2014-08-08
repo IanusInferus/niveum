@@ -49,7 +49,7 @@ namespace Server
             private LockedVariable<HttpWriteContext> WriteContext = new LockedVariable<HttpWriteContext>(null);
             private SessionStateMachine<HttpVirtualTransportServerHandleResult, Unit> ssm;
 
-            public HttpSession(HttpServer Server, IPEndPoint RemoteEndPoint)
+            public HttpSession(HttpServer Server, IPEndPoint RemoteEndPoint, Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory)
             {
                 this.Server = Server;
                 this.RemoteEndPoint = RemoteEndPoint;
@@ -64,15 +64,9 @@ namespace Server
                     throw new NotImplementedException();
                 };
 
-                var p = Server.ServerContext.CreateServerImplementationWithJsonAdapter(Context);
-                si = p.Key;
-                var a = p.Value;
-                JsonHttpPacketServer.CheckCommandAllowedDelegate cca = CommandName =>
-                {
-                    if (Server.CheckCommandAllowed == null) { return true; }
-                    return Server.CheckCommandAllowed(Context, CommandName);
-                };
-                vts = new JsonHttpPacketServer(a, cca);
+                var Pair = VirtualTransportServerFactory(Context);
+                si = Pair.Key;
+                vts = Pair.Value;
             }
 
             private void OnShutdownRead()

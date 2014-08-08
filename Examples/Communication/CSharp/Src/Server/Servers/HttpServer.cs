@@ -132,9 +132,8 @@ namespace Server
             private LockedVariable<ServerSessionSets> SessionSets = new LockedVariable<ServerSessionSets>(new ServerSessionSets());
 
             public TServerContext ServerContext { get; private set; }
+            private Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory;
 
-            public delegate Boolean CheckCommandAllowedDelegate(ISessionContext c, String CommandName);
-            private CheckCommandAllowedDelegate CheckCommandAllowedValue = null;
             private int MaxBadCommandsValue = 8;
             private String[] BindingsValue = { };
             private int? SessionIdleTimeoutValue = null;
@@ -145,20 +144,6 @@ namespace Server
 
             private int TimeoutCheckPeriodValue = 30;
             private String ServiceVirtualPathValue = null;
-
-            /// <summary>只能在启动前修改，以保证线程安全</summary>
-            public CheckCommandAllowedDelegate CheckCommandAllowed
-            {
-                get
-                {
-                    return CheckCommandAllowedValue;
-                }
-                set
-                {
-                    if (IsRunning) { throw new InvalidOperationException(); }
-                    CheckCommandAllowedValue = value;
-                }
-            }
 
             /// <summary>只能在启动前修改，以保证线程安全</summary>
             public int MaxBadCommands
@@ -329,9 +314,10 @@ namespace Server
 
             public LockedVariable<Dictionary<ISessionContext, HttpSession>> SessionMappings = new LockedVariable<Dictionary<ISessionContext, HttpSession>>(new Dictionary<ISessionContext, HttpSession>());
 
-            public HttpServer(TServerContext sc)
+            public HttpServer(TServerContext sc, Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory)
             {
                 ServerContext = sc;
+                this.VirtualTransportServerFactory = VirtualTransportServerFactory;
             }
 
             private Boolean IsMatchBindingName(Uri Url)
@@ -708,7 +694,7 @@ namespace Server
                                                 }
 
                                                 {
-                                                    var s = new HttpSession(this, e);
+                                                    var s = new HttpSession(this, e, VirtualTransportServerFactory);
 
                                                     var SessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
                                                     SessionSets.DoAction
