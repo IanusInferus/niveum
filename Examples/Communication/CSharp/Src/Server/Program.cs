@@ -302,11 +302,7 @@ namespace Server
                         var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Context);
                         var si = p.Key;
                         var a = p.Value;
-                        Streamed<ServerContext>.BinaryCountPacketServer.CheckCommandAllowedDelegate cca = CommandName =>
-                        {
-                            return true;
-                        };
-                        var bcps = new Streamed<ServerContext>.BinaryCountPacketServer(a, cca, t);
+                        var bcps = new Streamed<ServerContext>.BinaryCountPacketServer(a, CommandName => true, t);
                         return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
                     };
                 }
@@ -317,11 +313,7 @@ namespace Server
                         var p = ServerContext.CreateServerImplementationWithJsonAdapter(Context);
                         var si = p.Key;
                         var a = p.Value;
-                        Streamed<ServerContext>.JsonLinePacketServer.CheckCommandAllowedDelegate cca = CommandName =>
-                        {
-                            return true;
-                        };
-                        var bcps = new Streamed<ServerContext>.JsonLinePacketServer(a, cca, t);
+                        var bcps = new Streamed<ServerContext>.JsonLinePacketServer(a, CommandName => true, t);
                         return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
                     };
                 }
@@ -376,11 +368,7 @@ namespace Server
                         var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Context);
                         var si = p.Key;
                         var a = p.Value;
-                        Streamed<ServerContext>.BinaryCountPacketServer.CheckCommandAllowedDelegate cca = CommandName =>
-                        {
-                            return true;
-                        };
-                        var bcps = new Streamed<ServerContext>.BinaryCountPacketServer(a, cca, t);
+                        var bcps = new Streamed<ServerContext>.BinaryCountPacketServer(a, CommandName => true, t);
                         return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
                     };
                 }
@@ -391,11 +379,7 @@ namespace Server
                         var p = ServerContext.CreateServerImplementationWithJsonAdapter(Context);
                         var si = p.Key;
                         var a = p.Value;
-                        Streamed<ServerContext>.JsonLinePacketServer.CheckCommandAllowedDelegate cca = CommandName =>
-                        {
-                            return true;
-                        };
-                        var bcps = new Streamed<ServerContext>.JsonLinePacketServer(a, cca, t);
+                        var bcps = new Streamed<ServerContext>.JsonLinePacketServer(a, CommandName => true, t);
                         return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
                     };
                 }
@@ -439,16 +423,20 @@ namespace Server
             {
                 var s = vsc.Http;
 
-                var Server = new Http<ServerContext>.HttpServer(ServerContext);
+                Func<ISessionContext, KeyValuePair<IServerImplementation, Http<ServerContext>.IHttpVirtualTransportServer>> VirtualTransportServerFactory = Context =>
+                {
+                    var p = ServerContext.CreateServerImplementationWithJsonAdapter(Context);
+                    var si = p.Key;
+                    var a = p.Value;
+                    var jhps = new Http<ServerContext>.JsonHttpPacketServer(a, CommandName => true);
+                    return new KeyValuePair<IServerImplementation, Http<ServerContext>.IHttpVirtualTransportServer>(si, jhps);
+                };
+
+                var Server = new Http<ServerContext>.HttpServer(ServerContext, VirtualTransportServerFactory);
                 var Success = false;
 
                 try
                 {
-                    Server.CheckCommandAllowed = (sc, CommandName) =>
-                    {
-                        return true;
-                    };
-
                     Server.Bindings = s.Bindings.Select(b => b.Prefix).ToArray();
                     Server.SessionIdleTimeout = s.SessionIdleTimeout;
                     Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
