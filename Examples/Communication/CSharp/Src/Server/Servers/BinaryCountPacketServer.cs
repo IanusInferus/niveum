@@ -7,9 +7,9 @@ using Firefly.TextEncoding;
 
 namespace Server
 {
-    public partial class Tcp<TServerContext>
+    public partial class Streamed<TServerContext>
     {
-        public class BinaryCountPacketServer : ITcpVirtualTransportServer
+        public class BinaryCountPacketServer : IStreamedVirtualTransportServer
         {
             private class Context
             {
@@ -91,9 +91,9 @@ namespace Server
                 }
             }
 
-            public TcpVirtualTransportServerHandleResult Handle(int Count)
+            public StreamedVirtualTransportServerHandleResult Handle(int Count)
             {
-                var ret = TcpVirtualTransportServerHandleResult.CreateContinue();
+                var ret = StreamedVirtualTransportServerHandleResult.CreateContinue();
 
                 var Buffer = c.ReadBuffer.Array;
                 var FirstPosition = c.ReadBuffer.Offset;
@@ -124,7 +124,7 @@ namespace Server
                         }
                         if (ss.HasCommand(CommandName, CommandHash) && (CheckCommandAllowed != null ? CheckCommandAllowed(CommandName) : true))
                         {
-                            ret = TcpVirtualTransportServerHandleResult.CreateCommand(new TcpVirtualTransportServerHandleResultCommand
+                            ret = StreamedVirtualTransportServerHandleResult.CreateCommand(new StreamedVirtualTransportServerHandleResultCommand
                             {
                                 CommandName = CommandName,
                                 ExecuteCommand = (OnSuccess, OnFailure) =>
@@ -163,7 +163,7 @@ namespace Server
                         }
                         else
                         {
-                            ret = TcpVirtualTransportServerHandleResult.CreateBadCommand(new TcpVirtualTransportServerHandleResultBadCommand { CommandName = CommandName });
+                            ret = StreamedVirtualTransportServerHandleResult.CreateBadCommand(new StreamedVirtualTransportServerHandleResultBadCommand { CommandName = CommandName });
                         }
                         break;
                     }

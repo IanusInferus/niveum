@@ -12,7 +12,7 @@ using BaseSystem;
 
 namespace Server
 {
-    public partial class Tcp<TServerContext>
+    public partial class Streamed<TServerContext>
     {
         /// <summary>
         /// 本类的所有公共成员均是线程安全的。
@@ -62,7 +62,7 @@ namespace Server
 
             private ISessionContext Context;
             private IServerImplementation si;
-            private ITcpVirtualTransportServer vts;
+            private IStreamedVirtualTransportServer vts;
             private int NumBadCommands = 0;
             private Boolean IsDisposed = false;
 
@@ -195,7 +195,7 @@ namespace Server
             {
                 public PartContext Parts;
                 public SortedSet<int> NotAcknowledgedIndices = new SortedSet<int>();
-                public Action<TcpVirtualTransportServerHandleResult[]> OnSuccess;
+                public Action<StreamedVirtualTransportServerHandleResult[]> OnSuccess;
                 public Action OnFailure;
             }
             private class UdpWriteContext
@@ -206,7 +206,7 @@ namespace Server
             private LockedVariable<UdpReadContext> RawReadingContext = new LockedVariable<UdpReadContext>(new UdpReadContext { Parts = new PartContext(ReadingWindowSize), OnSuccess = null, OnFailure = null });
             private LockedVariable<UdpWriteContext> CookedWritingContext = new LockedVariable<UdpWriteContext>(new UdpWriteContext { Parts = new PartContext(WritingWindowSize), WritenIndex = IndexSpace - 1 });
 
-            private SessionStateMachine<TcpVirtualTransportServerHandleResult, Unit> ssm;
+            private SessionStateMachine<StreamedVirtualTransportServerHandleResult, Unit> ssm;
 
             public UdpSession(UdpServer Server, Socket ServerSocket, IPEndPoint RemoteEndPoint)
             {
@@ -214,7 +214,7 @@ namespace Server
                 this.ServerSocket = ServerSocket;
                 this.RemoteEndPoint = RemoteEndPoint;
                 this.LastActiveTimeValue = new LockedVariable<DateTime>(DateTime.UtcNow);
-                ssm = new SessionStateMachine<TcpVirtualTransportServerHandleResult, Unit>(ex => ex is SocketException, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit);
+                ssm = new SessionStateMachine<StreamedVirtualTransportServerHandleResult, Unit>(ex => ex is SocketException, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit);
 
                 Context = Server.ServerContext.CreateSessionContext();
                 Context.Quit += ssm.NotifyExit;
@@ -440,7 +440,7 @@ namespace Server
                     OnSuccess();
                 }
             }
-            private void OnExecute(TcpVirtualTransportServerHandleResult r, Action OnSuccess, Action OnFailure)
+            private void OnExecute(StreamedVirtualTransportServerHandleResult r, Action OnSuccess, Action OnFailure)
             {
                 if (r.OnCommand)
                 {
@@ -527,7 +527,7 @@ namespace Server
                     throw new InvalidOperationException();
                 }
             }
-            private void OnStartRawRead(Action<TcpVirtualTransportServerHandleResult[]> OnSuccess, Action OnFailure)
+            private void OnStartRawRead(Action<StreamedVirtualTransportServerHandleResult[]> OnSuccess, Action OnFailure)
             {
                 var Pushed = true;
                 var Parts = new List<Part>();
@@ -564,10 +564,10 @@ namespace Server
                 }
             }
 
-            private void HandleRawRead(IEnumerable<Part> Parts, Action<TcpVirtualTransportServerHandleResult[]> OnSuccess, Action OnFailure)
+            private void HandleRawRead(IEnumerable<Part> Parts, Action<StreamedVirtualTransportServerHandleResult[]> OnSuccess, Action OnFailure)
             {
                 if (ssm.IsExited()) { return; }
-                var Results = new List<TcpVirtualTransportServerHandleResult>();
+                var Results = new List<StreamedVirtualTransportServerHandleResult>();
                 foreach (var p in Parts)
                 {
                     var Buffer = vts.GetReadBuffer();
@@ -582,7 +582,7 @@ namespace Server
                     var c = p.Data.Length;
                     while (true)
                     {
-                        TcpVirtualTransportServerHandleResult Result;
+                        StreamedVirtualTransportServerHandleResult Result;
                         try
                         {
                             Result = vts.Handle(c);
@@ -752,7 +752,7 @@ namespace Server
 
                 var Pushed = false;
                 var Parts = new List<Part>();
-                Action<TcpVirtualTransportServerHandleResult[]> OnSuccess = null;
+                Action<StreamedVirtualTransportServerHandleResult[]> OnSuccess = null;
                 Action OnFailure = null;
                 RawReadingContext.DoAction(c =>
                 {

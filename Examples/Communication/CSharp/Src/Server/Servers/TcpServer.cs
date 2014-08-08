@@ -11,70 +11,9 @@ using Net;
 
 namespace Server
 {
-    public partial class Tcp<TServerContext>
+    public partial class Streamed<TServerContext>
         where TServerContext : IServerContext
     {
-        public class TcpVirtualTransportServerHandleResultCommand
-        {
-            public String CommandName;
-            public Action<Action, Action<Exception>> ExecuteCommand;
-        }
-
-        public class TcpVirtualTransportServerHandleResultBadCommand
-        {
-            public String CommandName;
-        }
-
-        public class TcpVirtualTransportServerHandleResultBadCommandLine
-        {
-            public String CommandLine;
-        }
-
-        public enum TcpVirtualTransportServerHandleResultTag
-        {
-            Continue = 0,
-            Command = 1,
-            BadCommand = 2,
-            BadCommandLine = 3
-        }
-        [TaggedUnion]
-        public class TcpVirtualTransportServerHandleResult
-        {
-            [Tag]
-            public TcpVirtualTransportServerHandleResultTag _Tag;
-            public Unit Continue;
-            public TcpVirtualTransportServerHandleResultCommand Command;
-            public TcpVirtualTransportServerHandleResultBadCommand BadCommand;
-            public TcpVirtualTransportServerHandleResultBadCommandLine BadCommandLine;
-
-            public static TcpVirtualTransportServerHandleResult CreateContinue() { return new TcpVirtualTransportServerHandleResult { _Tag = TcpVirtualTransportServerHandleResultTag.Continue, Continue = new Unit() }; }
-            public static TcpVirtualTransportServerHandleResult CreateCommand(TcpVirtualTransportServerHandleResultCommand Value) { return new TcpVirtualTransportServerHandleResult { _Tag = TcpVirtualTransportServerHandleResultTag.Command, Command = Value }; }
-            public static TcpVirtualTransportServerHandleResult CreateBadCommand(TcpVirtualTransportServerHandleResultBadCommand Value) { return new TcpVirtualTransportServerHandleResult { _Tag = TcpVirtualTransportServerHandleResultTag.BadCommand, BadCommand = Value }; }
-            public static TcpVirtualTransportServerHandleResult CreateBadCommandLine(TcpVirtualTransportServerHandleResultBadCommandLine Value) { return new TcpVirtualTransportServerHandleResult { _Tag = TcpVirtualTransportServerHandleResultTag.BadCommandLine, BadCommandLine = Value }; }
-
-            public Boolean OnContinue { get { return _Tag == TcpVirtualTransportServerHandleResultTag.Continue; } }
-            public Boolean OnCommand { get { return _Tag == TcpVirtualTransportServerHandleResultTag.Command; } }
-            public Boolean OnBadCommand { get { return _Tag == TcpVirtualTransportServerHandleResultTag.BadCommand; } }
-            public Boolean OnBadCommandLine { get { return _Tag == TcpVirtualTransportServerHandleResultTag.BadCommandLine; } }
-        }
-
-        public interface ITcpVirtualTransportServer
-        {
-            ArraySegment<Byte> GetReadBuffer();
-            Byte[][] TakeWriteBuffer();
-            TcpVirtualTransportServerHandleResult Handle(int Count);
-            UInt64 Hash { get; }
-            event Action ServerEvent;
-            event Action<String, int> InputByteLengthReport;
-            event Action<String, int> OutputByteLengthReport;
-        }
-
-        public enum SerializationProtocolType
-        {
-            Binary,
-            Json
-        }
-
         /// <summary>
         /// 本类的所有非继承的公共成员均是线程安全的。
         /// </summary>

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2014.08.07.
+//  Version:     2014.08.08.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -294,18 +294,18 @@ namespace Server
                     throw new InvalidOperationException("未知协议类型: " + s.SerializationProtocolType.ToString());
                 }
 
-                var Server = new Tcp<ServerContext>.TcpServer(ServerContext);
+                var Server = new Streamed<ServerContext>.TcpServer(ServerContext);
                 var Success = false;
 
                 try
                 {
                     if (s.SerializationProtocolType == SerializationProtocolType.Binary)
                     {
-                        Server.SerializationProtocolType = Tcp<ServerContext>.SerializationProtocolType.Binary;
+                        Server.SerializationProtocolType = SerializationProtocolType.Binary;
                     }
                     else if (s.SerializationProtocolType == SerializationProtocolType.Json)
                     {
-                        Server.SerializationProtocolType = Tcp<ServerContext>.SerializationProtocolType.Json;
+                        Server.SerializationProtocolType = SerializationProtocolType.Json;
                     }
                     else
                     {
@@ -350,18 +350,18 @@ namespace Server
                     throw new InvalidOperationException("未知协议类型: " + s.SerializationProtocolType.ToString());
                 }
 
-                var Server = new Tcp<ServerContext>.UdpServer(ServerContext);
+                var Server = new Streamed<ServerContext>.UdpServer(ServerContext);
                 var Success = false;
 
                 try
                 {
                     if (s.SerializationProtocolType == SerializationProtocolType.Binary)
                     {
-                        Server.SerializationProtocolType = Tcp<ServerContext>.SerializationProtocolType.Binary;
+                        Server.SerializationProtocolType = SerializationProtocolType.Binary;
                     }
                     else if (s.SerializationProtocolType == SerializationProtocolType.Json)
                     {
-                        Server.SerializationProtocolType = Tcp<ServerContext>.SerializationProtocolType.Json;
+                        Server.SerializationProtocolType = SerializationProtocolType.Json;
                     }
                     else
                     {
