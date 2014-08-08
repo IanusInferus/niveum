@@ -29,7 +29,7 @@ namespace Client
                     jo["commandHash"] = CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     jo["parameters"] = Parameters;
                     c.WriteBuffer.Add(jo);
-                    if (this.ClientMethod != null) { ClientMethod(); }
+                    if (ClientMethod != null) { ClientMethod(); }
                 };
             }
 
