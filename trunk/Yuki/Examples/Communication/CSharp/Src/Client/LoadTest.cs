@@ -116,7 +116,7 @@ namespace Client
             Console.Out.Flush();
 
             var tl = new List<Task>();
-            var bcl = new List<Tcp.TcpClient>();
+            var bcl = new List<Streamed.TcpClient>();
             var ccl = new List<ClientContext>();
             var tmrl = new List<Timer>();
             var vConnected = new LockedVariable<int>(0);
@@ -132,24 +132,24 @@ namespace Client
                 var n = k;
                 var Lockee = new Object();
                 IApplicationClient ac;
-                Tcp.ITcpVirtualTransportClient vtc;
+                Streamed.IStreamedVirtualTransportClient vtc;
                 if (ProtocolType == SerializationProtocolType.Binary)
                 {
                     var a = new BinarySerializationClientAdapter();
                     ac = a.GetApplicationClient();
-                    vtc = new Tcp.BinaryCountPacketClient(a);
+                    vtc = new Streamed.BinaryCountPacketClient(a);
                 }
                 else if (ProtocolType == SerializationProtocolType.Json)
                 {
                     var a = new JsonSerializationClientAdapter();
                     ac = a.GetApplicationClient();
-                    vtc = new Tcp.JsonLinePacketClient(a);
+                    vtc = new Streamed.JsonLinePacketClient(a);
                 }
                 else
                 {
                     throw new InvalidOperationException();
                 }
-                var bc = new Tcp.TcpClient(RemoteEndPoint, vtc);
+                var bc = new Streamed.TcpClient(RemoteEndPoint, vtc);
                 var cc = new ClientContext();
                 var bCompleted = new LockedVariable<Boolean>(false);
                 Action Completed = () =>
@@ -304,7 +304,7 @@ namespace Client
             Console.Out.Flush();
 
             var tl = new List<Task>();
-            var bcl = new List<Tcp.UdpClient>();
+            var bcl = new List<Streamed.UdpClient>();
             var ccl = new List<ClientContext>();
             var tmrl = new List<Timer>();
             var vConnected = new LockedVariable<int>(0);
@@ -320,24 +320,24 @@ namespace Client
                 var n = k;
                 var Lockee = new Object();
                 IApplicationClient ac;
-                Tcp.ITcpVirtualTransportClient vtc;
+                Streamed.IStreamedVirtualTransportClient vtc;
                 if (ProtocolType == SerializationProtocolType.Binary)
                 {
                     var a = new BinarySerializationClientAdapter();
                     ac = a.GetApplicationClient();
-                    vtc = new Tcp.BinaryCountPacketClient(a);
+                    vtc = new Streamed.BinaryCountPacketClient(a);
                 }
                 else if (ProtocolType == SerializationProtocolType.Json)
                 {
                     var a = new JsonSerializationClientAdapter();
                     ac = a.GetApplicationClient();
-                    vtc = new Tcp.JsonLinePacketClient(a);
+                    vtc = new Streamed.JsonLinePacketClient(a);
                 }
                 else
                 {
                     throw new InvalidOperationException();
                 }
-                var bc = new Tcp.UdpClient(RemoteEndPoint, vtc);
+                var bc = new Streamed.UdpClient(RemoteEndPoint, vtc);
                 var cc = new ClientContext();
                 var bCompleted = new LockedVariable<Boolean>(false);
                 Action Completed;

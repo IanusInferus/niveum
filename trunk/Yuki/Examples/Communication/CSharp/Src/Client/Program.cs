@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2014.08.07.
+//  Version:     2014.08.08.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -275,25 +275,25 @@ namespace Client
                 Console.WriteLine("协议不能识别：" + ProtocolType.ToString());
             }
             IApplicationClient ac;
-            Tcp.ITcpVirtualTransportClient vtc;
+            Streamed.IStreamedVirtualTransportClient vtc;
             var bt = new Rc4PacketClientTransformer();
             if (ProtocolType == SerializationProtocolType.Binary)
             {
                 var a = new BinarySerializationClientAdapter();
                 ac = a.GetApplicationClient();
-                vtc = new Tcp.BinaryCountPacketClient(a, bt);
+                vtc = new Streamed.BinaryCountPacketClient(a, bt);
             }
             else if (ProtocolType == SerializationProtocolType.Json)
             {
                 var a = new JsonSerializationClientAdapter();
                 ac = a.GetApplicationClient();
-                vtc = new Tcp.JsonLinePacketClient(a, bt);
+                vtc = new Streamed.JsonLinePacketClient(a, bt);
             }
             else
             {
                 throw new InvalidOperationException();
             }
-            using (var bc = new Tcp.TcpClient(RemoteEndPoint, vtc))
+            using (var bc = new Streamed.TcpClient(RemoteEndPoint, vtc))
             {
                 bc.Connect();
                 Console.WriteLine("连接成功。输入login登录，输入secure启用安全连接。");
@@ -322,25 +322,25 @@ namespace Client
                 Console.WriteLine("协议不能识别：" + ProtocolType.ToString());
             }
             IApplicationClient ac;
-            Tcp.ITcpVirtualTransportClient vtc;
+            Streamed.IStreamedVirtualTransportClient vtc;
             var bt = new Rc4PacketClientTransformer();
             if (ProtocolType == SerializationProtocolType.Binary)
             {
                 var a = new BinarySerializationClientAdapter();
                 ac = a.GetApplicationClient();
-                vtc = new Tcp.BinaryCountPacketClient(a, bt);
+                vtc = new Streamed.BinaryCountPacketClient(a, bt);
             }
             else if (ProtocolType == SerializationProtocolType.Json)
             {
                 var a = new JsonSerializationClientAdapter();
                 ac = a.GetApplicationClient();
-                vtc = new Tcp.JsonLinePacketClient(a, bt);
+                vtc = new Streamed.JsonLinePacketClient(a, bt);
             }
             else
             {
                 throw new InvalidOperationException();
             }
-            using (var bc = new Tcp.UdpClient(RemoteEndPoint, vtc))
+            using (var bc = new Streamed.UdpClient(RemoteEndPoint, vtc))
             {
                 bc.Connect();
                 Console.WriteLine("输入login登录，输入secure启用安全连接。");

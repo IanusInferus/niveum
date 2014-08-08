@@ -12,7 +12,7 @@ using BaseSystem;
 
 namespace Server
 {
-    public partial class Tcp<TServerContext>
+    public partial class Streamed<TServerContext>
         where TServerContext : IServerContext
     {
         /// <summary>
