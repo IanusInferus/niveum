@@ -4,24 +4,48 @@
     <ClInclude Include="Utility.h" />
     <ClInclude Include="Communication.h" />
     <ClInclude Include="CommunicationBinary.h" />
-    <ClInclude Include="Clients\BinarySocketClient.h">
-      <Filter>Clients</Filter>
-    </ClInclude>
     <ClInclude Include="UtfEncoding.h" />
     <ClInclude Include="Clients\ISerializationClient.h">
       <Filter>Clients</Filter>
     </ClInclude>
-    <ClInclude Include="Clients\SerializationClientAdapter.h">
+    <ClInclude Include="Context\SerializationClientAdapter.h">
+      <Filter>Context</Filter>
+    </ClInclude>
+    <ClInclude Include="Clients\BinaryCountPacketClient.h">
+      <Filter>Clients</Filter>
+    </ClInclude>
+    <ClInclude Include="Clients\TcpClient.h">
+      <Filter>Clients</Filter>
+    </ClInclude>
+    <ClInclude Include="Clients\IContext.h">
+      <Filter>Clients</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\Cryptography.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Clients\Rc4PacketClientTransformer.h">
+      <Filter>Clients</Filter>
+    </ClInclude>
+    <ClInclude Include="Clients\StreamedClient.h">
       <Filter>Clients</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="BaseSystem\Cryptography.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Clients">
       <UniqueIdentifier>{4dc36970-e2ac-4780-b5ac-b59255a00d7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Context">
+      <UniqueIdentifier>{15ff6155-cd37-4dde-b4fe-5491fabf8317}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BaseSystem">
+      <UniqueIdentifier>{0df3184a-89a6-4c00-9409-d95e57aa69f7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
