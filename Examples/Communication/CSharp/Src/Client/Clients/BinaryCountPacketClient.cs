@@ -53,7 +53,7 @@ namespace Client
                         Transformer.Transform(Bytes, 0, Bytes.Length);
                     }
                     c.WriteBuffer.Add(Bytes);
-                    if (this.ClientMethod != null) { ClientMethod(); }
+                    if (ClientMethod != null) { ClientMethod(); }
                 };
             }
 
