@@ -294,29 +294,47 @@ namespace Server
                     throw new InvalidOperationException("未知协议类型: " + s.SerializationProtocolType.ToString());
                 }
 
-                var Server = new Streamed<ServerContext>.TcpServer(ServerContext);
+                Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
+                if (s.SerializationProtocolType == SerializationProtocolType.Binary)
+                {
+                    VirtualTransportServerFactory = (Context, t) =>
+                    {
+                        var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Context);
+                        var si = p.Key;
+                        var a = p.Value;
+                        Streamed<ServerContext>.BinaryCountPacketServer.CheckCommandAllowedDelegate cca = CommandName =>
+                        {
+                            return true;
+                        };
+                        var bcps = new Streamed<ServerContext>.BinaryCountPacketServer(a, cca, t);
+                        return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
+                    };
+                }
+                else if (s.SerializationProtocolType == SerializationProtocolType.Json)
+                {
+                    VirtualTransportServerFactory = (Context, t) =>
+                    {
+                        var p = ServerContext.CreateServerImplementationWithJsonAdapter(Context);
+                        var si = p.Key;
+                        var a = p.Value;
+                        Streamed<ServerContext>.JsonLinePacketServer.CheckCommandAllowedDelegate cca = CommandName =>
+                        {
+                            return true;
+                        };
+                        var bcps = new Streamed<ServerContext>.JsonLinePacketServer(a, cca, t);
+                        return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
+                    };
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+
+                var Server = new Streamed<ServerContext>.TcpServer(ServerContext, VirtualTransportServerFactory);
                 var Success = false;
 
                 try
                 {
-                    if (s.SerializationProtocolType == SerializationProtocolType.Binary)
-                    {
-                        Server.SerializationProtocolType = SerializationProtocolType.Binary;
-                    }
-                    else if (s.SerializationProtocolType == SerializationProtocolType.Json)
-                    {
-                        Server.SerializationProtocolType = SerializationProtocolType.Json;
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException();
-                    }
-
-                    Server.CheckCommandAllowed = (sc, CommandName) =>
-                    {
-                        return true;
-                    };
-
                     Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
                     Server.SessionIdleTimeout = s.SessionIdleTimeout;
                     Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
@@ -350,29 +368,47 @@ namespace Server
                     throw new InvalidOperationException("未知协议类型: " + s.SerializationProtocolType.ToString());
                 }
 
-                var Server = new Streamed<ServerContext>.UdpServer(ServerContext);
+                Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
+                if (s.SerializationProtocolType == SerializationProtocolType.Binary)
+                {
+                    VirtualTransportServerFactory = (Context, t) =>
+                    {
+                        var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Context);
+                        var si = p.Key;
+                        var a = p.Value;
+                        Streamed<ServerContext>.BinaryCountPacketServer.CheckCommandAllowedDelegate cca = CommandName =>
+                        {
+                            return true;
+                        };
+                        var bcps = new Streamed<ServerContext>.BinaryCountPacketServer(a, cca, t);
+                        return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
+                    };
+                }
+                else if (s.SerializationProtocolType == SerializationProtocolType.Json)
+                {
+                    VirtualTransportServerFactory = (Context, t) =>
+                    {
+                        var p = ServerContext.CreateServerImplementationWithJsonAdapter(Context);
+                        var si = p.Key;
+                        var a = p.Value;
+                        Streamed<ServerContext>.JsonLinePacketServer.CheckCommandAllowedDelegate cca = CommandName =>
+                        {
+                            return true;
+                        };
+                        var bcps = new Streamed<ServerContext>.JsonLinePacketServer(a, cca, t);
+                        return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
+                    };
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+
+                var Server = new Streamed<ServerContext>.UdpServer(ServerContext, VirtualTransportServerFactory);
                 var Success = false;
 
                 try
                 {
-                    if (s.SerializationProtocolType == SerializationProtocolType.Binary)
-                    {
-                        Server.SerializationProtocolType = SerializationProtocolType.Binary;
-                    }
-                    else if (s.SerializationProtocolType == SerializationProtocolType.Json)
-                    {
-                        Server.SerializationProtocolType = SerializationProtocolType.Json;
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException();
-                    }
-
-                    Server.CheckCommandAllowed = (sc, CommandName) =>
-                    {
-                        return true;
-                    };
-
                     Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
                     Server.SessionIdleTimeout = s.SessionIdleTimeout;
                     Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
