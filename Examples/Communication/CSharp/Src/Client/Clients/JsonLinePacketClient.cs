@@ -5,9 +5,9 @@ using System.Text.RegularExpressions;
 
 namespace Client
 {
-    public partial class Tcp
+    public partial class Streamed
     {
-        public class JsonLinePacketClient : ITcpVirtualTransportClient
+        public class JsonLinePacketClient : IStreamedVirtualTransportClient
         {
             private class Context
             {
@@ -48,9 +48,9 @@ namespace Client
                 return WriteBuffer;
             }
 
-            public TcpVirtualTransportClientHandleResult Handle(int Count)
+            public StreamedVirtualTransportClientHandleResult Handle(int Count)
             {
-                var ret = TcpVirtualTransportClientHandleResult.CreateContinue();
+                var ret = StreamedVirtualTransportClientHandleResult.CreateContinue();
 
                 var Buffer = c.ReadBuffer.Array;
                 var FirstPosition = c.ReadBuffer.Offset;
@@ -82,7 +82,7 @@ namespace Client
                         var CommandName = cmd.HasValue.CommandName;
                         var CommandHash = cmd.HasValue.CommandHash;
                         var Parameters = cmd.HasValue.Parameters;
-                        ret = TcpVirtualTransportClientHandleResult.CreateCommand(new TcpVirtualTransportClientHandleResultCommand
+                        ret = StreamedVirtualTransportClientHandleResult.CreateCommand(new StreamedVirtualTransportClientHandleResultCommand
                         {
                             CommandName = CommandName,
                             HandleResult = () => jc.HandleResult(CommandName, CommandHash, Parameters)

@@ -12,7 +12,7 @@ using Net;
 
 namespace Server
 {
-    public partial class Tcp<TServerContext>
+    public partial class Streamed<TServerContext>
     {
         /// <summary>
         /// 本类的所有公共成员均是线程安全的。
@@ -25,19 +25,19 @@ namespace Server
 
             private ISessionContext Context;
             private IServerImplementation si;
-            private ITcpVirtualTransportServer vts;
+            private IStreamedVirtualTransportServer vts;
             private int NumBadCommands = 0;
             private Boolean IsDisposed = false;
 
             private Byte[] WriteBuffer;
-            private SessionStateMachine<TcpVirtualTransportServerHandleResult, Unit> ssm;
+            private SessionStateMachine<StreamedVirtualTransportServerHandleResult, Unit> ssm;
 
             public TcpSession(TcpServer Server, StreamedAsyncSocket Socket, IPEndPoint RemoteEndPoint)
             {
                 this.Server = Server;
                 this.Socket = Socket;
                 this.RemoteEndPoint = RemoteEndPoint;
-                ssm = new SessionStateMachine<TcpVirtualTransportServerHandleResult, Unit>(ex => ex is SocketException, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit);
+                ssm = new SessionStateMachine<StreamedVirtualTransportServerHandleResult, Unit>(ex => ex is SocketException, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit);
                 Socket.TimedOut += ssm.NotifyFailure;
 
                 Context = Server.ServerContext.CreateSessionContext();
@@ -136,7 +136,7 @@ namespace Server
                     }
                 );
             }
-            private void OnExecute(TcpVirtualTransportServerHandleResult r, Action OnSuccess, Action OnFailure)
+            private void OnExecute(StreamedVirtualTransportServerHandleResult r, Action OnSuccess, Action OnFailure)
             {
                 if (r.OnCommand)
                 {
@@ -223,7 +223,7 @@ namespace Server
                     throw new InvalidOperationException();
                 }
             }
-            private void OnStartRawRead(Action<TcpVirtualTransportServerHandleResult[]> OnSuccess, Action OnFailure)
+            private void OnStartRawRead(Action<StreamedVirtualTransportServerHandleResult[]> OnSuccess, Action OnFailure)
             {
                 Action<int> Completed = Count =>
                 {
@@ -233,11 +233,11 @@ namespace Server
                         return;
                     }
                     if (ssm.IsExited()) { return; }
-                    var Results = new List<TcpVirtualTransportServerHandleResult>();
+                    var Results = new List<StreamedVirtualTransportServerHandleResult>();
                     var c = Count;
                     while (true)
                     {
-                        TcpVirtualTransportServerHandleResult Result;
+                        StreamedVirtualTransportServerHandleResult Result;
                         try
                         {
                             Result = vts.Handle(c);

@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace Client
 {
-    public partial class Tcp
+    public partial class Streamed
     {
-        public class BinaryCountPacketClient : ITcpVirtualTransportClient
+        public class BinaryCountPacketClient : IStreamedVirtualTransportClient
         {
             private class Context
             {
@@ -69,9 +69,9 @@ namespace Client
                 return WriteBuffer;
             }
 
-            public TcpVirtualTransportClientHandleResult Handle(int Count)
+            public StreamedVirtualTransportClientHandleResult Handle(int Count)
             {
-                var ret = TcpVirtualTransportClientHandleResult.CreateContinue();
+                var ret = StreamedVirtualTransportClientHandleResult.CreateContinue();
 
                 var Buffer = c.ReadBuffer.Array;
                 var FirstPosition = c.ReadBuffer.Offset;
@@ -96,7 +96,7 @@ namespace Client
                         var CommandName = r.Command.CommandName;
                         var CommandHash = r.Command.CommandHash;
                         var Parameters = r.Command.Parameters;
-                        ret = TcpVirtualTransportClientHandleResult.CreateCommand(new TcpVirtualTransportClientHandleResultCommand
+                        ret = StreamedVirtualTransportClientHandleResult.CreateCommand(new StreamedVirtualTransportClientHandleResultCommand
                         {
                             CommandName = CommandName,
                             HandleResult = () => bc.HandleResult(CommandName, CommandHash, Parameters)

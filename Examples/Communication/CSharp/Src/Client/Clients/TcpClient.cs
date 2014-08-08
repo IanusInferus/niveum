@@ -9,52 +9,11 @@ using Net;
 
 namespace Client
 {
-    public partial class Tcp
+    public partial class Streamed
     {
-        public enum SerializationProtocolType
-        {
-            Binary,
-            Json
-        }
-
-        public class TcpVirtualTransportClientHandleResultCommand
-        {
-            public String CommandName;
-            public Action HandleResult;
-        }
-
-        public enum TcpVirtualTransportClientHandleResultTag
-        {
-            Continue = 0,
-            Command = 1
-        }
-        [TaggedUnion]
-        public class TcpVirtualTransportClientHandleResult
-        {
-            [Tag]
-            public TcpVirtualTransportClientHandleResultTag _Tag;
-            public Unit Continue;
-            public TcpVirtualTransportClientHandleResultCommand Command;
-
-            public static TcpVirtualTransportClientHandleResult CreateContinue() { return new TcpVirtualTransportClientHandleResult { _Tag = TcpVirtualTransportClientHandleResultTag.Continue, Continue = new Unit() }; }
-            public static TcpVirtualTransportClientHandleResult CreateCommand(TcpVirtualTransportClientHandleResultCommand Value) { return new TcpVirtualTransportClientHandleResult { _Tag = TcpVirtualTransportClientHandleResultTag.Command, Command = Value }; }
-
-            public Boolean OnContinue { get { return _Tag == TcpVirtualTransportClientHandleResultTag.Continue; } }
-            public Boolean OnCommand { get { return _Tag == TcpVirtualTransportClientHandleResultTag.Command; } }
-        }
-
-        public interface ITcpVirtualTransportClient
-        {
-            ArraySegment<Byte> GetReadBuffer();
-            Byte[][] TakeWriteBuffer();
-            TcpVirtualTransportClientHandleResult Handle(int Count);
-            UInt64 Hash { get; }
-            event Action ClientMethod;
-        }
-
         public sealed class TcpClient : IDisposable
         {
-            public ITcpVirtualTransportClient VirtualTransportClient { get; private set; }
+            public IStreamedVirtualTransportClient VirtualTransportClient { get; private set; }
 
             private IPEndPoint RemoteEndPoint;
             private StreamedAsyncSocket Socket;
@@ -69,7 +28,7 @@ namespace Client
             private Boolean Connected = false;
             private Byte[] WriteBuffer;
 
-            public TcpClient(IPEndPoint RemoteEndPoint, ITcpVirtualTransportClient VirtualTransportClient)
+            public TcpClient(IPEndPoint RemoteEndPoint, IStreamedVirtualTransportClient VirtualTransportClient)
             {
                 this.RemoteEndPoint = RemoteEndPoint;
                 Socket = new StreamedAsyncSocket(new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp), null);
@@ -111,11 +70,11 @@ namespace Client
                 };
             }
             public TcpClient(IPEndPoint RemoteEndPoint, IBinarySerializationClientAdapter BinarySerializationClientAdapter)
-                : this(RemoteEndPoint, new Client.Tcp.BinaryCountPacketClient(BinarySerializationClientAdapter))
+                : this(RemoteEndPoint, new Client.Streamed.BinaryCountPacketClient(BinarySerializationClientAdapter))
             {
             }
             public TcpClient(IPEndPoint RemoteEndPoint, IJsonSerializationClientAdapter JsonSerializationClientAdapter)
-                : this(RemoteEndPoint, new Client.Tcp.JsonLinePacketClient(JsonSerializationClientAdapter))
+                : this(RemoteEndPoint, new Client.Streamed.JsonLinePacketClient(JsonSerializationClientAdapter))
             {
             }
 

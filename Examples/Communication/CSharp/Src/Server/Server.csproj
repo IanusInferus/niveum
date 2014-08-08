@@ -69,6 +69,7 @@
     <Compile Include="Servers\JsonLinePacketServer.cs" />
     <Compile Include="Servers\Rc4PacketServerTransformer.cs" />
     <Compile Include="Servers\SessionStateMachine.cs" />
+    <Compile Include="Servers\StreamedServer.cs" />
     <Compile Include="Servers\TcpServer.cs" />
     <Compile Include="Servers\TcpSession.cs" />
     <Compile Include="Servers\BinaryCountPacketServer.cs" />

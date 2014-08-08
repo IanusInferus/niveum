@@ -9,11 +9,11 @@ using BaseSystem;
 
 namespace Client
 {
-    public partial class Tcp
+    public partial class Streamed
     {
         public sealed class UdpClient : IDisposable
         {
-            public ITcpVirtualTransportClient VirtualTransportClient { get; private set; }
+            public IStreamedVirtualTransportClient VirtualTransportClient { get; private set; }
 
             private IPEndPoint RemoteEndPoint;
             private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
@@ -202,7 +202,7 @@ namespace Client
             private LockedVariable<UdpReadContext> RawReadingContext = new LockedVariable<UdpReadContext>(new UdpReadContext { Parts = new PartContext(ReadingWindowSize) });
             private LockedVariable<UdpWriteContext> CookedWritingContext = new LockedVariable<UdpWriteContext>(new UdpWriteContext { Parts = new PartContext(WritingWindowSize), WritenIndex = IndexSpace - 1, Timer = null });
 
-            public UdpClient(IPEndPoint RemoteEndPoint, ITcpVirtualTransportClient VirtualTransportClient)
+            public UdpClient(IPEndPoint RemoteEndPoint, IStreamedVirtualTransportClient VirtualTransportClient)
             {
                 this.RemoteEndPoint = RemoteEndPoint;
                 this.VirtualTransportClient = VirtualTransportClient;
@@ -224,15 +224,15 @@ namespace Client
                 };
             }
             public UdpClient(IPEndPoint RemoteEndPoint, IBinarySerializationClientAdapter BinarySerializationClientAdapter)
-                : this(RemoteEndPoint, new Client.Tcp.BinaryCountPacketClient(BinarySerializationClientAdapter))
+                : this(RemoteEndPoint, new Client.Streamed.BinaryCountPacketClient(BinarySerializationClientAdapter))
             {
             }
             public UdpClient(IPEndPoint RemoteEndPoint, IJsonSerializationClientAdapter JsonSerializationClientAdapter)
-                : this(RemoteEndPoint, new Client.Tcp.JsonLinePacketClient(JsonSerializationClientAdapter))
+                : this(RemoteEndPoint, new Client.Streamed.JsonLinePacketClient(JsonSerializationClientAdapter))
             {
             }
 
-            private void OnWrite(ITcpVirtualTransportClient vtc, Action OnSuccess, Action OnFailure)
+            private void OnWrite(IStreamedVirtualTransportClient vtc, Action OnSuccess, Action OnFailure)
             {
                 var ByteArrays = vtc.TakeWriteBuffer();
                 var TotalLength = ByteArrays.Sum(b => b.Length);
