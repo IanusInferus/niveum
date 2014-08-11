@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2014.08.08.
+//  Version:     2014.08.11.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -148,7 +148,8 @@ namespace Client
             };
 
             auto ac = bsca->GetApplicationClient();
-            auto bsc = std::make_shared<Streamed::TcpClient>(IoService, RemoteEndPoint, bsca);
+            auto vtc = std::make_shared<Streamed::BinaryCountPacketClient>(bsca, nullptr);
+            auto bsc = std::make_shared<Streamed::TcpClient>(IoService, RemoteEndPoint, vtc);
             bsc->Connect();
             std::wprintf(L"%ls\n", L"连接成功。");
 

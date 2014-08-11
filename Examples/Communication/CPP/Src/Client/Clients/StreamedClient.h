@@ -47,7 +47,7 @@ namespace Client
             static std::shared_ptr<class StreamedVirtualTransportClientHandleResult> CreateCommand(std::shared_ptr<StreamedVirtualTransportClientHandleResultCommand> Value)
             {
                 auto r = std::make_shared<StreamedVirtualTransportClientHandleResult>();
-                r->_Tag = StreamedVirtualTransportClientHandleResultTag_Continue;
+                r->_Tag = StreamedVirtualTransportClientHandleResultTag_Command;
                 r->Command = Value;
                 return r;
             }

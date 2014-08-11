@@ -37,17 +37,6 @@ namespace Client
                 }
             }
             private LockedVariable<Boolean> ConnectedValue = new LockedVariable<Boolean>(false);
-            public Boolean Connected
-            {
-                get
-                {
-                    return ConnectedValue.Check(v => v);
-                }
-                private set
-                {
-                    ConnectedValue.Update(v => value);
-                }
-            }
             private LockedVariable<SecureContext> SecureContextValue = new LockedVariable<SecureContext>(null);
             public SecureContext SecureContext
             {
@@ -223,14 +212,6 @@ namespace Client
                     OnWrite(VirtualTransportClient, () => { }, () => { throw new InvalidOperationException(); });
                 };
             }
-            public UdpClient(IPEndPoint RemoteEndPoint, IBinarySerializationClientAdapter BinarySerializationClientAdapter)
-                : this(RemoteEndPoint, new Client.Streamed.BinaryCountPacketClient(BinarySerializationClientAdapter))
-            {
-            }
-            public UdpClient(IPEndPoint RemoteEndPoint, IJsonSerializationClientAdapter JsonSerializationClientAdapter)
-                : this(RemoteEndPoint, new Client.Streamed.JsonLinePacketClient(JsonSerializationClientAdapter))
-            {
-            }
 
             private void OnWrite(IStreamedVirtualTransportClient vtc, Action OnSuccess, Action OnFailure)
             {
@@ -245,7 +226,7 @@ namespace Client
                 }
                 var RemoteEndPoint = this.RemoteEndPoint;
                 var SessionId = this.SessionId;
-                var Connected = this.Connected;
+                var Connected = this.ConnectedValue.Check(v => v);
                 var SecureContext = this.SecureContext;
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
@@ -392,7 +373,7 @@ namespace Client
 
                 var RemoteEndPoint = this.RemoteEndPoint;
                 var SessionId = this.SessionId;
-                var Connected = this.Connected;
+                var Connected = this.ConnectedValue.Check(v => v);
                 var SecureContext = this.SecureContext;
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
@@ -772,7 +753,6 @@ namespace Client
                 IsDisposed = true;
 
                 IsRunningValue.Update(b => false);
-                Connected = false;
                 try
                 {
                     Socket.Dispose();
