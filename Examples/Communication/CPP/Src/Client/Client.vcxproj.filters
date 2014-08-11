@@ -29,6 +29,9 @@
     <ClInclude Include="Clients\StreamedClient.h">
       <Filter>Clients</Filter>
     </ClInclude>
+    <ClInclude Include="BaseSystem\LockedVariable.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />

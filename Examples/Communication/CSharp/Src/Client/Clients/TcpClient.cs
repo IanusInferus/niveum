@@ -25,7 +25,6 @@ namespace Client
                     return IsRunningValue.Check(b => b);
                 }
             }
-            private Boolean Connected = false;
             private Byte[] WriteBuffer;
 
             public TcpClient(IPEndPoint RemoteEndPoint, IStreamedVirtualTransportClient VirtualTransportClient)
@@ -68,14 +67,6 @@ namespace Client
                         }
                     }
                 };
-            }
-            public TcpClient(IPEndPoint RemoteEndPoint, IBinarySerializationClientAdapter BinarySerializationClientAdapter)
-                : this(RemoteEndPoint, new Client.Streamed.BinaryCountPacketClient(BinarySerializationClientAdapter))
-            {
-            }
-            public TcpClient(IPEndPoint RemoteEndPoint, IJsonSerializationClientAdapter JsonSerializationClientAdapter)
-                : this(RemoteEndPoint, new Client.Streamed.JsonLinePacketClient(JsonSerializationClientAdapter))
-            {
             }
 
             private static int GetMinNotLessPowerOfTwo(int v)
@@ -122,7 +113,6 @@ namespace Client
                     {
                         throw new AggregateException(Exception);
                     }
-                    Connected = true;
                 }
             }
 
@@ -205,10 +195,18 @@ namespace Client
                 if (IsDisposed) { return; }
                 IsDisposed = true;
 
-                IsRunningValue.Update(b => false);
+                var Connected = false;
+                IsRunningValue.Update(b =>
+                {
+                    Connected = b;
+                    return false;
+                });
                 try
                 {
-                    Socket.Shutdown(SocketShutdown.Both);
+                    if (Connected)
+                    {
+                        Socket.Shutdown(SocketShutdown.Both);
+                    }
                 }
                 catch
                 {
