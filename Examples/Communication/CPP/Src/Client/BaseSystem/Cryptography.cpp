@@ -1,9 +1,24 @@
 ﻿#include "Cryptography.h"
 
+#include <stdexcept>
+
 namespace Algorithms
 {
     namespace Cryptography
     {
+        std::int32_t CRC32(const std::vector<std::uint8_t> &Bytes)
+        {
+            throw std::logic_error("NotImplemented");
+        }
+        std::vector<std::uint8_t> SHA1(const std::vector<std::uint8_t> &Bytes)
+        {
+            throw std::logic_error("NotImplemented");
+        }
+        std::vector<std::uint8_t> HMACSHA1(const std::vector<std::uint8_t> &Key, const std::vector<std::uint8_t> &Bytes)
+        {
+            throw std::logic_error("NotImplemented");
+        }
+
         RC4::RC4(const std::vector<std::uint8_t> &Key)
         {
             for (int k = 0; k < 256; k += 1)
