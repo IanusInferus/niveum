@@ -92,6 +92,7 @@
     <ClInclude Include="Clients\ISerializationClient.h" />
     <ClInclude Include="Clients\Rc4PacketClientTransformer.h" />
     <ClInclude Include="Clients\StreamedClient.h" />
+    <ClInclude Include="Clients\UdpClient.h" />
     <ClInclude Include="Context\SerializationClientAdapter.h" />
     <ClInclude Include="UtfEncoding.h" />
     <ClInclude Include="Clients\TcpClient.h" />

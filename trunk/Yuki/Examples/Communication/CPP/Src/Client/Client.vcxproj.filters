@@ -32,6 +32,9 @@
     <ClInclude Include="BaseSystem\LockedVariable.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
+    <ClInclude Include="Clients\UdpClient.h">
+      <Filter>Clients</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />

@@ -625,7 +625,7 @@ namespace Client
                         }
 
                         var Pushed = false;
-                        var Parts = new List<Part>();
+                        var Parts = new List<Byte[]>();
                         RawReadingContext.DoAction(c =>
                         {
                             if (c.Parts.HasPart(Index))
@@ -654,7 +654,7 @@ namespace Client
                                 {
                                     var p = c.Parts.TryTakeFirstPart();
                                     if (p == null) { break; }
-                                    Parts.Add(p);
+                                    Parts.Add(p.Data);
                                 }
                             }
                         });
@@ -663,14 +663,14 @@ namespace Client
                         {
                             var ReadBuffer = VirtualTransportClient.GetReadBuffer();
                             var ReadBufferLength = ReadBuffer.Offset + ReadBuffer.Count;
-                            if (p.Data.Length > ReadBuffer.Array.Length - ReadBufferLength)
+                            if (p.Length > ReadBuffer.Array.Length - ReadBufferLength)
                             {
                                 Faulted(new InvalidOperationException());
                                 return;
                             }
-                            Array.Copy(p.Data, 0, ReadBuffer.Array, ReadBufferLength, p.Data.Length);
+                            Array.Copy(p, 0, ReadBuffer.Array, ReadBufferLength, p.Length);
 
-                            var c = p.Data.Length;
+                            var c = p.Length;
                             while (true)
                             {
                                 var r = VirtualTransportClient.Handle(c);

@@ -23,11 +23,11 @@ namespace Client
         {
         }
 
-        void SetSecureContext(const SecureContext &SecureContext)
+        void SetSecureContext(std::shared_ptr<SecureContext> SecureContext)
         {
             UseEncryption = true;
-            ServerStream = std::make_shared<Algorithms::Cryptography::RC4>(SecureContext.ServerToken);
-            ClientStream = std::make_shared<Algorithms::Cryptography::RC4>(SecureContext.ClientToken);
+            ServerStream = std::make_shared<Algorithms::Cryptography::RC4>(SecureContext->ServerToken);
+            ClientStream = std::make_shared<Algorithms::Cryptography::RC4>(SecureContext->ClientToken);
             ServerStream->Skip(1536);
             ClientStream->Skip(1536);
         }
