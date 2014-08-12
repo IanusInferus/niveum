@@ -172,7 +172,7 @@ namespace Client
             class TryShiftResult
             {
             public:
-                std::shared_ptr<Command> Command;
+                std::shared_ptr<class Command> Command;
                 int Position;
             };
 

@@ -33,14 +33,10 @@ namespace Client
             {
                 return IsRunningValue.Check<bool>([](bool v) { return v; });
             }
-        private:
-            bool IsDisposed;
 
-        public:
             TcpClient(boost::asio::io_service &io_service, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient)
                 : Socket(io_service), IsRunningValue(false), IsDisposed(false)
             {
-                this->VirtualTransportClient = VirtualTransportClient;
                 this->RemoteEndPoint = RemoteEndPoint;
                 this->VirtualTransportClient = VirtualTransportClient;
                 VirtualTransportClient->ClientMethod = [=]()
@@ -108,7 +104,7 @@ namespace Client
                 return false;
             }
 
-            void Completed(size_t Count, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+            void Completed(std::size_t Count, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
             {
                 if (Count == 0)
                 {
@@ -165,6 +161,8 @@ namespace Client
                 Socket.async_read_some(boost::asio::buffer(&(*Buffer)[BufferLength], Buffer->size() - BufferLength), ReadHandler);
             }
 
+        private:
+            bool IsDisposed;
         public:
             void Close()
             {

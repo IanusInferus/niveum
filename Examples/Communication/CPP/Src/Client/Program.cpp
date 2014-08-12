@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2014.08.11.
+//  Version:     2014.08.12.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -15,6 +15,7 @@
 #include "CommunicationBinary.h"
 #include "Clients/BinaryCountPacketClient.h"
 #include "Clients/TcpClient.h"
+#include "Clients/UdpClient.h"
 #include "Context/SerializationClientAdapter.h"
 
 #include <exception>
@@ -171,26 +172,40 @@ namespace Client
 
         static void RunUdp(boost::asio::ip::udp::endpoint RemoteEndPoint)
         {
-            //boost::asio::io_service IoService;
-            //auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService);
-            //auto ac = bsca->GetApplicationClient();
-            //auto bsc = std::make_shared<Streamed::UdpClient>(IoService, RemoteEndPoint, bsca);
-            //bsc->Connect();
+            boost::asio::io_service IoService;
+            auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService);
+            bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
+            {
+                //std::wprintf(L"%ls\n", (boost::wformat(L"%1% %2%ms") % CommandName % Milliseconds).str().c_str());
+            };
+            bsca->ClientCommandFailed = [=](std::wstring CommandName, int Milliseconds)
+            {
+                //std::wprintf(L"%ls\n", (boost::wformat(L"%1% Failed %2%ms") % CommandName % Milliseconds).str().c_str());
+            };
+            bsca->ServerCommandReceived = [=](std::wstring CommandName)
+            {
+                //std::wprintf(L"%ls\n", CommandName.c_str());
+            };
 
-            //boost::mutex Lockee;
-            //auto DoHandle = [&](std::function<void(void)> a)
-            //{
-            //    boost::unique_lock<boost::mutex> Lock(Lockee);
-            //    a();
-            //};
-            //bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
+            auto ac = bsca->GetApplicationClient();
+            auto vtc = std::make_shared<Streamed::BinaryCountPacketClient>(bsca, nullptr);
+            auto bsc = std::make_shared<Streamed::UdpClient>(IoService, RemoteEndPoint, vtc);
+            bsc->Connect();
 
-            //boost::thread t([&]() { IoService.run(); });
+            boost::mutex Lockee;
+            auto DoHandle = [&](std::function<void(void)> a)
+            {
+                boost::unique_lock<boost::mutex> Lock(Lockee);
+                a();
+            };
+            bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
 
-            //ReadLineAndSendLoop(ac, Lockee);
+            boost::thread t([&]() { IoService.run(); });
 
-            //bsc->Close();
-            //t.join();
+            ReadLineAndSendLoop(ac, Lockee);
+
+            bsc->Close();
+            t.join();
         }
     };
 }
@@ -199,6 +214,9 @@ int main(int argc, char **argv)
 {
     std::setlocale(LC_ALL, "");
 
+#if _DEBUG
+    return Client::Program::MainInner(argc, argv);
+#else
     try
     {
         return Client::Program::MainInner(argc, argv);
@@ -208,4 +226,5 @@ int main(int argc, char **argv)
         std::wprintf(L"Error:\n%ls\n", s2w(ex.what()).c_str());
         return -1;
     }
+#endif
 }
