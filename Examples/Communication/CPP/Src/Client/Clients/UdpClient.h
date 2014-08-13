@@ -237,6 +237,23 @@ namespace Client
             BaseSystem::LockedVariable<std::shared_ptr<UdpReadContext>> RawReadingContext;
             BaseSystem::LockedVariable<std::shared_ptr<UdpWriteContext>> CookedWritingContext;
 
+#if _MSC_VER
+            class connection_reset_command
+            {
+            public:
+                int name() const
+                {
+                    return SIO_UDP_CONNRESET;
+                }
+
+                void *data()
+                {
+                    static bool b[1] = {false};
+                    return reinterpret_cast<void *>(b);
+                }
+            };
+#endif
+
         public:
             UdpClient(boost::asio::io_service &io_service, boost::asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient)
                 : io_service(io_service), Socket(io_service), IsRunningValue(false), SessionIdValue(0), ConnectedValue(false), SecureContextValue(nullptr), RawReadingContext(nullptr), CookedWritingContext(nullptr), IsDisposed(false)
@@ -634,14 +651,28 @@ namespace Client
                     if (b) { throw std::logic_error("InvalidOperationException"); }
                     return true;
                 });
+
                 if (RemoteEndPoint.address().is_v4())
                 {
                     Socket.open(boost::asio::ip::udp::v4());
-                    Socket.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), 0));
                 }
                 else
                 {
                     Socket.open(boost::asio::ip::udp::v6());
+                }
+
+#if _MSC_VER
+                //在Windows下关闭SIO_UDP_CONNRESET报告，防止接受数据出错
+                //http://support.microsoft.com/kb/263823/en-us
+                Socket.io_control(connection_reset_command());
+#endif
+
+                if (RemoteEndPoint.address().is_v4())
+                {
+                    Socket.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), 0));
+                }
+                else
+                {
                     Socket.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address_v6::any(), 0));
                 }
             }
