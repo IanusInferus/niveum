@@ -23,7 +23,7 @@ namespace Client
     class BinarySerializationClientAdapter : public IBinarySerializationClientAdapter
     {
     private:
-        static const int NumTimeoutMilliseconds = 20000;
+        static int NumTimeoutMilliseconds() { return 20000; }
 
         class BinarySender : public Communication::Binary::IBinarySender
         {
@@ -43,7 +43,7 @@ namespace Client
                 cq.Time = Time;
                 auto Finished = std::make_shared<bool>(false);
                 auto Timer = std::make_shared<boost::asio::deadline_timer>(a.io_service);
-                Timer->expires_from_now(boost::posix_time::milliseconds(NumTimeoutMilliseconds));
+                Timer->expires_from_now(boost::posix_time::milliseconds(NumTimeoutMilliseconds()));
                 Timer->async_wait([=](const boost::system::error_code& error)
                 {
                     if (error == boost::system::errc::success)
