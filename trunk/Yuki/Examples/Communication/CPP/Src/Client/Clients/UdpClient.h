@@ -64,18 +64,18 @@ namespace Client
             boost::asio::ip::udp::socket Socket;
             std::vector<std::uint8_t> ReadBuffer;
 
-            static const int MaxPacketLength = 1400;
-            static const int ReadingWindowSize = 1024;
-            static const int WritingWindowSize = 16;
-            static const int IndexSpace = 65536;
-            static const int InitialPacketTimeoutMilliseconds = 500;
-            static const int MaxSquaredPacketResentCount = 3;
-            static const int MaxLinearPacketResentCount = 10;
+            static int MaxPacketLength() { return 1400; }
+            static int ReadingWindowSize() { return 1024; }
+            static int WritingWindowSize() { return 16; }
+            static int IndexSpace() { return 65536; }
+            static int InitialPacketTimeoutMilliseconds() { return 500; }
+            static int MaxSquaredPacketResentCount() { return 3; }
+            static int MaxLinearPacketResentCount() { return 10; }
 
             static int GetTimeoutMilliseconds(int ResentCount)
             {
-                if (ResentCount <= MaxSquaredPacketResentCount) { return InitialPacketTimeoutMilliseconds * (1 << ResentCount); }
-                return InitialPacketTimeoutMilliseconds * (1 << MaxSquaredPacketResentCount) * (std::min(ResentCount, MaxLinearPacketResentCount) - MaxSquaredPacketResentCount + 1);
+                if (ResentCount <= MaxSquaredPacketResentCount()) { return InitialPacketTimeoutMilliseconds() * (1 << ResentCount); }
+                return InitialPacketTimeoutMilliseconds() * (1 << MaxSquaredPacketResentCount()) * (std::min(ResentCount, MaxLinearPacketResentCount()) - MaxSquaredPacketResentCount() + 1);
             }
 
             class Part
@@ -92,7 +92,7 @@ namespace Client
                 int WindowSize;
             public:
                 PartContext(int WindowSize)
-                    : MaxHandled(IndexSpace - 1)
+                    : MaxHandled(IndexSpace() - 1)
                 {
                     this->WindowSize = WindowSize;
                 }
@@ -115,15 +115,15 @@ namespace Client
                 }
                 bool IsEqualOrAfter(int New, int Original)
                 {
-                    return ((New - Original + IndexSpace) % IndexSpace) < WindowSize;
+                    return ((New - Original + IndexSpace()) % IndexSpace()) < WindowSize;
                 }
                 static bool IsSuccessor(int New, int Original)
                 {
-                    return ((New - Original + IndexSpace) % IndexSpace) == 1;
+                    return ((New - Original + IndexSpace()) % IndexSpace()) == 1;
                 }
                 static int GetSuccessor(int Original)
                 {
-                    return (Original + 1) % IndexSpace;
+                    return (Original + 1) % IndexSpace();
                 }
                 bool HasPart(int Index)
                 {
@@ -139,7 +139,7 @@ namespace Client
                 }
                 bool TryPushPart(int Index, std::shared_ptr<std::vector<std::uint8_t>> Data, int Offset, int Length)
                 {
-                    if (((Index - MaxHandled + IndexSpace) % IndexSpace) > WindowSize)
+                    if (((Index - MaxHandled + IndexSpace()) % IndexSpace()) > WindowSize)
                     {
                         return false;
                     }
@@ -156,7 +156,7 @@ namespace Client
                 }
                 bool TryPushPart(int Index, std::shared_ptr<std::vector<std::uint8_t>> Data)
                 {
-                    if (((Index - MaxHandled + IndexSpace) % IndexSpace) > WindowSize)
+                    if (((Index - MaxHandled + IndexSpace()) % IndexSpace()) > WindowSize)
                     {
                         return false;
                     }
@@ -231,18 +231,18 @@ namespace Client
             UdpClient(boost::asio::io_service &io_service, boost::asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient)
                 : io_service(io_service), Socket(io_service), IsRunningValue(false), SessionIdValue(0), ConnectedValue(false), SecureContextValue(nullptr), RawReadingContext(nullptr), CookedWritingContext(nullptr), IsDisposed(false)
             {
-                ReadBuffer.resize(MaxPacketLength, 0);
+                ReadBuffer.resize(MaxPacketLength(), 0);
                 RawReadingContext.Update([](std::shared_ptr<UdpReadContext> cc)
                 {
                     auto c = std::make_shared<UdpReadContext>();
-                    c->Parts = std::make_shared<PartContext>(ReadingWindowSize);
+                    c->Parts = std::make_shared<PartContext>(ReadingWindowSize());
                     return c;
                 });
                 CookedWritingContext.Update([](std::shared_ptr<UdpWriteContext> cc)
                 {
                     auto c = std::make_shared<UdpWriteContext>();
-                    c->Parts = std::make_shared<PartContext>(WritingWindowSize);
-                    c->WritenIndex = IndexSpace - 1;
+                    c->Parts = std::make_shared<PartContext>(WritingWindowSize());
+                    c->WritenIndex = IndexSpace() - 1;
                     c->Timer = nullptr;
                     return c;
                 });
@@ -341,7 +341,7 @@ namespace Client
                             IsACK = false;
                         }
 
-                        auto Length = std::min(12 + (IsACK ? 2 + NumIndex * 2 : 0) + TotalLength - WritingOffset, MaxPacketLength);
+                        auto Length = std::min(12 + (IsACK ? 2 + NumIndex * 2 : 0) + TotalLength - WritingOffset, MaxPacketLength());
                         auto DataLength = Length - (12 + (IsACK ? 2 + NumIndex * 2 : 0));
                         auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
                         Buffer->resize(Length, 0);
@@ -728,7 +728,7 @@ namespace Client
                     if ((Flag & 1) != 0)
                     {
                         auto NumIndex = (*Buffer)[Offset] | (static_cast<std::int32_t>((*Buffer)[Offset + 1]) << 8);
-                        if (NumIndex > ReadingWindowSize) //若Index数量较大，则丢弃包
+                        if (NumIndex > ReadingWindowSize()) //若Index数量较大，则丢弃包
                         {
                             return;
                         }
