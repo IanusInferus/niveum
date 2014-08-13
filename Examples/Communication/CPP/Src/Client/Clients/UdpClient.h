@@ -64,7 +64,6 @@ namespace Client
             boost::asio::ip::udp::socket Socket;
             std::vector<std::uint8_t> ReadBuffer;
 
-        public:
             static const int MaxPacketLength = 1400;
             static const int ReadingWindowSize = 1024;
             static const int WritingWindowSize = 16;
@@ -72,7 +71,7 @@ namespace Client
             static const int InitialPacketTimeoutMilliseconds = 500;
             static const int MaxSquaredPacketResentCount = 3;
             static const int MaxLinearPacketResentCount = 10;
-        private:
+
             static int GetTimeoutMilliseconds(int ResentCount)
             {
                 if (ResentCount <= MaxSquaredPacketResentCount) { return InitialPacketTimeoutMilliseconds * (1 << ResentCount); }
