@@ -78,6 +78,16 @@ namespace Client
                 return InitialPacketTimeoutMilliseconds() * (1 << MaxSquaredPacketResentCount()) * (std::min(ResentCount, MaxLinearPacketResentCount()) - MaxSquaredPacketResentCount() + 1);
             }
 
+            static void ArrayCopy(const std::vector<std::uint8_t> &Source, int SourceIndex, std::vector<std::uint8_t> &Destination, int DestinationIndex, int Length)
+            {
+                if (Length < 0) { throw std::logic_error("InvalidArgument"); }
+                if (SourceIndex < 0) { throw std::logic_error("InvalidArgument"); }
+                if (DestinationIndex < 0) { throw std::logic_error("InvalidArgument"); }
+                if (SourceIndex + Length > static_cast<int>(Source.size())) { throw std::logic_error("InvalidArgument"); }
+                if (DestinationIndex + Length > static_cast<int>(Destination.size())) { throw std::logic_error("InvalidArgument"); }
+                memcpy(&Destination[DestinationIndex], &Source[SourceIndex], Length);
+            }
+
             class Part
             {
             public:
@@ -145,7 +155,7 @@ namespace Client
                     }
                     auto b = std::make_shared<std::vector<std::uint8_t>>();
                     b->resize(Length, 0);
-                    memcpy(&(*b)[0], &(*Data)[Offset], Length);
+                    ArrayCopy(*Data, Offset, *b, 0, Length);
                     auto p = std::make_shared<Part>();
                     p->Index = Index;
                     p->Data = b;
@@ -282,7 +292,8 @@ namespace Client
                 int Offset = 0;
                 for (auto b : ByteArrays)
                 {
-                    memcpy(&(*WriteBuffer)[Offset], &(*b)[0], b->size());
+                    ArrayCopy(*b, 0, *WriteBuffer, Offset, static_cast<int>(b->size()));
+                    Offset += static_cast<int>(b->size());
                 }
                 auto RemoteEndPoint = this->RemoteEndPoint;
                 auto SessionId = this->SessionId();
@@ -365,7 +376,7 @@ namespace Client
                             Indices.clear();
                         }
 
-                        memcpy(&(*Buffer)[12 + (IsACK ? 2 + NumIndex * 2 : 0)], &(*WriteBuffer)[WritingOffset], DataLength);
+                        ArrayCopy(*WriteBuffer, WritingOffset, *Buffer, 12 + (IsACK ? 2 + NumIndex * 2 : 0), DataLength);
                         WritingOffset += DataLength;
 
                         if (SecureContext != nullptr)
@@ -382,12 +393,12 @@ namespace Client
                         {
                             std::vector<std::uint8_t> SHABuffer;
                             SHABuffer.resize(4);
-                            memcpy(&SHABuffer[0], &(*Buffer)[4], 4);
+                            ArrayCopy(*Buffer, 4, SHABuffer, 0, 4);
                             auto SHA1 = Algorithms::Cryptography::SHA1(SHABuffer);
                             std::vector<std::uint8_t> Key;
                             Key.resize(SecureContext->ServerToken.size() + SHA1.size());
-                            memcpy(&Key[0], &SecureContext->ServerToken[0], SecureContext->ServerToken.size());
-                            memcpy(&Key[SecureContext->ServerToken.size()], &SHA1[0], SHA1.size());
+                            ArrayCopy(SecureContext->ServerToken, 0, Key, 0, static_cast<int>(SecureContext->ServerToken.size()));
+                            ArrayCopy(SHA1, 0, Key, SecureContext->ServerToken.size(), static_cast<int>(SHA1.size()));
                             auto HMACBytes = Algorithms::Cryptography::HMACSHA1(Key, *Buffer);
                             HMACBytes.resize(4);
                             Verification = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
@@ -537,12 +548,12 @@ namespace Client
                         {
                             std::vector<std::uint8_t> SHABuffer;
                             SHABuffer.resize(4);
-                            memcpy(&SHABuffer[0], &(*Buffer)[4], 4);
+                            ArrayCopy(*Buffer, 4, SHABuffer, 0, 4);
                             auto SHA1 = Algorithms::Cryptography::SHA1(SHABuffer);
                             std::vector<std::uint8_t> Key;
                             Key.resize(SecureContext->ServerToken.size() + SHA1.size());
-                            memcpy(&Key[0], &SecureContext->ServerToken[0], SecureContext->ServerToken.size());
-                            memcpy(&Key[SecureContext->ServerToken.size()], &SHA1[0], SHA1.size());
+                            ArrayCopy(SecureContext->ServerToken, 0, Key, 0, static_cast<int>(SecureContext->ServerToken.size()));
+                            ArrayCopy(SHA1, 0, Key, SecureContext->ServerToken.size(), static_cast<int>(SHA1.size()));
                             auto HMACBytes = Algorithms::Cryptography::HMACSHA1(Key, *Buffer);
                             HMACBytes.resize(4);
                             Verification = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
@@ -697,12 +708,12 @@ namespace Client
                     {
                         std::vector<std::uint8_t> SHABuffer;
                         SHABuffer.resize(4);
-                        memcpy(&SHABuffer[0], &(*Buffer)[4], 4);
+                        ArrayCopy(*Buffer, 4, SHABuffer, 0, 4);
                         auto SHA1 = Algorithms::Cryptography::SHA1(SHABuffer);
                         std::vector<std::uint8_t> Key;
                         Key.resize(SecureContext->ClientToken.size() + SHA1.size());
-                        memcpy(&Key[0], &SecureContext->ClientToken[0], SecureContext->ClientToken.size());
-                        memcpy(&Key[SecureContext->ClientToken.size()], &SHA1[0], SHA1.size());
+                        ArrayCopy(SecureContext->ClientToken, 0, Key, 0, static_cast<int>(SecureContext->ClientToken.size()));
+                        ArrayCopy(SHA1, 0, Key, SecureContext->ClientToken.size(), static_cast<int>(SHA1.size()));
                         auto HMACBytes = Algorithms::Cryptography::HMACSHA1(Key, *Buffer);
                         HMACBytes.resize(4);
                         auto HMAC = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
@@ -797,7 +808,7 @@ namespace Client
                             UnknownFaulted(boost::system::error_code(boost::system::errc::no_buffer_space, boost::system::system_category()));
                             return;
                         }
-                        memcpy(&(*ReadBuffer)[ReadBufferLength], &(*p)[0], p->size());
+                        ArrayCopy(*p, 0, *ReadBuffer, ReadBufferLength, static_cast<int>(p->size()));
 
                         auto c = p->size();
                         while (true)
@@ -850,7 +861,7 @@ namespace Client
                     }
                     auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
                     Buffer->resize(Count, 0);
-                    memcpy(&(*Buffer)[0], &ReadBuffer[0], Count);
+                    ArrayCopy(ReadBuffer, 0, *Buffer, 0, Count);
                     CompletedSocket(Buffer, DoResultHandle, UnknownFaulted);
                     Buffer = nullptr;
                     ReceiveAsync(DoResultHandle, UnknownFaulted);
