@@ -260,13 +260,6 @@ namespace Client
                 this->RemoteEndPoint = RemoteEndPoint;
                 this->VirtualTransportClient = VirtualTransportClient;
 
-                //在Windows下关闭SIO_UDP_CONNRESET报告，防止接受数据出错
-                //http://support.microsoft.com/kb/263823/en-us
-#if _MSC_VER
-                //TODO
-                //Socket.io_control(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
-#endif
-
                 VirtualTransportClient->ClientMethod = [=]()
                 {
                     OnWrite(*VirtualTransportClient, []() {}, []() { throw std::logic_error("InvalidOperationException"); });
