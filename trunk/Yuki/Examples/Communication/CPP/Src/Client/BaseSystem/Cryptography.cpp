@@ -2,13 +2,17 @@
 
 #include <stdexcept>
 
+#include <boost/crc.hpp>
+
 namespace Algorithms
 {
     namespace Cryptography
     {
         std::int32_t CRC32(const std::vector<std::uint8_t> &Bytes)
         {
-            throw std::logic_error("NotImplemented");
+            boost::crc_32_type crc;
+            crc.process_bytes(Bytes.data(), Bytes.size());
+            return static_cast<std::int32_t>(crc.checksum());
         }
         std::vector<std::uint8_t> SHA1(const std::vector<std::uint8_t> &Bytes)
         {

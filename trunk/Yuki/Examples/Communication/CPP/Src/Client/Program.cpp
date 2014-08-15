@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2014.08.12.
+//  Version:     2014.08.15.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -30,6 +30,7 @@
 #undef SendMessage
 #endif
 #include <boost/thread.hpp>
+#include <boost/date_time/time.hpp>
 #include <boost/format.hpp>
 
 namespace Client
@@ -41,7 +42,39 @@ namespace Client
         {
             DisplayTitle();
 
-            if (argc == 4)
+            if (argc == 5 && (std::string(argv[4]) == "/test"))
+            {
+                auto TransportProtocol = std::string(argv[1]);
+                std::transform(TransportProtocol.begin(), TransportProtocol.end(), TransportProtocol.begin(), ::tolower);
+
+                boost::asio::io_service IoService(16);
+                if (TransportProtocol == "tcp")
+                {
+                    boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
+                    for (int k = 0; k < 2048; k += 1)
+                    {
+                        IoService.post([=]() { RunTcp(RemoteEndPoint, Test); });
+                    }
+                }
+                else if (TransportProtocol == "udp")
+                {
+                    boost::asio::ip::udp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
+                    for (int k = 0; k < 2048; k += 1)
+                    {
+                        IoService.post([=]() { RunUdp(RemoteEndPoint, Test); });
+                    }
+                }
+                std::vector<std::shared_ptr<boost::thread>> Threads;
+                for (int k = 0; k < 16; k += 1)
+                {
+                    Threads.push_back(std::make_shared<boost::thread>([&]() { IoService.run(); }));
+                }
+                for (auto t : Threads)
+                {
+                    t->join();
+                }
+            }
+            else if (argc == 4)
             {
                 auto TransportProtocol = std::string(argv[1]);
                 std::transform(TransportProtocol.begin(), TransportProtocol.end(), TransportProtocol.begin(), ::tolower);
@@ -49,18 +82,18 @@ namespace Client
                 if (TransportProtocol == "tcp")
                 {
                     boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
-                    RunTcp(RemoteEndPoint);
+                    RunTcp(RemoteEndPoint, ReadLineAndSendLoop);
                 }
                 else if (TransportProtocol == "udp")
                 {
                     boost::asio::ip::udp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
-                    RunUdp(RemoteEndPoint);
+                    RunUdp(RemoteEndPoint, ReadLineAndSendLoop);
                 }
             }
             else if (argc == 1)
             {
                 boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string("127.0.0.1"), 8001);
-                RunTcp(RemoteEndPoint);
+                RunTcp(RemoteEndPoint, ReadLineAndSendLoop);
             }
             else
             {
@@ -81,7 +114,7 @@ namespace Client
         {
             std::wprintf(L"%ls\n", L"用法:");
             std::wprintf(L"%ls\n", L"Client [<TransportProtocol> <IpAddress> <Port>]");
-            std::wprintf(L"%ls\n", L"复制二进制数据");
+            std::wprintf(L"%ls\n", L"Client <TransportProtocol> <IpAddress> <Port> /test");
             std::wprintf(L"%ls\n", L"TransportProtocol 传输协议，可为Tcp和Udp，默认为Tcp");
             std::wprintf(L"%ls\n", L"IpAddress 服务器IP地址，默认为127.0.0.1");
             std::wprintf(L"%ls\n", L"Port 服务器端口，默认为8001");
@@ -131,7 +164,44 @@ namespace Client
             }
         }
 
-        static void RunTcp(boost::asio::ip::tcp::endpoint RemoteEndPoint)
+        static void Test(std::shared_ptr<Communication::IApplicationClient> InnerClient, boost::mutex &Lockee)
+        {
+            InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
+            {
+                auto m = e->Message;
+                wprintf(L"%ls\n", m.c_str());
+            };
+
+            std::wstring Line;
+            Line.reserve(2048);
+            for (int k = 0; k < 512; k += 1)
+            {
+                Line += L"TEST";
+            }
+
+            {
+                boost::unique_lock<boost::mutex> Lock(Lockee);
+                InnerClient->ServerTime(std::make_shared<Communication::ServerTimeRequest>(), [=](std::shared_ptr<Communication::ServerTimeReply> r2)
+                {
+                    auto Request = std::make_shared<Communication::SendMessageRequest>();
+                    Request->Content = Line;
+                    InnerClient->SendMessage(Request, [](std::shared_ptr<Communication::SendMessageReply> r)
+                    {
+                        if (r->OnTooLong())
+                        {
+                        }
+                        else
+                        {
+                            std::wprintf(L"%ls\n", L"出错。");
+                        }
+                    });
+                });
+            }
+
+            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+        }
+
+        static void RunTcp(boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, boost::mutex &)> Action)
         {
             boost::asio::io_service IoService;
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService);
@@ -152,7 +222,6 @@ namespace Client
             auto vtc = std::make_shared<Streamed::BinaryCountPacketClient>(bsca, nullptr);
             auto bsc = std::make_shared<Streamed::TcpClient>(IoService, RemoteEndPoint, vtc);
             bsc->Connect();
-            std::wprintf(L"%ls\n", L"连接成功。");
 
             boost::mutex Lockee;
             auto DoHandle = [&](std::function<void(void)> a)
@@ -161,16 +230,21 @@ namespace Client
                 a();
             };
             bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
-            
+
             boost::thread t([&]() { IoService.run(); });
 
-            ReadLineAndSendLoop(ac, Lockee);
+            Action(ac, Lockee);
 
             bsc->Close();
+            bsc = nullptr;
+            vtc = nullptr;
+            ac = nullptr;
+            bsca = nullptr;
+            IoService.poll();
             t.join();
         }
 
-        static void RunUdp(boost::asio::ip::udp::endpoint RemoteEndPoint)
+        static void RunUdp(boost::asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, boost::mutex &)> Action)
         {
             boost::asio::io_service IoService;
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService);
@@ -202,9 +276,14 @@ namespace Client
 
             boost::thread t([&]() { IoService.run(); });
 
-            ReadLineAndSendLoop(ac, Lockee);
+            Action(ac, Lockee);
 
             bsc->Close();
+            bsc = nullptr;
+            vtc = nullptr;
+            ac = nullptr;
+            bsca = nullptr;
+            IoService.poll();
             t.join();
         }
     };

@@ -35,6 +35,7 @@ namespace Client
             std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient;
             boost::asio::ip::udp::endpoint RemoteEndPoint;
             BaseSystem::LockedVariable<bool> IsRunningValue;
+            BaseSystem::LockedVariable<bool> ReceivingValue;
         public:
             bool IsRunning()
             {
@@ -241,6 +242,13 @@ namespace Client
             class connection_reset_command
             {
             public:
+                unsigned long b; //false
+
+                connection_reset_command()
+                    : b(0)
+                {
+                }
+
                 int name() const
                 {
                     return SIO_UDP_CONNRESET;
@@ -248,15 +256,14 @@ namespace Client
 
                 void *data()
                 {
-                    static bool b[1] = {false};
-                    return reinterpret_cast<void *>(b);
+                    return reinterpret_cast<void *>(&b);
                 }
             };
 #endif
 
         public:
             UdpClient(boost::asio::io_service &io_service, boost::asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient)
-                : io_service(io_service), Socket(io_service), IsRunningValue(false), SessionIdValue(0), ConnectedValue(false), SecureContextValue(nullptr), RawReadingContext(nullptr), CookedWritingContext(nullptr), IsDisposed(false)
+                : io_service(io_service), Socket(io_service), IsRunningValue(false), ReceivingValue(false), SessionIdValue(0), ConnectedValue(false), SecureContextValue(nullptr), RawReadingContext(nullptr), CookedWritingContext(nullptr), IsDisposed(false)
             {
                 ReadBuffer.resize(MaxPacketLength(), 0);
                 RawReadingContext.Update([](std::shared_ptr<UdpReadContext> cc)
@@ -279,7 +286,7 @@ namespace Client
 
                 VirtualTransportClient->ClientMethod = [=]()
                 {
-                    OnWrite(*VirtualTransportClient, []() {}, []() { throw std::logic_error("InvalidOperationException"); });
+                    OnWrite(*this->VirtualTransportClient, []() {}, []() { throw std::logic_error("InvalidOperationException"); });
                 };
             }
 
@@ -289,9 +296,9 @@ namespace Client
             }
 
         private:
-            void OnWrite(const IStreamedVirtualTransportClient &vtc, std::function<void()> OnSuccess, std::function<void()> OnFailure)
+            void OnWrite(IStreamedVirtualTransportClient &vtc, std::function<void()> OnSuccess, std::function<void()> OnFailure)
             {
-                auto ByteArrays = VirtualTransportClient->TakeWriteBuffer();
+                auto ByteArrays = vtc.TakeWriteBuffer();
                 int TotalLength = 0;
                 for (auto b : ByteArrays)
                 {
@@ -872,13 +879,19 @@ namespace Client
             /// <param name="UnknownFaulted">未知错误处理函数</param>
             void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
             {
-                if (!IsRunningValue.Check<bool>([](bool b) { return b; })) { return; }
+                if (!IsRunningValue.Check<bool>([](bool b) { return b; }))
+                {
+                    ReceivingValue.Update([](bool v) { return false; });
+                    return;
+                }
+                ReceivingValue.Update([](bool v) { return true; });
 
                 auto ServerEndPoint = this->RemoteEndPoint;
                 auto ReadHandler = [=](const boost::system::error_code &se, std::size_t Count)
                 {
                     if (se != boost::system::errc::success)
                     {
+                        ReceivingValue.Update([](bool v) { return false; });
                         if (IsSocketErrorKnown(se)) { return; }
                         UnknownFaulted(se);
                         return;
@@ -922,6 +935,9 @@ namespace Client
                 {
                     Timer->cancel();
                     Timer = nullptr;
+                }
+                while (ReceivingValue.Check<bool>([](bool v) { return v; }))
+                {
                 }
             }
         };
