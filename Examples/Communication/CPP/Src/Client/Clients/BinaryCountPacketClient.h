@@ -125,6 +125,7 @@ namespace Client
                         auto Parameters = r->Command->Parameters;
                         auto Command = std::make_shared<StreamedVirtualTransportClientHandleResultCommand>();
                         Command->CommandName = CommandName;
+                        auto bc = this->bc;
                         Command->HandleResult = [=]() { bc->HandleResult(CommandName, CommandHash, Parameters); };
                         ret = StreamedVirtualTransportClientHandleResult::CreateCommand(Command);
                         break;

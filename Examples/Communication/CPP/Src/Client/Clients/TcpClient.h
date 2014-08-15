@@ -28,6 +28,7 @@ namespace Client
             boost::asio::ip::tcp::endpoint RemoteEndPoint;
             boost::asio::ip::tcp::socket Socket;
             BaseSystem::LockedVariable<bool> IsRunningValue;
+            BaseSystem::LockedVariable<bool> ReceivingValue;
         public:
             bool IsRunning()
             {
@@ -35,13 +36,13 @@ namespace Client
             }
 
             TcpClient(boost::asio::io_service &io_service, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient)
-                : Socket(io_service), IsRunningValue(false), IsDisposed(false)
+                : Socket(io_service), IsRunningValue(false), ReceivingValue(false), IsDisposed(false)
             {
                 this->RemoteEndPoint = RemoteEndPoint;
                 this->VirtualTransportClient = VirtualTransportClient;
                 VirtualTransportClient->ClientMethod = [=]()
                 {
-                    auto ByteArrays = VirtualTransportClient->TakeWriteBuffer();
+                    auto ByteArrays = this->VirtualTransportClient->TakeWriteBuffer();
                     std::vector<boost::asio::const_buffer> Buffers;
                     for (auto b : ByteArrays)
                     {
@@ -108,6 +109,7 @@ namespace Client
             {
                 if (Count == 0)
                 {
+                    ReceivingValue.Update([](bool v) { return false; });
                     return;
                 }
 
@@ -142,6 +144,8 @@ namespace Client
             /// <param name="UnknownFaulted">未知错误处理函数</param>
             void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
             {
+                ReceivingValue.Update([](bool v) { return true; });
+
                 auto ReadHandler = [=](const boost::system::error_code &se, std::size_t Count)
                 {
                     if (se == boost::system::errc::success)
@@ -150,6 +154,7 @@ namespace Client
                     }
                     else
                     {
+                        ReceivingValue.Update([](bool v) { return false; });
                         if (!IsSocketErrorKnown(se))
                         {
                             UnknownFaulted(se);
@@ -190,6 +195,9 @@ namespace Client
                     Socket.close();
                 }
                 catch (...)
+                {
+                }
+                while (ReceivingValue.Check<bool>([](bool v) { return v; }))
                 {
                 }
             }
