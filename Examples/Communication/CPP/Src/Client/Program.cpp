@@ -53,7 +53,7 @@ namespace Client
                     boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
                     for (int k = 0; k < 2048; k += 1)
                     {
-                        IoService.post([=]() { RunTcp(RemoteEndPoint, Test); });
+                        IoService.post([=, &IoService]() { RunTcp(IoService, RemoteEndPoint, Test); });
                     }
                 }
                 else if (TransportProtocol == "udp")
@@ -61,13 +61,28 @@ namespace Client
                     boost::asio::ip::udp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
                     for (int k = 0; k < 2048; k += 1)
                     {
-                        IoService.post([=]() { RunUdp(RemoteEndPoint, Test); });
+                        IoService.post([=, &IoService]() { RunUdp(IoService, RemoteEndPoint, Test); });
                     }
                 }
                 std::vector<std::shared_ptr<boost::thread>> Threads;
-                for (int k = 0; k < 2; k += 1)
+                for (int k = 0; k < 16; k += 1)
                 {
-                    Threads.push_back(std::make_shared<boost::thread>([&]() { IoService.run(); }));
+                    Threads.push_back(std::make_shared<boost::thread>([&]()
+                    {
+                        auto Exit = false;
+                        while (true)
+                        {
+                            try
+                            {
+                                IoService.run();
+                                Exit = true;
+                            }
+                            catch (std::exception &)
+                            {
+                            }
+                            if (Exit) { break; }
+                        }
+                    }));
                 }
                 for (int k = 0; k < 2048; k += 1)
                 {
@@ -87,21 +102,57 @@ namespace Client
                 auto TransportProtocol = std::string(argv[1]);
                 std::transform(TransportProtocol.begin(), TransportProtocol.end(), TransportProtocol.begin(), ::tolower);
 
+                boost::asio::io_service IoService;
                 if (TransportProtocol == "tcp")
                 {
                     boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
-                    RunTcp(RemoteEndPoint, ReadLineAndSendLoop);
+                    RunTcp(IoService, RemoteEndPoint, ReadLineAndSendLoop);
                 }
                 else if (TransportProtocol == "udp")
                 {
                     boost::asio::ip::udp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
-                    RunUdp(RemoteEndPoint, ReadLineAndSendLoop);
+                    RunUdp(IoService, RemoteEndPoint, ReadLineAndSendLoop);
                 }
+                boost::thread t([&]()
+                {
+                    auto Exit = false;
+                    while (true)
+                    {
+                        try
+                        {
+                            IoService.run();
+                            Exit = true;
+                        }
+                        catch (std::exception &)
+                        {
+                        }
+                        if (Exit) { break; }
+                    }
+                });
+                t.join();
             }
             else if (argc == 1)
             {
+                boost::asio::io_service IoService;
                 boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string("127.0.0.1"), 8001);
-                RunTcp(RemoteEndPoint, ReadLineAndSendLoop);
+                RunTcp(IoService, RemoteEndPoint, ReadLineAndSendLoop);
+                boost::thread t([&]()
+                {
+                    auto Exit = false;
+                    while (true)
+                    {
+                        try
+                        {
+                            IoService.run();
+                            Exit = true;
+                        }
+                        catch (std::exception &)
+                        {
+                        }
+                        if (Exit) { break; }
+                    }
+                });
+                t.join();
             }
             else
             {
@@ -174,11 +225,14 @@ namespace Client
 
         static void Test(std::shared_ptr<Communication::IApplicationClient> InnerClient, boost::mutex &Lockee)
         {
-            InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
             {
-                auto m = e->Message;
-                wprintf(L"%ls\n", m.c_str());
-            };
+                boost::unique_lock<boost::mutex> Lock(Lockee);
+                InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
+                {
+                    auto m = e->Message;
+                    wprintf(L"%ls\n", m.c_str());
+                };
+            }
 
             std::wstring Line;
             Line.reserve(2048);
@@ -206,12 +260,11 @@ namespace Client
                 });
             }
 
-            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
         }
 
-        static void RunTcp(boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, boost::mutex &)> Action)
+        static void RunTcp(boost::asio::io_service &IoService, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, boost::mutex &)> Action)
         {
-            boost::asio::io_service IoService;
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
             {
@@ -234,27 +287,13 @@ namespace Client
             boost::mutex Lockee;
             auto DoHandle = [&](std::function<void(void)> a)
             {
-                boost::unique_lock<boost::mutex> Lock(Lockee);
-                a();
+                IoService.post([&, a]()
+                {
+                    boost::unique_lock<boost::mutex> Lock(Lockee);
+                    a();
+                });
             };
             bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
-
-            boost::thread t([&]()
-            {
-                auto Exit = false;
-                while (true)
-                {
-                    try
-                    {
-                        IoService.run();
-                        Exit = true;
-                    }
-                    catch (std::exception &)
-                    {
-                    }
-                    if (Exit) { break; }
-                }
-            });
 
             Action(ac, Lockee);
 
@@ -263,13 +302,10 @@ namespace Client
             vtc = nullptr;
             ac = nullptr;
             bsca = nullptr;
-            IoService.poll();
-            t.join();
         }
 
-        static void RunUdp(boost::asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, boost::mutex &)> Action)
+        static void RunUdp(boost::asio::io_service &IoService, boost::asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, boost::mutex &)> Action)
         {
-            boost::asio::io_service IoService;
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
             {
@@ -292,37 +328,24 @@ namespace Client
             boost::mutex Lockee;
             auto DoHandle = [&](std::function<void(void)> a)
             {
-                boost::unique_lock<boost::mutex> Lock(Lockee);
-                a();
+                IoService.post([&, a]()
+                {
+                    boost::unique_lock<boost::mutex> Lock(Lockee);
+                    a();
+                });
             };
             bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
 
-            boost::thread t([&]()
-            {
-                auto Exit = false;
-                while (true)
-                {
-                    try
-                    {
-                        IoService.run();
-                        Exit = true;
-                    }
-                    catch (std::exception &)
-                    {
-                    }
-                    if (Exit) { break; }
-                }
-            });
-
             Action(ac, Lockee);
 
-            bsc->Close();
-            bsc = nullptr;
-            vtc = nullptr;
-            ac = nullptr;
-            bsca = nullptr;
-            IoService.poll();
-            t.join();
+            {
+                boost::unique_lock<boost::mutex> Lock(Lockee);
+                bsc->Close();
+                bsc = nullptr;
+                vtc = nullptr;
+                ac = nullptr;
+                bsca = nullptr;
+            }
         }
     };
 }

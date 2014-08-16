@@ -62,7 +62,7 @@ namespace Client
         private:
             boost::asio::io_service &io_service;
             boost::asio::ip::udp::socket Socket;
-            std::vector<std::uint8_t> ReadBuffer;
+            std::shared_ptr<std::vector<std::uint8_t>> ReadBuffer;
 
             static int MaxPacketLength() { return 1400; }
             static int ReadingWindowSize() { return 1024; }
@@ -264,15 +264,16 @@ namespace Client
             UdpClient(boost::asio::io_service &io_service, boost::asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient)
                 : io_service(io_service), Socket(io_service), IsRunningValue(nullptr), SessionIdValue(0), ConnectedValue(false), SecureContextValue(nullptr), RawReadingContext(nullptr), CookedWritingContext(nullptr), IsDisposed(false)
             {
-                IsRunningValue = std::make_shared<BaseSystem::LockedVariable<bool>>(false);
-                ReadBuffer.resize(MaxPacketLength(), 0);
-                RawReadingContext.Update([](std::shared_ptr<UdpReadContext> cc)
+                this->IsRunningValue = std::make_shared<BaseSystem::LockedVariable<bool>>(false);
+                ReadBuffer = std::make_shared<std::vector<std::uint8_t>>();
+                ReadBuffer->resize(MaxPacketLength(), 0);
+                RawReadingContext.Update([=](std::shared_ptr<UdpReadContext> cc)
                 {
                     auto c = std::make_shared<UdpReadContext>();
                     c->Parts = std::make_shared<PartContext>(ReadingWindowSize());
                     return c;
                 });
-                CookedWritingContext.Update([](std::shared_ptr<UdpWriteContext> cc)
+                CookedWritingContext.Update([=](std::shared_ptr<UdpWriteContext> cc)
                 {
                     auto c = std::make_shared<UdpWriteContext>();
                     c->Parts = std::make_shared<PartContext>(WritingWindowSize());
@@ -284,9 +285,14 @@ namespace Client
                 this->RemoteEndPoint = RemoteEndPoint;
                 this->VirtualTransportClient = VirtualTransportClient;
 
+                auto IsRunningValue = this->IsRunningValue;
                 VirtualTransportClient->ClientMethod = [=]()
                 {
-                    OnWrite(*this->VirtualTransportClient, []() {}, []() { throw std::logic_error("InvalidOperationException"); });
+                    IsRunningValue->DoAction([=](bool b)
+                    {
+                        if (!b) { return; }
+                        OnWrite(*this->VirtualTransportClient, []() {}, []() { throw std::logic_error("InvalidOperationException"); });
+                    });
                 };
             }
 
@@ -298,6 +304,9 @@ namespace Client
         private:
             void OnWrite(IStreamedVirtualTransportClient &vtc, std::function<void()> OnSuccess, std::function<void()> OnFailure)
             {
+                auto IsRunningValue = this->IsRunningValue;
+
+                bool Success = true;
                 auto ByteArrays = vtc.TakeWriteBuffer();
                 int TotalLength = 0;
                 for (auto b : ByteArrays)
@@ -341,12 +350,10 @@ namespace Client
                 });
                 if ((ByteArrays.size() == 0) && (Indices.size() == 0))
                 {
-                    OnSuccess();
                     return;
                 }
-                bool Success = true;
                 std::vector<std::shared_ptr<std::vector<std::uint8_t>>> Parts;
-                CookedWritingContext.DoAction([&](std::shared_ptr<UdpWriteContext> c)
+                CookedWritingContext.DoAction([&, IsRunningValue](std::shared_ptr<UdpWriteContext> c)
                 {
                     auto Time = boost::posix_time::microsec_clock::universal_time();
                     auto WritingOffset = 0;
@@ -452,7 +459,7 @@ namespace Client
                         {
                             if (error == boost::system::errc::success)
                             {
-                                Check();
+                                Check(IsRunningValue);
                             }
                         });
                     }
@@ -479,154 +486,158 @@ namespace Client
                 }
             }
 
-            void Check()
+            void Check(std::shared_ptr<BaseSystem::LockedVariable<bool>> IsRunningValue)
             {
-                auto IsRunning = this->IsRunning();
-
-                auto RemoteEndPoint = this->RemoteEndPoint;
-                auto SessionId = this->SessionId();
-                auto Connected = this->ConnectedValue.Check<bool>([](bool v) { return v; });
-                auto SecureContext = this->SecureContextValue.Check<std::shared_ptr<class SecureContext>>([](std::shared_ptr<class SecureContext> v) { return v; });
-                std::vector<int> Indices;
-                RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
+                IsRunningValue->DoAction([=](bool b)
                 {
-                    if (c->NotAcknowledgedIndices.size() == 0) { return; }
-                    while (c->NotAcknowledgedIndices.size() > 0)
+                    if (!b) { return; }
+                    auto IsRunning = b;
+
+                    auto RemoteEndPoint = this->RemoteEndPoint;
+                    auto SessionId = this->SessionId();
+                    auto Connected = this->ConnectedValue.Check<bool>([](bool v) { return v; });
+                    auto SecureContext = this->SecureContextValue.Check<std::shared_ptr<class SecureContext>>([](std::shared_ptr<class SecureContext> v) { return v; });
+                    std::vector<int> Indices;
+                    RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
                     {
-                        auto First = *c->NotAcknowledgedIndices.begin();
-                        if (c->Parts->IsEqualOrAfter(c->Parts->MaxHandled, First))
+                        if (c->NotAcknowledgedIndices.size() == 0) { return; }
+                        while (c->NotAcknowledgedIndices.size() > 0)
                         {
-                            c->NotAcknowledgedIndices.erase(First);
+                            auto First = *c->NotAcknowledgedIndices.begin();
+                            if (c->Parts->IsEqualOrAfter(c->Parts->MaxHandled, First))
+                            {
+                                c->NotAcknowledgedIndices.erase(First);
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
-                        else
+                        Indices.push_back(c->Parts->MaxHandled);
+                        for (auto i : c->NotAcknowledgedIndices)
+                        {
+                            Indices.push_back(i);
+                        }
+                    });
+
+                    std::shared_ptr<boost::asio::deadline_timer> Timer = nullptr;
+                    std::vector<std::shared_ptr<std::vector<std::uint8_t>>> Parts;
+                    CookedWritingContext.DoAction([&, IsRunningValue](std::shared_ptr<UdpWriteContext> cc)
+                    {
+                        if (cc->Timer == nullptr) { return; }
+                        Timer = cc->Timer;
+                        cc->Timer = nullptr;
+                        if (!IsRunning) { return; }
+
+                        if (Indices.size() > 0)
+                        {
+                            auto Index = Indices[0];
+
+                            auto NumIndex = Indices.size();
+                            if (NumIndex > 0xFFFF)
+                            {
+                                return;
+                            }
+
+                            auto Flag = 8; //AUX
+
+                            auto Length = 12 + 2 + NumIndex * 2;
+                            auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
+                            Buffer->resize(Length, 0);
+                            (*Buffer)[0] = static_cast<std::uint8_t>(SessionId & 0xFF);
+                            (*Buffer)[1] = static_cast<std::uint8_t>((SessionId >> 8) & 0xFF);
+                            (*Buffer)[2] = static_cast<std::uint8_t>((SessionId >> 16) & 0xFF);
+                            (*Buffer)[3] = static_cast<std::uint8_t>((SessionId >> 24) & 0xFF);
+
+                            Flag |= 1; //ACK
+                            (*Buffer)[12] = static_cast<std::uint8_t>(NumIndex & 0xFF);
+                            (*Buffer)[13] = static_cast<std::uint8_t>((NumIndex >> 8) & 0xFF);
+                            int j = 0;
+                            for (auto i : Indices)
+                            {
+                                (*Buffer)[14 + j * 2] = static_cast<std::uint8_t>(i & 0xFF);
+                                (*Buffer)[14 + j * 2 + 1] = static_cast<std::uint8_t>((i >> 8) & 0xFF);
+                                j += 1;
+                            }
+                            Indices.clear();
+
+                            if (SecureContext != nullptr)
+                            {
+                                Flag |= 2; //ENC
+                            }
+                            (*Buffer)[4] = static_cast<std::uint8_t>(Flag & 0xFF);
+                            (*Buffer)[5] = static_cast<std::uint8_t>((Flag >> 8) & 0xFF);
+                            (*Buffer)[6] = static_cast<std::uint8_t>(Index & 0xFF);
+                            (*Buffer)[7] = static_cast<std::uint8_t>((Index >> 8) & 0xFF);
+
+                            std::int32_t Verification = 0;
+                            if (SecureContext != nullptr)
+                            {
+                                std::vector<std::uint8_t> SHABuffer;
+                                SHABuffer.resize(4);
+                                ArrayCopy(*Buffer, 4, SHABuffer, 0, 4);
+                                auto SHA1 = Algorithms::Cryptography::SHA1(SHABuffer);
+                                std::vector<std::uint8_t> Key;
+                                Key.resize(SecureContext->ServerToken.size() + SHA1.size());
+                                ArrayCopy(SecureContext->ServerToken, 0, Key, 0, static_cast<int>(SecureContext->ServerToken.size()));
+                                ArrayCopy(SHA1, 0, Key, SecureContext->ServerToken.size(), static_cast<int>(SHA1.size()));
+                                auto HMACBytes = Algorithms::Cryptography::HMACSHA1(Key, *Buffer);
+                                HMACBytes.resize(4);
+                                Verification = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
+                            }
+                            else
+                            {
+                                Verification = Algorithms::Cryptography::CRC32(*Buffer);
+                            }
+
+                            (*Buffer)[8] = static_cast<std::uint8_t>(Verification & 0xFF);
+                            (*Buffer)[9] = static_cast<std::uint8_t>((Verification >> 8) & 0xFF);
+                            (*Buffer)[10] = static_cast<std::uint8_t>((Verification >> 16) & 0xFF);
+                            (*Buffer)[11] = static_cast<std::uint8_t>((Verification >> 24) & 0xFF);
+
+                            Parts.push_back(Buffer);
+                        }
+
+                        if (cc->Parts->Parts.size() == 0) { return; }
+                        auto t = boost::posix_time::microsec_clock::universal_time();
+                        cc->Parts->ForEachTimedoutPacket(t, [&](int i, std::shared_ptr<std::vector<std::uint8_t>> d) { Parts.push_back(d); });
+                        auto Wait = std::numeric_limits<int>::max();
+                        for (auto Pair : cc->Parts->Parts)
+                        {
+                            auto p = std::get<1>(Pair);
+                            auto pWait = (p->ResendTime - t).total_milliseconds() + 1;
+                            if (pWait < Wait)
+                            {
+                                Wait = static_cast<int>(pWait);
+                            }
+                        }
+                        cc->Timer = std::make_shared<boost::asio::deadline_timer>(io_service);
+                        cc->Timer->expires_from_now(boost::posix_time::milliseconds(Wait));
+                        cc->Timer->async_wait([=](const boost::system::error_code& error)
+                        {
+                            if (error == boost::system::errc::success)
+                            {
+                                Check(IsRunningValue);
+                            }
+                        });
+                    });
+                    if (Timer != nullptr)
+                    {
+                        Timer->cancel();
+                        Timer = nullptr;
+                    }
+                    for (auto p : Parts)
+                    {
+                        try
+                        {
+                            SendPacket(RemoteEndPoint, p);
+                        }
+                        catch (...)
                         {
                             break;
                         }
                     }
-                    Indices.push_back(c->Parts->MaxHandled);
-                    for (auto i : c->NotAcknowledgedIndices)
-                    {
-                        Indices.push_back(i);
-                    }
                 });
-
-                std::shared_ptr<boost::asio::deadline_timer> Timer = nullptr;
-                std::vector<std::shared_ptr<std::vector<std::uint8_t>>> Parts;
-                CookedWritingContext.DoAction([&](std::shared_ptr<UdpWriteContext> cc)
-                {
-                    if (cc->Timer == nullptr) { return; }
-                    Timer = cc->Timer;
-                    cc->Timer = nullptr;
-                    if (!IsRunning) { return; }
-
-                    if (Indices.size() > 0)
-                    {
-                        auto Index = Indices[0];
-
-                        auto NumIndex = Indices.size();
-                        if (NumIndex > 0xFFFF)
-                        {
-                            return;
-                        }
-
-                        auto Flag = 8; //AUX
-
-                        auto Length = 12 + 2 + NumIndex * 2;
-                        auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
-                        Buffer->resize(Length, 0);
-                        (*Buffer)[0] = static_cast<std::uint8_t>(SessionId & 0xFF);
-                        (*Buffer)[1] = static_cast<std::uint8_t>((SessionId >> 8) & 0xFF);
-                        (*Buffer)[2] = static_cast<std::uint8_t>((SessionId >> 16) & 0xFF);
-                        (*Buffer)[3] = static_cast<std::uint8_t>((SessionId >> 24) & 0xFF);
-
-                        Flag |= 1; //ACK
-                        (*Buffer)[12] = static_cast<std::uint8_t>(NumIndex & 0xFF);
-                        (*Buffer)[13] = static_cast<std::uint8_t>((NumIndex >> 8) & 0xFF);
-                        int j = 0;
-                        for (auto i : Indices)
-                        {
-                            (*Buffer)[14 + j * 2] = static_cast<std::uint8_t>(i & 0xFF);
-                            (*Buffer)[14 + j * 2 + 1] = static_cast<std::uint8_t>((i >> 8) & 0xFF);
-                            j += 1;
-                        }
-                        Indices.clear();
-
-                        if (SecureContext != nullptr)
-                        {
-                            Flag |= 2; //ENC
-                        }
-                        (*Buffer)[4] = static_cast<std::uint8_t>(Flag & 0xFF);
-                        (*Buffer)[5] = static_cast<std::uint8_t>((Flag >> 8) & 0xFF);
-                        (*Buffer)[6] = static_cast<std::uint8_t>(Index & 0xFF);
-                        (*Buffer)[7] = static_cast<std::uint8_t>((Index >> 8) & 0xFF);
-
-                        std::int32_t Verification = 0;
-                        if (SecureContext != nullptr)
-                        {
-                            std::vector<std::uint8_t> SHABuffer;
-                            SHABuffer.resize(4);
-                            ArrayCopy(*Buffer, 4, SHABuffer, 0, 4);
-                            auto SHA1 = Algorithms::Cryptography::SHA1(SHABuffer);
-                            std::vector<std::uint8_t> Key;
-                            Key.resize(SecureContext->ServerToken.size() + SHA1.size());
-                            ArrayCopy(SecureContext->ServerToken, 0, Key, 0, static_cast<int>(SecureContext->ServerToken.size()));
-                            ArrayCopy(SHA1, 0, Key, SecureContext->ServerToken.size(), static_cast<int>(SHA1.size()));
-                            auto HMACBytes = Algorithms::Cryptography::HMACSHA1(Key, *Buffer);
-                            HMACBytes.resize(4);
-                            Verification = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
-                        }
-                        else
-                        {
-                            Verification = Algorithms::Cryptography::CRC32(*Buffer);
-                        }
-
-                        (*Buffer)[8] = static_cast<std::uint8_t>(Verification & 0xFF);
-                        (*Buffer)[9] = static_cast<std::uint8_t>((Verification >> 8) & 0xFF);
-                        (*Buffer)[10] = static_cast<std::uint8_t>((Verification >> 16) & 0xFF);
-                        (*Buffer)[11] = static_cast<std::uint8_t>((Verification >> 24) & 0xFF);
-
-                        Parts.push_back(Buffer);
-                    }
-
-                    if (cc->Parts->Parts.size() == 0) { return; }
-                    auto t = boost::posix_time::microsec_clock::universal_time();
-                    cc->Parts->ForEachTimedoutPacket(t, [&](int i, std::shared_ptr<std::vector<std::uint8_t>> d) { Parts.push_back(d); });
-                    auto Wait = std::numeric_limits<int>::max();
-                    for (auto Pair : cc->Parts->Parts)
-                    {
-                        auto p = std::get<1>(Pair);
-                        auto pWait = (p->ResendTime - t).total_milliseconds() + 1;
-                        if (pWait < Wait)
-                        {
-                            Wait = static_cast<int>(pWait);
-                        }
-                    }
-                    cc->Timer = std::make_shared<boost::asio::deadline_timer>(io_service);
-                    cc->Timer->expires_from_now(boost::posix_time::milliseconds(Wait));
-                    cc->Timer->async_wait([=](const boost::system::error_code& error)
-                    {
-                        if (error == boost::system::errc::success)
-                        {
-                            Check();
-                        }
-                    });
-                });
-                if (Timer != nullptr)
-                {
-                    Timer->cancel();
-                    Timer = nullptr;
-                }
-                for (auto p : Parts)
-                {
-                    try
-                    {
-                        SendPacket(RemoteEndPoint, p);
-                    }
-                    catch (...)
-                    {
-                        break;
-                    }
-                }
             }
 
             void SendPacket(boost::asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<std::vector<std::uint8_t>> Data)
@@ -653,35 +664,37 @@ namespace Client
         public:
             void Connect()
             {
-                IsRunningValue->Update([](bool b)
+                auto IsRunningValue = this->IsRunningValue;
+                IsRunningValue->Update([&](bool b)
                 {
                     if (b) { throw std::logic_error("InvalidOperationException"); }
-                    return true;
-                });
 
-                if (RemoteEndPoint.address().is_v4())
-                {
-                    Socket.open(boost::asio::ip::udp::v4());
-                }
-                else
-                {
-                    Socket.open(boost::asio::ip::udp::v6());
-                }
+                    if (RemoteEndPoint.address().is_v4())
+                    {
+                        Socket.open(boost::asio::ip::udp::v4());
+                    }
+                    else
+                    {
+                        Socket.open(boost::asio::ip::udp::v6());
+                    }
 
 #if _MSC_VER
-                //在Windows下关闭SIO_UDP_CONNRESET报告，防止接受数据出错
-                //http://support.microsoft.com/kb/263823/en-us
-                Socket.io_control(connection_reset_command());
+                    //在Windows下关闭SIO_UDP_CONNRESET报告，防止接受数据出错
+                    //http://support.microsoft.com/kb/263823/en-us
+                    Socket.io_control(connection_reset_command());
 #endif
 
-                if (RemoteEndPoint.address().is_v4())
-                {
-                    Socket.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), 0));
-                }
-                else
-                {
-                    Socket.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address_v6::any(), 0));
-                }
+                    if (RemoteEndPoint.address().is_v4())
+                    {
+                        Socket.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), 0));
+                    }
+                    else
+                    {
+                        Socket.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address_v6::any(), 0));
+                    }
+
+                    return true;
+                });
             }
 
             /// <summary>异步连接</summary>
@@ -873,43 +886,48 @@ namespace Client
                 }
             }
 
+            void ReceiveAsyncInner(std::shared_ptr<BaseSystem::LockedVariable<bool>> IsRunningValue, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+            {
+                IsRunningValue->DoAction([=](bool b)
+                {
+                    if (!b) { return; }
+                    auto ReadBuffer = this->ReadBuffer;
+                    auto ServerEndPoint = std::make_shared<boost::asio::ip::udp::endpoint>(this->RemoteEndPoint);
+                    auto ReadHandler = [=](const boost::system::error_code &se, std::size_t Count)
+                    {
+                        if (se != boost::system::errc::success)
+                        {
+                            if (IsSocketErrorKnown(se)) { return; }
+                            UnknownFaulted(se);
+                            return;
+                        }
+                        auto IsRunning = IsRunningValue->Check<bool>([=](bool b)
+                        {
+                            if (!b) { return b; }
+                            if (*ServerEndPoint != this->RemoteEndPoint) { return b; }
+                            auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
+                            Buffer->resize(Count, 0);
+                            ArrayCopy(*ReadBuffer, 0, *Buffer, 0, Count);
+                            CompletedSocket(Buffer, DoResultHandle, UnknownFaulted);
+                            Buffer = nullptr;
+                            return b;
+                        });
+                        if (!IsRunning)
+                        {
+                            return;
+                        }
+                        ReceiveAsyncInner(IsRunningValue, DoResultHandle, UnknownFaulted);
+                    };
+                    Socket.async_receive_from(boost::asio::buffer(*ReadBuffer), *ServerEndPoint, ReadHandler);
+                });
+            }
         public:
             /// <summary>接收消息</summary>
             /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
             /// <param name="UnknownFaulted">未知错误处理函数</param>
             void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
             {
-                auto ReadHandler = [=](const boost::system::error_code &se, std::size_t Count)
-                {
-                    if (se != boost::system::errc::success)
-                    {
-                        if (IsSocketErrorKnown(se)) { return; }
-                        UnknownFaulted(se);
-                        return;
-                    }
-                    auto IsRunning = IsRunningValue->Check<bool>([=](bool b)
-                    {
-                        if (!b) { return b; }
-                        auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
-                        Buffer->resize(Count, 0);
-                        ArrayCopy(ReadBuffer, 0, *Buffer, 0, Count);
-                        CompletedSocket(Buffer, DoResultHandle, UnknownFaulted);
-                        Buffer = nullptr;
-                        return b;
-                    });
-                    if (!IsRunning)
-                    {
-                        return;
-                    }
-                    ReceiveAsync(DoResultHandle, UnknownFaulted);
-                };
-                IsRunningValue->Check<bool>([=](bool b)
-                {
-                    if (!b) { return b; }
-                    auto ServerEndPoint = this->RemoteEndPoint;
-                    Socket.async_receive_from(boost::asio::buffer(ReadBuffer), ServerEndPoint, ReadHandler);
-                    return b;
-                });
+                ReceiveAsyncInner(this->IsRunningValue, DoResultHandle, UnknownFaulted);
             }
 
         private:
@@ -917,31 +935,35 @@ namespace Client
         public:
             void Close()
             {
-                if (IsDisposed) { return; }
-                IsDisposed = true;
+                auto IsRunningValue = this->IsRunningValue;
+                IsRunningValue->Update([=](bool b)
+                {
+                    if (IsDisposed) { return false; }
+                    IsDisposed = true;
 
-                IsRunningValue->Update([&](bool b) { return false; });
-                try
-                {
-                    Socket.close();
-                }
-                catch (...)
-                {
-                }
-                std::shared_ptr<boost::asio::deadline_timer> Timer = nullptr;
-                CookedWritingContext.DoAction([&](std::shared_ptr<UdpWriteContext> c)
-                {
-                    if (c->Timer != nullptr)
+                    try
                     {
-                        Timer = c->Timer;
-                        c->Timer = nullptr;
+                        Socket.close();
                     }
+                    catch (...)
+                    {
+                    }
+                    std::shared_ptr<boost::asio::deadline_timer> Timer = nullptr;
+                    CookedWritingContext.DoAction([&](std::shared_ptr<UdpWriteContext> c)
+                    {
+                        if (c->Timer != nullptr)
+                        {
+                            Timer = c->Timer;
+                            c->Timer = nullptr;
+                        }
+                    });
+                    if (Timer != nullptr)
+                    {
+                        Timer->cancel();
+                        Timer = nullptr;
+                    }
+                    return false;
                 });
-                if (Timer != nullptr)
-                {
-                    Timer->cancel();
-                    Timer = nullptr;
-                }
             }
         };
     }
