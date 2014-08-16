@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2014.08.15.
+//  Version:     2014.08.16.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -65,9 +65,17 @@ namespace Client
                     }
                 }
                 std::vector<std::shared_ptr<boost::thread>> Threads;
-                for (int k = 0; k < 16; k += 1)
+                for (int k = 0; k < 2; k += 1)
                 {
                     Threads.push_back(std::make_shared<boost::thread>([&]() { IoService.run(); }));
+                }
+                for (int k = 0; k < 2048; k += 1)
+                {
+                    IoService.post([=]()
+                    {
+                        auto a = new unsigned char[10000];
+                        delete[] a;
+                    });
                 }
                 for (auto t : Threads)
                 {
@@ -198,7 +206,7 @@ namespace Client
                 });
             }
 
-            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
         }
 
         static void RunTcp(boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, boost::mutex &)> Action)
@@ -231,7 +239,22 @@ namespace Client
             };
             bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
 
-            boost::thread t([&]() { IoService.run(); });
+            boost::thread t([&]()
+            {
+                auto Exit = false;
+                while (true)
+                {
+                    try
+                    {
+                        IoService.run();
+                        Exit = true;
+                    }
+                    catch (std::exception &)
+                    {
+                    }
+                    if (Exit) { break; }
+                }
+            });
 
             Action(ac, Lockee);
 
@@ -274,7 +297,22 @@ namespace Client
             };
             bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
 
-            boost::thread t([&]() { IoService.run(); });
+            boost::thread t([&]()
+            {
+                auto Exit = false;
+                while (true)
+                {
+                    try
+                    {
+                        IoService.run();
+                        Exit = true;
+                    }
+                    catch (std::exception &)
+                    {
+                    }
+                    if (Exit) { break; }
+                }
+            });
 
             Action(ac, Lockee);
 

@@ -34,12 +34,11 @@ namespace Client
         private:
             std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient;
             boost::asio::ip::udp::endpoint RemoteEndPoint;
-            BaseSystem::LockedVariable<bool> IsRunningValue;
-            BaseSystem::LockedVariable<bool> ReceivingValue;
+            std::shared_ptr<BaseSystem::LockedVariable<bool>> IsRunningValue;
         public:
             bool IsRunning()
             {
-                return IsRunningValue.Check<bool>([](bool v) { return v; });
+                return IsRunningValue->Check<bool>([](bool v) { return v; });
             }
         private:
             BaseSystem::LockedVariable<int> SessionIdValue;
@@ -263,8 +262,9 @@ namespace Client
 
         public:
             UdpClient(boost::asio::io_service &io_service, boost::asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient)
-                : io_service(io_service), Socket(io_service), IsRunningValue(false), ReceivingValue(false), SessionIdValue(0), ConnectedValue(false), SecureContextValue(nullptr), RawReadingContext(nullptr), CookedWritingContext(nullptr), IsDisposed(false)
+                : io_service(io_service), Socket(io_service), IsRunningValue(nullptr), SessionIdValue(0), ConnectedValue(false), SecureContextValue(nullptr), RawReadingContext(nullptr), CookedWritingContext(nullptr), IsDisposed(false)
             {
+                IsRunningValue = std::make_shared<BaseSystem::LockedVariable<bool>>(false);
                 ReadBuffer.resize(MaxPacketLength(), 0);
                 RawReadingContext.Update([](std::shared_ptr<UdpReadContext> cc)
                 {
@@ -653,7 +653,7 @@ namespace Client
         public:
             void Connect()
             {
-                IsRunningValue.Update([](bool b)
+                IsRunningValue->Update([](bool b)
                 {
                     if (b) { throw std::logic_error("InvalidOperationException"); }
                     return true;
@@ -879,31 +879,37 @@ namespace Client
             /// <param name="UnknownFaulted">未知错误处理函数</param>
             void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
             {
-                if (!IsRunningValue.Check<bool>([](bool b) { return b; }))
-                {
-                    ReceivingValue.Update([](bool v) { return false; });
-                    return;
-                }
-                ReceivingValue.Update([](bool v) { return true; });
-
-                auto ServerEndPoint = this->RemoteEndPoint;
                 auto ReadHandler = [=](const boost::system::error_code &se, std::size_t Count)
                 {
                     if (se != boost::system::errc::success)
                     {
-                        ReceivingValue.Update([](bool v) { return false; });
                         if (IsSocketErrorKnown(se)) { return; }
                         UnknownFaulted(se);
                         return;
                     }
-                    auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
-                    Buffer->resize(Count, 0);
-                    ArrayCopy(ReadBuffer, 0, *Buffer, 0, Count);
-                    CompletedSocket(Buffer, DoResultHandle, UnknownFaulted);
-                    Buffer = nullptr;
+                    auto IsRunning = IsRunningValue->Check<bool>([=](bool b)
+                    {
+                        if (!b) { return b; }
+                        auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
+                        Buffer->resize(Count, 0);
+                        ArrayCopy(ReadBuffer, 0, *Buffer, 0, Count);
+                        CompletedSocket(Buffer, DoResultHandle, UnknownFaulted);
+                        Buffer = nullptr;
+                        return b;
+                    });
+                    if (!IsRunning)
+                    {
+                        return;
+                    }
                     ReceiveAsync(DoResultHandle, UnknownFaulted);
                 };
-                Socket.async_receive_from(boost::asio::buffer(ReadBuffer), ServerEndPoint, ReadHandler);
+                IsRunningValue->Check<bool>([=](bool b)
+                {
+                    if (!b) { return b; }
+                    auto ServerEndPoint = this->RemoteEndPoint;
+                    Socket.async_receive_from(boost::asio::buffer(ReadBuffer), ServerEndPoint, ReadHandler);
+                    return b;
+                });
             }
 
         private:
@@ -914,7 +920,7 @@ namespace Client
                 if (IsDisposed) { return; }
                 IsDisposed = true;
 
-                IsRunningValue.Update([&](bool b) { return false; });
+                IsRunningValue->Update([&](bool b) { return false; });
                 try
                 {
                     Socket.close();
@@ -935,9 +941,6 @@ namespace Client
                 {
                     Timer->cancel();
                     Timer = nullptr;
-                }
-                while (ReceivingValue.Check<bool>([](bool v) { return v; }))
-                {
                 }
             }
         };
