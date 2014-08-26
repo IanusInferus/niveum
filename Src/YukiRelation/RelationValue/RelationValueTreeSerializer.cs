@@ -322,7 +322,7 @@ namespace Yuki.RelationValue
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
                         try
                         {
-                            var v = Regex.Split(cv.Trim(" \t\r\n".ToCharArray()), "( |\t|\r|\n)+", RegexOptions.ExplicitCapture).Select(s => Byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToList();
+                            var v = Regex.Split(cv.Trim(" \t\r\n".ToCharArray()), "( |\t|\r|\n)+", RegexOptions.ExplicitCapture).Where(s => s != "").Select(s => Byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToList();
                             return ColumnVal.CreatePrimitive(PrimitiveVal.CreateBinaryValue(v));
                         }
                         catch (FormatException)
