@@ -184,29 +184,20 @@ namespace Client
                 (
                     a =>
                     {
-                        lock (Lockee)
-                        {
-                            a();
-                        }
+                        a();
                     },
                     UnknownFaulted
                 );
-                lock (Lockee)
+                ac.ServerTime(new ServerTimeRequest { }, r =>
                 {
-                    ac.ServerTime(new ServerTimeRequest { }, r =>
-                    {
-                        vConnected.Update(i => i + 1);
-                        Check.Set();
-                    });
-                }
+                    vConnected.Update(i => i + 1);
+                    Check.Set();
+                });
                 var t = new Task
                 (
                     () =>
                     {
-                        lock (Lockee)
-                        {
-                            Test(NumUser, n, cc, ac, Completed);
-                        }
+                        Test(NumUser, n, cc, ac, Completed);
                     }
                 );
                 var tmr = new Timer
@@ -215,10 +206,7 @@ namespace Client
                     {
                         if (!bAbondon.Check(b => b)) { return; }
                         if (bCompleted.Check(b => b)) { return; }
-                        lock (Lockee)
-                        {
-                            ac.ServerTime(new ServerTimeRequest { }, r => { });
-                        }
+                        ac.ServerTime(new ServerTimeRequest { }, r => { });
                     },
                     null,
                     10000,
@@ -356,15 +344,12 @@ namespace Client
                 {
                     Completed = () =>
                     {
-                        lock (Lockee)
+                        ac.Quit(new QuitRequest { }, r =>
                         {
-                            ac.Quit(new QuitRequest { }, r =>
-                            {
-                                bCompleted.Update(b => true);
-                                vCompleted.Update(i => i + 1);
-                                Check.Set();
-                            });
-                        }
+                            bCompleted.Update(b => true);
+                            vCompleted.Update(i => i + 1);
+                            Check.Set();
+                        });
                     };
                     FaultedCompleted = () =>
                     {
@@ -399,29 +384,20 @@ namespace Client
                 (
                     a =>
                     {
-                        lock (Lockee)
-                        {
-                            a();
-                        }
+                        a();
                     },
                     UnknownFaulted
                 );
-                lock (Lockee)
+                ac.ServerTime(new ServerTimeRequest { }, r =>
                 {
-                    ac.ServerTime(new ServerTimeRequest { }, r =>
-                    {
-                        vConnected.Update(i => i + 1);
-                        Check.Set();
-                    });
-                }
+                    vConnected.Update(i => i + 1);
+                    Check.Set();
+                });
                 var t = new Task
                 (
                     () =>
                     {
-                        lock (Lockee)
-                        {
-                            Test(NumUser, n, cc, ac, Completed);
-                        }
+                        Test(NumUser, n, cc, ac, Completed);
                     }
                 );
                 var tmr = new Timer
@@ -430,20 +406,17 @@ namespace Client
                     {
                         if (!bAbondon.Check(b => b)) { return; }
                         if (bCompleted.Check(b => b)) { return; }
-                        lock (Lockee)
+                        int OldValue = 0;
+                        vError.Update(v =>
                         {
-                            int OldValue = 0;
-                            vError.Update(v =>
-                            {
-                                OldValue = v;
-                                return v + 1;
-                            });
-                            if (OldValue <= 10)
-                            {
-                                Console.WriteLine(String.Format("{0}:{1}", n, "Timedout"));
-                            }
-                            FaultedCompleted();
+                            OldValue = v;
+                            return v + 1;
+                        });
+                        if (OldValue <= 10)
+                        {
+                            Console.WriteLine(String.Format("{0}:{1}", n, "Timedout"));
                         }
+                        FaultedCompleted();
                     },
                     null,
                     10000,
@@ -564,48 +537,39 @@ namespace Client
                 {
                     Completed = () =>
                     {
-                        lock (Lockee)
+                        ac.Quit(new QuitRequest { }, r =>
                         {
-                            ac.Quit(new QuitRequest { }, r =>
-                            {
-                                vCompleted.Update(i => i + 1);
-                                Check.Set();
-                            });
-                        }
+                            vCompleted.Update(i => i + 1);
+                            Check.Set();
+                        });
                     };
                 }
                 if (InitializeClientContext != null) { InitializeClientContext(NumUser, n, cc, ac, Completed); }
-                lock (Lockee)
+                try
                 {
-                    try
+                    ac.ServerTime(new ServerTimeRequest { }, r =>
                     {
-                        ac.ServerTime(new ServerTimeRequest { }, r =>
-                        {
-                            vConnected.Update(i => i + 1);
-                            Check.Set();
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(String.Format("{0}:{1}", n, ex.Message));
-                        Completed();
-                    }
+                        vConnected.Update(i => i + 1);
+                        Check.Set();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(String.Format("{0}:{1}", n, ex.Message));
+                    Completed();
                 }
                 var t = new Task
                 (
                     () =>
                     {
-                        lock (Lockee)
+                        try
                         {
-                            try
-                            {
-                                Test(NumUser, n, cc, ac, Completed);
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine(String.Format("{0}:{1}", n, ex.Message));
-                                Completed();
-                            }
+                            Test(NumUser, n, cc, ac, Completed);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(String.Format("{0}:{1}", n, ex.Message));
+                            Completed();
                         }
                     }
                 );
