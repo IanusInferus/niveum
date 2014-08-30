@@ -118,27 +118,18 @@ namespace Client
                 (
                     a =>
                     {
-                        lock (Lockee)
-                        {
-                            a();
-                        }
+                        a();
                     },
                     UnknownFaulted
                 );
-                lock (Lockee)
+                ac.ServerTime(new ServerTimeRequest { }, r =>
                 {
-                    ac.ServerTime(new ServerTimeRequest { }, r =>
-                    {
-                        vConnected.Update(i => i + 1);
-                        Check.Set();
-                    });
-                }
+                    vConnected.Update(i => i + 1);
+                    Check.Set();
+                });
                 Action f = () =>
                 {
-                    lock (Lockee)
-                    {
-                        Test(NumUser, n, cc, ac, Completed);
-                    }
+                    Test(NumUser, n, cc, ac, Completed);
                 };
                 var t = new Task(f);
                 lock (tll)
@@ -274,27 +265,18 @@ namespace Client
                 (
                     a =>
                     {
-                        lock (Lockee)
-                        {
-                            a();
-                        }
+                        a();
                     },
                     UnknownFaulted
                 );
-                lock (Lockee)
+                ac.ServerTime(new ServerTimeRequest { }, r =>
                 {
-                    ac.ServerTime(new ServerTimeRequest { }, r =>
-                    {
-                        vConnected.Update(i => i + 1);
-                        Check.Set();
-                    });
-                }
+                    vConnected.Update(i => i + 1);
+                    Check.Set();
+                });
                 Action f = () =>
                 {
-                    lock (Lockee)
-                    {
-                        Test(NumUser, n, cc, ac, Completed);
-                    }
+                    Test(NumUser, n, cc, ac, Completed);
                 };
                 var t = new Task(f);
                 lock (tll)
@@ -318,14 +300,11 @@ namespace Client
                         tt.Start();
                         return;
                     }
-                    lock (Lockee)
+                    ac.Quit(new QuitRequest { }, r =>
                     {
-                        ac.Quit(new QuitRequest { }, r =>
-                        {
-                            vCompleted.Update(i => i + 1);
-                            Check.Set();
-                        });
-                    }
+                        vCompleted.Update(i => i + 1);
+                        Check.Set();
+                    });
                 };
             }
 
@@ -416,33 +395,27 @@ namespace Client
                     vCompleted.Update(i => i + 1);
                     Check.Set();
                 };
-                lock (Lockee)
+                try
+                {
+                    ac.ServerTime(new ServerTimeRequest { }, r =>
+                    {
+                        vConnected.Update(i => i + 1);
+                        Check.Set();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    HandleError(ex);
+                }
+                Action f = () =>
                 {
                     try
                     {
-                        ac.ServerTime(new ServerTimeRequest { }, r =>
-                        {
-                            vConnected.Update(i => i + 1);
-                            Check.Set();
-                        });
+                        Test(NumUser, n, cc, ac, Completed);
                     }
                     catch (Exception ex)
                     {
                         HandleError(ex);
-                    }
-                }
-                Action f = () =>
-                {
-                    lock (Lockee)
-                    {
-                        try
-                        {
-                            Test(NumUser, n, cc, ac, Completed);
-                        }
-                        catch (Exception ex)
-                        {
-                            HandleError(ex);
-                        }
                     }
                 };
                 var t = new Task(f);
@@ -467,14 +440,11 @@ namespace Client
                         tt.Start();
                         return;
                     }
-                    lock (Lockee)
+                    ac.Quit(new QuitRequest { }, r =>
                     {
-                        ac.Quit(new QuitRequest { }, r =>
-                        {
-                            vCompleted.Update(i => i + 1);
-                            Check.Set();
-                        });
-                    }
+                        vCompleted.Update(i => i + 1);
+                        Check.Set();
+                    });
                 };
             }
 

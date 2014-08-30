@@ -54,7 +54,7 @@ namespace Client
 
             public const int MaxPacketLength = 1400;
             public const int ReadingWindowSize = 1024;
-            public const int WritingWindowSize = 16;
+            public const int WritingWindowSize = 32;
             public const int IndexSpace = 65536;
             public const int InitialPacketTimeoutMilliseconds = 500;
             public const int MaxSquaredPacketResentCount = 3;
@@ -139,7 +139,7 @@ namespace Client
                     return true;
                 }
 
-                public void Acknowledge(int Index, IEnumerable<int> Indices)
+                public void Acknowledge(int Index, IEnumerable<int> Indices, int WritenIndex)
                 {
                     MaxHandled = Index;
                     while (true)
@@ -160,6 +160,18 @@ namespace Client
                         if (Parts.ContainsKey(i))
                         {
                             Parts.Remove(i);
+                        }
+                    }
+                    while ((MaxHandled != WritenIndex) && IsEqualOrAfter(WritenIndex, MaxHandled))
+                    {
+                        var Next = GetSuccessor(MaxHandled);
+                        if (!Parts.ContainsKey(Next))
+                        {
+                            MaxHandled = Next;
+                        }
+                        else
+                        {
+                            break;
                         }
                     }
                 }
@@ -232,19 +244,25 @@ namespace Client
                 RawReadingContext.DoAction(c =>
                 {
                     if (c.NotAcknowledgedIndices.Count == 0) { return; }
+                    var MaxHandled = c.Parts.MaxHandled;
                     while (c.NotAcknowledgedIndices.Count > 0)
                     {
                         var First = c.NotAcknowledgedIndices.First();
-                        if (c.Parts.IsEqualOrAfter(c.Parts.MaxHandled, First))
+                        if (c.Parts.IsEqualOrAfter(MaxHandled, First))
                         {
                             c.NotAcknowledgedIndices.Remove(First);
+                        }
+                        else if (PartContext.IsSuccessor(First, MaxHandled))
+                        {
+                            c.NotAcknowledgedIndices.Remove(First);
+                            MaxHandled = First;
                         }
                         else
                         {
                             break;
                         }
                     }
-                    Indices.Add(c.Parts.MaxHandled);
+                    Indices.Add(MaxHandled);
                     Indices.AddRange(c.NotAcknowledgedIndices);
                     c.NotAcknowledgedIndices.Clear();
                 });
@@ -379,20 +397,27 @@ namespace Client
                 RawReadingContext.DoAction(c =>
                 {
                     if (c.NotAcknowledgedIndices.Count == 0) { return; }
-                    while (c.NotAcknowledgedIndices.Count > 0)
+                    var NotAcknowledgedIndices = new SortedSet<int>(c.NotAcknowledgedIndices);
+                    var MaxHandled = c.Parts.MaxHandled;
+                    while (NotAcknowledgedIndices.Count > 0)
                     {
                         var First = c.NotAcknowledgedIndices.First();
-                        if (c.Parts.IsEqualOrAfter(c.Parts.MaxHandled, First))
+                        if (c.Parts.IsEqualOrAfter(MaxHandled, First))
                         {
-                            c.NotAcknowledgedIndices.Remove(First);
+                            NotAcknowledgedIndices.Remove(First);
+                        }
+                        else if (PartContext.IsSuccessor(First, MaxHandled))
+                        {
+                            NotAcknowledgedIndices.Remove(First);
+                            MaxHandled = First;
                         }
                         else
                         {
                             break;
                         }
                     }
-                    Indices.Add(c.Parts.MaxHandled);
-                    Indices.AddRange(c.NotAcknowledgedIndices);
+                    Indices.Add(MaxHandled);
+                    Indices.AddRange(NotAcknowledgedIndices);
                 });
 
                 var Parts = new List<Byte[]>();
@@ -620,7 +645,7 @@ namespace Client
                         {
                             CookedWritingContext.DoAction(c =>
                             {
-                                c.Parts.Acknowledge(Indices.First(), Indices.Skip(1));
+                                c.Parts.Acknowledge(Indices.First(), Indices.Skip(1), c.WritenIndex);
                             });
                         }
 

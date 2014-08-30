@@ -11,6 +11,7 @@ namespace Client
             private class Context
             {
                 public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[128 * 1024], 0, 0);
+                public Object WriteBufferLockee = new Object();
                 public List<Byte[]> WriteBuffer = new List<Byte[]>();
 
                 public int State = 0;
@@ -48,12 +49,15 @@ namespace Client
                         s.Position = 0;
                         Bytes = s.Read((int)(s.Length));
                     }
-                    if (Transformer != null)
+                    lock (c.WriteBufferLockee)
                     {
-                        Transformer.Transform(Bytes, 0, Bytes.Length);
+                        if (Transformer != null)
+                        {
+                            Transformer.Transform(Bytes, 0, Bytes.Length);
+                        }
+                        c.WriteBuffer.Add(Bytes);
                     }
-                    c.WriteBuffer.Add(Bytes);
-                    if (ClientMethod != null) { ClientMethod(); }
+                    if (this.ClientMethod != null) { ClientMethod(); }
                 };
             }
 
@@ -64,9 +68,12 @@ namespace Client
 
             public Byte[][] TakeWriteBuffer()
             {
-                var WriteBuffer = c.WriteBuffer.ToArray();
-                c.WriteBuffer = new List<Byte[]>();
-                return WriteBuffer;
+                lock (c.WriteBufferLockee)
+                {
+                    var WriteBuffer = c.WriteBuffer.ToArray();
+                    c.WriteBuffer = new List<Byte[]>();
+                    return WriteBuffer;
+                }
             }
 
             public StreamedVirtualTransportClientHandleResult Handle(int Count)
