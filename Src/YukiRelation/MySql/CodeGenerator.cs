@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构MySQL数据库代码生成器
-//  Version:     2014.04.23.
+//  Version:     2014.08.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -145,8 +145,17 @@ namespace Yuki.RelationSchema.MySql
                         FieldsAndKeys.Add(GetColumnDef(f));
                     }
                 }
+                var FieldDict = r.Fields.ToDictionary(f => f.Name);
                 {
                     var Name = RelationSchemaExtensions.GetLimitedKeyName("PK", String.Format("{0}_{1}", r.CollectionName, r.PrimaryKey.Columns.FriendlyName()), MaxNameLength);
+                    foreach (var c in r.PrimaryKey.Columns)
+                    {
+                        var f = FieldDict[c.Name];
+                        if (f.Type.OnOptional)
+                        {
+                            throw new InvalidOperationException(String.Format("MySQL主键中不支持NULL字段'{0}': {1}", Name, f.Name));
+                        }
+                    }
                     FieldsAndKeys.Add(GetPrimaryKey(r.PrimaryKey, Name));
                 }
                 foreach (var k in r.UniqueKeys)
