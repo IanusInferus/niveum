@@ -57,17 +57,18 @@ namespace Server
                         ms.Position = 0;
                         Bytes = ms.Read((int)(ms.Length));
                     }
+                    var BytesLength = Bytes.Length;
                     lock (c.WriteBufferLockee)
                     {
                         if (Transformer != null)
                         {
-                            Transformer.Transform(Bytes, 0, Bytes.Length);
+                            Transformer.Transform(Bytes, 0, BytesLength);
                         }
                         c.WriteBuffer.Add(Bytes);
                     }
                     if (OutputByteLengthReport != null)
                     {
-                        OutputByteLengthReport(CommandName, Bytes.Length);
+                        OutputByteLengthReport(CommandName, BytesLength);
                     }
                     if (this.ServerEvent != null)
                     {
@@ -143,17 +144,18 @@ namespace Server
                                             ms.Position = 0;
                                             Bytes = ms.Read((int)(ms.Length));
                                         }
+                                        var BytesLength = Bytes.Length;
                                         lock (c.WriteBufferLockee)
                                         {
                                             if (Transformer != null)
                                             {
-                                                Transformer.Transform(Bytes, 0, Bytes.Length);
+                                                Transformer.Transform(Bytes, 0, BytesLength);
                                             }
                                             c.WriteBuffer.Add(Bytes);
                                         }
                                         if (OutputByteLengthReport != null)
                                         {
-                                            OutputByteLengthReport(CommandName, Bytes.Length);
+                                            OutputByteLengthReport(CommandName, BytesLength);
                                         }
                                         OnSuccess();
                                     };
