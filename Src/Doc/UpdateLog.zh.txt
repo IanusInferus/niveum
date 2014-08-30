@@ -1,6 +1,8 @@
 ﻿2014.08.30
 Yuki.Relation:
 增加MySQL主键中不支持NULL字段的检测。
+Yuki.Core:
+修正C++二进制代码生成中Int有一处写为Int32的问题。
 
 2014.08.26
 Yuki.Relation:
