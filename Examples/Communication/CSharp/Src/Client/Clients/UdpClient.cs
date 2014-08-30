@@ -401,7 +401,7 @@ namespace Client
                     var MaxHandled = c.Parts.MaxHandled;
                     while (NotAcknowledgedIndices.Count > 0)
                     {
-                        var First = c.NotAcknowledgedIndices.First();
+                        var First = NotAcknowledgedIndices.First();
                         if (c.Parts.IsEqualOrAfter(MaxHandled, First))
                         {
                             NotAcknowledgedIndices.Remove(First);
