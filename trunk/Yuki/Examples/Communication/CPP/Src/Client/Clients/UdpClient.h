@@ -66,7 +66,7 @@ namespace Client
 
             static int MaxPacketLength() { return 1400; }
             static int ReadingWindowSize() { return 1024; }
-            static int WritingWindowSize() { return 16; }
+            static int WritingWindowSize() { return 32; }
             static int IndexSpace() { return 65536; }
             static int InitialPacketTimeoutMilliseconds() { return 500; }
             static int MaxSquaredPacketResentCount() { return 3; }
@@ -179,7 +179,7 @@ namespace Client
                     return true;
                 }
 
-                void Acknowledge(int Index, const std::vector<int> &Indices)
+                void Acknowledge(int Index, const std::vector<int> &Indices, int WritenIndex)
                 {
                     MaxHandled = Index;
                     while (true)
@@ -202,6 +202,18 @@ namespace Client
                         if (Parts.count(i) > 0)
                         {
                             Parts.erase(i);
+                        }
+                    }
+                    while ((MaxHandled != WritenIndex) && IsEqualOrAfter(WritenIndex, MaxHandled))
+                    {
+                        auto Next = GetSuccessor(MaxHandled);
+                        if (Parts.count(Next) == 0)
+                        {
+                            MaxHandled = Next;
+                        }
+                        else
+                        {
+                            break;
                         }
                     }
                 }
@@ -329,19 +341,25 @@ namespace Client
                 RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
                 {
                     if (c->NotAcknowledgedIndices.size() == 0) { return; }
+                    auto MaxHandled = c->Parts->MaxHandled;
                     while (c->NotAcknowledgedIndices.size() > 0)
                     {
                         auto First = *c->NotAcknowledgedIndices.begin();
-                        if (c->Parts->IsEqualOrAfter(c->Parts->MaxHandled, First))
+                        if (c->Parts->IsEqualOrAfter(MaxHandled, First))
                         {
                             c->NotAcknowledgedIndices.erase(First);
+                        }
+                        else if (PartContext::IsSuccessor(First, MaxHandled))
+                        {
+                            c->NotAcknowledgedIndices.erase(First);
+                            MaxHandled = First;
                         }
                         else
                         {
                             break;
                         }
                     }
-                    Indices.push_back(c->Parts->MaxHandled);
+                    Indices.push_back(MaxHandled);
                     for (auto i : c->NotAcknowledgedIndices)
                     {
                         Indices.push_back(i);
@@ -501,20 +519,27 @@ namespace Client
                     RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
                     {
                         if (c->NotAcknowledgedIndices.size() == 0) { return; }
-                        while (c->NotAcknowledgedIndices.size() > 0)
+                        auto NotAcknowledgedIndices = std::set<int>(c->NotAcknowledgedIndices.begin(), c->NotAcknowledgedIndices.end());
+                        auto MaxHandled = c->Parts->MaxHandled;
+                        while (NotAcknowledgedIndices.size() > 0)
                         {
-                            auto First = *c->NotAcknowledgedIndices.begin();
-                            if (c->Parts->IsEqualOrAfter(c->Parts->MaxHandled, First))
+                            auto First = *NotAcknowledgedIndices.begin();
+                            if (c->Parts->IsEqualOrAfter(MaxHandled, First))
                             {
-                                c->NotAcknowledgedIndices.erase(First);
+                                NotAcknowledgedIndices.erase(First);
+                            }
+                            else if (PartContext::IsSuccessor(First, MaxHandled))
+                            {
+                                NotAcknowledgedIndices.erase(First);
+                                MaxHandled = First;
                             }
                             else
                             {
                                 break;
                             }
                         }
-                        Indices.push_back(c->Parts->MaxHandled);
-                        for (auto i : c->NotAcknowledgedIndices)
+                        Indices.push_back(MaxHandled);
+                        for (auto i : NotAcknowledgedIndices)
                         {
                             Indices.push_back(i);
                         }
@@ -804,7 +829,7 @@ namespace Client
                         {
                             auto First = Indices[0];
                             Indices.erase(Indices.begin());
-                            c->Parts->Acknowledge(First, Indices);
+                            c->Parts->Acknowledge(First, Indices, c->WritenIndex);
                         });
                     }
 
