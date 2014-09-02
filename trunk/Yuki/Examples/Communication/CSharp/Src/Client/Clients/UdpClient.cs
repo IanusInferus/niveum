@@ -221,11 +221,11 @@ namespace Client
 
                 VirtualTransportClient.ClientMethod += () =>
                 {
-                    OnWrite(VirtualTransportClient, () => { }, () => { throw new InvalidOperationException(); });
+                    OnWrite(VirtualTransportClient, () => { }, se => { throw new SocketException((int)(se)); });
                 };
             }
 
-            private void OnWrite(IStreamedVirtualTransportClient vtc, Action OnSuccess, Action OnFailure)
+            private void OnWrite(IStreamedVirtualTransportClient vtc, Action OnSuccess, Action<SocketError> OnFailure)
             {
                 var ByteArrays = vtc.TakeWriteBuffer();
                 var TotalLength = ByteArrays.Sum(b => b.Length);
@@ -271,7 +271,7 @@ namespace Client
                     OnSuccess();
                     return;
                 }
-                var Success = true;
+                var se = SocketError.Success;
                 var Parts = new List<Byte[]>();
                 CookedWritingContext.DoAction(c =>
                 {
@@ -284,7 +284,7 @@ namespace Client
                         var NumIndex = Indices.Count;
                         if (NumIndex > 0xFFFF)
                         {
-                            Success = false;
+                            se = SocketError.NoBufferSpaceAvailable;
                             return;
                         }
 
@@ -351,7 +351,7 @@ namespace Client
                         var Part = new Part { Index = Index, ResendTime = Time.AddIntMilliseconds(GetTimeoutMilliseconds(0)), Data = Buffer, ResentCount = 0 };
                         if (!c.Parts.TryPushPart(Index, Buffer))
                         {
-                            Success = false;
+                            se = SocketError.NoBufferSpaceAvailable;
                             return;
                         }
                         Parts.Add(Part.Data);
@@ -371,13 +371,13 @@ namespace Client
                     }
                     catch
                     {
-                        Success = false;
+                        se = SocketError.Interrupted;
                         break;
                     }
                 }
-                if (!Success)
+                if (se != SocketError.Success)
                 {
-                    OnFailure();
+                    OnFailure(se);
                 }
                 else
                 {
