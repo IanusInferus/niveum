@@ -303,7 +303,7 @@ namespace Client
                     IsRunningValue->DoAction([=](bool b)
                     {
                         if (!b) { return; }
-                        OnWrite(*this->VirtualTransportClient, []() {}, []() { throw std::logic_error("InvalidOperationException"); });
+                        OnWrite(*this->VirtualTransportClient, []() {}, [](boost::system::errc::errc_t se) { throw boost::system::system_error(se, boost::system::generic_category()); });
                     });
                 };
             }
@@ -314,11 +314,10 @@ namespace Client
             }
 
         private:
-            void OnWrite(IStreamedVirtualTransportClient &vtc, std::function<void()> OnSuccess, std::function<void()> OnFailure)
+            void OnWrite(IStreamedVirtualTransportClient &vtc, std::function<void()> OnSuccess, std::function<void(boost::system::errc::errc_t)> OnFailure)
             {
                 auto IsRunningValue = this->IsRunningValue;
 
-                bool Success = true;
                 auto ByteArrays = vtc.TakeWriteBuffer();
                 int TotalLength = 0;
                 for (auto b : ByteArrays)
@@ -370,6 +369,7 @@ namespace Client
                 {
                     return;
                 }
+                auto se = boost::system::errc::success;
                 std::vector<std::shared_ptr<std::vector<std::uint8_t>>> Parts;
                 CookedWritingContext.DoAction([&, IsRunningValue](std::shared_ptr<UdpWriteContext> c)
                 {
@@ -382,7 +382,7 @@ namespace Client
                         auto NumIndex = static_cast<int>(Indices.size());
                         if (NumIndex > 0xFFFF)
                         {
-                            Success = false;
+                            se = boost::system::errc::no_buffer_space;
                             return;
                         }
 
@@ -462,7 +462,7 @@ namespace Client
                         Part->ResentCount = 0;
                         if (!c->Parts->TryPushPart(Index, Buffer))
                         {
-                            Success = false;
+                            se = boost::system::errc::no_buffer_space;
                             return;
                         }
                         Parts.push_back(Part->Data);
@@ -490,13 +490,13 @@ namespace Client
                     }
                     catch (...)
                     {
-                        Success = false;
+                        se = boost::system::errc::interrupted;
                         break;
                     }
                 }
-                if (!Success)
+                if (se != boost::system::errc::success)
                 {
-                    OnFailure();
+                    OnFailure(se);
                 }
                 else
                 {
