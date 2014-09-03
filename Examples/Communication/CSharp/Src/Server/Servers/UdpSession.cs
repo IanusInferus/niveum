@@ -28,7 +28,7 @@ namespace Server
                 {
                     return RemoteEndPointValue.Check(v => v);
                 }
-                private set
+                set
                 {
                     RemoteEndPointValue.Update(v => value);
                 }
@@ -707,7 +707,6 @@ namespace Server
                         }
                     }
                 }
-                this.RemoteEndPoint = RemoteEndPoint;
                 return true;
             }
 
@@ -734,7 +733,6 @@ namespace Server
                         }
                     }
                 }
-                this.RemoteEndPoint = RemoteEndPoint;
 
                 var Pushed = false;
                 var Parts = new List<Part>();

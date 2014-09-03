@@ -635,6 +635,57 @@ namespace Server
                                                         if (Indices.Length < 1) { continue; }
                                                         if (Index != Indices[0]) { continue; }
                                                         if (Offset != Buffer.Length) { continue; }
+                                                    }
+
+                                                    var PreviousRemoteEndPoint = s.RemoteEndPoint;
+                                                    if (!PreviousRemoteEndPoint.Equals(e))
+                                                    {
+                                                        SessionSets.DoAction
+                                                        (
+                                                            ss =>
+                                                            {
+                                                                var Authenticated = false;
+                                                                {
+                                                                    var PreviousIpAddress = PreviousRemoteEndPoint.Address;
+                                                                    var isi = ss.IpSessions[PreviousIpAddress];
+                                                                    if (isi.Authenticated.Contains(s))
+                                                                    {
+                                                                        isi.Authenticated.Remove(s);
+                                                                        Authenticated = true;
+                                                                    }
+                                                                    isi.Count -= 1;
+                                                                    if (isi.Count == 0)
+                                                                    {
+                                                                        ss.IpSessions.Remove(PreviousIpAddress);
+                                                                    }
+                                                                }
+
+                                                                {
+                                                                    IpSessionInfo isi;
+                                                                    if (ss.IpSessions.ContainsKey(e.Address))
+                                                                    {
+                                                                        isi = ss.IpSessions[e.Address];
+                                                                        isi.Count += 1;
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        isi = new IpSessionInfo();
+                                                                        isi.Count += 1;
+                                                                        ss.IpSessions.Add(e.Address, isi);
+                                                                    }
+                                                                    if (Authenticated)
+                                                                    {
+                                                                        isi.Authenticated.Add(s);
+                                                                    }
+                                                                }
+
+                                                                s.RemoteEndPoint = e;
+                                                            }
+                                                        );
+                                                    }
+
+                                                    if ((Flag & 8) != 0)
+                                                    {
                                                         if (!s.PushAux(e, Indices))
                                                         {
                                                             StoppingSessions.Enqueue(s);
