@@ -4,6 +4,8 @@ Yuki.Core:
 Examples:
 调整C#通讯示例，修改写法，去除无用变量。
 调整Haxe通讯示例，修改JsonHttpClient写法。
+调整C#通讯示例，修改HTTP服务器，去除对来路判断的无用异常。
+调整Haxe通讯示例，增加命令队列，使得同时发出多个命令时不再出错。
 
 2014.09.02
 Examples:
