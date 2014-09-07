@@ -16,6 +16,7 @@ class JsonHttpClient
     private var useJsonp : Boolean;
     private var useShortConnection : Boolean;
     private var sessionId : String;
+    private var commandQueue : List<Dynamic>;
 
     public function new(jc : IJsonSerializationClientAdapter, prefix : String, serviceVirtualPath : String, useJsonp : Boolean, useShortConnection : Boolean)
     {
@@ -26,10 +27,11 @@ class JsonHttpClient
         this.useJsonp = useJsonp;
         this.useShortConnection = useShortConnection;
         sessionId = null;
+        commandQueue = new List<Dynamic>();
         jc.clientEvent = function(commandName : String, commandHash : String, parameters : String) : Void
         {
             var jo = {commandName : commandName, commandHash : commandHash, parameters : parameters};
-            sendRaw(jo, jc.handleResult);
+            sendWithHash(jo, jc.handleResult);
         };
     }
 
@@ -41,6 +43,20 @@ class JsonHttpClient
     }
     private function sendRaw(jo : Dynamic, _callback : String -> String -> String -> Void)
     {
+        var c = function(r)
+        {
+            var commands : Array<Dynamic> = r.commands;
+            sessionId = r.sessionid;
+            for (c in commands)
+            {
+                _callback(c.commandName, c.commandHash, c.parameters);
+            }
+            commandQueue.pop();
+            if (commandQueue.length > 0)
+            {
+                sendRaw(jo, _callback);
+            }
+        };
         if (useJsonp)
         {
             var url;
@@ -52,15 +68,7 @@ class JsonHttpClient
             {
                 url = prefix + serviceVirtualPath + "?sessionid=" + StringTools.urlEncode(sessionId) + "&callback=?";
             }
-            JQueryStatic.getJSON(url, {data : Json.stringify([jo])}, function(r)
-            {
-                var commands : Array<Dynamic> = r.commands;
-                sessionId = r.sessionid;
-                for (c in commands)
-                {
-                    _callback(c.commandName, c.commandHash, c.parameters);
-                }
-            });
+            JQueryStatic.getJSON(url, {data : Json.stringify([jo])}, c);
         }
         else
         {
@@ -73,15 +81,19 @@ class JsonHttpClient
             {
                 url = prefix + serviceVirtualPath + "?sessionid=" + StringTools.urlEncode(sessionId);
             }
-            JQueryStatic.post(url, Json.stringify([jo]), function(r)
-            {
-                var commands : Array<Dynamic> = r.commands;
-                sessionId = r.sessionid;
-                for (c in commands)
-                {
-                    _callback(c.commandName, c.commandHash, c.parameters);
-                }
-            });
+            JQueryStatic.post(url, Json.stringify([jo]), c);
+        }
+    }
+    private function sendWithHash(jo : Dynamic, _callback : String -> String -> String -> Void)
+    {
+        if (commandQueue.length > 0)
+        {
+            commandQueue.add({jo : jo, _callback : _callback});
+        }
+        else
+        {
+            commandQueue.add({jo : jo, _callback : _callback});
+            sendRaw(jo, _callback);
         }
     }
 
@@ -91,6 +103,6 @@ class JsonHttpClient
         {
             _callback(commandName, parameters);
         };
-        sendRaw({commandName : commandName, parameters : parameters}, c);
+        sendWithHash({commandName : commandName, parameters : parameters}, c);
     }
 }

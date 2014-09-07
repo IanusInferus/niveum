@@ -29,7 +29,10 @@ CSharp服务器默认在8003端口监听HTTP请求。
         }
 
         location = /cmd {
+            rewrite      ^.*$  /cmd  break;
             proxy_pass   http://127.0.0.1:8003;
+            proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header    X-Forwarded-Port $remote_port;
         }
 其中路径要做相应更改。
 运行nginx。
