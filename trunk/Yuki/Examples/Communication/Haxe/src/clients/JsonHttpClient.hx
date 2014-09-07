@@ -1,67 +1,44 @@
+package clients;
+
 import haxe.Json;
 import jQuery.JQuery;
 
 import Common;
-import communication.Communication;
-import communication.CommunicationJson;
 
-private class JsonSender implements IJsonSender
-{
-    public var sendObject : Dynamic -> Void;
-
-    public function new()
-    {
-    }
-
-    public function send(commandName : String, commandHash : String, parameters : String) : Void
-    {
-        var jo = {commandName : commandName, commandHash : commandHash, parameters : parameters};
-        sendObject(jo);
-    }
-}
+import clients.ISerializationClient;
 
 class JsonHttpClient
 {
-    public var InnerClient(get, null) : IApplicationClient;
-    public function get_InnerClient() : IApplicationClient
-    {
-        return jc.GetApplicationClient();
-    }
+    private var jc : IJsonSerializationClientAdapter;
 
     private var prefix : String;
     private var serviceVirtualPath : String;
     private var useJsonp : Boolean;
     private var useShortConnection : Boolean;
-    private var jc : JsonSerializationClient;
     private var sessionId : String;
 
-    public function new(prefix : String, serviceVirtualPath : String, useJsonp : Boolean, useShortConnection : Boolean)
+    public function new(jc : IJsonSerializationClientAdapter, prefix : String, serviceVirtualPath : String, useJsonp : Boolean, useShortConnection : Boolean)
     {
         if (!StringTools.endsWith(prefix, "/")) { throw "InvalidOperationException: PrefixNotEndWithSlash: '" + prefix + "'"; }
+        this.jc = jc;
         this.prefix = prefix;
         this.serviceVirtualPath = serviceVirtualPath;
         this.useJsonp = useJsonp;
         this.useShortConnection = useShortConnection;
-        var js = new JsonSender();
-        jc = new JsonSerializationClient(js);
-        var ac = jc.GetApplicationClient();
-        ac.errorCommand = function(e)
-        {
-            try
-            {
-                ac.dequeueCallback(e.commandName);
-            }
-            catch (unknown : Dynamic)
-            {
-            }
-        };
         sessionId = null;
-        js.sendObject = function(jo : Dynamic)
+        jc.clientEvent = function(commandName : String, commandHash : String, parameters : String) : Void
         {
+            var jo = {commandName : commandName, commandHash : commandHash, parameters : parameters};
             sendRaw(jo, jc.handleResult);
         };
     }
-    
+
+    private function getTimeAndRandom() : String
+    {
+        var Time = DateTools.format(Date.now(), "%Y%m%d%H%M%S");
+        var Random = StringTools.lpad(Std.string(Std.random(100)), "0", 2);
+        return Time + Random;
+    }
     private function sendRaw(jo : Dynamic, _callback : String -> String -> String -> Void)
     {
         if (useJsonp)
@@ -69,7 +46,7 @@ class JsonHttpClient
             var url;
             if ((sessionId == null) || useShortConnection)
             {
-                url = prefix + serviceVirtualPath + "?callback=?";
+                url = prefix + serviceVirtualPath + "?avoidCache=" + getTimeAndRandom() + "&callback=?";
             }
             else
             {
@@ -90,7 +67,7 @@ class JsonHttpClient
             var url;
             if ((sessionId == null) || useShortConnection)
             {
-                url = prefix + serviceVirtualPath;
+                url = prefix + serviceVirtualPath + "?avoidCache=" + getTimeAndRandom();
             }
             else
             {

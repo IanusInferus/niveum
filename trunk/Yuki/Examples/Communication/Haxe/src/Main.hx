@@ -10,7 +10,8 @@ import jQuery.JQuery;
 
 import Common;
 import communication.Communication;
-import JsonHttpClient;
+import context.SerializationClientAdapter;
+import clients.JsonHttpClient;
 
 using Lambda;
 
@@ -62,8 +63,9 @@ class Main
                 });
             });
 
-            var c = new JsonHttpClient("http://localhost/", "cmd", true, false);
-            var jc = c.InnerClient;
+            var jsca = new JsonSerializationClientAdapter();
+            var c = new JsonHttpClient(jsca, "http://localhost/", "cmd", true, false);
+            var jc = jsca.getApplicationClient();
             Q("#button_servertime").click(function(e)
             {
                 jc.serverTime({}, function(r)
