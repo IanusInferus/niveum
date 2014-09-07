@@ -391,7 +391,6 @@ namespace Client
 
                 var RemoteEndPoint = this.RemoteEndPoint;
                 var SessionId = this.SessionId;
-                var Connected = this.ConnectedValue.Check(v => v);
                 var SecureContext = this.SecureContext;
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
