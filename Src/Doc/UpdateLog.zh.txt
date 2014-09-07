@@ -1,6 +1,9 @@
 ﻿2014.09.07
+Yuki.Core:
+修正Haxe JSON代码生成中一处大小写错误。
 Examples:
 调整C#通讯示例，修改写法，去除无用变量。
+调整Haxe通讯示例，修改JsonHttpClient写法。
 
 2014.09.02
 Examples:
