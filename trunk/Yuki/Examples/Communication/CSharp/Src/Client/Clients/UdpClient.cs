@@ -612,12 +612,7 @@ namespace Client
 
                             //只有尚未加密时可以设定
                             this.SessionId = SessionId;
-                            var Connected = false;
-                            ConnectedValue.Update(v =>
-                            {
-                                Connected = v;
-                                return true;
-                            });
+                            ConnectedValue.Update(v => true);
                         }
 
                         var Offset = 12;
