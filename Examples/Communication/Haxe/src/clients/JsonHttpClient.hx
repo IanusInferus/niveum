@@ -43,7 +43,7 @@ class JsonHttpClient
     }
     private function sendRaw(jo : Dynamic, _callback : String -> String -> String -> Void)
     {
-        var c = function(r)
+        var c = function(r : Dynamic)
         {
             var commands : Array<Dynamic> = r.commands;
             sessionId = r.sessionid;
@@ -54,7 +54,8 @@ class JsonHttpClient
             commandQueue.pop();
             if (commandQueue.length > 0)
             {
-                sendRaw(jo, _callback);
+                var pair = commandQueue.first();
+                sendRaw(pair.jo, pair._callback);
             }
         };
         if (useJsonp)
