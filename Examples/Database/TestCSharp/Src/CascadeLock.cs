@@ -22,7 +22,7 @@ namespace BaseSystem
 
         public void Enter(LinkedList<Object> LockList)
         {
-            EnterLock(Root, LockList.First);
+            EnterLock(Root, LockList.First, false);
         }
 
         public void Exit(LinkedList<Object> LockList)
@@ -30,7 +30,7 @@ namespace BaseSystem
             ExitLock(Root, LockList.First);
         }
 
-        private void EnterLock(Node n, LinkedListNode<Object> Head)
+        private void EnterLock(Node n, LinkedListNode<Object> Head, Boolean Taken)
         {
             if (Head == null)
             {
@@ -41,7 +41,7 @@ namespace BaseSystem
                     var Success = false;
                     lock (n)
                     {
-                        if (!n.IsExclusive)
+                        if (!n.IsExclusive || Taken)
                         {
                             n.IsExclusive = true;
                             Locked = true;
@@ -69,10 +69,11 @@ namespace BaseSystem
                 while (true)
                 {
                     Node Child = null;
+                    var ChildTaken = false;
 
                     lock (n)
                     {
-                        if (!n.IsExclusive)
+                        if (!n.IsExclusive || Taken)
                         {
                             if (n.Children.ContainsKey(Value))
                             {
@@ -88,8 +89,9 @@ namespace BaseSystem
                             }
                             else
                             {
-                                Child = new Node { EnterCount = 1, IsExclusive = false };
+                                Child = new Node { EnterCount = 1, IsExclusive = true };
                                 n.Children.Add(Value, Child);
+                                ChildTaken = true;
                             }
                         }
                     }
@@ -100,7 +102,15 @@ namespace BaseSystem
                     }
                     else
                     {
-                        EnterLock(Child, Next);
+                        EnterLock(Child, Next, ChildTaken);
+                        if (Taken)
+                        {
+                            lock (n)
+                            {
+                                n.IsExclusive = false;
+                                n.Waiter.Set();
+                            }
+                        }
                         break;
                     }
                 }
