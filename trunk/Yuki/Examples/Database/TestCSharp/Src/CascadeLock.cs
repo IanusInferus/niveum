@@ -7,169 +7,131 @@ namespace BaseSystem
     /// <summary>
     /// 本类的所有方法都是线程安全的。本类包含AutoResetEvent资源，请保证Enter和Exit的匹配。
     /// </summary>
-    public class CascadeLock : ICascadeLock
+    public class CascadeLock : ICascadeLock, IDisposable
     {
         private class Node
         {
-            //除Waiter变量外，其他变量均应在锁定之后使用
-            public int EnterCount;
-            public bool IsExclusive;
+            //锁定Node本身之后使用
+            public int EnterCount = 0;
+            //锁定Node本身之后使用
             public Dictionary<Object, Node> Children = new Dictionary<Object, Node>();
 
-            public AutoResetEvent Waiter = new AutoResetEvent(false);
+            //无需锁定Node本身也能使用
+            public ReaderWriterLockSlim Lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         }
-        private Node Root = new Node { EnterCount = 1, IsExclusive = false };
+        private Node Root = new Node { };
 
         public void Enter(LinkedList<Object> LockList)
         {
-            EnterLock(Root, LockList.First, false);
+            lock (Root)
+            {
+                Root.EnterCount += 1;
+            }
+            EnterLock(Root, LockList.First);
         }
 
         public void Exit(LinkedList<Object> LockList)
         {
             ExitLock(Root, LockList.First);
+            lock (Root)
+            {
+                Root.EnterCount -= 1;
+            }
         }
 
-        private void EnterLock(Node n, LinkedListNode<Object> Head, Boolean Taken)
+        private void EnterLock(Node n, LinkedListNode<Object> Head)
         {
             if (Head == null)
             {
-                if (n == Root) { throw new InvalidOperationException(); }
-                var Locked = false;
-                while (true)
-                {
-                    var Success = false;
-                    lock (n)
-                    {
-                        if (!n.IsExclusive || Taken)
-                        {
-                            n.IsExclusive = true;
-                            Locked = true;
-                        }
-                        if (Locked)
-                        {
-                            Success = n.Children.Count == 0;
-                        }
-                    }
-                    if (Success)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        n.Waiter.WaitOne();
-                    }
-                }
+                n.Lock.EnterWriteLock();
             }
             else
             {
                 var Value = Head.Value;
                 var Next = Head.Next;
 
-                while (true)
+                n.Lock.EnterUpgradeableReadLock();
+
+                Node Child = null;
+                lock (n)
                 {
-                    Node Child = null;
-                    var ChildTaken = false;
-
-                    lock (n)
+                    if (n.Children.ContainsKey(Value))
                     {
-                        if (!n.IsExclusive || Taken)
+                        Child = n.Children[Value];
+                        lock (Child)
                         {
-                            if (n.Children.ContainsKey(Value))
-                            {
-                                var c = n.Children[Value];
-                                lock (c)
-                                {
-                                    if (!c.IsExclusive)
-                                    {
-                                        c.EnterCount += 1;
-                                        Child = c;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                Child = new Node { EnterCount = 1, IsExclusive = true };
-                                n.Children.Add(Value, Child);
-                                ChildTaken = true;
-                            }
+                            Child.EnterCount += 1;
                         }
-                    }
-
-                    if (Child == null)
-                    {
-                        n.Waiter.WaitOne();
                     }
                     else
                     {
-                        EnterLock(Child, Next, ChildTaken);
-                        if (Taken)
-                        {
-                            lock (n)
-                            {
-                                n.IsExclusive = false;
-                                n.Waiter.Set();
-                            }
-                        }
-                        break;
+                        Child = new Node { };
+                        Child.EnterCount += 1;
+                        n.Children.Add(Value, Child);
                     }
                 }
+
+                EnterLock(Child, Next);
             }
         }
-        private bool ExitLock(Node n, LinkedListNode<Object> Head)
+        private void ExitLock(Node n, LinkedListNode<Object> Head)
         {
             if (Head == null)
             {
-                if (n == Root) { throw new InvalidOperationException(); }
-                lock (n)
-                {
-                    if (!n.IsExclusive) { throw new InvalidOperationException(); }
-                    n.IsExclusive = false;
-                    n.EnterCount -= 1;
-                    if (n.EnterCount < 0) { throw new InvalidOperationException(); }
-                    if (n.EnterCount == 0)
-                    {
-                        n.Waiter.Dispose();
-                        n.Waiter = null;
-                        return true;
-                    }
-                    else
-                    {
-                        n.Waiter.Set();
-                        return false;
-                    }
-                }
+                n.Lock.ExitWriteLock();
             }
             else
             {
                 var Value = Head.Value;
                 var Next = Head.Next;
 
+                Node Child = null;
                 lock (n)
                 {
-                    if (!n.Children.ContainsKey(Value)) { throw new InvalidOperationException(); }
-                    var c = n.Children[Value];
-                    var NeedRemove = ExitLock(c, Next);
-                    if (NeedRemove)
+                    Child = n.Children[Value];
+                }
+
+                ExitLock(Child, Next);
+
+                lock (n)
+                {
+                    bool ToRemove;
+                    lock (Child)
+                    {
+                        Child.EnterCount -= 1;
+                        ToRemove = (Child.EnterCount == 0);
+                    }
+                    if (ToRemove)
                     {
                         n.Children.Remove(Value);
-                    }
-                    if (n == Root) { return false; }
-                    n.EnterCount -= 1;
-                    if (n.EnterCount < 0) { throw new InvalidOperationException(); }
-                    if (n.EnterCount == 0)
-                    {
-                        n.Waiter.Dispose();
-                        n.Waiter = null;
-                        return true;
-                    }
-                    else
-                    {
-                        n.Waiter.Set();
-                        return false;
+                        Child.Lock.Dispose();
+                        Child.Lock = null;
                     }
                 }
+
+                n.Lock.ExitUpgradeableReadLock();
             }
+        }
+
+        private void Dispose(Node n)
+        {
+            Dictionary<Object, Node> Children;
+            lock (n)
+            {
+                n.Lock.Dispose();
+                n.Lock = null;
+                Children = n.Children;
+                n.Children = null;
+            }
+            foreach (var Child in Children.Values)
+            {
+                Dispose(Child);
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(Root);
         }
     }
 }

@@ -72,20 +72,22 @@ namespace Database
 
             var ConnectionString = argv[0];
 
-            var cl = new CascadeLock();
-            var dam = new DataAccessManager(ConnectionString, cl);
-            if (UseLoadTest)
+            using (var cl = new CascadeLock())
             {
-                LoadTest.DoTest(dam);
-            }
-            else if (UsePerformanceTest)
-            {
-                PerformanceTest.DoTest(dam);
-            }
-            else
-            {
-                DisplayInfo();
-                return -1;
+                var dam = new DataAccessManager(ConnectionString, cl);
+                if (UseLoadTest)
+                {
+                    LoadTest.DoTest(dam);
+                }
+                else if (UsePerformanceTest)
+                {
+                    PerformanceTest.DoTest(dam);
+                }
+                else
+                {
+                    DisplayInfo();
+                    return -1;
+                }
             }
 
             return 0;
