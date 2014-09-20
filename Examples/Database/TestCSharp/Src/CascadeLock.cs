@@ -5,7 +5,11 @@ using System.Threading;
 namespace BaseSystem
 {
     /// <summary>
-    /// 本类的所有方法都是线程安全的。本类包含AutoResetEvent资源，请保证Enter和Exit的匹配。
+    /// 本类的所有方法都是线程安全的。
+    /// 本类包含ReaderWriterLockSlim资源，请保证Enter和Exit的匹配。
+    /// 对同一个锁定分支的Enter和Exit应在同一个线程中进行。
+    /// 不能对一个锁定分支在同一个线程中穿插进行两次写锁定。
+    /// 不能对一个锁定分支和它的下级锁定分支在同一个线程中穿插进行锁定。
     /// </summary>
     public class CascadeLock : ICascadeLock, IDisposable
     {
@@ -17,7 +21,7 @@ namespace BaseSystem
             public Dictionary<Object, Node> Children = new Dictionary<Object, Node>();
 
             //无需锁定Node本身也能使用
-            public ReaderWriterLockSlim Lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+            public ReaderWriterLockSlim Lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         }
         private Node Root = new Node { };
 
