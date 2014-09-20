@@ -17,7 +17,7 @@ namespace BaseSystem
             public Dictionary<Object, Node> Children = new Dictionary<Object, Node>();
 
             //无需锁定Node本身也能使用
-            public ReaderWriterLockSlim Lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+            public ReaderWriterLockSlim Lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         }
         private Node Root = new Node { };
 
@@ -50,7 +50,7 @@ namespace BaseSystem
                 var Value = Head.Value;
                 var Next = Head.Next;
 
-                n.Lock.EnterUpgradeableReadLock();
+                n.Lock.EnterReadLock();
 
                 Node Child = null;
                 lock (n)
@@ -109,7 +109,7 @@ namespace BaseSystem
                     }
                 }
 
-                n.Lock.ExitUpgradeableReadLock();
+                n.Lock.ExitReadLock();
             }
         }
 
