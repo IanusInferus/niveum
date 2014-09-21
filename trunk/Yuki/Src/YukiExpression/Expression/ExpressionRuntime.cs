@@ -3,7 +3,7 @@
 //  File:        ExpressionRuntime.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式系统库
-//  Version:     2013.03.13.
+//  Version:     2014.09.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -184,7 +184,10 @@ namespace Yuki.Expression
         }
     }
 
-    public class ExpressionRuntimeProvider : IVariableTypeProvider, IVariableProvider
+    /// <summary>
+    /// 本类是线程安全的。
+    /// </summary>
+    public class ExpressionRuntimeProvider<T> : IVariableTypeProvider, IVariableProvider<T>
     {
         private class FunctionResolver
         {
@@ -203,63 +206,63 @@ namespace Yuki.Expression
                 this.ReturnType = rt;
                 this.Create = Create;
             }
-            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<Boolean>, Delegate> Create)
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<T, Boolean>, Delegate> Create)
             {
                 this.Name = Name;
                 this.ParameterTypes = new PrimitiveType[] { pt0 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
-            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<int>, Delegate> Create)
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<T, int>, Delegate> Create)
             {
                 this.Name = Name;
                 this.ParameterTypes = new PrimitiveType[] { pt0 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
-            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<double>, Delegate> Create)
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<T, double>, Delegate> Create)
             {
                 this.Name = Name;
                 this.ParameterTypes = new PrimitiveType[] { pt0 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
-            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<Boolean>, Func<Boolean>, Delegate> Create)
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<T, Boolean>, Func<T, Boolean>, Delegate> Create)
             {
                 this.Name = Name;
                 this.ParameterTypes = new PrimitiveType[] { pt0, pt1 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
-            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<int>, Func<int>, Delegate> Create)
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<T, int>, Func<T, int>, Delegate> Create)
             {
                 this.Name = Name;
                 this.ParameterTypes = new PrimitiveType[] { pt0, pt1 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
-            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<double>, Func<double>, Delegate> Create)
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<T, double>, Func<T, double>, Delegate> Create)
             {
                 this.Name = Name;
                 this.ParameterTypes = new PrimitiveType[] { pt0, pt1 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
-            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<double>, Func<int>, Delegate> Create)
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<T, double>, Func<T, int>, Delegate> Create)
             {
                 this.Name = Name;
                 this.ParameterTypes = new PrimitiveType[] { pt0, pt1 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
-            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType pt2, PrimitiveType rt, Func<Func<int>, Func<int>, Func<int>, Delegate> Create)
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType pt2, PrimitiveType rt, Func<Func<T, int>, Func<T, int>, Func<T, int>, Delegate> Create)
             {
                 this.Name = Name;
                 this.ParameterTypes = new PrimitiveType[] { pt0, pt1, pt2 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
-            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType pt2, PrimitiveType rt, Func<Func<double>, Func<double>, Func<double>, Delegate> Create)
+            public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType pt2, PrimitiveType rt, Func<Func<T, double>, Func<T, double>, Func<T, double>, Delegate> Create)
             {
                 this.Name = Name;
                 this.ParameterTypes = new PrimitiveType[] { pt0, pt1, pt2 };
@@ -270,72 +273,72 @@ namespace Yuki.Expression
 
         private static class FunctionSignatureMap
         {
-            public static Dictionary<String, List<FunctionResolver>> Map;
+            public static Dictionary<String, List<FunctionResolver>> Map; //只读时是线程安全的
 
             static FunctionSignatureMap()
             {
                 var l = new List<FunctionResolver>();
 
                 //算术运算
-                l.Add(new FunctionResolver("+", PrimitiveType.Int, PrimitiveType.Int, (Func<int> Operand) => (Func<int>)(() => +Operand())));
-                l.Add(new FunctionResolver("-", PrimitiveType.Int, PrimitiveType.Int, (Func<int> Operand) => (Func<int>)(() => -Operand())));
-                l.Add(new FunctionResolver("+", PrimitiveType.Real, PrimitiveType.Real, (Func<double> Operand) => (Func<double>)(() => +Operand())));
-                l.Add(new FunctionResolver("-", PrimitiveType.Real, PrimitiveType.Real, (Func<double> Operand) => (Func<double>)(() => -Operand())));
-                l.Add(new FunctionResolver("+", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => Left() + Right())));
-                l.Add(new FunctionResolver("-", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => Left() - Right())));
-                l.Add(new FunctionResolver("*", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => Left() * Right())));
-                l.Add(new FunctionResolver("/", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Real, (Func<int> Left, Func<int> Right) => (Func<double>)(() => (double)(Left()) / (double)(Right()))));
-                l.Add(new FunctionResolver("+", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => Left() + Right())));
-                l.Add(new FunctionResolver("-", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => Left() - Right())));
-                l.Add(new FunctionResolver("*", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => Left() * Right())));
-                l.Add(new FunctionResolver("/", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => Left() / Right())));
-                l.Add(new FunctionResolver("pow", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.pow(Left(), Right()))));
-                l.Add(new FunctionResolver("pow", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => ExpressionRuntime.pow(Left(), Right()))));
-                l.Add(new FunctionResolver("exp", PrimitiveType.Real, PrimitiveType.Real, (Func<double> Operand) => (Func<double>)(() => ExpressionRuntime.exp(Operand()))));
-                l.Add(new FunctionResolver("log", PrimitiveType.Real, PrimitiveType.Real, (Func<double> Operand) => (Func<double>)(() => ExpressionRuntime.log(Operand()))));
-                l.Add(new FunctionResolver("mod", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.mod(Left(), Right()))));
-                l.Add(new FunctionResolver("div", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.div(Left(), Right()))));
+                l.Add(new FunctionResolver("+", PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Operand) => (Func<T, int>)(t => +Operand(t))));
+                l.Add(new FunctionResolver("-", PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Operand) => (Func<T, int>)(t => -Operand(t))));
+                l.Add(new FunctionResolver("+", PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Operand) => (Func<T, double>)(t => +Operand(t))));
+                l.Add(new FunctionResolver("-", PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Operand) => (Func<T, double>)(t => -Operand(t))));
+                l.Add(new FunctionResolver("+", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Left, Func<T, int> Right) => (Func<T, int>)(t => Left(t) + Right(t))));
+                l.Add(new FunctionResolver("-", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Left, Func<T, int> Right) => (Func<T, int>)(t => Left(t) - Right(t))));
+                l.Add(new FunctionResolver("*", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Left, Func<T, int> Right) => (Func<T, int>)(t => Left(t) * Right(t))));
+                l.Add(new FunctionResolver("/", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Real, (Func<T, int> Left, Func<T, int> Right) => (Func<T, double>)(t => (double)(Left(t)) / (double)(Right(t)))));
+                l.Add(new FunctionResolver("+", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Left, Func<T, double> Right) => (Func<T, double>)(t => Left(t) + Right(t))));
+                l.Add(new FunctionResolver("-", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Left, Func<T, double> Right) => (Func<T, double>)(t => Left(t) - Right(t))));
+                l.Add(new FunctionResolver("*", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Left, Func<T, double> Right) => (Func<T, double>)(t => Left(t) * Right(t))));
+                l.Add(new FunctionResolver("/", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Left, Func<T, double> Right) => (Func<T, double>)(t => Left(t) / Right(t))));
+                l.Add(new FunctionResolver("pow", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Left, Func<T, int> Right) => (Func<T, int>)(t => ExpressionRuntime.pow(Left(t), Right(t)))));
+                l.Add(new FunctionResolver("pow", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Left, Func<T, double> Right) => (Func<T, double>)(t => ExpressionRuntime.pow(Left(t), Right(t)))));
+                l.Add(new FunctionResolver("exp", PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Operand) => (Func<T, double>)(t => ExpressionRuntime.exp(Operand(t)))));
+                l.Add(new FunctionResolver("log", PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Operand) => (Func<T, double>)(t => ExpressionRuntime.log(Operand(t)))));
+                l.Add(new FunctionResolver("mod", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Left, Func<T, int> Right) => (Func<T, int>)(t => ExpressionRuntime.mod(Left(t), Right(t)))));
+                l.Add(new FunctionResolver("div", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Left, Func<T, int> Right) => (Func<T, int>)(t => ExpressionRuntime.div(Left(t), Right(t)))));
 
                 //逻辑运算
-                l.Add(new FunctionResolver("!", PrimitiveType.Boolean, PrimitiveType.Boolean, (Func<Boolean> Operand) => (Func<Boolean>)(() => !Operand())));
+                l.Add(new FunctionResolver("!", PrimitiveType.Boolean, PrimitiveType.Boolean, (Func<T, Boolean> Operand) => (Func<T, Boolean>)(t => !Operand(t))));
 
                 //关系运算
-                l.Add(new FunctionResolver("<", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() < Right())));
-                l.Add(new FunctionResolver(">", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() > Right())));
-                l.Add(new FunctionResolver("<=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() <= Right())));
-                l.Add(new FunctionResolver(">=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() >= Right())));
-                l.Add(new FunctionResolver("==", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() == Right())));
-                l.Add(new FunctionResolver("!=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<int> Left, Func<int> Right) => (Func<Boolean>)(() => Left() != Right())));
-                l.Add(new FunctionResolver("<", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<double> Left, Func<double> Right) => (Func<Boolean>)(() => Left() < Right())));
-                l.Add(new FunctionResolver(">", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<double> Left, Func<double> Right) => (Func<Boolean>)(() => Left() > Right())));
-                l.Add(new FunctionResolver("<=", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<double> Left, Func<double> Right) => (Func<Boolean>)(() => Left() <= Right())));
-                l.Add(new FunctionResolver(">=", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<double> Left, Func<double> Right) => (Func<Boolean>)(() => Left() >= Right())));
-                l.Add(new FunctionResolver("==", PrimitiveType.Boolean, PrimitiveType.Boolean, PrimitiveType.Boolean, (Func<Boolean> Left, Func<Boolean> Right) => (Func<Boolean>)(() => Left() == Right())));
-                l.Add(new FunctionResolver("!=", PrimitiveType.Boolean, PrimitiveType.Boolean, PrimitiveType.Boolean, (Func<Boolean> Left, Func<Boolean> Right) => (Func<Boolean>)(() => Left() != Right())));
+                l.Add(new FunctionResolver("<", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<T, int> Left, Func<T, int> Right) => (Func<T, Boolean>)(t => Left(t) < Right(t))));
+                l.Add(new FunctionResolver(">", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<T, int> Left, Func<T, int> Right) => (Func<T, Boolean>)(t => Left(t) > Right(t))));
+                l.Add(new FunctionResolver("<=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<T, int> Left, Func<T, int> Right) => (Func<T, Boolean>)(t => Left(t) <= Right(t))));
+                l.Add(new FunctionResolver(">=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<T, int> Left, Func<T, int> Right) => (Func<T, Boolean>)(t => Left(t) >= Right(t))));
+                l.Add(new FunctionResolver("==", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<T, int> Left, Func<T, int> Right) => (Func<T, Boolean>)(t => Left(t) == Right(t))));
+                l.Add(new FunctionResolver("!=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (Func<T, int> Left, Func<T, int> Right) => (Func<T, Boolean>)(t => Left(t) != Right(t))));
+                l.Add(new FunctionResolver("<", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<T, double> Left, Func<T, double> Right) => (Func<T, Boolean>)(t => Left(t) < Right(t))));
+                l.Add(new FunctionResolver(">", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<T, double> Left, Func<T, double> Right) => (Func<T, Boolean>)(t => Left(t) > Right(t))));
+                l.Add(new FunctionResolver("<=", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<T, double> Left, Func<T, double> Right) => (Func<T, Boolean>)(t => Left(t) <= Right(t))));
+                l.Add(new FunctionResolver(">=", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (Func<T, double> Left, Func<T, double> Right) => (Func<T, Boolean>)(t => Left(t) >= Right(t))));
+                l.Add(new FunctionResolver("==", PrimitiveType.Boolean, PrimitiveType.Boolean, PrimitiveType.Boolean, (Func<T, Boolean> Left, Func<T, Boolean> Right) => (Func<T, Boolean>)(t => Left(t) == Right(t))));
+                l.Add(new FunctionResolver("!=", PrimitiveType.Boolean, PrimitiveType.Boolean, PrimitiveType.Boolean, (Func<T, Boolean> Left, Func<T, Boolean> Right) => (Func<T, Boolean>)(t => Left(t) != Right(t))));
 
                 //取整运算
-                l.Add(new FunctionResolver("round", PrimitiveType.Real, PrimitiveType.Int, (Func<double> Operand) => (Func<int>)(() => ExpressionRuntime.round(Operand()))));
-                l.Add(new FunctionResolver("floor", PrimitiveType.Real, PrimitiveType.Int, (Func<double> Operand) => (Func<int>)(() => ExpressionRuntime.floor(Operand()))));
-                l.Add(new FunctionResolver("ceil", PrimitiveType.Real, PrimitiveType.Int, (Func<double> Operand) => (Func<int>)(() => ExpressionRuntime.ceil(Operand()))));
-                l.Add(new FunctionResolver("round", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real, (Func<double> Left, Func<int> Right) => (Func<double>)(() => ExpressionRuntime.round(Left(), Right()))));
-                l.Add(new FunctionResolver("floor", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real, (Func<double> Left, Func<int> Right) => (Func<double>)(() => ExpressionRuntime.floor(Left(), Right()))));
-                l.Add(new FunctionResolver("ceil", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real, (Func<double> Left, Func<int> Right) => (Func<double>)(() => ExpressionRuntime.ceil(Left(), Right()))));
+                l.Add(new FunctionResolver("round", PrimitiveType.Real, PrimitiveType.Int, (Func<T, double> Operand) => (Func<T, int>)(t => ExpressionRuntime.round(Operand(t)))));
+                l.Add(new FunctionResolver("floor", PrimitiveType.Real, PrimitiveType.Int, (Func<T, double> Operand) => (Func<T, int>)(t => ExpressionRuntime.floor(Operand(t)))));
+                l.Add(new FunctionResolver("ceil", PrimitiveType.Real, PrimitiveType.Int, (Func<T, double> Operand) => (Func<T, int>)(t => ExpressionRuntime.ceil(Operand(t)))));
+                l.Add(new FunctionResolver("round", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real, (Func<T, double> Left, Func<T, int> Right) => (Func<T, double>)(t => ExpressionRuntime.round(Left(t), Right(t)))));
+                l.Add(new FunctionResolver("floor", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real, (Func<T, double> Left, Func<T, int> Right) => (Func<T, double>)(t => ExpressionRuntime.floor(Left(t), Right(t)))));
+                l.Add(new FunctionResolver("ceil", PrimitiveType.Real, PrimitiveType.Int, PrimitiveType.Real, (Func<T, double> Left, Func<T, int> Right) => (Func<T, double>)(t => ExpressionRuntime.ceil(Left(t), Right(t)))));
 
                 //范围限制运算
-                l.Add(new FunctionResolver("min", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.min(Left(), Right()))));
-                l.Add(new FunctionResolver("max", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Left, Func<int> Right) => (Func<int>)(() => ExpressionRuntime.max(Left(), Right()))));
-                l.Add(new FunctionResolver("clamp", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Arg0, Func<int> Arg1, Func<int> Arg2) => (Func<int>)(() => ExpressionRuntime.clamp(Arg0(), Arg1(), Arg2()))));
-                l.Add(new FunctionResolver("min", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => ExpressionRuntime.min(Left(), Right()))));
-                l.Add(new FunctionResolver("max", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Left, Func<double> Right) => (Func<double>)(() => ExpressionRuntime.max(Left(), Right()))));
-                l.Add(new FunctionResolver("clamp", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Arg0, Func<double> Arg1, Func<double> Arg2) => (Func<double>)(() => ExpressionRuntime.clamp(Arg0(), Arg1(), Arg2()))));
+                l.Add(new FunctionResolver("min", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Left, Func<T, int> Right) => (Func<T, int>)(t => ExpressionRuntime.min(Left(t), Right(t)))));
+                l.Add(new FunctionResolver("max", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Left, Func<T, int> Right) => (Func<T, int>)(t => ExpressionRuntime.max(Left(t), Right(t)))));
+                l.Add(new FunctionResolver("clamp", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Arg0, Func<T, int> Arg1, Func<T, int> Arg2) => (Func<T, int>)(t => ExpressionRuntime.clamp(Arg0(t), Arg1(t), Arg2(t)))));
+                l.Add(new FunctionResolver("min", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Left, Func<T, double> Right) => (Func<T, double>)(t => ExpressionRuntime.min(Left(t), Right(t)))));
+                l.Add(new FunctionResolver("max", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Left, Func<T, double> Right) => (Func<T, double>)(t => ExpressionRuntime.max(Left(t), Right(t)))));
+                l.Add(new FunctionResolver("clamp", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Arg0, Func<T, double> Arg1, Func<T, double> Arg2) => (Func<T, double>)(t => ExpressionRuntime.clamp(Arg0(t), Arg1(t), Arg2(t)))));
 
                 //其他运算
-                l.Add(new FunctionResolver("abs", PrimitiveType.Int, PrimitiveType.Int, (Func<int> Operand) => (Func<int>)(() => ExpressionRuntime.abs(Operand()))));
-                l.Add(new FunctionResolver("abs", PrimitiveType.Real, PrimitiveType.Real, (Func<double> Operand) => (Func<double>)(() => ExpressionRuntime.abs(Operand()))));
-                l.Add(new FunctionResolver("rand", PrimitiveType.Real, () => (Func<double>)(() => ExpressionRuntime.rand())));
-                l.Add(new FunctionResolver("rand", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<int> Arg0, Func<int> Arg1) => (Func<int>)(() => ExpressionRuntime.rand(Arg0(), Arg1()))));
-                l.Add(new FunctionResolver("rand", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<double> Arg0, Func<double> Arg1) => (Func<double>)(() => ExpressionRuntime.rand(Arg0(), Arg1()))));
-                l.Add(new FunctionResolver("creal", PrimitiveType.Int, PrimitiveType.Real, (Func<int> Operand) => (Func<double>)(() => Operand())));
+                l.Add(new FunctionResolver("abs", PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Operand) => (Func<T, int>)(t => ExpressionRuntime.abs(Operand(t)))));
+                l.Add(new FunctionResolver("abs", PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Operand) => (Func<T, double>)(t => ExpressionRuntime.abs(Operand(t)))));
+                l.Add(new FunctionResolver("rand", PrimitiveType.Real, () => (Func<T, double>)(t => ExpressionRuntime.rand())));
+                l.Add(new FunctionResolver("rand", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (Func<T, int> Arg0, Func<T, int> Arg1) => (Func<T, int>)(t => ExpressionRuntime.rand(Arg0(t), Arg1(t)))));
+                l.Add(new FunctionResolver("rand", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Real, (Func<T, double> Arg0, Func<T, double> Arg1) => (Func<T, double>)(t => ExpressionRuntime.rand(Arg0(t), Arg1(t)))));
+                l.Add(new FunctionResolver("creal", PrimitiveType.Int, PrimitiveType.Real, (Func<T, int> Operand) => (Func<T, double>)(t => Operand(t))));
 
                 Map = new Dictionary<String, List<FunctionResolver>>();
                 foreach (var fs in l)

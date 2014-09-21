@@ -3,7 +3,7 @@
 //  File:        ExpressionEvaluator.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式求值工具
-//  Version:     2013.03.13.
+//  Version:     2014.09.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -15,16 +15,19 @@ using Yuki.ExpressionSchema;
 
 namespace Yuki.Expression
 {
-    public interface IVariableProvider : IVariableTypeProvider
+    public interface IVariableProvider<T> : IVariableTypeProvider
     {
         Delegate[] GetValue(String Name, PrimitiveType[] ParameterTypes, Delegate[] Parameters);
     }
 
-    public class VariableProviderCombiner : IVariableProvider
+    /// <summary>
+    /// 本类是线程安全的。
+    /// </summary>
+    public class VariableProviderCombiner<T> : IVariableProvider<T>
     {
-        private IVariableProvider[] Providers;
+        private IVariableProvider<T>[] Providers;
 
-        public VariableProviderCombiner(params IVariableProvider[] Providers)
+        public VariableProviderCombiner(params IVariableProvider<T>[] Providers)
         {
             this.Providers = Providers;
         }
@@ -45,34 +48,34 @@ namespace Yuki.Expression
         }
     }
 
-    public class ExpressionEvaluator
+    public class ExpressionEvaluator<T>
     {
-        public static Delegate Compile(IVariableProvider VariableProvider, Expr Expr)
+        public static Delegate Compile(IVariableProvider<T> VariableProvider, Expr Expr)
         {
-            var ee = new ExpressionEvaluator(VariableProvider, Expr, new Dictionary<Object, Firefly.Texting.TreeFormat.Syntax.TextRange>(), new Dictionary<Expr, PrimitiveType>());
+            var ee = new ExpressionEvaluator<T>(VariableProvider, Expr, new Dictionary<Object, Firefly.Texting.TreeFormat.Syntax.TextRange>(), new Dictionary<Expr, PrimitiveType>());
             return ee.Compile();
         }
-        public static Delegate Compile(IVariableProvider VariableProvider, ExpressionParserExprResult Expr)
+        public static Delegate Compile(IVariableProvider<T> VariableProvider, ExpressionParserExprResult Expr)
         {
-            var ee = new ExpressionEvaluator(VariableProvider, Expr.Body, Expr.Positions, Expr.TypeDict);
+            var ee = new ExpressionEvaluator<T>(VariableProvider, Expr.Body, Expr.Positions, Expr.TypeDict);
             return ee.Compile();
         }
-        public static Func<T> Compile<T>(IVariableProvider VariableProvider, Expr Expr)
+        public static Func<T, TReturn> Compile<TReturn>(IVariableProvider<T> VariableProvider, Expr Expr)
         {
-            var ee = new ExpressionEvaluator(VariableProvider, Expr, new Dictionary<Object, Firefly.Texting.TreeFormat.Syntax.TextRange>(), new Dictionary<Expr, PrimitiveType>());
-            return ee.Compile<T>();
+            var ee = new ExpressionEvaluator<T>(VariableProvider, Expr, new Dictionary<Object, Firefly.Texting.TreeFormat.Syntax.TextRange>(), new Dictionary<Expr, PrimitiveType>());
+            return ee.Compile<TReturn>();
         }
-        public static Func<T> Compile<T>(IVariableProvider VariableProvider, ExpressionParserExprResult Expr)
+        public static Func<T, TReturn> Compile<TReturn>(IVariableProvider<T> VariableProvider, ExpressionParserExprResult Expr)
         {
-            var ee = new ExpressionEvaluator(VariableProvider, Expr.Body, Expr.Positions, Expr.TypeDict);
-            return ee.Compile<T>();
+            var ee = new ExpressionEvaluator<T>(VariableProvider, Expr.Body, Expr.Positions, Expr.TypeDict);
+            return ee.Compile<TReturn>();
         }
 
-        private IVariableProvider VariableProvider;
+        private IVariableProvider<T> VariableProvider;
         private Expr Expr;
         private Dictionary<Object, Firefly.Texting.TreeFormat.Syntax.TextRange> Positions;
         private Dictionary<Expr, PrimitiveType> TypeDict;
-        private ExpressionEvaluator(IVariableProvider VariableProvider, Expr Expr, Dictionary<Object, Firefly.Texting.TreeFormat.Syntax.TextRange> Positions, Dictionary<Expr, PrimitiveType> TypeDict)
+        private ExpressionEvaluator(IVariableProvider<T> VariableProvider, Expr Expr, Dictionary<Object, Firefly.Texting.TreeFormat.Syntax.TextRange> Positions, Dictionary<Expr, PrimitiveType> TypeDict)
         {
             this.VariableProvider = VariableProvider;
             this.Expr = Expr;
@@ -85,9 +88,9 @@ namespace Yuki.Expression
             return BuildExpr(Expr);
         }
 
-        private Func<T> Compile<T>()
+        private Func<T, TReturn> Compile<TReturn>()
         {
-            return (Func<T>)(BuildExpr(Expr));
+            return (Func<T, TReturn>)(BuildExpr(Expr));
         }
 
         private Delegate BuildExpr(Expr e)
@@ -97,17 +100,17 @@ namespace Yuki.Expression
                 if (e.Literal.OnBooleanValue)
                 {
                     var v = e.Literal.BooleanValue;
-                    return (Func<Boolean>)(() => v);
+                    return (Func<T, Boolean>)(t => v);
                 }
                 else if (e.Literal.OnIntValue)
                 {
                     var v = e.Literal.IntValue;
-                    return (Func<int>)(() => v);
+                    return (Func<T, int>)(t => v);
                 }
                 else if (e.Literal.OnRealValue)
                 {
                     var v = e.Literal.RealValue;
-                    return (Func<double>)(() => v);
+                    return (Func<T, double>)(t => v);
                 }
                 else
                 {
@@ -151,39 +154,39 @@ namespace Yuki.Expression
                 {
                     throw new InvalidOperationException();
                 }
-                var Condition = (Func<Boolean>)(BuildExpr(e.If.Condition));
-                var t = l.GetType();
-                if (t == typeof(Func<Boolean>))
+                var Condition = (Func<T, Boolean>)(BuildExpr(e.If.Condition));
+                var type = l.GetType();
+                if (type == typeof(Func<T, Boolean>))
                 {
-                    var Left = (Func<Boolean>)(l);
-                    var Right = (Func<Boolean>)(r);
-                    return (Func<Boolean>)(() => Condition() ? Left() : Right());
+                    var Left = (Func<T, Boolean>)(l);
+                    var Right = (Func<T, Boolean>)(r);
+                    return (Func<T, Boolean>)(t => Condition(t) ? Left(t) : Right(t));
                 }
-                if (t == typeof(Func<int>))
+                if (type == typeof(Func<T, int>))
                 {
-                    var Left = (Func<int>)(l);
-                    var Right = (Func<int>)(r);
-                    return (Func<int>)(() => Condition() ? Left() : Right());
+                    var Left = (Func<T, int>)(l);
+                    var Right = (Func<T, int>)(r);
+                    return (Func<T, int>)(t => Condition(t) ? Left(t) : Right(t));
                 }
-                if (t == typeof(Func<double>))
+                if (type == typeof(Func<T, double>))
                 {
-                    var Left = (Func<double>)(l);
-                    var Right = (Func<double>)(r);
-                    return (Func<double>)(() => Condition() ? Left() : Right());
+                    var Left = (Func<T, double>)(l);
+                    var Right = (Func<T, double>)(r);
+                    return (Func<T, double>)(t => Condition(t) ? Left(t) : Right(t));
                 }
                 throw new InvalidOperationException();
             }
             else if (e.OnAndAlso)
             {
-                var Left = (Func<Boolean>)(BuildExpr(e.AndAlso.Left));
-                var Right = (Func<Boolean>)(BuildExpr(e.AndAlso.Right));
-                return (Func<Boolean>)(() => Left() && Right());
+                var Left = (Func<T, Boolean>)(BuildExpr(e.AndAlso.Left));
+                var Right = (Func<T, Boolean>)(BuildExpr(e.AndAlso.Right));
+                return (Func<T, Boolean>)(t => Left(t) && Right(t));
             }
             else if (e.OnOrElse)
             {
-                var Left = (Func<Boolean>)(BuildExpr(e.OrElse.Left));
-                var Right = (Func<Boolean>)(BuildExpr(e.OrElse.Right));
-                return (Func<Boolean>)(() => Left() || Right());
+                var Left = (Func<T, Boolean>)(BuildExpr(e.OrElse.Left));
+                var Right = (Func<T, Boolean>)(BuildExpr(e.OrElse.Right));
+                return (Func<T, Boolean>)(t => Left(t) || Right(t));
             }
             else
             {
@@ -193,15 +196,15 @@ namespace Yuki.Expression
 
         private static PrimitiveType GetReturnType(Delegate ParameterFunc)
         {
-            if (ParameterFunc.GetType() == typeof(Func<Boolean>))
+            if (ParameterFunc.GetType() == typeof(Func<T, Boolean>))
             {
                 return PrimitiveType.Boolean;
             }
-            if (ParameterFunc.GetType() == typeof(Func<int>))
+            if (ParameterFunc.GetType() == typeof(Func<T, int>))
             {
                 return PrimitiveType.Int;
             }
-            if (ParameterFunc.GetType() == typeof(Func<double>))
+            if (ParameterFunc.GetType() == typeof(Func<T, double>))
             {
                 return PrimitiveType.Real;
             }

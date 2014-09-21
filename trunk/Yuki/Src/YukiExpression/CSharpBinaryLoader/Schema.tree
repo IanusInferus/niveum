@@ -115,8 +115,7 @@ ObjectSchemaTemplate
                     {
                         ${Parameters}
                     }
-                    private [[FuncContext_${FunctionName}]] [[Context_${FunctionName}]];
-                    private Func<[[${ReturnType}]]> [[Func_${FunctionName}]];
+                    private Func<[[FuncContext_${FunctionName}]], [[${ReturnType}]]> [[Func_${FunctionName}]];
         Template
             Name Module_FunctionContext_Parameter
             //Parameters: ${Name}, ${Type}
@@ -129,14 +128,13 @@ ObjectSchemaTemplate
             Value
                 $String
                     {
-                        var vc = new VariableContext();
-                        [[Context_${FunctionName}]] = new [[FuncContext_${FunctionName}]]();
+                        var vc = new VariableContext<[[FuncContext_${FunctionName}]]>();
                         ${Parameters}
-                        var p = new VariableProviderCombiner(vc, new ExpressionRuntimeProvider());
-                        var d = ExpressionEvaluator.Compile<[[${ReturnType}]]>(p, fd[@"${FunctionName}"].Body);
-                        [[Func_${FunctionName}]] = () =>
+                        var p = new VariableProviderCombiner<[[FuncContext_${FunctionName}]]>(vc, new ExpressionRuntimeProvider<[[FuncContext_${FunctionName}]]>());
+                        var d = ExpressionEvaluator<[[FuncContext_${FunctionName}]]>.Compile<[[${ReturnType}]]>(p, fd[@"${FunctionName}"].Body);
+                        [[Func_${FunctionName}]] = t =>
                         {
-                            return d();
+                            return d(t);
                         };
                     }
         Template
@@ -144,7 +142,7 @@ ObjectSchemaTemplate
             //Parameters: ${FunctionName}, ${Name}, ${Type}
             Value
                 $String
-                    vc.Replace(@"${Name}", null, PrimitiveType.[[${Type}]], vvc => (Func<[[${Type}]]>)(() => [[Context_${FunctionName}.${Name}]]));
+                    vc.Replace(@"${Name}", null, PrimitiveType.[[${Type}]], vvc => (Func<[[FuncContext_${FunctionName}]], [[${Type}]]>)([[Context_${FunctionName}]] => [[Context_${FunctionName}.${Name}]]));
         Template
             Name Module_FunctionCall
             //Parameters: ${FunctionName}, ${ParameterList}, ${Parameters}, ${ReturnType}
@@ -152,8 +150,9 @@ ObjectSchemaTemplate
                 $String
                     public [[${ReturnType}]] [[${FunctionName}]](${ParameterList})
                     {
+                        var [[Context_${FunctionName}]] = new [[FuncContext_${FunctionName}]]();
                         ${Parameters}
-                        return [[Func_${FunctionName}]]();
+                        return [[Func_${FunctionName}]]([[Context_${FunctionName}]]);
                     }
         Template
             Name Module_FunctionCall_ParameterList_Parameter
