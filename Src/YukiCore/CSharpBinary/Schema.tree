@@ -143,44 +143,13 @@ ObjectSchemaTemplate
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (s, p) =>
-                    {
-                        using (var bas = new ByteArrayStream())
-                        {
-                            bas.WriteBytes(p);
-                            bas.Position = 0;
-                            var Request = BinaryTranslator.[[${Name}RequestFromBinary]](bas);
-                            var Reply = s.[[${Name}]](Request);
-                            bas.Position = 0;
-                            bas.SetLength(0);
-                            BinaryTranslator.[[${Name}ReplyToBinary]](bas, Reply);
-                            bas.Position = 0;
-                            return bas.ReadBytes(bas.Length);
-                        }
-                    });
+                    ClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (s, p) => BinaryTranslator.[[${Name}ReplyToBytes]](s.[[${Name}]](BinaryTranslator.[[${Name}RequestFromBytes]](p))));
         Template
             Name BinarySerializationServer_ClientCommandAsync
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (s, p, Callback, OnFailure) =>
-                    {
-                        using (var bas = new ByteArrayStream())
-                        {
-                            bas.WriteBytes(p);
-                            bas.Position = 0;
-                            var Request = BinaryTranslator.[[${Name}RequestFromBinary]](bas);
-                            s.[[${Name}]](Request, Reply =>
-                            {
-                                using (var rbas = new ByteArrayStream())
-                                {
-                                    BinaryTranslator.[[${Name}ReplyToBinary]](rbas, Reply);
-                                    rbas.Position = 0;
-                                    Callback(rbas.ReadBytes(rbas.Length));
-                                }
-                            }, OnFailure);
-                        }
-                    });
+                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), (s, p, Callback, OnFailure) => s.[[${Name}]](BinaryTranslator.[[${Name}RequestFromBytes]](p), Reply => Callback(BinaryTranslator.[[${Name}ReplyToBytes]](Reply)), OnFailure));
         Template
             Name BinarySerializationServer_ClientCommand_WithFirefly
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
@@ -198,15 +167,7 @@ ObjectSchemaTemplate
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    s.${Name} += e =>
-                    {
-                        using (var bas = new ByteArrayStream())
-                        {
-                            BinaryTranslator.[[${Name}EventToBinary]](bas, e);
-                            bas.Position = 0;
-                            OnServerEvent(@"${CommandName}", 0x${CommandHash}, bas.ReadBytes(bas.Length));
-                        }
-                    };
+                    s.${Name} += e => OnServerEvent(@"${CommandName}", 0x${CommandHash}, BinaryTranslator.[[${Name}EventToBytes]](e));
         Template
             Name BinarySerializationServer_ServerCommand_WithFirefly
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
@@ -318,23 +279,9 @@ ObjectSchemaTemplate
                 $String
                     public void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback)
                     {
-                        using (var bas = new ByteArrayStream())
-                        {
-                            BinaryTranslator.[[${Name}RequestToBinary]](bas, r);
-                            bas.Position = 0;
-                            var Request = bas.ReadBytes(bas.Length);
-                            AddCallback(@"${CommandName}", 0x${CommandHash}, Parameters =>
-                            {
-                                using (var basr = new ByteArrayStream())
-                                {
-                                    basr.WriteBytes(Parameters);
-                                    basr.Position = 0;
-                                    var Reply = BinaryTranslator.[[${Name}ReplyFromBinary]](basr);
-                                    Callback(Reply);
-                                }
-                            });
-                            s.Send(@"${CommandName}", 0x${CommandHash}, Request);
-                        }
+                        var Request = BinaryTranslator.[[${Name}RequestToBytes]](r);
+                        AddCallback(@"${CommandName}", 0x${CommandHash}, Parameters => Callback(BinaryTranslator.[[${Name}ReplyFromBytes]](Parameters)));
+                        s.Send(@"${CommandName}", 0x${CommandHash}, Request);
                     }
         Template
             Name BinarySerializationClient_ApplicationClientCommand_WithFirefly
@@ -359,16 +306,7 @@ ObjectSchemaTemplate
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
             Value
                 $String
-                    ServerCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), Parameters =>
-                    {
-                        using (var bas = new ByteArrayStream())
-                        {
-                            bas.WriteBytes(Parameters);
-                            bas.Position = 0;
-                            var e = BinaryTranslator.[[${Name}EventFromBinary]](bas);
-                            c.[[Raise${Name}]](e);
-                        }
-                    });
+                    ServerCommands.Add(new KeyValuePair<String, UInt32>(@"${CommandName}", 0x${CommandHash}), Parameters => c.[[Raise${Name}]](BinaryTranslator.[[${Name}EventFromBytes]](Parameters)));
         Template
             Name BinarySerializationClient_ServerCommand_WithFirefly
             //Parameters: ${CommandName}, ${Name}, ${CommandHash}
@@ -823,6 +761,24 @@ ObjectSchemaTemplate
                     {
                         WriteStream.WriteUnit(s, v);
                     }
+                    public static Unit UnitFromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return UnitFromBinary(bas);
+                        }
+                    }
+                    public static Byte[] UnitToBytes(Unit v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            UnitToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Primitive_Boolean
             Value
@@ -834,6 +790,24 @@ ObjectSchemaTemplate
                     public static void BooleanToBinary(IWritableStream s, Boolean v)
                     {
                         WriteStream.WriteBoolean(s, v);
+                    }
+                    public static Boolean BooleanFromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return BooleanFromBinary(bas);
+                        }
+                    }
+                    public static Byte[] BooleanToBytes(Boolean v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            BooleanToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
         Template
             Name BinaryTranslator_Primitive_String
@@ -847,6 +821,24 @@ ObjectSchemaTemplate
                     {
                         WriteStream.WriteString(s, v);
                     }
+                    public static String StringFromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return StringFromBinary(bas);
+                        }
+                    }
+                    public static Byte[] StringToBytes(String v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            StringToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Primitive_Int
             Value
@@ -858,6 +850,24 @@ ObjectSchemaTemplate
                     public static void IntToBinary(IWritableStream s, Int v)
                     {
                         WriteStream.WriteInt32(s, (Int32)(v));
+                    }
+                    public static Int IntFromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return IntFromBinary(bas);
+                        }
+                    }
+                    public static Byte[] IntToBytes(Int v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            IntToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
         Template
             Name BinaryTranslator_Primitive_Real
@@ -871,6 +881,24 @@ ObjectSchemaTemplate
                     {
                         WriteStream.WriteFloat64(s, v);
                     }
+                    public static Real RealFromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return RealFromBinary(bas);
+                        }
+                    }
+                    public static Byte[] RealToBytes(Real v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            RealToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Primitive_Byte
             Value
@@ -882,6 +910,24 @@ ObjectSchemaTemplate
                     public static void ByteToBinary(IWritableStream s, Byte v)
                     {
                         WriteStream.WriteByte(s, v);
+                    }
+                    public static Byte ByteFromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return ByteFromBinary(bas);
+                        }
+                    }
+                    public static Byte[] ByteToBytes(Byte v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            ByteToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
         Template
             Name BinaryTranslator_Primitive_UInt8
@@ -895,6 +941,24 @@ ObjectSchemaTemplate
                     {
                         WriteStream.WriteUInt8(s, v);
                     }
+                    public static UInt8 UInt8FromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return UInt8FromBinary(bas);
+                        }
+                    }
+                    public static Byte[] UInt8ToBytes(UInt8 v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            UInt8ToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Primitive_UInt16
             Value
@@ -906,6 +970,24 @@ ObjectSchemaTemplate
                     public static void UInt16ToBinary(IWritableStream s, UInt16 v)
                     {
                         WriteStream.WriteUInt16(s, v);
+                    }
+                    public static UInt16 UInt16FromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return UInt16FromBinary(bas);
+                        }
+                    }
+                    public static Byte[] UInt16ToBytes(UInt16 v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            UInt16ToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
         Template
             Name BinaryTranslator_Primitive_UInt32
@@ -919,6 +1001,24 @@ ObjectSchemaTemplate
                     {
                         WriteStream.WriteUInt32(s, v);
                     }
+                    public static UInt32 UInt32FromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return UInt32FromBinary(bas);
+                        }
+                    }
+                    public static Byte[] UInt32ToBytes(UInt32 v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            UInt32ToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Primitive_UInt64
             Value
@@ -930,6 +1030,24 @@ ObjectSchemaTemplate
                     public static void UInt64ToBinary(IWritableStream s, UInt64 v)
                     {
                         WriteStream.WriteUInt64(s, v);
+                    }
+                    public static UInt64 UInt64FromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return UInt64FromBinary(bas);
+                        }
+                    }
+                    public static Byte[] UInt64ToBytes(UInt64 v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            UInt64ToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
         Template
             Name BinaryTranslator_Primitive_Int8
@@ -943,6 +1061,24 @@ ObjectSchemaTemplate
                     {
                         WriteStream.WriteInt8(s, v);
                     }
+                    public static Int8 Int8FromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return Int8FromBinary(bas);
+                        }
+                    }
+                    public static Byte[] Int8ToBytes(Int8 v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            Int8ToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Primitive_Int16
             Value
@@ -954,6 +1090,24 @@ ObjectSchemaTemplate
                     public static void Int16ToBinary(IWritableStream s, Int16 v)
                     {
                         WriteStream.WriteInt16(s, v);
+                    }
+                    public static Int16 Int16FromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return Int16FromBinary(bas);
+                        }
+                    }
+                    public static Byte[] Int16ToBytes(Int16 v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            Int16ToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
         Template
             Name BinaryTranslator_Primitive_Int32
@@ -967,6 +1121,24 @@ ObjectSchemaTemplate
                     {
                         WriteStream.WriteInt32(s, v);
                     }
+                    public static Int32 Int32FromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return Int32FromBinary(bas);
+                        }
+                    }
+                    public static Byte[] Int32ToBytes(Int32 v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            Int32ToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Primitive_Int64
             Value
@@ -978,6 +1150,24 @@ ObjectSchemaTemplate
                     public static void Int64ToBinary(IWritableStream s, Int64 v)
                     {
                         WriteStream.WriteInt64(s, v);
+                    }
+                    public static Int64 Int64FromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return Int64FromBinary(bas);
+                        }
+                    }
+                    public static Byte[] Int64ToBytes(Int64 v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            Int64ToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
         Template
             Name BinaryTranslator_Primitive_Float32
@@ -991,6 +1181,24 @@ ObjectSchemaTemplate
                     {
                         WriteStream.WriteFloat32(s, v);
                     }
+                    public static Float32 Float32FromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return Float32FromBinary(bas);
+                        }
+                    }
+                    public static Byte[] Float32ToBytes(Float32 v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            Float32ToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Primitive_Float64
             Value
@@ -1003,6 +1211,24 @@ ObjectSchemaTemplate
                     {
                         WriteStream.WriteFloat64(s, v);
                     }
+                    public static Float64 Float64FromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return Float64FromBinary(bas);
+                        }
+                    }
+                    public static Byte[] Float64ToBytes(Float64 v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            Float64ToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Primitive_Type
             Value
@@ -1014,6 +1240,24 @@ ObjectSchemaTemplate
                     public static void TypeToBinary(IWritableStream s, Type v)
                     {
                         throw new NotSupportedException();
+                    }
+                    public static Type TypeFromBytes(Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return TypeFromBinary(bas);
+                        }
+                    }
+                    public static Byte[] TypeToBytes(Type v)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            TypeToBinary(bas, v);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
         Template
             Name BinaryTranslator_Alias
@@ -1030,6 +1274,24 @@ ObjectSchemaTemplate
                     {
                         [[${ValueTypeFriendlyName}ToBinary]](s, o.Value);
                     }
+                    public static [[${Name}]] [[${Name}FromBytes]](Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return [[${Name}FromBinary]](bas);
+                        }
+                    }
+                    public static Byte[] [[${Name}ToBytes]]([[${Name}]] o)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            [[${Name}ToBinary]](bas, o);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Record
             //Parameters: ${Name}, ${FieldFroms}, ${FieldTos}
@@ -1044,6 +1306,24 @@ ObjectSchemaTemplate
                     public static void [[${Name}ToBinary]](IWritableStream s, [[${Name}]] o)
                     {
                         ${FieldTos}
+                    }
+                    public static [[${Name}]] [[${Name}FromBytes]](Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return [[${Name}FromBinary]](bas);
+                        }
+                    }
+                    public static Byte[] [[${Name}ToBytes]]([[${Name}]] o)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            [[${Name}ToBinary]](bas, o);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
         Template
             Name BinaryTranslator_FieldFrom
@@ -1074,6 +1354,24 @@ ObjectSchemaTemplate
                         [[${Name}TagToBinary]](s, o._Tag);
                         ${AlternativeTos}
                         throw new InvalidOperationException();
+                    }
+                    public static [[${Name}]] [[${Name}FromBytes]](Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return [[${Name}FromBinary]](bas);
+                        }
+                    }
+                    public static Byte[] [[${Name}ToBytes]]([[${Name}]] o)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            [[${Name}ToBinary]](bas, o);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
         Template
             Name BinaryTranslator_AlternativeFrom
@@ -1108,6 +1406,24 @@ ObjectSchemaTemplate
                     {
                         [[${UnderlyingTypeFriendlyName}ToBinary]](s, (${UnderlyingType})(o));
                     }
+                    public static [[${Name}]] [[${Name}FromBytes]](Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return [[${Name}FromBinary]](bas);
+                        }
+                    }
+                    public static Byte[] [[${Name}ToBytes]]([[${Name}]] o)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            [[${Name}ToBinary]](bas, o);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Tuple
             //Parameters: ${TypeFriendlyName}, ${TupleElementFroms}, ${TupleElementTos}
@@ -1122,6 +1438,24 @@ ObjectSchemaTemplate
                     public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, [[${TypeFriendlyName}]] t)
                     {
                         ${TupleElementTos}
+                    }
+                    public static [[${TypeFriendlyName}]] [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return [[${TypeFriendlyName}FromBinary]](bas);
+                        }
+                    }
+                    public static Byte[] [[${TypeFriendlyName}ToBytes]]([[${TypeFriendlyName}]] o)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            [[${TypeFriendlyName}ToBinary]](bas, o);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
         Template
             Name BinaryTranslator_TupleElementFrom
@@ -1159,6 +1493,24 @@ ObjectSchemaTemplate
                             [[${ElementTypeFriendlyName}ToBinary]](s, l[k]);
                         }
                     }
+                    public static [[${TypeString}]] [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return [[${TypeFriendlyName}FromBinary]](bas);
+                        }
+                    }
+                    public static Byte[] [[${TypeFriendlyName}ToBytes]]([[${TypeString}]] o)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            [[${TypeFriendlyName}ToBinary]](bas, o);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Set
             //Parameters: ${TypeFriendlyName}, ${TypeString}, ${ElementTypeFriendlyName}
@@ -1181,6 +1533,24 @@ ObjectSchemaTemplate
                         foreach (var e in l)
                         {
                             [[${ElementTypeFriendlyName}ToBinary]](s, e);
+                        }
+                    }
+                    public static [[${TypeString}]] [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return [[${TypeFriendlyName}FromBinary]](bas);
+                        }
+                    }
+                    public static Byte[] [[${TypeFriendlyName}ToBytes]]([[${TypeString}]] o)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            [[${TypeFriendlyName}ToBinary]](bas, o);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
                         }
                     }
         Template
@@ -1209,6 +1579,24 @@ ObjectSchemaTemplate
                             [[${ValueTypeFriendlyName}ToBinary]](s, p.Value);
                         }
                     }
+                    public static [[${TypeString}]] [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return [[${TypeFriendlyName}FromBinary]](bas);
+                        }
+                    }
+                    public static Byte[] [[${TypeFriendlyName}ToBytes]]([[${TypeString}]] o)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            [[${TypeFriendlyName}ToBinary]](bas, o);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
+                    }
         Template
             Name BinaryTranslator_Optional
             //Parameters: ${TypeFriendlyName}, ${TypeString}, ${AlternativeFroms}, ${AlternativeTos}
@@ -1226,4 +1614,22 @@ ObjectSchemaTemplate
                         OptionalTagToBinary(s, o._Tag);
                         ${AlternativeTos}
                         throw new InvalidOperationException();
+                    }
+                    public static [[${TypeString}]] [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            bas.WriteBytes(Bytes);
+                            bas.Position = 0;
+                            return [[${TypeFriendlyName}FromBinary]](bas);
+                        }
+                    }
+                    public static Byte[] [[${TypeFriendlyName}ToBytes]]([[${TypeString}]] o)
+                    {
+                        using (var bas = new ByteArrayStream())
+                        {
+                            [[${TypeFriendlyName}ToBinary]](bas, o);
+                            bas.Position = 0;
+                            return bas.ReadBytes(bas.Length);
+                        }
                     }
