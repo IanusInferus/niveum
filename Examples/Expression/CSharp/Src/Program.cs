@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 表达式计算工具
-//  Version:     2013.03.14.
+//  Version:     2014.09.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -86,7 +86,7 @@ namespace ExprCalc
                 a = bs.Read<Assembly>(s);
             }
 
-            var vc = new VariableContext();
+            var vc = new VariableContext<int>();
             foreach (var m in a.Modules)
             {
                 foreach (var f in m.Functions)
@@ -103,7 +103,7 @@ namespace ExprCalc
             TestInteractive(vc);
         }
 
-        private static void TestBasic(VariableContext vc)
+        private static void TestBasic(VariableContext<int> vc)
         {
             //等于/不等于
             Trace.Assert(Evaluate(vc, "false==false").Equals(true));
@@ -399,12 +399,12 @@ namespace ExprCalc
             Trace.Assert(e("abs(1-1.0)<0.00001"));
         }
 
-        private static Object Evaluate(VariableContext vc, String s)
+        private static Object Evaluate(VariableContext<int> vc, String s)
         {
-            var p = new VariableProviderCombiner(vc, new ExpressionRuntimeProvider());
+            var p = new VariableProviderCombiner<int>(vc, new ExpressionRuntimeProvider<int>());
             var r = ExpressionParser.ParseExpr(p, s);
-            var d = ExpressionEvaluator.Compile(p, r).AdaptFunction<Object>();
-            var o = d();
+            var d = ExpressionEvaluator<int>.Compile(p, r).AdaptFunction<int, Object>();
+            var o = d(0);
             return o;
         }
 
@@ -428,7 +428,7 @@ namespace ExprCalc
         private static Regex rAssignment = new Regex(@"^\s*(?<Identifier>[A-Za-z_][A-Za-z0-9_]*)\s*(?<!=)=(?!=)\s*(?<Expr>.*)$", RegexOptions.ExplicitCapture);
         private static Regex rFunctionDefinition = new Regex(@"^\s*(?<Signature>.*?)\s*(?<!=)=(?!=)\s*(?<Expr>.*)$", RegexOptions.ExplicitCapture);
         private static Regex rDelete = new Regex(@"^\s*del\s*(?<Identifier>[A-Za-z_][A-Za-z0-9_]*)\s*", RegexOptions.ExplicitCapture);
-        public static void TestInteractive(VariableContext vc)
+        public static void TestInteractive(VariableContext<int> vc)
         {
             while (true)
             {
@@ -461,7 +461,7 @@ namespace ExprCalc
                         {
                             var Signature = m.Result("${Signature}");
                             var Expr = m.Result("${Expr}");
-                            var p = new VariableProviderCombiner(vc, new ExpressionRuntimeProvider());
+                            var p = new VariableProviderCombiner<int>(vc, new ExpressionRuntimeProvider<int>());
                             var rs = ExpressionParser.ParseSignature(Signature);
                             OutputStart += Line.Length - Expr.Length;
                             var rb = ExpressionParser.ParseBody(p, rs.Declaration, Expr);
