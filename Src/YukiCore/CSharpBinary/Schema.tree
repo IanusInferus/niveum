@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板数据
-      Version:     2014.02.11.
+      Version:     2014.09.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -58,7 +58,6 @@ ObjectSchemaTemplate
 
                     using System;
                     using System.Collections.Generic;
-                    using System.Threading;
         Template
             Name Header_WithFirefly
             //Parameters:
@@ -75,7 +74,6 @@ ObjectSchemaTemplate
 
                     using System;
                     using System.Collections.Generic;
-                    using System.Threading;
                     using Firefly;
                     using Firefly.Streaming;
                     using Firefly.Mapping;
@@ -384,43 +382,88 @@ ObjectSchemaTemplate
                 $String
                     public static class BinaryTranslator
                     {
-                        private static ThreadLocal<BinarySerializer> bs = new ThreadLocal<BinarySerializer>
-                        (
-                            () =>
-                            {
-                                var s = new BinarySerializer();
-                                var st = new StringTranslator();
-                                s.PutReaderTranslator(st);
-                                s.PutWriterTranslator(st);
-                                s.PutCounterTranslator(st);
-                                return s;
-                            }
-                        );
-
+                        private static Object Lockee = new Object();
+                        private static LinkedList<BinarySerializer> bsl = new LinkedList<BinarySerializer>();
+                        private static BinarySerializer CreateNewSerializer()
+                        {
+                            var s = new BinarySerializer();
+                            var st = new StringTranslator();
+                            s.PutReaderTranslator(st);
+                            s.PutWriterTranslator(st);
+                            s.PutCounterTranslator(st);
+                            return s;
+                        }
+                
                         public static Byte[] Serialize<T>(T Value)
                         {
-                            using (var s = Streams.CreateMemoryStream())
+                            BinarySerializer bs;
+                            lock (Lockee)
                             {
-                                bs.Value.Write<T>(Value, s);
-                                s.Position = 0;
-                                return s.Read((int)(s.Length));
+                                if (bsl.Count > 0)
+                                {
+                                    bs = bsl.Last.Value;
+                                    bsl.RemoveLast();
+                                }
+                                else
+                                {
+                                    bs = CreateNewSerializer();
+                                }
+                            }
+                            try
+                            {
+                                using (var s = Streams.CreateMemoryStream())
+                                {
+                                    bs.Write<T>(Value, s);
+                                    s.Position = 0;
+                                    return s.Read((int)(s.Length));
+                                }
+                            }
+                            finally
+                            {
+                                lock (Lockee)
+                                {
+                                    bsl.AddLast(bs);
+                                }
                             }
                         }
                         public static T Deserialize<T>(Byte[] Bytes)
                         {
-                            using (var s = new ByteArrayStream(Bytes))
+                            BinarySerializer bs;
+                            lock (Lockee)
                             {
-                                return bs.Value.Read<T>(s);
+                                if (bsl.Count > 0)
+                                {
+                                    bs = bsl.Last.Value;
+                                    bsl.RemoveLast();
+                                }
+                                else
+                                {
+                                    bs = CreateNewSerializer();
+                                }
+                            }
+                            try
+                            {
+                                using (var s = new ByteArrayStream(Bytes))
+                                {
+                                    return bs.Read<T>(s);
+                                }
+                            }
+                            finally
+                            {
+                                lock (Lockee)
+                                {
+                                    bsl.AddLast(bs);
+                                }
                             }
                         }
-
+                
                         private class StringTranslator : IProjectorToProjectorDomainTranslator<String, Byte[]>, IProjectorToProjectorRangeTranslator<String, Byte[]>
                         {
                             public Func<String, R> TranslateProjectorToProjectorDomain<R>(Func<Byte[], R> Projector)
                             {
                                 return s => Projector(TextEncoding.UTF16.GetBytes(s));
                             }
-
+                
                             public Func<D, String> TranslateProjectorToProjectorRange<D>(Func<D, Byte[]> Projector)
                             {
                                 return k => TextEncoding.UTF16.GetString(Projector(k));
