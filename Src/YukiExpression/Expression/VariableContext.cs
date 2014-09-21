@@ -3,7 +3,7 @@
 //  File:        VariableContext.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 默认变量上下文
-//  Version:     2013.03.13.
+//  Version:     2014.09.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -16,16 +16,19 @@ using Yuki.ExpressionSchema;
 
 namespace Yuki.Expression
 {
-    public class VariableContext : IVariableProvider
+    /// <summary>
+    /// 本类的GetValue函数是线程安全的。
+    /// </summary>
+    public class VariableContext<T> : IVariableProvider<T>
     {
         private class Variable
         {
             public Yuki.ExpressionSchema.VariableDef[] Parameters;
             public PrimitiveType ReturnType;
-            public Func<VariableContext, Delegate> Create;
+            public Func<VariableContext<T>, Delegate> Create;
         }
 
-        private Dictionary<String, List<Variable>> Dict = new Dictionary<String, List<Variable>>();
+        private Dictionary<String, List<Variable>> Dict = new Dictionary<String, List<Variable>>(); //只读时是线程安全的
         public VariableContext()
         {
         }
@@ -44,7 +47,7 @@ namespace Yuki.Expression
         {
             return new FunctionParameterAndReturnTypes { ParameterTypes = GetParameterTypes(d), ReturnType = GetReturnType(d) };
         }
-        private Boolean NullableSequenceEqual<T>(IEnumerable<T> Left, IEnumerable<T> Right)
+        private Boolean NullableSequenceEqual<E>(IEnumerable<E> Left, IEnumerable<E> Right)
         {
             if (Left == null && Right == null) { return true; }
             if (Left == null || Right == null) { return false; }
@@ -106,10 +109,10 @@ namespace Yuki.Expression
         }
         public void Replace(String Name, FunctionDef Definition)
         {
-            Func<IVariableProvider, Delegate> d = vc => ExpressionEvaluator.Compile(new VariableProviderCombiner(vc, new ExpressionRuntimeProvider()), Definition.Body);
+            Func<IVariableProvider<T>, Delegate> d = vc => ExpressionEvaluator<T>.Compile(new VariableProviderCombiner<T>(vc, new ExpressionRuntimeProvider<T>()), Definition.Body);
             Replace(Name, Definition.Parameters.ToArray(), Definition.ReturnValue, d);
         }
-        public void Replace(String Name, Yuki.ExpressionSchema.VariableDef[] Parameters, PrimitiveType ReturnValue, Func<IVariableProvider, Delegate> Create)
+        public void Replace(String Name, Yuki.ExpressionSchema.VariableDef[] Parameters, PrimitiveType ReturnValue, Func<IVariableProvider<T>, Delegate> Create)
         {
             var nv = new Variable
             {
@@ -181,7 +184,7 @@ namespace Yuki.Expression
                     {
                         if (v.Parameters.Select(p => p.Type).SequenceEqual(ParameterTypes))
                         {
-                            var vc = new VariableContext();
+                            var vc = new VariableContext<T>();
                             for (int k = 0; k < v.Parameters.Length; k += 1)
                             {
                                 var p = v.Parameters[k];

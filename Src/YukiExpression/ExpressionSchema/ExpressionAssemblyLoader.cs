@@ -3,7 +3,7 @@
 //  File:        ExpressionAssemblyLoader.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式函数集加载器
-//  Version:     2013.03.28.
+//  Version:     2014.09.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -129,7 +129,7 @@ namespace Yuki.ExpressionSchema
                             ReachedFunctions.Add(FunctionName);
                             var ep = new ExpressionParser(null, nm.Text);
                             var BodyRange = new Syntax.TextRange { Start = nm.Text.Calc(Line.Range.Start, gBody.Index), End = Line.Range.End };
-                            var func = ep.ParseFunction(new Yuki.Expression.ExpressionRuntimeProvider(), fd, BodyRange);
+                            var func = ep.ParseFunction(new Yuki.Expression.ExpressionRuntimeProvider<int>(), fd, BodyRange);
                             Functions.Add(FunctionName, func.Definition);
                         }
 

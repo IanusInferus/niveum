@@ -2,6 +2,10 @@
 Yuki.Core:
 修改C#二进制序列化代码生成，将每个线程生成二进制序列化器改为使用一个序列化器池。
 修改C#二进制序列化代码生成，在非Firefly代码增加FromBytes和ToBytes方法。
+Yuki.Expression:
+修改表达式计算，将生成的公式代码改为支持多线程的。
+Examples:
+修正表达式示例。
 
 2014.09.20
 Examples:
