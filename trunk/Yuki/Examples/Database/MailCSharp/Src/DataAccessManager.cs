@@ -44,11 +44,6 @@ namespace Database
             }
             return Types.Single();
         }
-        private static Func<String, IDataAccess> GetConstructor(Type t)
-        {
-            var c = (IDataAccessPool)(Activator.CreateInstance(t));
-            return c.Create;
-        }
 
         public static String GetConnectionStringExample()
         {
@@ -117,7 +112,8 @@ namespace Database
                 var t = GetType(MemoryType);
                 if (t != null)
                 {
-                    var c = GetConstructor(t);
+                    var o = Activator.CreateInstance(t);
+                    var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
                     ConnectionFactory = () => c(ConnectionString);
                     return;
                 }
@@ -126,7 +122,8 @@ namespace Database
                 var t = GetType(SqlServerType);
                 if (t != null)
                 {
-                    var c = GetConstructor(t);
+                    var o = Activator.CreateInstance(t);
+                    var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
                     ConnectionFactory = () => c(ConnectionString);
                     return;
                 }
@@ -135,7 +132,8 @@ namespace Database
                 var t = GetType(PostgreSqlType);
                 if (t != null)
                 {
-                    var c = GetConstructor(t);
+                    var o = Activator.CreateInstance(t);
+                    var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
                     ConnectionFactory = () => c(ConnectionString);
                     return;
                 }
@@ -144,7 +142,8 @@ namespace Database
                 var t = GetType(MySqlType);
                 if (t != null)
                 {
-                    var c = GetConstructor(t);
+                    var o = Activator.CreateInstance(t);
+                    var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
                     ConnectionFactory = () => c(ConnectionString);
                     return;
                 }
@@ -156,25 +155,29 @@ namespace Database
             if (Type == DatabaseType.Memory)
             {
                 var t = GetType(MemoryType, true);
-                var c = GetConstructor(t);
+                var o = Activator.CreateInstance(t);
+                var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
                 ConnectionFactory = () => c(ConnectionString);
             }
             else if (Type == DatabaseType.SqlServer)
             {
                 var t = GetType(SqlServerType, true);
-                var c = GetConstructor(t);
+                var o = Activator.CreateInstance(t);
+                var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
                 ConnectionFactory = () => c(ConnectionString);
             }
             else if (Type == DatabaseType.PostgreSQL)
             {
                 var t = GetType(PostgreSqlType, true);
-                var c = GetConstructor(t);
+                var o = Activator.CreateInstance(t);
+                var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
                 ConnectionFactory = () => c(ConnectionString);
             }
             else if (Type == DatabaseType.MySQL)
             {
                 var t = GetType(MySqlType, true);
-                var c = GetConstructor(t);
+                var o = Activator.CreateInstance(t);
+                var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
                 ConnectionFactory = () => c(ConnectionString);
             }
             else
