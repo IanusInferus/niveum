@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# PostgreSQL代码模板数据
-      Version:     2014.01.18.
+      Version:     2014.09.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -73,19 +73,6 @@ ObjectSchemaTemplate
                         private NpgsqlConnection Connection;
                         private NpgsqlTransaction Transaction;
                         private ITransactionLock TransactionLock;
-                        public PostgreSqlDataAccess(String ConnectionString)
-                        {
-                            Connection = new NpgsqlConnection(ConnectionString);
-                            Connection.Open();
-                            Transaction = Connection.BeginTransaction();
-                        }
-                        public PostgreSqlDataAccess(String ConnectionString, ITransactionLock TransactionLock)
-                        {
-                            Connection = new NpgsqlConnection(ConnectionString);
-                            Connection.Open();
-                            Transaction = Connection.BeginTransaction();
-                            this.TransactionLock = TransactionLock;
-                        }
                         public PostgreSqlDataAccess(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
                         {
                             Connection = new NpgsqlConnection(ConnectionString);
@@ -93,18 +80,12 @@ ObjectSchemaTemplate
                             Transaction = Connection.BeginTransaction(IsolationLevel);
                             this.TransactionLock = TransactionLock;
                         }
-
-                        public static IDataAccess Create(String ConnectionString)
+                        public PostgreSqlDataAccess(String ConnectionString, IsolationLevel IsolationLevel, Func<NpgsqlConnection, NpgsqlTransaction, ITransactionLock> TransactionLockFactory)
                         {
-                            return new PostgreSqlDataAccess(ConnectionString);
-                        }
-                        public static IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
-                        {
-                            return new PostgreSqlDataAccess(ConnectionString, TransactionLock);
-                        }
-                        public static IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
-                        {
-                            return new PostgreSqlDataAccess(ConnectionString, IsolationLevel, TransactionLock);
+                            Connection = new NpgsqlConnection(ConnectionString);
+                            Connection.Open();
+                            Transaction = Connection.BeginTransaction(IsolationLevel);
+                            this.TransactionLock = TransactionLockFactory(Connection, Transaction);
                         }
 
                         public void Dispose()
@@ -616,7 +597,7 @@ ObjectSchemaTemplate
             //Parameters: ${Hash}
             Value
                 $String
-                    public class PostgreSqlDataAccessPool : IDataAccessPool
+                    public class PostgreSqlDataAccessPool
                     {
                         public UInt64 Hash
                         {
@@ -628,17 +609,22 @@ ObjectSchemaTemplate
 
                         public IDataAccess Create(String ConnectionString)
                         {
-                            return PostgreSqlDataAccess.Create(ConnectionString);
+                            return new PostgreSqlDataAccess(ConnectionString, IsolationLevel.ReadCommitted, (ITransactionLock)(null));
+                        }
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel)
+                        {
+                            return new PostgreSqlDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null));
                         }
                         public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
                         {
-                            return PostgreSqlDataAccess.Create(ConnectionString, TransactionLock);
+                            return new PostgreSqlDataAccess(ConnectionString, IsolationLevel.ReadCommitted, TransactionLock);
                         }
                         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
                         {
-                            return PostgreSqlDataAccess.Create(ConnectionString, IsolationLevel, TransactionLock);
+                            return new PostgreSqlDataAccess(ConnectionString, IsolationLevel, TransactionLock);
                         }
-                        public void Dispose()
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<NpgsqlConnection, NpgsqlTransaction, ITransactionLock> TransactionLockFactory)
                         {
+                            return new PostgreSqlDataAccess(ConnectionString, IsolationLevel, TransactionLockFactory);
                         }
                     }

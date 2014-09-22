@@ -5,8 +5,11 @@ Yuki.Core:
 Yuki.Expression:
 修改表达式计算，将生成的公式代码改为支持多线程的。
 修正表达式计算中的一处更改错误。
+Yuki.Relation:
+修改数据库代码生成，整理部分接口。
 Examples:
 修正表达式示例。
+修改数据库示例。
 
 2014.09.20
 Examples:
