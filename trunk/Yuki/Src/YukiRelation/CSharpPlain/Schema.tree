@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C#简单类型代码模板数据
-      Version:     2013.10.31.
+      Version:     2014.09.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -27,17 +27,10 @@ ObjectSchemaTemplate
                         ${Queries};
                     }
         Template
-            Name IDataAccessPool
+            Name ITransactionLock
             //Parameters: ${Queries}
             Value
                 $String
-                    public interface IDataAccessPool : IDisposable
-                    {
-                        UInt64 Hash { get; }
-                        IDataAccess Create(String ConnectionString);
-                        IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock);
-                    }
-
                     public interface ITransactionLock : IDisposable
                     {
                         void Enter(IEnumerable<Object> LockPath);

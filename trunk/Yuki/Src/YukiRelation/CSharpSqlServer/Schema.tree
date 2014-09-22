@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# SQL Server代码模板数据
-      Version:     2014.01.18.
+      Version:     2014.09.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -71,19 +71,6 @@ ObjectSchemaTemplate
                         private SqlConnection Connection;
                         private SqlTransaction Transaction;
                         private ITransactionLock TransactionLock;
-                        public SqlServerDataAccess(String ConnectionString)
-                        {
-                            Connection = new SqlConnection(ConnectionString);
-                            Connection.Open();
-                            Transaction = Connection.BeginTransaction();
-                        }
-                        public SqlServerDataAccess(String ConnectionString, ITransactionLock TransactionLock)
-                        {
-                            Connection = new SqlConnection(ConnectionString);
-                            Connection.Open();
-                            Transaction = Connection.BeginTransaction();
-                            this.TransactionLock = TransactionLock;
-                        }
                         public SqlServerDataAccess(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
                         {
                             Connection = new SqlConnection(ConnectionString);
@@ -91,18 +78,12 @@ ObjectSchemaTemplate
                             Transaction = Connection.BeginTransaction(IsolationLevel);
                             this.TransactionLock = TransactionLock;
                         }
-
-                        public static IDataAccess Create(String ConnectionString)
+                        public SqlServerDataAccess(String ConnectionString, IsolationLevel IsolationLevel, Func<SqlConnection, SqlTransaction, ITransactionLock> TransactionLockFactory)
                         {
-                            return new SqlServerDataAccess(ConnectionString);
-                        }
-                        public static IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
-                        {
-                            return new SqlServerDataAccess(ConnectionString, TransactionLock);
-                        }
-                        public static IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
-                        {
-                            return new SqlServerDataAccess(ConnectionString, IsolationLevel, TransactionLock);
+                            Connection = new SqlConnection(ConnectionString);
+                            Connection.Open();
+                            Transaction = Connection.BeginTransaction(IsolationLevel);
+                            this.TransactionLock = TransactionLockFactory(Connection, Transaction);
                         }
 
                         public void Dispose()
@@ -614,7 +595,7 @@ ObjectSchemaTemplate
             //Parameters: ${Hash}
             Value
                 $String
-                    public class SqlServerDataAccessPool : IDataAccessPool
+                    public class SqlServerDataAccessPool
                     {
                         public UInt64 Hash
                         {
@@ -626,17 +607,22 @@ ObjectSchemaTemplate
 
                         public IDataAccess Create(String ConnectionString)
                         {
-                            return SqlServerDataAccess.Create(ConnectionString);
+                            return new SqlServerDataAccess(ConnectionString, IsolationLevel.ReadCommitted, (ITransactionLock)(null));
+                        }
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel)
+                        {
+                            return new SqlServerDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null));
                         }
                         public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
                         {
-                            return SqlServerDataAccess.Create(ConnectionString, TransactionLock);
+                            return new SqlServerDataAccess(ConnectionString, IsolationLevel.ReadCommitted, TransactionLock);
                         }
                         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
                         {
-                            return SqlServerDataAccess.Create(ConnectionString, IsolationLevel, TransactionLock);
+                            return new SqlServerDataAccess(ConnectionString, IsolationLevel, TransactionLock);
                         }
-                        public void Dispose()
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<SqlConnection, SqlTransaction, ITransactionLock> TransactionLockFactory)
                         {
+                            return new SqlServerDataAccess(ConnectionString, IsolationLevel, TransactionLockFactory);
                         }
                     }
