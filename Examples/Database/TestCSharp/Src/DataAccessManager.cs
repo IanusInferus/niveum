@@ -67,11 +67,6 @@ namespace Database
                 InnerLock.Dispose();
             }
         }
-        private static Func<String, ICascadeLock, IDataAccess> GetConstructor(Type t)
-        {
-            var c = (IDataAccessPool)(Activator.CreateInstance(t));
-            return (ConnectionString, CascadeLock) => c.Create(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
-        }
 
         public static String GetConnectionStringExample()
         {
@@ -128,8 +123,9 @@ namespace Database
                 var t = GetType(SqlServerType);
                 if (t != null)
                 {
-                    var c = GetConstructor(t);
-                    ConnectionFactory = () => c(ConnectionString, CascadeLock);
+                    var o = Activator.CreateInstance(t);
+                    var c = (Func<String, ITransactionLock, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, ITransactionLock, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String), typeof(ITransactionLock) })));
+                    ConnectionFactory = () => c(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
                     return;
                 }
             }
@@ -137,8 +133,9 @@ namespace Database
                 var t = GetType(PostgreSqlType);
                 if (t != null)
                 {
-                    var c = GetConstructor(t);
-                    ConnectionFactory = () => c(ConnectionString, CascadeLock);
+                    var o = Activator.CreateInstance(t);
+                    var c = (Func<String, ITransactionLock, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, ITransactionLock, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String), typeof(ITransactionLock) })));
+                    ConnectionFactory = () => c(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
                     return;
                 }
             }
@@ -146,8 +143,9 @@ namespace Database
                 var t = GetType(MySqlType);
                 if (t != null)
                 {
-                    var c = GetConstructor(t);
-                    ConnectionFactory = () => c(ConnectionString, CascadeLock);
+                    var o = Activator.CreateInstance(t);
+                    var c = (Func<String, ITransactionLock, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, ITransactionLock, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String), typeof(ITransactionLock) })));
+                    ConnectionFactory = () => c(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
                     return;
                 }
             }
@@ -158,20 +156,23 @@ namespace Database
             if (Type == DatabaseType.SqlServer)
             {
                 var t = GetType(SqlServerType, true);
-                var c = GetConstructor(t);
-                ConnectionFactory = () => c(ConnectionString, CascadeLock);
+                var o = Activator.CreateInstance(t);
+                var c = (Func<String, ITransactionLock, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, ITransactionLock, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String), typeof(ITransactionLock) })));
+                ConnectionFactory = () => c(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
             }
             else if (Type == DatabaseType.PostgreSQL)
             {
                 var t = GetType(PostgreSqlType, true);
-                var c = GetConstructor(t);
-                ConnectionFactory = () => c(ConnectionString, CascadeLock);
+                var o = Activator.CreateInstance(t);
+                var c = (Func<String, ITransactionLock, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, ITransactionLock, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String), typeof(ITransactionLock) })));
+                ConnectionFactory = () => c(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
             }
             else if (Type == DatabaseType.MySQL)
             {
                 var t = GetType(MySqlType, true);
-                var c = GetConstructor(t);
-                ConnectionFactory = () => c(ConnectionString, CascadeLock);
+                var o = Activator.CreateInstance(t);
+                var c = (Func<String, ITransactionLock, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, ITransactionLock, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String), typeof(ITransactionLock) })));
+                ConnectionFactory = () => c(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
             }
             else
             {
