@@ -86,21 +86,21 @@ namespace Yuki.Expression
 
         public void Replace(String Name, Object v)
         {
-            var t = v.GetType();
-            if (t == typeof(Boolean))
+            var type = v.GetType();
+            if (type == typeof(Boolean))
             {
                 var vv = (Boolean)(v);
-                Replace(Name, null, PrimitiveType.Boolean, vc => (Func<Boolean>)(() => vv));
+                Replace(Name, null, PrimitiveType.Boolean, vc => (Func<T, Boolean>)(t => vv));
             }
-            else if (t == typeof(int))
+            else if (type == typeof(int))
             {
                 var vv = (int)(v);
-                Replace(Name, null, PrimitiveType.Int, vc => (Func<int>)(() => vv));
+                Replace(Name, null, PrimitiveType.Int, vc => (Func<T, int>)(t => vv));
             }
-            else if (t == typeof(double))
+            else if (type == typeof(double))
             {
                 var vv = (double)(v);
-                Replace(Name, null, PrimitiveType.Real, vc => (Func<double>)(() => vv));
+                Replace(Name, null, PrimitiveType.Real, vc => (Func<T, double>)(t => vv));
             }
             else
             {
