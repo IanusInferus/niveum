@@ -368,7 +368,7 @@ namespace Server
                         WritingOffset += DataLength;
 
                         var IsEncrypted = (SecureContext != null);
-                        if (SecureContext != null)
+                        if (IsEncrypted)
                         {
                             Flag |= 2; //ENC
                         }
@@ -710,6 +710,10 @@ namespace Server
                 return true;
             }
 
+            public void PrePush(Action a)
+            {
+                ssm.AddToActionQueue(a);
+            }
             public Boolean Push(IPEndPoint RemoteEndPoint, int Index, int[] Indices, Byte[] Buffer, int Offset, int Length)
             {
                 var Time = DateTime.UtcNow;
