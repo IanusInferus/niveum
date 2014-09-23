@@ -565,11 +565,14 @@ namespace Server
                                                     );
 
                                                     s.Start();
-                                                    if (!s.Push(e, Index, null, Buffer, Offset, Buffer.Length - Offset))
+                                                    s.PrePush(() =>
                                                     {
-                                                        StoppingSessions.Enqueue(s);
-                                                        PurifieringTaskNotifier.Set();
-                                                    }
+                                                        if (!s.Push(e, Index, null, Buffer, Offset, Buffer.Length - Offset))
+                                                        {
+                                                            StoppingSessions.Enqueue(s);
+                                                            PurifieringTaskNotifier.Set();
+                                                        }
+                                                    });
                                                 }
                                                 else
                                                 {
@@ -591,115 +594,118 @@ namespace Server
                                                         continue;
                                                     }
 
-                                                    var IsEncrypted = (Flag & 2) != 0;
-                                                    var NextSecureContext = s.NextSecureContext;
-                                                    var SecureContext = s.SecureContext;
-                                                    if ((SecureContext == null) && (NextSecureContext != null))
+                                                    s.PrePush(() =>
                                                     {
-                                                        s.SecureContext = NextSecureContext;
-                                                        s.NextSecureContext = null;
-                                                        SecureContext = NextSecureContext;
-                                                        NextSecureContext = null;
-                                                    }
-                                                    if ((SecureContext != null) != IsEncrypted)
-                                                    {
-                                                        continue;
-                                                    }
-                                                    if (IsEncrypted)
-                                                    {
-                                                        var Key = SecureContext.ServerToken.Concat(Cryptography.SHA1(Buffer.Skip(4).Take(4).ToArray()));
-                                                        var HMACBytes = Cryptography.HMACSHA1(Key, Buffer).Take(4).ToArray();
-                                                        var HMAC = HMACBytes[0] | ((Int32)(HMACBytes[1]) << 8) | ((Int32)(HMACBytes[2]) << 16) | ((Int32)(HMACBytes[3]) << 24);
-                                                        if (HMAC != Verification) { continue; }
-                                                    }
-
-                                                    var Offset = 12;
-                                                    int[] Indices = null;
-                                                    if ((Flag & 1) != 0)
-                                                    {
-                                                        var NumIndex = Buffer[Offset] | ((Int32)(Buffer[Offset + 1]) << 8);
-                                                        if (NumIndex > UdpSession.ReadingWindowSize) { continue; } //若Index数量较大，则丢弃包
-                                                        Offset += 2;
-                                                        Indices = new int[NumIndex];
-                                                        for (int k = 0; k < NumIndex; k += 1)
+                                                        var IsEncrypted = (Flag & 2) != 0;
+                                                        var NextSecureContext = s.NextSecureContext;
+                                                        var SecureContext = s.SecureContext;
+                                                        if ((SecureContext == null) && (NextSecureContext != null))
                                                         {
-                                                            Indices[k] = Buffer[Offset + k * 2] | ((Int32)(Buffer[Offset + k * 2 + 1]) << 8);
+                                                            s.SecureContext = NextSecureContext;
+                                                            s.NextSecureContext = null;
+                                                            SecureContext = NextSecureContext;
+                                                            NextSecureContext = null;
                                                         }
-                                                        Offset += NumIndex * 2;
-                                                    }
+                                                        if ((SecureContext != null) != IsEncrypted)
+                                                        {
+                                                            return;
+                                                        }
+                                                        if (IsEncrypted)
+                                                        {
+                                                            var Key = SecureContext.ServerToken.Concat(Cryptography.SHA1(Buffer.Skip(4).Take(4).ToArray()));
+                                                            var HMACBytes = Cryptography.HMACSHA1(Key, Buffer).Take(4).ToArray();
+                                                            var HMAC = HMACBytes[0] | ((Int32)(HMACBytes[1]) << 8) | ((Int32)(HMACBytes[2]) << 16) | ((Int32)(HMACBytes[3]) << 24);
+                                                            if (HMAC != Verification) { return; }
+                                                        }
 
-                                                    //如果Flag中包含AUX，则判断
-                                                    if ((Flag & 8) != 0)
-                                                    {
-                                                        if (Indices == null) { continue; }
-                                                        if (Indices.Length < 1) { continue; }
-                                                        if (Index != Indices[0]) { continue; }
-                                                        if (Offset != Buffer.Length) { continue; }
-                                                    }
-
-                                                    var PreviousRemoteEndPoint = s.RemoteEndPoint;
-                                                    if (!PreviousRemoteEndPoint.Equals(e))
-                                                    {
-                                                        SessionSets.DoAction
-                                                        (
-                                                            ss =>
+                                                        var Offset = 12;
+                                                        int[] Indices = null;
+                                                        if ((Flag & 1) != 0)
+                                                        {
+                                                            var NumIndex = Buffer[Offset] | ((Int32)(Buffer[Offset + 1]) << 8);
+                                                            if (NumIndex > UdpSession.ReadingWindowSize) { return; } //若Index数量较大，则丢弃包
+                                                            Offset += 2;
+                                                            Indices = new int[NumIndex];
+                                                            for (int k = 0; k < NumIndex; k += 1)
                                                             {
-                                                                var Authenticated = false;
-                                                                {
-                                                                    var PreviousIpAddress = PreviousRemoteEndPoint.Address;
-                                                                    var isi = ss.IpSessions[PreviousIpAddress];
-                                                                    if (isi.Authenticated.Contains(s))
-                                                                    {
-                                                                        isi.Authenticated.Remove(s);
-                                                                        Authenticated = true;
-                                                                    }
-                                                                    isi.Count -= 1;
-                                                                    if (isi.Count == 0)
-                                                                    {
-                                                                        ss.IpSessions.Remove(PreviousIpAddress);
-                                                                    }
-                                                                }
-
-                                                                {
-                                                                    IpSessionInfo isi;
-                                                                    if (ss.IpSessions.ContainsKey(e.Address))
-                                                                    {
-                                                                        isi = ss.IpSessions[e.Address];
-                                                                        isi.Count += 1;
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        isi = new IpSessionInfo();
-                                                                        isi.Count += 1;
-                                                                        ss.IpSessions.Add(e.Address, isi);
-                                                                    }
-                                                                    if (Authenticated)
-                                                                    {
-                                                                        isi.Authenticated.Add(s);
-                                                                    }
-                                                                }
-
-                                                                s.RemoteEndPoint = e;
+                                                                Indices[k] = Buffer[Offset + k * 2] | ((Int32)(Buffer[Offset + k * 2 + 1]) << 8);
                                                             }
-                                                        );
-                                                    }
+                                                            Offset += NumIndex * 2;
+                                                        }
 
-                                                    if ((Flag & 8) != 0)
-                                                    {
-                                                        if (!s.PushAux(e, Indices))
+                                                        //如果Flag中包含AUX，则判断
+                                                        if ((Flag & 8) != 0)
                                                         {
-                                                            StoppingSessions.Enqueue(s);
-                                                            PurifieringTaskNotifier.Set();
+                                                            if (Indices == null) { return; }
+                                                            if (Indices.Length < 1) { return; }
+                                                            if (Index != Indices[0]) { return; }
+                                                            if (Offset != Buffer.Length) { return; }
                                                         }
-                                                    }
-                                                    else
-                                                    {
-                                                        if (!s.Push(e, Index, Indices, Buffer, Offset, Buffer.Length - Offset))
+
+                                                        var PreviousRemoteEndPoint = s.RemoteEndPoint;
+                                                        if (!PreviousRemoteEndPoint.Equals(e))
                                                         {
-                                                            StoppingSessions.Enqueue(s);
-                                                            PurifieringTaskNotifier.Set();
+                                                            SessionSets.DoAction
+                                                            (
+                                                                ss =>
+                                                                {
+                                                                    var Authenticated = false;
+                                                                    {
+                                                                        var PreviousIpAddress = PreviousRemoteEndPoint.Address;
+                                                                        var isi = ss.IpSessions[PreviousIpAddress];
+                                                                        if (isi.Authenticated.Contains(s))
+                                                                        {
+                                                                            isi.Authenticated.Remove(s);
+                                                                            Authenticated = true;
+                                                                        }
+                                                                        isi.Count -= 1;
+                                                                        if (isi.Count == 0)
+                                                                        {
+                                                                            ss.IpSessions.Remove(PreviousIpAddress);
+                                                                        }
+                                                                    }
+
+                                                                    {
+                                                                        IpSessionInfo isi;
+                                                                        if (ss.IpSessions.ContainsKey(e.Address))
+                                                                        {
+                                                                            isi = ss.IpSessions[e.Address];
+                                                                            isi.Count += 1;
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            isi = new IpSessionInfo();
+                                                                            isi.Count += 1;
+                                                                            ss.IpSessions.Add(e.Address, isi);
+                                                                        }
+                                                                        if (Authenticated)
+                                                                        {
+                                                                            isi.Authenticated.Add(s);
+                                                                        }
+                                                                    }
+
+                                                                    s.RemoteEndPoint = e;
+                                                                }
+                                                            );
                                                         }
-                                                    }
+
+                                                        if ((Flag & 8) != 0)
+                                                        {
+                                                            if (!s.PushAux(e, Indices))
+                                                            {
+                                                                StoppingSessions.Enqueue(s);
+                                                                PurifieringTaskNotifier.Set();
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            if (!s.Push(e, Index, Indices, Buffer, Offset, Buffer.Length - Offset))
+                                                            {
+                                                                StoppingSessions.Enqueue(s);
+                                                                PurifieringTaskNotifier.Set();
+                                                            }
+                                                        }
+                                                    });
                                                 }
                                             }
                                             catch (Exception ex)
