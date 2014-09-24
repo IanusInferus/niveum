@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# MySQL代码模板数据
-      Version:     2014.09.22.
+      Version:     2014.09.24.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -58,6 +58,7 @@ ObjectSchemaTemplate
 
                     using System;
                     using System.Collections.Generic;
+                    using System.Diagnostics;
                     using System.Data;
                     using MySql.Data.MySqlClient;
                     using ${EntityNamespaceName};
@@ -68,69 +69,132 @@ ObjectSchemaTemplate
                 $String
                     public partial class MySqlDataAccess : IDataAccess
                     {
+                        private Stopwatch sw;
                         private MySqlConnection Connection;
                         private MySqlTransaction Transaction;
                         private ITransactionLock TransactionLock;
-                        public MySqlDataAccess(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
+                        private Action<long> ReportMilliseconds;
+                        public MySqlDataAccess(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock, Action<long> ReportMilliseconds)
                         {
-                            Connection = new MySqlConnection(ConnectionString);
-                            Connection.Open();
-                            Transaction = Connection.BeginTransaction(IsolationLevel);
+                            if (ReportMilliseconds != null)
+                            {
+                                sw = new Stopwatch();
+                                sw.Start();
+                            }
+                            try
+                            {
+                                Connection = new MySqlConnection(ConnectionString);
+                                Connection.Open();
+                                Transaction = Connection.BeginTransaction(IsolationLevel);
+                            }
+                            finally
+                            {
+                                if (ReportMilliseconds != null)
+                                {
+                                    sw.Stop();
+                                }
+                            }
                             this.TransactionLock = TransactionLock;
+                            this.ReportMilliseconds = ReportMilliseconds;
                         }
-                        public MySqlDataAccess(String ConnectionString, IsolationLevel IsolationLevel, Func<MySqlConnection, MySqlTransaction, ITransactionLock> TransactionLockFactory)
+                        public MySqlDataAccess(String ConnectionString, IsolationLevel IsolationLevel, Func<MySqlConnection, MySqlTransaction, ITransactionLock> TransactionLockFactory, Action<long> ReportMilliseconds)
                         {
-                            Connection = new MySqlConnection(ConnectionString);
-                            Connection.Open();
-                            Transaction = Connection.BeginTransaction(IsolationLevel);
+                            if (ReportMilliseconds != null)
+                            {
+                                sw = new Stopwatch();
+                                sw.Start();
+                            }
+                            try
+                            {
+                                Connection = new MySqlConnection(ConnectionString);
+                                Connection.Open();
+                                Transaction = Connection.BeginTransaction(IsolationLevel);
+                            }
+                            finally
+                            {
+                                if (ReportMilliseconds != null)
+                                {
+                                    sw.Stop();
+                                }
+                            }
                             this.TransactionLock = TransactionLockFactory(Connection, Transaction);
+                            this.ReportMilliseconds = ReportMilliseconds;
                         }
 
                         public void Dispose()
                         {
-                            if (Transaction != null)
+                            if (ReportMilliseconds != null)
                             {
-                                Transaction.Rollback();
-                                Transaction.Dispose();
-                                Transaction = null;
+                                sw.Start();
                             }
-                            if (TransactionLock != null)
+                            try
                             {
-                                TransactionLock.ExitAll();
-                                TransactionLock = null;
+                                if (Transaction != null)
+                                {
+                                    Transaction.Rollback();
+                                    Transaction.Dispose();
+                                    Transaction = null;
+                                }
+                                if (TransactionLock != null)
+                                {
+                                    TransactionLock.ExitAll();
+                                    TransactionLock = null;
+                                }
+                                if (Connection != null)
+                                {
+                                    Connection.Dispose();
+                                    Connection = null;
+                                }
                             }
-                            if (Connection != null)
+                            finally
                             {
-                                Connection.Dispose();
-                                Connection = null;
+                                if (ReportMilliseconds != null)
+                                {
+                                    sw.Stop();
+                                    ReportMilliseconds(sw.ElapsedMilliseconds);
+                                }
                             }
                         }
 
                         public void Complete()
                         {
-                            if (Transaction != null)
+                            if (ReportMilliseconds != null)
                             {
-                                Transaction.Commit();
-                                Transaction.Dispose();
-                                Transaction = null;
+                                sw.Start();
                             }
-                            else
+                            try
                             {
-                                throw new InvalidOperationException();
+                                if (Transaction != null)
+                                {
+                                    Transaction.Commit();
+                                    Transaction.Dispose();
+                                    Transaction = null;
+                                }
+                                else
+                                {
+                                    throw new InvalidOperationException();
+                                }
+                                if (TransactionLock != null)
+                                {
+                                    TransactionLock.ExitAll();
+                                    TransactionLock = null;
+                                }
+                                if (Connection != null)
+                                {
+                                    Connection.Dispose();
+                                    Connection = null;
+                                }
+                                else
+                                {
+                                    throw new InvalidOperationException();
+                                }
                             }
-                            if (TransactionLock != null)
+                            finally
                             {
-                                TransactionLock.ExitAll();
-                                TransactionLock = null;
-                            }
-                            if (Connection != null)
-                            {
-                                Connection.Dispose();
-                                Connection = null;
-                            }
-                            else
-                            {
-                                throw new InvalidOperationException();
+                                if (ReportMilliseconds != null)
+                                {
+                                    sw.Stop();
+                                }
                             }
                         }
 
@@ -367,7 +431,21 @@ ObjectSchemaTemplate
                 $String
                     public ${Signature}
                     {
-                        ${Content}
+                        if (sw != null)
+                        {
+                            sw.Start();
+                        }
+                        try
+                        {
+                            ${Content}
+                        }
+                        finally
+                        {
+                            if (sw != null)
+                            {
+                                sw.Stop();
+                            }
+                        }
                     }
         Template
             Name SelectLock_Optional
@@ -636,22 +714,34 @@ ObjectSchemaTemplate
 
                         public IDataAccess Create(String ConnectionString)
                         {
-                            return new MySqlDataAccess(ConnectionString, IsolationLevel.ReadCommitted, (ITransactionLock)(null));
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel.ReadCommitted, (ITransactionLock)(null), null);
                         }
                         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel)
                         {
-                            return new MySqlDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null));
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null), null);
                         }
                         public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
                         {
-                            return new MySqlDataAccess(ConnectionString, IsolationLevel.ReadCommitted, TransactionLock);
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel.ReadCommitted, TransactionLock, null);
                         }
                         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
                         {
-                            return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLock);
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLock, null);
                         }
                         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<MySqlConnection, MySqlTransaction, ITransactionLock> TransactionLockFactory)
                         {
-                            return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLockFactory);
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLockFactory, null);
+                        }
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Action<long> ReportMilliseconds)
+                        {
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null), ReportMilliseconds);
+                        }
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock, Action<long> ReportMilliseconds)
+                        {
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLock, ReportMilliseconds);
+                        }
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<MySqlConnection, MySqlTransaction, ITransactionLock> TransactionLockFactory, Action<long> ReportMilliseconds)
+                        {
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLockFactory, ReportMilliseconds);
                         }
                     }
