@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2014.03.07.
+//  Version:     2014.09.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -708,7 +708,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                         var aHead = d[a.Name];
                         if (aHead.Type.OnTypeRef && (aHead.Type.TypeRef.Name == "Unit") && aHead.Type.TypeRef.Version == "")
                         {
-                            AlternativeTos.AddRange(GetTemplate("Translator_AlternativeTo_Unit").Substitute("VersionedTypeString", VersionedTypeString).Substitute("Name", a.Name));
+                            AlternativeTos.AddRange(GetTemplate("Translator_AlternativeTo_Unit").Substitute("TypeString", TypeString).Substitute("Name", a.Name));
                             continue;
                         }
                         if (IsSameType(a.Type, aHead.Type, false))
