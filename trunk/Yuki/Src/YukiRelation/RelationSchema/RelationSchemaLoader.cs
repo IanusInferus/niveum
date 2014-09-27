@@ -26,6 +26,8 @@ namespace Yuki.RelationSchema
 {
     public sealed class RelationSchemaLoader
     {
+        private List<Semantics.Node> RTypes;
+        private List<Semantics.Node> RTypeRefs;
         private List<Semantics.Node> Types;
         private List<Semantics.Node> TypeRefs;
         private List<Semantics.Node> Imports;
@@ -38,6 +40,8 @@ namespace Yuki.RelationSchema
 
         public RelationSchemaLoader()
         {
+            RTypes = new List<Semantics.Node>();
+            RTypeRefs = new List<Semantics.Node>();
             Types = new List<Semantics.Node>();
             TypeRefs = new List<Semantics.Node>();
             Imports = new List<Semantics.Node>();
@@ -60,8 +64,8 @@ namespace Yuki.RelationSchema
 
         public Schema GetResult()
         {
-            var TypesQueryListsNode = MakeStemNode("Types", Types.Where(n => n.OnStem && n.Stem.Name == "QueryList").Select(n => MakeStemNode("TypeDef", n)).ToArray());
-            var TypeRefsQueryListsNode = MakeStemNode("TypeRefs", Types.Where(n => n.OnStem && n.Stem.Name == "QueryList").Select(n => MakeStemNode("TypeDef", n)).ToArray());
+            var TypesQueryListsNode = MakeStemNode("Types", RTypes.Concat(Types.Where(n => n.OnStem && n.Stem.Name == "QueryList")).Select(n => MakeStemNode("TypeDef", n)).ToArray());
+            var TypeRefsQueryListsNode = MakeStemNode("TypeRefs", RTypeRefs.Concat(Types.Where(n => n.OnStem && n.Stem.Name == "QueryList")).Select(n => MakeStemNode("TypeDef", n)).ToArray());
             var RelationSchema = MakeStemNode("Schema", TypesQueryListsNode, TypeRefsQueryListsNode, MakeStemNode("Imports"), MakeStemNode("TypePaths"));
             var rtfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { RelationSchema } }, Positions = Positions };
             var rx = XmlInterop.TreeToXml(rtfr);
@@ -127,6 +131,57 @@ namespace Yuki.RelationSchema
             var s = new Semantics.Stem { Name = Name, Children = Children };
             var n = Semantics.Node.CreateStem(s);
             return n;
+        }
+
+        public void LoadSchema(String TreePath)
+        {
+            using (var Reader = Txt.CreateTextReader(TreePath))
+            {
+                if (Debugger.IsAttached)
+                {
+                    LoadSchema(TreePath, Reader);
+                }
+                else
+                {
+                    try
+                    {
+                        LoadSchema(TreePath, Reader);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = Opt<Syntax.TextRange>.Empty }, ex);
+                    }
+                }
+            }
+        }
+        public void LoadSchema(String TreePath, StreamReader Reader)
+        {
+            var t = TreeFile.ReadDirect(Reader, TreePath, new TreeFormatParseSetting(), new TreeFormatEvaluateSetting());
+            LoadSchema(t);
+        }
+        public void LoadSchema(TreeFormatResult t)
+        {
+            var SchemaContent = t.Value.Nodes.Single(n => n.OnStem && n.Stem.Name == "Schema").Stem.Children;
+            var TypesNodes = SchemaContent.Single(n => n.OnStem && n.Stem.Name == "Types").Stem.Children.Where(n => n.OnStem).SelectMany(n => n.Stem.Children);
+            var TypeRefsNodes = SchemaContent.Single(n => n.OnStem && n.Stem.Name == "TypeRefs").Stem.Children.Where(n => n.OnStem).SelectMany(n => n.Stem.Children);
+            RTypes.AddRange(TypesNodes);
+            RTypeRefs.AddRange(TypeRefsNodes);
+            foreach (var n in TypesNodes.Concat(TypeRefsNodes))
+            {
+                if (!n.OnStem)
+                {
+                    throw new InvalidOperationException();
+                }
+                var NameNode = n.Stem.Children.Single(nc => nc.Stem.Name == "Name").Stem.Children.Single();
+                if (!NameNode.OnLeaf)
+                {
+                    throw new InvalidOperationException();
+                }
+                var Name = NameNode.Leaf;
+                Parsed.Add(Name);
+            }
+            Imports.AddRange(SchemaContent.Single(n => n.OnStem && n.Stem.Name == "Imports").Stem.Children.Where(n => n.OnStem));
+            TypePaths.AddRange(SchemaContent.Single(n => n.OnStem && n.Stem.Name == "TypePaths").Stem.Children.Where(n => n.OnStem));
         }
 
         public void AddImport(String Import)
