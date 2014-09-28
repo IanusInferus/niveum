@@ -68,14 +68,15 @@ namespace Client
             static int ReadingWindowSize() { return 1024; }
             static int WritingWindowSize() { return 32; }
             static int IndexSpace() { return 65536; }
-            static int InitialPacketTimeoutMilliseconds() { return 500; }
-            static int MaxSquaredPacketResentCount() { return 3; }
-            static int MaxLinearPacketResentCount() { return 10; }
 
             static int GetTimeoutMilliseconds(int ResentCount)
             {
-                if (ResentCount <= MaxSquaredPacketResentCount()) { return InitialPacketTimeoutMilliseconds() * (1 << ResentCount); }
-                return InitialPacketTimeoutMilliseconds() * (1 << MaxSquaredPacketResentCount()) * (std::min(ResentCount, MaxLinearPacketResentCount()) - MaxSquaredPacketResentCount() + 1);
+                if (ResentCount == 0) { return 500; }
+                if (ResentCount == 1) { return 900; }
+                if (ResentCount == 2) { return 1700; }
+                if (ResentCount == 3) { return 2100; }
+                if (ResentCount == 4) { return 3100; }
+                return 4100;
             }
 
             static void ArrayCopy(const std::vector<std::uint8_t> &Source, int SourceIndex, std::vector<std::uint8_t> &Destination, int DestinationIndex, int Length)

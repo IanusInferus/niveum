@@ -70,13 +70,11 @@ namespace Server
             public const int ReadingWindowSize = 32;
             public const int WritingWindowSize = 1024;
             public const int IndexSpace = 65536;
-            public const int InitialPacketTimeoutMilliseconds = 400;
-            public const int MaxSquaredPacketResentCount = 3;
-            public const int MaxLinearPacketResentCount = 10;
+            public static readonly int[] TimeoutSequences = { 400, 800, 1600, 2000, 3000, 4000 };
             private static int GetTimeoutMilliseconds(int ResentCount)
             {
-                if (ResentCount <= MaxSquaredPacketResentCount) { return InitialPacketTimeoutMilliseconds * (1 << ResentCount); }
-                return InitialPacketTimeoutMilliseconds * (1 << MaxSquaredPacketResentCount) * (Math.Min(ResentCount, MaxLinearPacketResentCount) - MaxSquaredPacketResentCount + 1);
+                if (ResentCount < TimeoutSequences.Length) { return TimeoutSequences[ResentCount]; }
+                return TimeoutSequences[TimeoutSequences.Length - 1];
             }
 
             private class Part

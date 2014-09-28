@@ -56,13 +56,11 @@ namespace Client
             public const int ReadingWindowSize = 1024;
             public const int WritingWindowSize = 32;
             public const int IndexSpace = 65536;
-            public const int InitialPacketTimeoutMilliseconds = 500;
-            public const int MaxSquaredPacketResentCount = 3;
-            public const int MaxLinearPacketResentCount = 10;
+            public static readonly int[] TimeoutSequences = { 500, 900, 1700, 2100, 3100, 4100 };
             private static int GetTimeoutMilliseconds(int ResentCount)
             {
-                if (ResentCount <= MaxSquaredPacketResentCount) { return InitialPacketTimeoutMilliseconds * (1 << ResentCount); }
-                return InitialPacketTimeoutMilliseconds * (1 << MaxSquaredPacketResentCount) * (Math.Min(ResentCount, MaxLinearPacketResentCount) - MaxSquaredPacketResentCount + 1);
+                if (ResentCount < TimeoutSequences.Length) { return TimeoutSequences[ResentCount]; }
+                return TimeoutSequences[TimeoutSequences.Length - 1];
             }
 
             private class Part
