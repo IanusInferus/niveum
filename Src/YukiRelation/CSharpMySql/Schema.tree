@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# MySQL代码模板数据
-      Version:     2014.09.24.
+      Version:     2014.10.01.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -69,15 +69,17 @@ ObjectSchemaTemplate
                 $String
                     public partial class MySqlDataAccess : IDataAccess
                     {
+                        private int Count;
                         private Stopwatch sw;
                         private MySqlConnection Connection;
                         private MySqlTransaction Transaction;
                         private ITransactionLock TransactionLock;
-                        private Action<long> ReportMilliseconds;
-                        public MySqlDataAccess(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock, Action<long> ReportMilliseconds)
+                        private Action<int, long> Report;
+                        public MySqlDataAccess(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock, Action<int, long> Report)
                         {
-                            if (ReportMilliseconds != null)
+                            if (Report != null)
                             {
+                                Count = 0;
                                 sw = new Stopwatch();
                                 sw.Start();
                             }
@@ -89,18 +91,19 @@ ObjectSchemaTemplate
                             }
                             finally
                             {
-                                if (ReportMilliseconds != null)
+                                if (Report != null)
                                 {
                                     sw.Stop();
                                 }
                             }
                             this.TransactionLock = TransactionLock;
-                            this.ReportMilliseconds = ReportMilliseconds;
+                            this.Report = Report;
                         }
-                        public MySqlDataAccess(String ConnectionString, IsolationLevel IsolationLevel, Func<MySqlConnection, MySqlTransaction, ITransactionLock> TransactionLockFactory, Action<long> ReportMilliseconds)
+                        public MySqlDataAccess(String ConnectionString, IsolationLevel IsolationLevel, Func<MySqlConnection, MySqlTransaction, ITransactionLock> TransactionLockFactory, Action<int, long> Report)
                         {
-                            if (ReportMilliseconds != null)
+                            if (Report != null)
                             {
+                                Count = 0;
                                 sw = new Stopwatch();
                                 sw.Start();
                             }
@@ -112,18 +115,18 @@ ObjectSchemaTemplate
                             }
                             finally
                             {
-                                if (ReportMilliseconds != null)
+                                if (Report != null)
                                 {
                                     sw.Stop();
                                 }
                             }
                             this.TransactionLock = TransactionLockFactory(Connection, Transaction);
-                            this.ReportMilliseconds = ReportMilliseconds;
+                            this.Report = Report;
                         }
 
                         public void Dispose()
                         {
-                            if (ReportMilliseconds != null)
+                            if (Report != null)
                             {
                                 sw.Start();
                             }
@@ -148,17 +151,17 @@ ObjectSchemaTemplate
                             }
                             finally
                             {
-                                if (ReportMilliseconds != null)
+                                if (Report != null)
                                 {
                                     sw.Stop();
-                                    ReportMilliseconds(sw.ElapsedMilliseconds);
+                                    Report(Count, (sw.ElapsedTicks * 1000000) / Stopwatch.Frequency);
                                 }
                             }
                         }
 
                         public void Complete()
                         {
-                            if (ReportMilliseconds != null)
+                            if (Report != null)
                             {
                                 sw.Start();
                             }
@@ -191,7 +194,7 @@ ObjectSchemaTemplate
                             }
                             finally
                             {
-                                if (ReportMilliseconds != null)
+                                if (Report != null)
                                 {
                                     sw.Stop();
                                 }
@@ -431,9 +434,10 @@ ObjectSchemaTemplate
                 $String
                     public ${Signature}
                     {
-                        if (sw != null)
+                        if (this.Report != null)
                         {
-                            sw.Start();
+                            this.Count += 1;
+                            this.sw.Start();
                         }
                         try
                         {
@@ -441,9 +445,9 @@ ObjectSchemaTemplate
                         }
                         finally
                         {
-                            if (sw != null)
+                            if (this.Report != null)
                             {
-                                sw.Stop();
+                                this.sw.Stop();
                             }
                         }
                     }
@@ -732,16 +736,16 @@ ObjectSchemaTemplate
                         {
                             return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLockFactory, null);
                         }
-                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Action<long> ReportMilliseconds)
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Action<int, long> Report)
                         {
-                            return new MySqlDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null), ReportMilliseconds);
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null), Report);
                         }
-                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock, Action<long> ReportMilliseconds)
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock, Action<int, long> Report)
                         {
-                            return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLock, ReportMilliseconds);
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLock, Report);
                         }
-                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<MySqlConnection, MySqlTransaction, ITransactionLock> TransactionLockFactory, Action<long> ReportMilliseconds)
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<MySqlConnection, MySqlTransaction, ITransactionLock> TransactionLockFactory, Action<int, long> Report)
                         {
-                            return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLockFactory, ReportMilliseconds);
+                            return new MySqlDataAccess(ConnectionString, IsolationLevel, TransactionLockFactory, Report);
                         }
                     }
