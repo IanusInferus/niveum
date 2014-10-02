@@ -76,3 +76,4 @@
     EnableLogConsole True
     ServerDebug True
     ClientDebug True
+    NumMaxThread 32
