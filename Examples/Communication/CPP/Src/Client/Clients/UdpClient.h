@@ -274,7 +274,7 @@ namespace Client
 #endif
 
         public:
-            UdpClient(boost::asio::io_service &io_service, boost::asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient)
+            UdpClient(boost::asio::io_service &io_service, boost::asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient, std::function<void(boost::system::system_error)> ExceptionHandler = nullptr)
                 : io_service(io_service), Socket(io_service), IsRunningValue(nullptr), SessionIdValue(0), ConnectedValue(false), SecureContextValue(nullptr), RawReadingContext(nullptr), CookedWritingContext(nullptr), IsDisposed(false)
             {
                 this->IsRunningValue = std::make_shared<BaseSystem::LockedVariable<bool>>(false);
@@ -304,7 +304,17 @@ namespace Client
                     IsRunningValue->DoAction([=](bool b)
                     {
                         if (!b) { return; }
-                        OnWrite(*this->VirtualTransportClient, []() {}, [](boost::system::errc::errc_t se) { throw boost::system::system_error(se, boost::system::generic_category()); });
+                        OnWrite(*this->VirtualTransportClient, [=]() {}, [=](boost::system::errc::errc_t se)
+                        {
+                            if (ExceptionHandler != nullptr)
+                            {
+                                ExceptionHandler(boost::system::system_error(se, boost::system::generic_category()));
+                            }
+                            else
+                            {
+                                throw boost::system::system_error(se, boost::system::generic_category());
+                            }
+                        });
                     });
                 };
             }
