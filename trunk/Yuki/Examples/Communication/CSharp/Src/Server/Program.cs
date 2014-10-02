@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2014.09.07.
+//  Version:     2014.10.02.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -119,30 +119,12 @@ namespace Server
                 var MaxWorkThreadCount = ProcessorCount * 2 + 1;
                 var MinCompletionPortThreadCount = ProcessorCount + 1;
                 var MaxCompletionPortThreadCount = ProcessorCount * 2 + 1;
-                foreach (var s in c.Servers)
-                {
-                    if (s.OnTcp)
-                    {
-                        MinWorkThreadCount += 2 + s.Tcp.Bindings.Count();
-                        MaxWorkThreadCount += 2 + s.Tcp.Bindings.Count();
-                    }
-                    else if (s.OnUdp)
-                    {
-                        MinWorkThreadCount += 2 + s.Udp.Bindings.Count();
-                        MaxWorkThreadCount += 2 + s.Udp.Bindings.Count();
-                    }
-                    else if (s.OnHttp)
-                    {
-                        MinWorkThreadCount += 3;
-                        MaxWorkThreadCount += 3;
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException();
-                    }
-                }
-                ThreadPool.SetMinThreads(MinWorkThreadCount, MinCompletionPortThreadCount);
+                MaxWorkThreadCount = Math.Max(ProcessorCount, Math.Min(MaxWorkThreadCount, c.NumMaxThread));
+                MinWorkThreadCount = Math.Max(1, Math.Min(MinWorkThreadCount, MaxWorkThreadCount));
+                MaxCompletionPortThreadCount = Math.Max(ProcessorCount, Math.Min(MaxCompletionPortThreadCount, c.NumMaxThread));
+                MinCompletionPortThreadCount = Math.Max(1, Math.Min(MinCompletionPortThreadCount, MaxCompletionPortThreadCount));
                 ThreadPool.SetMaxThreads(MaxWorkThreadCount, MaxCompletionPortThreadCount);
+                ThreadPool.SetMinThreads(MinWorkThreadCount, MinCompletionPortThreadCount);
 
                 Console.WriteLine(@"逻辑处理器数量: " + ProcessorCount.ToString());
                 Console.WriteLine(@"工作线程数量: [{0}-{1}]".Formats(MinWorkThreadCount, MaxWorkThreadCount));

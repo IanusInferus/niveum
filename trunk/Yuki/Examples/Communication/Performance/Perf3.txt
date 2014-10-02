@@ -4,24 +4,24 @@
 主板        MSI B75MA-P45
 CPU         Intel i3 3220
 内存        16GB
-主机系统    Windows 8 64 bit
+主机系统    Windows 8.1 64 bit
 测试方法    打开命令行输出(C#的Configuration.tree中选项EnableLogConsole设为True)
 
 
-C#/UDP/Binary/.Net 4.5/x64/Windows 8 64 bit
+C#/UDP/Binary/.Net 4.5/x64/Windows 8.1 64 bit
 
-TestAdd: 1 Users, 8 Request/User, 62 ms
-TestMultiply: 1 Users, 8 Request/User, 62 ms
-TestText: 1 Users, 8 Request/User, 94 ms
-TestAdd: 4096 Users, 1 Request/User, 2859 ms
-TestAdd: 4096 Users, 4 Request/User, 15641 ms
-TestAdd: 4096 Users, 16 Request/User, 27157 ms
-TestAdd: 4096 Users, 64 Request/User, 124469 ms
-TestMultiply: 4096 Users, 1 Request/User, 16594 ms
-TestMultiply: 4096 Users, 4 Request/User, 50672 ms
-TestMultiply: 4096 Users, 16 Request/User, 139859 ms
-TestMultiply: 4096 Users, 64 Request/User, 573593 ms
-TestText: 4096 Users, 1 Request/User, 15937 ms
-TestText: 4096 Users, 4 Request/User, 48860 ms
-TestText: 4096 Users, 16 Request/User, 224640 ms
-TestText: 4096 Users, 64 Request/User, 844250 ms
+TestAdd: 1 Users, 8 Request/User, 16 ms
+TestMultiply: 1 Users, 8 Request/User, 63 ms
+TestText: 1 Users, 8 Request/User, 47 ms
+TestAdd: 4096 Users, 1 Request/User, 844 ms
+TestAdd: 4096 Users, 4 Request/User, 7282 ms
+TestAdd: 4096 Users, 16 Request/User, 10031 ms
+TestAdd: 4096 Users, 64 Request/User, 48531 ms
+TestMultiply: 4096 Users, 1 Request/User, 11000 ms
+TestMultiply: 4096 Users, 4 Request/User, 27828 ms
+TestMultiply: 4096 Users, 16 Request/User, 99593 ms
+TestMultiply: 4096 Users, 64 Request/User, 385875 ms
+TestText: 4096 Users, 1 Request/User, 8578 ms
+TestText: 4096 Users, 4 Request/User, 29547 ms
+TestText: 4096 Users, 16 Request/User, 91672 ms
+TestText: 4096 Users, 64 Request/User, 359078 ms
