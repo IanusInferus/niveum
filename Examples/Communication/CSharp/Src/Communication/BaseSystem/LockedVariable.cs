@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading;
 
 namespace BaseSystem
 {
     public class LockedVariable<T>
     {
         private T Value;
-        private Object Lockee = new Object();
+        private ReaderWriterLockSlim Lockee = new ReaderWriterLockSlim();
         public LockedVariable(T Value)
         {
             this.Value = Value;
@@ -16,25 +16,40 @@ namespace BaseSystem
 
         public S Check<S>(Func<T, S> Map)
         {
-            lock (Lockee)
+            Lockee.EnterReadLock();
+            try
             {
                 return Map(Value);
+            }
+            finally
+            {
+                Lockee.ExitReadLock();
             }
         }
 
         public void DoAction(Action<T> Action)
         {
-            lock (Lockee)
+            Lockee.EnterWriteLock();
+            try
             {
                 Action(Value);
+            }
+            finally
+            {
+                Lockee.ExitWriteLock();
             }
         }
 
         public void Update(Func<T, T> Map)
         {
-            lock (Lockee)
+            Lockee.EnterWriteLock();
+            try
             {
                 Value = Map(Value);
+            }
+            finally
+            {
+                Lockee.ExitWriteLock();
             }
         }
     }
