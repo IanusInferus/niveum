@@ -9,6 +9,7 @@
     EnableLogConsole            Boolean
     ServerDebug                 Boolean
     ClientDebug                 Boolean
+    NumMaxThread                Int
 
 #TaggedUnion VirtualServerConfiguration
     Tcp                         TcpServerConfiguration
