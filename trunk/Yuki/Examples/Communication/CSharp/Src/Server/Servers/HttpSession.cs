@@ -49,12 +49,12 @@ namespace Server
             private LockedVariable<HttpWriteContext> WriteContext = new LockedVariable<HttpWriteContext>(null);
             private SessionStateMachine<HttpVirtualTransportServerHandleResult, Unit> ssm;
 
-            public HttpSession(HttpServer Server, IPEndPoint RemoteEndPoint, Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory)
+            public HttpSession(HttpServer Server, IPEndPoint RemoteEndPoint, Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem)
             {
                 this.Server = Server;
                 this.RemoteEndPoint = RemoteEndPoint;
                 this.LastActiveTimeValue = new LockedVariable<DateTime>(DateTime.UtcNow);
-                ssm = new SessionStateMachine<HttpVirtualTransportServerHandleResult, Unit>(ex => false, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit);
+                ssm = new SessionStateMachine<HttpVirtualTransportServerHandleResult, Unit>(ex => false, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit, QueueUserWorkItem);
 
                 Context = Server.ServerContext.CreateSessionContext();
                 Context.Quit += ssm.NotifyExit;

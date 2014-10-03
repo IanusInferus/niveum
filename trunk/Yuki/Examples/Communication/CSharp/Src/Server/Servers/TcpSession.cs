@@ -32,12 +32,12 @@ namespace Server
             private Byte[] WriteBuffer;
             private SessionStateMachine<StreamedVirtualTransportServerHandleResult, Unit> ssm;
 
-            public TcpSession(TcpServer Server, StreamedAsyncSocket Socket, IPEndPoint RemoteEndPoint, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory)
+            public TcpSession(TcpServer Server, StreamedAsyncSocket Socket, IPEndPoint RemoteEndPoint, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem)
             {
                 this.Server = Server;
                 this.Socket = Socket;
                 this.RemoteEndPoint = RemoteEndPoint;
-                ssm = new SessionStateMachine<StreamedVirtualTransportServerHandleResult, Unit>(ex => ex is SocketException, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit);
+                ssm = new SessionStateMachine<StreamedVirtualTransportServerHandleResult, Unit>(ex => ex is SocketException, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit, QueueUserWorkItem);
                 Socket.TimedOut += ssm.NotifyFailure;
 
                 Context = Server.ServerContext.CreateSessionContext();

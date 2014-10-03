@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2014.09.08.
+//  Version:     2014.10.03.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -268,6 +268,7 @@ namespace Client
             Console.WriteLine(@"/stable 自动化稳定性测试");
         }
 
+        private static Action<Action> QueueUserWorkItem = a => ThreadPool.QueueUserWorkItem(o => a());
         public static void RunTcp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, Boolean UseOld)
         {
             if (!(ProtocolType == SerializationProtocolType.Binary || ProtocolType == SerializationProtocolType.Json))
@@ -293,7 +294,7 @@ namespace Client
             {
                 throw new InvalidOperationException();
             }
-            using (var bc = new Streamed.TcpClient(RemoteEndPoint, vtc))
+            using (var bc = new Streamed.TcpClient(RemoteEndPoint, vtc, QueueUserWorkItem))
             {
                 bc.Connect();
                 Console.WriteLine("连接成功。输入login登录，输入secure启用安全连接。");
@@ -340,7 +341,7 @@ namespace Client
             {
                 throw new InvalidOperationException();
             }
-            using (var bc = new Streamed.UdpClient(RemoteEndPoint, vtc))
+            using (var bc = new Streamed.UdpClient(RemoteEndPoint, vtc, QueueUserWorkItem))
             {
                 bc.Connect();
                 Console.WriteLine("输入login登录，输入secure启用安全连接。");
