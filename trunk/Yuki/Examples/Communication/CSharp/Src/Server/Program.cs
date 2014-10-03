@@ -121,11 +121,11 @@ namespace Server
                 WorkThreadCount = Math.Max(1, Math.Min(WorkThreadCount, c.NumMaxThread));
 
                 var WorkItemAdded = new AutoResetEvent(false);
-                var WorkItems = new ConcurrentBag<Action>();
+                var WorkItems = new ConcurrentQueue<Action>();
 
                 Action<Action> QueueUserWorkItem = a =>
                 {
-                    WorkItems.Add(a);
+                    WorkItems.Enqueue(a);
                     WorkItemAdded.Set();
                 };
 
@@ -138,7 +138,7 @@ namespace Server
                         var Result = WaitHandle.WaitAny(WaitHandles);
                         if (Result == 0) { break; }
                         Action a;
-                        while (WorkItems.TryTake(out a))
+                        while (WorkItems.TryDequeue(out a))
                         {
                             a();
                         }
