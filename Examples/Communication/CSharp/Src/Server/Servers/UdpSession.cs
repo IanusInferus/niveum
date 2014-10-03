@@ -218,13 +218,13 @@ namespace Server
 
             private SessionStateMachine<StreamedVirtualTransportServerHandleResult, Unit> ssm;
 
-            public UdpSession(UdpServer Server, Socket ServerSocket, IPEndPoint RemoteEndPoint, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory)
+            public UdpSession(UdpServer Server, Socket ServerSocket, IPEndPoint RemoteEndPoint, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem)
             {
                 this.Server = Server;
                 this.ServerSocket = ServerSocket;
                 this.RemoteEndPoint = RemoteEndPoint;
                 this.LastActiveTimeValue = new LockedVariable<DateTime>(DateTime.UtcNow);
-                ssm = new SessionStateMachine<StreamedVirtualTransportServerHandleResult, Unit>(ex => ex is SocketException, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit);
+                ssm = new SessionStateMachine<StreamedVirtualTransportServerHandleResult, Unit>(ex => ex is SocketException, OnCriticalError, OnShutdownRead, OnShutdownWrite, OnWrite, OnExecute, OnStartRawRead, OnExit, QueueUserWorkItem);
 
                 Context = Server.ServerContext.CreateSessionContext();
                 Context.Quit += ssm.NotifyExit;

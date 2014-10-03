@@ -86,6 +86,7 @@ namespace Server
 
             public TServerContext ServerContext { get; private set; }
             private Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
+            private Action<Action> QueueUserWorkItem;
 
             private int MaxBadCommandsValue = 8;
             private IPEndPoint[] BindingsValue = { };
@@ -247,10 +248,11 @@ namespace Server
 
             public LockedVariable<Dictionary<ISessionContext, UdpSession>> SessionMappings = new LockedVariable<Dictionary<ISessionContext, UdpSession>>(new Dictionary<ISessionContext, UdpSession>());
 
-            public UdpServer(TServerContext sc, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory)
+            public UdpServer(TServerContext sc, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem)
             {
                 ServerContext = sc;
                 this.VirtualTransportServerFactory = VirtualTransportServerFactory;
+                this.QueueUserWorkItem = QueueUserWorkItem;
 
                 this.MaxConnectionsExceeded += OnMaxConnectionsExceeded;
                 this.MaxConnectionsPerIPExceeded += OnMaxConnectionsPerIPExceeded;
@@ -480,7 +482,7 @@ namespace Server
                                                     if ((Flag & 8) != 0) { continue; }
                                                     var Offset = 12;
 
-                                                    s = new UdpSession(this, a.Socket, e, VirtualTransportServerFactory);
+                                                    s = new UdpSession(this, a.Socket, e, VirtualTransportServerFactory, QueueUserWorkItem);
                                                     SessionId = s.SessionId;
 
                                                     if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
@@ -557,7 +559,7 @@ namespace Server
                                                             }
                                                             while (ss.SessionIdToSession.ContainsKey(SessionId))
                                                             {
-                                                                s = new UdpSession(this, a.Socket, e, VirtualTransportServerFactory);
+                                                                s = new UdpSession(this, a.Socket, e, VirtualTransportServerFactory, QueueUserWorkItem);
                                                                 SessionId = s.SessionId;
                                                             }
                                                             ss.SessionIdToSession.Add(SessionId, s);

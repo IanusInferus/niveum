@@ -55,6 +55,7 @@ namespace Server
 
             public TServerContext ServerContext { get; private set; }
             private Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
+            private Action<Action> QueueUserWorkItem;
 
             private int MaxBadCommandsValue = 8;
             private IPEndPoint[] BindingsValue = { };
@@ -195,10 +196,11 @@ namespace Server
 
             public LockedVariable<Dictionary<ISessionContext, TcpSession>> SessionMappings = new LockedVariable<Dictionary<ISessionContext, TcpSession>>(new Dictionary<ISessionContext, TcpSession>());
 
-            public TcpServer(TServerContext sc, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory)
+            public TcpServer(TServerContext sc, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem)
             {
                 ServerContext = sc;
                 this.VirtualTransportServerFactory = VirtualTransportServerFactory;
+                this.QueueUserWorkItem = QueueUserWorkItem;
 
                 this.MaxConnectionsExceeded += OnMaxConnectionsExceeded;
                 this.MaxConnectionsPerIPExceeded += OnMaxConnectionsPerIPExceeded;
@@ -400,7 +402,7 @@ namespace Server
                                                 a.Dispose();
                                                 continue;
                                             }
-                                            var s = new TcpSession(this, new StreamedAsyncSocket(a, UnauthenticatedSessionIdleTimeoutValue), e, VirtualTransportServerFactory);
+                                            var s = new TcpSession(this, new StreamedAsyncSocket(a, UnauthenticatedSessionIdleTimeoutValue, QueueUserWorkItem), e, VirtualTransportServerFactory, QueueUserWorkItem);
 
                                             if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
                                             {

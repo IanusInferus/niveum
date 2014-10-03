@@ -50,6 +50,7 @@ namespace Client
                 }
             }
             private Socket Socket;
+            private Action<Action> QueueUserWorkItem;
             private Byte[] ReadBuffer = new Byte[MaxPacketLength];
 
             public const int MaxPacketLength = 1400;
@@ -201,11 +202,12 @@ namespace Client
             private LockedVariable<UdpReadContext> RawReadingContext = new LockedVariable<UdpReadContext>(new UdpReadContext { Parts = new PartContext(ReadingWindowSize) });
             private LockedVariable<UdpWriteContext> CookedWritingContext = new LockedVariable<UdpWriteContext>(new UdpWriteContext { Parts = new PartContext(WritingWindowSize), WritenIndex = IndexSpace - 1, Timer = null });
 
-            public UdpClient(IPEndPoint RemoteEndPoint, IStreamedVirtualTransportClient VirtualTransportClient)
+            public UdpClient(IPEndPoint RemoteEndPoint, IStreamedVirtualTransportClient VirtualTransportClient, Action<Action> QueueUserWorkItem)
             {
                 this.RemoteEndPoint = RemoteEndPoint;
                 this.VirtualTransportClient = VirtualTransportClient;
                 this.Socket = new Socket(RemoteEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+                this.QueueUserWorkItem = QueueUserWorkItem;
 
                 //在Windows下关闭SIO_UDP_CONNRESET报告，防止接受数据出错
                 //http://support.microsoft.com/kb/263823/en-us
@@ -749,7 +751,7 @@ namespace Client
                         var willRaiseEvent = Socket.ReceiveFromAsync(ae);
                         if (!willRaiseEvent)
                         {
-                            ThreadPool.QueueUserWorkItem(o => Completed(null, ae));
+                            QueueUserWorkItem(() => Completed(null, ae));
                         }
                     }
                     catch (Exception ex)

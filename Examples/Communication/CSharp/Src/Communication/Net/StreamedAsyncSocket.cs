@@ -30,6 +30,7 @@ namespace Net
             }
         }
         public event Action TimedOut;
+        private Action<Action> QueueUserWorkItem;
 
         private class AsyncOperationContext : IDisposable
         {
@@ -138,10 +139,11 @@ namespace Net
             }
         }
 
-        public StreamedAsyncSocket(Socket InnerSocket, int? TimeoutSeconds)
+        public StreamedAsyncSocket(Socket InnerSocket, int? TimeoutSeconds, Action<Action> QueueUserWorkItem)
         {
             this.InnerSocket = InnerSocket;
             this.TimeoutSeconds = TimeoutSeconds;
+            this.QueueUserWorkItem = QueueUserWorkItem;
         }
 
         private Boolean TryLockAsyncOperation(SocketAsyncOperation OperationIdentifier)
@@ -221,7 +223,7 @@ namespace Net
                 bool willRaiseEvent = Operation(Context.EventArgs);
                 if (!willRaiseEvent)
                 {
-                    ThreadPool.QueueUserWorkItem(o => Context.DoOnCompletion());
+                    QueueUserWorkItem(Context.DoOnCompletion);
                 }
                 Success = true;
             }
@@ -287,7 +289,7 @@ namespace Net
             {
                 var a = e.AcceptSocket;
                 if (Completed == null) { return null; }
-                return () => Completed(new StreamedAsyncSocket(a, TimeoutSeconds));
+                return () => Completed(new StreamedAsyncSocket(a, TimeoutSeconds, QueueUserWorkItem));
             };
             DoAsync(SocketAsyncOperation.Accept, GetContext, Operation, ResultToCompleted, Faulted);
         }

@@ -15,6 +15,8 @@ namespace Client
 {
     class LoadTest
     {
+        private static Action<Action> QueueUserWorkItem = a => ThreadPool.QueueUserWorkItem(o => a());
+
         public class ClientContext
         {
             public Object Lockee = new Object();
@@ -149,7 +151,7 @@ namespace Client
                 {
                     throw new InvalidOperationException();
                 }
-                var bc = new Streamed.TcpClient(RemoteEndPoint, vtc);
+                var bc = new Streamed.TcpClient(RemoteEndPoint, vtc, QueueUserWorkItem);
                 var cc = new ClientContext();
                 var bCompleted = new LockedVariable<Boolean>(false);
                 Action Completed = () =>
@@ -325,7 +327,7 @@ namespace Client
                 {
                     throw new InvalidOperationException();
                 }
-                var bc = new Streamed.UdpClient(RemoteEndPoint, vtc);
+                var bc = new Streamed.UdpClient(RemoteEndPoint, vtc, QueueUserWorkItem);
                 var cc = new ClientContext();
                 var bCompleted = new LockedVariable<Boolean>(false);
                 Action Completed;

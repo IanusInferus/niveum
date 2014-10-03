@@ -15,6 +15,8 @@ namespace Client
 {
     class PerformanceTest
     {
+        private static Action<Action> QueueUserWorkItem = a => ThreadPool.QueueUserWorkItem(o => a());
+
         public class ClientContext
         {
         }
@@ -91,7 +93,7 @@ namespace Client
                 {
                     throw new InvalidOperationException();
                 }
-                var bc = new Streamed.TcpClient(RemoteEndPoint, vtc);
+                var bc = new Streamed.TcpClient(RemoteEndPoint, vtc, QueueUserWorkItem);
                 var cc = new ClientContext();
                 ac.Error += e =>
                 {
@@ -238,7 +240,7 @@ namespace Client
                 {
                     throw new InvalidOperationException();
                 }
-                var bc = new Streamed.UdpClient(RemoteEndPoint, vtc);
+                var bc = new Streamed.UdpClient(RemoteEndPoint, vtc, QueueUserWorkItem);
                 var cc = new ClientContext();
                 ac.Error += e =>
                 {

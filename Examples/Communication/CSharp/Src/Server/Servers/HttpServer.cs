@@ -133,6 +133,7 @@ namespace Server
 
             public TServerContext ServerContext { get; private set; }
             private Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory;
+            private Action<Action> QueueUserWorkItem;
 
             private int MaxBadCommandsValue = 8;
             private String[] BindingsValue = { };
@@ -314,10 +315,11 @@ namespace Server
 
             public LockedVariable<Dictionary<ISessionContext, HttpSession>> SessionMappings = new LockedVariable<Dictionary<ISessionContext, HttpSession>>(new Dictionary<ISessionContext, HttpSession>());
 
-            public HttpServer(TServerContext sc, Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory)
+            public HttpServer(TServerContext sc, Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem)
             {
                 ServerContext = sc;
                 this.VirtualTransportServerFactory = VirtualTransportServerFactory;
+                this.QueueUserWorkItem = QueueUserWorkItem;
             }
 
             private Boolean IsMatchBindingName(Uri Url)
@@ -702,7 +704,7 @@ namespace Server
                                                 }
 
                                                 {
-                                                    var s = new HttpSession(this, e, VirtualTransportServerFactory);
+                                                    var s = new HttpSession(this, e, VirtualTransportServerFactory, QueueUserWorkItem);
 
                                                     var SessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
                                                     SessionSets.DoAction
