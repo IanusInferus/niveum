@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# MySQL代码模板数据
-      Version:     2014.10.01.
+      Version:     2014.10.04.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -570,7 +570,7 @@ ObjectSchemaTemplate
                     cmd.CommandText = @"${SQL}";
                     ${ParameterAdds}
                     var Count = cmd.ExecuteNonQuery();
-                    if ((Count != 1) && (Count != 2))
+                    if ((Count != 0) && (Count != 1) && (Count != 2))
                     {
                         throw new InvalidOperationException();
                     }
@@ -585,7 +585,7 @@ ObjectSchemaTemplate
                         cmd.CommandText = @"${SQL}";
                         ${ParameterAdds}
                         var Count = cmd.ExecuteNonQuery();
-                        if ((Count != 1) && (Count != 2))
+                        if ((Count != 0) && (Count != 1) && (Count != 2))
                         {
                             throw new InvalidOperationException();
                         }
