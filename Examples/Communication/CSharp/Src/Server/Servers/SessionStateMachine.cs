@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
-using System.Threading;
 using BaseSystem;
 
 namespace Server
@@ -46,8 +45,9 @@ namespace Server
         private Action<TRead, Action, Action> OnExecute;
         private Action<Action<TRead[]>, Action> OnStartRawRead;
         private Action OnExit;
+        private Action<Action> QueueUserWorkItem;
 
-        public SessionStateMachine(Func<Exception, Boolean> IsKnownException, Action<Exception, StackTrace> OnCriticalError, Action OnShutdownRead, Action OnShutdownWrite, Action<TWrite, Action, Action> OnWrite, Action<TRead, Action, Action> OnExecute, Action<Action<TRead[]>, Action> OnStartRawRead, Action OnExit)
+        public SessionStateMachine(Func<Exception, Boolean> IsKnownException, Action<Exception, StackTrace> OnCriticalError, Action OnShutdownRead, Action OnShutdownWrite, Action<TWrite, Action, Action> OnWrite, Action<TRead, Action, Action> OnExecute, Action<Action<TRead[]>, Action> OnStartRawRead, Action OnExit, Action<Action> QueueUserWorkItem)
         {
             this.IsKnownException = IsKnownException;
             this.OnCriticalError = OnCriticalError;
@@ -57,6 +57,7 @@ namespace Server
             this.OnExecute = OnExecute;
             this.OnStartRawRead = OnStartRawRead;
             this.OnExit = OnExit;
+            this.QueueUserWorkItem = QueueUserWorkItem;
             c = new LockedVariable<Context>(new Context
             {
                 State = 0,
@@ -302,7 +303,7 @@ namespace Server
                     if (!q.IsRunning)
                     {
                         q.IsRunning = true;
-                        ThreadPool.QueueUserWorkItem(o => ExecuteActionQueue());
+                        QueueUserWorkItem(ExecuteActionQueue);
                     }
                 }
             );
@@ -354,7 +355,7 @@ namespace Server
                 Count -= 1;
                 if (Count == 0) { break; }
             }
-            ThreadPool.QueueUserWorkItem(o => ExecuteActionQueue());
+            QueueUserWorkItem(ExecuteActionQueue);
         }
     }
 }
