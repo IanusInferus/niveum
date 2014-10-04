@@ -130,7 +130,7 @@ namespace Server
                 };
 
                 var WaitHandles = new WaitHandle[] { ThreadPoolExit, WorkItemAdded };
-                var Threads = Enumerable.Range(0, WorkThreadCount).Select((i, t) => new Task(() =>
+                var Threads = Enumerable.Range(0, WorkThreadCount).Select((i, t) => new Thread(() =>
                 {
                     Thread.CurrentThread.Name = "Worker" + i.ToString();
                     while (true)
@@ -143,7 +143,7 @@ namespace Server
                             a();
                         }
                     }
-                }, TaskCreationOptions.LongRunning)).ToArray();
+                })).ToArray();
                 foreach (var t in Threads)
                 {
                     t.Start();
@@ -288,8 +288,7 @@ namespace Server
                 ThreadPoolExit.Set();
                 foreach (var t in Threads)
                 {
-                    t.Wait();
-                    t.Dispose();
+                    t.Join();
                 }
             }
 
