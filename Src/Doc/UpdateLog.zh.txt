@@ -1,6 +1,8 @@
 ﻿2014.10.04
 Yuki.Relation:
 修正C# MySQL数据库代码生成，防止Upsert的值和原来一样时返回0导致出错。
+Examples:
+修改C#通讯示例，增强调试支持。
 
 2014.10.03
 Examples:
