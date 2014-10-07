@@ -1,0 +1,151 @@
+﻿负载测试
+
+测试环境
+主板        P8B75-M LE
+CPU         Intel i3 3220
+内存        8GB
+硬盘        Samsung SSD 840
+主机系统    Windows 8.1 64 bit
+
+
+C#/SQL Server 2008 R2/.Net 4.5.1/x64/Windows 8.1 64 bit
+
+TestSaveData: 64 Users, 47 ms
+TestLoadData: 64 Users, 16 ms
+TestSaveAndLoadData: 64 Users, 15 ms
+TestAddLockData: 64 Users, 47 ms
+TestAddDeleteLockData: 64 Users, 47 ms
+TestSaveData: 1 Users, 0 ms
+TestSaveData: 4 Users, 0 ms
+TestSaveData: 16 Users, 16 ms
+TestSaveData: 64 Users, 0 ms
+TestSaveData: 256 Users, 47 ms
+TestSaveData: 1024 Users, 93 ms
+TestSaveData: 4096 Users, 422 ms
+TestSaveData: 16384 Users, 1516 ms
+TestLoadData: 1 Users, 0 ms
+TestLoadData: 4 Users, 0 ms
+TestLoadData: 16 Users, 15 ms
+TestLoadData: 64 Users, 16 ms
+TestLoadData: 256 Users, 31 ms
+TestLoadData: 1024 Users, 78 ms
+TestLoadData: 4096 Users, 250 ms
+TestLoadData: 16384 Users, 1032 ms
+TestSaveAndLoadData: 1 Users, 0 ms
+TestSaveAndLoadData: 4 Users, 0 ms
+TestSaveAndLoadData: 16 Users, 0 ms
+TestSaveAndLoadData: 64 Users, 16 ms
+TestSaveAndLoadData: 256 Users, 47 ms
+TestSaveAndLoadData: 1024 Users, 125 ms
+TestSaveAndLoadData: 4096 Users, 515 ms
+TestSaveAndLoadData: 16384 Users, 2172 ms
+TestAddLockData: 1 Users, 0 ms
+TestAddLockData: 4 Users, 16 ms
+TestAddLockData: 16 Users, 16 ms
+TestAddLockData: 64 Users, 31 ms
+TestAddLockData: 256 Users, 140 ms
+TestAddLockData: 1024 Users, 484 ms
+TestAddLockData: 4096 Users, 2672 ms
+TestAddDeleteLockData: 1 Users, 0 ms
+TestAddDeleteLockData: 4 Users, 0 ms
+TestAddDeleteLockData: 16 Users, 16 ms
+TestAddDeleteLockData: 64 Users, 62 ms
+TestAddDeleteLockData: 256 Users, 141 ms
+TestAddDeleteLockData: 1024 Users, 359 ms
+TestAddDeleteLockData: 4096 Users, 1250 ms
+
+
+C#/PostgreSQL 9.3.5/.Net 4.5.1/x64/Windows 8.1 64 bit
+
+TestSaveData: 64 Users, 1359 ms
+TestLoadData: 64 Users, 31 ms
+TestSaveAndLoadData: 64 Users, 47 ms
+TestAddLockData: 64 Users, 141 ms
+TestAddDeleteLockData: 64 Users, 109 ms
+TestSaveData: 1 Users, 0 ms
+TestSaveData: 4 Users, 47 ms
+TestSaveData: 16 Users, 47 ms
+TestSaveData: 64 Users, 31 ms
+TestSaveData: 256 Users, 94 ms
+TestSaveData: 1024 Users, 500 ms
+TestSaveData: 4096 Users, 1656 ms
+TestSaveData: 16384 Users, 9172 ms
+TestLoadData: 1 Users, 0 ms
+TestLoadData: 4 Users, 47 ms
+TestLoadData: 16 Users, 94 ms
+TestLoadData: 64 Users, 93 ms
+TestLoadData: 256 Users, 94 ms
+TestLoadData: 1024 Users, 313 ms
+TestLoadData: 4096 Users, 1312 ms
+TestLoadData: 16384 Users, 5219 ms
+TestSaveAndLoadData: 1 Users, 0 ms
+TestSaveAndLoadData: 4 Users, 62 ms
+TestSaveAndLoadData: 16 Users, 78 ms
+TestSaveAndLoadData: 64 Users, 94 ms
+TestSaveAndLoadData: 256 Users, 219 ms
+TestSaveAndLoadData: 1024 Users, 781 ms
+TestSaveAndLoadData: 4096 Users, 3016 ms
+TestSaveAndLoadData: 16384 Users, 12844 ms
+TestAddLockData: 1 Users, 0 ms
+TestAddLockData: 4 Users, 62 ms
+TestAddLockData: 16 Users, 125 ms
+TestAddLockData: 64 Users, 1016 ms
+TestAddLockData: 256 Users, 312 ms
+TestAddLockData: 1024 Users, 1016 ms
+TestAddLockData: 4096 Users, 4906 ms
+TestAddDeleteLockData: 1 Users, 0 ms
+TestAddDeleteLockData: 4 Users, 63 ms
+TestAddDeleteLockData: 16 Users, 109 ms
+TestAddDeleteLockData: 64 Users, 1016 ms
+TestAddDeleteLockData: 256 Users, 265 ms
+TestAddDeleteLockData: 1024 Users, 875 ms
+TestAddDeleteLockData: 4096 Users, 3781 ms
+
+
+C#/MySQL 5.7.4/.Net 4.5.1/x64/Windows 8.1 64 bit
+innodb_buffer_pool_size = 2048M
+innodb_flush_log_at_trx_commit = 0
+
+TestSaveData: 64 Users, 516 ms
+TestLoadData: 64 Users, 31 ms
+TestSaveAndLoadData: 64 Users, 31 ms
+TestAddLockData: 64 Users, 47 ms
+TestAddDeleteLockData: 64 Users, 46 ms
+TestSaveData: 1 Users, 0 ms
+TestSaveData: 4 Users, 0 ms
+TestSaveData: 16 Users, 47 ms
+TestSaveData: 64 Users, 32 ms
+TestSaveData: 256 Users, 46 ms
+TestSaveData: 1024 Users, 204 ms
+TestSaveData: 4096 Users, 937 ms
+TestSaveData: 16384 Users, 3375 ms
+TestLoadData: 1 Users, 0 ms
+TestLoadData: 4 Users, 0 ms
+TestLoadData: 16 Users, 0 ms
+TestLoadData: 64 Users, 31 ms
+TestLoadData: 256 Users, 47 ms
+TestLoadData: 1024 Users, 188 ms
+TestLoadData: 4096 Users, 765 ms
+TestLoadData: 16384 Users, 3250 ms
+TestSaveAndLoadData: 1 Users, 0 ms
+TestSaveAndLoadData: 4 Users, 0 ms
+TestSaveAndLoadData: 16 Users, 16 ms
+TestSaveAndLoadData: 64 Users, 47 ms
+TestSaveAndLoadData: 256 Users, 94 ms
+TestSaveAndLoadData: 1024 Users, 406 ms
+TestSaveAndLoadData: 4096 Users, 1687 ms
+TestSaveAndLoadData: 16384 Users, 6453 ms
+TestAddLockData: 1 Users, 0 ms
+TestAddLockData: 4 Users, 16 ms
+TestAddLockData: 16 Users, 16 ms
+TestAddLockData: 64 Users, 62 ms
+TestAddLockData: 256 Users, 125 ms
+TestAddLockData: 1024 Users, 500 ms
+TestAddLockData: 4096 Users, 1953 ms
+TestAddDeleteLockData: 1 Users, 0 ms
+TestAddDeleteLockData: 4 Users, 0 ms
+TestAddDeleteLockData: 16 Users, 15 ms
+TestAddDeleteLockData: 64 Users, 47 ms
+TestAddDeleteLockData: 256 Users, 109 ms
+TestAddDeleteLockData: 1024 Users, 438 ms
+TestAddDeleteLockData: 4096 Users, 1781 ms
