@@ -1,0 +1,85 @@
+﻿性能测试
+
+测试环境
+主板        P8B75-M LE
+CPU         Intel i3 3220
+内存        8GB
+硬盘        Samsung SSD 840
+主机系统    Windows 8.1 64 bit
+
+
+C#/SQL Server 2008 R2/.Net 4.5.1/x64/Windows 8.1 64 bit
+
+TestSaveData: 1 Users, 8 Request/User, 47 ms
+TestLoadData: 1 Users, 8 Request/User, 0 ms
+TestSaveAndLoadData: 1 Users, 8 Request/User, 0 ms
+TestAddLockData: 1 Users, 8 Request/User, 0 ms
+TestSaveData: 4096 Users, 1 Request/User, 312 ms
+TestSaveData: 4096 Users, 2 Request/User, 516 ms
+TestSaveData: 4096 Users, 4 Request/User, 1016 ms
+TestSaveData: 4096 Users, 8 Request/User, 2125 ms
+TestLoadData: 4096 Users, 1 Request/User, 281 ms
+TestLoadData: 4096 Users, 2 Request/User, 515 ms
+TestLoadData: 4096 Users, 4 Request/User, 1032 ms
+TestLoadData: 4096 Users, 8 Request/User, 2093 ms
+TestSaveAndLoadData: 4096 Users, 1 Request/User, 594 ms
+TestSaveAndLoadData: 4096 Users, 2 Request/User, 1172 ms
+TestSaveAndLoadData: 4096 Users, 4 Request/User, 2359 ms
+TestSaveAndLoadData: 4096 Users, 8 Request/User, 4688 ms
+TestAddLockData: 4096 Users, 1 Request/User, 1296 ms
+TestAddLockData: 4096 Users, 2 Request/User, 2594 ms
+TestAddLockData: 4096 Users, 4 Request/User, 5922 ms
+TestAddLockData: 4096 Users, 8 Request/User, 10781 ms
+
+
+C#/PostgreSQL 9.3.5/.Net 4.5.1/x64/Windows 8.1 64 bit
+shared_buffers = 2048MB
+synchronous_commit = off
+checkpoint_segments = 1000
+
+TestSaveData: 1 Users, 8 Request/User, 328 ms
+TestLoadData: 1 Users, 8 Request/User, 16 ms
+TestSaveAndLoadData: 1 Users, 8 Request/User, 0 ms
+TestAddLockData: 1 Users, 8 Request/User, 15 ms
+TestSaveData: 4096 Users, 1 Request/User, 1703 ms
+TestSaveData: 4096 Users, 2 Request/User, 3313 ms
+TestSaveData: 4096 Users, 4 Request/User, 6703 ms
+TestSaveData: 4096 Users, 8 Request/User, 13453 ms
+TestLoadData: 4096 Users, 1 Request/User, 1516 ms
+TestLoadData: 4096 Users, 2 Request/User, 2906 ms
+TestLoadData: 4096 Users, 4 Request/User, 5687 ms
+TestLoadData: 4096 Users, 8 Request/User, 11469 ms
+TestSaveAndLoadData: 4096 Users, 1 Request/User, 3219 ms
+TestSaveAndLoadData: 4096 Users, 2 Request/User, 6344 ms
+TestSaveAndLoadData: 4096 Users, 4 Request/User, 12609 ms
+TestSaveAndLoadData: 4096 Users, 8 Request/User, 25297 ms
+TestAddLockData: 4096 Users, 1 Request/User, 3703 ms
+TestAddLockData: 4096 Users, 2 Request/User, 7187 ms
+TestAddLockData: 4096 Users, 4 Request/User, 14234 ms
+TestAddLockData: 4096 Users, 8 Request/User, 28172 ms
+
+
+C#/MySQL 5.7.4/.Net 4.5.1/x64/Windows 8.1 64 bit
+innodb_buffer_pool_size = 2048M
+innodb_flush_log_at_trx_commit = 0
+
+TestSaveData: 1 Users, 8 Request/User, 391 ms
+TestLoadData: 1 Users, 8 Request/User, 0 ms
+TestSaveAndLoadData: 1 Users, 8 Request/User, 15 ms
+TestAddLockData: 1 Users, 8 Request/User, 16 ms
+TestSaveData: 4096 Users, 1 Request/User, 797 ms
+TestSaveData: 4096 Users, 2 Request/User, 1468 ms
+TestSaveData: 4096 Users, 4 Request/User, 2938 ms
+TestSaveData: 4096 Users, 8 Request/User, 5859 ms
+TestLoadData: 4096 Users, 1 Request/User, 782 ms
+TestLoadData: 4096 Users, 2 Request/User, 1531 ms
+TestLoadData: 4096 Users, 4 Request/User, 3109 ms
+TestLoadData: 4096 Users, 8 Request/User, 6110 ms
+TestSaveAndLoadData: 4096 Users, 1 Request/User, 1562 ms
+TestSaveAndLoadData: 4096 Users, 2 Request/User, 3031 ms
+TestSaveAndLoadData: 4096 Users, 4 Request/User, 6172 ms
+TestSaveAndLoadData: 4096 Users, 8 Request/User, 12625 ms
+TestAddLockData: 4096 Users, 1 Request/User, 1969 ms
+TestAddLockData: 4096 Users, 2 Request/User, 3766 ms
+TestAddLockData: 4096 Users, 4 Request/User, 7234 ms
+TestAddLockData: 4096 Users, 8 Request/User, 14859 ms
