@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2014.04.11.
+//  Version:     2014.10.10.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -229,6 +229,19 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
+                else if (optNameLower == "regefdbnpgsql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length >= 0)
+                    {
+                        RegenFoundationDBPostgreSQL(Schema(), ConnectionString, DatabaseName, args);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else
                 {
                     throw new ArgumentException(opt.Name);
@@ -265,6 +278,8 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/regenpgsql:<DataDir>*");
             Console.WriteLine(@"重建MySQL数据库");
             Console.WriteLine(@"/regenmysql:<DataDir>*");
+            Console.WriteLine(@"重建FoundationDB/PostgreSQL数据库");
+            Console.WriteLine(@"/regefdbnpgsql:<DataDir>*");
             Console.WriteLine(@"RelationSchemaDir|RelationSchemaFile 关系类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"ConnectionString 数据库连接字符串。");
             Console.WriteLine(@"DataDir 数据目录，里面有若干tree数据文件。");
@@ -654,6 +669,122 @@ namespace Yuki.DatabaseRegenerator
             {
                 c.Open();
                 c.ChangeDatabase(DatabaseName);
+                try
+                {
+                    foreach (var Sql in Alters)
+                    {
+                        if (Sql == "") { continue; }
+
+                        var cmd = c.CreateCommand();
+                        cmd.CommandText = Sql;
+                        cmd.CommandType = CommandType.Text;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                finally
+                {
+                    c.Close();
+                }
+            }
+        }
+
+        public static void RegenFoundationDBPostgreSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
+        {
+            var Value = LoadData(s, DataDirs);
+
+            var GenSqls = s.CompileToPostgreSql(DatabaseName, true);
+            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
+            RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToArray();
+            var CreateDatabases = new String[] { String.Format("DROP SCHEMA IF EXISTS \"{0}\" CASCADE", DatabaseName.ToLowerInvariant()), String.Format("CREATE SCHEMA \"{0}\"", DatabaseName.ToLowerInvariant()) };
+            var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToArray();
+            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER")).ToArray();
+
+            var cf = GetConnectionFactory(DatabaseType.PostgreSQL);
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                try
+                {
+                    foreach (var Sql in CreateDatabases)
+                    {
+                        if (Sql == "") { continue; }
+
+                        var cmd = c.CreateCommand();
+                        cmd.CommandText = Sql;
+                        cmd.CommandType = CommandType.Text;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                finally
+                {
+                    c.Close();
+                }
+            }
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
+                try
+                {
+                    foreach (var Sql in Creates)
+                    {
+                        if (Sql == "") { continue; }
+
+                        var cmd = c.CreateCommand();
+                        cmd.CommandText = Sql;
+                        cmd.CommandType = CommandType.Text;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                finally
+                {
+                    c.Close();
+                }
+            }
+
+            var ImportTableInfo = TableOperations.GetImportTableInfo(s, Value);
+            var Tables = ImportTableInfo.Tables;
+            var EntityMetas = ImportTableInfo.EntityMetas;
+            var EnumUnderlyingTypes = ImportTableInfo.EnumUnderlyingTypes;
+
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
+                try
+                {
+                    using (var b = c.BeginTransaction())
+                    {
+                        var Success = false;
+                        try
+                        {
+                            foreach (var t in Tables)
+                            {
+                                TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.PostgreSQL);
+                            }
+
+                            b.Commit();
+                            Success = true;
+                        }
+                        finally
+                        {
+                            if (!Success)
+                            {
+                                b.Rollback();
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    c.Close();
+                }
+            }
+
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
                 try
                 {
                     foreach (var Sql in Alters)

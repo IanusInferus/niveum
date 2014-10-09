@@ -1,4 +1,8 @@
-﻿2014.10.07
+﻿2014.10.10
+Yuki.DatabaseRegenerator:
+增加FoundationDB通过PostgreSQL驱动生成数据库的功能。
+
+2014.10.07
 Examples:
 更新C#数据库代码生成的性能测试结果。
 
