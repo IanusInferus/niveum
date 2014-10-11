@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# PostgreSQL代码模板数据
-      Version:     2014.09.22.
+      Version:     2014.10.11.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -454,6 +454,15 @@ ObjectSchemaTemplate
                     cmd.CommandText = @"${SQL}";
                     ${ParameterAdds}
                     return Convert.ToInt32(cmd.ExecuteScalar());
+        Template
+            Name InsertUpdate_Optional
+            //Parameters: ${SQL}, ${ParameterAdds}
+            Value
+                $String
+                    var cmd = CreateTextCommand();
+                    cmd.CommandText = @"${SQL}";
+                    ${ParameterAdds}
+                    cmd.ExecuteNonQuery();
         Template
             Name InsertUpdateUpsert_One
             //Parameters: ${SQL}, ${ParameterAdds}

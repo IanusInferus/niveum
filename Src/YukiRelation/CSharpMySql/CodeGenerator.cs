@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# MySQL代码生成器
-//  Version:     2013.10.31.
+//  Version:     2014.10.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -167,6 +167,10 @@ namespace Yuki.RelationSchema.CSharpMySql
                     if (q.Verb.OnInsert || q.Verb.OnUpsert)
                     {
                         l.Add("INSERT");
+                        if (q.Numeral.OnOptional)
+                        {
+                            l.Add("IGNORE");
+                        }
                         l.Add("INTO `{0}`".Formats(e.CollectionName));
 
                         var NonIdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && !f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
@@ -315,7 +319,12 @@ namespace Yuki.RelationSchema.CSharpMySql
                         }
                         else
                         {
-                            if (q.Numeral.OnOne)
+                            if (q.Numeral.OnOptional)
+                            {
+                                if (q.Verb.OnUpsert) { throw new InvalidOperationException(); }
+                                Template = GetTemplate("InsertUpdate_Optional");
+                            }
+                            else if (q.Numeral.OnOne)
                             {
                                 Template = GetTemplate("InsertUpdate_One");
                             }

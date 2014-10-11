@@ -1,4 +1,8 @@
-﻿2014.10.10
+﻿2014.10.11
+Yuki.Relation:
+增加Insert Optional和Update Optional功能，但其中Insert Optional功能只有MySQL代码生成支持，SQL Server和PostgreSQL不支持。
+
+2014.10.10
 Yuki.DatabaseRegenerator:
 增加FoundationDB通过PostgreSQL驱动生成数据库的功能。
 

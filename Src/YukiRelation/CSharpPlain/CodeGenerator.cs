@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C#简单类型代码生成器
-//  Version:     2014.09.22.
+//  Version:     2014.10.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -93,7 +93,26 @@ namespace Yuki.RelationSchema.CSharpPlain
                 var or = TypeDict[q.EntityName].Record;
                 var Name = q.FriendlyName();
                 var pl = new List<String>();
-                if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert)
+                if (q.Verb.OnInsert || q.Verb.OnUpdate)
+                {
+                    if (q.Numeral.OnOptional)
+                    {
+                        pl.Add("{0} {1}".Formats(GetEscapedIdentifier(q.EntityName), GetEscapedIdentifier("v")));
+                    }
+                    else if (q.Numeral.OnOne)
+                    {
+                        pl.Add("{0} {1}".Formats(GetEscapedIdentifier(q.EntityName), GetEscapedIdentifier("v")));
+                    }
+                    else if (q.Numeral.OnMany)
+                    {
+                        pl.Add("{0} {1}".Formats(GetEscapedIdentifier("List<{0}>".Formats(q.EntityName)), GetEscapedIdentifier("l")));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
+                else if (q.Verb.OnUpsert)
                 {
                     if (q.Numeral.OnOne)
                     {

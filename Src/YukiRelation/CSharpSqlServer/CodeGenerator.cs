@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# SQL Server代码生成器
-//  Version:     2013.10.31.
+//  Version:     2014.10.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -166,6 +166,11 @@ namespace Yuki.RelationSchema.CSharpSqlServer
                 {
                     if (q.Verb.OnInsert || q.Verb.OnUpsert)
                     {
+                        if (q.Numeral.OnOptional && q.Verb.OnInsert)
+                        {
+                            throw new NotSupportedException("InsertOptional");
+                        }
+
                         if (q.Verb.OnUpsert)
                         {
                             l.Add("UPDATE [{0}]".Formats(e.CollectionName));
@@ -306,7 +311,12 @@ namespace Yuki.RelationSchema.CSharpSqlServer
                     }
                     else
                     {
-                        if (q.Numeral.OnOne)
+                        if (q.Numeral.OnOptional)
+                        {
+                            if (q.Verb.OnUpsert) { throw new InvalidOperationException(); }
+                            Template = GetTemplate("InsertUpdate_Optional");
+                        }
+                        else if (q.Numeral.OnOne)
                         {
                             Template = GetTemplate("InsertUpdateUpsert_One");
                         }
