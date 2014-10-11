@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2013.11.13.
+//  Version:     2014.10.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -416,7 +416,8 @@ namespace Yuki.RelationSchema
         // From <EntityName> {Select, Lock} Count
         // From <EntityName> {Select, Lock} Count By <Index>
         // 
-        // From <EntityName> {Insert, Update, Upsert} {One, Many}
+        // From <EntityName> {Insert, Update} {Optional, One, Many}
+        // From <EntityName> Upsert {One, Many}
         // 
         // From <EntityName> Delete {Optional, One, Many} By <Index>
         // From <EntityName> Delete All
@@ -460,7 +461,14 @@ namespace Yuki.RelationSchema
                                 if (q.OrderBy.Count == 0) { continue; }
                             }
                         }
-                        if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert)
+                        if (q.Verb.OnInsert || q.Verb.OnUpdate)
+                        {
+                            if (q.Numeral.OnOptional || q.Numeral.OnOne || q.Numeral.OnMany)
+                            {
+                                if (q.By.Count == 0 && q.OrderBy.Count == 0) { continue; }
+                            }
+                        }
+                        if (q.Verb.OnUpsert)
                         {
                             if (q.Numeral.OnOne || q.Numeral.OnMany)
                             {
@@ -487,6 +495,7 @@ namespace Yuki.RelationSchema
         }
 
         // EntityName必须对应于Entity
+        // Insert Optional对应的Entity不得含有Identity列
         // Upsert对应的Entity不得含有Identity列，不得有多个PrimaryKey或UniqueKey
         // By索引和OrderBy索引中的名称必须是Entity中的列
         // By索引必须和Entity已经声明的Key一致但可以不用考虑列的顺序和每个列里数据的排列方法
@@ -541,7 +550,17 @@ namespace Yuki.RelationSchema
                             throw new InvalidOperationException(String.Format("EntityNameNotExist: '{0}' in {1}", q.EntityName, GetQueryLine(q)));
                         }
                         var e = EntityDict[q.EntityName];
-                        if (q.Verb.OnUpsert)
+                        if (q.Verb.OnInsert)
+                        {
+                            if (q.Numeral.OnOptional)
+                            {
+                                if (e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Any())
+                                {
+                                    throw new InvalidOperationException(String.Format("InsertOptionalNotValidOnEntityWithIdentityColumn: '{0}' in {1}", q.EntityName, GetQueryLine(q)));
+                                }
+                            }
+                        }
+                        else if (q.Verb.OnUpsert)
                         {
                             if (e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Any())
                             {
