@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# PostgreSQL代码生成器
-//  Version:     2013.10.31.
+//  Version:     2014.10.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -166,6 +166,11 @@ namespace Yuki.RelationSchema.CSharpPostgreSql
                 {
                     if (q.Verb.OnInsert || q.Verb.OnUpsert)
                     {
+                        if (q.Numeral.OnOptional && q.Verb.OnInsert)
+                        {
+                            throw new NotSupportedException("InsertOptional");
+                        }
+
                         var NonPrimaryKeyColumns = e.Fields.Where(f => f.Attribute.OnColumn).Select(f => f.Name).Except(e.PrimaryKey.Columns.Select(c => c.Name), StringComparer.OrdinalIgnoreCase).ToArray();
                         var PrimaryKeyColumns = e.PrimaryKey.Columns.Select(c => c.Name).ToArray();
                         var NonIdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && !f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
@@ -310,7 +315,12 @@ namespace Yuki.RelationSchema.CSharpPostgreSql
                     }
                     else
                     {
-                        if (q.Numeral.OnOne)
+                        if (q.Numeral.OnOptional)
+                        {
+                            if (q.Verb.OnUpsert) { throw new InvalidOperationException(); }
+                            Template = GetTemplate("InsertUpdate_Optional");
+                        }
+                        else if (q.Numeral.OnOne)
                         {
                             Template = GetTemplate("InsertUpdateUpsert_One");
                         }
