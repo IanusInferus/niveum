@@ -1,4 +1,8 @@
-﻿2014.10.11
+﻿2014.10.15
+Examples:
+修正C#/C++通讯示例中网络较卡时，一次收到很多包，确认包会被服务器拒绝的问题。
+
+2014.10.11
 Yuki.Relation:
 增加Insert Optional和Update Optional功能，但其中Insert Optional功能只有MySQL代码生成支持，SQL Server和PostgreSQL不支持。
 
