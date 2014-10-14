@@ -620,7 +620,7 @@ namespace Client
                         if ((Flag & 1) != 0)
                         {
                             var NumIndex = Buffer[Offset] | ((Int32)(Buffer[Offset + 1]) << 8);
-                            if (NumIndex > ReadingWindowSize) //若Index数量较大，则丢弃包
+                            if (NumIndex > WritingWindowSize) //若Index数量较大，则丢弃包
                             {
                                 return;
                             }
