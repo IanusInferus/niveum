@@ -625,7 +625,7 @@ namespace Server
                                                         if ((Flag & 1) != 0)
                                                         {
                                                             var NumIndex = Buffer[Offset] | ((Int32)(Buffer[Offset + 1]) << 8);
-                                                            if (NumIndex > UdpSession.ReadingWindowSize) { return; } //若Index数量较大，则丢弃包
+                                                            if (NumIndex > UdpSession.WritingWindowSize) { return; } //若Index数量较大，则丢弃包
                                                             Offset += 2;
                                                             Indices = new int[NumIndex];
                                                             for (int k = 0; k < NumIndex; k += 1)
