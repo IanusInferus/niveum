@@ -49,6 +49,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CascadeLock.cs" />
+    <Compile Include="Common.cs" />
+    <Compile Include="CountedDataAccessWrapper.cs" />
     <Compile Include="DataAccessManager.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="LoadTest.cs" />

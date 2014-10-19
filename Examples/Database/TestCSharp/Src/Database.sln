@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseMSSQL", "DatabaseMSSQL.csproj", "{1454125C-55C4-402F-98A4-9D3E338B040D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabasePostgreSQL", "DatabasePostgreSQL.csproj", "{52EEDD61-A8AF-45E5-91FB-6CDD28900D95}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseMySQL", "DatabaseMySQL.csproj", "{0A065F81-F62F-4F6D-8F99-3E9BBE19D857}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseKrustallos", "DatabaseKrustallos.csproj", "{6458CFCE-004E-429C-B356-A739C9B441BF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{0A065F81-F62F-4F6D-8F99-3E9BBE19D857}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A065F81-F62F-4F6D-8F99-3E9BBE19D857}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A065F81-F62F-4F6D-8F99-3E9BBE19D857}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6458CFCE-004E-429C-B356-A739C9B441BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6458CFCE-004E-429C-B356-A739C9B441BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6458CFCE-004E-429C-B356-A739C9B441BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6458CFCE-004E-429C-B356-A739C9B441BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

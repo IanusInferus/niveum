@@ -11,7 +11,8 @@ namespace Database
         SqlServer,
         SqlServerCe,
         PostgreSQL,
-        MySQL
+        MySQL,
+        Krustallos
     }
 
     /// <summary>线程安全。</summary>
@@ -22,9 +23,11 @@ namespace Database
         private static readonly String SqlServerType = "Database.SqlServer.SqlServerDataAccessPool";
         private static readonly String PostgreSqlType = "Database.PostgreSql.PostgreSqlDataAccessPool";
         private static readonly String MySqlType = "Database.MySql.MySqlDataAccessPool";
+        private static readonly String KrustallosType = "Database.Krustallos.KrustallosDataAccessPool";
         private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Test";
         private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=test;";
         private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Test;";
+        private static readonly String KrustallosConnectionString = "";
 
         private static Type GetType(String FullName, Boolean ThrowOnError = false)
         {
@@ -91,6 +94,13 @@ namespace Database
                     return MySqlConnectionString;
                 }
             }
+            {
+                var t = GetType(KrustallosType);
+                if (t != null)
+                {
+                    return KrustallosConnectionString;
+                }
+            }
             throw new InvalidOperationException();
         }
 
@@ -110,6 +120,11 @@ namespace Database
             {
                 var t = GetType(MySqlType, true);
                 return MySqlConnectionString;
+            }
+            else if (Type == DatabaseType.Krustallos)
+            {
+                var t = GetType(KrustallosType, true);
+                return KrustallosConnectionString;
             }
             else
             {
@@ -149,6 +164,16 @@ namespace Database
                     return;
                 }
             }
+            {
+                var t = GetType(KrustallosType);
+                if (t != null)
+                {
+                    var o = Activator.CreateInstance(t);
+                    var c = (Func<String, ITransactionLock, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, ITransactionLock, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String), typeof(ITransactionLock) })));
+                    ConnectionFactory = () => c(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
+                    return;
+                }
+            }
             throw new InvalidOperationException();
         }
         public DataAccessManager(DatabaseType Type, String ConnectionString, ICascadeLock CascadeLock)
@@ -170,6 +195,13 @@ namespace Database
             else if (Type == DatabaseType.MySQL)
             {
                 var t = GetType(MySqlType, true);
+                var o = Activator.CreateInstance(t);
+                var c = (Func<String, ITransactionLock, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, ITransactionLock, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String), typeof(ITransactionLock) })));
+                ConnectionFactory = () => c(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
+            }
+            else if (Type == DatabaseType.Krustallos)
+            {
+                var t = GetType(KrustallosType, true);
                 var o = Activator.CreateInstance(t);
                 var c = (Func<String, ITransactionLock, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, ITransactionLock, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String), typeof(ITransactionLock) })));
                 ConnectionFactory = () => c(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
