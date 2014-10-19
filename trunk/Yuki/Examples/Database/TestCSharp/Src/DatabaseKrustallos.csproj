@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{0A065F81-F62F-4F6D-8F99-3E9BBE19D857}</ProjectGuid>
+    <ProjectGuid>{6458CFCE-004E-429C-B356-A739C9B441BF}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Database</RootNamespace>
-    <AssemblyName>DatabaseMySQL</AssemblyName>
+    <AssemblyName>DatabaseKrustallos</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
@@ -40,14 +40,26 @@
     <Reference Include="Firefly.Core">
       <HintPath>..\..\..\..\Bin\Firefly.Core.dll</HintPath>
     </Reference>
-    <Reference Include="MySql.Data">
-      <HintPath>..\..\..\..\Bin\MySql.Data.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\..\Src\Krustallos\ImmutableSortedDictionary.cs">
+      <Link>Krustallos\ImmutableSortedDictionary.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\Instance.cs">
+      <Link>Krustallos\Instance.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\Transaction.cs">
+      <Link>Krustallos\Transaction.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\Version.cs">
+      <Link>Krustallos\Version.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\VersionedStore.cs">
+      <Link>Krustallos\VersionedStore.cs</Link>
+    </Compile>
     <Compile Include="Common.cs" />
     <Compile Include="CountedDataAccessWrapper.cs" />
     <Compile Include="DataAccessManager.cs" />
@@ -55,7 +67,7 @@
     <Compile Include="LoadTest.cs" />
     <Compile Include="CascadeLock.cs" />
     <Compile Include="TransactionLock.cs" />
-    <Compile Include="MySql\MySqlDataAccess.cs" />
+    <Compile Include="Krustallos\KrustallosDataAccess.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestService.cs" />
