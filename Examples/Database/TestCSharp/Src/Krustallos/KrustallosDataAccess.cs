@@ -48,7 +48,7 @@ namespace Database.Krustallos
             this.Transaction = new Transaction(Instance, IsolationLevel);
             this.TransactionLock = TransactionLock;
         }
-        public KrustallosDataAccess(Instance Instance, KrustallosData Data, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory, Action<int, long> Report)
+        public KrustallosDataAccess(Instance Instance, KrustallosData Data, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory)
         {
             this.Instance = Instance;
             this.Data = Data;
@@ -97,6 +97,37 @@ namespace Database.Krustallos
 
     public partial class KrustallosDataAccess
     {
+        public static TestRecord Clone(TestRecord v)
+        {
+            return new TestRecord
+            {
+                SessionIndex = v.SessionIndex,
+                Value = v.Value
+            };
+        }
+
+        public static TestLockRecord Clone(TestLockRecord v)
+        {
+            return new TestLockRecord
+            {
+                Id = v.Id,
+                Value = v.Value
+            };
+        }
+
+        public static TestDuplicatedKeyNameRecord Clone(TestDuplicatedKeyNameRecord v)
+        {
+            return new TestDuplicatedKeyNameRecord
+            {
+                Id = v.Id,
+                A = v.A,
+                B = v.B
+            };
+        }
+    }
+
+    public partial class KrustallosDataAccess
+    {
         public void FromTestRecordUpsertOne(TestRecord v)
         {
             Transaction.UpdateVersioned(new String[] { "TestRecord" }, this.Data.TestRecord, _d_ => _d_.AddOrSetItem(v.SessionIndex, v));
@@ -104,7 +135,7 @@ namespace Database.Krustallos
 
         public Optional<TestRecord> FromTestRecordSelectOptionalBySessionIndex(Int SessionIndex)
         {
-            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestRecord, _d_ => _d_.Range(SessionIndex, SessionIndex).Select(_e_ => _e_.Value)).ToList();
+            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestRecord, _d_ => _d_.Range(SessionIndex, SessionIndex).Select(_e_ => Clone(_e_.Value))).ToList();
             if (_l_.Count == 0) { return null; }
             if (_l_.Count > 1)
             {
@@ -125,7 +156,7 @@ namespace Database.Krustallos
 
         public Optional<TestLockRecord> FromTestLockRecordSelectOptionalById(Int Id)
         {
-            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestLockRecord, _d_ => _d_.Range(Id, Id).Select(_e_ => _e_.Value)).ToList();
+            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestLockRecord, _d_ => _d_.Range(Id, Id).Select(_e_ => Clone(_e_.Value))).ToList();
             if (_l_.Count == 0) { return null; }
             if (_l_.Count > 1)
             {
@@ -137,7 +168,7 @@ namespace Database.Krustallos
         public Optional<TestLockRecord> FromTestLockRecordLockOptionalById(Int Id)
         {
             if (TransactionLock != null) { TransactionLock.Enter(new Object[] { "TestLockRecord", "Id", Id }); }
-            var _l_ = Transaction.CheckCurrentVersioned(this.Data.TestLockRecord, _d_ => _d_.Range(Id, Id).Select(_e_ => _e_.Value)).ToList();
+            var _l_ = Transaction.CheckCurrentVersioned(this.Data.TestLockRecord, _d_ => _d_.Range(Id, Id).Select(_e_ => Clone(_e_.Value))).ToList();
             if (_l_.Count == 0) { return null; }
             if (_l_.Count > 1)
             {
@@ -148,7 +179,7 @@ namespace Database.Krustallos
 
         public Optional<TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordSelectOptionalByAAndB(String A, Int B)
         {
-            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestDuplicatedKeyNameRecordByAAndB, _d_ => _d_.Range(A, A).SelectMany(_e_ => _e_.Value.Range(B, B)).Select(_e_ => _e_.Value)).ToList();
+            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestDuplicatedKeyNameRecordByAAndB, _d_ => _d_.Range(A, A).SelectMany(_e_ => _e_.Value.Range(B, B)).Select(_e_ => Clone(_e_.Value))).ToList();
             if (_l_.Count == 0) { return null; }
             if (_l_.Count > 1)
             {
@@ -159,12 +190,12 @@ namespace Database.Krustallos
 
         public void FromTestDuplicatedKeyNameRecordUpsertOne(TestDuplicatedKeyNameRecord v)
         {
-            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord" }, this.Data.TestDuplicatedKeyNameRecord, _d_ => _d_.AddOrSetItem(v.Id, v));
-            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "A", "B" }, this.Data.TestDuplicatedKeyNameRecordByAAndB, _d_ => _d_.AddOrSetItem(v.A, _d_.GetOrCreate(v.A, () => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>()).AddOrSetItem(v.B, v)));
-            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "A-", "B" }, this.Data.TestDuplicatedKeyNameRecordByADescAndB, _d_ => _d_.AddOrSetItem(v.A, _d_.GetOrCreate(v.A, () => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>()).AddOrSetItem(v.B, v)));
-            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "A", "B-" }, this.Data.TestDuplicatedKeyNameRecordByAAndBDesc, _d_ => _d_.AddOrSetItem(v.A, _d_.GetOrCreate(v.A, () => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>(true)).AddOrSetItem(v.B, v)));
+            var _v_ = Clone(v);
+            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord" }, this.Data.TestDuplicatedKeyNameRecord, _d_ => _d_.AddOrSetItem(v.Id, _v_));
+            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "A", "B" }, this.Data.TestDuplicatedKeyNameRecordByAAndB, _d_ => _d_.AddOrSetItem(v.A, _d_.GetOrCreate(v.A, () => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>()).AddOrSetItem(v.B, _v_)));
+            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "A-", "B" }, this.Data.TestDuplicatedKeyNameRecordByADescAndB, _d_ => _d_.AddOrSetItem(v.A, _d_.GetOrCreate(v.A, () => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>()).AddOrSetItem(v.B, _v_)));
+            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "A", "B-" }, this.Data.TestDuplicatedKeyNameRecordByAAndBDesc, _d_ => _d_.AddOrSetItem(v.A, _d_.GetOrCreate(v.A, () => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>(true)).AddOrSetItem(v.B, _v_)));
         }
-
     }
 
     public class KrustallosDataAccessPool
@@ -181,36 +212,24 @@ namespace Database.Krustallos
 
         public IDataAccess Create(String ConnectionString)
         {
-            return Create(ConnectionString, IsolationLevel.ReadCommitted, (ITransactionLock)(null), null);
-        }
-        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel)
-        {
-            return Create(ConnectionString, IsolationLevel, (ITransactionLock)(null), null);
+            return Create(ConnectionString, IsolationLevel.ReadCommitted, (ITransactionLock)(null));
         }
         public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
         {
-            return Create(ConnectionString, IsolationLevel.ReadCommitted, TransactionLock, null);
+            return Create(ConnectionString, IsolationLevel.ReadCommitted, TransactionLock);
+        }
+        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel)
+        {
+            return Create(ConnectionString, IsolationLevel, (ITransactionLock)(null));
         }
         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
         {
-            return Create(ConnectionString, IsolationLevel, TransactionLock, null);
+            return Create(ConnectionString, IsolationLevel, t => TransactionLock);
         }
         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory)
         {
-            return Create(ConnectionString, IsolationLevel, TransactionLockFactory, null);
-        }
-        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Action<int, long> Report)
-        {
-            return Create(ConnectionString, IsolationLevel, (ITransactionLock)(null), null);
-        }
-        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock, Action<int, long> Report)
-        {
-            return Create(ConnectionString, IsolationLevel, t => TransactionLock, Report);
-        }
-        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory, Action<int, long> Report)
-        {
             var Pair = Instances.GetOrAdd(ConnectionString, Key => new KeyValuePair<Instance, KrustallosData>(new Instance(), new KrustallosData()));
-            return new KrustallosDataAccess(Pair.Key, Pair.Value, IsolationLevel, TransactionLockFactory, Report);
+            return new KrustallosDataAccess(Pair.Key, Pair.Value, IsolationLevel, TransactionLockFactory);
         }
     }
 }
