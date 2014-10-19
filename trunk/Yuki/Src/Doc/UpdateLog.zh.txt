@@ -1,6 +1,9 @@
 ﻿2014.10.19
 Krustallos:
 增加Krustallos内存事务数据库代码。
+Yuki.Relation:
+增加C#计时包装代码生成。
+去除C# MySQL代码中的计时功能。
 
 2014.10.15
 Examples:
