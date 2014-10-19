@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C#简单类型代码生成器
-//  Version:     2014.10.11.
+//  Version:     2014.10.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -171,6 +171,52 @@ namespace Yuki.RelationSchema.CSharpPlain
                     Type = "void";
                 }
                 return GetTemplate("QuerySignature").Substitute("Name", Name).Substitute("ParameterList", ParameterList).Substitute("Type", Type).Single();
+            }
+            public String GetQueryParameterList(QueryDef q)
+            {
+                var pl = new List<String>();
+                if (q.Verb.OnInsert || q.Verb.OnUpdate)
+                {
+                    if (q.Numeral.OnOptional)
+                    {
+                        pl.Add(GetEscapedIdentifier("v"));
+                    }
+                    else if (q.Numeral.OnOne)
+                    {
+                        pl.Add(GetEscapedIdentifier("v"));
+                    }
+                    else if (q.Numeral.OnMany)
+                    {
+                        pl.Add(GetEscapedIdentifier("l"));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
+                else if (q.Verb.OnUpsert)
+                {
+                    if (q.Numeral.OnOne)
+                    {
+                        pl.Add(GetEscapedIdentifier("v"));
+                    }
+                    else if (q.Numeral.OnMany)
+                    {
+                        pl.Add(GetEscapedIdentifier("l"));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
+                pl.AddRange(q.By.Select(c => GetEscapedIdentifier(c)).ToArray());
+                if (q.Numeral.OnRange)
+                {
+                    pl.Add("Int _Skip_");
+                    pl.Add("Int _Take_");
+                }
+                var ParameterList = String.Join(", ", pl.ToArray());
+                return ParameterList;
             }
 
             public String[] GetComplexTypes()
