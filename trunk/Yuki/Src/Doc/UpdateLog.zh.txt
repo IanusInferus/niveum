@@ -4,6 +4,8 @@ Krustallos:
 Yuki.Relation:
 增加C#计时包装代码生成。
 去除C# MySQL代码中的计时功能。
+Examples:
+修改C#数据库示例，对应Yuki.Relation的修改。
 
 2014.10.15
 Examples:
