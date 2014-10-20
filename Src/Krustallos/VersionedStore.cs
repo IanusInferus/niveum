@@ -16,35 +16,13 @@ namespace Krustallos
         private ImmutableSortedDictionary<Version, ImmutableSortedDictionary<TKey, TValue>> Versions = new ImmutableSortedDictionary<Version, ImmutableSortedDictionary<TKey, TValue>>((Left, Right) => -Left.CompareTo(Right));
         private Func<TKey, TKey, int> Compare;
 
-        private class DefaultComparer
-        {
-            public int Compare(TKey x, TKey y)
-            {
-                return ((IComparable<TKey>)(x)).CompareTo(y);
-            }
-        }
-        private class ReversedDefaultComparer
-        {
-            public int Compare(TKey x, TKey y)
-            {
-                return -((IComparable<TKey>)(x)).CompareTo(y);
-            }
-        }
-
         public VersionedStore()
         {
-            this.Compare = (new DefaultComparer()).Compare;
+            this.Compare = ConcurrentComparer.CreateDefault<TKey>();
         }
         public VersionedStore(bool IsReversed)
         {
-            if (IsReversed)
-            {
-                this.Compare = (new ReversedDefaultComparer()).Compare;
-            }
-            else
-            {
-                this.Compare = (new DefaultComparer()).Compare;
-            }
+            this.Compare = ConcurrentComparer.CreateDefault<TKey>(IsReversed);
         }
         public VersionedStore(Func<TKey, TKey, int> ConcurrentCompare)
         {
