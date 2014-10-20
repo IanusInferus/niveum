@@ -45,6 +45,9 @@
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\..\Src\Krustallos\ConcurrentComparer.cs">
+      <Link>Krustallos\ConcurrentComparer.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\..\Src\Krustallos\ImmutableSortedDictionary.cs">
       <Link>Krustallos\ImmutableSortedDictionary.cs</Link>
     </Compile>
@@ -64,6 +67,8 @@
     <Compile Include="CountedDataAccessWrapper.cs" />
     <Compile Include="DataAccessManager.cs" />
     <Compile Include="Database.cs" />
+    <Compile Include="Krustallos\TestComparer.cs" />
+    <Compile Include="Krustallos\TestDictionary.cs" />
     <Compile Include="LoadTest.cs" />
     <Compile Include="CascadeLock.cs" />
     <Compile Include="TransactionLock.cs" />
