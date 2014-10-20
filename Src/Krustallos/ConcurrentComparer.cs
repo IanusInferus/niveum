@@ -8,21 +8,13 @@ namespace Krustallos
     {
         public static Func<T, T, int> CreateDefault<T>(bool IsReversed = false)
         {
-            if (typeof(T).IsGenericType && (typeof(T).GetGenericTypeDefinition() == typeof(Optional<>)))
+            if (IsReversed)
             {
-                var Type = typeof(T).GetGenericArguments().Single();
-                var Inner = Activator.CreateInstance((IsReversed ? typeof(ReversedDefaultComparer<>) : typeof(DefaultComparer<>)).MakeGenericType(Type));
-                return ((IComparer<T>)(Activator.CreateInstance(typeof(OptionalComparer<>).MakeGenericType(Type), Inner))).Compare;
-            }
-            else if (typeof(T).GetInterfaces().Where(it => it.IsGenericType && (it.GetGenericTypeDefinition() == typeof(IEnumerable<>))).Count() == 1)
-            {
-                var Type = typeof(T).GetInterfaces().Where(it => it.IsGenericType && (it.GetGenericTypeDefinition() == typeof(IEnumerable<>))).Single().GetGenericArguments().Single();
-                var Inner = Activator.CreateInstance((IsReversed ? typeof(ReversedDefaultComparer<>) : typeof(DefaultComparer<>)).MakeGenericType(Type));
-                return ((IComparer<T>)(Activator.CreateInstance(typeof(EnumerableComparer<>).MakeGenericType(Type), Inner))).Compare;
+                return (new ReversedComparer<T>(new DefaultComparer<T>())).Compare;
             }
             else
             {
-                return (IsReversed ? (IComparer<T>)(new ReversedDefaultComparer<T>()) : (IComparer<T>)(new DefaultComparer<T>())).Compare;
+                return (new DefaultComparer<T>()).Compare;
             }
         }
         private class DefaultComparer<T> : IComparer<T>
@@ -34,6 +26,18 @@ namespace Krustallos
                 {
                     Inner = (Func<T, T, int>)(Object)(Func<String, String, int>)(String.CompareOrdinal);
                 }
+                else if (typeof(T).IsGenericType && (typeof(T).GetGenericTypeDefinition() == typeof(Optional<>)))
+                {
+                    var Type = typeof(T).GetGenericArguments().Single();
+                    var ElementComparer = Activator.CreateInstance(typeof(DefaultComparer<>).MakeGenericType(Type));
+                    Inner = ((IComparer<T>)(Activator.CreateInstance(typeof(OptionalComparer<>).MakeGenericType(Type), ElementComparer))).Compare;
+                }
+                else if (typeof(T).GetInterfaces().Where(it => it.IsGenericType && (it.GetGenericTypeDefinition() == typeof(IEnumerable<>))).Count() == 1)
+                {
+                    var Type = typeof(T).GetInterfaces().Where(it => it.IsGenericType && (it.GetGenericTypeDefinition() == typeof(IEnumerable<>))).Single().GetGenericArguments().Single();
+                    var ElementComparer = Activator.CreateInstance(typeof(DefaultComparer<>).MakeGenericType(Type));
+                    Inner = ((IComparer<T>)(Activator.CreateInstance(typeof(EnumerableComparer<>).MakeGenericType(Type), ElementComparer))).Compare;
+                }
                 else
                 {
                     Inner = (x, y) => ((IComparable<T>)(x)).CompareTo(y);
@@ -44,23 +48,16 @@ namespace Krustallos
                 return Inner(x, y);
             }
         }
-        private class ReversedDefaultComparer<T> : IComparer<T>
+        private class ReversedComparer<T> : IComparer<T>
         {
-            private Func<T, T, int> Inner;
-            public ReversedDefaultComparer()
+            private IComparer<T> Inner;
+            public ReversedComparer(IComparer<T> Inner)
             {
-                if (typeof(T) == typeof(String))
-                {
-                    Inner = (Func<T, T, int>)(Object)(Func<String, String, int>)(String.CompareOrdinal);
-                }
-                else
-                {
-                    Inner = (x, y) => ((IComparable<T>)(x)).CompareTo(y);
-                }
+                this.Inner = Inner;
             }
             public int Compare(T x, T y)
             {
-                return -Inner(x, y);
+                return -Inner.Compare(x, y);
             }
         }
         private class OptionalComparer<T> : IComparer<Optional<T>>
