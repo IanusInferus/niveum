@@ -1,4 +1,8 @@
-﻿2014.10.19
+﻿2014.10.20
+Krustallos:
+增加并行比较器。
+
+2014.10.19
 Krustallos:
 增加Krustallos内存事务数据库代码。
 Yuki.Relation:
