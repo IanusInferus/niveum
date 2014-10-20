@@ -11,36 +11,14 @@ namespace Krustallos
         private Func<TKey, TKey, int> Compare;
         private Node Root;
 
-        private class DefaultComparer
-        {
-            public int Compare(TKey x, TKey y)
-            {
-                return ((IComparable<TKey>)(x)).CompareTo(y);
-            }
-        }
-        private class ReversedDefaultComparer
-        {
-            public int Compare(TKey x, TKey y)
-            {
-                return -((IComparable<TKey>)(x)).CompareTo(y);
-            }
-        }
-
         public ImmutableSortedDictionary()
         {
-            this.Compare = (new DefaultComparer()).Compare;
+            this.Compare = ConcurrentComparer.CreateDefault<TKey>();
             this.Root = null;
         }
         public ImmutableSortedDictionary(bool IsReversed)
         {
-            if (IsReversed)
-            {
-                this.Compare = (new ReversedDefaultComparer()).Compare;
-            }
-            else
-            {
-                this.Compare = (new DefaultComparer()).Compare;
-            }
+            this.Compare = ConcurrentComparer.CreateDefault<TKey>(IsReversed);
             this.Root = null;
         }
         public ImmutableSortedDictionary(Func<TKey, TKey, int> ConcurrentCompare)
