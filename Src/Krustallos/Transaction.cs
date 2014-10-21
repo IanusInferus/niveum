@@ -133,18 +133,18 @@ namespace Krustallos
             return WriterVersion.Value;
         }
 
-        public IEnumerable<TRet> CheckReaderVersioned<TKey, TValue, TRet>(VersionedStore<TKey, TValue> Store, Func<ImmutableSortedDictionary<TKey, TValue>, IEnumerable<TRet>> Selector)
+        public IEnumerable<TRet> CheckReaderVersioned<T, TRet>(VersionedStore<T> Store, Func<T, IEnumerable<TRet>> Selector)
         {
             var ReaderVersion = GetReaderVersion();
             var Content = Store.GetVersionContent(ReaderVersion);
             return Selector(Content);
         }
-        public IEnumerable<TRet> CheckCurrentVersioned<TKey, TValue, TRet>(VersionedStore<TKey, TValue> Store, Func<ImmutableSortedDictionary<TKey, TValue>, IEnumerable<TRet>> Selector)
+        public IEnumerable<TRet> CheckCurrentVersioned<T, TRet>(VersionedStore<T> Store, Func<T, IEnumerable<TRet>> Selector)
         {
             var Content = Store.GetLastVersionContent();
             return Selector(Content);
         }
-        public void UpdateVersioned<TKey, TValue>(String[] StorePath, VersionedStore<TKey, TValue> Store, Func<ImmutableSortedDictionary<TKey, TValue>, ImmutableSortedDictionary<TKey, TValue>> Transformer)
+        public void UpdateVersioned<T>(String[] StorePath, VersionedStore<T> Store, Func<T, T> Transformer)
         {
             if (!UpdateStores.ContainsKey(StorePath))
             {

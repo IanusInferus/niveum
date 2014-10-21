@@ -78,7 +78,7 @@ ObjectSchemaTemplate
             //Parameters: ${IndexName}, ${IndexType}
             Value
                 $String
-                    public [[${IndexType}]] [[${IndexName}]] = new [[${IndexType}]]();
+                    public VersionedStore<[[${IndexType}]]> [[${IndexName}]] = new VersionedStore<[[${IndexType}]]>(() => new [[${IndexType}]]());
         Template
             Name DataAccessBase
             //Parameters:

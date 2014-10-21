@@ -5,6 +5,8 @@ Yuki.Relation:
 增加C# Krustallos数据库代码生成。
 Krustallos:
 增加反向遍历。
+增加范围计数。
+减少排序比较。
 Examples:
 修改C# Krustallos数据库示例，增加测试用例。
 
