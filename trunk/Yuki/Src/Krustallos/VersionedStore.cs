@@ -11,40 +11,32 @@ namespace Krustallos
         void RemovePreviousVersions(Version v);
 
     }
-    public class VersionedStore<TKey, TValue> : IVersionedStore
+    public class VersionedStore<T> : IVersionedStore
     {
-        private ImmutableSortedDictionary<Version, ImmutableSortedDictionary<TKey, TValue>> Versions = new ImmutableSortedDictionary<Version, ImmutableSortedDictionary<TKey, TValue>>((Left, Right) => -Left.CompareTo(Right));
-        private Func<TKey, TKey, int> Compare;
+        private ImmutableSortedDictionary<Version, T> Versions = new ImmutableSortedDictionary<Version, T>((Left, Right) => -Left.CompareTo(Right));
+        private Func<T> Allocator;
 
-        public VersionedStore()
+        public VersionedStore(Func<T> Allocator)
         {
-            this.Compare = ConcurrentComparer.CreateDefault<TKey>();
-        }
-        public VersionedStore(bool IsReversed)
-        {
-            this.Compare = ConcurrentComparer.CreateDefault<TKey>(IsReversed);
-        }
-        public VersionedStore(Func<TKey, TKey, int> ConcurrentCompare)
-        {
-            this.Compare = ConcurrentCompare;
+            this.Allocator = Allocator;
         }
 
-        public ImmutableSortedDictionary<TKey, TValue> GetVersionContent(Version v)
+        public T GetVersionContent(Version v)
         {
             var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
             foreach (var Pair in Versions.Range(v, Optional<Version>.Empty))
             {
                 return Pair.Value;
             }
-            return new ImmutableSortedDictionary<TKey, TValue>(Compare);
+            return Allocator();
         }
 
-        public Optional<KeyValuePair<Version, ImmutableSortedDictionary<TKey, TValue>>> TryGetLastVersion()
+        public Optional<KeyValuePair<Version, T>> TryGetLastVersion()
         {
             var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
             return Versions.TryGetPairByIndex(0);
         }
-        public ImmutableSortedDictionary<TKey, TValue> GetLastVersionContent()
+        public T GetLastVersionContent()
         {
             var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
             var oPair = Versions.TryGetPairByIndex(0);
@@ -54,11 +46,11 @@ namespace Krustallos
             }
             else
             {
-                return new ImmutableSortedDictionary<TKey, TValue>(Compare);
+                return Allocator();
             }
         }
 
-        public void PutVersion(Version v, ImmutableSortedDictionary<TKey, TValue> Content)
+        public void PutVersion(Version v, T Content)
         {
             while (true)
             {

@@ -154,13 +154,11 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 var d = or.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
                 var l = new LinkedList<String>();
                 l.AddLast(e.Name);
-                foreach (var c in Key.Skip(1).Reverse())
+                foreach (var c in Key.Reverse())
                 {
                     l.AddFirst("ImmutableSortedDictionary<" + GetTypeString(d[c].Type) + ", ");
                     l.AddLast(">");
                 }
-                l.AddFirst("VersionedStore<" + GetTypeString(d[Key.First()].Type) + ", ");
-                l.AddLast(">");
                 return String.Join("", l.ToArray());
             }
 
