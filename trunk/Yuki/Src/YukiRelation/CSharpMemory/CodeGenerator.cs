@@ -271,27 +271,6 @@ namespace Yuki.RelationSchema.CSharpMemory
                 return String.Join("", l.ToArray());
             }
 
-            private class ByIndex
-            {
-                public List<String> Columns;
-
-                public override bool Equals(object obj)
-                {
-                    var o = obj as ByIndex;
-                    if (o == null) { return false; }
-                    if (Columns.Count != o.Columns.Count) { return false; }
-                    if (Columns.Intersect(o.Columns, StringComparer.OrdinalIgnoreCase).Count() != Columns.Count) { return false; }
-                    return true;
-                }
-
-                public override int GetHashCode()
-                {
-                    if (Columns.Count == 0) { return 0; }
-                    Func<String, int> h = StringComparer.OrdinalIgnoreCase.GetHashCode;
-                    return Columns.Select(k => h(k)).Aggregate((a, b) => a ^ b);
-                }
-            }
-
             public String[] GetQuery(QueryDef q)
             {
                 var e = TypeDict[q.EntityName].Entity;
