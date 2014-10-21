@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C#简单类型代码生成器
-//  Version:     2014.10.19.
+//  Version:     2014.10.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -212,8 +212,8 @@ namespace Yuki.RelationSchema.CSharpPlain
                 pl.AddRange(q.By.Select(c => GetEscapedIdentifier(c)).ToArray());
                 if (q.Numeral.OnRange)
                 {
-                    pl.Add("Int _Skip_");
-                    pl.Add("Int _Take_");
+                    pl.Add("_Skip_");
+                    pl.Add("_Take_");
                 }
                 var ParameterList = String.Join(", ", pl.ToArray());
                 return ParameterList;
