@@ -24,15 +24,12 @@ using Byte = System.Byte;
 
 namespace Database.Krustallos
 {
-
     public class KrustallosData
     {
-        public VersionedStore<Int, TestRecord> TestRecord = new VersionedStore<Int, TestRecord>();
-        public VersionedStore<Int, TestLockRecord> TestLockRecord = new VersionedStore<Int, TestLockRecord>();
-        public VersionedStore<Int, TestDuplicatedKeyNameRecord> TestDuplicatedKeyNameRecord = new VersionedStore<Int, TestDuplicatedKeyNameRecord>();
-        public VersionedStore<String, ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>> TestDuplicatedKeyNameRecordByAAndB = new VersionedStore<String, ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>>();
-        public VersionedStore<String, ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>> TestDuplicatedKeyNameRecordByADescAndB = new VersionedStore<String, ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>>(true);
-        public VersionedStore<String, ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>> TestDuplicatedKeyNameRecordByAAndBDesc = new VersionedStore<String, ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>>();
+        public VersionedStore<ImmutableSortedDictionary<Int, TestRecord>> TestRecordBySessionIndex = new VersionedStore<ImmutableSortedDictionary<Int, TestRecord>>(() => new ImmutableSortedDictionary<Int, TestRecord>());
+        public VersionedStore<ImmutableSortedDictionary<Int, TestLockRecord>> TestLockRecordById = new VersionedStore<ImmutableSortedDictionary<Int, TestLockRecord>>(() => new ImmutableSortedDictionary<Int, TestLockRecord>());
+        public VersionedStore<ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>> TestDuplicatedKeyNameRecordById = new VersionedStore<ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>>(() => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>());
+        public VersionedStore<ImmutableSortedDictionary<String, ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>>> TestDuplicatedKeyNameRecordByAAndB = new VersionedStore<ImmutableSortedDictionary<String, ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>>>(() => new ImmutableSortedDictionary<String, ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>>());
     }
 
     public partial class KrustallosDataAccess : IDataAccess
@@ -97,32 +94,27 @@ namespace Database.Krustallos
 
     public partial class KrustallosDataAccess
     {
-        public static TestRecord Clone(TestRecord v)
+        private static TestRecord Clone(TestRecord v)
         {
-            return new TestRecord
-            {
-                SessionIndex = v.SessionIndex,
-                Value = v.Value
-            };
+            var nv = new TestRecord();
+            nv.SessionIndex = v.SessionIndex;
+            nv.Value = v.Value;
+            return nv;
         }
-
-        public static TestLockRecord Clone(TestLockRecord v)
+        private static TestLockRecord Clone(TestLockRecord v)
         {
-            return new TestLockRecord
-            {
-                Id = v.Id,
-                Value = v.Value
-            };
+            var nv = new TestLockRecord();
+            nv.Id = v.Id;
+            nv.Value = v.Value;
+            return nv;
         }
-
-        public static TestDuplicatedKeyNameRecord Clone(TestDuplicatedKeyNameRecord v)
+        private static TestDuplicatedKeyNameRecord Clone(TestDuplicatedKeyNameRecord v)
         {
-            return new TestDuplicatedKeyNameRecord
-            {
-                Id = v.Id,
-                A = v.A,
-                B = v.B
-            };
+            var nv = new TestDuplicatedKeyNameRecord();
+            nv.Id = v.Id;
+            nv.A = v.A;
+            nv.B = v.B;
+            return nv;
         }
     }
 
@@ -130,12 +122,12 @@ namespace Database.Krustallos
     {
         public void FromTestRecordUpsertOne(TestRecord v)
         {
-            Transaction.UpdateVersioned(new String[] { "TestRecord" }, this.Data.TestRecord, _d_ => _d_.AddOrSetItem(v.SessionIndex, v));
+            Transaction.UpdateVersioned(new String[] { "TestRecord", "SessionIndex" }, this.Data.TestRecordBySessionIndex, _d_ => _d_.AddOrSetItem(v.SessionIndex, v));
         }
 
         public Optional<TestRecord> FromTestRecordSelectOptionalBySessionIndex(Int SessionIndex)
         {
-            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestRecord, _d_ => _d_.Range(SessionIndex, SessionIndex).Select(_e_ => Clone(_e_.Value))).ToList();
+            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestRecordBySessionIndex, _d_ => _d_.Range(SessionIndex, SessionIndex).Select(_p_ => _p_.Value).Select(_e_ => Clone(_e_))).ToList();
             if (_l_.Count == 0) { return null; }
             if (_l_.Count > 1)
             {
@@ -146,17 +138,17 @@ namespace Database.Krustallos
 
         public void FromTestLockRecordUpsertOne(TestLockRecord v)
         {
-            Transaction.UpdateVersioned(new String[] { "TestLockRecord" }, this.Data.TestLockRecord, _d_ => _d_.AddOrSetItem(v.Id, v));
+            Transaction.UpdateVersioned(new String[] { "TestLockRecord", "Id" }, this.Data.TestLockRecordById, _d_ => _d_.AddOrSetItem(v.Id, v));
         }
 
         public void FromTestLockRecordDeleteOptionalById(Int Id)
         {
-            Transaction.UpdateVersioned(new String[] { "TestLockRecord" }, this.Data.TestLockRecord, _d_ => _d_.RemoveIfExist(Id));
+            Transaction.UpdateVersioned(new String[] { "TestLockRecord", "Id" }, this.Data.TestLockRecordById, _d_ => _d_.RemoveIfExist(Id));
         }
 
         public Optional<TestLockRecord> FromTestLockRecordSelectOptionalById(Int Id)
         {
-            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestLockRecord, _d_ => _d_.Range(Id, Id).Select(_e_ => Clone(_e_.Value))).ToList();
+            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestLockRecordById, _d_ => _d_.Range(Id, Id).Select(_p_ => _p_.Value).Select(_e_ => Clone(_e_))).ToList();
             if (_l_.Count == 0) { return null; }
             if (_l_.Count > 1)
             {
@@ -168,7 +160,7 @@ namespace Database.Krustallos
         public Optional<TestLockRecord> FromTestLockRecordLockOptionalById(Int Id)
         {
             if (TransactionLock != null) { TransactionLock.Enter(new Object[] { "TestLockRecord", "Id", Id }); }
-            var _l_ = Transaction.CheckCurrentVersioned(this.Data.TestLockRecord, _d_ => _d_.Range(Id, Id).Select(_e_ => Clone(_e_.Value))).ToList();
+            var _l_ = Transaction.CheckCurrentVersioned(this.Data.TestLockRecordById, _d_ => _d_.Range(Id, Id).Select(_p_ => _p_.Value).Select(_e_ => Clone(_e_))).ToList();
             if (_l_.Count == 0) { return null; }
             if (_l_.Count > 1)
             {
@@ -177,9 +169,20 @@ namespace Database.Krustallos
             return _l_.Single();
         }
 
+        public Optional<TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordSelectOptionalByA(String A)
+        {
+            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestDuplicatedKeyNameRecordByAAndB, _d_ => _d_.Range(A, A).Select(_p_ => _p_.Value).SelectMany(_e_ => _e_).Select(_p_ => _p_.Value).Select(_e_ => Clone(_e_))).ToList();
+            if (_l_.Count == 0) { return null; }
+            if (_l_.Count > 1)
+            {
+                throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { A }).Select(o => o.ToString()).ToArray()) + ")");
+            }
+            return _l_.Single();
+        }
+
         public Optional<TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordSelectOptionalByAAndB(String A, Int B)
         {
-            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestDuplicatedKeyNameRecordByAAndB, _d_ => _d_.Range(A, A).SelectMany(_e_ => _e_.Value.Range(B, B)).Select(_e_ => Clone(_e_.Value))).ToList();
+            var _l_ = Transaction.CheckReaderVersioned(this.Data.TestDuplicatedKeyNameRecordByAAndB, _d_ => _d_.Range(A, A).Select(_p_ => _p_.Value).SelectMany(_e_ => _e_.Range(B, B)).Select(_p_ => _p_.Value).Select(_e_ => Clone(_e_))).ToList();
             if (_l_.Count == 0) { return null; }
             if (_l_.Count > 1)
             {
@@ -188,13 +191,23 @@ namespace Database.Krustallos
             return _l_.Single();
         }
 
-        public void FromTestDuplicatedKeyNameRecordUpsertOne(TestDuplicatedKeyNameRecord v)
+        public List<TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordSelectRangeByAOrderByAAndBDesc(String A, Int _Skip_, Int _Take_)
+        {
+            return Transaction.CheckReaderVersioned(this.Data.TestDuplicatedKeyNameRecordByAAndB, _d_ => _d_.Range(A, A).Select(_p_ => _p_.Value).SelectMany(_e_ => _e_).Select(_p_ => _p_.Value).OrderBy(_e_ => _e_.A).ThenByDescending(_e_ => _e_.B).Skip(_Skip_).Take(_Take_).Select(_e_ => Clone(_e_))).ToList();
+        }
+
+        public void FromTestDuplicatedKeyNameRecordInsertOne(TestDuplicatedKeyNameRecord v)
         {
             var _v_ = Clone(v);
-            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord" }, this.Data.TestDuplicatedKeyNameRecord, _d_ => _d_.AddOrSetItem(v.Id, _v_));
-            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "A", "B" }, this.Data.TestDuplicatedKeyNameRecordByAAndB, _d_ => _d_.AddOrSetItem(v.A, _d_.GetOrCreate(v.A, () => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>()).AddOrSetItem(v.B, _v_)));
-            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "A-", "B" }, this.Data.TestDuplicatedKeyNameRecordByADescAndB, _d_ => _d_.AddOrSetItem(v.A, _d_.GetOrCreate(v.A, () => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>()).AddOrSetItem(v.B, _v_)));
-            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "A", "B-" }, this.Data.TestDuplicatedKeyNameRecordByAAndBDesc, _d_ => _d_.AddOrSetItem(v.A, _d_.GetOrCreate(v.A, () => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>(true)).AddOrSetItem(v.B, _v_)));
+            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "Id" }, this.Data.TestDuplicatedKeyNameRecordById, _d_ => _d_.Add(v.Id, _v_));
+            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "A", "B" }, this.Data.TestDuplicatedKeyNameRecordByAAndB, _d_ => _d_.AddOrSetItem(v.A, _d_.GetOrCreate(v.A, () => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>()).Add(v.B, _v_)));
+        }
+
+        public void FromTestDuplicatedKeyNameRecordUpdateOptional(TestDuplicatedKeyNameRecord v)
+        {
+            var _v_ = Clone(v);
+            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "Id" }, this.Data.TestDuplicatedKeyNameRecordById, _d_ => _d_.SetItemIfExist(v.Id, _v_));
+            Transaction.UpdateVersioned(new String[] { "TestDuplicatedKeyNameRecord", "A", "B" }, this.Data.TestDuplicatedKeyNameRecordByAAndB, _d_ => _d_.AddOrSetItem(v.A, _d_.GetOrCreate(v.A, () => new ImmutableSortedDictionary<Int, TestDuplicatedKeyNameRecord>()).SetItemIfExist(v.B, _v_)));
         }
     }
 

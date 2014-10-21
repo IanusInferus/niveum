@@ -18,10 +18,24 @@ namespace BaseSystem
     /// </summary>
     public class TransactionLock
     {
+        private class ObjectComparer : IComparer<Object>
+        {
+            public int Compare(Object x, Object y)
+            {
+                if ((x.GetType() == typeof(String)) && (y.GetType() == typeof(String)))
+                {
+                    return String.CompareOrdinal((String)(x), (String)(y));
+                }
+                else
+                {
+                    return ((IComparable)(x)).CompareTo(y);
+                }
+            }
+        }
         private class Node
         {
             public List<LinkedList<Object>> ExclusiveLockLists = new List<LinkedList<Object>>();
-            public SortedSet<Object> ChildrenOrder = new SortedSet<Object>();
+            public SortedSet<Object> ChildrenOrder = new SortedSet<Object>(new ObjectComparer());
             public Dictionary<Object, Node> Children = new Dictionary<Object, Node>();
         }
         private Node Root = new Node { };

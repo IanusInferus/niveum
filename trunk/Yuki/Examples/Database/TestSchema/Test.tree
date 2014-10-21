@@ -4,7 +4,7 @@
       File:        Test.tree
       Location:    Yuki.Examples <Tree>
       Description: 测试
-      Version:     2013.10.09.
+      Version:     2014.10.21.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -33,3 +33,5 @@
     From TestDuplicatedKeyNameRecord Select Optional By A
     From TestDuplicatedKeyNameRecord Select Optional By (A B)
     From TestDuplicatedKeyNameRecord Select Range By A OrderBy (A B-)
+    From TestDuplicatedKeyNameRecord Insert One
+    From TestDuplicatedKeyNameRecord Update Optional

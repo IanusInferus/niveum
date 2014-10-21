@@ -68,6 +68,47 @@ namespace Krustallos
                     k -= 1;
                 }
             }
+            {
+                var k = 100;
+                foreach (var p in d.Range(100, 200))
+                {
+                    Debug.Assert(p.Key == k);
+                    Debug.Assert(p.Value == k * 2);
+                    k += 1;
+                }
+            }
+            {
+                var k = 200;
+                foreach (var p in d.RangeReversed(100, 200))
+                {
+                    Debug.Assert(p.Key == k);
+                    Debug.Assert(p.Value == k * 2);
+                    k -= 1;
+                }
+            }
+            {
+                var k = 100;
+                foreach (var p in d.RangeByIndex(100, 200))
+                {
+                    Debug.Assert(p.Key == k);
+                    Debug.Assert(p.Value == k * 2);
+                    k += 1;
+                }
+            }
+            {
+                var k = 200;
+                foreach (var p in d.RangeByIndexReversed(100, 200))
+                {
+                    Debug.Assert(p.Key == k);
+                    Debug.Assert(p.Value == k * 2);
+                    k -= 1;
+                }
+            }
+            Debug.Assert(d.RangeCount(100, 200) == 101);
+            Debug.Assert(d.RangeCount(0, n - 1) == n);
+            Debug.Assert(d.RangeCount(0, Optional<int>.Empty) == n);
+            Debug.Assert(d.RangeCount(Optional<int>.Empty, n - 1) == n);
+            Debug.Assert(d.RangeCount(Optional<int>.Empty, Optional<int>.Empty) == n);
             var l = d.ToList();
             Debug.Assert(l.Count == n);
             for (int k = 0; k < n; k += 1)
@@ -155,6 +196,47 @@ namespace Krustallos
                     k -= 1;
                 }
             }
+            {
+                var k = 100;
+                foreach (var p in d.Range(100, 200))
+                {
+                    Debug.Assert(p.Key == k);
+                    Debug.Assert(p.Value == k * 2);
+                    k += 1;
+                }
+            }
+            {
+                var k = 200;
+                foreach (var p in d.RangeReversed(100, 200))
+                {
+                    Debug.Assert(p.Key == k);
+                    Debug.Assert(p.Value == k * 2);
+                    k -= 1;
+                }
+            }
+            {
+                var k = 100;
+                foreach (var p in d.RangeByIndex(100, 200))
+                {
+                    Debug.Assert(p.Key == k);
+                    Debug.Assert(p.Value == k * 2);
+                    k += 1;
+                }
+            }
+            {
+                var k = 200;
+                foreach (var p in d.RangeByIndexReversed(100, 200))
+                {
+                    Debug.Assert(p.Key == k);
+                    Debug.Assert(p.Value == k * 2);
+                    k -= 1;
+                }
+            }
+            Debug.Assert(d.RangeCount(100, 200) == 101);
+            Debug.Assert(d.RangeCount(0, n - 1) == n);
+            Debug.Assert(d.RangeCount(0, Optional<int>.Empty) == n);
+            Debug.Assert(d.RangeCount(Optional<int>.Empty, n - 1) == n);
+            Debug.Assert(d.RangeCount(Optional<int>.Empty, Optional<int>.Empty) == n);
             var l = d.ToList();
             Debug.Assert(l.Count == n);
             for (int k = 0; k < n; k += 1)
