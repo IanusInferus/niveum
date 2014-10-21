@@ -30,3 +30,6 @@
     From TestLockRecord Delete Optional By Id
     From TestLockRecord Select Optional By Id
     From TestLockRecord Lock Optional By Id
+    From TestDuplicatedKeyNameRecord Select Optional By A
+    From TestDuplicatedKeyNameRecord Select Optional By (A B)
+    From TestDuplicatedKeyNameRecord Select Range By A OrderBy (A B-)
