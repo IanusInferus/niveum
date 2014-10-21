@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Memory代码生成器
-//  Version:     2013.10.01.
+//  Version:     2014.10.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -39,7 +39,6 @@ namespace Yuki.RelationSchema.CSharpMemory
             private OS.Schema InnerSchema;
             private Dictionary<String, TypeDef> TypeDict;
             private Dictionary<String, OS.TypeDef> InnerTypeDict;
-            private Dictionary<String, Dictionary<ByIndex, ByIndex>> ByIndexDict;
 
             static Writer()
             {
@@ -57,32 +56,6 @@ namespace Yuki.RelationSchema.CSharpMemory
                 InnerSchema = PlainObjectSchemaGenerator.Generate(Schema);
                 TypeDict = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
                 InnerTypeDict = Yuki.ObjectSchema.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
-
-                ByIndexDict = new Dictionary<String, Dictionary<ByIndex, ByIndex>>(StringComparer.OrdinalIgnoreCase);
-                foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
-                {
-                    var h = new Dictionary<ByIndex, ByIndex>();
-                    foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
-                    {
-                        var SubIndex = new ByIndex { Columns = k.Columns.Select(c => c.Name).ToList() };
-                        if (!h.ContainsKey(SubIndex))
-                        {
-                            h.Add(SubIndex, SubIndex);
-                        }
-                    }
-                    foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
-                    {
-                        for (int i = 1; i < k.Columns.Count; i += 1)
-                        {
-                            var SubIndex = new ByIndex { Columns = k.Columns.Take(i).Select(c => c.Name).ToList() };
-                            if (!h.ContainsKey(SubIndex))
-                            {
-                                h.Add(SubIndex, SubIndex);
-                            }
-                        }
-                    }
-                    ByIndexDict.Add(e.Name, h);
-                }
 
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Unit").Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Boolean").Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
@@ -322,17 +295,11 @@ namespace Yuki.RelationSchema.CSharpMemory
             public String[] GetQuery(QueryDef q)
             {
                 var e = TypeDict[q.EntityName].Entity;
-                var bih = ByIndexDict[q.EntityName];
 
                 var Signature = InnerWriter.GetQuerySignature(q);
-                var By = q.By;
-                if (q.By.Count > 0)
-                {
-                    By = bih[new ByIndex { Columns = q.By }].Columns.ToList();
-                }
-                var ManyName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateMany(), By = By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
-                var AllName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateAll(), By = By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
-                var Parameters = String.Join(", ", By.ToArray());
+                var ManyName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateMany(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
+                var AllName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateAll(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
+                var Parameters = String.Join(", ", q.By.ToArray());
                 var OrderBys = GetOrderBy(q);
                 String[] Content;
                 if (q.Verb.OnSelect || q.Verb.OnLock)
@@ -355,7 +322,7 @@ namespace Yuki.RelationSchema.CSharpMemory
                     }
                     else if (q.Numeral.OnRange)
                     {
-                        if (By.Count == 0)
+                        if (q.By.Count == 0)
                         {
                             Content = GetTemplate("SelectLock_RangeAll").Substitute("AllName", AllName).Substitute("OrderBys", OrderBys);
                         }
