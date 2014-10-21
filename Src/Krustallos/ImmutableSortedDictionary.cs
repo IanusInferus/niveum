@@ -135,6 +135,28 @@ namespace Krustallos
             }
             return Range(Root, Lower, Upper);
         }
+        public IEnumerable<KeyValuePair<TKey, TValue>> RangeReversed(Optional<TKey> Lower, Optional<TKey> Upper)
+        {
+            if (Lower.OnHasValue && Upper.OnHasValue)
+            {
+                if (Compare(Lower.Value, Upper.Value) > 0)
+                {
+                    return Enumerable.Empty<KeyValuePair<TKey, TValue>>();
+                }
+            }
+            return RangeReversed(Root, Lower, Upper);
+        }
+        public IEnumerable<KeyValuePair<TKey, TValue>> RangeByIndexReversed(Optional<int> LowerIndex, Optional<int> UpperIndex)
+        {
+            if (LowerIndex.OnHasValue && UpperIndex.OnHasValue)
+            {
+                if (LowerIndex.Value > UpperIndex.Value)
+                {
+                    return Enumerable.Empty<KeyValuePair<TKey, TValue>>();
+                }
+            }
+            return RangeByIndexReversed(Root, LowerIndex, UpperIndex);
+        }
         public IEnumerable<KeyValuePair<TKey, TValue>> RangeByIndex(Optional<int> LowerIndex, Optional<int> UpperIndex)
         {
             if (LowerIndex.OnHasValue && UpperIndex.OnHasValue)
@@ -222,7 +244,63 @@ namespace Krustallos
                 }
             }
         }
+        private IEnumerable<KeyValuePair<TKey, TValue>> RangeReversed(Node n, Optional<TKey> Lower, Optional<TKey> Upper)
+        {
+            if (n == null) { yield break; }
 
+            var nAgainstLower = Lower.OnNotHasValue ? 1 : Compare(n.Key, Lower.Value);
+            var nAgainstUpper = Upper.OnNotHasValue ? -1 : Compare(n.Key, Upper.Value);
+
+            if (nAgainstUpper < 0)
+            {
+                foreach (var v in RangeReversed(n.Right, Lower, Upper))
+                {
+                    yield return v;
+                }
+            }
+
+            if ((nAgainstLower >= 0) && (nAgainstUpper <= 0))
+            {
+                yield return new KeyValuePair<TKey, TValue>(n.Key, n.Value);
+            }
+
+            if (nAgainstLower > 0)
+            {
+                foreach (var v in RangeReversed(n.Left, Lower, Upper))
+                {
+                    yield return v;
+                }
+            }
+        }
+        private IEnumerable<KeyValuePair<TKey, TValue>> RangeByIndexReversed(Node n, Optional<int> LowerIndex, Optional<int> UpperIndex)
+        {
+            if (n == null) { yield break; }
+
+            var Index = GetCount(n.Left);
+            var nAgainstLower = LowerIndex.OnNotHasValue ? 1 : Index.CompareTo(LowerIndex.Value);
+            var nAgainstUpper = UpperIndex.OnNotHasValue ? -1 : Index.CompareTo(UpperIndex.Value);
+
+            if (nAgainstUpper < 0)
+            {
+                foreach (var v in RangeByIndexReversed(n.Right, LowerIndex.OnNotHasValue ? LowerIndex : (LowerIndex.Value - Index - 1), UpperIndex.OnNotHasValue ? UpperIndex : (UpperIndex.Value - Index - 1)))
+                {
+                    yield return v;
+                }
+            }
+
+            if ((nAgainstLower >= 0) && (nAgainstUpper <= 0))
+            {
+                yield return new KeyValuePair<TKey, TValue>(n.Key, n.Value);
+            }
+
+            if (nAgainstLower > 0)
+            {
+                foreach (var v in RangeByIndexReversed(n.Left, LowerIndex, UpperIndex))
+                {
+                    yield return v;
+                }
+            }
+        }
         public ImmutableSortedDictionary<TKey, TValue> Add(TKey Key, TValue Value)
         {
             return new ImmutableSortedDictionary<TKey, TValue>(this.Compare) { Root = Add(Root, Key, Value) };
