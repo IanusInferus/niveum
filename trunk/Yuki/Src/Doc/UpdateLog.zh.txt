@@ -1,6 +1,8 @@
 ﻿2014.10.23
 Yuki.Relation:
 完成C# Krustallos数据库代码生成。
+Examples:
+修改C# Krustallos数据库示例，增加测试用例。
 
 2014.10.21
 Yuki.Relation:
