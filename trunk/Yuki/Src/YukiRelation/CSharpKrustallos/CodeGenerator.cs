@@ -368,7 +368,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).ToArray();
                     foreach (var k in Keys)
                     {
-                        var Index = String.Join(", ", k.Columns.Select(c => @"""{0}""".Formats(c.IsDescending ? c.Name + "-" : c.Name)));
+                        var Index = String.Join(", ", (new String[] { e.Name }).Concat(k.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
                         var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
                         UpdateStatements.AddRange(GetTemplate("InsertUpdateUpsert_UpdateStatement").Substitute("Index", Index).Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("Key", Key));
@@ -407,7 +407,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).ToArray();
                     foreach (var k in Keys)
                     {
-                        var Index = String.Join(", ", k.Columns.Select(c => @"""{0}""".Formats(c.IsDescending ? c.Name + "-" : c.Name)));
+                        var Index = String.Join(", ", (new String[] { e.Name }).Concat(k.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
                         var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         if (q.Numeral.OnOptional || q.Numeral.OnOne)
                         {
