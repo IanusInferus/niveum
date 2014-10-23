@@ -357,6 +357,17 @@ namespace Krustallos
         {
             return new ImmutableSortedDictionary<TKey, TValue>(this.Compare) { Root = SetItem(Root, Key, Value) };
         }
+        public ImmutableSortedDictionary<TKey, TValue> AddIfNotExist(TKey Key, TValue Value)
+        {
+            if (ContainsKey(Key))
+            {
+                return this;
+            }
+            else
+            {
+                return Add(Key, Value);
+            }
+        }
         public ImmutableSortedDictionary<TKey, TValue> AddOrSetItem(TKey Key, TValue Value)
         {
             if (ContainsKey(Key))
@@ -366,17 +377,6 @@ namespace Krustallos
             else
             {
                 return Add(Key, Value);
-            }
-        }
-        public ImmutableSortedDictionary<TKey, TValue> RemoveIfExist(TKey Key)
-        {
-            if (ContainsKey(Key))
-            {
-                return Remove(Key);
-            }
-            else
-            {
-                return this;
             }
         }
         public ImmutableSortedDictionary<TKey, TValue> SetItemIfExist(TKey Key, TValue Value)
@@ -399,6 +399,37 @@ namespace Krustallos
             else
             {
                 return ValueFactory();
+            }
+        }
+        public ImmutableSortedDictionary<TKey, TValue> RemoveIfExist(TKey Key)
+        {
+            if (ContainsKey(Key))
+            {
+                return Remove(Key);
+            }
+            else
+            {
+                return this;
+            }
+        }
+        public ImmutableSortedDictionary<TKey, TValue> RemoveRange(IEnumerable<TKey> Range)
+        {
+            var d = this;
+            foreach (var k in Range)
+            {
+                d = d.Remove(k);
+            }
+            return d;
+        }
+        public ImmutableSortedDictionary<TKey, TValue> RemoveAll()
+        {
+            if (Count == 0)
+            {
+                return this;
+            }
+            else
+            {
+                return new ImmutableSortedDictionary<TKey, TValue>(this.Compare);
             }
         }
 

@@ -1,4 +1,8 @@
-﻿2014.10.21
+﻿2014.10.23
+Yuki.Relation:
+完成C# Krustallos数据库代码生成。
+
+2014.10.21
 Yuki.Relation:
 修正C#计时包装代码生成中，生成的Select Range代码编译错误的问题。
 精简C#内存数据库代码生成代码。
