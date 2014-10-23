@@ -133,13 +133,13 @@ namespace Krustallos
             return WriterVersion.Value;
         }
 
-        public IEnumerable<TRet> CheckReaderVersioned<T, TRet>(VersionedStore<T> Store, Func<T, IEnumerable<TRet>> Selector)
+        public TRet CheckReaderVersioned<T, TRet>(VersionedStore<T> Store, Func<T, TRet> Selector)
         {
             var ReaderVersion = GetReaderVersion();
             var Content = Store.GetVersionContent(ReaderVersion);
             return Selector(Content);
         }
-        public IEnumerable<TRet> CheckCurrentVersioned<T, TRet>(VersionedStore<T> Store, Func<T, IEnumerable<TRet>> Selector)
+        public TRet CheckCurrentVersioned<T, TRet>(VersionedStore<T> Store, Func<T, TRet> Selector)
         {
             var Content = Store.GetLastVersionContent();
             return Selector(Content);
