@@ -54,6 +54,9 @@
     <Compile Include="..\..\..\..\Src\Krustallos\Instance.cs">
       <Link>Krustallos\Instance.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\Key.cs">
+      <Link>Krustallos\Key.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\..\Src\Krustallos\Transaction.cs">
       <Link>Krustallos\Transaction.cs</Link>
     </Compile>
