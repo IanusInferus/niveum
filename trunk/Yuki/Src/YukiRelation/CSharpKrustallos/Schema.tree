@@ -75,10 +75,10 @@ ObjectSchemaTemplate
                     }
         Template
             Name Data_Index
-            //Parameters: ${IndexName}, ${IndexType}
+            //Parameters: ${IndexName}, ${IndexType}, ${KeyComparer}
             Value
                 $String
-                    public VersionedStore<[[${IndexType}]]> [[${IndexName}]] = new VersionedStore<[[${IndexType}]]>(() => new [[${IndexType}]]());
+                    public VersionedStore<[[${IndexType}]]> [[${IndexName}]] = new VersionedStore<[[${IndexType}]]>(() => new [[${IndexType}]](${KeyComparer}));
         Template
             Name DataAccessBase
             //Parameters:
@@ -241,13 +241,96 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${LockingStatement}
-                    return Transaction.[[${Function}]](this.Data.[[${IndexName}]], _d_ => _d_${Filters}).Count();
+                    return Transaction.[[${Function}]](this.Data.[[${IndexName}]], _d_ => _d_${Filters});
         Template
             Name Lock_LockingStatement
             //Parameters: ${EntityNameAndParameterAndValues}
             Value
                 $String
                     if (TransactionLock != null) { TransactionLock.Enter(new Object[] { ${EntityNameAndParameterAndValues} }); }
+        Template
+            Name InsertUpdateUpsert_OptionalOne
+            //Parameters: ${UpdateStatements}
+            Value
+                $String
+                    var _v_ = Clone(v);
+                    ${UpdateStatements}
+        Template
+            Name InsertUpdateUpsert_Many
+            //Parameters: ${UpdateStatements}
+            Value
+                $String
+                    foreach (var v in l)
+                    {
+                        var _v_ = Clone(v);
+                        ${UpdateStatements}
+                    }
+        Template
+            Name InsertUpdateUpsert_UpdateStatement
+            //Parameters: ${Index}, ${IndexName}, ${Function}, ${Key}
+            Value
+                $String
+                    Transaction.UpdateVersioned(new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](new Key(${Key}), _v_));
+        Template
+            Name Delete_Optional
+            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${UpdateStatements}
+            Value
+                $String
+                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    if (_l_.Count == 0) { return; }
+                    if (_l_.Count > 1)
+                    {
+                        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                    }
+                    var v = _l_.Single();
+                    ${UpdateStatements}
+        Template
+            Name Delete_One
+            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${UpdateStatements}
+            Value
+                $String
+                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    if (_l_.Count == 0)
+                    {
+                        throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                    }
+                    if (_l_.Count > 1)
+                    {
+                        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                    }
+                    var v = _l_.Single();
+                    ${UpdateStatements}
+        Template
+            Name Delete_ManyRange
+            //Parameters: ${IndexName}, ${Filters}, ${UpdateStatements}
+            Value
+                $String
+                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    ${UpdateStatements}
+        Template
+            Name Delete_All
+            //Parameters: ${UpdateStatements}
+            Value
+                $String
+                    ${UpdateStatements}
+        Template
+            Name Delete_UpdateStatement_OptionalOne
+            //Parameters: ${Index}, ${IndexName}, ${Function}, ${Key}
+            Value
+                $String
+                    Transaction.UpdateVersioned(new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](new Key(${Key})));
+        Template
+            Name Delete_UpdateStatement_ManyRange
+            //Parameters: ${Index}, ${IndexName}, ${Function}, ${Key}
+            Value
+                $String
+                    Transaction.UpdateVersioned(new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](_l_.Select(v => new Key(${Key}))));
+        Template
+            Name Delete_UpdateStatement_All
+            //Parameters: ${Index}, ${IndexName}, ${Function}
+            Value
+                $String
+                    Transaction.UpdateVersioned(new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]]());
         Template
             Name DataAccessPool
             //Parameters: ${Hash}

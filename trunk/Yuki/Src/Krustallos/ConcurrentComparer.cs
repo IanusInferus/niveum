@@ -17,6 +17,11 @@ namespace Krustallos
                 return (new DefaultComparer<T>()).Compare;
             }
         }
+        public static Func<Object, Object, int> AsObjectComparer<T>(Func<T, T, int> Compare)
+        {
+            return (x, y) => Compare((T)(x), (T)(y));
+        }
+
         private class DefaultComparer<T> : IComparer<T>
         {
             private Func<T, T, int> Inner;
@@ -84,6 +89,9 @@ namespace Krustallos
             }
             public int Compare(IEnumerable<T> x, IEnumerable<T> y)
             {
+                if ((x == null) && (y == null)) { return 0; }
+                if (x == null) { return -1; }
+                if (y == null) { return 1; }
                 var xi = x.GetEnumerator();
                 var yi = y.GetEnumerator();
                 while (true)
