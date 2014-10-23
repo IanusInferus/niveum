@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos代码生成器
-//  Version:     2014.10.21.
+//  Version:     2014.10.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
