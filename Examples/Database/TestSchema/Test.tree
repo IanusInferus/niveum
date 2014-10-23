@@ -4,7 +4,7 @@
       File:        Test.tree
       Location:    Yuki.Examples <Tree>
       Description: 测试
-      Version:     2014.10.21.
+      Version:     2014.10.23.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -27,11 +27,41 @@
     From TestRecord Upsert One
     From TestRecord Select Optional By SessionIndex
     From TestLockRecord Upsert One
+    From TestLockRecord Upsert Many
     From TestLockRecord Delete Optional By Id
     From TestLockRecord Select Optional By Id
     From TestLockRecord Lock Optional By Id
     From TestDuplicatedKeyNameRecord Select Optional By A
     From TestDuplicatedKeyNameRecord Select Optional By (A B)
+    From TestDuplicatedKeyNameRecord Select One By A
+    From TestDuplicatedKeyNameRecord Select One By (A B)
+    From TestDuplicatedKeyNameRecord Select Many By A
+    From TestDuplicatedKeyNameRecord Select Many By (A B)
+    From TestDuplicatedKeyNameRecord Select All
     From TestDuplicatedKeyNameRecord Select Range By A OrderBy (A B-)
+    From TestDuplicatedKeyNameRecord Select Range OrderBy (A- B)
+    From TestDuplicatedKeyNameRecord Select Count By A
+    From TestDuplicatedKeyNameRecord Select Count By (A B)
+    From TestDuplicatedKeyNameRecord Lock Optional By A
+    From TestDuplicatedKeyNameRecord Lock Optional By (A B)
+    From TestDuplicatedKeyNameRecord Lock One By A
+    From TestDuplicatedKeyNameRecord Lock One By (A B)
+    From TestDuplicatedKeyNameRecord Lock Many By A
+    From TestDuplicatedKeyNameRecord Lock Many By (A B)
+    From TestDuplicatedKeyNameRecord Lock All
+    From TestDuplicatedKeyNameRecord Lock Range By A OrderBy (A B-)
+    From TestDuplicatedKeyNameRecord Lock Range OrderBy (A- B)
+    From TestDuplicatedKeyNameRecord Lock Count By A
+    From TestDuplicatedKeyNameRecord Lock Count By (A B)
     From TestDuplicatedKeyNameRecord Insert One
+    From TestDuplicatedKeyNameRecord Insert Many
     From TestDuplicatedKeyNameRecord Update Optional
+    From TestDuplicatedKeyNameRecord Update One
+    From TestDuplicatedKeyNameRecord Update Many
+    From TestDuplicatedKeyNameRecord Delete Optional By A
+    From TestDuplicatedKeyNameRecord Delete Optional By (A B)
+    From TestDuplicatedKeyNameRecord Delete One By A
+    From TestDuplicatedKeyNameRecord Delete One By (A B)
+    From TestDuplicatedKeyNameRecord Delete Many By A
+    From TestDuplicatedKeyNameRecord Delete Many By (A B)
+    From TestDuplicatedKeyNameRecord Delete All
