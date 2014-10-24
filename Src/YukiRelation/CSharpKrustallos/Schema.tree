@@ -75,10 +75,10 @@ ObjectSchemaTemplate
                     }
         Template
             Name Data_Index
-            //Parameters: ${IndexName}, ${IndexType}, ${KeyComparer}
+            //Parameters: ${Index}, ${IndexName}, ${IndexType}, ${KeyComparer}
             Value
                 $String
-                    public VersionedStore<[[${IndexType}]]> [[${IndexName}]] = new VersionedStore<[[${IndexType}]]>(() => new [[${IndexType}]](${KeyComparer}));
+                    public VersionedStore<[[${IndexType}]]> [[${IndexName}]] = new VersionedStore<[[${IndexType}]]>(new String[] { ${Index} }, () => new [[${IndexType}]](${KeyComparer}));
         Template
             Name DataAccessBase
             //Parameters:
@@ -201,11 +201,11 @@ ObjectSchemaTemplate
                     }
         Template
             Name SelectLock_Optional
-            //Parameters: ${Function}, ${Index}, ${IndexName}, ${LockingStatement}, ${Parameters}, ${Filters}
+            //Parameters: ${Function}, ${IndexName}, ${LockingStatement}, ${Parameters}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    var _l_ = Transaction.[[${Function}]](new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+                    var _l_ = Transaction.[[${Function}]](this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
                     if (_l_.Count == 0) { return null; }
                     if (_l_.Count > 1)
                     {
@@ -214,11 +214,11 @@ ObjectSchemaTemplate
                     return _l_.Single();
         Template
             Name SelectLock_One
-            //Parameters: ${Function}, ${Index}, ${IndexName}, ${LockingStatement}, ${Parameters}, ${Filters}
+            //Parameters: ${Function}, ${IndexName}, ${LockingStatement}, ${Parameters}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    var _l_ = Transaction.[[${Function}]](new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+                    var _l_ = Transaction.[[${Function}]](this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
                     if (_l_.Count == 0)
                     {
                         throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -230,18 +230,18 @@ ObjectSchemaTemplate
                     return _l_.Single();
         Template
             Name SelectLock_ManyAllRange
-            //Parameters: ${Function}, ${Index}, ${IndexName}, ${LockingStatement}, ${Filters}
+            //Parameters: ${Function}, ${IndexName}, ${LockingStatement}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    return Transaction.[[${Function}]](new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+                    return Transaction.[[${Function}]](this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
         Template
             Name SelectLock_Count
-            //Parameters: ${Function}, ${Index}, ${IndexName}, ${LockingStatement}, ${Filters}
+            //Parameters: ${Function}, ${IndexName}, ${LockingStatement}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    return Transaction.[[${Function}]](new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_${Filters});
+                    return Transaction.[[${Function}]](this.Data.[[${IndexName}]], _d_ => _d_${Filters});
         Template
             Name Lock_LockingStatement
             //Parameters: ${EntityNameAndParameterAndValues}
@@ -267,16 +267,16 @@ ObjectSchemaTemplate
                     }
         Template
             Name InsertUpdateUpsert_UpdateStatement
-            //Parameters: ${Index}, ${IndexName}, ${Function}, ${Key}
+            //Parameters: ${IndexName}, ${Function}, ${Key}
             Value
                 $String
-                    Transaction.UpdateVersioned(new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](new Key(${Key}), _v_));
+                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](new Key(${Key}), _v_));
         Template
             Name Delete_Optional
-            //Parameters: ${Index}, ${IndexName}, ${Parameters}, ${Filters}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckCurrentVersioned(new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0) { return; }
                     if (_l_.Count > 1)
                     {
@@ -286,10 +286,10 @@ ObjectSchemaTemplate
                     ${UpdateStatements}
         Template
             Name Delete_One
-            //Parameters: ${Index}, ${IndexName}, ${Parameters}, ${Filters}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckCurrentVersioned(new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0)
                     {
                         throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -302,10 +302,10 @@ ObjectSchemaTemplate
                     ${UpdateStatements}
         Template
             Name Delete_ManyRange
-            //Parameters: ${Index}, ${IndexName}, ${Filters}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${Filters}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckCurrentVersioned(new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
                     ${UpdateStatements}
         Template
             Name Delete_All
@@ -315,22 +315,22 @@ ObjectSchemaTemplate
                     ${UpdateStatements}
         Template
             Name Delete_UpdateStatement_OptionalOne
-            //Parameters: ${Index}, ${IndexName}, ${Function}, ${Key}
+            //Parameters: ${IndexName}, ${Function}, ${Key}
             Value
                 $String
-                    Transaction.UpdateVersioned(new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](new Key(${Key})));
+                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](new Key(${Key})));
         Template
             Name Delete_UpdateStatement_ManyRange
-            //Parameters: ${Index}, ${IndexName}, ${Function}, ${Key}
+            //Parameters: ${IndexName}, ${Function}, ${Key}
             Value
                 $String
-                    Transaction.UpdateVersioned(new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](_l_.Select(v => new Key(${Key}))));
+                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](_l_.Select(v => new Key(${Key}))));
         Template
             Name Delete_UpdateStatement_All
-            //Parameters: ${Index}, ${IndexName}, ${Function}
+            //Parameters: ${IndexName}, ${Function}
             Value
                 $String
-                    Transaction.UpdateVersioned(new String[] { ${Index} }, this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]]());
+                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]]());
         Template
             Name DataAccessPool
             //Parameters: ${Hash}

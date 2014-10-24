@@ -13,11 +13,13 @@ namespace Krustallos
     }
     public class VersionedStore<T> : IVersionedStore
     {
-        private ImmutableSortedDictionary<Version, T> Versions = new ImmutableSortedDictionary<Version, T>((Left, Right) => -Left.CompareTo(Right));
+        public String[] Path { get; private set; }
         private Func<T> Allocator;
+        private ImmutableSortedDictionary<Version, T> Versions = new ImmutableSortedDictionary<Version, T>((Left, Right) => -Left.CompareTo(Right));
 
-        public VersionedStore(Func<T> Allocator)
+        public VersionedStore(String[] Path, Func<T> Allocator)
         {
+            this.Path = Path;
             this.Allocator = Allocator;
         }
 
