@@ -37,6 +37,7 @@ using Yuki.RelationSchema.CSharpSqlServer;
 using Yuki.RelationSchema.CSharpPostgreSql;
 using Yuki.RelationSchema.CSharpMySql;
 using Yuki.RelationSchema.CSharpKrustallos;
+using Yuki.RelationSchema.CSharpKrustallosMySql;
 using Yuki.RelationSchema.CSharpCounted;
 using Yuki.RelationSchema.CppPlain;
 using Yuki.RelationSchema.CppMemory;
@@ -350,6 +351,19 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "t2cskrsmysql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 5)
+                    {
+                        RelationSchemaToCSharpKrustallosMySqlCode(args[0], args[1], args[2], args[3], args[4]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "t2cscw")
                 {
                     var args = opt.Arguments;
@@ -453,7 +467,9 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"生成C# MySQL类型");
             Console.WriteLine(@"/t2csmysql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# Krustallos类型");
-            Console.WriteLine(@"/t2cskrs:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
+            Console.WriteLine(@"/t2cskrs:<CsCodePath>,<EntityNamespaceName>,<KrustallosContextNamespaceName>,<MySqlContextNamespaceName>,<ContextNamespaceName>");
+            Console.WriteLine(@"生成C# Krustallos-MySQL类型");
+            Console.WriteLine(@"/t2cskrsmysql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# 计时包装类型");
             Console.WriteLine(@"/t2cscw:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C++数据库简单类型");
@@ -468,6 +484,8 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"ContextNamespaceName 上下文命名空间名称。");
             Console.WriteLine(@"ContextClassName 上下文类名称。");
             Console.WriteLine(@"WithFirefly 是否使用Firefly库。");
+            Console.WriteLine(@"KrustallosContextNamespaceName Krustallos上下文命名空间名称。");
+            Console.WriteLine(@"MySqlContextNamespaceName MySQL上下文命名空间名称。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
             Console.WriteLine(@"RelationSchemaManipulator /loadtype:DatabaseSchema /t2csd:Src\Generated\Database.cs,Example,Example.Database,Example.Database.Context,DbRoot");
@@ -702,6 +720,23 @@ namespace Yuki.RelationSchemaManipulator
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCSharpKrustallos(EntityNamespaceName, ContextNamespaceName);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void RelationSchemaToCSharpKrustallosMySqlCode(String CsCodePath, String EntityNamespaceName, String KrustallosContextNamespaceName, String MySqlContextNamespaceName, String ContextNamespaceName)
+        {
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToCSharpKrustallosMySql(EntityNamespaceName, KrustallosContextNamespaceName, MySqlContextNamespaceName, ContextNamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
