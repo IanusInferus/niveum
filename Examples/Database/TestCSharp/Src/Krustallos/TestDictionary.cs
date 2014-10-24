@@ -264,6 +264,35 @@ namespace Krustallos
             Debug.Assert(l2.Count == 0);
         }
 
+        public static void TestHeight()
+        {
+            Func<int, double> HeightLimit = ((Func<Func<int, double>>)(() =>
+            {
+                // ln(sqrt(5) * (n + 2)) / ln((1 + sqrt(5)) / 2) - 2
+                var a = Math.Sqrt(5);
+                var b = 1.0 / Math.Log((1 + Math.Sqrt(5)) * 0.5);
+                return c =>
+                {
+                    return Math.Log(a * (c + 2)) * b - 2;
+                };
+            }))();
+
+            var d = new ImmutableSortedDictionary<int, Unit>();
+            var n = 10000;
+            var r = new Random();
+            for (int k = 0; k < n; k += 1)
+            {
+                d = d.AddOrSetItem(r.Next(0, n), default(Unit));
+                Debug.Assert(d.Height < HeightLimit(d.Count));
+            }
+            var Count = d.Count;
+            for (int k = 0; k < Count; k += 1)
+            {
+                d = d.Remove(d.TryGetPairByIndex(r.Next(0, d.Count)).Value.Key);
+                Debug.Assert(d.Height < HeightLimit(d.Count));
+            }
+        }
+
         public static void TestParallelRandomAdd1()
         {
             var swSerial = new Stopwatch();
@@ -496,6 +525,7 @@ namespace Krustallos
         {
             TestSequentialAdd();
             TestRandomAdd();
+            TestHeight();
             TestParallelRandomAdd1();
             TestParallelRandomAdd2();
         }
