@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2014.10.21.
+//  Version:     2014.10.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================

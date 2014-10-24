@@ -17,6 +17,8 @@ namespace Krustallos
         private class UpdateStoreInfo
         {
             public IVersionedStore Store;
+            public Object CurrentStateFromReaderVersion;
+            public Object CurrentStateFromCurrentVersion;
             public Action Revert;
         }
 
@@ -133,30 +135,83 @@ namespace Krustallos
             return WriterVersion.Value;
         }
 
-        public TRet CheckReaderVersioned<T, TRet>(VersionedStore<T> Store, Func<T, TRet> Selector)
+        public TRet CheckReaderVersioned<T, TRet>(String[] StorePath, VersionedStore<T> Store, Func<T, TRet> Selector)
         {
-            var ReaderVersion = GetReaderVersion();
-            var Content = Store.GetVersionContent(ReaderVersion);
-            return Selector(Content);
+            if (!UpdateStores.ContainsKey(StorePath))
+            {
+                var ReaderVersion = GetReaderVersion();
+                var Content = Store.GetVersionContent(ReaderVersion);
+                return Selector(Content);
+            }
+            else
+            {
+                var usi = UpdateStores[StorePath];
+                return Selector((T)(usi.CurrentStateFromReaderVersion));
+            }
         }
-        public TRet CheckCurrentVersioned<T, TRet>(VersionedStore<T> Store, Func<T, TRet> Selector)
+        public TRet CheckCurrentVersioned<T, TRet>(String[] StorePath, VersionedStore<T> Store, Func<T, TRet> Selector)
         {
-            var Content = Store.GetLastVersionContent();
-            return Selector(Content);
+            if (!UpdateStores.ContainsKey(StorePath))
+            {
+                var Content = Store.GetLastVersionContent();
+                return Selector(Content);
+            }
+            else
+            {
+                var usi = UpdateStores[StorePath];
+                return Selector((T)(usi.CurrentStateFromCurrentVersion));
+            }
         }
         public void UpdateVersioned<T>(String[] StorePath, VersionedStore<T> Store, Func<T, T> Transformer)
         {
             if (!UpdateStores.ContainsKey(StorePath))
             {
+                var ReaderVersion = GetReaderVersion();
+                var ReaderVersionContent = Store.GetVersionContent(ReaderVersion);
+                var CurrentVersionContent = Store.GetLastVersionContent();
+                Object CurrentStateFromReaderVersion;
+                Object CurrentStateFromCurrentVersion;
+                if ((Object)(ReaderVersionContent) == (Object)(CurrentVersionContent))
+                {
+                    CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
+                    CurrentStateFromCurrentVersion = CurrentStateFromReaderVersion;
+                }
+                else
+                {
+                    CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
+                    CurrentStateFromCurrentVersion = Transformer(CurrentVersionContent);
+                }
                 UpdateStores.Add(StorePath, new UpdateStoreInfo
                 {
                     Store = Store,
+                    CurrentStateFromReaderVersion = CurrentStateFromReaderVersion,
+                    CurrentStateFromCurrentVersion = CurrentStateFromCurrentVersion,
                     Revert = () =>
                     {
                         var WriterVersion = GetWriterVersion();
                         Store.RemoveVersion(WriterVersion);
                     }
                 });
+            }
+            else
+            {
+                var usi = UpdateStores[StorePath];
+                var ReaderVersionContent = (T)(usi.CurrentStateFromReaderVersion);
+                var CurrentVersionContent = (T)(usi.CurrentStateFromCurrentVersion);
+                Object CurrentStateFromReaderVersion;
+                Object CurrentStateFromCurrentVersion;
+                if ((Object)(ReaderVersionContent) == (Object)(CurrentVersionContent))
+                {
+                    CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
+                    CurrentStateFromCurrentVersion = CurrentStateFromReaderVersion;
+                }
+                else
+                {
+                    CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
+                    CurrentStateFromCurrentVersion = Transformer(CurrentVersionContent);
+                }
+                usi.CurrentStateFromReaderVersion = CurrentStateFromReaderVersion;
+                usi.CurrentStateFromCurrentVersion = CurrentStateFromCurrentVersion;
             }
             Updates.Add(() =>
             {
