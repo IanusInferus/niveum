@@ -2,8 +2,10 @@
 Yuki.Relation:
 修改C# Krustallos数据库代码生成，增加对读取自己修改的支持。
 增加C# Krustallos-MySQL数据库代码生成。
+修正Krustallos数据库不变平衡树的实现中的旋转错误问题。
 Examples:
-修改C# Krustallos-MySQL数据库示例。
+增加C# Krustallos-MySQL数据库示例。
+修改C# Krustallos数据库示例，增加测试用例。
 
 2014.10.23
 Yuki.Relation:

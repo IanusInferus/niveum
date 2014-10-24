@@ -58,6 +58,13 @@ namespace Krustallos
                 return GetCount(Root);
             }
         }
+        public int Height
+        {
+            get
+            {
+                return GetHeight(Root);
+            }
+        }
         public bool ContainsKey(TKey Key)
         {
             foreach (var v in Range(Key, Key))
@@ -197,6 +204,11 @@ namespace Krustallos
         {
             if (n == null) { return 0; }
             return n.Height;
+        }
+        private static int GetBalanceFactor(Node n)
+        {
+            if (n == null) { return 0; }
+            return GetHeight(n.Left) - GetHeight(n.Right);
         }
         private IEnumerable<KeyValuePair<TKey, TValue>> Range(Node n, Optional<TKey> Lower, Optional<TKey> Upper)
         {
@@ -508,33 +520,40 @@ namespace Krustallos
         private Node Rebalance(Node n)
         {
             var BalanceFactor = GetBalanceFactor(n);
+            //if ((BalanceFactor < -2) || (BalanceFactor > 2)) { throw new InvalidOperationException(); }
             if (BalanceFactor == 2)
             {
                 var l = n.Left;
-                if (GetBalanceFactor(n.Left) == 1)
+                var BalanceFactorLeft = GetBalanceFactor(n.Left);
+                //if ((BalanceFactorLeft <= -2) || (BalanceFactorLeft >= 2)) { throw new InvalidOperationException(); }
+                if (BalanceFactorLeft == -1)
                 {
-                    // LL Rotate
-                    return new Node(l.Key, l.Value, l.Left, new Node(n.Key, n.Value, l.Right, n.Right));
+                    // LR Case
+                    var lr = l.Right;
+                    return new Node(lr.Key, lr.Value, new Node(l.Key, l.Value, l.Left, lr.Left), new Node(n.Key, n.Value, lr.Right, n.Right));
                 }
                 else
                 {
-                    // LR Rotate
-                    var lr = l.Right;
-                    return new Node(lr.Key, lr.Value, new Node(l.Key, l.Value, l.Left, lr.Left), new Node(n.Key, n.Value, lr.Right, n.Right));
+                    // (BalanceFactorLeft == 1) || (BalanceFactorLeft == 0)
+                    // LL Case
+                    return new Node(l.Key, l.Value, l.Left, new Node(n.Key, n.Value, l.Right, n.Right));
                 }
             }
             else if (BalanceFactor == -2)
             {
                 var r = n.Right;
-                if (GetBalanceFactor(n.Right) == 1)
+                var BalanceFactorRight = GetBalanceFactor(n.Right);
+                //if ((BalanceFactorRight <= -2) || (BalanceFactorRight >= 2)) { throw new InvalidOperationException(); }
+                if (BalanceFactorRight == 1)
                 {
-                    // RL Rotate
+                    // RL Case
                     var rl = r.Left;
                     return new Node(rl.Key, rl.Value, new Node(n.Key, n.Value, n.Left, rl.Left), new Node(r.Key, r.Value, rl.Right, r.Right));
                 }
                 else
                 {
-                    // RR Rotate
+                    // (BalanceFactorRight == -1) || (BalanceFactorRight == 0)
+                    // RR Case
                     return new Node(r.Key, r.Value, new Node(n.Key, n.Value, n.Left, r.Left), r.Right);
                 }
             }
@@ -542,11 +561,6 @@ namespace Krustallos
             {
                 return n;
             }
-        }
-        private int GetBalanceFactor(Node n)
-        {
-            if (n == null) { return 0; }
-            return GetHeight(n.Left) - GetHeight(n.Right);
         }
     }
 }
