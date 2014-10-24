@@ -151,10 +151,11 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).ToArray();
                     foreach (var k in Keys)
                     {
+                        var Index = String.Join(", ", (new String[] { e.Name }).Concat(k.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
                         var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var IndexType = "ImmutableSortedDictionary<Key, " + e.Name + ">";
                         var KeyComparer = "new KeyComparer({0})".Formats(String.Join(", ", k.Columns.Select(c => "ConcurrentComparer.AsObjectComparer(ConcurrentComparer.CreateDefault<{0}>({1}))".Formats(GetTypeString(d[c.Name].Type), c.IsDescending ? "true" : "false"))));
-                        l.AddRange(GetTemplate("Data_Index").Substitute("IndexName", IndexName).Substitute("IndexType", IndexType).Substitute("KeyComparer", KeyComparer));
+                        l.AddRange(GetTemplate("Data_Index").Substitute("Index", Index).Substitute("IndexName", IndexName).Substitute("IndexType", IndexType).Substitute("KeyComparer", KeyComparer));
                     }
                 }
                 return l.ToArray();
@@ -315,9 +316,8 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     {
                         Filters = Filters + ".Skip(_Skip_).Take(_Take_)";
                     }
-                    var Index = String.Join(", ", (new String[] { e.Name }).Concat(ByKey.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
                     var IndexName = e.Name + "By" + String.Join("And", ByKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
-                    Content = Template.Substitute("Function", q.Verb.OnLock ? "CheckCurrentVersioned" : "CheckReaderVersioned").Substitute("Index", Index).Substitute("IndexName", IndexName).Substitute("LockingStatement", LockingStatement).Substitute("Parameters", Parameters).Substitute("Filters", Filters);
+                    Content = Template.Substitute("Function", q.Verb.OnLock ? "CheckCurrentVersioned" : "CheckReaderVersioned").Substitute("IndexName", IndexName).Substitute("LockingStatement", LockingStatement).Substitute("Parameters", Parameters).Substitute("Filters", Filters);
                 }
                 else if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert)
                 {
@@ -369,10 +369,9 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).ToArray();
                     foreach (var k in Keys)
                     {
-                        var Index = String.Join(", ", (new String[] { e.Name }).Concat(k.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
                         var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
-                        UpdateStatements.AddRange(GetTemplate("InsertUpdateUpsert_UpdateStatement").Substitute("Index", Index).Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("Key", Key));
+                        UpdateStatements.AddRange(GetTemplate("InsertUpdateUpsert_UpdateStatement").Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("Key", Key));
                     }
                     Content = Template.Substitute("UpdateStatements", UpdateStatements.ToArray());
                 }
@@ -408,21 +407,20 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).ToArray();
                     foreach (var k in Keys)
                     {
-                        var Index = String.Join(", ", (new String[] { e.Name }).Concat(k.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
                         var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         if (q.Numeral.OnOptional || q.Numeral.OnOne)
                         {
                             var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
-                            UpdateStatements.AddRange(GetTemplate("Delete_UpdateStatement_OptionalOne").Substitute("Index", Index).Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("Key", Key));
+                            UpdateStatements.AddRange(GetTemplate("Delete_UpdateStatement_OptionalOne").Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("Key", Key));
                         }
                         else if (q.Numeral.OnMany || q.Numeral.OnRange)
                         {
                             var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
-                            UpdateStatements.AddRange(GetTemplate("Delete_UpdateStatement_ManyRange").Substitute("Index", Index).Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("Key", Key));
+                            UpdateStatements.AddRange(GetTemplate("Delete_UpdateStatement_ManyRange").Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("Key", Key));
                         }
                         else if (q.Numeral.OnAll)
                         {
-                            UpdateStatements.AddRange(GetTemplate("Delete_UpdateStatement_All").Substitute("Index", Index).Substitute("IndexName", IndexName).Substitute("Function", Function));
+                            UpdateStatements.AddRange(GetTemplate("Delete_UpdateStatement_All").Substitute("IndexName", IndexName).Substitute("Function", Function));
                         }
                         else
                         {
@@ -433,9 +431,8 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         var Bys = GetBy(q, ByKey.Columns.Count);
                         var OrderBys = GetOrderBy(q);
                         var Filters = Bys + OrderBys;
-                        var Index = String.Join(", ", (new String[] { e.Name }).Concat(ByKey.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
                         var IndexName = e.Name + "By" + String.Join("And", ByKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
-                        Content = Template.Substitute("Index", Index).Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements.ToArray());
+                        Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements.ToArray());
                     }
                 }
                 else

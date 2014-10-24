@@ -135,8 +135,9 @@ namespace Krustallos
             return WriterVersion.Value;
         }
 
-        public TRet CheckReaderVersioned<T, TRet>(String[] StorePath, VersionedStore<T> Store, Func<T, TRet> Selector)
+        public TRet CheckReaderVersioned<T, TRet>(VersionedStore<T> Store, Func<T, TRet> Selector)
         {
+            var StorePath = Store.Path;
             if (!UpdateStores.ContainsKey(StorePath))
             {
                 var ReaderVersion = GetReaderVersion();
@@ -149,8 +150,9 @@ namespace Krustallos
                 return Selector((T)(usi.CurrentStateFromReaderVersion));
             }
         }
-        public TRet CheckCurrentVersioned<T, TRet>(String[] StorePath, VersionedStore<T> Store, Func<T, TRet> Selector)
+        public TRet CheckCurrentVersioned<T, TRet>(VersionedStore<T> Store, Func<T, TRet> Selector)
         {
+            var StorePath = Store.Path;
             if (!UpdateStores.ContainsKey(StorePath))
             {
                 var Content = Store.GetLastVersionContent();
@@ -162,8 +164,9 @@ namespace Krustallos
                 return Selector((T)(usi.CurrentStateFromCurrentVersion));
             }
         }
-        public void UpdateVersioned<T>(String[] StorePath, VersionedStore<T> Store, Func<T, T> Transformer)
+        public void UpdateVersioned<T>(VersionedStore<T> Store, Func<T, T> Transformer)
         {
+            var StorePath = Store.Path;
             if (!UpdateStores.ContainsKey(StorePath))
             {
                 var ReaderVersion = GetReaderVersion();
