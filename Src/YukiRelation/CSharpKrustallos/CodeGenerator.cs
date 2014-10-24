@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos代码生成器
-//  Version:     2014.10.23.
+//  Version:     2014.10.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -315,8 +315,9 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     {
                         Filters = Filters + ".Skip(_Skip_).Take(_Take_)";
                     }
+                    var Index = String.Join(", ", (new String[] { e.Name }).Concat(ByKey.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
                     var IndexName = e.Name + "By" + String.Join("And", ByKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
-                    Content = Template.Substitute("Function", q.Verb.OnLock ? "CheckCurrentVersioned" : "CheckReaderVersioned").Substitute("IndexName", IndexName).Substitute("LockingStatement", LockingStatement).Substitute("Parameters", Parameters).Substitute("Filters", Filters);
+                    Content = Template.Substitute("Function", q.Verb.OnLock ? "CheckCurrentVersioned" : "CheckReaderVersioned").Substitute("Index", Index).Substitute("IndexName", IndexName).Substitute("LockingStatement", LockingStatement).Substitute("Parameters", Parameters).Substitute("Filters", Filters);
                 }
                 else if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert)
                 {
@@ -432,8 +433,9 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         var Bys = GetBy(q, ByKey.Columns.Count);
                         var OrderBys = GetOrderBy(q);
                         var Filters = Bys + OrderBys;
+                        var Index = String.Join(", ", (new String[] { e.Name }).Concat(ByKey.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
                         var IndexName = e.Name + "By" + String.Join("And", ByKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
-                        Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements.ToArray());
+                        Content = Template.Substitute("Index", Index).Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements.ToArray());
                     }
                 }
                 else
