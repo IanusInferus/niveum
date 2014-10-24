@@ -77,22 +77,38 @@ ObjectSchemaTemplate
                     public partial class KrustallosMySqlDataAccess : IDataAccess
                     {
                         private KrustallosDataAccess Cache;
-                        private MySqlDataAccess Underlying;
-                        public KrustallosMySqlDataAccess(KrustallosDataAccess Cache, MySqlDataAccess Underlying)
+                        private MySqlDataAccess Underlying
+                        {
+                            get
+                            {
+                                if (UnderlyingValue != null) { return UnderlyingValue; }
+                                UnderlyingValue = UnderlyingFactory();
+                                return UnderlyingValue;
+                            }
+                        }
+                        private Func<MySqlDataAccess> UnderlyingFactory;
+                        private MySqlDataAccess UnderlyingValue;
+                        public KrustallosMySqlDataAccess(KrustallosDataAccess Cache, Func<MySqlDataAccess> UnderlyingFactory)
                         {
                             this.Cache = Cache;
-                            this.Underlying = Underlying;
+                            this.UnderlyingFactory = UnderlyingFactory;
                         }
 
                         public void Dispose()
                         {
                             Cache.Dispose();
-                            Underlying.Dispose();
+                            if (UnderlyingValue != null)
+                            {
+                                UnderlyingValue.Dispose();
+                            }
                         }
 
                         public void Complete()
                         {
-                            Underlying.Complete();
+                            if (UnderlyingValue != null)
+                            {
+                                UnderlyingValue.Complete();
+                            }
                             Cache.Complete();
                         }
                     }
@@ -197,8 +213,7 @@ ObjectSchemaTemplate
                         {
                             var ii = Instances.GetOrAdd(ConnectionString, Key => new InstanceInfo(Key, IsolationLevel));
                             var k = new KrustallosDataAccess(ii.Instance, ii.Data, IsolationLevel, TransactionLockFactory);
-                            var m = new MySqlDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null));
-                            return new KrustallosMySqlDataAccess(k, m);
+                            return new KrustallosMySqlDataAccess(k, () => new MySqlDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null)));
                         }
                     }
         Template
