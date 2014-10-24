@@ -54,6 +54,7 @@
     <Compile Include="CppMemory\CodeGenerator.cs" />
     <Compile Include="CppPlain\CodeGenerator.cs" />
     <Compile Include="CSharpCounted\CodeGenerator.cs" />
+    <Compile Include="CSharpKrustallosMySql\CodeGenerator.cs" />
     <Compile Include="CSharpKrustallos\CodeGenerator.cs" />
     <Compile Include="CSharpLinqToEntities\CodeGenerator.cs" />
     <Compile Include="CSharpMemory\CodeGenerator.cs" />
@@ -95,6 +96,7 @@
     <EmbeddedResource Include="CppMemory\Schema.tree" />
     <EmbeddedResource Include="CSharpCounted\Schema.tree" />
     <EmbeddedResource Include="CSharpKrustallos\Schema.tree" />
+    <EmbeddedResource Include="CSharpKrustallosMySql\Schema.tree" />
     <None Include="RelationSchema\RelationSchema.tree" />
     <EmbeddedResource Include="CSharpLinqToSql\Schema.tree" />
     <EmbeddedResource Include="TSql\Schema.tree" />
