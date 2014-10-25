@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos代码生成器
-//  Version:     2014.10.24.
+//  Version:     2014.10.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -146,6 +146,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 var l = new List<String>();
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
                 {
+                    if (e.Fields.Where(f => f.Attribute.OnColumn).Any(f => f.Attribute.Column.IsIdentity)) { throw new InvalidOperationException("IdentitiyNotSupported: {0}".Formats(e.Name)); }
                     var or = InnerTypeDict[e.Name].Record;
                     var d = or.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
                     var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).ToArray();

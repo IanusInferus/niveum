@@ -1,4 +1,12 @@
-﻿2014.10.24
+﻿2014.10.25
+Yuki.Relation:
+修改C# Krustallos数据库代码生成，增加对自增字段的禁止。
+修改MySQL数据库代码生成，去除MySQL认为是重复但实际未重复的索引(因为MySQL不支持索引中的字段指定为逆序)的生成代码。
+修改C# Memory数据库代码生成，删去无用代码。
+Krustallos:
+加快版本分配速度。
+
+2014.10.24
 Yuki.Relation:
 修改C# Krustallos数据库代码生成，增加对读取自己修改的支持。
 增加C# Krustallos-MySQL数据库代码生成。

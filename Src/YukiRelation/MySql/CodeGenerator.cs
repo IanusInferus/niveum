@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构MySQL数据库代码生成器
-//  Version:     2014.08.30.
+//  Version:     2014.10.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -135,8 +135,44 @@ namespace Yuki.RelationSchema.MySql
                 return l.ToArray();
             }
 
+            private class ByIndex
+            {
+                public List<String> Columns;
+
+                public override bool Equals(object obj)
+                {
+                    var o = obj as ByIndex;
+                    if (o == null) { return false; }
+                    if (Columns.Count != o.Columns.Count) { return false; }
+                    if (Columns.Intersect(o.Columns, StringComparer.OrdinalIgnoreCase).Count() != Columns.Count) { return false; }
+                    return true;
+                }
+
+                public override int GetHashCode()
+                {
+                    if (Columns.Count == 0) { return 0; }
+                    Func<String, int> h = StringComparer.OrdinalIgnoreCase.GetHashCode;
+                    return Columns.Select(k => h(k)).Aggregate((a, b) => a ^ b);
+                }
+            }
+
             public String[] GetTable(EntityDef r)
             {
+                var DuplicatedInMySqlViewPoint = new HashSet<Key>();
+                var NondirectionalKeys = new HashSet<ByIndex>();
+                foreach (var k in (new Key[] { r.PrimaryKey }).Concat(r.UniqueKeys).Concat(r.NonUniqueKeys))
+                {
+                    var Index = new ByIndex { Columns = k.Columns.Select(c => c.Name).ToList() };
+                    if (!NondirectionalKeys.Contains(Index))
+                    {
+                        NondirectionalKeys.Add(Index);
+                    }
+                    else
+                    {
+                        DuplicatedInMySqlViewPoint.Add(k);
+                    }
+                }
+
                 var FieldsAndKeys = new List<String[]>();
                 foreach (var f in r.Fields)
                 {
@@ -160,6 +196,7 @@ namespace Yuki.RelationSchema.MySql
                 }
                 foreach (var k in r.UniqueKeys)
                 {
+                    if (DuplicatedInMySqlViewPoint.Contains(k)) { continue; }
                     var Name = RelationSchemaExtensions.GetLimitedKeyName("UQ", String.Format("{0}_{1}", r.CollectionName, k.Columns.FriendlyName()), MaxNameLength);
                     FieldsAndKeys.Add(GetUniqueKey(k, Name));
                 }
@@ -176,6 +213,7 @@ namespace Yuki.RelationSchema.MySql
                 var NonUniqueKeys = new List<String>();
                 foreach (var k in r.NonUniqueKeys)
                 {
+                    if (DuplicatedInMySqlViewPoint.Contains(k)) { continue; }
                     var Name = RelationSchemaExtensions.GetLimitedKeyName("IX", String.Format("{0}_{1}", r.CollectionName, k.Columns.FriendlyName()), MaxNameLength);
                     NonUniqueKeys.AddRange(GetNonUniqueKey(k, Name, r.CollectionName));
                 }
