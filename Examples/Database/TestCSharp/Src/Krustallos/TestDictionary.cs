@@ -293,6 +293,38 @@ namespace Krustallos
             }
         }
 
+        public static void TestIndex()
+        {
+            var d = new ImmutableSortedDictionary<int, int>();
+            var n = 1000;
+            Debug.Assert(!d.ContainsKey(0));
+            for (int k = 0; k < n; k += 1)
+            {
+                d = d.Add(k, k * 2);
+            }
+            Debug.Assert(d.GetIndexStartWithKey(-1) == 0);
+            Debug.Assert(d.GetIndexStartWithKey(0) == 0);
+            Debug.Assert(d.GetIndexStartWithKey(100) == 100);
+            Debug.Assert(d.GetIndexStartWithKey(1000) == 1000);
+            Debug.Assert(d.GetIndexStartWithKey(1001) == 1000);
+            Debug.Assert(d.GetIndexEndWithKey(-1) == -1);
+            Debug.Assert(d.GetIndexEndWithKey(0) == 0);
+            Debug.Assert(d.GetIndexEndWithKey(100) == 100);
+            Debug.Assert(d.GetIndexEndWithKey(1000) == 999);
+            Debug.Assert(d.GetIndexEndWithKey(1001) == 999);
+            d = d.Remove(500);
+            Debug.Assert(d.GetIndexStartWithKey(500) == 500);
+            Debug.Assert(d.GetIndexEndWithKey(500) == 499);
+            {
+                int k = 100;
+                foreach (var p in d.Range(50, 250, 50, 50))
+                {
+                    Debug.Assert(p.Key == k);
+                    k += 1;
+                }
+            }
+        }
+
         public static void TestParallelRandomAdd1()
         {
             var swSerial = new Stopwatch();
@@ -526,6 +558,7 @@ namespace Krustallos
             TestSequentialAdd();
             TestRandomAdd();
             TestHeight();
+            TestIndex();
             TestParallelRandomAdd1();
             TestParallelRandomAdd2();
         }
