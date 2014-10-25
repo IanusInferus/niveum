@@ -34,6 +34,23 @@ namespace Krustallos
                 Debug.Assert(v.Left == v.Right);
             }
         }
+        public enum TestEnum
+        {
+            A,
+            B,
+            C
+        }
+        public static void TestComparerEnum()
+        {
+            var d = new ImmutableSortedDictionary<TestEnum, int>();
+            d = d.Add(TestEnum.B, 1);
+            d = d.Add(TestEnum.A, 0);
+            d = d.Add(TestEnum.C, 2);
+            foreach (var v in d.Zip(Enumerable.Range(0, d.Count), (a, b) => new { Key = a.Key, Left = a.Value, Right = b }))
+            {
+                Debug.Assert(v.Left == v.Right);
+            }
+        }
         public static void TestComparerByteArray()
         {
             var d = new ImmutableSortedDictionary<Byte[], int>();
@@ -103,6 +120,7 @@ namespace Krustallos
         {
             TestComparerString();
             TestComparerOptionalString();
+            TestComparerEnum();
             TestComparerByteArray();
             TestComparerStringArray();
             TestComparerOptionalByteArray();
