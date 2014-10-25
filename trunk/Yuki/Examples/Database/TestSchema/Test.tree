@@ -21,7 +21,11 @@
 #Entity TestDuplicatedKeyNameRecord                 [CN:TestDuplicatedKeyNameRecords][UK:A, B][UK:A-, B][UK:A, B-]
     Id                  Int
     A                   String                      [P:32]
-    B                   Int
+    B                   TestEnum
+
+#Enum TestEnum
+    A                   0
+    B                   1
 
 #Query
     From TestRecord Upsert One
