@@ -5,6 +5,7 @@ Yuki.Relation:
 修改C# Memory数据库代码生成，删去无用代码。
 修正C#计时包装代码生成中，有特定命名空间的问题。
 修正C# Krustallos数据库代码生成中，Select Count后不跟By索引时生成代码编译错误的问题。
+修正C# Krustallos数据库代码生成和C# Krustallos-MySQL数据库代码生成中，实例保存为全局变量的问题。
 Krustallos:
 加快版本分配速度。
 Examples:
