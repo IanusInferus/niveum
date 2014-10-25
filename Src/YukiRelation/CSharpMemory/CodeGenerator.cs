@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Memory代码生成器
-//  Version:     2014.10.21.
+//  Version:     2014.10.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -278,7 +278,7 @@ namespace Yuki.RelationSchema.CSharpMemory
                 var Signature = InnerWriter.GetQuerySignature(q);
                 var ManyName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateMany(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
                 var AllName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateAll(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
-                var Parameters = String.Join(", ", q.By.ToArray());
+                var Parameters = String.Join(", ", q.By.Select(c => "[[{0}]]".Formats(c)).ToArray());
                 var OrderBys = GetOrderBy(q);
                 String[] Content;
                 if (q.Verb.OnSelect || q.Verb.OnLock)
