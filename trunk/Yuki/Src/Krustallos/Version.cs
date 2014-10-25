@@ -7,9 +7,9 @@ namespace Krustallos
     public struct Version : IEquatable<Version>, IComparable<Version>
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public const int IndexSpace = 1048576;
+        public const int IndexSpace = 1073741824;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public const int WindowSize = 65536;
+        public const int WindowSize = 268435456;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int v;

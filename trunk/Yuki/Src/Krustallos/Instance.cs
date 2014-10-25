@@ -17,23 +17,23 @@ namespace Krustallos
     {
         private Object ReaderAllocateLockee = new Object();
         private Version CurrentReaderVersion = new Version(0);
-        private ImmutableSortedDictionary<Version, int> ReaderCounts = new ImmutableSortedDictionary<Version, int>();
+        private SortedDictionary<Version, int> ReaderCounts = new SortedDictionary<Version, int>();
         private Object WriterAllocateLockee = new Object();
         private Version CurrentWriterVersion = new Version(0);
-        private ImmutableSortedDictionary<Version, Unit> WriterExists = new ImmutableSortedDictionary<Version, Unit>();
+        private SortedDictionary<Version, Unit> WriterExists = new SortedDictionary<Version, Unit>();
         private Object ToBeRemovedLockee = new Object();
-        private ImmutableSortedDictionary<Version, HashSet<IVersionedStore>> ToBeRemoved = new ImmutableSortedDictionary<Version, HashSet<IVersionedStore>>();
+        private SortedDictionary<Version, HashSet<IVersionedStore>> ToBeRemoved = new SortedDictionary<Version, HashSet<IVersionedStore>>();
         public Version TakeReaderVersion()
         {
             lock (ReaderAllocateLockee)
             {
                 if (ReaderCounts.ContainsKey(CurrentReaderVersion))
                 {
-                    ReaderCounts = ReaderCounts.SetItem(CurrentReaderVersion, ReaderCounts.TryGetValue(CurrentReaderVersion).Value + 1);
+                    ReaderCounts[CurrentReaderVersion] += 1;
                 }
                 else
                 {
-                    ReaderCounts = ReaderCounts.Add(CurrentReaderVersion, 1);
+                    ReaderCounts.Add(CurrentReaderVersion, 1);
                 }
                 return CurrentReaderVersion;
             }
@@ -45,15 +45,14 @@ namespace Krustallos
             {
                 if (ReaderCounts.ContainsKey(CommittedVersion))
                 {
-                    var Count = ReaderCounts.TryGetValue(CommittedVersion).Value;
+                    var Count = ReaderCounts[CommittedVersion];
                     Count -= 1;
                     if (Count <= 0)
                     {
-                        ReaderCounts = ReaderCounts.Remove(CommittedVersion);
-                        var oPair = ReaderCounts.TryGetMinPair();
-                        if (oPair.OnHasValue)
+                        ReaderCounts.Remove(CommittedVersion);
+                        if (ReaderCounts.Count > 0)
                         {
-                            MinReaderVersion = oPair.Value.Key;
+                            MinReaderVersion = ReaderCounts.First().Key;
                         }
                         else
                         {
@@ -62,7 +61,7 @@ namespace Krustallos
                     }
                     else
                     {
-                        ReaderCounts = ReaderCounts.SetItem(CommittedVersion, Count);
+                        ReaderCounts[CommittedVersion] = Count;
                     }
                 }
                 else
@@ -81,7 +80,8 @@ namespace Krustallos
             var Stores = new HashSet<IVersionedStore>();
             lock (ToBeRemovedLockee)
             {
-                foreach (var p in ToBeRemoved.Range(Optional<Version>.Empty, Version))
+                var ToRemove = new List<Version>();
+                foreach (var p in ToBeRemoved)
                 {
                     foreach (var s in p.Value)
                     {
@@ -90,7 +90,12 @@ namespace Krustallos
                             Stores.Add(s);
                         }
                     }
-                    ToBeRemoved = ToBeRemoved.Remove(p.Key);
+                    ToRemove.Add(p.Key);
+                    if (p.Key == Version) { break; }
+                }
+                foreach (var v in ToRemove)
+                {
+                    ToBeRemoved.Remove(v);
                 }
             }
             foreach (var s in Stores)
@@ -103,7 +108,7 @@ namespace Krustallos
             lock (WriterAllocateLockee)
             {
                 CurrentWriterVersion += 1;
-                WriterExists = WriterExists.Add(CurrentWriterVersion, default(Unit));
+                WriterExists.Add(CurrentWriterVersion, default(Unit));
                 return CurrentWriterVersion;
             }
         }
@@ -112,11 +117,10 @@ namespace Krustallos
             Version MaxCommittedVersion;
             lock (WriterAllocateLockee)
             {
-                WriterExists = WriterExists.Remove(CurrentWriterVersion);
-                var oPair = WriterExists.TryGetMinPair();
-                if (oPair.OnHasValue)
+                WriterExists.Remove(CurrentWriterVersion);
+                if (WriterExists.Count > 0)
                 {
-                    MaxCommittedVersion = oPair.Value.Key - 1;
+                    MaxCommittedVersion = WriterExists.First().Key - 1;
                 }
                 else
                 {
@@ -132,16 +136,15 @@ namespace Krustallos
         {
             lock (ToBeRemovedLockee)
             {
-                this.ToBeRemoved = this.ToBeRemoved.Add(CommittingVersion, ToBeRemoved);
+                this.ToBeRemoved.Add(CommittingVersion, ToBeRemoved);
             }
             Version MaxCommittedVersion;
             lock (WriterAllocateLockee)
             {
-                WriterExists = WriterExists.Remove(CurrentWriterVersion);
-                var oPair = WriterExists.TryGetMinPair();
-                if (oPair.OnHasValue)
+                WriterExists.Remove(CurrentWriterVersion);
+                if (WriterExists.Count > 0)
                 {
-                    MaxCommittedVersion = oPair.Value.Key - 1;
+                    MaxCommittedVersion = WriterExists.First().Key - 1;
                 }
                 else
                 {
@@ -152,10 +155,9 @@ namespace Krustallos
             lock (ReaderAllocateLockee)
             {
                 CurrentReaderVersion = MaxCommittedVersion;
-                var oPair = ReaderCounts.TryGetMinPair();
-                if (oPair.OnHasValue)
+                if (ReaderCounts.Count > 0)
                 {
-                    MinReaderVersion = oPair.Value.Key;
+                    MinReaderVersion = ReaderCounts.First().Key;
                 }
                 else
                 {
