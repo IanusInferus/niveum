@@ -209,6 +209,10 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Upper = "new Key({0})".Formats(String.Join(", ", q.By.Select(k => "[[{0}]]".Formats(k)).Concat(Enumerable.Range(0, OuterByCount - q.By.Count).Select(i => "KeyCondition.Max"))));
                     l.Add(".RangeCount({0}, {1})".Formats(Lower, Upper));
                 }
+                else
+                {
+                    l.Add(".Count");
+                }
                 return String.Join("", l.ToArray());
             }
             public static String GetOrderBy(QueryDef q)
