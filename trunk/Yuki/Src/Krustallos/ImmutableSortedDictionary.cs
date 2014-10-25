@@ -131,6 +131,14 @@ namespace Krustallos
             }
             return Optional<TValue>.Empty;
         }
+        public int GetIndexStartWithKey(TKey Key)
+        {
+            return GetCount(Root) - RangeCount(Key, Optional<TKey>.Empty);
+        }
+        public int GetIndexEndWithKey(TKey Key)
+        {
+            return RangeCount(Optional<TKey>.Empty, Key) - 1;
+        }
         public IEnumerable<KeyValuePair<TKey, TValue>> Range(Optional<TKey> Lower, Optional<TKey> Upper)
         {
             if (Lower.OnHasValue && Upper.OnHasValue)
@@ -141,6 +149,46 @@ namespace Krustallos
                 }
             }
             return Range(Root, Lower, Upper);
+        }
+        public IEnumerable<KeyValuePair<TKey, TValue>> Range(Optional<TKey> Lower, Optional<TKey> Upper, int Skip, int Take)
+        {
+            if (Skip < 0) { Skip = 0; }
+            if (Take <= 0)
+            {
+                return Enumerable.Empty<KeyValuePair<TKey, TValue>>();
+            }
+            if (Lower.OnHasValue && Upper.OnHasValue)
+            {
+                if (Compare(Lower.Value, Upper.Value) > 0)
+                {
+                    return Enumerable.Empty<KeyValuePair<TKey, TValue>>();
+                }
+            }
+            var LowerIndex = 0;
+            if (Lower.OnHasValue)
+            {
+                LowerIndex = GetIndexStartWithKey(Lower.Value);
+            }
+            var UpperIndex = GetCount(Root) - 1;
+            if (Upper.OnHasValue)
+            {
+                UpperIndex = GetIndexEndWithKey(Upper.Value);
+            }
+            LowerIndex += Skip;
+            UpperIndex = Math.Min(UpperIndex, LowerIndex + Take - 1);
+            if (LowerIndex > UpperIndex)
+            {
+                return Enumerable.Empty<KeyValuePair<TKey, TValue>>();
+            }
+            if (LowerIndex >= GetCount(Root))
+            {
+                return Enumerable.Empty<KeyValuePair<TKey, TValue>>();
+            }
+            if (UpperIndex < 0)
+            {
+                return Enumerable.Empty<KeyValuePair<TKey, TValue>>();
+            }
+            return RangeByIndex(Root, LowerIndex, UpperIndex);
         }
         public IEnumerable<KeyValuePair<TKey, TValue>> RangeByIndex(Optional<int> LowerIndex, Optional<int> UpperIndex)
         {

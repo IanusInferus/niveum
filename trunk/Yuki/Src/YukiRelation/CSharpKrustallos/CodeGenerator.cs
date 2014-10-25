@@ -39,7 +39,6 @@ namespace Yuki.RelationSchema.CSharpKrustallos
             private OS.Schema InnerSchema;
             private Dictionary<String, TypeDef> TypeDict;
             private Dictionary<String, OS.TypeDef> InnerTypeDict;
-            private Dictionary<String, Dictionary<ByIndex, Key>> ByIndexDict;
 
             static Writer()
             {
@@ -57,39 +56,6 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 InnerSchema = PlainObjectSchemaGenerator.Generate(Schema);
                 TypeDict = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
                 InnerTypeDict = Yuki.ObjectSchema.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
-
-                ByIndexDict = new Dictionary<String, Dictionary<ByIndex, Key>>(StringComparer.OrdinalIgnoreCase);
-                foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
-                {
-                    var h = new Dictionary<ByIndex, Key>();
-                    {
-                        var EmptyIndex = new ByIndex { Columns = new List<String> { } };
-                        if (!h.ContainsKey(EmptyIndex))
-                        {
-                            h.Add(EmptyIndex, e.PrimaryKey);
-                        }
-                    }
-                    foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
-                    {
-                        var MainIndex = new ByIndex { Columns = k.Columns.Select(c => c.Name).ToList() };
-                        if (!h.ContainsKey(MainIndex))
-                        {
-                            h.Add(MainIndex, k);
-                        }
-                    }
-                    foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
-                    {
-                        for (int i = 1; i < k.Columns.Count; i += 1)
-                        {
-                            var SubIndex = new ByIndex { Columns = k.Columns.Take(i).Select(c => c.Name).ToList() };
-                            if (!h.ContainsKey(SubIndex))
-                            {
-                                h.Add(SubIndex, k);
-                            }
-                        }
-                    }
-                    ByIndexDict.Add(e.Name, h);
-                }
 
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Unit").Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Boolean").Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
@@ -188,100 +154,72 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 return l.ToArray();
             }
 
-            public static String GetBy(QueryDef q, int OuterByCount)
+            public static String GetFilters(QueryDef q, int OuterByCount)
             {
                 var l = new List<String>();
                 if (q.By.Count > 0)
                 {
                     var Lower = "new Key({0})".Formats(String.Join(", ", q.By.Select(k => "[[{0}]]".Formats(k)).Concat(Enumerable.Range(0, OuterByCount - q.By.Count).Select(i => "KeyCondition.Min"))));
                     var Upper = "new Key({0})".Formats(String.Join(", ", q.By.Select(k => "[[{0}]]".Formats(k)).Concat(Enumerable.Range(0, OuterByCount - q.By.Count).Select(i => "KeyCondition.Max"))));
-                    l.Add(".Range({0}, {1})".Formats(Lower, Upper));
-                }
-                l.Add(".Select(_p_ => _p_.Value)");
-                return String.Join("", l.ToArray());
-            }
-            public static String GetByCount(QueryDef q, int OuterByCount)
-            {
-                var l = new List<String>();
-                if (q.By.Count > 0)
-                {
-                    var Lower = "new Key({0})".Formats(String.Join(", ", q.By.Select(k => "[[{0}]]".Formats(k)).Concat(Enumerable.Range(0, OuterByCount - q.By.Count).Select(i => "KeyCondition.Min"))));
-                    var Upper = "new Key({0})".Formats(String.Join(", ", q.By.Select(k => "[[{0}]]".Formats(k)).Concat(Enumerable.Range(0, OuterByCount - q.By.Count).Select(i => "KeyCondition.Max"))));
-                    l.Add(".RangeCount({0}, {1})".Formats(Lower, Upper));
-                }
-                else
-                {
-                    l.Add(".Count");
-                }
-                return String.Join("", l.ToArray());
-            }
-            public static String GetOrderBy(QueryDef q)
-            {
-                var l = new List<String>();
-                var First = true;
-                foreach (var k in q.OrderBy)
-                {
-                    if (First)
+                    if (q.Numeral.OnCount)
                     {
-                        if (k.IsDescending)
-                        {
-                            l.Add(".OrderByDescending(_e_ => _e_.[[{0}]])".Formats(k.Name));
-                        }
-                        else
-                        {
-                            l.Add(".OrderBy(_e_ => _e_.[[{0}]])".Formats(k.Name));
-                        }
-                        First = false;
+                        l.Add(".RangeCount({0}, {1})".Formats(Lower, Upper));
+                    }
+                    else if (q.Numeral.OnRange)
+                    {
+                        l.Add(".Range({0}, {1}, _Skip_, _Take_)".Formats(Lower, Upper));
                     }
                     else
                     {
-                        if (k.IsDescending)
-                        {
-                            l.Add(".ThenByDescending(_e_ => _e_.[[{0}]])".Formats(k.Name));
-                        }
-                        else
-                        {
-                            l.Add(".ThenBy(_e_ => _e_.[[{0}]])".Formats(k.Name));
-                        }
+                        l.Add(".Range({0}, {1})".Formats(Lower, Upper));
                     }
                 }
+                else
+                {
+                    if (q.Numeral.OnCount)
+                    {
+                        l.Add(".Count");
+                    }
+                    else if (q.Numeral.OnRange)
+                    {
+                        l.Add(".RangeByIndex(_Skip_, _Skip_ + _Take_ - 1)");
+                    }
+                }
+                if (!q.Numeral.OnCount)
+                {
+                    l.Add(".Select(_p_ => _p_.Value)");
+                }
                 return String.Join("", l.ToArray());
-            }
-
-            private class ByIndex
-            {
-                public List<String> Columns;
-
-                public override bool Equals(object obj)
-                {
-                    var o = obj as ByIndex;
-                    if (o == null) { return false; }
-                    if (Columns.Count != o.Columns.Count) { return false; }
-                    if (Columns.Intersect(o.Columns, StringComparer.OrdinalIgnoreCase).Count() != Columns.Count) { return false; }
-                    return true;
-                }
-
-                public override int GetHashCode()
-                {
-                    if (Columns.Count == 0) { return 0; }
-                    Func<String, int> h = StringComparer.OrdinalIgnoreCase.GetHashCode;
-                    return Columns.Select(k => h(k)).Aggregate((a, b) => a ^ b);
-                }
             }
 
             public String[] GetQuery(QueryDef q)
             {
                 var e = TypeDict[q.EntityName].Entity;
-                var bih = ByIndexDict[q.EntityName];
 
                 var Signature = InnerWriter.GetQuerySignature(q);
-                var ByKey = bih[new ByIndex { Columns = q.By }];
+                var ByColumns = new HashSet<String>(q.By, StringComparer.OrdinalIgnoreCase);
+                var ActualOrderBy = q.OrderBy.Where(c => !ByColumns.Contains(c.Name)).ToList();
+                Key SearchKey = null;
+                foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
+                {
+                    if (k.Columns.Count < q.By.Count + ActualOrderBy.Count) { continue; }
+                    if (!k.Columns.Take(q.By.Count).Zip(q.By, (Left, Right) => Left.Name.Equals(Right, StringComparison.OrdinalIgnoreCase)).Any(f => !f))
+                    {
+                        if (!k.Columns.Skip(q.By.Count).Take(ActualOrderBy.Count).Zip(ActualOrderBy, (Left, Right) => Left.Name.Equals(Right.Name) && (Left.IsDescending == Right.IsDescending)).Any(f => !f))
+                        {
+                            SearchKey = k;
+                            break;
+                        }
+                    }
+                }
+                if (SearchKey == null)
+                {
+                    throw new InvalidOperationException();
+                }
                 var Parameters = String.Join(", ", q.By.ToArray());
                 String[] Content;
                 if (q.Verb.OnSelect || q.Verb.OnLock)
                 {
-                    var Bys = GetBy(q, ByKey.Columns.Count);
-                    var OrderBys = GetOrderBy(q);
                     String[] Template;
                     if (q.Numeral.OnOptional)
                     {
@@ -298,7 +236,6 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     else if (q.Numeral.OnCount)
                     {
                         Template = GetTemplate("SelectLock_Count");
-                        Bys = GetByCount(q, ByKey.Columns.Count);
                     }
                     else
                     {
@@ -316,59 +253,33 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         }
                         LockingStatement = GetTemplate("Lock_LockingStatement").Substitute("EntityNameAndParameterAndValues", String.Join(", ", EntityNameAndParameterAndValues.ToArray()));
                     }
-                    var Filters = Bys + OrderBys;
-                    if (q.Numeral.OnRange)
-                    {
-                        Filters = Filters + ".Skip(_Skip_).Take(_Take_)";
-                    }
-                    var IndexName = e.Name + "By" + String.Join("And", ByKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                    var Filters = GetFilters(q, SearchKey.Columns.Count);
+                    var IndexName = e.Name + "By" + String.Join("And", SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                     Content = Template.Substitute("Function", q.Verb.OnLock ? "CheckCurrentVersioned" : "CheckReaderVersioned").Substitute("IndexName", IndexName).Substitute("LockingStatement", LockingStatement).Substitute("Parameters", Parameters).Substitute("Filters", Filters);
                 }
-                else if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert)
+                else if (q.Verb.OnInsert)
                 {
                     String[] Template;
                     if (q.Numeral.OnOptional || q.Numeral.OnOne)
                     {
-                        Template = GetTemplate("InsertUpdateUpsert_OptionalOne");
+                        Template = GetTemplate("Insert_OptionalOne");
                     }
                     else if (q.Numeral.OnMany)
                     {
-                        Template = GetTemplate("InsertUpdateUpsert_Many");
+                        Template = GetTemplate("Insert_Many");
                     }
                     else
                     {
                         throw new InvalidOperationException();
                     }
                     String Function;
-                    if (q.Verb.OnInsert)
+                    if (q.Numeral.OnOptional)
                     {
-                        if (q.Numeral.OnOptional)
-                        {
-                            Function = "AddIfNotExist";
-                        }
-                        else
-                        {
-                            Function = "Add";
-                        }
-                    }
-                    else if (q.Verb.OnUpdate)
-                    {
-                        if (q.Numeral.OnOptional)
-                        {
-                            Function = "SetItemIfExist";
-                        }
-                        else
-                        {
-                            Function = "SetItem";
-                        }
-                    }
-                    else if (q.Verb.OnUpsert)
-                    {
-                        Function = "AddOrSetItem";
+                        Function = "AddIfNotExist";
                     }
                     else
                     {
-                        throw new InvalidOperationException();
+                        Function = "Add";
                     }
                     var UpdateStatements = new List<String>();
                     var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).ToArray();
@@ -376,9 +287,66 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     {
                         var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
-                        UpdateStatements.AddRange(GetTemplate("InsertUpdateUpsert_UpdateStatement").Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("Key", Key));
+                        UpdateStatements.AddRange(GetTemplate("Insert_UpdateStatement").Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("Key", Key));
                     }
                     Content = Template.Substitute("UpdateStatements", UpdateStatements.ToArray());
+                }
+                else if (q.Verb.OnUpdate || q.Verb.OnUpsert)
+                {
+                    String[] Template;
+                    if (q.Verb.OnUpdate)
+                    {
+                        if (q.Numeral.OnOptional)
+                        {
+                            Template = GetTemplate("Update_Optional");
+                        }
+                        else if (q.Numeral.OnOne)
+                        {
+                            Template = GetTemplate("Update_One");
+                        }
+                        else if (q.Numeral.OnMany)
+                        {
+                            Template = GetTemplate("Update_Many");
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException();
+                        }
+                    }
+                    else if (q.Verb.OnUpsert)
+                    {
+                        if (q.Numeral.OnOne)
+                        {
+                            Template = GetTemplate("Upsert_One");
+                        }
+                        else if (q.Numeral.OnMany)
+                        {
+                            Template = GetTemplate("Upsert_Many");
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException();
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                    var DeleteStatements = new List<String>();
+                    var UpdateStatements = new List<String>();
+                    var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).ToArray();
+                    foreach (var k in Keys)
+                    {
+                        var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        var Key = String.Join(", ", k.Columns.Select(c => "_v_.[[{0}]]".Formats(c.Name)));
+                        DeleteStatements.AddRange(GetTemplate("Delete_UpdateStatement_ManyRange").Substitute("IndexName", IndexName).Substitute("Function", "RemoveRange").Substitute("Key", Key));
+                        UpdateStatements.AddRange(GetTemplate("Insert_UpdateStatement").Substitute("IndexName", IndexName).Substitute("Function", "Add").Substitute("Key", Key));
+                    }
+                    {
+                        var Filters = GetFilters(q, SearchKey.Columns.Count);
+                        var IndexName = e.Name + "By" + String.Join("And", SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("Filters", Filters).Substitute("DeleteStatements", DeleteStatements.ToArray()).Substitute("UpdateStatements", UpdateStatements.ToArray());
+                    }
                 }
                 else if (q.Verb.OnDelete)
                 {
@@ -415,12 +383,12 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         if (q.Numeral.OnOptional || q.Numeral.OnOne)
                         {
-                            var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
+                            var Key = String.Join(", ", k.Columns.Select(c => "_v_.[[{0}]]".Formats(c.Name)));
                             UpdateStatements.AddRange(GetTemplate("Delete_UpdateStatement_OptionalOne").Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("Key", Key));
                         }
                         else if (q.Numeral.OnMany || q.Numeral.OnRange)
                         {
-                            var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
+                            var Key = String.Join(", ", k.Columns.Select(c => "_v_.[[{0}]]".Formats(c.Name)));
                             UpdateStatements.AddRange(GetTemplate("Delete_UpdateStatement_ManyRange").Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("Key", Key));
                         }
                         else if (q.Numeral.OnAll)
@@ -433,10 +401,8 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         }
                     }
                     {
-                        var Bys = GetBy(q, ByKey.Columns.Count);
-                        var OrderBys = GetOrderBy(q);
-                        var Filters = Bys + OrderBys;
-                        var IndexName = e.Name + "By" + String.Join("And", ByKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        var Filters = GetFilters(q, SearchKey.Columns.Count);
+                        var IndexName = e.Name + "By" + String.Join("And", SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements.ToArray());
                     }
                 }
