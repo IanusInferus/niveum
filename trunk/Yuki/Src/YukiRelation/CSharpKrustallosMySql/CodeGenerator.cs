@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos-MySQL代码生成器
-//  Version:     2014.10.24.
+//  Version:     2014.10.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -202,6 +202,11 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySql
                 return String.Join(" ", l.ToArray());
             }
 
+            public Key ConvertNonUniqueKeyToUniqueKey(Key NonUniqueKey, Key PrimaryKey)
+            {
+                return new Key { Columns = NonUniqueKey.Columns.Concat(PrimaryKey.Columns.Select(c => c.Name).Except(NonUniqueKey.Columns.Select(c => c.Name)).Select(Name => new KeyColumn { Name = Name, IsDescending = false })).ToList(), IsClustered = NonUniqueKey.IsClustered };
+            }
+
             public String[] GetDataLoadLoads()
             {
                 var l = new List<String>();
@@ -209,7 +214,7 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySql
                 {
                     var or = InnerTypeDict[e.Name].Record;
                     var d = or.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
-                    var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).ToArray();
+                    var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys.Select(k => ConvertNonUniqueKeyToUniqueKey(k, e.PrimaryKey))).ToArray();
                     var IndexNames = new List<String>();
                     var Updates = new List<String>();
                     foreach (var k in Keys)

@@ -308,16 +308,25 @@ ObjectSchemaTemplate
                     }
         Template
             Name Update_Many
-            //Parameters: ${IndexName}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
-                    if (_l_.Count == 0) { return; }
-                    ${DeleteStatements}
                     foreach (var v in l)
                     {
-                        var _v_ = Clone(v);
-                        ${UpdateStatements}
+                        var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                        if (_l_.Count == 0)
+                        {
+                            throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                        }
+                        if (_l_.Count > 1)
+                        {
+                            throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                        }
+                        ${DeleteStatements}
+                        {
+                            var _v_ = Clone(v);
+                            ${UpdateStatements}
+                        }
                     }
         Template
             Name Upsert_One
@@ -342,15 +351,21 @@ ObjectSchemaTemplate
             //Parameters: ${IndexName}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
-                    if (_l_.Count > 0)
-                    {
-                        ${DeleteStatements}
-                    }
                     foreach (var v in l)
                     {
-                        var _v_ = Clone(v);
-                        ${UpdateStatements}
+                        var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                        if (_l_.Count > 1)
+                        {
+                            throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                        }
+                        if (_l_.Count > 0)
+                        {
+                            ${DeleteStatements}
+                        }
+                        {
+                            var _v_ = Clone(v);
+                            ${UpdateStatements}
+                        }
                     }
         Template
             Name Delete_Optional
