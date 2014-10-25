@@ -9,6 +9,8 @@ Yuki.Relation:
 修正C# Krustallos数据库代码生成中，Update和Upsert不会删除非主键的其他索引中的原数据的问题。
 修正C# Krustallos数据库代码生成中，Select Range的性能问题。
 放松对OrderBy的语法限制，限制为“By索引加上OrderBy索引中除去By索引的部分，必须和Entity已经声明的Key一致”。
+修正C# Krustallos数据库代码生成中，Update和Upsert Many有编译错误的问题。
+修正C# Krustallos数据库代码生成中，非唯一索引没有转换为唯一索引的问题。
 Krustallos:
 加快版本分配速度。
 增加枚举比较器。
