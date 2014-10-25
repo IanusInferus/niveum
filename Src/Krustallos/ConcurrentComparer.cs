@@ -31,6 +31,12 @@ namespace Krustallos
                 {
                     Inner = (Func<T, T, int>)(Object)(Func<String, String, int>)(String.CompareOrdinal);
                 }
+                else if (typeof(T).IsEnum)
+                {
+                    var UnderlyingType = (typeof(T)).GetEnumUnderlyingType();
+                    var UnderlyingTypeComparer = Activator.CreateInstance(typeof(DefaultComparer<>).MakeGenericType(UnderlyingType));
+                    Inner = ((IComparer<T>)(Activator.CreateInstance(typeof(MappedComparer<,>).MakeGenericType(typeof(T), UnderlyingType), UnderlyingTypeComparer))).Compare;
+                }
                 else if (typeof(T).IsGenericType && (typeof(T).GetGenericTypeDefinition() == typeof(Optional<>)))
                 {
                     var Type = typeof(T).GetGenericArguments().Single();
@@ -78,6 +84,18 @@ namespace Krustallos
                 if (x == null) { return -1; }
                 if (y == null) { return 1; }
                 return Inner.Compare(x.HasValue, y.HasValue);
+            }
+        }
+        private class MappedComparer<T, M> : IComparer<T>
+        {
+            private IComparer<M> Inner;
+            public MappedComparer(IComparer<M> Inner)
+            {
+                this.Inner = Inner;
+            }
+            public int Compare(T x, T y)
+            {
+                return Inner.Compare((M)(Convert.ChangeType(x, typeof(M))), (M)(Convert.ChangeType(y, typeof(M))));
             }
         }
         private class EnumerableComparer<T> : IComparer<IEnumerable<T>>

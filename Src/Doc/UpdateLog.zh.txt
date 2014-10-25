@@ -8,8 +8,10 @@ Yuki.Relation:
 修正C# Krustallos数据库代码生成和C# Krustallos-MySQL数据库代码生成中，实例保存为全局变量的问题。
 Krustallos:
 加快版本分配速度。
+增加枚举比较器。
 Examples:
 修改数据库示例，增加Select Count测试用例。
+修改数据库示例，增加枚举比较器测试用例。
 
 2014.10.24
 Yuki.Relation:
