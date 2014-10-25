@@ -249,14 +249,14 @@ ObjectSchemaTemplate
                 $String
                     if (TransactionLock != null) { TransactionLock.Enter(new Object[] { ${EntityNameAndParameterAndValues} }); }
         Template
-            Name InsertUpdateUpsert_OptionalOne
+            Name Insert_OptionalOne
             //Parameters: ${UpdateStatements}
             Value
                 $String
                     var _v_ = Clone(v);
                     ${UpdateStatements}
         Template
-            Name InsertUpdateUpsert_Many
+            Name Insert_Many
             //Parameters: ${UpdateStatements}
             Value
                 $String
@@ -266,11 +266,92 @@ ObjectSchemaTemplate
                         ${UpdateStatements}
                     }
         Template
-            Name InsertUpdateUpsert_UpdateStatement
+            Name Insert_UpdateStatement
             //Parameters: ${IndexName}, ${Function}, ${Key}
             Value
                 $String
                     Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](new Key(${Key}), _v_));
+        Template
+            Name Update_Optional
+            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
+            Value
+                $String
+                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    if (_l_.Count == 0) { return; }
+                    if (_l_.Count > 1)
+                    {
+                        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                    }
+                    ${DeleteStatements}
+                    {
+                        var _v_ = Clone(v);
+                        ${UpdateStatements}
+                    }
+        Template
+            Name Update_One
+            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
+            Value
+                $String
+                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    if (_l_.Count == 0)
+                    {
+                        throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                    }
+                    if (_l_.Count > 1)
+                    {
+                        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                    }
+                    ${DeleteStatements}
+                    {
+                        var _v_ = Clone(v);
+                        ${UpdateStatements}
+                    }
+        Template
+            Name Update_Many
+            //Parameters: ${IndexName}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
+            Value
+                $String
+                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    if (_l_.Count == 0) { return; }
+                    ${DeleteStatements}
+                    foreach (var v in l)
+                    {
+                        var _v_ = Clone(v);
+                        ${UpdateStatements}
+                    }
+        Template
+            Name Upsert_One
+            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
+            Value
+                $String
+                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    if (_l_.Count > 1)
+                    {
+                        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+                    }
+                    if (_l_.Count > 0)
+                    {
+                        ${DeleteStatements}
+                    }
+                    {
+                        var _v_ = Clone(v);
+                        ${UpdateStatements}
+                    }
+        Template
+            Name Upsert_Many
+            //Parameters: ${IndexName}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
+            Value
+                $String
+                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    if (_l_.Count > 0)
+                    {
+                        ${DeleteStatements}
+                    }
+                    foreach (var v in l)
+                    {
+                        var _v_ = Clone(v);
+                        ${UpdateStatements}
+                    }
         Template
             Name Delete_Optional
             //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${UpdateStatements}
@@ -282,7 +363,7 @@ ObjectSchemaTemplate
                     {
                         throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
                     }
-                    var v = _l_.Single();
+                    var _v_ = _l_.Single();
                     ${UpdateStatements}
         Template
             Name Delete_One
@@ -298,7 +379,7 @@ ObjectSchemaTemplate
                     {
                         throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
                     }
-                    var v = _l_.Single();
+                    var _v_ = _l_.Single();
                     ${UpdateStatements}
         Template
             Name Delete_ManyRange
@@ -306,6 +387,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    if (_l_.Count == 0) { return; }
                     ${UpdateStatements}
         Template
             Name Delete_All
@@ -324,7 +406,7 @@ ObjectSchemaTemplate
             //Parameters: ${IndexName}, ${Function}, ${Key}
             Value
                 $String
-                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](_l_.Select(v => new Key(${Key}))));
+                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](_l_.Select(_v_ => new Key(${Key}))));
         Template
             Name Delete_UpdateStatement_All
             //Parameters: ${IndexName}, ${Function}
