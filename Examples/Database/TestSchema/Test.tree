@@ -4,7 +4,7 @@
       File:        Test.tree
       Location:    Yuki.Examples <Tree>
       Description: 测试
-      Version:     2014.10.23.
+      Version:     2014.10.25.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -40,6 +40,7 @@
     From TestDuplicatedKeyNameRecord Select All
     From TestDuplicatedKeyNameRecord Select Range By A OrderBy (A B-)
     From TestDuplicatedKeyNameRecord Select Range OrderBy (A- B)
+    From TestDuplicatedKeyNameRecord Select Count
     From TestDuplicatedKeyNameRecord Select Count By A
     From TestDuplicatedKeyNameRecord Select Count By (A B)
     From TestDuplicatedKeyNameRecord Lock Optional By A
