@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2014.10.11.
+//  Version:     2014.10.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -312,33 +312,6 @@ namespace Yuki.RelationSchema
             }
         }
 
-        private class OrderByIndex
-        {
-            public List<KeyColumn> Columns;
-
-            public override bool Equals(object obj)
-            {
-                var o = obj as OrderByIndex;
-                if (o == null) { return false; }
-                if (Columns.Count != o.Columns.Count) { return false; }
-                for (int k = 0; k < Columns.Count; k += 1)
-                {
-                    var c = Columns[k];
-                    var oc = o.Columns[k];
-                    if (!c.Name.Equals(oc.Name, StringComparison.OrdinalIgnoreCase)) { return false; }
-                    if (c.IsDescending != oc.IsDescending) { return false; }
-                }
-                return true;
-            }
-
-            public override int GetHashCode()
-            {
-                if (Columns.Count == 0) { return 0; }
-                Func<String, int> h = StringComparer.OrdinalIgnoreCase.GetHashCode;
-                return Columns.Select(k => h(k.Name) ^ k.IsDescending.GetHashCode()).Aggregate((a, b) => a ^ b);
-            }
-        }
-
         public static void VerifyEntityForeignKeys(this Schema s)
         {
             var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
@@ -499,46 +472,12 @@ namespace Yuki.RelationSchema
         // Upsert对应的Entity不得含有Identity列，不得有多个PrimaryKey或UniqueKey
         // By索引和OrderBy索引中的名称必须是Entity中的列
         // By索引必须和Entity已经声明的Key一致但可以不用考虑列的顺序和每个列里数据的排列方法
-        // OrderBy索引必须和Entity已经声明的Key一致
+        // By索引加上OrderBy索引中除去By索引的部分，必须和Entity已经声明的Key一致
         public static void VerifyQuerySemantics(this Schema s)
         {
             var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
             var EntityDict = Entities.ToDictionary(e => e.Name);
             var ColumnDict = Entities.ToDictionary(e => e.Name, e => e.Fields.Where(f => f.Attribute.OnColumn).ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase));
-            var ByIndexDict = new Dictionary<String, HashSet<ByIndex>>(StringComparer.OrdinalIgnoreCase);
-            var OrderByIndexDict = new Dictionary<String, HashSet<OrderByIndex>>(StringComparer.OrdinalIgnoreCase);
-            foreach (var e in Entities)
-            {
-                var h = new HashSet<ByIndex>();
-                foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
-                {
-                    for (int i = 1; i <= k.Columns.Count; i += 1)
-                    {
-                        var SubIndex = new ByIndex { Columns = k.Columns.Take(i).Select(c => c.Name).ToList() };
-                        if (!h.Contains(SubIndex))
-                        {
-                            h.Add(SubIndex);
-                        }
-                    }
-                }
-                ByIndexDict.Add(e.Name, h);
-            }
-            foreach (var e in Entities)
-            {
-                var h = new HashSet<OrderByIndex>();
-                foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
-                {
-                    for (int i = 1; i <= k.Columns.Count; i += 1)
-                    {
-                        var SubIndex = new OrderByIndex { Columns = k.Columns.Take(i).ToList() };
-                        if (!h.Contains(SubIndex))
-                        {
-                            h.Add(SubIndex);
-                        }
-                    }
-                }
-                OrderByIndexDict.Add(e.Name, h);
-            }
             foreach (var t in s.TypeRefs.Concat(s.Types))
             {
                 if (t.OnQueryList)
@@ -582,12 +521,6 @@ namespace Yuki.RelationSchema
                                     throw new InvalidOperationException(String.Format("ColumnNotExist: '{0}.{1}' in {2}", q.EntityName, Column, GetQueryLine(q)));
                                 }
                             }
-                            var bih = ByIndexDict[q.EntityName];
-                            var bi = new ByIndex { Columns = q.By };
-                            if (!bih.Contains(bi))
-                            {
-                                throw new InvalidOperationException(String.Format("ByIndexNotExist: '{0}.{1}' in {2}", q.EntityName, GetByKeyString(q.By), GetQueryLine(q)));
-                            }
                         }
                         if (q.OrderBy.Count != 0)
                         {
@@ -599,11 +532,36 @@ namespace Yuki.RelationSchema
                                     throw new InvalidOperationException(String.Format("ColumnNotExist: '{0}.{1}' in {2}", q.EntityName, Column.Name, GetQueryLine(q)));
                                 }
                             }
-                            var obih = OrderByIndexDict[q.EntityName];
-                            var obi = new OrderByIndex { Columns = q.OrderBy };
-                            if (!obih.Contains(obi))
+                        }
+                        if ((q.By.Count != 0) || (q.OrderBy.Count != 0))
+                        {
+                            var ByColumns = new HashSet<String>(q.By, StringComparer.OrdinalIgnoreCase);
+                            var ActualOrderBy = q.OrderBy.Where(c => !ByColumns.Contains(c.Name)).ToList();
+                            Key SearchKey = null;
+                            var IsByIndexExist = false;
+                            foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
                             {
-                                throw new InvalidOperationException(String.Format("OrderByIndexNotExist: '{0}.{1}' in {2}", q.EntityName, GetOrderByKeyString(q.OrderBy), GetQueryLine(q)));
+                                if (k.Columns.Count < q.By.Count + ActualOrderBy.Count) { continue; }
+                                if (!k.Columns.Take(q.By.Count).Zip(q.By, (Left, Right) => Left.Name.Equals(Right, StringComparison.OrdinalIgnoreCase)).Any(f => !f))
+                                {
+                                    IsByIndexExist = true;
+                                    if (!k.Columns.Skip(q.By.Count).Take(ActualOrderBy.Count).Zip(ActualOrderBy, (Left, Right) => Left.Name.Equals(Right.Name) && (Left.IsDescending == Right.IsDescending)).Any(f => !f))
+                                    {
+                                        SearchKey = k;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (SearchKey == null)
+                            {
+                                if (!IsByIndexExist)
+                                {
+                                    throw new InvalidOperationException(String.Format("ByIndexNotExist: '{0}.{1}' in {2}", q.EntityName, GetByKeyString(q.By), GetQueryLine(q)));
+                                }
+                                else
+                                {
+                                    throw new InvalidOperationException(String.Format("OrderByIndexNotExist: '{0}.{1}' in {2}", q.EntityName, GetOrderByKeyString(q.OrderBy), GetQueryLine(q)));
+                                }
                             }
                         }
                     }
