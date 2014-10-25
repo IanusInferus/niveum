@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# 计时包装代码模板数据
-      Version:     2014.10.19.
+      Version:     2014.10.25.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -69,7 +69,7 @@ ObjectSchemaTemplate
                     {
                         private int Count;
                         private Stopwatch sw;
-                        private Database.IDataAccess Inner;
+                        private IDataAccess Inner;
                         private Action<int, long> Report;
                         public CountedDataAccessWrapper(Func<IDataAccess> InnerDataAccessFactory, Action<int, long> Report)
                         {
