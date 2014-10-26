@@ -31,7 +31,7 @@ namespace Algorithms
         }
         public static Byte[] SHA1(Byte[] Bytes)
         {
-            SHA1 sha = new SHA1CryptoServiceProvider();
+            SHA1 sha = new SHA1Managed();
             return sha.ComputeHash(Bytes);
         }
         /// <summary>
