@@ -35,19 +35,22 @@ namespace Krustallos
             var yColumns = y.Columns;
             if (xColumns.Length != InnerCompares.Length) { throw new InvalidOperationException(); }
             if (yColumns.Length != InnerCompares.Length) { throw new InvalidOperationException(); }
-            foreach (var p in InnerCompares.Select((c, i) => new { Left = xColumns[i], Right = yColumns[i], Compare = c }))
+            for (int k = 0; k < InnerCompares.Length; k += 1)
             {
-                var LeftIsCondition = (p.Left != null) && (p.Left.GetType() == typeof(KeyCondition));
-                var RightIsCondition = (p.Right != null) && (p.Right.GetType() == typeof(KeyCondition));
+                var Left = xColumns[k];
+                var Right = yColumns[k];
+                var Compare = InnerCompares[k];
+                var LeftIsCondition = (Left != null) && (Left.GetType() == typeof(KeyCondition));
+                var RightIsCondition = (Right != null) && (Right.GetType() == typeof(KeyCondition));
                 if (LeftIsCondition && RightIsCondition)
                 {
-                    var l = (KeyCondition)(p.Left);
-                    var r = (KeyCondition)(p.Right);
+                    var l = (KeyCondition)(Left);
+                    var r = (KeyCondition)(Right);
                     return (int)(l) - (int)(r);
                 }
                 else if (LeftIsCondition)
                 {
-                    var l = (KeyCondition)(p.Left);
+                    var l = (KeyCondition)(Left);
                     if (l == KeyCondition.Min)
                     {
                         return -1;
@@ -63,7 +66,7 @@ namespace Krustallos
                 }
                 else if (RightIsCondition)
                 {
-                    var r = (KeyCondition)(p.Right);
+                    var r = (KeyCondition)(Right);
                     if (r == KeyCondition.Min)
                     {
                         return 1;
@@ -79,7 +82,7 @@ namespace Krustallos
                 }
                 else
                 {
-                    var Result = p.Compare(p.Left, p.Right);
+                    var Result = Compare(Left, Right);
                     if (Result != 0) { return Result; }
                 }
             }
