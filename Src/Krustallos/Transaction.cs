@@ -63,15 +63,9 @@ namespace Krustallos
         public void Commit()
         {
             var Success = false;
-            var Locked = new List<Object>();
+            Monitor.Enter(Instance);
             try
             {
-                foreach (var p in UpdateStores)
-                {
-                    var o = p.Value.Store;
-                    Monitor.Enter(o);
-                    Locked.Add(o);
-                }
                 foreach (var u in Updates)
                 {
                     u();
@@ -101,10 +95,7 @@ namespace Krustallos
                         WriterVersion = Optional<Version>.Empty;
                     }
                 }
-                foreach (var o in Locked)
-                {
-                    Monitor.Exit(o);
-                }
+                Monitor.Exit(Instance);
                 if (ReaderVersion.OnHasValue)
                 {
                     Instance.ReturnReaderVersion(ReaderVersion.Value);
