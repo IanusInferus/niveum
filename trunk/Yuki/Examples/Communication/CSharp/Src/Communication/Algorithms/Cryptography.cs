@@ -20,6 +20,15 @@ namespace Algorithms
         {
             return Encoding.UTF8.GetBytes(s);
         }
+        public static Int32 CRC32(Byte[] Bytes)
+        {
+            var c = new Firefly.CRC32();
+            foreach (var b in Bytes)
+            {
+                c.PushData(b);
+            }
+            return c.GetCRC32();
+        }
         public static Int32 CRC32(IEnumerable<Byte> Bytes)
         {
             var c = new Firefly.CRC32();
@@ -34,6 +43,11 @@ namespace Algorithms
             SHA1 sha = new SHA1Managed();
             return sha.ComputeHash(Bytes);
         }
+        public static Byte[] SHA1(IEnumerable<Byte> Bytes)
+        {
+            SHA1 sha = new SHA1Managed();
+            return sha.ComputeHash(Bytes.ToArray());
+        }
         /// <summary>
         /// HMAC = H((K XOR opad) :: H((K XOR ipad) :: Inner))
         /// H = SHA1
@@ -42,8 +56,8 @@ namespace Algorithms
         /// </summary>
         public static Byte[] HMACSHA1(IEnumerable<Byte> Key, IEnumerable<Byte> Bytes)
         {
-            var InnerHash = SHA1(Key.Select(k => (Byte)(k ^ 0x36)).Concat(Bytes).ToArray());
-            var OuterHash = SHA1(Key.Select(k => (Byte)(k ^ 0x5C)).Concat(InnerHash).ToArray());
+            var InnerHash = SHA1(Key.Select(k => unchecked((Byte)(k ^ 0x36))).Concat(Bytes));
+            var OuterHash = SHA1(Key.Select(k => unchecked((Byte)(k ^ 0x5C))).Concat(InnerHash));
             return OuterHash;
         }
 
@@ -96,7 +110,7 @@ namespace Algorithms
 
         public static String BytesToHexString(Byte[] Bytes)
         {
-            return String.Join("", Bytes.Select(b => b.ToString("X2")).ToArray());
+            return String.Join("", Bytes.Select(b => b.ToString("X2")));
         }
 
         private static Regex rWhitespace = new Regex(@"\s", RegexOptions.ExplicitCapture);
