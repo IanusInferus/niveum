@@ -68,7 +68,7 @@ namespace Client
             static int ReadingWindowSize() { return 1024; }
             static int WritingWindowSize() { return 32; }
             static int IndexSpace() { return 65536; }
-
+            static int CheckTimeout() { return 500; }
             static int GetTimeoutMilliseconds(int ResentCount)
             {
                 if (ResentCount == 0) { return 500; }
@@ -219,7 +219,7 @@ namespace Client
                     }
                 }
 
-                void ForEachTimedoutPacket(boost::posix_time::ptime Time, std::function<void(int, std::shared_ptr<std::vector<std::uint8_t>>)> f)
+                void ForEachTimedoutPacket(int SessionId, boost::posix_time::ptime Time, std::function<void(int, std::shared_ptr<std::vector<std::uint8_t>>)> f)
                 {
                     for (auto p : Parts)
                     {
@@ -344,8 +344,12 @@ namespace Client
                     Offset += static_cast<int>(b->size());
                 }
                 auto RemoteEndPoint = this->RemoteEndPoint;
-                auto SessionId = this->SessionId();
-                auto Connected = this->ConnectedValue.Check<bool>([](bool v) { return v; });
+                int SessionId = 0;
+                auto Connected = this->ConnectedValue.Check<bool>([&](bool v)
+                {
+                    SessionId = this->SessionId();
+                    return v;
+                });
                 auto SecureContext = this->SecureContextValue.Check<std::shared_ptr<class SecureContext>>([](std::shared_ptr<class SecureContext> v) { return v; });
                 std::vector<int> Indices;
                 RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
@@ -483,7 +487,7 @@ namespace Client
                     if (c->Timer == nullptr)
                     {
                         c->Timer = std::make_shared<boost::asio::deadline_timer>(io_service);
-                        c->Timer->expires_from_now(boost::posix_time::milliseconds(GetTimeoutMilliseconds(0)));
+                        c->Timer->expires_from_now(boost::posix_time::milliseconds(CheckTimeout()));
                         c->Timer->async_wait([=](const boost::system::error_code& error)
                         {
                             if (error == boost::system::errc::success)
@@ -523,8 +527,12 @@ namespace Client
                     auto IsRunning = b;
 
                     auto RemoteEndPoint = this->RemoteEndPoint;
-                    auto SessionId = this->SessionId();
-                    auto Connected = this->ConnectedValue.Check<bool>([](bool v) { return v; });
+                    int SessionId = 0;
+                    auto Connected = this->ConnectedValue.Check<bool>([&](bool v)
+                    {
+                        SessionId = this->SessionId();
+                        return v;
+                    });
                     auto SecureContext = this->SecureContextValue.Check<std::shared_ptr<class SecureContext>>([](std::shared_ptr<class SecureContext> v) { return v; });
                     std::vector<int> Indices;
                     RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
@@ -636,7 +644,7 @@ namespace Client
 
                         if (cc->Parts->Parts.size() == 0) { return; }
                         auto t = boost::posix_time::microsec_clock::universal_time();
-                        cc->Parts->ForEachTimedoutPacket(t, [&](int i, std::shared_ptr<std::vector<std::uint8_t>> d) { Parts.push_back(d); });
+                        cc->Parts->ForEachTimedoutPacket(SessionId, t, [&](int i, std::shared_ptr<std::vector<std::uint8_t>> d) { Parts.push_back(d); });
                         auto Wait = std::numeric_limits<int>::max();
                         for (auto Pair : cc->Parts->Parts)
                         {
@@ -804,14 +812,27 @@ namespace Client
                         //如果Flag中不包含ENC，则验证CRC32
                         if (Algorithms::Cryptography::CRC32(*Buffer) != Verification) { return; }
 
-                        //只有尚未加密时可以设定
-                        this->SessionIdValue.Update([=](int v) { return SessionId; });
-                        auto Connected = false;
+                        //只有尚未连接时可以设定
+                        auto Close = false;
                         ConnectedValue.Update([&](bool v)
                         {
-                            Connected = v;
+                            if (!v)
+                            {
+                                this->SessionIdValue.Update([=](int vv) { return v; });
+                            }
+                            else
+                            {
+                                if (SessionId != this->SessionId())
+                                {
+                                    Close = true;
+                                }
+                            }
                             return true;
                         });
+                        if (Close)
+                        {
+                            return;
+                        }
                     }
 
                     int Offset = 12;
