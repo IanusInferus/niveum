@@ -188,7 +188,7 @@ namespace Server
                     }
                 }
 
-                public void ForEachTimedoutPacket(DateTime Time, Action<int, Byte[]> f)
+                public void ForEachTimedoutPacket(int SessionId, DateTime Time, Action<int, Byte[]> f)
                 {
                     foreach (var p in Parts)
                     {
@@ -197,6 +197,7 @@ namespace Server
                             f(p.Key, p.Value.Data);
                             p.Value.ResendTime = Time.AddIntMilliseconds(GetTimeoutMilliseconds(p.Value.ResentCount));
                             p.Value.ResentCount += 1;
+                            //Debug.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + " Resend SessionId: " + SessionId.ToString("X8") + " Index: " + p.Key.ToString() + " Count: " + p.Value.ResentCount.ToString());
                         }
                     }
                 }
@@ -399,6 +400,7 @@ namespace Server
                             return;
                         }
                         Parts.Add(Part.Data);
+                        //Debug.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + " Send SessionId: " + SessionId.ToString("X8") + " Index: " + Index.ToString());
 
                         c.WritenIndex = Index;
                     }
@@ -684,6 +686,7 @@ namespace Server
 
             public Boolean PushAux(IPEndPoint RemoteEndPoint, int[] Indices)
             {
+                var SessionId = this.SessionId;
                 var Time = DateTime.UtcNow;
                 if ((Indices != null) && (Indices.Length > 0))
                 {
@@ -691,7 +694,7 @@ namespace Server
                     CookedWritingContext.DoAction(c =>
                     {
                         c.Parts.Acknowledge(Indices.First(), Indices.Skip(1), c.WritenIndex);
-                        c.Parts.ForEachTimedoutPacket(Time, (i, d) => l.Add(d));
+                        c.Parts.ForEachTimedoutPacket(SessionId, Time, (i, d) => l.Add(d));
                     });
                     foreach (var p in l)
                     {
@@ -708,12 +711,26 @@ namespace Server
                 return true;
             }
 
+            public bool IsPushed(int Index)
+            {
+                var Pushed = false;
+                RawReadingContext.DoAction(c =>
+                {
+                    if (c.Parts.HasPart(Index))
+                    {
+                        Pushed = true;
+                        return;
+                    }
+                });
+                return Pushed;
+            }
             public void PrePush(Action a)
             {
                 ssm.AddToActionQueue(a);
             }
             public Boolean Push(IPEndPoint RemoteEndPoint, int Index, int[] Indices, Byte[] Buffer, int Offset, int Length)
             {
+                var SessionId = this.SessionId;
                 var Time = DateTime.UtcNow;
                 if ((Indices != null) && (Indices.Length > 0))
                 {
@@ -721,7 +738,7 @@ namespace Server
                     CookedWritingContext.DoAction(c =>
                     {
                         c.Parts.Acknowledge(Indices.First(), Indices.Skip(1), c.WritenIndex);
-                        c.Parts.ForEachTimedoutPacket(Time, (i, d) => l.Add(d));
+                        c.Parts.ForEachTimedoutPacket(SessionId, Time, (i, d) => l.Add(d));
                     });
                     foreach (var p in l)
                     {
