@@ -108,7 +108,7 @@ namespace Algorithms
             }
         }
 
-        public static String BytesToHexString(Byte[] Bytes)
+        public static String BytesToHexString(IEnumerable<Byte> Bytes)
         {
             return String.Join("", Bytes.Select(b => b.ToString("X2")));
         }

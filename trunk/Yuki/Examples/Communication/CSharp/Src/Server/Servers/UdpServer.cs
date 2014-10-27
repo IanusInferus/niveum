@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -467,6 +468,7 @@ namespace Server
                                                 Buffer[9] = 0;
                                                 Buffer[10] = 0;
                                                 Buffer[11] = 0;
+                                                //Debug.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + " Receive SessionId: " + SessionId.ToString("X8") + " Index: " + Index.ToString());
 
                                                 //如果Flag中不包含ENC，则验证CRC32
                                                 if ((Flag & 2) == 0)
@@ -596,6 +598,10 @@ namespace Server
                                                         continue;
                                                     }
 
+                                                    if (s.IsPushed(Index))
+                                                    {
+                                                        continue;
+                                                    }
                                                     s.PrePush(() =>
                                                     {
                                                         var IsEncrypted = (Flag & 2) != 0;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
@@ -57,6 +58,7 @@ namespace Client
             public const int ReadingWindowSize = 1024;
             public const int WritingWindowSize = 32;
             public const int IndexSpace = 65536;
+            public const int CheckTimeout = 500;
             public static readonly int[] TimeoutSequences = { 500, 900, 1700, 2100, 3100, 4100 };
             private static int GetTimeoutMilliseconds(int ResentCount)
             {
@@ -175,7 +177,7 @@ namespace Client
                     }
                 }
 
-                public void ForEachTimedoutPacket(DateTime Time, Action<int, Byte[]> f)
+                public void ForEachTimedoutPacket(int SessionId, DateTime Time, Action<int, Byte[]> f)
                 {
                     foreach (var p in Parts)
                     {
@@ -184,6 +186,7 @@ namespace Client
                             f(p.Key, p.Value.Data);
                             p.Value.ResendTime = Time.AddIntMilliseconds(GetTimeoutMilliseconds(p.Value.ResentCount));
                             p.Value.ResentCount += 1;
+                            //Debug.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + " Resend SessionId: " + SessionId.ToString("X8") + " Index: " + p.Key.ToString() + " Count: " + p.Value.ResentCount.ToString());
                         }
                     }
                 }
@@ -237,8 +240,12 @@ namespace Client
                     Offset += b.Length;
                 }
                 var RemoteEndPoint = this.RemoteEndPoint;
-                var SessionId = this.SessionId;
-                var Connected = this.ConnectedValue.Check(v => v);
+                int SessionId = 0;
+                var Connected = this.ConnectedValue.Check(v =>
+                {
+                    SessionId = this.SessionId;
+                    return v;
+                });
                 var SecureContext = this.SecureContext;
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
@@ -355,12 +362,13 @@ namespace Client
                             return;
                         }
                         Parts.Add(Part.Data);
+                        //Debug.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + " Send SessionId: " + SessionId.ToString("X8") + " Index: " + Index.ToString());
 
                         c.WritenIndex = Index;
                     }
                     if (c.Timer == null)
                     {
-                        c.Timer = new Timer(o => Check(), null, GetTimeoutMilliseconds(0), Timeout.Infinite);
+                        c.Timer = new Timer(o => Check(), null, CheckTimeout, Timeout.Infinite);
                     }
                 });
                 foreach (var p in Parts)
@@ -390,7 +398,12 @@ namespace Client
                 var IsRunning = this.IsRunning;
 
                 var RemoteEndPoint = this.RemoteEndPoint;
-                var SessionId = this.SessionId;
+                int SessionId = 0;
+                var Connected = this.ConnectedValue.Check(v =>
+                {
+                    SessionId = this.SessionId;
+                    return v;
+                });
                 var SecureContext = this.SecureContext;
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
@@ -485,11 +498,12 @@ namespace Client
                         Buffer[11] = (Byte)((Verification >> 24) & 0xFF);
 
                         Parts.Add(Buffer);
+                        //Debug.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + " SendAux SessionId: " + SessionId.ToString("X8") + " Index: " + Index.ToString());
                     }
 
                     if (cc.Parts.Parts.Count == 0) { return; }
                     var t = DateTime.UtcNow;
-                    cc.Parts.ForEachTimedoutPacket(t, (i, d) => Parts.Add(d));
+                    cc.Parts.ForEachTimedoutPacket(SessionId, t, (i, d) => Parts.Add(d));
                     var Wait = Math.Max(Convert.ToInt32((cc.Parts.Parts.Min(p => p.Value.ResendTime) - t).TotalMilliseconds), 0);
                     cc.Timer = new Timer(o => Check(), null, Wait, Timeout.Infinite);
                 });
@@ -590,6 +604,7 @@ namespace Client
                         Buffer[9] = 0;
                         Buffer[10] = 0;
                         Buffer[11] = 0;
+                        //Debug.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + " Receive SessionId: " + SessionId.ToString("X8") + " Index: " + Index.ToString());
 
                         var IsEncrypted = (Flag & 2) != 0;
                         var SecureContext = this.SecureContext;
@@ -610,9 +625,27 @@ namespace Client
                             //如果Flag中不包含ENC，则验证CRC32
                             if (Cryptography.CRC32(Buffer) != Verification) { return; }
 
-                            //只有尚未加密时可以设定
-                            this.SessionId = SessionId;
-                            ConnectedValue.Update(v => true);
+                            //只有尚未连接时可以设定
+                            var Close = false;
+                            ConnectedValue.Update(v =>
+                            {
+                                if (!v)
+                                {
+                                    this.SessionId = SessionId;
+                                }
+                                else
+                                {
+                                    if (SessionId != this.SessionId)
+                                    {
+                                        Close = true;
+                                    }
+                                }
+                                return true;
+                            });
+                            if (Close)
+                            {
+                                return;
+                            }
                         }
 
                         var Offset = 12;
