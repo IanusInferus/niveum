@@ -154,14 +154,25 @@ namespace Server
 
                 using (var ExitEvent = new AutoResetEvent(false))
                 {
-                    ConsoleCancelEventHandler CancelKeyPress = null;
-                    CancelKeyPress = (sender, e) =>
+                    LockedVariable<ConsoleCancelEventHandler> CancelKeyPress = null;
+                    CancelKeyPress = new LockedVariable<ConsoleCancelEventHandler>((sender, e) =>
                     {
+                        QueueUserWorkItem(() =>
+                        {
+                            CancelKeyPress.Update(v =>
+                            {
+                                if (v != null)
+                                {
+                                    Console.CancelKeyPress -= v;
+                                }
+                                return null;
+                            });
+                        });
                         e.Cancel = true;
                         Console.WriteLine("命令行中断退出。");
                         ExitEvent.Set();
-                    };
-                    Console.CancelKeyPress += CancelKeyPress;
+                    });
+                    Console.CancelKeyPress += CancelKeyPress.Check(v => v);
 
                     using (var Logger = new ConsoleLogger())
                     {
@@ -198,7 +209,6 @@ namespace Server
                                 }
 
                                 ExitEvent.WaitOne();
-                                Console.CancelKeyPress -= CancelKeyPress;
 
                                 foreach (var s in ServerContext.Sessions.AsParallel())
                                 {
@@ -242,7 +252,6 @@ namespace Server
                                 }
 
                                 ExitEvent.WaitOne();
-                                Console.CancelKeyPress -= CancelKeyPress;
 
                                 foreach (var s in ServerContext.Sessions.AsParallel())
                                 {
