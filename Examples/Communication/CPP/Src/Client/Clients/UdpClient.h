@@ -350,6 +350,10 @@ namespace Client
                     SessionId = this->SessionId();
                     return v;
                 });
+                if (Connected && (SessionId == 0))
+                {
+                    throw std::logic_error("InvalidOperation");
+                }
                 auto SecureContext = this->SecureContextValue.Check<std::shared_ptr<class SecureContext>>([](std::shared_ptr<class SecureContext> v) { return v; });
                 std::vector<int> Indices;
                 RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
@@ -533,6 +537,10 @@ namespace Client
                         SessionId = this->SessionId();
                         return v;
                     });
+                    if (Connected && (SessionId == 0))
+                    {
+                        throw std::logic_error("InvalidOperation");
+                    }
                     auto SecureContext = this->SecureContextValue.Check<std::shared_ptr<class SecureContext>>([](std::shared_ptr<class SecureContext> v) { return v; });
                     std::vector<int> Indices;
                     RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
@@ -818,7 +826,7 @@ namespace Client
                         {
                             if (!v)
                             {
-                                this->SessionIdValue.Update([=](int vv) { return v; });
+                                this->SessionIdValue.Update([=](int vv) { return SessionId; });
                             }
                             else
                             {

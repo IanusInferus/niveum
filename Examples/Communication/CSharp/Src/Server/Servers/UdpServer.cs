@@ -559,7 +559,7 @@ namespace Server
                                                                 isi.Count += 1;
                                                                 ss.IpSessions.Add(e.Address, isi);
                                                             }
-                                                            while (ss.SessionIdToSession.ContainsKey(SessionId))
+                                                            while ((SessionId == 0) || ss.SessionIdToSession.ContainsKey(SessionId))
                                                             {
                                                                 s = new UdpSession(this, a.Socket, e, VirtualTransportServerFactory, QueueUserWorkItem);
                                                                 SessionId = s.SessionId;
