@@ -246,6 +246,10 @@ namespace Client
                     SessionId = this.SessionId;
                     return v;
                 });
+                if (Connected && (SessionId == 0))
+                {
+                    throw new InvalidOperationException();
+                }
                 var SecureContext = this.SecureContext;
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
@@ -404,6 +408,10 @@ namespace Client
                     SessionId = this.SessionId;
                     return v;
                 });
+                if (Connected && (SessionId == 0))
+                {
+                    throw new InvalidOperationException();
+                }
                 var SecureContext = this.SecureContext;
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
