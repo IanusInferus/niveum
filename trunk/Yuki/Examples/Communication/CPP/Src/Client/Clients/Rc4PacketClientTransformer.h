@@ -14,8 +14,8 @@ namespace Client
     {
     private:
         bool UseEncryption;
-        std::shared_ptr<Algorithms::Cryptography::RC4> ServerStream;
-        std::shared_ptr<Algorithms::Cryptography::RC4> ClientStream;
+        std::shared_ptr<Algorithms::RC4> ServerStream;
+        std::shared_ptr<Algorithms::RC4> ClientStream;
 
     public:
         Rc4PacketClientTransformer()
@@ -26,8 +26,8 @@ namespace Client
         void SetSecureContext(std::shared_ptr<SecureContext> SecureContext)
         {
             UseEncryption = true;
-            ServerStream = std::make_shared<Algorithms::Cryptography::RC4>(SecureContext->ServerToken);
-            ClientStream = std::make_shared<Algorithms::Cryptography::RC4>(SecureContext->ClientToken);
+            ServerStream = std::make_shared<Algorithms::RC4>(SecureContext->ServerToken);
+            ClientStream = std::make_shared<Algorithms::RC4>(SecureContext->ClientToken);
             ServerStream->Skip(1536);
             ClientStream->Skip(1536);
         }

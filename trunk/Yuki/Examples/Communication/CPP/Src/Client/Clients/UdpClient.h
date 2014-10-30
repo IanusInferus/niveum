@@ -68,14 +68,14 @@ namespace Client
             static int ReadingWindowSize() { return 1024; }
             static int WritingWindowSize() { return 32; }
             static int IndexSpace() { return 65536; }
-            static int CheckTimeout() { return 500; }
+            static int CheckTimeout() { return 2000; }
             static int GetTimeoutMilliseconds(int ResentCount)
             {
-                if (ResentCount == 0) { return 500; }
-                if (ResentCount == 1) { return 900; }
-                if (ResentCount == 2) { return 1700; }
-                if (ResentCount == 3) { return 2100; }
-                if (ResentCount == 4) { return 3100; }
+                if (ResentCount == 0) { return 400; }
+                if (ResentCount == 1) { return 800; }
+                if (ResentCount == 2) { return 1600; }
+                if (ResentCount == 3) { return 2000; }
+                if (ResentCount == 4) { return 3000; }
                 return 4100;
             }
 
@@ -239,6 +239,11 @@ namespace Client
             public:
                 std::shared_ptr<PartContext> Parts;
                 std::set<int> NotAcknowledgedIndices;
+                boost::posix_time::ptime LastCheck;
+                UdpReadContext()
+                    : LastCheck(boost::posix_time::microsec_clock::universal_time())
+                {
+                }
             };
             class UdpWriteContext
             {
@@ -546,6 +551,9 @@ namespace Client
                     RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
                     {
                         if (c->NotAcknowledgedIndices.size() == 0) { return; }
+                        auto CurrentTime = boost::posix_time::microsec_clock::universal_time();
+                        if ((CurrentTime - c->LastCheck).total_milliseconds() + 1 < CheckTimeout()) { return; }
+                        c->LastCheck = CurrentTime;
                         auto NotAcknowledgedIndices = std::set<int>(c->NotAcknowledgedIndices.begin(), c->NotAcknowledgedIndices.end());
                         auto MaxHandled = c->Parts->MaxHandled;
                         while (NotAcknowledgedIndices.size() > 0)

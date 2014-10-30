@@ -722,6 +722,7 @@ namespace Server
                                 var l = Listener;
                                 l.BeginGetContext(ar =>
                                 {
+                                    if (!l.IsListening) { return; }
                                     try
                                     {
                                         var a = l.EndGetContext(ar);
@@ -772,6 +773,7 @@ namespace Server
                         }
                         if (ListenConsumer != null)
                         {
+                            Listener.Stop();
                             ListenConsumer.Dispose();
                             Listener.Close();
                             Listener = null;
