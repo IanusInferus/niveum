@@ -9,14 +9,14 @@ namespace Server
     {
         private Boolean WillUseEncryption = false;
         private Boolean UseEncryption = false;
-        private Cryptography.RC4 ServerStream;
-        private Cryptography.RC4 ClientStream;
+        private RC4 ServerStream;
+        private RC4 ClientStream;
 
         public void SetSecureContext(SecureContext SecureContext)
         {
             WillUseEncryption = true;
-            ServerStream = new Cryptography.RC4(SecureContext.ServerToken);
-            ClientStream = new Cryptography.RC4(SecureContext.ClientToken);
+            ServerStream = new RC4(SecureContext.ServerToken);
+            ClientStream = new RC4(SecureContext.ClientToken);
             ServerStream.Skip(1536);
             ClientStream.Skip(1536);
         }
