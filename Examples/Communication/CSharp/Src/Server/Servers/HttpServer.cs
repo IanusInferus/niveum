@@ -104,15 +104,11 @@ namespace Server
             }
 
             private HttpListener Listener = new HttpListener();
-            private Task ListeningTask;
             private CancellationTokenSource ListeningTaskTokenSource;
-            private ConcurrentQueue<HttpListenerContext> AcceptedListenerContexts = new ConcurrentQueue<HttpListenerContext>();
-            private Task AcceptingTask;
-            private CancellationTokenSource AcceptingTaskTokenSource;
-            private AutoResetEvent AcceptingTaskNotifier;
-            private Task PurifieringTask;
-            private CancellationTokenSource PurifieringTaskTokenSource;
-            private AutoResetEvent PurifieringTaskNotifier;
+            private AsyncConsumer<int> ListenConsumer;
+            private AsyncConsumer<HttpListenerContext> AcceptConsumer;
+            private AsyncConsumer<HttpListenerContext> ContextPurifyConsumer;
+            private AsyncConsumer<HttpSession> PurifyConsumer;
             private Timer LastActiveTimeCheckTimer;
 
             private class IpSessionInfo
@@ -127,8 +123,6 @@ namespace Server
                 public Dictionary<String, HttpSession> SessionIdToSession = new Dictionary<String, HttpSession>(StringComparer.OrdinalIgnoreCase);
                 public Dictionary<HttpSession, String> SessionToId = new Dictionary<HttpSession, String>();
             }
-            private ConcurrentQueue<HttpSession> StoppingSessions = new ConcurrentQueue<HttpSession>();
-            private ConcurrentQueue<HttpListenerContext> StoppingListenerContexts = new ConcurrentQueue<HttpListenerContext>();
             private LockedVariable<ServerSessionSets> SessionSets = new LockedVariable<ServerSessionSets>(new ServerSessionSets());
 
             public TServerContext ServerContext { get; private set; }
@@ -373,14 +367,8 @@ namespace Server
                             }
 
                             ListeningTaskTokenSource = new CancellationTokenSource();
-                            AcceptingTaskTokenSource = new CancellationTokenSource();
-                            AcceptingTaskNotifier = new AutoResetEvent(false);
-                            PurifieringTaskTokenSource = new CancellationTokenSource();
-                            PurifieringTaskNotifier = new AutoResetEvent(false);
 
                             var ListeningTaskToken = ListeningTaskTokenSource.Token;
-                            var AcceptingTaskToken = AcceptingTaskTokenSource.Token;
-                            var PurifieringTaskToken = PurifieringTaskTokenSource.Token;
 
                             foreach (var Binding in BindingsValue)
                             {
@@ -390,97 +378,19 @@ namespace Server
                             {
                                 SetTimer(Listener, UnauthenticatedSessionIdleTimeoutValue.Value);
                             }
-                            ListeningTask = new Task
-                            (
-                                () =>
-                                {
-                                    try
-                                    {
-                                        Listener.Start();
-                                    }
-                                    catch (HttpListenerException ex)
-                                    {
-                                        String Message;
-                                        if (ex.ErrorCode == 5)
-                                        {
-                                            var l = new List<String>();
-                                            l.Add("Under Windows, try run the following as administrator:");
-                                            var UserDomainName = Environment.UserDomainName;
-                                            var UserName = Environment.UserName;
-                                            foreach (var p in BindingsValue)
-                                            {
-                                                l.Add(@"netsh http add urlacl url={0} user={1}\{2}".Formats(p, UserDomainName, UserName));
-                                            }
-                                            l.Add("and delete it when you don't need it:");
-                                            foreach (var p in BindingsValue)
-                                            {
-                                                l.Add(@"netsh http delete urlacl url={0}".Formats(p));
-                                            }
-                                            Message = String.Join("\r\n", l.ToArray());
-                                        }
-                                        else
-                                        {
-                                            Message = ExceptionInfo.GetExceptionInfo(ex);
-                                        }
-                                        ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0), Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = Message });
-                                        return;
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0), Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = ExceptionInfo.GetExceptionInfo(ex) });
-                                        return;
-                                    }
-                                    Boolean ListenerStopped = false;
-                                    try
-                                    {
-                                        while (true)
-                                        {
-                                            if (ListeningTaskToken.IsCancellationRequested) { return; }
-                                            var l = Listener;
-                                            using (var Finished = new AutoResetEvent(false))
-                                            {
-                                                var ca = l.BeginGetContext(ar =>
-                                                {
-                                                    try
-                                                    {
-                                                        var a = l.EndGetContext(ar);
-                                                        AcceptedListenerContexts.Enqueue(a);
-                                                        AcceptingTaskNotifier.Set();
-                                                    }
-                                                    catch (HttpListenerException)
-                                                    {
-                                                    }
-                                                    finally
-                                                    {
-                                                        Finished.Set();
-                                                    }
-                                                }, null);
-                                                var Index = WaitHandle.WaitAny(new WaitHandle[] { Finished, ListeningTaskToken.WaitHandle });
-                                                if (Index == 1)
-                                                {
-                                                    l.Stop();
-                                                    ListenerStopped = true;
-                                                    Finished.WaitOne();
-                                                }
-                                                ca.AsyncWaitHandle.WaitOne();
-                                                ca.AsyncWaitHandle.Dispose();
-                                            }
-                                        }
-                                    }
-                                    finally
-                                    {
-                                        if (!ListenerStopped)
-                                        {
-                                            Listener.Stop();
-                                        }
-                                    }
-                                },
-                                TaskCreationOptions.LongRunning
-                            );
 
-                            Func<HttpSession, Boolean> Purify = StoppingSession =>
+                            Action<HttpListenerContext> PurifyContext = ListenerContext =>
                             {
-                                var Removed = false;
+                                try
+                                {
+                                    ListenerContext.Response.Close();
+                                }
+                                catch
+                                {
+                                }
+                            };
+                            Action<HttpSession> Purify = StoppingSession =>
+                            {
                                 SessionSets.DoAction
                                 (
                                     ss =>
@@ -488,7 +398,6 @@ namespace Server
                                         if (ss.Sessions.Contains(StoppingSession))
                                         {
                                             ss.Sessions.Remove(StoppingSession);
-                                            Removed = true;
                                             var IpAddress = StoppingSession.RemoteEndPoint.Address;
                                             var isi = ss.IpSessions[IpAddress];
                                             if (isi.Authenticated.Contains(StoppingSession))
@@ -507,337 +416,326 @@ namespace Server
                                     }
                                 );
                                 StoppingSession.Dispose();
-                                return Removed;
                             };
 
-                            Func<Boolean> PurifyOneInSession = () =>
+                            Action<HttpListenerContext> Accept = a =>
                             {
-                                HttpSession StoppingSession;
-                                while (StoppingSessions.TryDequeue(out StoppingSession))
+                                var e = (IPEndPoint)a.Request.RemoteEndPoint;
+                                var XForwardedFor = a.Request.Headers["X-Forwarded-For"];
+                                var Address = e.Address;
+                                if ((XForwardedFor != null) && (XForwardedFor != ""))
                                 {
-                                    var Removed = Purify(StoppingSession);
-                                    if (Removed) { return true; }
+                                    try
+                                    {
+                                        IPAddress addr;
+                                        if (IPAddress.TryParse(XForwardedFor.Split(',')[0].Trim(' '), out addr))
+                                        {
+                                            Address = addr;
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
                                 }
-                                return false;
-                            };
-
-                            AcceptingTask = new Task
-                            (
-                                () =>
+                                var XForwardedPort = a.Request.Headers["X-Forwarded-Port"];
+                                var Port = e.Port;
+                                if ((XForwardedPort != null) && (XForwardedPort != ""))
                                 {
-                                    while (true)
+                                    try
                                     {
-                                        if (AcceptingTaskToken.IsCancellationRequested) { return; }
-                                        AcceptingTaskNotifier.WaitOne();
-                                        while (true)
+                                        int p;
+                                        if (int.TryParse(XForwardedPort.Split(',')[0].Trim(' '), out p))
                                         {
-                                            HttpListenerContext a;
-                                            if (!AcceptedListenerContexts.TryDequeue(out a))
+                                            Port = p;
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
+                                }
+                                e = new IPEndPoint(Address, Port);
+
+                                try
+                                {
+                                    if (ServerContext.EnableLogSystem)
+                                    {
+                                        ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Name = "RequestIn", Message = "" });
+                                    }
+
+                                    if (a.Request.ContentLength64 < 0)
+                                    {
+                                        a.Response.StatusCode = 411;
+                                        NotifyListenerContextQuit(a);
+                                        return;
+                                    }
+
+                                    if (a.Request.ContentLength64 > 8 * 1024)
+                                    {
+                                        a.Response.StatusCode = 413;
+                                        NotifyListenerContextQuit(a);
+                                        return;
+                                    }
+
+                                    if (!IsMatchBindingName(a.Request.Url))
+                                    {
+                                        a.Response.StatusCode = 404;
+                                        NotifyListenerContextQuit(a);
+                                        return;
+                                    }
+
+                                    var Headers = a.Request.Headers.AllKeys.ToDictionary(k => k, k => a.Request.Headers[k]);
+                                    if (Headers.ContainsKey("Range"))
+                                    {
+                                        a.Response.StatusCode = 400;
+                                        NotifyListenerContextQuit(a);
+                                        return;
+                                    }
+                                    if (Headers.ContainsKey("Accept-Charset"))
+                                    {
+                                        var AcceptCharsetParts = Headers["Accept-Charset"].Split(';');
+                                        if (AcceptCharsetParts.Length == 0)
+                                        {
+                                            a.Response.StatusCode = 400;
+                                            NotifyListenerContextQuit(a);
+                                            return;
+                                        }
+                                        var EncodingNames = AcceptCharsetParts[0].Split(',').Select(n => n.Trim(' ')).ToArray();
+                                        if (!(EncodingNames.Contains("utf-8", StringComparer.OrdinalIgnoreCase) || EncodingNames.Contains("*", StringComparer.OrdinalIgnoreCase)))
+                                        {
+                                            a.Response.StatusCode = 400;
+                                            NotifyListenerContextQuit(a);
+                                            return;
+                                        }
+                                    }
+
+                                    {
+                                        var Query = HttpListenerRequestExtension.GetQuery(a.Request);
+
+                                        if (Query.ContainsKey("sessionid"))
+                                        {
+                                            HttpSession s = null;
+
+                                            var SessionId = Query["sessionid"];
+                                            var Close = false;
+                                            SessionSets.DoAction
+                                            (
+                                                ss =>
+                                                {
+                                                    if (!ss.SessionIdToSession.ContainsKey(SessionId))
+                                                    {
+                                                        a.Response.StatusCode = 403;
+                                                        Close = true;
+                                                        return;
+                                                    }
+                                                    var CurrentSession = ss.SessionIdToSession[SessionId];
+                                                    if (!CurrentSession.RemoteEndPoint.Address.Equals(e.Address))
+                                                    {
+                                                        a.Response.StatusCode = 403;
+                                                        Close = true;
+                                                        return;
+                                                    }
+                                                    s = ss.SessionIdToSession[SessionId];
+                                                }
+                                            );
+                                            if (Close)
                                             {
-                                                break;
-                                            }
-
-                                            var e = (IPEndPoint)a.Request.RemoteEndPoint;
-                                            var XForwardedFor = a.Request.Headers["X-Forwarded-For"];
-                                            var Address = e.Address;
-                                            if ((XForwardedFor != null) && (XForwardedFor != ""))
-                                            {
-                                                try
-                                                {
-                                                    IPAddress addr;
-                                                    if (IPAddress.TryParse(XForwardedFor.Split(',')[0].Trim(' '), out addr))
-                                                    {
-                                                        Address = addr;
-                                                    }
-                                                }
-                                                catch
-                                                {
-                                                }
-                                            }
-                                            var XForwardedPort = a.Request.Headers["X-Forwarded-Port"];
-                                            var Port = e.Port;
-                                            if ((XForwardedPort != null) && (XForwardedPort != ""))
-                                            {
-                                                try
-                                                {
-                                                    int p;
-                                                    if (int.TryParse(XForwardedPort.Split(',')[0].Trim(' '), out p))
-                                                    {
-                                                        Port = p;
-                                                    }
-                                                }
-                                                catch
-                                                {
-                                                }
-                                            }
-                                            e = new IPEndPoint(Address, Port);
-
-                                            try
-                                            {
-                                                if (ServerContext.EnableLogSystem)
-                                                {
-                                                    ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Name = "RequestIn", Message = "" });
-                                                }
-
-                                                if (a.Request.ContentLength64 < 0)
-                                                {
-                                                    a.Response.StatusCode = 411;
-                                                    NotifyListenerContextQuit(a);
-                                                    continue;
-                                                }
-
-                                                if (a.Request.ContentLength64 > 8 * 1024)
-                                                {
-                                                    a.Response.StatusCode = 413;
-                                                    NotifyListenerContextQuit(a);
-                                                    continue;
-                                                }
-
-                                                if (!IsMatchBindingName(a.Request.Url))
-                                                {
-                                                    a.Response.StatusCode = 404;
-                                                    NotifyListenerContextQuit(a);
-                                                    continue;
-                                                }
-
-                                                var Headers = a.Request.Headers.AllKeys.ToDictionary(k => k, k => a.Request.Headers[k]);
-                                                if (Headers.ContainsKey("Range"))
-                                                {
-                                                    a.Response.StatusCode = 400;
-                                                    NotifyListenerContextQuit(a);
-                                                    continue;
-                                                }
-                                                if (Headers.ContainsKey("Accept-Charset"))
-                                                {
-                                                    var AcceptCharsetParts = Headers["Accept-Charset"].Split(';');
-                                                    if (AcceptCharsetParts.Length == 0)
-                                                    {
-                                                        a.Response.StatusCode = 400;
-                                                        NotifyListenerContextQuit(a);
-                                                        continue;
-                                                    }
-                                                    var EncodingNames = AcceptCharsetParts[0].Split(',').Select(n => n.Trim(' ')).ToArray();
-                                                    if (!(EncodingNames.Contains("utf-8", StringComparer.OrdinalIgnoreCase) || EncodingNames.Contains("*", StringComparer.OrdinalIgnoreCase)))
-                                                    {
-                                                        a.Response.StatusCode = 400;
-                                                        NotifyListenerContextQuit(a);
-                                                        continue;
-                                                    }
-                                                }
-
-                                                {
-                                                    var Query = HttpListenerRequestExtension.GetQuery(a.Request);
-
-                                                    if (Query.ContainsKey("sessionid"))
-                                                    {
-                                                        HttpSession s = null;
-
-                                                        var SessionId = Query["sessionid"];
-                                                        var Close = false;
-                                                        SessionSets.DoAction
-                                                        (
-                                                            ss =>
-                                                            {
-                                                                if (!ss.SessionIdToSession.ContainsKey(SessionId))
-                                                                {
-                                                                    a.Response.StatusCode = 403;
-                                                                    Close = true;
-                                                                    return;
-                                                                }
-                                                                var CurrentSession = ss.SessionIdToSession[SessionId];
-                                                                if (!CurrentSession.RemoteEndPoint.Address.Equals(e.Address))
-                                                                {
-                                                                    a.Response.StatusCode = 403;
-                                                                    Close = true;
-                                                                    return;
-                                                                }
-                                                                s = ss.SessionIdToSession[SessionId];
-                                                            }
-                                                        );
-                                                        if (Close)
-                                                        {
-                                                            NotifyListenerContextQuit(a);
-                                                            continue;
-                                                        }
-                                                        var NewSessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
-                                                        SessionSets.DoAction
-                                                        (
-                                                            ss =>
-                                                            {
-                                                                ss.SessionIdToSession.Remove(SessionId);
-                                                                ss.SessionIdToSession.Add(NewSessionId, s);
-                                                                ss.SessionToId[s] = NewSessionId;
-                                                            }
-                                                        );
-                                                        if (!s.Push(a, NewSessionId))
-                                                        {
-                                                            NotifyListenerContextQuit(a);
-                                                            continue;
-                                                        }
-                                                        continue;
-                                                    }
-                                                }
-
-                                                if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
-                                                {
-                                                    PurifyOneInSession();
-                                                }
-                                                if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
-                                                {
-                                                    a.Response.StatusCode = 503;
-                                                    NotifyListenerContextQuit(a);
-                                                    continue;
-                                                }
-
-                                                if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
-                                                {
-                                                    a.Response.StatusCode = 503;
-                                                    NotifyListenerContextQuit(a);
-                                                    continue;
-                                                }
-
-                                                if (MaxUnauthenticatedPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? (ss.IpSessions[e.Address].Count - ss.IpSessions[e.Address].Authenticated.Count) : 0) >= MaxUnauthenticatedPerIPValue.Value))
-                                                {
-                                                    a.Response.StatusCode = 503;
-                                                    NotifyListenerContextQuit(a);
-                                                    continue;
-                                                }
-
-                                                {
-                                                    var s = new HttpSession(this, e, VirtualTransportServerFactory, QueueUserWorkItem);
-
-                                                    var SessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
-                                                    SessionSets.DoAction
-                                                    (
-                                                        ss =>
-                                                        {
-                                                            ss.Sessions.Add(s);
-                                                            if (ss.IpSessions.ContainsKey(e.Address))
-                                                            {
-                                                                ss.IpSessions[e.Address].Count += 1;
-                                                            }
-                                                            else
-                                                            {
-                                                                var isi = new IpSessionInfo();
-                                                                isi.Count += 1;
-                                                                ss.IpSessions.Add(e.Address, isi);
-                                                            }
-                                                            ss.SessionIdToSession.Add(SessionId, s);
-                                                            ss.SessionToId.Add(s, SessionId);
-                                                        }
-                                                    );
-
-                                                    s.Start();
-                                                    if (!s.Push(a, SessionId))
-                                                    {
-                                                        NotifyListenerContextQuit(a);
-                                                        continue;
-                                                    }
-                                                }
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                if (ServerContext.EnableLogSystem)
-                                                {
-                                                    ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = ExceptionInfo.GetExceptionInfo(ex) });
-                                                }
                                                 NotifyListenerContextQuit(a);
+                                                return;
                                             }
+                                            var NewSessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
+                                            SessionSets.DoAction
+                                            (
+                                                ss =>
+                                                {
+                                                    ss.SessionIdToSession.Remove(SessionId);
+                                                    ss.SessionIdToSession.Add(NewSessionId, s);
+                                                    ss.SessionToId[s] = NewSessionId;
+                                                }
+                                            );
+                                            if (!s.Push(a, NewSessionId))
+                                            {
+                                                NotifyListenerContextQuit(a);
+                                                return;
+                                            }
+                                            return;
                                         }
                                     }
-                                },
-                                AcceptingTaskToken,
-                                TaskCreationOptions.LongRunning
-                            );
 
-                            PurifieringTask = new Task
-                            (
-                                () =>
-                                {
-                                    while (true)
+                                    if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
                                     {
-                                        if (PurifieringTaskToken.IsCancellationRequested) { return; }
+                                        ContextPurifyConsumer.DoOne();
+                                        PurifyConsumer.DoOne();
+                                    }
+                                    if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
+                                    {
+                                        a.Response.StatusCode = 503;
+                                        NotifyListenerContextQuit(a);
+                                        return;
+                                    }
 
-                                        PurifieringTaskNotifier.WaitOne();
+                                    if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
+                                    {
+                                        a.Response.StatusCode = 503;
+                                        NotifyListenerContextQuit(a);
+                                        return;
+                                    }
 
-                                        if (UnauthenticatedSessionIdleTimeoutValue.HasValue)
-                                        {
-                                            var CheckTime = DateTime.UtcNow.AddIntSeconds(-UnauthenticatedSessionIdleTimeoutValue.Value);
-                                            SessionSets.DoAction
-                                            (
-                                                ss =>
-                                                {
-                                                    foreach (var s in ss.Sessions)
-                                                    {
-                                                        var IpAddress = s.RemoteEndPoint.Address;
-                                                        var isi = ss.IpSessions[IpAddress];
-                                                        if (!isi.Authenticated.Contains(s))
-                                                        {
-                                                            if (s.LastActiveTime < CheckTime)
-                                                            {
-                                                                StoppingSessions.Enqueue(s);
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            );
-                                        }
+                                    if (MaxUnauthenticatedPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? (ss.IpSessions[e.Address].Count - ss.IpSessions[e.Address].Authenticated.Count) : 0) >= MaxUnauthenticatedPerIPValue.Value))
+                                    {
+                                        a.Response.StatusCode = 503;
+                                        NotifyListenerContextQuit(a);
+                                        return;
+                                    }
 
-                                        if (SessionIdleTimeoutValue.HasValue)
-                                        {
-                                            var CheckTime = DateTime.UtcNow.AddIntSeconds(-SessionIdleTimeoutValue.Value);
-                                            SessionSets.DoAction
-                                            (
-                                                ss =>
-                                                {
-                                                    foreach (var s in ss.Sessions)
-                                                    {
-                                                        var IpAddress = s.RemoteEndPoint.Address;
-                                                        var isi = ss.IpSessions[IpAddress];
-                                                        if (isi.Authenticated.Contains(s))
-                                                        {
-                                                            if (s.LastActiveTime < CheckTime)
-                                                            {
-                                                                StoppingSessions.Enqueue(s);
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            );
-                                        }
+                                    {
+                                        var s = new HttpSession(this, e, VirtualTransportServerFactory, QueueUserWorkItem);
 
-                                        HttpSession StoppingSession;
-                                        while (StoppingSessions.TryDequeue(out StoppingSession))
-                                        {
-                                            Purify(StoppingSession);
-                                        }
-
-                                        HttpListenerContext ListenerContext;
-                                        while (StoppingListenerContexts.TryDequeue(out ListenerContext))
-                                        {
-                                            try
+                                        var SessionId = Convert.ToBase64String(Cryptography.CreateRandom(64));
+                                        SessionSets.DoAction
+                                        (
+                                            ss =>
                                             {
-                                                ListenerContext.Response.Close();
+                                                ss.Sessions.Add(s);
+                                                if (ss.IpSessions.ContainsKey(e.Address))
+                                                {
+                                                    ss.IpSessions[e.Address].Count += 1;
+                                                }
+                                                else
+                                                {
+                                                    var isi = new IpSessionInfo();
+                                                    isi.Count += 1;
+                                                    ss.IpSessions.Add(e.Address, isi);
+                                                }
+                                                ss.SessionIdToSession.Add(SessionId, s);
+                                                ss.SessionToId.Add(s, SessionId);
                                             }
-                                            catch
-                                            {
-                                            }
+                                        );
+
+                                        s.Start();
+                                        if (!s.Push(a, SessionId))
+                                        {
+                                            NotifyListenerContextQuit(a);
+                                            return;
                                         }
                                     }
-                                },
-                                PurifieringTaskToken,
-                                TaskCreationOptions.LongRunning
-                            );
+                                }
+                                catch (Exception ex)
+                                {
+                                    if (ServerContext.EnableLogSystem)
+                                    {
+                                        ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = ExceptionInfo.GetExceptionInfo(ex) });
+                                    }
+                                    NotifyListenerContextQuit(a);
+                                }
+                            };
+                            AcceptConsumer = new AsyncConsumer<HttpListenerContext>(QueueUserWorkItem, a => { Accept(a); return true; }, int.MaxValue);
+
+                            ContextPurifyConsumer = new AsyncConsumer<HttpListenerContext>(QueueUserWorkItem, l => { PurifyContext(l); return true; }, int.MaxValue);
+                            PurifyConsumer = new AsyncConsumer<HttpSession>(QueueUserWorkItem, s => { Purify(s); return true; }, int.MaxValue);
 
                             if (UnauthenticatedSessionIdleTimeoutValue.HasValue || SessionIdleTimeoutValue.HasValue)
                             {
                                 var TimePeriod = TimeSpan.FromSeconds(Math.Max(TimeoutCheckPeriodValue, 1));
-                                LastActiveTimeCheckTimer = new Timer(state => { PurifieringTaskNotifier.Set(); }, null, TimePeriod, TimePeriod);
+                                LastActiveTimeCheckTimer = new Timer(state =>
+                                {
+                                    if (UnauthenticatedSessionIdleTimeoutValue.HasValue)
+                                    {
+                                        var CheckTime = DateTime.UtcNow.AddIntSeconds(-UnauthenticatedSessionIdleTimeoutValue.Value);
+                                        SessionSets.DoAction
+                                        (
+                                            ss =>
+                                            {
+                                                foreach (var s in ss.Sessions)
+                                                {
+                                                    var IpAddress = s.RemoteEndPoint.Address;
+                                                    var isi = ss.IpSessions[IpAddress];
+                                                    if (!isi.Authenticated.Contains(s))
+                                                    {
+                                                        if (s.LastActiveTime < CheckTime)
+                                                        {
+                                                            PurifyConsumer.Push(s);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        );
+                                    }
+
+                                    if (SessionIdleTimeoutValue.HasValue)
+                                    {
+                                        var CheckTime = DateTime.UtcNow.AddIntSeconds(-SessionIdleTimeoutValue.Value);
+                                        SessionSets.DoAction
+                                        (
+                                            ss =>
+                                            {
+                                                foreach (var s in ss.Sessions)
+                                                {
+                                                    var IpAddress = s.RemoteEndPoint.Address;
+                                                    var isi = ss.IpSessions[IpAddress];
+                                                    if (isi.Authenticated.Contains(s))
+                                                    {
+                                                        if (s.LastActiveTime < CheckTime)
+                                                        {
+                                                            PurifyConsumer.Push(s);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        );
+                                    }
+                                }, null, TimePeriod, TimePeriod);
                             }
 
-                            AcceptingTask.Start();
-                            PurifieringTask.Start();
-                            ListeningTask.Start();
+                            try
+                            {
+                                Listener.Start();
+                            }
+                            catch (HttpListenerException ex)
+                            {
+                                String Message;
+                                if (ex.ErrorCode == 5)
+                                {
+                                    var l = new List<String>();
+                                    l.Add("Under Windows, try run the following as administrator:");
+                                    var UserDomainName = Environment.UserDomainName;
+                                    var UserName = Environment.UserName;
+                                    foreach (var p in BindingsValue)
+                                    {
+                                        l.Add(@"netsh http add urlacl url={0} user={1}\{2}".Formats(p, UserDomainName, UserName));
+                                    }
+                                    l.Add("and delete it when you don't need it:");
+                                    foreach (var p in BindingsValue)
+                                    {
+                                        l.Add(@"netsh http delete urlacl url={0}".Formats(p));
+                                    }
+                                    Message = String.Join("\r\n", l.ToArray());
+                                }
+                                else
+                                {
+                                    Message = ExceptionInfo.GetExceptionInfo(ex);
+                                }
+                                throw new AggregateException(Message, ex);
+                            }
+                            Action Listen = () =>
+                            {
+                                if (ListeningTaskToken.IsCancellationRequested) { return; }
+                                var l = Listener;
+                                l.BeginGetContext(ar =>
+                                {
+                                    try
+                                    {
+                                        var a = l.EndGetContext(ar);
+                                        AcceptConsumer.Push(a);
+                                    }
+                                    catch (HttpListenerException)
+                                    {
+                                    }
+                                    ListenConsumer.Push(0);
+                                }, null);
+                            };
+                            ListenConsumer = new AsyncConsumer<int>(QueueUserWorkItem, i => { Listen(); return true; }, 1);
+
+                            Listen();
 
                             Success = true;
 
@@ -871,25 +769,23 @@ namespace Server
                         if (ListeningTaskTokenSource != null)
                         {
                             ListeningTaskTokenSource.Cancel();
-                            ListeningTask.Wait();
+                        }
+                        if (ListenConsumer != null)
+                        {
                             Listener.Close();
+                            ListenConsumer.Dispose();
                             Listener = null;
+                            ListenConsumer = null;
+                        }
+                        if (ListeningTaskTokenSource != null)
+                        {
                             ListeningTaskTokenSource = null;
-                            ListeningTask = null;
                         }
 
-                        if (AcceptingTask != null)
+                        if (AcceptConsumer != null)
                         {
-                            AcceptingTaskTokenSource.Cancel();
-                            AcceptingTaskNotifier.Set();
-                        }
-                        if (AcceptingTask != null)
-                        {
-                            AcceptingTask.Wait();
-                            AcceptingTask.Dispose();
-                            AcceptingTaskTokenSource.Dispose();
-                            AcceptingTaskTokenSource = null;
-                            AcceptingTask = null;
+                            AcceptConsumer.Dispose();
+                            AcceptConsumer = null;
                         }
 
                         SessionSets.DoAction
@@ -905,29 +801,15 @@ namespace Server
                             }
                         );
 
-                        if (PurifieringTask != null)
+                        if (ContextPurifyConsumer != null)
                         {
-                            PurifieringTaskTokenSource.Cancel();
-                            PurifieringTaskNotifier.Set();
+                            ContextPurifyConsumer.Dispose();
+                            ContextPurifyConsumer = null;
                         }
-                        if (PurifieringTask != null)
+                        if (PurifyConsumer != null)
                         {
-                            PurifieringTask.Wait();
-                            PurifieringTask.Dispose();
-                            PurifieringTaskTokenSource.Dispose();
-                            PurifieringTaskTokenSource = null;
-                            PurifieringTask = null;
-                        }
-
-                        if (AcceptingTaskNotifier != null)
-                        {
-                            AcceptingTaskNotifier.Dispose();
-                            AcceptingTaskNotifier = null;
-                        }
-                        if (PurifieringTaskNotifier != null)
-                        {
-                            PurifieringTaskNotifier.Dispose();
-                            PurifieringTaskNotifier = null;
+                            PurifyConsumer.Dispose();
+                            PurifyConsumer = null;
                         }
 
                         return false;
@@ -937,13 +819,11 @@ namespace Server
 
             public void NotifyListenerContextQuit(HttpListenerContext ListenerContext)
             {
-                StoppingListenerContexts.Enqueue(ListenerContext);
-                PurifieringTaskNotifier.Set();
+                ContextPurifyConsumer.Push(ListenerContext);
             }
             public void NotifySessionQuit(HttpSession s)
             {
-                StoppingSessions.Enqueue(s);
-                PurifieringTaskNotifier.Set();
+                PurifyConsumer.Push(s);
             }
             public void NotifySessionAuthenticated(HttpSession s)
             {
