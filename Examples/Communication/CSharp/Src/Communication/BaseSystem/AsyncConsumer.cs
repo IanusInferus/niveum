@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,75 +11,108 @@ namespace BaseSystem
     /// </summary>
     public class AsyncConsumer<T> : IDisposable
     {
-        private ConcurrentQueue<T> Entries = new ConcurrentQueue<T>();
-        private AutoResetEvent CheckHandle = new AutoResetEvent(false);
-        private LockedVariable<Task> TaskValue = new LockedVariable<Task>(null);
+        private Action<Action> QueueUserWorkItem;
+        private Func<T, Boolean> DoConsume;
+        private int MaxConsumerCount;
+        private Queue<T> Entries = new Queue<T>();
+        private int RunningCount = 0;
+        private Boolean IsExited = false;
 
-        public AsyncConsumer()
+        public AsyncConsumer(Action<Action> QueueUserWorkItem, Func<T, Boolean> DoConsume, int MaxConsumerCount)
         {
+            this.QueueUserWorkItem = QueueUserWorkItem;
+            this.DoConsume = DoConsume;
+            this.MaxConsumerCount = MaxConsumerCount;
         }
 
         public void Push(T Entry)
         {
-            Entries.Enqueue(Entry);
-            CheckHandle.Set();
+            lock (Entries)
+            {
+                if (IsExited)
+                {
+                    return;
+                }
+                Entries.Enqueue(Entry);
+                if (RunningCount < MaxConsumerCount)
+                {
+                    RunningCount += 1;
+                    QueueUserWorkItem(Run);
+                }
+            }
         }
 
-        public void Start(Func<T, Boolean> SyncConsume)
+        private void Run()
         {
-            TaskValue.Update
-            (
-                Task =>
+            T e;
+            lock (Entries)
+            {
+                if (IsExited)
                 {
-                    if (Task != null) { throw new InvalidOperationException(); }
-
-                    var tt = new Task
-                    (
-                        () =>
-                        {
-                            while (true)
-                            {
-                                CheckHandle.WaitOne();
-                                T e;
-                                var DoExit = false;
-                                while (Entries.TryDequeue(out e))
-                                {
-                                    if (!SyncConsume(e))
-                                    {
-                                        DoExit = true;
-                                    }
-                                }
-                                if (DoExit)
-                                {
-                                    return;
-                                }
-                            }
-                        },
-                        TaskCreationOptions.LongRunning
-                    );
-                    tt.Start();
-                    return tt;
+                    RunningCount -= 1;
+                    return;
                 }
-            );
+                if (Entries.Count > 0)
+                {
+                    e = Entries.Dequeue();
+                }
+                else
+                {
+                    RunningCount -= 1;
+                    return;
+                }
+            }
+            if (!DoConsume(e))
+            {
+                lock (Entries)
+                {
+                    IsExited = true;
+                    RunningCount -= 1;
+                }
+                return;
+            }
+            QueueUserWorkItem(Run);
         }
 
-        public void Stop()
+        public void DoOne()
         {
-            TaskValue.Update
-            (
-                Task =>
+            T e;
+            lock (Entries)
+            {
+                if (IsExited)
                 {
-                    if (Task == null) { return null; }
-                    Task.Wait();
-                    return null;
+                    return;
                 }
-            );
+                if (Entries.Count > 0)
+                {
+                    e = Entries.Dequeue();
+                }
+                else
+                {
+                    return;
+                }
+                if (!DoConsume(e))
+                {
+                    IsExited = true;
+                }
+            }
         }
 
         public void Dispose()
         {
-            Stop();
-            CheckHandle.Dispose();
+            lock (Entries)
+            {
+                while (!IsExited && Entries.Count > 0)
+                {
+                    var e = Entries.Dequeue();
+                    if (!DoConsume(e))
+                    {
+                        IsExited = true;
+                        return;
+                    }
+                }
+                IsExited = true;
+            }
         }
     }
 }

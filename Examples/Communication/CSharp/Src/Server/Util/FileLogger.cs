@@ -11,11 +11,13 @@ namespace Server
     /// </summary>
     public class FileLogger : ILogger
     {
+        private Action<Action> QueueUserWorkItem;
         private String Path;
         private AsyncConsumer<SessionLogEntry> AsyncConsumer = null;
 
-        public FileLogger(String Path)
+        public FileLogger(Action<Action> QueueUserWorkItem, String Path)
         {
+            this.QueueUserWorkItem = QueueUserWorkItem;
             this.Path = Path;
         }
 
@@ -26,9 +28,9 @@ namespace Server
         {
             if (AsyncConsumer != null) { throw new InvalidOperationException(); }
 
-            AsyncConsumer = new AsyncConsumer<SessionLogEntry>();
-            AsyncConsumer.Start
+            AsyncConsumer = new AsyncConsumer<SessionLogEntry>
             (
+                QueueUserWorkItem,
                 e =>
                 {
                     if (e == null) { return false; }
@@ -40,7 +42,8 @@ namespace Server
                     {
                     }
                     return true;
-                }
+                },
+                1
             );
         }
 
@@ -55,7 +58,6 @@ namespace Server
             if (AsyncConsumer != null)
             {
                 AsyncConsumer.Push(null);
-                AsyncConsumer.Stop();
                 AsyncConsumer.Dispose();
                 AsyncConsumer = null;
             }

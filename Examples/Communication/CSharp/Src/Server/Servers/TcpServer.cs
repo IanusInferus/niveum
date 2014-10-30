@@ -22,7 +22,8 @@ namespace Server
             private class BindingInfo
             {
                 public LockedVariable<Socket> Socket;
-                public Task Task;
+                public AsyncConsumer<SocketAsyncEventArgs> ListenConsumer;
+                public Action Start;
             }
 
             private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
@@ -42,16 +43,11 @@ namespace Server
 
             private Dictionary<IPEndPoint, BindingInfo> BindingInfos = new Dictionary<IPEndPoint, BindingInfo>();
             private CancellationTokenSource ListeningTaskTokenSource;
-            private ConcurrentQueue<Socket> AcceptedSockets = new ConcurrentQueue<Socket>();
-            private Task AcceptingTask;
-            private CancellationTokenSource AcceptingTaskTokenSource;
-            private AutoResetEvent AcceptingTaskNotifier;
-            private Task PurifieringTask;
-            private CancellationTokenSource PurifieringTaskTokenSource;
-            private AutoResetEvent PurifieringTaskNotifier;
+            private AsyncConsumer<Socket> AcceptConsumer;
+            private AsyncConsumer<TcpSession> PurifyConsumer;
+
             private LockedVariable<HashSet<TcpSession>> Sessions = new LockedVariable<HashSet<TcpSession>>(new HashSet<TcpSession>());
             private LockedVariable<Dictionary<IPAddress, IpSessionInfo>> IpSessions = new LockedVariable<Dictionary<IPAddress, IpSessionInfo>>(new Dictionary<IPAddress, IpSessionInfo>());
-            private ConcurrentQueue<TcpSession> StoppingSessions = new ConcurrentQueue<TcpSession>();
 
             public TServerContext ServerContext { get; private set; }
             private Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
@@ -239,90 +235,8 @@ namespace Server
                             }
 
                             ListeningTaskTokenSource = new CancellationTokenSource();
-                            AcceptingTaskTokenSource = new CancellationTokenSource();
-                            AcceptingTaskNotifier = new AutoResetEvent(false);
-                            PurifieringTaskTokenSource = new CancellationTokenSource();
-                            PurifieringTaskNotifier = new AutoResetEvent(false);
 
                             var ListeningTaskToken = ListeningTaskTokenSource.Token;
-                            var AcceptingTaskToken = AcceptingTaskTokenSource.Token;
-                            var PurifieringTaskToken = PurifieringTaskTokenSource.Token;
-
-                            var Exceptions = new List<Exception>();
-                            foreach (var Binding in BindingsValue)
-                            {
-                                var Socket = new Socket(Binding.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-                                try
-                                {
-                                    Socket.Bind(Binding);
-                                }
-                                catch (SocketException ex)
-                                {
-                                    Exceptions.Add(ex);
-                                    continue;
-                                }
-                                Socket.Listen(MaxConnectionsValue.HasValue ? (MaxConnectionsValue.Value + 1) : 128);
-
-                                var BindingInfo = new BindingInfo
-                                {
-                                    Socket = new LockedVariable<Socket>(Socket),
-                                    Task = null
-                                };
-                                var Task = new Task
-                                (
-                                    () =>
-                                    {
-                                        try
-                                        {
-                                            while (true)
-                                            {
-                                                if (ListeningTaskToken.IsCancellationRequested) { return; }
-                                                try
-                                                {
-                                                    var a = BindingInfo.Socket.Check(s => s).Accept();
-                                                    AcceptedSockets.Enqueue(a);
-                                                    AcceptingTaskNotifier.Set();
-                                                }
-                                                catch (SocketException)
-                                                {
-                                                    if (ListeningTaskToken.IsCancellationRequested) { return; }
-                                                    BindingInfo.Socket.Update
-                                                    (
-                                                        OriginalSocket =>
-                                                        {
-                                                            try
-                                                            {
-                                                                OriginalSocket.Dispose();
-                                                            }
-                                                            catch (Exception)
-                                                            {
-                                                            }
-                                                            var NewSocket = new Socket(Binding.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                                                            NewSocket.Bind(Binding);
-                                                            NewSocket.Listen(MaxConnectionsValue.HasValue ? (MaxConnectionsValue.Value + 1) : 128);
-                                                            Socket = NewSocket;
-                                                            return NewSocket;
-                                                        }
-                                                    );
-                                                }
-                                            }
-                                        }
-                                        catch (ObjectDisposedException)
-                                        {
-                                        }
-                                    },
-                                    TaskCreationOptions.LongRunning
-                                );
-
-                                BindingInfo.Task = Task;
-
-                                BindingInfos.Add(Binding, BindingInfo);
-                            }
-                            if (BindingInfos.Count == 0)
-                            {
-                                throw new AggregateException(Exceptions);
-                            }
 
                             Func<TcpSession, Boolean> Purify = StoppingSession =>
                             {
@@ -365,161 +279,191 @@ namespace Server
                                 return Removed;
                             };
 
-                            Func<Boolean> PurifyOneInSession = () =>
+                            Action<Socket> Accept = a =>
                             {
-                                TcpSession StoppingSession;
-                                while (StoppingSessions.TryDequeue(out StoppingSession))
+                                IPEndPoint e;
+                                try
                                 {
-                                    var Removed = Purify(StoppingSession);
-                                    if (Removed) { return true; }
+                                    e = (IPEndPoint)(a.RemoteEndPoint);
                                 }
-                                return false;
+                                catch
+                                {
+                                    a.Dispose();
+                                    return;
+                                }
+                                var s = new TcpSession(this, new StreamedAsyncSocket(a, UnauthenticatedSessionIdleTimeoutValue, QueueUserWorkItem), e, VirtualTransportServerFactory, QueueUserWorkItem);
+
+                                if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
+                                {
+                                    PurifyConsumer.DoOne();
+                                }
+                                if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
+                                {
+                                    try
+                                    {
+                                        s.Start();
+                                        if (MaxConnectionsExceeded != null)
+                                        {
+                                            MaxConnectionsExceeded(s);
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        s.Dispose();
+                                    }
+                                    return;
+                                }
+
+                                if (MaxConnectionsPerIPValue.HasValue && (IpSessions.Check(iss => iss.ContainsKey(e.Address) ? iss[e.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
+                                {
+                                    try
+                                    {
+                                        s.Start();
+                                        if (MaxConnectionsPerIPExceeded != null)
+                                        {
+                                            MaxConnectionsPerIPExceeded(s);
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        PurifyConsumer.Push(s);
+                                    }
+                                    return;
+                                }
+
+                                if (MaxUnauthenticatedPerIPValue.HasValue && (IpSessions.Check(iss => iss.ContainsKey(e.Address) ? (iss[e.Address].Count - iss[e.Address].Authenticated.Count) : 0) >= MaxUnauthenticatedPerIPValue.Value))
+                                {
+                                    try
+                                    {
+                                        s.Start();
+                                        if (MaxConnectionsPerIPExceeded != null)
+                                        {
+                                            MaxConnectionsPerIPExceeded(s);
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        PurifyConsumer.Push(s);
+                                    }
+                                    return;
+                                }
+
+                                Sessions.DoAction
+                                (
+                                    ss =>
+                                    {
+                                        ss.Add(s);
+                                    }
+                                );
+                                IpSessions.DoAction
+                                (
+                                    iss =>
+                                    {
+                                        if (iss.ContainsKey(e.Address))
+                                        {
+                                            iss[e.Address].Count += 1;
+                                        }
+                                        else
+                                        {
+                                            var isi = new IpSessionInfo();
+                                            isi.Count += 1;
+                                            iss.Add(e.Address, isi);
+                                        }
+                                    }
+                                );
+
+                                s.Start();
                             };
 
-                            AcceptingTask = new Task
-                            (
-                                () =>
+                            var Exceptions = new List<Exception>();
+                            foreach (var Binding in BindingsValue)
+                            {
+                                Func<Socket> CreateSocket = () =>
                                 {
-                                    while (true)
+                                    var s = new Socket(Binding.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                                    return s;
+                                };
+
+                                var Socket = CreateSocket();
+
+                                try
+                                {
+                                    Socket.Bind(Binding);
+                                }
+                                catch (SocketException ex)
+                                {
+                                    Exceptions.Add(ex);
+                                    continue;
+                                }
+                                Socket.Listen(MaxConnectionsValue.HasValue ? (MaxConnectionsValue.Value + 1) : 128);
+
+                                var BindingInfo = new BindingInfo();
+                                BindingInfo.Socket = new LockedVariable<Socket>(Socket);
+                                Action Start = null;
+                                Func<SocketAsyncEventArgs, Boolean> Completed = args =>
+                                {
+                                    try
                                     {
-                                        if (AcceptingTaskToken.IsCancellationRequested) { return; }
-                                        AcceptingTaskNotifier.WaitOne();
-                                        while (true)
+                                        if (ListeningTaskToken.IsCancellationRequested) { return false; }
+                                        if (args.SocketError == SocketError.Success)
                                         {
-                                            Socket a;
-                                            if (!AcceptedSockets.TryDequeue(out a))
-                                            {
-                                                break;
-                                            }
-
-                                            IPEndPoint e;
-                                            try
-                                            {
-                                                e = (IPEndPoint)(a.RemoteEndPoint);
-                                            }
-                                            catch
-                                            {
-                                                a.Dispose();
-                                                continue;
-                                            }
-                                            var s = new TcpSession(this, new StreamedAsyncSocket(a, UnauthenticatedSessionIdleTimeoutValue, QueueUserWorkItem), e, VirtualTransportServerFactory, QueueUserWorkItem);
-
-                                            if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
-                                            {
-                                                PurifyOneInSession();
-                                            }
-                                            if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
-                                            {
-                                                try
-                                                {
-                                                    s.Start();
-                                                    if (MaxConnectionsExceeded != null)
-                                                    {
-                                                        MaxConnectionsExceeded(s);
-                                                    }
-                                                }
-                                                finally
-                                                {
-                                                    s.Dispose();
-                                                }
-                                                continue;
-                                            }
-
-                                            if (MaxConnectionsPerIPValue.HasValue && (IpSessions.Check(iss => iss.ContainsKey(e.Address) ? iss[e.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
-                                            {
-                                                try
-                                                {
-                                                    s.Start();
-                                                    if (MaxConnectionsPerIPExceeded != null)
-                                                    {
-                                                        MaxConnectionsPerIPExceeded(s);
-                                                    }
-                                                }
-                                                finally
-                                                {
-                                                    StoppingSessions.Enqueue(s);
-                                                    PurifieringTaskNotifier.Set();
-                                                }
-                                                continue;
-                                            }
-
-                                            if (MaxUnauthenticatedPerIPValue.HasValue && (IpSessions.Check(iss => iss.ContainsKey(e.Address) ? (iss[e.Address].Count - iss[e.Address].Authenticated.Count) : 0) >= MaxUnauthenticatedPerIPValue.Value))
-                                            {
-                                                try
-                                                {
-                                                    s.Start();
-                                                    if (MaxConnectionsPerIPExceeded != null)
-                                                    {
-                                                        MaxConnectionsPerIPExceeded(s);
-                                                    }
-                                                }
-                                                finally
-                                                {
-                                                    StoppingSessions.Enqueue(s);
-                                                    PurifieringTaskNotifier.Set();
-                                                }
-                                                continue;
-                                            }
-
-                                            Sessions.DoAction
+                                            var a = args.AcceptSocket;
+                                            QueueUserWorkItem(() => Accept(a));
+                                        }
+                                        else
+                                        {
+                                            BindingInfo.Socket.Update
                                             (
-                                                ss =>
+                                                OriginalSocket =>
                                                 {
-                                                    ss.Add(s);
+                                                    try
+                                                    {
+                                                        OriginalSocket.Dispose();
+                                                    }
+                                                    catch (Exception)
+                                                    {
+                                                    }
+                                                    var NewSocket = CreateSocket();
+                                                    NewSocket.Bind(Binding);
+                                                    NewSocket.Listen(MaxConnectionsValue.HasValue ? (MaxConnectionsValue.Value + 1) : 128);
+                                                    Socket = NewSocket;
+                                                    return NewSocket;
                                                 }
                                             );
-                                            IpSessions.DoAction
-                                            (
-                                                iss =>
-                                                {
-                                                    if (iss.ContainsKey(e.Address))
-                                                    {
-                                                        iss[e.Address].Count += 1;
-                                                    }
-                                                    else
-                                                    {
-                                                        var isi = new IpSessionInfo();
-                                                        isi.Count += 1;
-                                                        iss.Add(e.Address, isi);
-                                                    }
-                                                }
-                                            );
-
-                                            s.Start();
                                         }
                                     }
-                                },
-                                AcceptingTaskToken,
-                                TaskCreationOptions.LongRunning
-                            );
-
-                            PurifieringTask = new Task
-                            (
-                                () =>
-                                {
-                                    while (true)
+                                    finally
                                     {
-                                        if (PurifieringTaskToken.IsCancellationRequested) { return; }
-
-                                        PurifieringTaskNotifier.WaitOne();
-
-                                        TcpSession StoppingSession;
-                                        while (StoppingSessions.TryDequeue(out StoppingSession))
-                                        {
-                                            Purify(StoppingSession);
-                                        }
+                                        args.Dispose();
                                     }
-                                },
-                                PurifieringTaskToken,
-                                TaskCreationOptions.LongRunning
-                            );
+                                    Start();
+                                    return true;
+                                };
+                                Start = () =>
+                                {
+                                    var EventArgs = new SocketAsyncEventArgs();
+                                    var bs = BindingInfo.Socket.Check(s => s);
+                                    EventArgs.Completed += (o, args) => BindingInfo.ListenConsumer.Push(args);
+                                    if (!bs.AcceptAsync(EventArgs))
+                                    {
+                                        BindingInfo.ListenConsumer.Push(EventArgs);
+                                    }
+                                };
+                                BindingInfo.ListenConsumer = new AsyncConsumer<SocketAsyncEventArgs>(QueueUserWorkItem, Completed, 1);
+                                BindingInfo.Start = Start;
 
-                            AcceptingTask.Start();
-                            PurifieringTask.Start();
+                                BindingInfos.Add(Binding, BindingInfo);
+                            }
+                            if (BindingInfos.Count == 0)
+                            {
+                                throw new AggregateException(Exceptions);
+                            }
+
+                            PurifyConsumer = new AsyncConsumer<TcpSession>(QueueUserWorkItem, s => { Purify(s); return true; }, int.MaxValue);
 
                             foreach (var BindingInfo in BindingInfos.Values)
                             {
-                                BindingInfo.Task.Start();
+                                BindingInfo.Start();
                             }
 
                             Success = true;
@@ -567,11 +511,7 @@ namespace Server
                         }
                         foreach (var BindingInfo in BindingInfos.Values)
                         {
-                            if (BindingInfo.Task.Status != TaskStatus.Created)
-                            {
-                                BindingInfo.Task.Wait();
-                            }
-                            BindingInfo.Task.Dispose();
+                            BindingInfo.ListenConsumer.Dispose();
                         }
                         BindingInfos.Clear();
                         if (ListeningTaskTokenSource != null)
@@ -579,20 +519,11 @@ namespace Server
                             ListeningTaskTokenSource = null;
                         }
 
-                        if (AcceptingTask != null)
+                        if (AcceptConsumer != null)
                         {
-                            AcceptingTaskTokenSource.Cancel();
-                            AcceptingTaskNotifier.Set();
+                            AcceptConsumer.Dispose();
+                            AcceptConsumer = null;
                         }
-                        if (AcceptingTask != null)
-                        {
-                            AcceptingTask.Wait();
-                            AcceptingTask.Dispose();
-                            AcceptingTaskTokenSource.Dispose();
-                            AcceptingTaskTokenSource = null;
-                            AcceptingTask = null;
-                        }
-
                         Sessions.DoAction
                         (
                             ss =>
@@ -612,29 +543,10 @@ namespace Server
                             }
                         );
 
-                        if (PurifieringTask != null)
+                        if (PurifyConsumer != null)
                         {
-                            PurifieringTaskTokenSource.Cancel();
-                            PurifieringTaskNotifier.Set();
-                        }
-                        if (PurifieringTask != null)
-                        {
-                            PurifieringTask.Wait();
-                            PurifieringTask.Dispose();
-                            PurifieringTaskTokenSource.Dispose();
-                            PurifieringTaskTokenSource = null;
-                            PurifieringTask = null;
-                        }
-
-                        if (AcceptingTaskNotifier != null)
-                        {
-                            AcceptingTaskNotifier.Dispose();
-                            AcceptingTaskNotifier = null;
-                        }
-                        if (PurifieringTaskNotifier != null)
-                        {
-                            PurifieringTaskNotifier.Dispose();
-                            PurifieringTaskNotifier = null;
+                            PurifyConsumer.Dispose();
+                            PurifyConsumer = null;
                         }
 
                         return false;
@@ -644,8 +556,7 @@ namespace Server
 
             public void NotifySessionQuit(TcpSession s)
             {
-                StoppingSessions.Enqueue(s);
-                PurifieringTaskNotifier.Set();
+                PurifyConsumer.Push(s);
             }
             public void NotifySessionAuthenticated(TcpSession s)
             {

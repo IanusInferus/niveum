@@ -113,120 +113,135 @@ namespace Server
 
         public static void Run(Configuration c)
         {
-            using (var ThreadPoolExit = new ManualResetEvent(false))
+            var ProcessorCount = Environment.ProcessorCount;
+            var WorkThreadCount = ProcessorCount;
+            //增加后台执行功能使用的线程
+            WorkThreadCount = Math.Max(1, Math.Min(WorkThreadCount, c.NumMaxThread));
+            Console.WriteLine(@"逻辑处理器数量: " + ProcessorCount.ToString());
+            Console.WriteLine(@"工作线程数量: {0}".Formats(WorkThreadCount));
+
+            using (var tp = new CountedThreadPool("Worker", WorkThreadCount))
+            using (var tpLog = new CountedThreadPool("Log", 1))
+            using (var ExitEvent = new AutoResetEvent(false))
             {
-                var ProcessorCount = Environment.ProcessorCount;
-                var WorkThreadCount = ProcessorCount;
-                //增加后台执行功能使用的线程
-                WorkThreadCount = Math.Max(1, Math.Min(WorkThreadCount, c.NumMaxThread));
-
-                var WorkItemAdded = new AutoResetEvent(false);
-                var WorkItems = new ConcurrentQueue<Action>();
-
-                Action<Action> QueueUserWorkItem = a =>
+                LockedVariable<ConsoleCancelEventHandler> CancelKeyPress = null;
+                CancelKeyPress = new LockedVariable<ConsoleCancelEventHandler>((sender, e) =>
                 {
-                    WorkItems.Enqueue(a);
-                    WorkItemAdded.Set();
-                };
-
-                var WaitHandles = new WaitHandle[] { ThreadPoolExit, WorkItemAdded };
-                var Threads = Enumerable.Range(0, WorkThreadCount).Select((i, t) => new Thread(() =>
-                {
-                    Thread.CurrentThread.Name = "Worker" + i.ToString();
-                    while (true)
+                    tp.QueueUserWorkItem(() =>
                     {
-                        var Result = WaitHandle.WaitAny(WaitHandles);
-                        if (Result == 0) { break; }
-                        Action a;
-                        while (WorkItems.TryDequeue(out a))
+                        CancelKeyPress.Update(v =>
                         {
-                            a();
-                        }
-                    }
-                })).ToArray();
-                foreach (var t in Threads)
-                {
-                    t.Start();
-                }
-
-                Console.WriteLine(@"逻辑处理器数量: " + ProcessorCount.ToString());
-                Console.WriteLine(@"工作线程数量: {0}".Formats(WorkThreadCount));
-
-                using (var ExitEvent = new AutoResetEvent(false))
-                {
-                    LockedVariable<ConsoleCancelEventHandler> CancelKeyPress = null;
-                    CancelKeyPress = new LockedVariable<ConsoleCancelEventHandler>((sender, e) =>
-                    {
-                        QueueUserWorkItem(() =>
-                        {
-                            CancelKeyPress.Update(v =>
+                            if (v != null)
                             {
-                                if (v != null)
-                                {
-                                    Console.CancelKeyPress -= v;
-                                }
-                                return null;
-                            });
+                                Console.CancelKeyPress -= v;
+                            }
+                            return null;
                         });
-                        e.Cancel = true;
-                        Console.WriteLine("命令行中断退出。");
-                        ExitEvent.Set();
                     });
-                    Console.CancelKeyPress += CancelKeyPress.Check(v => v);
+                    e.Cancel = true;
+                    Console.WriteLine("命令行中断退出。");
+                    ExitEvent.Set();
+                });
+                Console.CancelKeyPress += CancelKeyPress.Check(v => v);
 
-                    using (var Logger = new ConsoleLogger())
+                using (var Logger = new ConsoleLogger(tpLog.QueueUserWorkItem))
+                {
+                    using (var ServerContext = new ServerContext())
                     {
-                        using (var ServerContext = new ServerContext())
-                        {
-                            ServerContext.EnableLogNormalIn = c.EnableLogNormalIn;
-                            ServerContext.EnableLogNormalOut = c.EnableLogNormalOut;
-                            ServerContext.EnableLogUnknownError = c.EnableLogUnknownError;
-                            ServerContext.EnableLogCriticalError = c.EnableLogCriticalError;
-                            ServerContext.EnableLogPerformance = c.EnableLogPerformance;
-                            ServerContext.EnableLogSystem = c.EnableLogSystem;
-                            ServerContext.ServerDebug = c.ServerDebug;
-                            ServerContext.ClientDebug = c.ClientDebug;
+                        ServerContext.EnableLogNormalIn = c.EnableLogNormalIn;
+                        ServerContext.EnableLogNormalOut = c.EnableLogNormalOut;
+                        ServerContext.EnableLogUnknownError = c.EnableLogUnknownError;
+                        ServerContext.EnableLogCriticalError = c.EnableLogCriticalError;
+                        ServerContext.EnableLogPerformance = c.EnableLogPerformance;
+                        ServerContext.EnableLogSystem = c.EnableLogSystem;
+                        ServerContext.ServerDebug = c.ServerDebug;
+                        ServerContext.ClientDebug = c.ClientDebug;
 
-                            ServerContext.Shutdown += () =>
+                        ServerContext.Shutdown += () =>
+                        {
+                            Console.WriteLine("远程命令退出。");
+                            ExitEvent.Set();
+                        };
+                        if (c.EnableLogConsole)
+                        {
+                            ServerContext.SessionLog += Logger.Push;
+                        }
+
+                        Logger.Start();
+
+                        var ServerDict = new Dictionary<VirtualServerConfiguration, IServer>();
+
+                        if (System.Diagnostics.Debugger.IsAttached)
+                        {
+                            foreach (var s in c.Servers)
                             {
-                                Console.WriteLine("远程命令退出。");
-                                ExitEvent.Set();
-                            };
-                            if (c.EnableLogConsole)
-                            {
-                                ServerContext.SessionLog += Logger.Push;
+                                ServerDict.Add(s, StartServer(c, s, ServerContext, tp.QueueUserWorkItem));
                             }
 
-                            Logger.Start();
+                            ExitEvent.WaitOne();
 
-                            var ServerDict = new Dictionary<VirtualServerConfiguration, IServer>();
-
-                            if (System.Diagnostics.Debugger.IsAttached)
+                            foreach (var s in ServerContext.Sessions.AsParallel())
                             {
-                                foreach (var s in c.Servers)
+                                s.SessionLock.AcquireReaderLock(int.MaxValue);
+                                try
                                 {
-                                    ServerDict.Add(s, StartServer(c, s, ServerContext, QueueUserWorkItem));
-                                }
-
-                                ExitEvent.WaitOne();
-
-                                foreach (var s in ServerContext.Sessions.AsParallel())
-                                {
-                                    s.SessionLock.AcquireReaderLock(int.MaxValue);
-                                    try
+                                    if (s.EventPump != null)
                                     {
-                                        if (s.EventPump != null)
-                                        {
-                                            s.EventPump.ServerShutdown(new Communication.ServerShutdownEvent { });
-                                        }
-                                    }
-                                    finally
-                                    {
-                                        s.SessionLock.ReleaseLock();
+                                        s.EventPump.ServerShutdown(new Communication.ServerShutdownEvent { });
                                     }
                                 }
+                                finally
+                                {
+                                    s.SessionLock.ReleaseLock();
+                                }
+                            }
 
-                                foreach (var s in c.Servers)
+                            foreach (var s in c.Servers)
+                            {
+                                if (ServerDict.ContainsKey(s))
+                                {
+                                    var Server = ServerDict[s];
+                                    StopServer(c, s, Server);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            foreach (var s in c.Servers)
+                            {
+                                try
+                                {
+                                    ServerDict.Add(s, StartServer(c, s, ServerContext, tp.QueueUserWorkItem));
+                                }
+                                catch (Exception ex)
+                                {
+                                    var Message = Times.DateTimeUtcToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
+                                    Console.WriteLine(Message);
+                                    FileLoggerSync.WriteLog("Error.log", Message);
+                                }
+                            }
+
+                            ExitEvent.WaitOne();
+
+                            foreach (var s in ServerContext.Sessions.AsParallel())
+                            {
+                                s.SessionLock.AcquireReaderLock(int.MaxValue);
+                                try
+                                {
+                                    if (s.EventPump != null)
+                                    {
+                                        s.EventPump.ServerShutdown(new Communication.ServerShutdownEvent { });
+                                    }
+                                }
+                                finally
+                                {
+                                    s.SessionLock.ReleaseLock();
+                                }
+                            }
+
+                            foreach (var s in c.Servers)
+                            {
+                                try
                                 {
                                     if (ServerDict.ContainsKey(s))
                                     {
@@ -234,70 +249,19 @@ namespace Server
                                         StopServer(c, s, Server);
                                     }
                                 }
-                            }
-                            else
-                            {
-                                foreach (var s in c.Servers)
+                                catch (Exception ex)
                                 {
-                                    try
-                                    {
-                                        ServerDict.Add(s, StartServer(c, s, ServerContext, QueueUserWorkItem));
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        var Message = Times.DateTimeUtcToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
-                                        Console.WriteLine(Message);
-                                        FileLoggerSync.WriteLog("Error.log", Message);
-                                    }
+                                    Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
                                 }
-
-                                ExitEvent.WaitOne();
-
-                                foreach (var s in ServerContext.Sessions.AsParallel())
-                                {
-                                    s.SessionLock.AcquireReaderLock(int.MaxValue);
-                                    try
-                                    {
-                                        if (s.EventPump != null)
-                                        {
-                                            s.EventPump.ServerShutdown(new Communication.ServerShutdownEvent { });
-                                        }
-                                    }
-                                    finally
-                                    {
-                                        s.SessionLock.ReleaseLock();
-                                    }
-                                }
-
-                                foreach (var s in c.Servers)
-                                {
-                                    try
-                                    {
-                                        if (ServerDict.ContainsKey(s))
-                                        {
-                                            var Server = ServerDict[s];
-                                            StopServer(c, s, Server);
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
-                                    }
-                                }
-                            }
-
-
-                            if (c.EnableLogConsole)
-                            {
-                                ServerContext.SessionLog -= Logger.Push;
                             }
                         }
+
+
+                        if (c.EnableLogConsole)
+                        {
+                            ServerContext.SessionLog -= Logger.Push;
+                        }
                     }
-                }
-                ThreadPoolExit.Set();
-                foreach (var t in Threads)
-                {
-                    t.Join();
                 }
             }
 
