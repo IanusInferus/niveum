@@ -58,8 +58,8 @@ namespace Client
             public const int ReadingWindowSize = 1024;
             public const int WritingWindowSize = 32;
             public const int IndexSpace = 65536;
-            public const int CheckTimeout = 500;
-            public static readonly int[] TimeoutSequences = { 500, 900, 1700, 2100, 3100, 4100 };
+            public const int CheckTimeout = 2000;
+            public static readonly int[] TimeoutSequences = { 400, 800, 1600, 2000, 3000, 4000 };
             private static int GetTimeoutMilliseconds(int ResentCount)
             {
                 if (ResentCount < TimeoutSequences.Length) { return TimeoutSequences[ResentCount]; }
@@ -195,6 +195,7 @@ namespace Client
             {
                 public PartContext Parts;
                 public SortedSet<int> NotAcknowledgedIndices = new SortedSet<int>();
+                public DateTime LastCheck = DateTime.UtcNow;
             }
             private class UdpWriteContext
             {
@@ -417,6 +418,9 @@ namespace Client
                 RawReadingContext.DoAction(c =>
                 {
                     if (c.NotAcknowledgedIndices.Count == 0) { return; }
+                    var CurrentTime = DateTime.UtcNow;
+                    if ((CurrentTime - c.LastCheck).TotalMilliseconds < CheckTimeout) { return; }
+                    c.LastCheck = CurrentTime;
                     var NotAcknowledgedIndices = new SortedSet<int>(c.NotAcknowledgedIndices);
                     var MaxHandled = c.Parts.MaxHandled;
                     while (NotAcknowledgedIndices.Count > 0)

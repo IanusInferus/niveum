@@ -8,6 +8,7 @@ namespace BaseSystem
 {
     public class CountedThreadPool : IDisposable
     {
+        private CancellationTokenSource TokenSource;
         private ManualResetEvent ThreadPoolExit;
         private AutoResetEvent WorkItemAdded;
         private ConcurrentQueue<Action> WorkItems;
@@ -16,10 +17,12 @@ namespace BaseSystem
 
         public CountedThreadPool(String Name, int ThreadCount)
         {
+            TokenSource = new CancellationTokenSource();
             ThreadPoolExit = new ManualResetEvent(false);
             WorkItemAdded = new AutoResetEvent(false);
             WorkItems = new ConcurrentQueue<Action>();
 
+            var Token = TokenSource.Token;
             WaitHandles = new WaitHandle[] { ThreadPoolExit, WorkItemAdded };
             Threads = Enumerable.Range(0, ThreadCount).Select((i, t) => new Thread(() =>
             {
@@ -28,10 +31,19 @@ namespace BaseSystem
                 {
                     var Result = WaitHandle.WaitAny(WaitHandles);
                     if (Result == 0) { break; }
-                    Action a;
-                    while (WorkItems.TryDequeue(out a))
+                    int EmptyCount = 0;
+                    while (true)
                     {
-                        a();
+                        if (Token.IsCancellationRequested) { return; }
+                        Action a;
+                        while (WorkItems.TryDequeue(out a))
+                        {
+                            EmptyCount = 0;
+                            a();
+                        }
+                        EmptyCount += 1;
+                        if (EmptyCount > 128) { break; }
+                        Thread.SpinWait(1 + EmptyCount);
                     }
                 }
             })).ToArray();
@@ -49,6 +61,7 @@ namespace BaseSystem
 
         public void Dispose()
         {
+            TokenSource.Cancel();
             ThreadPoolExit.Set();
             foreach (var t in Threads)
             {
@@ -57,6 +70,7 @@ namespace BaseSystem
 
             WorkItemAdded.Dispose();
             ThreadPoolExit.Dispose();
+            TokenSource.Dispose();
         }
     }
 }
