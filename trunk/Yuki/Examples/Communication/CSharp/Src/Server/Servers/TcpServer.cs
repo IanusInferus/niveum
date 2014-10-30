@@ -46,8 +46,12 @@ namespace Server
             private AsyncConsumer<Socket> AcceptConsumer;
             private AsyncConsumer<TcpSession> PurifyConsumer;
 
-            private LockedVariable<HashSet<TcpSession>> Sessions = new LockedVariable<HashSet<TcpSession>>(new HashSet<TcpSession>());
-            private LockedVariable<Dictionary<IPAddress, IpSessionInfo>> IpSessions = new LockedVariable<Dictionary<IPAddress, IpSessionInfo>>(new Dictionary<IPAddress, IpSessionInfo>());
+            private class ServerSessionSets
+            {
+                public HashSet<TcpSession> Sessions = new HashSet<TcpSession>();
+                public Dictionary<IPAddress, IpSessionInfo> IpSessions = new Dictionary<IPAddress, IpSessionInfo>();
+            }
+            private LockedVariable<ServerSessionSets> SessionSets = new LockedVariable<ServerSessionSets>(new ServerSessionSets());
 
             public TServerContext ServerContext { get; private set; }
             private Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
@@ -238,45 +242,30 @@ namespace Server
 
                             var ListeningTaskToken = ListeningTaskTokenSource.Token;
 
-                            Func<TcpSession, Boolean> Purify = StoppingSession =>
+                            Action<TcpSession> Purify = StoppingSession =>
                             {
-                                var Removed = false;
-                                Sessions.DoAction
+                                SessionSets.DoAction
                                 (
                                     ss =>
                                     {
-                                        if (ss.Contains(StoppingSession))
+                                        if (ss.Sessions.Contains(StoppingSession))
                                         {
-                                            ss.Remove(StoppingSession);
-                                            Removed = true;
+                                            ss.Sessions.Remove(StoppingSession);
+                                            var IpAddress = StoppingSession.RemoteEndPoint.Address;
+                                            var isi = ss.IpSessions[IpAddress];
+                                            if (isi.Authenticated.Contains(StoppingSession))
+                                            {
+                                                isi.Authenticated.Remove(StoppingSession);
+                                            }
+                                            isi.Count -= 1;
+                                            if (isi.Count == 0)
+                                            {
+                                                ss.IpSessions.Remove(IpAddress);
+                                            }
                                         }
                                     }
                                 );
-                                if (Removed)
-                                {
-                                    var IpAddress = StoppingSession.RemoteEndPoint.Address;
-                                    IpSessions.DoAction
-                                    (
-                                        iss =>
-                                        {
-                                            if (iss.ContainsKey(IpAddress))
-                                            {
-                                                var isi = iss[IpAddress];
-                                                if (isi.Authenticated.Contains(StoppingSession))
-                                                {
-                                                    isi.Authenticated.Remove(StoppingSession);
-                                                }
-                                                isi.Count -= 1;
-                                                if (isi.Count == 0)
-                                                {
-                                                    iss.Remove(IpAddress);
-                                                }
-                                            }
-                                        }
-                                    );
-                                }
                                 StoppingSession.Dispose();
-                                return Removed;
                             };
 
                             Action<Socket> Accept = a =>
@@ -293,11 +282,11 @@ namespace Server
                                 }
                                 var s = new TcpSession(this, new StreamedAsyncSocket(a, UnauthenticatedSessionIdleTimeoutValue, QueueUserWorkItem), e, VirtualTransportServerFactory, QueueUserWorkItem);
 
-                                if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
+                                if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
                                 {
                                     PurifyConsumer.DoOne();
                                 }
-                                if (MaxConnectionsValue.HasValue && (Sessions.Check(ss => ss.Count) >= MaxConnectionsValue.Value))
+                                if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
                                 {
                                     try
                                     {
@@ -314,7 +303,7 @@ namespace Server
                                     return;
                                 }
 
-                                if (MaxConnectionsPerIPValue.HasValue && (IpSessions.Check(iss => iss.ContainsKey(e.Address) ? iss[e.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
+                                if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
                                 {
                                     try
                                     {
@@ -331,7 +320,7 @@ namespace Server
                                     return;
                                 }
 
-                                if (MaxUnauthenticatedPerIPValue.HasValue && (IpSessions.Check(iss => iss.ContainsKey(e.Address) ? (iss[e.Address].Count - iss[e.Address].Authenticated.Count) : 0) >= MaxUnauthenticatedPerIPValue.Value))
+                                if (MaxUnauthenticatedPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address].Count : 0) >= MaxUnauthenticatedPerIPValue.Value))
                                 {
                                     try
                                     {
@@ -348,26 +337,20 @@ namespace Server
                                     return;
                                 }
 
-                                Sessions.DoAction
+                                SessionSets.DoAction
                                 (
                                     ss =>
                                     {
-                                        ss.Add(s);
-                                    }
-                                );
-                                IpSessions.DoAction
-                                (
-                                    iss =>
-                                    {
-                                        if (iss.ContainsKey(e.Address))
+                                        ss.Sessions.Add(s);
+                                        if (ss.IpSessions.ContainsKey(e.Address))
                                         {
-                                            iss[e.Address].Count += 1;
+                                            ss.IpSessions[e.Address].Count += 1;
                                         }
                                         else
                                         {
                                             var isi = new IpSessionInfo();
                                             isi.Count += 1;
-                                            iss.Add(e.Address, isi);
+                                            ss.IpSessions.Add(e.Address, isi);
                                         }
                                     }
                                 );
@@ -524,22 +507,16 @@ namespace Server
                             AcceptConsumer.Dispose();
                             AcceptConsumer = null;
                         }
-                        Sessions.DoAction
+                        SessionSets.DoAction
                         (
                             ss =>
                             {
-                                foreach (var s in ss)
+                                foreach (var s in ss.Sessions)
                                 {
                                     s.Dispose();
                                 }
-                                ss.Clear();
-                            }
-                        );
-                        IpSessions.DoAction
-                        (
-                            iss =>
-                            {
-                                iss.Clear();
+                                ss.Sessions.Clear();
+                                ss.IpSessions.Clear();
                             }
                         );
 
@@ -561,13 +538,13 @@ namespace Server
             public void NotifySessionAuthenticated(TcpSession s)
             {
                 var e = s.RemoteEndPoint;
-                IpSessions.DoAction
+                SessionSets.DoAction
                 (
-                    iss =>
+                    ss =>
                     {
-                        if (iss.ContainsKey(e.Address))
+                        if (ss.IpSessions.ContainsKey(e.Address))
                         {
-                            var isi = iss[e.Address];
+                            var isi = ss.IpSessions[e.Address];
                             if (!isi.Authenticated.Contains(s))
                             {
                                 isi.Authenticated.Add(s);
