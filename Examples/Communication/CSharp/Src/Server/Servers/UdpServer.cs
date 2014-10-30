@@ -288,9 +288,8 @@ namespace Server
 
                             var ListeningTaskToken = ListeningTaskTokenSource.Token;
 
-                            Func<UdpSession, Boolean> Purify = StoppingSession =>
+                            Action<UdpSession> Purify = StoppingSession =>
                             {
-                                var Removed = false;
                                 SessionSets.DoAction
                                 (
                                     ss =>
@@ -298,7 +297,6 @@ namespace Server
                                         if (ss.Sessions.Contains(StoppingSession))
                                         {
                                             ss.Sessions.Remove(StoppingSession);
-                                            Removed = true;
                                             var IpAddress = StoppingSession.RemoteEndPoint.Address;
                                             var isi = ss.IpSessions[IpAddress];
                                             if (isi.Authenticated.Contains(StoppingSession))
@@ -316,7 +314,6 @@ namespace Server
                                     }
                                 );
                                 StoppingSession.Dispose();
-                                return Removed;
                             };
 
                             Action<AcceptingInfo> Accept = a =>
