@@ -22,7 +22,7 @@ namespace Algorithms
         }
         public static Int32 CRC32(Byte[] Bytes)
         {
-            var c = new Firefly.CRC32();
+            var c = new CRC32();
             foreach (var b in Bytes)
             {
                 c.PushData(b);
@@ -31,13 +31,14 @@ namespace Algorithms
         }
         public static Int32 CRC32(IEnumerable<Byte> Bytes)
         {
-            var c = new Firefly.CRC32();
+            var c = new CRC32();
             foreach (var b in Bytes)
             {
                 c.PushData(b);
             }
             return c.GetCRC32();
         }
+
         public static Byte[] SHA1(Byte[] Bytes)
         {
             SHA1 sha = new SHA1Managed();
@@ -61,53 +62,6 @@ namespace Algorithms
             return OuterHash;
         }
 
-        public class RC4
-        {
-            private Byte[] S;
-            private int i;
-            private int j;
-
-            public RC4(Byte[] Key)
-            {
-                S = Enumerable.Range(0, 256).Select(k => (Byte)(k)).ToArray();
-                int b = 0;
-                for (int a = 0; a < 256; a += 1)
-                {
-                    b = (b + S[a] + Key[a % Key.Length]) % 256;
-                    Swap(ref S[a], ref S[b]);
-                }
-
-                i = 0;
-                j = 0;
-            }
-
-            public Byte NextByte()
-            {
-                i = (i + 1) % 256;
-                j = (j + S[i]) % 256;
-                Swap(ref S[i], ref S[j]);
-                var K = S[(S[i] + S[j]) % 256];
-                return K;
-            }
-
-            public void Skip(int n)
-            {
-                for (int k = 0; k < n; k += 1)
-                {
-                    i = (i + 1) % 256;
-                    j = (j + S[i]) % 256;
-                    Swap(ref S[i], ref S[j]);
-                }
-            }
-
-            private void Swap(ref Byte a, ref Byte b)
-            {
-                var t = a;
-                a = b;
-                b = t;
-            }
-        }
-
         public static String BytesToHexString(IEnumerable<Byte> Bytes)
         {
             return String.Join("", Bytes.Select(b => b.ToString("X2")));
@@ -120,6 +74,105 @@ namespace Algorithms
             if (h.Length % 2 != 0) { throw new ArgumentException("HexStringLengthNotEven"); }
             Func<String, Byte> ParseByte = s => Byte.Parse(s, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
             return Enumerable.Range(0, h.Length / 2).Select(i => ParseByte(h.Substring(i * 2, 2))).ToArray();
+        }
+    }
+
+    public class CRC32
+    {
+        private static Int32[] Table;
+        static CRC32()
+        {
+            //g(x) = x^32 + x^26 + x^23 + x^22 + x^16 + x^12 + x^11 + x^10 + x^8 + x^7 + x^5 + x^4 + x^2 + x + 1
+            //多项式系数的位数组表示104C11DB7
+            Int32 Coefficients = unchecked((Int32)(0xEDB88320));
+            //反向表示
+
+            Table = new Int32[256];
+
+            for (int i = 0; i < 256; i++)
+            {
+                Int32 CRC = i;
+                for (int j = 0; j < 8; j++)
+                {
+                    if ((CRC & 1) != 0)
+                    {
+                        CRC = (CRC >> 1) & 0x7FFFFFFF;
+                        CRC = CRC ^ Coefficients;
+                    }
+                    else
+                    {
+                        CRC = (CRC >> 1) & 0x7FFFFFFF;
+                    }
+                }
+                Table[i] = CRC;
+            }
+        }
+
+        private Int32 Result;
+        public CRC32()
+        {
+            Reset();
+        }
+        public void Reset()
+        {
+            Result = unchecked((Int32)(0xFFFFFFFF));
+        }
+        public void PushData(byte b)
+        {
+            int iLookup = (Result & 0xFF) ^ b;
+            Result = (Result >> 8) & 0xFFFFFF;
+            Result = Result ^ Table[iLookup];
+        }
+        public Int32 GetCRC32()
+        {
+            return ~Result;
+        }
+    }
+
+    public class RC4
+    {
+        private Byte[] S;
+        private int i;
+        private int j;
+
+        public RC4(Byte[] Key)
+        {
+            S = Enumerable.Range(0, 256).Select(k => (Byte)(k)).ToArray();
+            int b = 0;
+            for (int a = 0; a < 256; a += 1)
+            {
+                b = (b + S[a] + Key[a % Key.Length]) % 256;
+                Swap(ref S[a], ref S[b]);
+            }
+
+            i = 0;
+            j = 0;
+        }
+
+        public Byte NextByte()
+        {
+            i = (i + 1) % 256;
+            j = (j + S[i]) % 256;
+            Swap(ref S[i], ref S[j]);
+            var K = S[(S[i] + S[j]) % 256];
+            return K;
+        }
+
+        public void Skip(int n)
+        {
+            for (int k = 0; k < n; k += 1)
+            {
+                i = (i + 1) % 256;
+                j = (j + S[i]) % 256;
+                Swap(ref S[i], ref S[j]);
+            }
+        }
+
+        private void Swap(ref Byte a, ref Byte b)
+        {
+            var t = a;
+            a = b;
+            b = t;
         }
     }
 }

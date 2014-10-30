@@ -80,9 +80,7 @@ namespace Server
 
         public ISessionContext CreateSessionContext()
         {
-            var s = new SessionContext();
-            s.SessionToken = Cryptography.CreateRandom(4);
-            return s;
+            return new SessionContext(Cryptography.CreateRandom(4));
         }
 
         private ServerImplementation CreateServerImplementation(SessionContext Context)
