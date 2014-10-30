@@ -772,8 +772,8 @@ namespace Server
                         }
                         if (ListenConsumer != null)
                         {
-                            Listener.Close();
                             ListenConsumer.Dispose();
+                            Listener.Close();
                             Listener = null;
                             ListenConsumer = null;
                         }

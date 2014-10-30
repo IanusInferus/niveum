@@ -12,6 +12,12 @@ namespace Server
 {
     public class SessionContext : ISessionContext
     {
+        public SessionContext(Byte[] SessionToken)
+        {
+            this.SessionTokenValue = SessionToken;
+            this.SessionTokenStringValue = Cryptography.BytesToHexString(SessionToken.Reverse());
+        }
+
         //单线程访问
         public void Dispose()
         {
@@ -39,8 +45,10 @@ namespace Server
         public IPEndPoint RemoteEndPoint { get; set; }
         public bool IsSecureConnection = false;
 
-        public Byte[] SessionToken { get; set; }
-        public String SessionTokenString { get { return Cryptography.BytesToHexString(SessionToken.Reverse()); } }
+        private Byte[] SessionTokenValue;
+        private String SessionTokenStringValue;
+        public Byte[] SessionToken { get { return SessionTokenValue; } }
+        public String SessionTokenString { get { return SessionTokenStringValue; } }
 
         public ReaderWriterLock SessionLock = new ReaderWriterLock(); //跨线程共享读写访问变量锁
 

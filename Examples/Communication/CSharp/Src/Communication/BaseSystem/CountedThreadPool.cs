@@ -8,7 +8,6 @@ namespace BaseSystem
 {
     public class CountedThreadPool : IDisposable
     {
-        private String Name;
         private ManualResetEvent ThreadPoolExit;
         private AutoResetEvent WorkItemAdded;
         private ConcurrentQueue<Action> WorkItems;
