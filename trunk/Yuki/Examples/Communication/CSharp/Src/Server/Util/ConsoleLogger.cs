@@ -11,15 +11,21 @@ namespace Server
     /// </summary>
     public class ConsoleLogger : ILogger
     {
+        private Action<Action> QueueUserWorkItem;
         private AsyncConsumer<SessionLogEntry> AsyncConsumer = null;
+
+        public ConsoleLogger(Action<Action> QueueUserWorkItem)
+        {
+            this.QueueUserWorkItem = QueueUserWorkItem;
+        }
 
         public void Start()
         {
             if (AsyncConsumer != null) { throw new InvalidOperationException(); }
 
-            AsyncConsumer = new AsyncConsumer<SessionLogEntry>();
-            AsyncConsumer.Start
+            AsyncConsumer = new AsyncConsumer<SessionLogEntry>
             (
+                QueueUserWorkItem,
                 e =>
                 {
                     if (e == null) { return false; }
@@ -34,7 +40,8 @@ namespace Server
                     {
                     }
                     return true;
-                }
+                },
+                1
             );
         }
 
@@ -49,7 +56,6 @@ namespace Server
             if (AsyncConsumer != null)
             {
                 AsyncConsumer.Push(null);
-                AsyncConsumer.Stop();
                 AsyncConsumer.Dispose();
                 AsyncConsumer = null;
             }
