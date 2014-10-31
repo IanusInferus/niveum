@@ -673,9 +673,15 @@ namespace Server
                                     EventArgs.SetBuffer(BindingInfo.ReadBuffer, 0, BindingInfo.ReadBuffer.Length);
                                     var bs = BindingInfo.Socket.Check(s => s);
                                     EventArgs.Completed += (o, args) => BindingInfo.ListenConsumer.Push(args);
-                                    if (!bs.ReceiveFromAsync(EventArgs))
+                                    try
                                     {
-                                        BindingInfo.ListenConsumer.Push(EventArgs);
+                                        if (!bs.ReceiveFromAsync(EventArgs))
+                                        {
+                                            BindingInfo.ListenConsumer.Push(EventArgs);
+                                        }
+                                    }
+                                    catch (ObjectDisposedException)
+                                    {
                                     }
                                 };
                                 BindingInfo.ListenConsumer = new AsyncConsumer<SocketAsyncEventArgs>(QueueUserWorkItem, Completed, 1);
