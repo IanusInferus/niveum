@@ -56,6 +56,7 @@ namespace Server
             public TServerContext ServerContext { get; private set; }
             private Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
             private Action<Action> QueueUserWorkItem;
+            private Action<Action> PurifierQueueUserWorkItem;
 
             private int MaxBadCommandsValue = 8;
             private IPEndPoint[] BindingsValue = { };
@@ -196,11 +197,12 @@ namespace Server
 
             public LockedVariable<Dictionary<ISessionContext, TcpSession>> SessionMappings = new LockedVariable<Dictionary<ISessionContext, TcpSession>>(new Dictionary<ISessionContext, TcpSession>());
 
-            public TcpServer(TServerContext sc, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem)
+            public TcpServer(TServerContext sc, Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem, Action<Action> PurifierQueueUserWorkItem)
             {
                 ServerContext = sc;
                 this.VirtualTransportServerFactory = VirtualTransportServerFactory;
                 this.QueueUserWorkItem = QueueUserWorkItem;
+                this.PurifierQueueUserWorkItem = PurifierQueueUserWorkItem;
 
                 this.MaxConnectionsExceeded += OnMaxConnectionsExceeded;
                 this.MaxConnectionsPerIPExceeded += OnMaxConnectionsPerIPExceeded;
@@ -442,7 +444,7 @@ namespace Server
                                 throw new AggregateException(Exceptions);
                             }
 
-                            PurifyConsumer = new AsyncConsumer<TcpSession>(QueueUserWorkItem, s => { Purify(s); return true; }, int.MaxValue);
+                            PurifyConsumer = new AsyncConsumer<TcpSession>(PurifierQueueUserWorkItem, s => { Purify(s); return true; }, int.MaxValue);
 
                             foreach (var BindingInfo in BindingInfos.Values)
                             {
