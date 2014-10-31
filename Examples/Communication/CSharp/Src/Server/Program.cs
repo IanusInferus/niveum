@@ -123,6 +123,7 @@ namespace Server
             Console.WriteLine(@"工作线程数量: {0}".Formats(WorkThreadCount));
 
             using (var tp = new CountedThreadPool("Worker", WorkThreadCount))
+            using (var tpPurifier = new CountedThreadPool("Purifier", 2))
             using (var tpLog = new CountedThreadPool("Log", 1))
             using (var ExitEvent = new AutoResetEvent(false))
             {
@@ -173,7 +174,7 @@ namespace Server
                         {
                             foreach (var s in c.Servers)
                             {
-                                ServerDict.Add(s, StartServer(c, s, ServerContext, tp.QueueUserWorkItem));
+                                ServerDict.Add(s, StartServer(c, s, ServerContext, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
                             }
 
                             ExitEvent.WaitOne();
@@ -210,7 +211,7 @@ namespace Server
                             {
                                 try
                                 {
-                                    ServerDict.Add(s, StartServer(c, s, ServerContext, tp.QueueUserWorkItem));
+                                    ServerDict.Add(s, StartServer(c, s, ServerContext, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
                                 }
                                 catch (Exception ex)
                                 {
@@ -268,7 +269,7 @@ namespace Server
             Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  服务器进程退出完成。");
         }
 
-        private static IServer StartServer(Configuration c, VirtualServerConfiguration vsc, ServerContext ServerContext, Action<Action> QueueUserWorkItem)
+        private static IServer StartServer(Configuration c, VirtualServerConfiguration vsc, ServerContext ServerContext, Action<Action> QueueUserWorkItem, Action<Action> PurifierQueueUserWorkItem)
         {
             if (vsc.OnTcp)
             {
@@ -307,7 +308,7 @@ namespace Server
                     throw new InvalidOperationException();
                 }
 
-                var Server = new Streamed<ServerContext>.TcpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem);
+                var Server = new Streamed<ServerContext>.TcpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
                 var Success = false;
 
                 try
@@ -373,7 +374,7 @@ namespace Server
                     throw new InvalidOperationException();
                 }
 
-                var Server = new Streamed<ServerContext>.UdpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem);
+                var Server = new Streamed<ServerContext>.UdpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
                 var Success = false;
 
                 try
@@ -417,7 +418,7 @@ namespace Server
                     return new KeyValuePair<IServerImplementation, Http<ServerContext>.IHttpVirtualTransportServer>(si, jhps);
                 };
 
-                var Server = new Http<ServerContext>.HttpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem);
+                var Server = new Http<ServerContext>.HttpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
                 var Success = false;
 
                 try
