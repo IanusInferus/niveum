@@ -43,7 +43,7 @@ namespace Server
                 }
                 catch (Exception ex)
                 {
-                    var Message = Times.DateTimeUtcToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
+                    var Message = Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
                     Console.WriteLine(Message);
                     FileLoggerSync.WriteLog("Crash.log", Message);
                     return -1;
@@ -54,7 +54,7 @@ namespace Server
         private static void CurrentDomain_UnhandledException(Object sender, UnhandledExceptionEventArgs e)
         {
             var ex = (Exception)(e.ExceptionObject);
-            var Message = Times.DateTimeUtcToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex, null);
+            var Message = Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex, null);
             Console.WriteLine(Message);
             FileLoggerSync.WriteLog("Crash.log", Message);
             Environment.Exit(-1);
@@ -63,7 +63,7 @@ namespace Server
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             var ex = e.Exception;
-            var Message = Times.DateTimeUtcToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
+            var Message = Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
             Console.WriteLine(Message);
             FileLoggerSync.WriteLog("Crash.log", Message);
             Environment.Exit(-1);
@@ -113,6 +113,8 @@ namespace Server
 
         public static void Run(Configuration c)
         {
+            Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  服务器进程启动。");
+
             var ProcessorCount = Environment.ProcessorCount;
             var WorkThreadCount = ProcessorCount;
             //增加后台执行功能使用的线程
@@ -124,25 +126,21 @@ namespace Server
             using (var tpLog = new CountedThreadPool("Log", 1))
             using (var ExitEvent = new AutoResetEvent(false))
             {
-                LockedVariable<ConsoleCancelEventHandler> CancelKeyPress = null;
-                CancelKeyPress = new LockedVariable<ConsoleCancelEventHandler>((sender, e) =>
+                LockedVariable<ConsoleCancelEventHandler> CancelKeyPressInner = null;
+                CancelKeyPressInner = new LockedVariable<ConsoleCancelEventHandler>((sender, e) =>
                 {
-                    tp.QueueUserWorkItem(() =>
-                    {
-                        CancelKeyPress.Update(v =>
-                        {
-                            if (v != null)
-                            {
-                                Console.CancelKeyPress -= v;
-                            }
-                            return null;
-                        });
-                    });
+                    CancelKeyPressInner.Update(v => { return null; });
                     e.Cancel = true;
-                    Console.WriteLine("命令行中断退出。");
+                    Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  命令行中断退出。");
                     ExitEvent.Set();
                 });
-                Console.CancelKeyPress += CancelKeyPress.Check(v => v);
+                ConsoleCancelEventHandler CancelKeyPress = (sender, e) =>
+                {
+                    var f = CancelKeyPressInner.Check(v => v);
+                    if (f == null) { return; }
+                    f(sender, e);
+                };
+                Console.CancelKeyPress += CancelKeyPress;
 
                 using (var Logger = new ConsoleLogger(tpLog.QueueUserWorkItem))
                 {
@@ -159,7 +157,7 @@ namespace Server
 
                         ServerContext.Shutdown += () =>
                         {
-                            Console.WriteLine("远程命令退出。");
+                            Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  远程命令退出。");
                             ExitEvent.Set();
                         };
                         if (c.EnableLogConsole)
@@ -179,6 +177,7 @@ namespace Server
                             }
 
                             ExitEvent.WaitOne();
+                            Console.CancelKeyPress -= CancelKeyPress;
 
                             foreach (var s in ServerContext.Sessions.AsParallel())
                             {
@@ -215,13 +214,14 @@ namespace Server
                                 }
                                 catch (Exception ex)
                                 {
-                                    var Message = Times.DateTimeUtcToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
+                                    var Message = Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
                                     Console.WriteLine(Message);
                                     FileLoggerSync.WriteLog("Error.log", Message);
                                 }
                             }
 
                             ExitEvent.WaitOne();
+                            Console.CancelKeyPress -= CancelKeyPress;
 
                             foreach (var s in ServerContext.Sessions.AsParallel())
                             {
@@ -265,7 +265,7 @@ namespace Server
                 }
             }
 
-            Console.WriteLine("服务器进程退出完成。");
+            Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  服务器进程退出完成。");
         }
 
         private static IServer StartServer(Configuration c, VirtualServerConfiguration vsc, ServerContext ServerContext, Action<Action> QueueUserWorkItem)
