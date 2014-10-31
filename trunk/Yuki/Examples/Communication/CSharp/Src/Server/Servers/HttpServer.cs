@@ -128,6 +128,7 @@ namespace Server
             public TServerContext ServerContext { get; private set; }
             private Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory;
             private Action<Action> QueueUserWorkItem;
+            private Action<Action> PurifierQueueUserWorkItem;
 
             private int MaxBadCommandsValue = 8;
             private String[] BindingsValue = { };
@@ -309,11 +310,12 @@ namespace Server
 
             public LockedVariable<Dictionary<ISessionContext, HttpSession>> SessionMappings = new LockedVariable<Dictionary<ISessionContext, HttpSession>>(new Dictionary<ISessionContext, HttpSession>());
 
-            public HttpServer(TServerContext sc, Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem)
+            public HttpServer(TServerContext sc, Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem, Action<Action> PurifierQueueUserWorkItem)
             {
                 ServerContext = sc;
                 this.VirtualTransportServerFactory = VirtualTransportServerFactory;
                 this.QueueUserWorkItem = QueueUserWorkItem;
+                this.PurifierQueueUserWorkItem = PurifierQueueUserWorkItem;
             }
 
             private Boolean IsMatchBindingName(Uri Url)
@@ -631,7 +633,7 @@ namespace Server
                             AcceptConsumer = new AsyncConsumer<HttpListenerContext>(QueueUserWorkItem, a => { Accept(a); return true; }, int.MaxValue);
 
                             ContextPurifyConsumer = new AsyncConsumer<HttpListenerContext>(QueueUserWorkItem, l => { PurifyContext(l); return true; }, int.MaxValue);
-                            PurifyConsumer = new AsyncConsumer<HttpSession>(QueueUserWorkItem, s => { Purify(s); return true; }, int.MaxValue);
+                            PurifyConsumer = new AsyncConsumer<HttpSession>(PurifierQueueUserWorkItem, s => { Purify(s); return true; }, int.MaxValue);
 
                             if (UnauthenticatedSessionIdleTimeoutValue.HasValue || SessionIdleTimeoutValue.HasValue)
                             {
