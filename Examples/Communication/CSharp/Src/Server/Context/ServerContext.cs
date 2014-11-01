@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading;
 using Communication;
 using BaseSystem;
 using Algorithms;
@@ -88,10 +89,37 @@ namespace Server
             var si = new ServerImplementation(this, Context);
             return si;
         }
+
+        private Int64 RequestCountValue = 0;
+        private Int64 ReplyCountValue = 0;
+        private Int64 EventCountValue = 0;
+        public Int64 RequestCount
+        {
+            get
+            {
+                return Interlocked.Read(ref RequestCountValue);
+            }
+        }
+        public Int64 ReplyCount
+        {
+            get
+            {
+                return Interlocked.Read(ref ReplyCountValue);
+            }
+        }
+        public Int64 EventCount
+        {
+            get
+            {
+                return Interlocked.Read(ref EventCountValue);
+            }
+        }
+
         private void HookLog(SessionContext Context, JsonLogAspectWrapper law)
         {
             law.ClientCommandIn += (CommandName, Parameters) =>
             {
+                Interlocked.Add(ref RequestCountValue, 1);
                 if (EnableLogNormalIn)
                 {
                     RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = Context.RemoteEndPoint, Time = DateTime.UtcNow, Type = "In", Name = CommandName, Message = Parameters });
@@ -99,6 +127,7 @@ namespace Server
             };
             law.ClientCommandOut += (CommandName, Parameters) =>
             {
+                Interlocked.Add(ref ReplyCountValue, 1);
                 if (EnableLogNormalOut)
                 {
                     RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = Context.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Name = CommandName, Message = Parameters });
@@ -106,6 +135,7 @@ namespace Server
             };
             law.ServerCommand += (CommandName, Parameters) =>
             {
+                Interlocked.Add(ref EventCountValue, 1);
                 if (EnableLogNormalOut)
                 {
                     RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = Context.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Name = CommandName, Message = Parameters });
