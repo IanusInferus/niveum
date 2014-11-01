@@ -262,6 +262,16 @@ namespace Server
                         {
                             ServerContext.SessionLog -= Logger.Push;
                         }
+
+                        Action<String, Int64> DisplayCountIfNotZero = (Message, Count) =>
+                        {
+                            if (Count == 0) { return; }
+                            Console.WriteLine(Message + Count.ToInvariantString());
+                        };
+
+                        DisplayCountIfNotZero(@"ServerContext.RequestCount = ", ServerContext.RequestCount);
+                        DisplayCountIfNotZero(@"ServerContext.ReplyCount = ", ServerContext.ReplyCount);
+                        DisplayCountIfNotZero(@"ServerContext.EventCount = ", ServerContext.EventCount);
                     }
                 }
             }

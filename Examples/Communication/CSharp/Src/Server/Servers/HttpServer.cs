@@ -792,18 +792,20 @@ namespace Server
                             AcceptConsumer = null;
                         }
 
+                        List<HttpSession> Sessions = null;
                         SessionSets.DoAction
                         (
                             ss =>
                             {
-                                foreach (var s in ss.Sessions)
-                                {
-                                    s.Dispose();
-                                }
+                                Sessions = ss.Sessions.ToList();
                                 ss.Sessions.Clear();
                                 ss.IpSessions.Clear();
                             }
                         );
+                        foreach (var s in Sessions)
+                        {
+                            s.Dispose();
+                        }
 
                         if (ContextPurifyConsumer != null)
                         {
