@@ -515,18 +515,21 @@ namespace Server
                             AcceptConsumer.Dispose();
                             AcceptConsumer = null;
                         }
+
+                        List<TcpSession> Sessions = null;
                         SessionSets.DoAction
                         (
                             ss =>
                             {
-                                foreach (var s in ss.Sessions)
-                                {
-                                    s.Dispose();
-                                }
+                                Sessions = ss.Sessions.ToList();
                                 ss.Sessions.Clear();
                                 ss.IpSessions.Clear();
                             }
                         );
+                        foreach (var s in Sessions)
+                        {
+                            s.Dispose();
+                        }
 
                         if (PurifyConsumer != null)
                         {
