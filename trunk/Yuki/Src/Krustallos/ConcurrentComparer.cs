@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace Krustallos
 {
@@ -83,9 +84,7 @@ namespace Krustallos
                 {
                     var UnderlyingType = (typeof(T)).GetEnumUnderlyingType();
                     var UnderlyingTypeComparer = Activator.CreateInstance(typeof(DefaultComparer<>).MakeGenericType(UnderlyingType));
-                    Func<T, T> Identity = x => x;
-                    var Mapper = Delegate.CreateDelegate(typeof(Func<,>).MakeGenericType(typeof(T), UnderlyingType), Identity.Method);
-                    Inner = ((IComparer<T>)(Activator.CreateInstance(typeof(MappedComparer<,>).MakeGenericType(typeof(T), UnderlyingType), UnderlyingTypeComparer, Mapper))).Compare;
+                    Inner = ((IComparer<T>)(Activator.CreateInstance(typeof(MappedComparer<,>).MakeGenericType(typeof(T), UnderlyingType), UnderlyingTypeComparer))).Compare;
                 }
                 else if (typeof(T).IsGenericType && (typeof(T).GetGenericTypeDefinition() == typeof(Optional<>)))
                 {
@@ -138,12 +137,19 @@ namespace Krustallos
         }
         private class MappedComparer<T, M> : IComparer<T>
         {
+            private static Func<T, M> Mapper;
+
+            static MappedComparer()
+            {
+                var p = Expression.Parameter(typeof(T), "T");
+                var c = Expression.Convert(p, typeof(M));
+                Mapper = Expression.Lambda<Func<T, M>>(c, p).Compile();
+            }
+
             private IComparer<M> Inner;
-            private Func<T, M> Mapper;
-            public MappedComparer(IComparer<M> Inner, Func<T, M> Mapper)
+            public MappedComparer(IComparer<M> Inner)
             {
                 this.Inner = Inner;
-                this.Mapper = Mapper;
             }
             public int Compare(T x, T y)
             {
