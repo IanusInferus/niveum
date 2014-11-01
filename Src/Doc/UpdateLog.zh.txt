@@ -1,6 +1,8 @@
 ﻿2014.11.01
 Examples:
 修正C#通讯示例，使得退出时Socket已销毁不报错。
+Krustallos:
+去除部分装箱，优化性能。
 
 2014.10.31
 Examples:

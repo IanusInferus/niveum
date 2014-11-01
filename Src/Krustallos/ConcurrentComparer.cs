@@ -31,11 +31,61 @@ namespace Krustallos
                 {
                     Inner = (Func<T, T, int>)(Object)(Func<String, String, int>)(String.CompareOrdinal);
                 }
+                else if (typeof(T) == typeof(SByte))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Byte, Byte, int>)((x, y) => x.CompareTo(y));
+                }
+                else if (typeof(T) == typeof(Int16))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Int16, Int16, int>)((x, y) => x.CompareTo(y));
+                }
+                else if (typeof(T) == typeof(Int32))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Int32, Int32, int>)((x, y) => x.CompareTo(y));
+                }
+                else if (typeof(T) == typeof(Int64))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Int64, Int64, int>)((x, y) => x.CompareTo(y));
+                }
+                else if (typeof(T) == typeof(Byte))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Byte, Byte, int>)((x, y) => x.CompareTo(y));
+                }
+                else if (typeof(T) == typeof(UInt16))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Int16, Int16, int>)((x, y) => x.CompareTo(y));
+                }
+                else if (typeof(T) == typeof(UInt32))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Int32, Int32, int>)((x, y) => x.CompareTo(y));
+                }
+                else if (typeof(T) == typeof(UInt64))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Int64, Int64, int>)((x, y) => x.CompareTo(y));
+                }
+                else if (typeof(T) == typeof(Single))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Single, Single, int>)((x, y) => x.CompareTo(y));
+                }
+                else if (typeof(T) == typeof(Double))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Double, Double, int>)((x, y) => x.CompareTo(y));
+                }
+                else if (typeof(T) == typeof(Decimal))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Decimal, Decimal, int>)((x, y) => x.CompareTo(y));
+                }
+                else if (typeof(T) == typeof(Char))
+                {
+                    Inner = (Func<T, T, int>)(Object)(Func<Char, Char, int>)((x, y) => x.CompareTo(y));
+                }
                 else if (typeof(T).IsEnum)
                 {
                     var UnderlyingType = (typeof(T)).GetEnumUnderlyingType();
                     var UnderlyingTypeComparer = Activator.CreateInstance(typeof(DefaultComparer<>).MakeGenericType(UnderlyingType));
-                    Inner = ((IComparer<T>)(Activator.CreateInstance(typeof(MappedComparer<,>).MakeGenericType(typeof(T), UnderlyingType), UnderlyingTypeComparer))).Compare;
+                    Func<T, T> Identity = x => x;
+                    var Mapper = Delegate.CreateDelegate(typeof(Func<,>).MakeGenericType(typeof(T), UnderlyingType), Identity.Method);
+                    Inner = ((IComparer<T>)(Activator.CreateInstance(typeof(MappedComparer<,>).MakeGenericType(typeof(T), UnderlyingType), UnderlyingTypeComparer, Mapper))).Compare;
                 }
                 else if (typeof(T).IsGenericType && (typeof(T).GetGenericTypeDefinition() == typeof(Optional<>)))
                 {
@@ -89,13 +139,15 @@ namespace Krustallos
         private class MappedComparer<T, M> : IComparer<T>
         {
             private IComparer<M> Inner;
-            public MappedComparer(IComparer<M> Inner)
+            private Func<T, M> Mapper;
+            public MappedComparer(IComparer<M> Inner, Func<T, M> Mapper)
             {
                 this.Inner = Inner;
+                this.Mapper = Mapper;
             }
             public int Compare(T x, T y)
             {
-                return Inner.Compare((M)(Convert.ChangeType(x, typeof(M))), (M)(Convert.ChangeType(y, typeof(M))));
+                return Inner.Compare(Mapper(x), Mapper(y));
             }
         }
         private class EnumerableComparer<T> : IComparer<IEnumerable<T>>
