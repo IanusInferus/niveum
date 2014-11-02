@@ -132,10 +132,6 @@ namespace Client
         {
             return bc->GetApplicationClient()->Hash();
         }
-        virtual void DequeueCallback(std::wstring CommandName)
-        {
-            bc->GetApplicationClient()->DequeueCallback(CommandName);
-        }
         virtual void HandleResult(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
         {
             if (CommandRequests->count(CommandName) > 0)

@@ -6,7 +6,6 @@ namespace Client
     public interface IBinarySerializationClientAdapter
     {
         UInt64 Hash { get; }
-        void DequeueCallback(String CommandName);
         void HandleResult(String CommandName, UInt32 CommandHash, Byte[] Parameters);
         event BinaryClientEventDelegate ClientEvent;
     }
@@ -15,7 +14,6 @@ namespace Client
     public interface IJsonSerializationClientAdapter
     {
         UInt64 Hash { get; }
-        void DequeueCallback(String CommandName);
         void HandleResult(String CommandName, UInt32 CommandHash, String Parameters);
         event JsonClientEventDelegate ClientEvent;
     }

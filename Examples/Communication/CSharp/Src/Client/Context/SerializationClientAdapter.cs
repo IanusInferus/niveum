@@ -21,7 +21,6 @@ namespace Client
         }
 
         public UInt64 Hash { get { return bc.GetApplicationClient().Hash; } }
-        public void DequeueCallback(String CommandName) { bc.GetApplicationClient().DequeueCallback(CommandName); }
         public void HandleResult(String CommandName, UInt32 CommandHash, Byte[] Parameters) { bc.HandleResult(CommandName, CommandHash, Parameters); }
         public event BinaryClientEventDelegate ClientEvent;
 
@@ -50,7 +49,6 @@ namespace Client
         }
 
         public UInt64 Hash { get { return jc.GetApplicationClient().Hash; } }
-        public void DequeueCallback(String CommandName) { jc.GetApplicationClient().DequeueCallback(CommandName); }
         public void HandleResult(String CommandName, UInt32 CommandHash, String Parameters) { jc.HandleResult(CommandName, CommandHash, Parameters); }
         public event JsonClientEventDelegate ClientEvent;
 
