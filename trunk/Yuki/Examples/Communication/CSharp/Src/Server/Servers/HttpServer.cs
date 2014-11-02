@@ -722,6 +722,7 @@ namespace Server
                             {
                                 if (ListeningTaskToken.IsCancellationRequested) { return; }
                                 var l = Listener;
+                                var lc = ListenConsumer;
                                 l.BeginGetContext(ar =>
                                 {
                                     if (!l.IsListening) { return; }
@@ -733,7 +734,7 @@ namespace Server
                                     catch (HttpListenerException)
                                     {
                                     }
-                                    ListenConsumer.Push(0);
+                                    lc.Push(0);
                                 }, null);
                             };
                             ListenConsumer = new AsyncConsumer<int>(QueueUserWorkItem, i => { Listen(); return true; }, 1);
