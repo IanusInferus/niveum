@@ -71,65 +71,55 @@ namespace Krustallos
             {
                 if (Updates.Count > 0)
                 {
-                    while (true)
+                    var Success = false;
+                    var Locked = new List<Object>();
+                    try
                     {
-                        var Success = false;
-                        var Locked = new List<Object>();
-                        try
+                        foreach (var p in UpdateStores)
                         {
-                            foreach (var p in UpdateStores)
-                            {
-                                var o = p.Value.Store;
-                                Monitor.Enter(o);
-                                Locked.Add(o);
-                            }
-                            if (WriterVersion.OnNotHasValue)
-                            {
-                                WriterVersion = Instance.CreateWriterVersion();
-                            }
-                            var WriterVersionValue = WriterVersion.Value;
-                            var UpdateSuccess = true;
-                            foreach (var u in Updates)
-                            {
-                                if (!u(WriterVersionValue))
-                                {
-                                    UpdateSuccess = false;
-                                    break;
-                                }
-                            }
-                            if (!UpdateSuccess) { continue; }
-                            Success = true;
+                            var o = p.Value.Store;
+                            Monitor.Enter(o);
+                            Locked.Add(o);
                         }
-                        finally
+                        if (WriterVersion.OnNotHasValue)
                         {
-                            if (Success)
+                            WriterVersion = Instance.CreateWriterVersion();
+                        }
+                        var WriterVersionValue = WriterVersion.Value;
+                        foreach (var u in Updates)
+                        {
+                            u(WriterVersionValue);
+                        }
+                        Success = true;
+                    }
+                    finally
+                    {
+                        if (Success)
+                        {
+                            if (WriterVersion.OnHasValue)
                             {
-                                if (WriterVersion.OnHasValue)
-                                {
-                                    Instance.CommitWriterVersion(WriterVersion.Value, new HashSet<IVersionedStore>(UpdateStores.Select(p => p.Value.Store)));
-                                    WriterVersion = Optional<Version>.Empty;
-                                }
-                            }
-                            else
-                            {
-                                if (WriterVersion.OnHasValue)
-                                {
-                                    var WriterVersionValue = WriterVersion.Value;
-                                    foreach (var p in UpdateStores)
-                                    {
-                                        var Revert = p.Value.Revert;
-                                        Revert(WriterVersionValue);
-                                    }
-                                    Instance.RevertWriterVersion(WriterVersionValue);
-                                    WriterVersion = Optional<Version>.Empty;
-                                }
-                            }
-                            foreach (var o in Locked)
-                            {
-                                Monitor.Exit(o);
+                                Instance.CommitWriterVersion(WriterVersion.Value, new HashSet<IVersionedStore>(UpdateStores.Select(p => p.Value.Store)));
+                                WriterVersion = Optional<Version>.Empty;
                             }
                         }
-                        if (Success) { break; }
+                        else
+                        {
+                            if (WriterVersion.OnHasValue)
+                            {
+                                var WriterVersionValue = WriterVersion.Value;
+                                foreach (var p in UpdateStores)
+                                {
+                                    var Revert = p.Value.Revert;
+                                    Revert(WriterVersionValue);
+                                }
+                                Instance.RevertWriterVersion(WriterVersionValue);
+                                WriterVersion = Optional<Version>.Empty;
+                            }
+                        }
+                        foreach (var o in Locked)
+                        {
+                            Monitor.Exit(o);
+                        }
                     }
                 }
             }
