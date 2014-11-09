@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace Krustallos
 {
@@ -16,6 +15,7 @@ namespace Krustallos
         public String[] Path { get; private set; }
         private Func<T> Allocator;
         private ImmutableSortedDictionary<Version, T> Versions = new ImmutableSortedDictionary<Version, T>();
+        private Object Lockee = new Object();
 
         public VersionedStore(String[] Path, Func<T> Allocator)
         {
@@ -25,7 +25,11 @@ namespace Krustallos
 
         public T GetVersionContent(Version v)
         {
-            var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
+            ImmutableSortedDictionary<Version, T> Versions;
+            lock (Lockee)
+            {
+                Versions = this.Versions;
+            }
             foreach (var Pair in Versions.RangeReversed(Optional<Version>.Empty, v))
             {
                 return Pair.Value;
@@ -34,7 +38,11 @@ namespace Krustallos
         }
         public T GetVersionContent(Version v, ImmutableSortedDictionary<Version, Unit> Excepts)
         {
-            var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
+            ImmutableSortedDictionary<Version, T> Versions;
+            lock (Lockee)
+            {
+                Versions = this.Versions;
+            }
             foreach (var Pair in Versions.RangeReversed(Optional<Version>.Empty, v))
             {
                 if (Excepts.ContainsKey(Pair.Key)) { continue; }
@@ -45,12 +53,20 @@ namespace Krustallos
 
         public Optional<KeyValuePair<Version, T>> TryGetLastVersion()
         {
-            var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
+            ImmutableSortedDictionary<Version, T> Versions;
+            lock (Lockee)
+            {
+                Versions = this.Versions;
+            }
             return Versions.TryGetMaxPair();
         }
-        public Optional<KeyValuePair<Version, T>> TryGetLastVersion(ImmutableSortedDictionary<Version, Unit> Excepts)
+        public Optional<KeyValuePair<Version, T>> TryGetLastVersion(ImmutableSortedDictionary<Version, int> Excepts)
         {
-            var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
+            ImmutableSortedDictionary<Version, T> Versions;
+            lock (Lockee)
+            {
+                Versions = this.Versions;
+            }
             foreach (var Pair in Versions.RangeReversed(Optional<Version>.Empty, Optional<Version>.Empty))
             {
                 if (Excepts.ContainsKey(Pair.Key)) { continue; }
@@ -60,7 +76,11 @@ namespace Krustallos
         }
         public T GetLastVersionContent()
         {
-            var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
+            ImmutableSortedDictionary<Version, T> Versions;
+            lock (Lockee)
+            {
+                Versions = this.Versions;
+            }
             var oPair = Versions.TryGetMaxPair();
             if (oPair.OnHasValue)
             {
@@ -73,7 +93,11 @@ namespace Krustallos
         }
         public T GetLastVersionContent(ImmutableSortedDictionary<Version, Unit> Excepts)
         {
-            var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
+            ImmutableSortedDictionary<Version, T> Versions;
+            lock (Lockee)
+            {
+                Versions = this.Versions;
+            }
             foreach (var Pair in Versions.RangeReversed(Optional<Version>.Empty, Optional<Version>.Empty))
             {
                 if (Excepts.ContainsKey(Pair.Key)) { continue; }
@@ -84,63 +108,52 @@ namespace Krustallos
 
         public void PutVersion(Version v, T Content)
         {
-            while (true)
+            lock (Lockee)
             {
-                var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
-                var NewVersion = (Versions.ContainsKey(v) ? Versions.Remove(v) : Versions).Add(v, Content);
-                if (Interlocked.CompareExchange(ref this.Versions, NewVersion, Versions) == Versions)
-                {
-                    break;
-                }
+                var Versions = this.Versions;
+                this.Versions = (Versions.ContainsKey(v) ? Versions.Remove(v) : Versions).Add(v, Content);
             }
         }
         public Boolean TryPutLastVersion(Version v, T Content)
         {
-            var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
-            var oMaxPair = Versions.TryGetMaxPair();
-            if (oMaxPair.OnHasValue && oMaxPair.Value.Key > v) { return false; }
-            var NewVersion = (Versions.ContainsKey(v) ? Versions.Remove(v) : Versions).Add(v, Content);
-            if (Interlocked.CompareExchange(ref this.Versions, NewVersion, Versions) == Versions)
+            lock (Lockee)
             {
-                return true;
+                var Versions = this.Versions;
+                var oMaxPair = Versions.TryGetMaxPair();
+                if (oMaxPair.OnHasValue && oMaxPair.Value.Key > v) { return false; }
+                this.Versions = (Versions.ContainsKey(v) ? Versions.Remove(v) : Versions).Add(v, Content);
             }
-            return false;
+            return true;
         }
 
         public void RemoveVersion(Version v)
         {
-            while (true)
+            lock (Lockee)
             {
-                var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
+                var Versions = this.Versions;
                 if (!Versions.ContainsKey(v))
                 {
-                    break;
+                    return;
                 }
-                if (Interlocked.CompareExchange(ref this.Versions, Versions.Remove(v), Versions) == Versions)
-                {
-                    break;
-                }
+                this.Versions = Versions.Remove(v);
             }
         }
         public void RemovePreviousVersions(Version v)
         {
-            while (true)
+            lock (Lockee)
             {
-                var Versions = Interlocked.CompareExchange(ref this.Versions, null, null);
+                var Versions = this.Versions;
                 var NewVersions = Versions;
+                var Prev = Optional<Version>.Empty;
                 foreach (var p in Versions.Range(Optional<Version>.Empty, v))
                 {
-                    if (p.Key == v) { continue; }
-                    if (NewVersions.Count > 1)
+                    if (Prev.OnHasValue)
                     {
-                        NewVersions = NewVersions.Remove(p.Key);
-                        break;
+                        NewVersions = NewVersions.Remove(Prev.Value);
                     }
+                    Prev = p.Key;
                 }
-                if (Interlocked.CompareExchange(ref this.Versions, NewVersions, Versions) == Versions)
-                {
-                    break;
-                }
+                this.Versions = NewVersions;
             }
         }
     }
