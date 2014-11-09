@@ -3,6 +3,7 @@ Krustallos:
 去除事务提交全局锁，所有数据读取都只读取Reader版本。
 将部分无锁操作改为使用锁来进行。
 修正删除无用版本时删除了部分需要用到的版本的问题。
+去除部分无用代码。
 Yuki.Relation:
 按照Krustallos的修改进行对应的C# Krustallos代码生成修改。
 
