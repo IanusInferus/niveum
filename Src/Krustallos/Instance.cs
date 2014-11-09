@@ -17,10 +17,13 @@ namespace Krustallos
     {
         private Object ReaderAllocateLockee = new Object();
         private Version CurrentReaderVersion = new Version(0);
+        private Version MinReaderVersion = new Version(0);
         private SortedDictionary<Version, int> ReaderCounts = new SortedDictionary<Version, int>();
         private Object WriterAllocateLockee = new Object();
         private Version CurrentWriterVersion = new Version(0);
-        private SortedDictionary<Version, Unit> WriterExists = new SortedDictionary<Version, Unit>();
+        private Version MinWriterVersion = new Version(0);
+        private Version MaxCommittedWriterVersion = new Version(0);
+        private ImmutableSortedDictionary<Version, Unit> WriterExists = new ImmutableSortedDictionary<Version, Unit>();
         private Object ToBeRemovedLockee = new Object();
         private SortedDictionary<Version, HashSet<IVersionedStore>> ToBeRemoved = new SortedDictionary<Version, HashSet<IVersionedStore>>();
         public Version TakeReaderVersion()
@@ -40,7 +43,7 @@ namespace Krustallos
         }
         public void ReturnReaderVersion(Version CommittedVersion)
         {
-            var MinReaderVersion = Optional<Version>.Empty;
+            var oMinReaderVersion = Optional<Version>.Empty;
             lock (ReaderAllocateLockee)
             {
                 if (ReaderCounts.ContainsKey(CommittedVersion))
@@ -58,6 +61,7 @@ namespace Krustallos
                         {
                             MinReaderVersion = CurrentReaderVersion;
                         }
+                        oMinReaderVersion = MinReaderVersion;
                     }
                     else
                     {
@@ -69,9 +73,22 @@ namespace Krustallos
                     throw new InvalidOperationException();
                 }
             }
-            if (MinReaderVersion.OnHasValue)
+            if (oMinReaderVersion.OnHasValue)
             {
-                RemoveOldVersions(MinReaderVersion.Value);
+                var CurrentMinReaderVersion = oMinReaderVersion.Value;
+                Version CurrentMinWriterVersion;
+                lock (WriterAllocateLockee)
+                {
+                    CurrentMinWriterVersion = MinWriterVersion;
+                }
+                RemoveOldVersions(CurrentMinWriterVersion < CurrentMinReaderVersion ? CurrentMinWriterVersion : CurrentMinReaderVersion);
+            }
+        }
+        public ImmutableSortedDictionary<Version, Unit> GetPendingWriterVesions()
+        {
+            lock (WriterAllocateLockee)
+            {
+                return WriterExists;
             }
         }
 
@@ -83,6 +100,7 @@ namespace Krustallos
                 var ToRemove = new List<Version>();
                 foreach (var p in ToBeRemoved)
                 {
+                    if (p.Key >= Version) { break; }
                     foreach (var s in p.Value)
                     {
                         if (!Stores.Contains(s))
@@ -91,7 +109,6 @@ namespace Krustallos
                         }
                     }
                     ToRemove.Add(p.Key);
-                    if (p.Key == Version) { break; }
                 }
                 foreach (var v in ToRemove)
                 {
@@ -108,28 +125,23 @@ namespace Krustallos
             lock (WriterAllocateLockee)
             {
                 CurrentWriterVersion += 1;
-                WriterExists.Add(CurrentWriterVersion, default(Unit));
+                WriterExists = WriterExists.Add(CurrentWriterVersion, default(Unit));
                 return CurrentWriterVersion;
             }
         }
         public void RevertWriterVersion(Version CommittingVersion)
         {
-            Version MaxCommittedVersion;
             lock (WriterAllocateLockee)
             {
-                WriterExists.Remove(CurrentWriterVersion);
+                WriterExists = WriterExists.Remove(CommittingVersion);
                 if (WriterExists.Count > 0)
                 {
-                    MaxCommittedVersion = WriterExists.First().Key - 1;
+                    MinWriterVersion = WriterExists.First().Key;
                 }
                 else
                 {
-                    MaxCommittedVersion = CurrentWriterVersion;
+                    MinWriterVersion = CurrentWriterVersion;
                 }
-            }
-            lock (ReaderAllocateLockee)
-            {
-                CurrentReaderVersion = MaxCommittedVersion;
             }
         }
         public void CommitWriterVersion(Version CommittingVersion, HashSet<IVersionedStore> ToBeRemoved)
@@ -138,23 +150,27 @@ namespace Krustallos
             {
                 this.ToBeRemoved.Add(CommittingVersion, ToBeRemoved);
             }
-            Version MaxCommittedVersion;
+            Version CurrentMaxCommittedWriterVersion;
+            Version CurrentMinWriterVersion;
             lock (WriterAllocateLockee)
             {
-                WriterExists.Remove(CurrentWriterVersion);
+                WriterExists = WriterExists.Remove(CommittingVersion);
+                MaxCommittedWriterVersion = CommittingVersion > MaxCommittedWriterVersion ? CommittingVersion : MaxCommittedWriterVersion;
                 if (WriterExists.Count > 0)
                 {
-                    MaxCommittedVersion = WriterExists.First().Key - 1;
+                    MinWriterVersion = WriterExists.First().Key;
                 }
                 else
                 {
-                    MaxCommittedVersion = CurrentWriterVersion;
+                    MinWriterVersion = CurrentWriterVersion;
                 }
+                CurrentMaxCommittedWriterVersion = MaxCommittedWriterVersion;
+                CurrentMinWriterVersion = MinWriterVersion;
             }
-            var MinReaderVersion = Optional<Version>.Empty;
+            Version CurrentMinReaderVersion;
             lock (ReaderAllocateLockee)
             {
-                CurrentReaderVersion = MaxCommittedVersion;
+                CurrentReaderVersion = CurrentMaxCommittedWriterVersion;
                 if (ReaderCounts.Count > 0)
                 {
                     MinReaderVersion = ReaderCounts.First().Key;
@@ -163,11 +179,9 @@ namespace Krustallos
                 {
                     MinReaderVersion = CurrentReaderVersion;
                 }
+                CurrentMinReaderVersion = MinReaderVersion;
             }
-            if (MinReaderVersion.OnHasValue)
-            {
-                RemoveOldVersions(MinReaderVersion.Value);
-            }
+            RemoveOldVersions(CurrentMinWriterVersion < CurrentMinReaderVersion ? CurrentMinWriterVersion : CurrentMinReaderVersion);
         }
     }
 }

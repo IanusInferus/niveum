@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos代码生成器
-//  Version:     2014.10.25.
+//  Version:     2014.11.09.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -267,7 +267,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     }
                     var Filters = GetFilters(q, SearchKey.Columns.Count);
                     var IndexName = e.Name + "By" + String.Join("And", SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
-                    Content = Template.Substitute("Function", q.Verb.OnLock ? "CheckCurrentVersioned" : "CheckReaderVersioned").Substitute("IndexName", IndexName).Substitute("LockingStatement", LockingStatement).Substitute("Parameters", Parameters).Substitute("Filters", Filters);
+                    Content = Template.Substitute("IndexName", IndexName).Substitute("LockingStatement", LockingStatement).Substitute("Parameters", Parameters).Substitute("Filters", Filters);
                 }
                 else if (q.Verb.OnInsert)
                 {
