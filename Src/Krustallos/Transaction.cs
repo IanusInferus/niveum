@@ -11,15 +11,15 @@ namespace Krustallos
         private Instance Instance;
         private Optional<Version> ReaderVersion;
         private Optional<Version> WriterVersion;
+        private Optional<ImmutableSortedDictionary<Version, Unit>> PendingWriterVesions;
         private SortedDictionary<String[], UpdateStoreInfo> UpdateStores;
-        private List<Action> Updates;
+        private List<Func<Version, Boolean>> Updates;
 
         private class UpdateStoreInfo
         {
             public IVersionedStore Store;
             public Object CurrentStateFromReaderVersion;
-            public Object CurrentStateFromCurrentVersion;
-            public Action Revert;
+            public Action<Version> Revert;
         }
 
         private class StringArrayComparer : IComparer<String[]>
@@ -43,7 +43,7 @@ namespace Krustallos
             this.Instance = Instance;
             if (IsolationLevel != System.Data.IsolationLevel.ReadCommitted) { throw new NotSupportedException(); }
             UpdateStores = new SortedDictionary<String[], UpdateStoreInfo>(new StringArrayComparer());
-            Updates = new List<Action>();
+            Updates = new List<Func<Version, Boolean>>();
         }
 
         public void Revert()
@@ -62,40 +62,70 @@ namespace Krustallos
 
         public void Commit()
         {
-            var Success = false;
-            Monitor.Enter(Instance);
             try
             {
-                foreach (var u in Updates)
+                if (Updates.Count > 0)
                 {
-                    u();
+                    while (true)
+                    {
+                        var Success = false;
+                        var Locked = new List<Object>();
+                        try
+                        {
+                            foreach (var p in UpdateStores)
+                            {
+                                var o = p.Value.Store;
+                                Monitor.Enter(o);
+                                Locked.Add(o);
+                            }
+                            var WriterVersion = GetWriterVersion();
+                            var UpdateSuccess = true;
+                            foreach (var u in Updates)
+                            {
+                                if (!u(WriterVersion))
+                                {
+                                    UpdateSuccess = false;
+                                    break;
+                                }
+                            }
+                            if (!UpdateSuccess) { continue; }
+                            Success = true;
+                        }
+                        finally
+                        {
+                            if (Success)
+                            {
+                                if (WriterVersion.OnHasValue)
+                                {
+                                    Instance.CommitWriterVersion(WriterVersion.Value, new HashSet<IVersionedStore>(UpdateStores.Select(p => p.Value.Store)));
+                                    WriterVersion = Optional<Version>.Empty;
+                                }
+                            }
+                            else
+                            {
+                                if (WriterVersion.OnHasValue)
+                                {
+                                    var WriterVersionValue = WriterVersion.Value;
+                                    foreach (var p in UpdateStores)
+                                    {
+                                        var Revert = p.Value.Revert;
+                                        Revert(WriterVersionValue);
+                                    }
+                                    Instance.RevertWriterVersion(WriterVersionValue);
+                                    WriterVersion = Optional<Version>.Empty;
+                                }
+                            }
+                            foreach (var o in Locked)
+                            {
+                                Monitor.Exit(o);
+                            }
+                        }
+                        if (Success) { break; }
+                    }
                 }
-                Success = true;
             }
             finally
             {
-                if (Success)
-                {
-                    if (WriterVersion.OnHasValue)
-                    {
-                        Instance.CommitWriterVersion(WriterVersion.Value, new HashSet<IVersionedStore>(UpdateStores.Select(p => p.Value.Store)));
-                        WriterVersion = Optional<Version>.Empty;
-                    }
-                }
-                else
-                {
-                    foreach (var p in UpdateStores)
-                    {
-                        var Revert = p.Value.Revert;
-                        Revert();
-                    }
-                    if (WriterVersion.OnHasValue)
-                    {
-                        Instance.RevertWriterVersion(WriterVersion.Value);
-                        WriterVersion = Optional<Version>.Empty;
-                    }
-                }
-                Monitor.Exit(Instance);
                 if (ReaderVersion.OnHasValue)
                 {
                     Instance.ReturnReaderVersion(ReaderVersion.Value);
@@ -125,6 +155,14 @@ namespace Krustallos
             }
             return WriterVersion.Value;
         }
+        public ImmutableSortedDictionary<Version, Unit> GetPendingWriterVersions()
+        {
+            if (PendingWriterVesions.OnNotHasValue)
+            {
+                PendingWriterVesions = Instance.GetPendingWriterVesions();
+            }
+            return PendingWriterVesions.Value;
+        }
 
         public TRet CheckReaderVersioned<T, TRet>(VersionedStore<T> Store, Func<T, TRet> Selector)
         {
@@ -132,27 +170,13 @@ namespace Krustallos
             if (!UpdateStores.ContainsKey(StorePath))
             {
                 var ReaderVersion = GetReaderVersion();
-                var Content = Store.GetVersionContent(ReaderVersion);
+                var Content = Store.GetVersionContent(ReaderVersion, GetPendingWriterVersions());
                 return Selector(Content);
             }
             else
             {
                 var usi = UpdateStores[StorePath];
                 return Selector((T)(usi.CurrentStateFromReaderVersion));
-            }
-        }
-        public TRet CheckCurrentVersioned<T, TRet>(VersionedStore<T> Store, Func<T, TRet> Selector)
-        {
-            var StorePath = Store.Path;
-            if (!UpdateStores.ContainsKey(StorePath))
-            {
-                var Content = Store.GetLastVersionContent();
-                return Selector(Content);
-            }
-            else
-            {
-                var usi = UpdateStores[StorePath];
-                return Selector((T)(usi.CurrentStateFromCurrentVersion));
             }
         }
         public void UpdateVersioned<T>(VersionedStore<T> Store, Func<T, T> Transformer)
@@ -162,27 +186,13 @@ namespace Krustallos
             {
                 var ReaderVersion = GetReaderVersion();
                 var ReaderVersionContent = Store.GetVersionContent(ReaderVersion);
-                var CurrentVersionContent = Store.GetLastVersionContent();
-                Object CurrentStateFromReaderVersion;
-                Object CurrentStateFromCurrentVersion;
-                if ((Object)(ReaderVersionContent) == (Object)(CurrentVersionContent))
-                {
-                    CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
-                    CurrentStateFromCurrentVersion = CurrentStateFromReaderVersion;
-                }
-                else
-                {
-                    CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
-                    CurrentStateFromCurrentVersion = Transformer(CurrentVersionContent);
-                }
+                var CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
                 UpdateStores.Add(StorePath, new UpdateStoreInfo
                 {
                     Store = Store,
                     CurrentStateFromReaderVersion = CurrentStateFromReaderVersion,
-                    CurrentStateFromCurrentVersion = CurrentStateFromCurrentVersion,
-                    Revert = () =>
+                    Revert = WriterVersion =>
                     {
-                        var WriterVersion = GetWriterVersion();
                         Store.RemoveVersion(WriterVersion);
                     }
                 });
@@ -191,27 +201,13 @@ namespace Krustallos
             {
                 var usi = UpdateStores[StorePath];
                 var ReaderVersionContent = (T)(usi.CurrentStateFromReaderVersion);
-                var CurrentVersionContent = (T)(usi.CurrentStateFromCurrentVersion);
-                Object CurrentStateFromReaderVersion;
-                Object CurrentStateFromCurrentVersion;
-                if ((Object)(ReaderVersionContent) == (Object)(CurrentVersionContent))
-                {
-                    CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
-                    CurrentStateFromCurrentVersion = CurrentStateFromReaderVersion;
-                }
-                else
-                {
-                    CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
-                    CurrentStateFromCurrentVersion = Transformer(CurrentVersionContent);
-                }
+                var CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
                 usi.CurrentStateFromReaderVersion = CurrentStateFromReaderVersion;
-                usi.CurrentStateFromCurrentVersion = CurrentStateFromCurrentVersion;
             }
-            Updates.Add(() =>
+            Updates.Add(WriterVersion =>
             {
-                var WriterVersion = GetWriterVersion();
                 var Content = Store.GetLastVersionContent();
-                Store.PutVersion(WriterVersion, Transformer(Content));
+                return Store.TryPutLastVersion(WriterVersion, Transformer(Content));
             });
         }
     }
