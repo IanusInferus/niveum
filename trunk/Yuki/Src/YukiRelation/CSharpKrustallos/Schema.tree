@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Krustallos代码模板数据
-      Version:     2014.10.25.
+      Version:     2014.11.09.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -201,11 +201,11 @@ ObjectSchemaTemplate
                     }
         Template
             Name SelectLock_Optional
-            //Parameters: ${Function}, ${IndexName}, ${LockingStatement}, ${Parameters}, ${Filters}
+            //Parameters: ${IndexName}, ${LockingStatement}, ${Parameters}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    var _l_ = Transaction.[[${Function}]](this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
                     if (_l_.Count == 0) { return null; }
                     if (_l_.Count > 1)
                     {
@@ -214,11 +214,11 @@ ObjectSchemaTemplate
                     return _l_.Single();
         Template
             Name SelectLock_One
-            //Parameters: ${Function}, ${IndexName}, ${LockingStatement}, ${Parameters}, ${Filters}
+            //Parameters: ${IndexName}, ${LockingStatement}, ${Parameters}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    var _l_ = Transaction.[[${Function}]](this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
                     if (_l_.Count == 0)
                     {
                         throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -230,18 +230,18 @@ ObjectSchemaTemplate
                     return _l_.Single();
         Template
             Name SelectLock_ManyAllRange
-            //Parameters: ${Function}, ${IndexName}, ${LockingStatement}, ${Filters}
+            //Parameters: ${IndexName}, ${LockingStatement}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    return Transaction.[[${Function}]](this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+                    return Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
         Template
             Name SelectLock_Count
-            //Parameters: ${Function}, ${IndexName}, ${LockingStatement}, ${Filters}
+            //Parameters: ${IndexName}, ${LockingStatement}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    return Transaction.[[${Function}]](this.Data.[[${IndexName}]], _d_ => _d_${Filters});
+                    return Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters});
         Template
             Name Lock_LockingStatement
             //Parameters: ${EntityNameAndParameterAndValues}
@@ -276,7 +276,7 @@ ObjectSchemaTemplate
             //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0) { return; }
                     if (_l_.Count > 1)
                     {
@@ -292,7 +292,7 @@ ObjectSchemaTemplate
             //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0)
                     {
                         throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -313,7 +313,7 @@ ObjectSchemaTemplate
                 $String
                     foreach (var v in l)
                     {
-                        var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                        var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
                         if (_l_.Count == 0)
                         {
                             throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -333,7 +333,7 @@ ObjectSchemaTemplate
             //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
                     if (_l_.Count > 1)
                     {
                         throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -353,7 +353,7 @@ ObjectSchemaTemplate
                 $String
                     foreach (var v in l)
                     {
-                        var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                        var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
                         if (_l_.Count > 1)
                         {
                             throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -372,7 +372,7 @@ ObjectSchemaTemplate
             //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0) { return; }
                     if (_l_.Count > 1)
                     {
@@ -385,7 +385,7 @@ ObjectSchemaTemplate
             //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0)
                     {
                         throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -401,7 +401,7 @@ ObjectSchemaTemplate
             //Parameters: ${IndexName}, ${Filters}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckCurrentVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0) { return; }
                     ${UpdateStatements}
         Template
