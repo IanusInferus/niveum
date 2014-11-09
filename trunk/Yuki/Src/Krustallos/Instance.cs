@@ -24,6 +24,7 @@ namespace Krustallos
         private Version MinWriterVersion = new Version(0);
         private Version MaxCommittedWriterVersion = new Version(0);
         private ImmutableSortedDictionary<Version, Unit> WriterExists = new ImmutableSortedDictionary<Version, Unit>();
+        private SortedDictionary<Version, int> WriterReferenceCounts = new SortedDictionary<Version, int>();
         private Object ToBeRemovedLockee = new Object();
         private SortedDictionary<Version, HashSet<IVersionedStore>> ToBeRemoved = new SortedDictionary<Version, HashSet<IVersionedStore>>();
         public Version TakeReaderVersion()
@@ -81,19 +82,59 @@ namespace Krustallos
                 {
                     CurrentMinWriterVersion = MinWriterVersion;
                 }
-                RemoveOldVersions(CurrentMinWriterVersion < CurrentMinReaderVersion ? CurrentMinWriterVersion : CurrentMinReaderVersion);
+                RemoveOldVersions(CurrentMinReaderVersion, CurrentMinWriterVersion);
             }
         }
-        public ImmutableSortedDictionary<Version, Unit> GetPendingWriterVesions()
+        public ImmutableSortedDictionary<Version, Unit> TakePendingWriterVesions()
         {
             lock (WriterAllocateLockee)
             {
+                foreach (var v in WriterExists)
+                {
+                    WriterReferenceCounts[v.Key] += 1;
+                }
                 return WriterExists;
             }
         }
-
-        private void RemoveOldVersions(Krustallos.Version Version)
+        public void ReturnPendingWriterVesions(ImmutableSortedDictionary<Version, Unit> WriterExists)
         {
+            Version CurrentMinWriterVersion;
+            lock (WriterAllocateLockee)
+            {
+                foreach (var v in WriterExists)
+                {
+                    var Count = WriterReferenceCounts[v.Key];
+                    if (Count > 1)
+                    {
+                        WriterReferenceCounts[v.Key] = Count - 1;
+                    }
+                    else
+                    {
+                        WriterReferenceCounts.Remove(v.Key);
+                    }
+                }
+                if (WriterReferenceCounts.Count > 0)
+                {
+                    MinWriterVersion = WriterReferenceCounts.First().Key;
+                }
+                else
+                {
+                    MinWriterVersion = CurrentWriterVersion;
+                }
+                CurrentMinWriterVersion = MinWriterVersion;
+            }
+            Version CurrentMinReaderVersion;
+            lock (ReaderAllocateLockee)
+            {
+                CurrentMinReaderVersion = MinReaderVersion;
+            }
+            RemoveOldVersions(CurrentMinReaderVersion, CurrentMinWriterVersion);
+        }
+
+        private void RemoveOldVersions(Version CurrentMinReaderVersion, Version CurrentMinWriterVersion)
+        {
+            var Version = (CurrentMinWriterVersion - 1 < CurrentMinReaderVersion) ? (CurrentMinWriterVersion - 1) : CurrentMinReaderVersion;
+
             var Stores = new HashSet<IVersionedStore>();
             lock (ToBeRemovedLockee)
             {
@@ -126,6 +167,7 @@ namespace Krustallos
             {
                 CurrentWriterVersion += 1;
                 WriterExists = WriterExists.Add(CurrentWriterVersion, default(Unit));
+                WriterReferenceCounts.Add(CurrentWriterVersion, 1);
                 return CurrentWriterVersion;
             }
         }
@@ -134,9 +176,18 @@ namespace Krustallos
             lock (WriterAllocateLockee)
             {
                 WriterExists = WriterExists.Remove(CommittingVersion);
-                if (WriterExists.Count > 0)
+                var Count = WriterReferenceCounts[CommittingVersion];
+                if (Count > 1)
                 {
-                    MinWriterVersion = WriterExists.First().Key;
+                    WriterReferenceCounts[CommittingVersion] = Count - 1;
+                }
+                else
+                {
+                    WriterReferenceCounts.Remove(CommittingVersion);
+                }
+                if (WriterReferenceCounts.Count > 0)
+                {
+                    MinWriterVersion = WriterReferenceCounts.First().Key;
                 }
                 else
                 {
@@ -155,10 +206,19 @@ namespace Krustallos
             lock (WriterAllocateLockee)
             {
                 WriterExists = WriterExists.Remove(CommittingVersion);
-                MaxCommittedWriterVersion = CommittingVersion > MaxCommittedWriterVersion ? CommittingVersion : MaxCommittedWriterVersion;
-                if (WriterExists.Count > 0)
+                var Count = WriterReferenceCounts[CommittingVersion];
+                if (Count > 1)
                 {
-                    MinWriterVersion = WriterExists.First().Key;
+                    WriterReferenceCounts[CommittingVersion] = Count - 1;
+                }
+                else
+                {
+                    WriterReferenceCounts.Remove(CommittingVersion);
+                }
+                MaxCommittedWriterVersion = CommittingVersion > MaxCommittedWriterVersion ? CommittingVersion : MaxCommittedWriterVersion;
+                if (WriterReferenceCounts.Count > 0)
+                {
+                    MinWriterVersion = WriterReferenceCounts.First().Key;
                 }
                 else
                 {
@@ -181,7 +241,7 @@ namespace Krustallos
                 }
                 CurrentMinReaderVersion = MinReaderVersion;
             }
-            RemoveOldVersions(CurrentMinWriterVersion < CurrentMinReaderVersion ? CurrentMinWriterVersion : CurrentMinReaderVersion);
+            RemoveOldVersions(CurrentMinReaderVersion, CurrentMinWriterVersion);
         }
     }
 }

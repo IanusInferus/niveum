@@ -58,6 +58,11 @@ namespace Krustallos
                 Instance.ReturnReaderVersion(ReaderVersion.Value);
                 ReaderVersion = Optional<Version>.Empty;
             }
+            if (PendingWriterVesions.OnHasValue)
+            {
+                Instance.ReturnPendingWriterVesions(PendingWriterVesions.Value);
+                PendingWriterVesions = Optional<ImmutableSortedDictionary<Version, Unit>>.Empty;
+            }
         }
 
         public void Commit()
@@ -78,11 +83,15 @@ namespace Krustallos
                                 Monitor.Enter(o);
                                 Locked.Add(o);
                             }
-                            var WriterVersion = GetWriterVersion();
+                            if (WriterVersion.OnNotHasValue)
+                            {
+                                WriterVersion = Instance.CreateWriterVersion();
+                            }
+                            var WriterVersionValue = WriterVersion.Value;
                             var UpdateSuccess = true;
                             foreach (var u in Updates)
                             {
-                                if (!u(WriterVersion))
+                                if (!u(WriterVersionValue))
                                 {
                                     UpdateSuccess = false;
                                     break;
@@ -131,6 +140,11 @@ namespace Krustallos
                     Instance.ReturnReaderVersion(ReaderVersion.Value);
                     ReaderVersion = Optional<Version>.Empty;
                 }
+                if (PendingWriterVesions.OnHasValue)
+                {
+                    Instance.ReturnPendingWriterVesions(PendingWriterVesions.Value);
+                    PendingWriterVesions = Optional<ImmutableSortedDictionary<Version, Unit>>.Empty;
+                }
             }
         }
 
@@ -147,19 +161,11 @@ namespace Krustallos
             }
             return ReaderVersion.Value;
         }
-        public Version GetWriterVersion()
-        {
-            if (WriterVersion.OnNotHasValue)
-            {
-                WriterVersion = Instance.CreateWriterVersion();
-            }
-            return WriterVersion.Value;
-        }
         public ImmutableSortedDictionary<Version, Unit> GetPendingWriterVersions()
         {
             if (PendingWriterVesions.OnNotHasValue)
             {
-                PendingWriterVesions = Instance.GetPendingWriterVesions();
+                PendingWriterVesions = Instance.TakePendingWriterVesions();
             }
             return PendingWriterVesions.Value;
         }
