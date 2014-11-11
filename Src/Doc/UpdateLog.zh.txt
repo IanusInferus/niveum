@@ -1,4 +1,10 @@
-﻿2014.11.09
+﻿2014.11.12
+Krustallos:
+增加分区功能，尝试减小锁的范围。
+Yuki.Relation:
+按照Krustallos的修改进行对应的C# Krustallos和C# Krustallos-MySQL代码生成修改。
+
+2014.11.09
 Krustallos:
 去除事务提交全局锁，所有数据读取都只读取Reader版本。
 将部分无锁操作改为使用锁来进行。

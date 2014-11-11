@@ -26,7 +26,7 @@ namespace Krustallos
         private ImmutableSortedDictionary<Version, Unit> WriterExists = new ImmutableSortedDictionary<Version, Unit>();
         private SortedDictionary<Version, int> WriterReferenceCounts = new SortedDictionary<Version, int>();
         private Object ToBeRemovedLockee = new Object();
-        private SortedDictionary<Version, HashSet<IVersionedStore>> ToBeRemoved = new SortedDictionary<Version, HashSet<IVersionedStore>>();
+        private SortedDictionary<Version, HashSet<IVersionedPartition>> ToBeRemoved = new SortedDictionary<Version, HashSet<IVersionedPartition>>();
         public Version TakeReaderVersion()
         {
             lock (ReaderAllocateLockee)
@@ -135,7 +135,7 @@ namespace Krustallos
         {
             var Version = (CurrentMinWriterVersion - 1 < CurrentMinReaderVersion) ? (CurrentMinWriterVersion - 1) : CurrentMinReaderVersion;
 
-            var Stores = new HashSet<IVersionedStore>();
+            var Stores = new HashSet<IVersionedPartition>();
             lock (ToBeRemovedLockee)
             {
                 var ToRemove = new List<Version>();
@@ -195,7 +195,7 @@ namespace Krustallos
                 }
             }
         }
-        public void CommitWriterVersion(Version CommittingVersion, HashSet<IVersionedStore> ToBeRemoved)
+        public void CommitWriterVersion(Version CommittingVersion, HashSet<IVersionedPartition> ToBeRemoved)
         {
             lock (ToBeRemovedLockee)
             {

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos-MySQL代码生成器
-//  Version:     2014.10.25.
+//  Version:     2014.11.12.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -216,12 +216,17 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySql
                     var d = or.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
                     var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys.Select(k => ConvertNonUniqueKeyToUniqueKey(k, e.PrimaryKey))).ToArray();
                     var IndexNames = new List<String>();
+                    var Partitions = new List<String>();
                     var Updates = new List<String>();
                     foreach (var k in Keys)
                     {
                         var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
+                        var FirstColumnName = k.Columns.First().Name;
+                        var FirstColumnType = d[FirstColumnName].Type;
+                        var PartitionIndex = (FirstColumnType.OnTypeRef && FirstColumnType.TypeRef.Name.Equals("Int", StringComparison.OrdinalIgnoreCase)) ? ("v.[[" + FirstColumnName + "]] % Data.[[${IndexName}]].NumPartition") : "0";
                         IndexNames.Add(IndexName);
+                        Partitions.AddRange(GetTemplate("DataLoad_Partition").Substitute("PartitionIndex", PartitionIndex).Substitute("IndexName", IndexName));
                         Updates.AddRange(GetTemplate("DataLoad_Update").Substitute("IndexName", IndexName).Substitute("Key", Key));
                     }
                     var SQL = GetSelectAllQueryString(e);
@@ -240,7 +245,7 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySql
                         }
                         j += 1;
                     }
-                    l.AddRange(GetTemplate("DataLoad_Load").Substitute("IndexNames", IndexNames.ToArray()).Substitute("Updates", Updates.ToArray()).Substitute("EntityName", e.Name).Substitute("SQL", SQL).Substitute("ResultSets", ResultSets.ToArray()));
+                    l.AddRange(GetTemplate("DataLoad_Load").Substitute("IndexNames", IndexNames.ToArray()).Substitute("Partitions", Partitions.ToArray()).Substitute("Updates", Updates.ToArray()).Substitute("EntityName", e.Name).Substitute("SQL", SQL).Substitute("ResultSets", ResultSets.ToArray()));
                 }
                 return l.ToArray();
             }

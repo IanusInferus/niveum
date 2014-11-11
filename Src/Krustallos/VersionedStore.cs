@@ -4,23 +4,23 @@ using System.Linq;
 
 namespace Krustallos
 {
-    public interface IVersionedStore
+    public interface IVersionedPartition
     {
         void RemoveVersion(Version v);
         void RemovePreviousVersions(Version v);
 
     }
-    public class VersionedStore<T> : IVersionedStore
+    public class Partition<T> : IVersionedPartition
     {
-        public String[] Path { get; private set; }
+        public int PartitionIndex { get; private set; }
         private Func<T> Allocator;
         private ImmutableSortedDictionary<Version, T> Versions = new ImmutableSortedDictionary<Version, T>();
         private Object Lockee = new Object();
 
-        public VersionedStore(String[] Path, Func<T> Allocator)
+        public Partition(Func<T> Allocator, int PartitionIndex)
         {
-            this.Path = Path;
             this.Allocator = Allocator;
+            this.PartitionIndex = PartitionIndex;
         }
 
         public T GetVersionContent(Version v)
@@ -155,6 +155,28 @@ namespace Krustallos
                 }
                 this.Versions = NewVersions;
             }
+        }
+    }
+
+    public class VersionedStore<T>
+    {
+        public String[] Path { get; private set; }
+        public int NumPartition { get; private set; }
+        private Func<T> Allocator;
+        private Partition<T>[] Partitions;
+
+        public VersionedStore(String[] Path, Func<T> Allocator, int NumPartition = 1)
+        {
+            if (NumPartition < 1) { throw new ArgumentException(); }
+            this.Path = Path;
+            this.Allocator = Allocator;
+            this.NumPartition = NumPartition;
+            this.Partitions = Enumerable.Range(0, NumPartition).Select(Index => new Partition<T>(Allocator, Index)).ToArray();
+        }
+
+        public Partition<T> GetPartition(int Index)
+        {
+            return Partitions[Index];
         }
     }
 }

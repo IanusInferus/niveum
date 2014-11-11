@@ -12,12 +12,12 @@ namespace Krustallos
         private Optional<Version> ReaderVersion;
         private Optional<Version> WriterVersion;
         private Optional<ImmutableSortedDictionary<Version, Unit>> PendingWriterVesions;
-        private SortedDictionary<String[], UpdateStoreInfo> UpdateStores;
+        private SortedDictionary<String[], SortedDictionary<int, UpdatePartitionInfo>> UpdateStores;
         private List<Func<Version, Boolean>> Updates;
 
-        private class UpdateStoreInfo
+        private class UpdatePartitionInfo
         {
-            public IVersionedStore Store;
+            public IVersionedPartition Partition;
             public Object CurrentStateFromReaderVersion;
             public Action<Version> Revert;
         }
@@ -42,7 +42,7 @@ namespace Krustallos
         {
             this.Instance = Instance;
             if (IsolationLevel != System.Data.IsolationLevel.ReadCommitted) { throw new NotSupportedException(); }
-            UpdateStores = new SortedDictionary<String[], UpdateStoreInfo>(new StringArrayComparer());
+            UpdateStores = new SortedDictionary<String[], SortedDictionary<int, UpdatePartitionInfo>>(new StringArrayComparer());
             Updates = new List<Func<Version, Boolean>>();
         }
 
@@ -75,11 +75,14 @@ namespace Krustallos
                     var Locked = new List<Object>();
                     try
                     {
-                        foreach (var p in UpdateStores)
+                        foreach (var ps in UpdateStores)
                         {
-                            var o = p.Value.Store;
-                            Monitor.Enter(o);
-                            Locked.Add(o);
+                            foreach (var pp in ps.Value)
+                            {
+                                var o = pp.Value.Partition;
+                                Monitor.Enter(o);
+                                Locked.Add(o);
+                            }
                         }
                         if (WriterVersion.OnNotHasValue)
                         {
@@ -98,7 +101,7 @@ namespace Krustallos
                         {
                             if (WriterVersion.OnHasValue)
                             {
-                                Instance.CommitWriterVersion(WriterVersion.Value, new HashSet<IVersionedStore>(UpdateStores.Select(p => p.Value.Store)));
+                                Instance.CommitWriterVersion(WriterVersion.Value, new HashSet<IVersionedPartition>(UpdateStores.SelectMany(p => p.Value).Select(p => p.Value.Partition)));
                                 WriterVersion = Optional<Version>.Empty;
                             }
                         }
@@ -107,10 +110,13 @@ namespace Krustallos
                             if (WriterVersion.OnHasValue)
                             {
                                 var WriterVersionValue = WriterVersion.Value;
-                                foreach (var p in UpdateStores)
+                                foreach (var ps in UpdateStores)
                                 {
-                                    var Revert = p.Value.Revert;
-                                    Revert(WriterVersionValue);
+                                    foreach (var pp in ps.Value)
+                                    {
+                                        var Revert = pp.Value.Revert;
+                                        Revert(WriterVersionValue);
+                                    }
                                 }
                                 Instance.RevertWriterVersion(WriterVersionValue);
                                 WriterVersion = Optional<Version>.Empty;
@@ -160,51 +166,72 @@ namespace Krustallos
             return PendingWriterVesions.Value;
         }
 
-        public TRet CheckReaderVersioned<T, TRet>(VersionedStore<T> Store, Func<T, TRet> Selector)
+        public TRet CheckReaderVersioned<T, TRet>(VersionedStore<T> Store, int PartitionIndex, Func<T, TRet> Selector)
         {
             var StorePath = Store.Path;
-            if (!UpdateStores.ContainsKey(StorePath))
+            if (UpdateStores.ContainsKey(StorePath))
             {
-                var ReaderVersion = GetReaderVersion();
-                var Content = Store.GetVersionContent(ReaderVersion, GetPendingWriterVersions());
-                return Selector(Content);
-            }
-            else
-            {
-                var usi = UpdateStores[StorePath];
-                return Selector((T)(usi.CurrentStateFromReaderVersion));
-            }
-        }
-        public void UpdateVersioned<T>(VersionedStore<T> Store, Func<T, T> Transformer)
-        {
-            var StorePath = Store.Path;
-            if (!UpdateStores.ContainsKey(StorePath))
-            {
-                var ReaderVersion = GetReaderVersion();
-                var ReaderVersionContent = Store.GetVersionContent(ReaderVersion);
-                var CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
-                UpdateStores.Add(StorePath, new UpdateStoreInfo
+                var s = UpdateStores[StorePath];
+                if (s.ContainsKey(PartitionIndex))
                 {
-                    Store = Store,
+                    var upi = s[PartitionIndex];
+                    return Selector((T)(upi.CurrentStateFromReaderVersion));
+                }
+            }
+            var Partition = Store.GetPartition(PartitionIndex);
+            var ReaderVersion = GetReaderVersion();
+            var Content = Partition.GetVersionContent(ReaderVersion, GetPendingWriterVersions());
+            return Selector(Content);
+        }
+        public void UpdateVersioned<T>(VersionedStore<T> Store, int PartitionIndex, Func<T, T> Transformer)
+        {
+            var StorePath = Store.Path;
+            var Partition = Store.GetPartition(PartitionIndex);
+            Func<Version, Boolean> Update = WriterVersion =>
+            {
+                var Content = Partition.GetLastVersionContent();
+                return Partition.TryPutLastVersion(WriterVersion, Transformer(Content));
+            };
+            if (UpdateStores.ContainsKey(StorePath))
+            {
+                var s = UpdateStores[StorePath];
+                if (s.ContainsKey(PartitionIndex))
+                {
+                    var upi = s[PartitionIndex];
+                    var ReaderVersionContent = (T)(upi.CurrentStateFromReaderVersion);
+                    var CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
+                    upi.CurrentStateFromReaderVersion = CurrentStateFromReaderVersion;
+                    Updates.Add(Update);
+                    return;
+                }
+            }
+
+            {
+                var ReaderVersion = GetReaderVersion();
+                var ReaderVersionContent = Partition.GetVersionContent(ReaderVersion);
+                var CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
+                var upi = new UpdatePartitionInfo
+                {
+                    Partition = Partition,
                     CurrentStateFromReaderVersion = CurrentStateFromReaderVersion,
                     Revert = WriterVersion =>
                     {
-                        Store.RemoveVersion(WriterVersion);
+                        Partition.RemoveVersion(WriterVersion);
                     }
-                });
+                };
+                if (UpdateStores.ContainsKey(StorePath))
+                {
+                    var s = UpdateStores[StorePath];
+                    s.Add(PartitionIndex, upi);
+                }
+                else
+                {
+                    var s = new SortedDictionary<int, UpdatePartitionInfo>();
+                    s.Add(PartitionIndex, upi);
+                    UpdateStores.Add(StorePath, s);
+                }
+                Updates.Add(Update);
             }
-            else
-            {
-                var usi = UpdateStores[StorePath];
-                var ReaderVersionContent = (T)(usi.CurrentStateFromReaderVersion);
-                var CurrentStateFromReaderVersion = Transformer(ReaderVersionContent);
-                usi.CurrentStateFromReaderVersion = CurrentStateFromReaderVersion;
-            }
-            Updates.Add(WriterVersion =>
-            {
-                var Content = Store.GetLastVersionContent();
-                return Store.TryPutLastVersion(WriterVersion, Transformer(Content));
-            });
         }
     }
 }
