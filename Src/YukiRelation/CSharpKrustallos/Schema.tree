@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Krustallos代码模板数据
-      Version:     2014.11.09.
+      Version:     2014.11.12.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -66,19 +66,31 @@ ObjectSchemaTemplate
                     using ${EntityNamespaceName};
         Template
             Name Data
-            //Parameters: ${Indices}
+            //Parameters: ${IndiceDefinitions}, ${IndiceInitializations}
             Value
                 $String
                     public class KrustallosData
                     {
-                        ${Indices}
+                        ${IndiceDefinitions}
+
+                        public KrustallosData(int NumPartition)
+                        {
+                            if (NumPartition < 1) { throw new ArgumentException(); }
+                            ${IndiceInitializations}
+                        }
                     }
         Template
-            Name Data_Index
-            //Parameters: ${Index}, ${IndexName}, ${IndexType}, ${KeyComparer}
+            Name Data_IndexDefinition
+            //Parameters: ${IndexName}, ${IndexType}
             Value
                 $String
-                    public VersionedStore<[[${IndexType}]]> [[${IndexName}]] = new VersionedStore<[[${IndexType}]]>(new String[] { ${Index} }, () => new [[${IndexType}]](${KeyComparer}));
+                    public VersionedStore<[[${IndexType}]]> [[${IndexName}]];
+        Template
+            Name Data_IndexInitialization
+            //Parameters: ${Index}, ${IndexName}, ${IndexType}, ${KeyComparer}, ${NumPartition}
+            Value
+                $String
+                    this.[[${IndexName}]] = new VersionedStore<[[${IndexType}]]>(new String[] { ${Index} }, () => new [[${IndexType}]](${KeyComparer}), ${NumPartition});
         Template
             Name DataAccessBase
             //Parameters:
@@ -201,11 +213,11 @@ ObjectSchemaTemplate
                     }
         Template
             Name SelectLock_Optional
-            //Parameters: ${IndexName}, ${LockingStatement}, ${Parameters}, ${Filters}
+            //Parameters: ${IndexName}, ${LockingStatement}, ${Parameters}, ${PartitionIndex}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
                     if (_l_.Count == 0) { return null; }
                     if (_l_.Count > 1)
                     {
@@ -214,11 +226,11 @@ ObjectSchemaTemplate
                     return _l_.Single();
         Template
             Name SelectLock_One
-            //Parameters: ${IndexName}, ${LockingStatement}, ${Parameters}, ${Filters}
+            //Parameters: ${IndexName}, ${LockingStatement}, ${Parameters}, ${PartitionIndex}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
                     if (_l_.Count == 0)
                     {
                         throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -230,18 +242,18 @@ ObjectSchemaTemplate
                     return _l_.Single();
         Template
             Name SelectLock_ManyAllRange
-            //Parameters: ${IndexName}, ${LockingStatement}, ${Filters}
+            //Parameters: ${IndexName}, ${LockingStatement}, ${PartitionIndex}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    return Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+                    return Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
         Template
             Name SelectLock_Count
-            //Parameters: ${IndexName}, ${LockingStatement}, ${Filters}
+            //Parameters: ${IndexName}, ${LockingStatement}, ${PartitionIndex}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
-                    return Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters});
+                    return Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters});
         Template
             Name Lock_LockingStatement
             //Parameters: ${EntityNameAndParameterAndValues}
@@ -267,16 +279,16 @@ ObjectSchemaTemplate
                     }
         Template
             Name Insert_UpdateStatement
-            //Parameters: ${IndexName}, ${Function}, ${Key}
+            //Parameters: ${IndexName}, ${Function}, ${PartitionIndex}, ${Key}
             Value
                 $String
-                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](new Key(${Key}), _v_));
+                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_.[[${Function}]](new Key(${Key}), _v_));
         Template
             Name Update_Optional
-            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${Parameters}, ${PartitionIndex}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0) { return; }
                     if (_l_.Count > 1)
                     {
@@ -289,10 +301,10 @@ ObjectSchemaTemplate
                     }
         Template
             Name Update_One
-            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${Parameters}, ${PartitionIndex}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0)
                     {
                         throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -308,12 +320,12 @@ ObjectSchemaTemplate
                     }
         Template
             Name Update_Many
-            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${Parameters}, ${PartitionIndex}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
             Value
                 $String
                     foreach (var v in l)
                     {
-                        var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                        var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
                         if (_l_.Count == 0)
                         {
                             throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -330,10 +342,10 @@ ObjectSchemaTemplate
                     }
         Template
             Name Upsert_One
-            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${Parameters}, ${PartitionIndex}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
                     if (_l_.Count > 1)
                     {
                         throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -348,12 +360,12 @@ ObjectSchemaTemplate
                     }
         Template
             Name Upsert_Many
-            //Parameters: ${IndexName}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${PartitionIndex}, ${Filters}, ${DeleteStatements}, ${UpdateStatements}
             Value
                 $String
                     foreach (var v in l)
                     {
-                        var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                        var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
                         if (_l_.Count > 1)
                         {
                             throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -369,10 +381,10 @@ ObjectSchemaTemplate
                     }
         Template
             Name Delete_Optional
-            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${Parameters}, ${PartitionIndex}, ${Filters}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0) { return; }
                     if (_l_.Count > 1)
                     {
@@ -382,10 +394,10 @@ ObjectSchemaTemplate
                     ${UpdateStatements}
         Template
             Name Delete_One
-            //Parameters: ${IndexName}, ${Parameters}, ${Filters}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${Parameters}, ${PartitionIndex}, ${Filters}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0)
                     {
                         throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
@@ -398,10 +410,10 @@ ObjectSchemaTemplate
                     ${UpdateStatements}
         Template
             Name Delete_ManyRange
-            //Parameters: ${IndexName}, ${Filters}, ${UpdateStatements}
+            //Parameters: ${IndexName}, ${PartitionIndex}, ${Filters}, ${UpdateStatements}
             Value
                 $String
-                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _d_ => _d_${Filters}).ToList();
+                    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0) { return; }
                     ${UpdateStatements}
         Template
@@ -412,22 +424,25 @@ ObjectSchemaTemplate
                     ${UpdateStatements}
         Template
             Name Delete_UpdateStatement_OptionalOne
-            //Parameters: ${IndexName}, ${Function}, ${Key}
+            //Parameters: ${IndexName}, ${PartitionIndex}, ${Function}, ${Key}
             Value
                 $String
-                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](new Key(${Key})));
+                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_.[[${Function}]](new Key(${Key})));
         Template
             Name Delete_UpdateStatement_ManyRange
-            //Parameters: ${IndexName}, ${Function}, ${Key}
+            //Parameters: ${IndexName}, ${PartitionIndex}, ${Function}, ${Key}
             Value
                 $String
-                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]](_l_.Select(_v_ => new Key(${Key}))));
+                    foreach (var _v_ in _l_)
+                    {
+                        Transaction.UpdateVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_.[[${Function}]](new Key(${Key})));
+                    }
         Template
             Name Delete_UpdateStatement_All
-            //Parameters: ${IndexName}, ${Function}
+            //Parameters: ${IndexName}, ${PartitionIndex}, ${Function}
             Value
                 $String
-                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _d_ => _d_.[[${Function}]]());
+                    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_.[[${Function}]]());
         Template
             Name DataAccessPool
             //Parameters: ${Hash}
@@ -463,7 +478,15 @@ ObjectSchemaTemplate
                         }
                         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory)
                         {
-                            var Pair = Instances.GetOrAdd(ConnectionString, Key => new KeyValuePair<Instance, KrustallosData>(new Instance(), new KrustallosData()));
+                            return Create(ConnectionString, IsolationLevel, TransactionLockFactory, 16);
+                        }
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock, int NumPartition)
+                        {
+                            return Create(ConnectionString, IsolationLevel, t => TransactionLock, NumPartition);
+                        }
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory, int NumPartition)
+                        {
+                            var Pair = Instances.GetOrAdd(ConnectionString, Key => new KeyValuePair<Instance, KrustallosData>(new Instance(), new KrustallosData(NumPartition)));
                             return new KrustallosDataAccess(Pair.Key, Pair.Value, IsolationLevel, TransactionLockFactory);
                         }
                     }

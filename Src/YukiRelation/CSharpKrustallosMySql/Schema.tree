@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Krustallos-MySQL代码模板数据
-      Version:     2014.10.25.
+      Version:     2014.11.12.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -163,6 +163,7 @@ ObjectSchemaTemplate
                             public Instance Instance = new Instance();
                             private String ConnectionString;
                             private IsolationLevel IsolationLevel;
+                            private int NumPartition;
                             private Object Lockee = new Object();
                             public KrustallosData Data
                             {
@@ -174,7 +175,7 @@ ObjectSchemaTemplate
                                         {
                                             return DataValue;
                                         }
-                                        DataValue = new KrustallosData();
+                                        DataValue = new KrustallosData(NumPartition);
                                         using (var da = new MySqlDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null)))
                                         {
                                             da.Load(DataValue);
@@ -185,10 +186,11 @@ ObjectSchemaTemplate
                             }
                             private KrustallosData DataValue;
 
-                            public InstanceInfo(String ConnectionString, IsolationLevel IsolationLevel)
+                            public InstanceInfo(String ConnectionString, IsolationLevel IsolationLevel, int NumPartition)
                             {
                                 this.ConnectionString = ConnectionString;
                                 this.IsolationLevel = IsolationLevel;
+                                this.NumPartition = NumPartition;
                             }
                         }
                         private ConcurrentDictionary<String, InstanceInfo> Instances = new ConcurrentDictionary<String, InstanceInfo>();
@@ -211,7 +213,15 @@ ObjectSchemaTemplate
                         }
                         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory)
                         {
-                            var ii = Instances.GetOrAdd(ConnectionString, Key => new InstanceInfo(Key, IsolationLevel));
+                            return Create(ConnectionString, IsolationLevel, TransactionLockFactory, 16);
+                        }
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock, int NumPartition)
+                        {
+                            return Create(ConnectionString, IsolationLevel, t => TransactionLock, NumPartition);
+                        }
+                        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory, int NumPartition)
+                        {
+                            var ii = Instances.GetOrAdd(ConnectionString, Key => new InstanceInfo(Key, IsolationLevel, NumPartition));
                             var k = new KrustallosDataAccess(ii.Instance, ii.Data, IsolationLevel, TransactionLockFactory);
                             return new KrustallosMySqlDataAccess(k, () => new MySqlDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null)));
                         }
@@ -245,11 +255,10 @@ ObjectSchemaTemplate
                     }
         Template
             Name DataLoad_Load
-            //Parameters: ${IndexNames}, ${Updates}, ${EntityName}, ${SQL}, ${ResultSets}
+            //Parameters: ${IndexNames}, ${Partitions}, ${Updates}, ${EntityName}, ${SQL}, ${ResultSets}
             Value
                 $String
                     {
-                        var [[${IndexNames}]] = Data.[[${IndexNames}]].GetLastVersionContent();
                         var cmd = CreateTextCommand();
                         cmd.CommandText = @"${SQL}";
                         using (var dr = cmd.ExecuteReader())
@@ -260,11 +269,19 @@ ObjectSchemaTemplate
                                 {
                                     ${ResultSets}
                                 };
+                                ${Partitions}
+                                var [[${IndexNames}]] = [[p${IndexNames}]].GetLastVersionContent();
                                 ${Updates}
+                                [[p${IndexNames}]].PutVersion(new Version(0), [[${IndexNames}]]);
                             }
                         }
-                        Data.[[${IndexNames}]].PutVersion(new Version(0), [[${IndexNames}]]);
                     }
+        Template
+            Name DataLoad_Partition
+            //Parameters: ${PartitionIndex}, ${IndexName}
+            Value
+                $String
+                    var [[p${IndexName}]] = Data.[[${IndexName}]].GetPartition(${PartitionIndex});
         Template
             Name DataLoad_Update
             //Parameters: ${IndexName}, ${Key}
