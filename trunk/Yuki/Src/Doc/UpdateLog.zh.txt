@@ -3,6 +3,8 @@ Krustallos:
 增加分区功能，尝试减小锁的范围。
 Yuki.Relation:
 按照Krustallos的修改进行对应的C# Krustallos和C# Krustallos-MySQL代码生成修改。
+Yuki.DatabaseRegenerator:
+将数据加载改为并行的。
 
 2014.11.09
 Krustallos:
