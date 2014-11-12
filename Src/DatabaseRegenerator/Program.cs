@@ -311,7 +311,7 @@ namespace Yuki.DatabaseRegenerator
                     Files.Add(f, System.IO.File.ReadAllBytes(f));
                 }
             }
-            var Forests = Files.AsParallel().WithDegreeOfParallelism(4).Select(p =>
+            var Forests = Files.AsParallel().Select(p =>
             {
                 using (var bas = new ByteArrayStream(p.Value))
                 {
