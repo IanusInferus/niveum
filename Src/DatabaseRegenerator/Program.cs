@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2014.10.10.
+//  Version:     2014.11.12.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Data;
 using Firefly;
 using Firefly.Streaming;
+using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Firefly.Texting.TreeFormat.Semantics;
 using Yuki.RelationSchema;
@@ -301,29 +302,46 @@ namespace Yuki.DatabaseRegenerator
                 throw new InvalidOperationException("DuplicatedCollectionNames: {0}".Formats(String.Join(" ", DuplicatedCollectionNames)));
             }
             var CollectionNameToEntity = Entities.ToDictionary(e => e.CollectionName, StringComparer.OrdinalIgnoreCase);
-            var Tables = new Dictionary<String, List<Node>>();
+
+            var Files = new Dictionary<String, Byte[]>();
             foreach (var DataDir in DataDirs)
             {
                 foreach (var f in Directory.GetFiles(DataDir, "*.tree", SearchOption.AllDirectories).OrderBy(ff => ff, StringComparer.OrdinalIgnoreCase))
                 {
-                    var Result = TreeFile.ReadDirect(f, new TreeFormatParseSetting(), new TreeFormatEvaluateSetting());
-                    foreach (var n in Result.Value.Nodes)
-                    {
-                        if (!n.OnStem) { continue; }
-                        var Name = n.Stem.Name;
-                        if (CollectionNameToEntity.ContainsKey(Name))
-                        {
-                            Name = CollectionNameToEntity[Name].Name;
-                        }
-                        if (!Tables.ContainsKey(Name))
-                        {
-                            Tables.Add(Name, new List<Node>());
-                        }
-                        var t = Tables[Name];
-                        t.AddRange(n.Stem.Children);
-                    }
+                    Files.Add(f, System.IO.File.ReadAllBytes(f));
                 }
             }
+            var Forests = Files.AsParallel().WithDegreeOfParallelism(4).Select(p =>
+            {
+                using (var bas = new ByteArrayStream(p.Value))
+                {
+                    using (var sr = Txt.CreateTextReader(bas.AsNewReading(), Firefly.TextEncoding.TextEncoding.Default))
+                    {
+                        return TreeFile.ReadDirect(sr, p.Key, new TreeFormatParseSetting(), new TreeFormatEvaluateSetting()).Value.Nodes;
+                    }
+                }
+            }).ToList();
+
+            var Tables = new Dictionary<String, List<Node>>();
+            foreach (var Forest in Forests)
+            {
+                foreach (var n in Forest)
+                {
+                    if (!n.OnStem) { continue; }
+                    var Name = n.Stem.Name;
+                    if (CollectionNameToEntity.ContainsKey(Name))
+                    {
+                        Name = CollectionNameToEntity[Name].Name;
+                    }
+                    if (!Tables.ContainsKey(Name))
+                    {
+                        Tables.Add(Name, new List<Node>());
+                    }
+                    var t = Tables[Name];
+                    t.AddRange(n.Stem.Children);
+                }
+            }
+
             var Missings = Entities.Select(e => e.Name).Except(Tables.Keys, StringComparer.OrdinalIgnoreCase).ToArray();
             foreach (var Name in Missings)
             {
