@@ -1,6 +1,7 @@
 ﻿2014.11.14
 Krustallos:
 去除By键为空时无法分区的限制。
+修正当前读取版本会设为比以前的值小，导致读取时可能需要读取的版本已被删除的问题。
 Yuki.Relation:
 按照Krustallos的修改进行对应的C# Krustallos代码生成。
 
