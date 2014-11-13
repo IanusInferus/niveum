@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos代码生成器
-//  Version:     2014.11.12.
+//  Version:     2014.11.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -108,24 +108,9 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var or = InnerTypeDict[e.Name].Record;
                     var d = or.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
                     var Keys = KeysDict[e.Name];
-                    var KeyQueries = (EntityNameToQueries.ContainsKey(e.Name) ? EntityNameToQueries[e.Name] : new List<QueryDef>()).GroupBy(q => QueryToSearchKey[q]).ToDictionary(g => g.Key, g => g.ToList());
                     foreach (var k in Keys)
                     {
                         var CanBePartitioned = true;
-                        if (KeyQueries.ContainsKey(k))
-                        {
-                            foreach (var q in KeyQueries[k])
-                            {
-                                if (q.Verb.OnSelect || q.Verb.OnLock || q.Verb.OnDelete)
-                                {
-                                    if (q.By.Count == 0)
-                                    {
-                                        CanBePartitioned = false;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
                         var FirstColumnType = d[k.Columns.First().Name].Type;
                         if (!FirstColumnType.OnTypeRef || !FirstColumnType.TypeRef.Name.Equals("Int"))
                         {
@@ -313,6 +298,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 String[] Content;
                 if (q.Verb.OnSelect || q.Verb.OnLock)
                 {
+                    var CanBePartitioned = KeyCanBePartitioned[SearchKey];
                     String[] Template;
                     if (q.Numeral.OnOptional)
                     {
@@ -322,13 +308,31 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     {
                         Template = GetTemplate("SelectLock_One");
                     }
-                    else if (q.Numeral.OnMany || q.Numeral.OnAll || q.Numeral.OnRange)
+                    else if (q.Numeral.OnMany)
                     {
                         Template = GetTemplate("SelectLock_ManyAllRange");
                     }
+                    else if (q.Numeral.OnAll || q.Numeral.OnRange)
+                    {
+                        if (CanBePartitioned)
+                        {
+                            Template = GetTemplate("SelectLock_AllRange_Partitioned");
+                        }
+                        else
+                        {
+                            Template = GetTemplate("SelectLock_ManyAllRange");
+                        }
+                    }
                     else if (q.Numeral.OnCount)
                     {
-                        Template = GetTemplate("SelectLock_Count");
+                        if (CanBePartitioned)
+                        {
+                            Template = GetTemplate("SelectLock_Count_Partitioned");
+                        }
+                        else
+                        {
+                            Template = GetTemplate("SelectLock_Count");
+                        }
                     }
                     else
                     {
@@ -347,9 +351,16 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         LockingStatement = GetTemplate("Lock_LockingStatement").Substitute("EntityNameAndParameterAndValues", String.Join(", ", EntityNameAndParameterAndValues.ToArray()));
                     }
                     var IndexName = e.Name + "By" + String.Join("And", SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
-                    var PartitionIndex = KeyCanBePartitioned[SearchKey] ? "[[" + By.First() + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
                     var Filters = GetFilters(q, SearchKey.Columns.Count);
-                    Content = Template.Substitute("IndexName", IndexName).Substitute("LockingStatement", LockingStatement).Substitute("Parameters", Parameters).Substitute("PartitionIndex", PartitionIndex).Substitute("Filters", Filters);
+                    if (CanBePartitioned && (By.Count == 0))
+                    {
+                        Content = Template.Substitute("IndexName", IndexName).Substitute("LockingStatement", LockingStatement).Substitute("Parameters", Parameters).Substitute("Filters", Filters);
+                    }
+                    else
+                    {
+                        var PartitionIndex = CanBePartitioned ? "[[" + By.First() + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
+                        Content = Template.Substitute("IndexName", IndexName).Substitute("LockingStatement", LockingStatement).Substitute("Parameters", Parameters).Substitute("PartitionIndex", PartitionIndex).Substitute("Filters", Filters);
+                    }
                 }
                 else if (q.Verb.OnInsert)
                 {
@@ -447,6 +458,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 }
                 else if (q.Verb.OnDelete)
                 {
+                    var CanBePartitioned = KeyCanBePartitioned[SearchKey];
                     String[] Template;
                     String Function;
                     if (q.Numeral.OnOptional)
@@ -461,7 +473,14 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     }
                     else if (q.Numeral.OnMany || q.Numeral.OnRange)
                     {
-                        Template = GetTemplate("Delete_ManyRange");
+                        if (CanBePartitioned)
+                        {
+                            Template = GetTemplate("Delete_ManyRange_Partitioned");
+                        }
+                        else
+                        {
+                            Template = GetTemplate("Delete_ManyRange");
+                        }
                         Function = "Remove";
                     }
                     else if (q.Numeral.OnAll)
@@ -492,8 +511,15 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         }
                         else if (q.Numeral.OnAll)
                         {
-                            var PartitionIndex = "0";
-                            UpdateStatements.AddRange(GetTemplate("Delete_UpdateStatement_All").Substitute("IndexName", IndexName).Substitute("PartitionIndex", PartitionIndex).Substitute("Function", Function));
+                            if (CanBePartitioned)
+                            {
+                                UpdateStatements.AddRange(GetTemplate("Delete_UpdateStatement_All_Partitioned").Substitute("IndexName", IndexName).Substitute("Function", Function));
+                            }
+                            else
+                            {
+                                var PartitionIndex = "0";
+                                UpdateStatements.AddRange(GetTemplate("Delete_UpdateStatement_All").Substitute("IndexName", IndexName).Substitute("PartitionIndex", PartitionIndex).Substitute("Function", Function));
+                            }
                         }
                         else
                         {
@@ -502,9 +528,16 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     }
                     {
                         var IndexName = e.Name + "By" + String.Join("And", SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
-                        var PartitionIndex = KeyCanBePartitioned[SearchKey] ? "[[" + By.First() + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
                         var Filters = GetFilters(q, SearchKey.Columns.Count);
-                        Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("PartitionIndex", PartitionIndex).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements.ToArray());
+                        if (CanBePartitioned && (By.Count == 0))
+                        {
+                            Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements.ToArray());
+                        }
+                        else
+                        {
+                            var PartitionIndex = CanBePartitioned ? "[[" + By.First() + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
+                            Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("PartitionIndex", PartitionIndex).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements.ToArray());
+                        }
                     }
                 }
                 else

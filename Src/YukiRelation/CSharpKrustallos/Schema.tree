@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Krustallos代码模板数据
-      Version:     2014.11.12.
+      Version:     2014.11.14.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -213,7 +213,7 @@ ObjectSchemaTemplate
                     }
         Template
             Name SelectLock_Optional
-            //Parameters: ${IndexName}, ${LockingStatement}, ${Parameters}, ${PartitionIndex}, ${Filters}
+            //Parameters: ${IndexName}, ${LockingStatement}, ${Parameters}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
@@ -248,12 +248,26 @@ ObjectSchemaTemplate
                     ${LockingStatement}
                     return Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
         Template
+            Name SelectLock_AllRange_Partitioned
+            //Parameters: ${IndexName}, ${LockingStatement}, ${Filters}
+            Value
+                $String
+                    ${LockingStatement}
+                    return Enumerable.Range(0, this.Data.[[${IndexName}]].NumPartition).SelectMany(_i_ => Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _i_, _d_ => _d_${Filters}.Select(_e_ => Clone(_e_)))).ToList();
+        Template
             Name SelectLock_Count
             //Parameters: ${IndexName}, ${LockingStatement}, ${PartitionIndex}, ${Filters}
             Value
                 $String
                     ${LockingStatement}
                     return Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters});
+        Template
+            Name SelectLock_Count_Partitioned
+            //Parameters: ${IndexName}, ${LockingStatement}, ${Filters}
+            Value
+                $String
+                    ${LockingStatement}
+                    return Enumerable.Range(0, this.Data.[[${IndexName}]].NumPartition).Sum(_i_ => Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _i_, _d_ => _d_${Filters}));
         Template
             Name Lock_LockingStatement
             //Parameters: ${EntityNameAndParameterAndValues}
@@ -416,6 +430,15 @@ ObjectSchemaTemplate
                     var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
                     if (_l_.Count == 0) { return; }
                     ${UpdateStatements}
+
+        Template
+            Name Delete_ManyRange_Partitioned
+            //Parameters: ${IndexName}, ${Filters}, ${UpdateStatements}
+            Value
+                $String
+                    var _l_ = Enumerable.Range(0, this.Data.[[${IndexName}]].NumPartition).SelectMany(_i_ => Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _i_, _d_ => _d_${Filters})).ToList();
+                    if (_l_.Count == 0) { return; }
+                    ${UpdateStatements}
         Template
             Name Delete_All
             //Parameters: ${UpdateStatements}
@@ -443,6 +466,15 @@ ObjectSchemaTemplate
             Value
                 $String
                     Transaction.UpdateVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_.[[${Function}]]());
+        Template
+            Name Delete_UpdateStatement_All_Partitioned
+            //Parameters: ${IndexName}, ${Function}
+            Value
+                $String
+                    for (int _i_ = 0; _i_ < this.Data.[[${IndexName}]].NumPartition; _i_ += 1)
+                    {
+                        Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _i_, _d_ => _d_.[[${Function}]]());
+                    }
         Template
             Name DataAccessPool
             //Parameters: ${Hash}
