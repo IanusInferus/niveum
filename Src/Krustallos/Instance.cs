@@ -54,14 +54,17 @@ namespace Krustallos
                     if (Count <= 0)
                     {
                         ReaderCounts.Remove(CommittedVersion);
+                        Version NewMinReaderVersion;
                         if (ReaderCounts.Count > 0)
                         {
-                            MinReaderVersion = ReaderCounts.First().Key;
+                            NewMinReaderVersion = ReaderCounts.First().Key;
                         }
                         else
                         {
-                            MinReaderVersion = CurrentReaderVersion;
+                            NewMinReaderVersion = CurrentReaderVersion;
                         }
+                        if (NewMinReaderVersion < MinReaderVersion) { throw new InvalidOperationException(); }
+                        MinReaderVersion = NewMinReaderVersion;
                         oMinReaderVersion = MinReaderVersion;
                     }
                     else
@@ -133,32 +136,33 @@ namespace Krustallos
 
         private void RemoveOldVersions(Version CurrentMinReaderVersion, Version CurrentMinWriterVersion)
         {
+            //CurrentMinWriterVersion可能回滚，所以需要保留到CurrentMinWriterVersion前的一个版本
             var Version = (CurrentMinWriterVersion - 1 < CurrentMinReaderVersion) ? (CurrentMinWriterVersion - 1) : CurrentMinReaderVersion;
 
-            var Stores = new HashSet<IVersionedPartition>();
+            var Partitions = new HashSet<IVersionedPartition>();
             lock (ToBeRemovedLockee)
             {
                 var ToRemove = new List<Version>();
-                foreach (var p in ToBeRemoved)
+                foreach (var Pair in ToBeRemoved)
                 {
-                    if (p.Key >= Version) { break; }
-                    foreach (var s in p.Value)
+                    if (Pair.Key >= Version) { break; }
+                    foreach (var p in Pair.Value)
                     {
-                        if (!Stores.Contains(s))
+                        if (!Partitions.Contains(p))
                         {
-                            Stores.Add(s);
+                            Partitions.Add(p);
                         }
                     }
-                    ToRemove.Add(p.Key);
+                    ToRemove.Add(Pair.Key);
                 }
                 foreach (var v in ToRemove)
                 {
                     ToBeRemoved.Remove(v);
                 }
             }
-            foreach (var s in Stores)
+            foreach (var p in Partitions)
             {
-                s.RemovePreviousVersions(Version);
+                p.RemovePreviousVersions(Version);
             }
         }
         public Version CreateWriterVersion()
@@ -230,15 +234,18 @@ namespace Krustallos
             Version CurrentMinReaderVersion;
             lock (ReaderAllocateLockee)
             {
-                CurrentReaderVersion = CurrentMaxCommittedWriterVersion;
+                CurrentReaderVersion = CurrentMaxCommittedWriterVersion > CurrentReaderVersion ? CurrentMaxCommittedWriterVersion : CurrentReaderVersion;
+                Version NewMinReaderVersion;
                 if (ReaderCounts.Count > 0)
                 {
-                    MinReaderVersion = ReaderCounts.First().Key;
+                    NewMinReaderVersion = ReaderCounts.First().Key;
                 }
                 else
                 {
-                    MinReaderVersion = CurrentReaderVersion;
+                    NewMinReaderVersion = CurrentReaderVersion;
                 }
+                if (NewMinReaderVersion < MinReaderVersion) { throw new InvalidOperationException(); }
+                MinReaderVersion = NewMinReaderVersion;
                 CurrentMinReaderVersion = MinReaderVersion;
             }
             RemoveOldVersions(CurrentMinReaderVersion, CurrentMinWriterVersion);
