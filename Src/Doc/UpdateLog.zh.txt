@@ -1,8 +1,14 @@
-﻿2014.11.12
+﻿2014.11.14
+Krustallos:
+去除By键为空时无法分区的限制。
+Yuki.Relation:
+按照Krustallos的修改进行对应的C# Krustallos代码生成。
+
+2014.11.12
 Krustallos:
 增加分区功能，尝试减小锁的范围。
 Yuki.Relation:
-按照Krustallos的修改进行对应的C# Krustallos和C# Krustallos-MySQL代码生成修改。
+按照Krustallos的修改进行对应的C# Krustallos和C# Krustallos-MySQL代码生成。
 Yuki.DatabaseRegenerator:
 将数据加载改为并行的。
 
