@@ -310,7 +310,7 @@ namespace Server
         }
         private void ExecuteActionQueue()
         {
-            int Count = 16;
+            int Count = 64;
             while (true)
             {
                 Action a = null;

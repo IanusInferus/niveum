@@ -359,6 +359,7 @@ namespace Server
 
                                 s.Start();
                             };
+                            AcceptConsumer = new AsyncConsumer<Socket>(QueueUserWorkItem, a => { Accept(a); return true; }, int.MaxValue);
 
                             var Exceptions = new List<Exception>();
                             foreach (var Binding in BindingsValue)
@@ -393,7 +394,7 @@ namespace Server
                                         if (args.SocketError == SocketError.Success)
                                         {
                                             var a = args.AcceptSocket;
-                                            QueueUserWorkItem(() => Accept(a));
+                                            AcceptConsumer.Push(a);
                                         }
                                         else
                                         {

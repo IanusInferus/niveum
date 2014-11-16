@@ -27,6 +27,7 @@ namespace BaseSystem
 
         public void Push(T Entry)
         {
+            Boolean NeedToRun = false;
             lock (Entries)
             {
                 if (IsExited)
@@ -37,8 +38,12 @@ namespace BaseSystem
                 if (RunningCount < MaxConsumerCount)
                 {
                     RunningCount += 1;
-                    QueueUserWorkItem(Run);
+                    NeedToRun = true;
                 }
+            }
+            if (NeedToRun)
+            {
+                QueueUserWorkItem(Run);
             }
         }
 
