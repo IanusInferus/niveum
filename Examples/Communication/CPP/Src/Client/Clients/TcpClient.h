@@ -34,7 +34,7 @@ namespace Client
                 return IsRunningValue.Check<bool>([](bool v) { return v; });
             }
 
-            TcpClient(boost::asio::io_service &io_service, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient)
+            TcpClient(boost::asio::io_service &io_service, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient, std::function<void(boost::system::system_error)> ExceptionHandler = nullptr)
                 : Socket(io_service), IsRunningValue(false), IsDisposed(false)
             {
                 this->RemoteEndPoint = RemoteEndPoint;
@@ -48,7 +48,19 @@ namespace Client
                         Buffers.push_back(boost::asio::buffer(*b));
                     }
 
-                    boost::asio::write(Socket, Buffers);
+                    boost::system::error_code ec;
+                    boost::asio::write(Socket, Buffers, ec);
+                    if (ec != boost::system::errc::success)
+                    {
+                        if (ExceptionHandler != nullptr)
+                        {
+                            ExceptionHandler(boost::system::system_error(ec.value(), ec.category()));
+                        }
+                        else
+                        {
+                            throw boost::system::system_error(ec.value(), ec.category());
+                        }
+                    }
                 };
             }
 
