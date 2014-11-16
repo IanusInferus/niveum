@@ -48,63 +48,66 @@ namespace Net
 
             public void DoOnCompletion()
             {
+                Func<SocketAsyncEventArgs, Action> ResultToCompleted;
+                Action<Exception> Faulted;
+                Action ReleaseAsyncOperation;
                 lock (Lockee)
                 {
                     if (this.ResultToCompleted == null) { return; }
 
-                    var ResultToCompleted = this.ResultToCompleted;
-                    var Faulted = this.Faulted;
-                    var ReleaseAsyncOperation = this.ReleaseAsyncOperation;
+                    ResultToCompleted = this.ResultToCompleted;
+                    Faulted = this.Faulted;
+                    ReleaseAsyncOperation = this.ReleaseAsyncOperation;
                     this.ResultToCompleted = null;
                     this.Faulted = null;
                     this.ReleaseAsyncOperation = null;
+                }
 
-                    Exception Exception = null;
-                    Action Completed = null;
-                    try
+                Exception Exception = null;
+                Action Completed = null;
+                try
+                {
+                    if (EventArgs.SocketError == SocketError.Success)
                     {
-                        if (EventArgs.SocketError == SocketError.Success)
+                        if (Debugger.IsAttached)
                         {
-                            if (Debugger.IsAttached)
+                            if (ResultToCompleted != null)
+                            {
+                                Completed = ResultToCompleted(EventArgs);
+                            }
+                        }
+                        else
+                        {
+                            try
                             {
                                 if (ResultToCompleted != null)
                                 {
                                     Completed = ResultToCompleted(EventArgs);
                                 }
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                try
-                                {
-                                    if (ResultToCompleted != null)
-                                    {
-                                        Completed = ResultToCompleted(EventArgs);
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Exception = ex;
-                                }
+                                Exception = ex;
                             }
                         }
-                        else
-                        {
-                            Exception = new SocketException((int)(EventArgs.SocketError));
-                        }
                     }
-                    finally
+                    else
                     {
-                        ReleaseAsyncOperation();
+                        Exception = new SocketException((int)(EventArgs.SocketError));
                     }
-                    if (Exception != null)
-                    {
-                        Faulted(Exception);
-                        return;
-                    }
-                    if (Completed != null)
-                    {
-                        Completed();
-                    }
+                }
+                finally
+                {
+                    ReleaseAsyncOperation();
+                }
+                if (Exception != null)
+                {
+                    Faulted(Exception);
+                    return;
+                }
+                if (Completed != null)
+                {
+                    Completed();
                 }
             }
 
@@ -115,26 +118,38 @@ namespace Net
 
             public void Dispose()
             {
+                SocketAsyncEventArgs EventArgs = null;
+                Action<Exception> Faulted = null;
+                Action ReleaseAsyncOperation = null;
                 lock (Lockee)
                 {
-                    if (EventArgs != null)
+                    if (this.EventArgs != null)
                     {
-                        EventArgs.Completed -= EventArgs_Completed;
-                        EventArgs.Dispose();
-                        EventArgs = null;
+                        EventArgs = this.EventArgs;
+                        this.EventArgs = null;
                     }
                     if (this.ResultToCompleted != null)
                     {
-                        var Faulted = this.Faulted;
-                        var ReleaseAsyncOperation = this.ReleaseAsyncOperation;
+                        Faulted = this.Faulted;
+                        ReleaseAsyncOperation = this.ReleaseAsyncOperation;
                         this.ResultToCompleted = null;
                         this.Faulted = null;
                         this.ReleaseAsyncOperation = null;
-
-                        ReleaseAsyncOperation();
-                        var Exception = new SocketException((int)(SocketError.OperationAborted));
-                        Faulted(Exception);
                     }
+                }
+                if (EventArgs != null)
+                {
+                    EventArgs.Completed -= EventArgs_Completed;
+                    EventArgs.Dispose();
+                }
+                if (ReleaseAsyncOperation != null)
+                {
+                    ReleaseAsyncOperation();
+                }
+                if (Faulted != null)
+                {
+                    var Exception = new SocketException((int)(SocketError.OperationAborted));
+                    Faulted(Exception);
                 }
             }
         }
