@@ -15,7 +15,10 @@ namespace BaseSystem
         public CountedThreadPool(String Name, int ThreadCount)
         {
             TokenSource = new CancellationTokenSource();
-            WorkItems = new BlockingCollection<Action>();
+
+            //ConcurrentQueue在同一个线程既可以作为生产者又可以作为消费者，且调用的函数处理的内容很少时，存在scalability不好的问题
+            //http://download.microsoft.com/download/B/C/F/BCFD4868-1354-45E3-B71B-B851CD78733D/PerformanceCharacteristicsOfThreadSafeCollection.pdf
+            WorkItems = new BlockingCollection<Action>(new ConcurrentBag<Action>());
 
             var Token = TokenSource.Token;
             Threads = Enumerable.Range(0, ThreadCount).Select((i, t) => new Thread(() =>
