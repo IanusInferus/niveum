@@ -26,28 +26,28 @@ namespace Server.Services
         {
             if (r.Hash == ServerContext.HeadCommunicationSchemaHash)
             {
-                SessionContext.SessionLock.AcquireWriterLock(int.MaxValue);
+                SessionContext.SessionLock.EnterWriteLock();
                 try
                 {
                     SessionContext.Version = "";
                 }
                 finally
                 {
-                    SessionContext.SessionLock.ReleaseWriterLock();
+                    SessionContext.SessionLock.ExitWriteLock();
                 }
                 return CheckSchemaVersionReply.CreateHead();
             }
             if (ServerContext.CommunicationSchemaHashToVersion.ContainsKey(r.Hash))
             {
                 String Version = ServerContext.CommunicationSchemaHashToVersion[r.Hash];
-                SessionContext.SessionLock.AcquireWriterLock(int.MaxValue);
+                SessionContext.SessionLock.EnterWriteLock();
                 try
                 {
                     SessionContext.Version = Version;
                 }
                 finally
                 {
-                    SessionContext.SessionLock.ReleaseWriterLock();
+                    SessionContext.SessionLock.ExitWriteLock();
                 }
                 return CheckSchemaVersionReply.CreateSupported();
             }
