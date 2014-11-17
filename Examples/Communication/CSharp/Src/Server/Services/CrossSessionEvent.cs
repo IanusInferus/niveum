@@ -9,27 +9,27 @@ namespace Server.Services
     {
         public void RegisterCrossSessionEvents()
         {
-            SessionContext.SessionLock.AcquireWriterLock(int.MaxValue);
+            SessionContext.SessionLock.EnterWriteLock();
             try
             {
                 SessionContext.EventPump = CreateEventPump(() => SessionContext.Version);
             }
             finally
             {
-                SessionContext.SessionLock.ReleaseWriterLock();
+                SessionContext.SessionLock.ExitWriteLock();
             }
         }
 
         public void UnregisterCrossSessionEvents()
         {
-            SessionContext.SessionLock.AcquireWriterLock(int.MaxValue);
+            SessionContext.SessionLock.EnterWriteLock();
             try
             {
                 SessionContext.EventPump = null;
             }
             finally
             {
-                SessionContext.SessionLock.ReleaseWriterLock();
+                SessionContext.SessionLock.ExitWriteLock();
             }
         }
     }

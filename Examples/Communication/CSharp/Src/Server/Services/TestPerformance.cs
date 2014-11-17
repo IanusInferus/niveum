@@ -37,7 +37,7 @@ namespace Server.Services
             foreach (var rc in Sessions)
             {
                 if (rc == SessionContext) { continue; }
-                rc.SessionLock.AcquireWriterLock(int.MaxValue);
+                rc.SessionLock.EnterWriteLock();
                 try
                 {
                     rc.ReceivedMessageCount += 1;
@@ -48,7 +48,7 @@ namespace Server.Services
                 }
                 finally
                 {
-                    rc.SessionLock.ReleaseWriterLock();
+                    rc.SessionLock.ExitWriteLock();
                 }
             }
             return TestMessageReply.CreateSuccess(Sessions.Count);

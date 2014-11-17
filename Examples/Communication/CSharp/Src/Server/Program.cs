@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2014.10.31.
+//  Version:     2014.11.17.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -182,7 +182,7 @@ namespace Server
 
                             foreach (var s in ServerContext.Sessions.AsParallel())
                             {
-                                s.SessionLock.AcquireReaderLock(int.MaxValue);
+                                s.SessionLock.EnterReadLock();
                                 try
                                 {
                                     if (s.EventPump != null)
@@ -192,7 +192,7 @@ namespace Server
                                 }
                                 finally
                                 {
-                                    s.SessionLock.ReleaseLock();
+                                    s.SessionLock.ExitReadLock();
                                 }
                             }
 
@@ -226,7 +226,7 @@ namespace Server
 
                             foreach (var s in ServerContext.Sessions.AsParallel())
                             {
-                                s.SessionLock.AcquireReaderLock(int.MaxValue);
+                                s.SessionLock.EnterReadLock();
                                 try
                                 {
                                     if (s.EventPump != null)
@@ -236,7 +236,7 @@ namespace Server
                                 }
                                 finally
                                 {
-                                    s.SessionLock.ReleaseLock();
+                                    s.SessionLock.ExitReadLock();
                                 }
                             }
 
