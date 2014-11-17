@@ -1,6 +1,8 @@
 ﻿2014.11.17
 Examples:
 修改C#通讯示例，将ReaderWriterLock改为ReaderWriterLockSlim。
+Krustallos:
+将String比较改为固定区域。
 
 2014.11.16
 Examples:

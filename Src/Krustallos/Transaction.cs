@@ -29,7 +29,7 @@ namespace Krustallos
                 var CommonLength = Math.Min(x.Length, y.Length);
                 for (int k = 0; k < CommonLength; k += 1)
                 {
-                    var r = x[k].CompareTo(y[k]);
+                    var r = StringComparer.Ordinal.Compare(x[k], y[k]);
                     if (r != 0) { return r; }
                 }
                 if (x.Length < y.Length) { return -1; }
