@@ -50,7 +50,7 @@ namespace Server
         public Byte[] SessionToken { get { return SessionTokenValue; } }
         public String SessionTokenString { get { return SessionTokenStringValue; } }
 
-        public ReaderWriterLock SessionLock = new ReaderWriterLock(); //跨线程共享读写访问变量锁
+        public ReaderWriterLockSlim SessionLock = new ReaderWriterLockSlim(); //跨线程共享读写访问变量锁
 
 
         //跨线程共享读写访问，读写必须通过SessionLock
