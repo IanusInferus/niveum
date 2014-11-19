@@ -1,4 +1,10 @@
-﻿2014.11.17
+﻿2014.11.19
+Examples:
+修正C#通讯示例，去除编译警告。
+Krustallos:
+去除编译警告。
+
+2014.11.17
 Examples:
 修改C#通讯示例，将ReaderWriterLock改为ReaderWriterLockSlim。
 Krustallos:
