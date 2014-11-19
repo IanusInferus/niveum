@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Krustallos代码模板数据
-      Version:     2014.11.14.
+      Version:     2014.11.19.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -106,14 +106,14 @@ ObjectSchemaTemplate
                         {
                             this.Instance = Instance;
                             this.Data = Data;
-                            this.Transaction = new Transaction(Instance, IsolationLevel);
+                            this.Transaction = new Transaction(this.Instance, IsolationLevel);
                             this.TransactionLock = TransactionLock;
                         }
                         public KrustallosDataAccess(Instance Instance, KrustallosData Data, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory)
                         {
                             this.Instance = Instance;
                             this.Data = Data;
-                            this.Transaction = new Transaction(Instance, IsolationLevel);
+                            this.Transaction = new Transaction(this.Instance, IsolationLevel);
                             this.TransactionLock = TransactionLockFactory(Transaction);
                         }
 
