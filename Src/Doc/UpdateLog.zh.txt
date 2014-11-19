@@ -3,6 +3,8 @@ Examples:
 修正C#通讯示例，去除编译警告。
 Krustallos:
 去除编译警告。
+Yuki.Relation:
+去除C# Krustallos数据库代码生成中的编译警告。
 
 2014.11.17
 Examples:
