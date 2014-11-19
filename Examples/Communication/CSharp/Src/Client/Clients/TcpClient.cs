@@ -17,7 +17,7 @@ namespace Client
 
             private IPEndPoint RemoteEndPoint;
             private StreamedAsyncSocket Socket;
-            private Action<Action> QueueUserWorkItem;
+            //private Action<Action> QueueUserWorkItem;
             private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
             public Boolean IsRunning
             {
@@ -32,7 +32,7 @@ namespace Client
             {
                 this.RemoteEndPoint = RemoteEndPoint;
                 Socket = new StreamedAsyncSocket(new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp), null, QueueUserWorkItem);
-                this.QueueUserWorkItem = QueueUserWorkItem;
+                //this.QueueUserWorkItem = QueueUserWorkItem;
                 this.VirtualTransportClient = VirtualTransportClient;
                 VirtualTransportClient.ClientMethod += () =>
                 {
