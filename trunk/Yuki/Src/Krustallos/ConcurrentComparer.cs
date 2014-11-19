@@ -180,7 +180,6 @@ namespace Krustallos
                     var r = Inner.Compare(xi.Current, yi.Current);
                     if (r != 0) { return r; }
                 }
-                throw new InvalidOperationException();
             }
         }
     }

@@ -77,7 +77,6 @@ namespace Krustallos
             if (Obj == null) { return false; }
             if (Obj.GetType() != typeof(Version)) { return false; }
             var Other = (Version)(Obj);
-            if (Other == null) { return false; }
             return this.Equals(Other);
         }
         public override int GetHashCode()
