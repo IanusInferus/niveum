@@ -162,14 +162,12 @@ namespace Krustallos
     {
         public String[] Path { get; private set; }
         public int NumPartition { get; private set; }
-        private Func<T> Allocator;
         private Partition<T>[] Partitions;
 
         public VersionedStore(String[] Path, Func<T> Allocator, int NumPartition = 1)
         {
             if (NumPartition < 1) { throw new ArgumentException(); }
             this.Path = Path;
-            this.Allocator = Allocator;
             this.NumPartition = NumPartition;
             this.Partitions = Enumerable.Range(0, NumPartition).Select(Index => new Partition<T>(Allocator, Index)).ToArray();
         }
