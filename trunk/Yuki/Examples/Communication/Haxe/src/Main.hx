@@ -64,7 +64,7 @@ class Main
             });
 
             var jsca = new JsonSerializationClientAdapter();
-            var c = new JsonHttpClient(jsca, "http://localhost/", "cmd", true, false);
+            var c = new JsonHttpClient(jsca, "http://localhost/api/", "q", true, false);
             var jc = jsca.getApplicationClient();
             Q("#button_servertime").click(function(e)
             {

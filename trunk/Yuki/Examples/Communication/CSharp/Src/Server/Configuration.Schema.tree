@@ -7,11 +7,19 @@
     EnableLogPerformance        Boolean
     EnableLogSystem             Boolean
     EnableLogConsole            Boolean
+    EnableLogDatabase           Boolean
     ServerDebug                 Boolean
     ClientDebug                 Boolean
+    ServerConnectionTimeout     Int
     NumMaxThread                Int
 
 #TaggedUnion VirtualServerConfiguration
+    Chat                        ChatServerConfiguration
+
+#Record ChatServerConfiguration
+    Protocols                   List<ChatProtocolConfiguration>
+
+#TaggedUnion ChatProtocolConfiguration
     Tcp                         TcpServerConfiguration
     Udp                         UdpServerConfiguration
     Http                        HttpServerConfiguration
@@ -65,7 +73,3 @@
 
 #Record HttpBinding
     Prefix                      String
-
-#Record HttpStaticContentPath
-    VirtualPath                 String
-    PhysicalPath                String

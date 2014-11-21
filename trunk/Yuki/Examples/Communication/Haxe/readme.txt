@@ -28,8 +28,8 @@ CSharp服务器默认在8003端口监听HTTP请求。
             index  index.xhtml index.html index.htm;
         }
 
-        location = /cmd {
-            rewrite      ^.*$  /cmd  break;
+        location = /api/q {
+            rewrite      ^.*$  /api/q  break;
             proxy_pass   http://127.0.0.1:8003;
             proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header    X-Forwarded-Port $remote_port;
