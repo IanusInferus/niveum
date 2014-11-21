@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2014.11.17.
+//  Version:     2014.11.21.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -105,8 +105,7 @@ namespace Server
 
         public static Configuration LoadConfiguration()
         {
-            var ConfigurationFilePath = FileNameHandling.GetPath(FileNameHandling.GetFileDirectory(Assembly.GetEntryAssembly().Location), "Configuration.tree");
-            var x = TreeFile.ReadFile(ConfigurationFilePath);
+            var x = TreeFile.ReadFile("Configuration.tree");
             var c = (new XmlSerializer()).Read<Configuration>(x);
             return c;
         }
@@ -126,7 +125,10 @@ namespace Server
             using (var tpPurifier = new CountedThreadPool("Purifier", 2))
             using (var tpLog = new CountedThreadPool("Log", 1))
             using (var ExitEvent = new AutoResetEvent(false))
+            using (var Logger = new ConsoleLogger(tpLog.QueueUserWorkItem))
             {
+                Logger.Start();
+
                 LockedVariable<ConsoleCancelEventHandler> CancelKeyPressInner = null;
                 CancelKeyPressInner = new LockedVariable<ConsoleCancelEventHandler>((sender, e) =>
                 {
@@ -143,135 +145,124 @@ namespace Server
                 };
                 Console.CancelKeyPress += CancelKeyPress;
 
-                using (var Logger = new ConsoleLogger(tpLog.QueueUserWorkItem))
+                var ChatContexts = new List<ServerContext>();
+
+                var ServerCloses = new List<Action>();
+
+                try
                 {
-                    using (var ServerContext = new ServerContext())
+                    foreach (var s in c.Servers)
                     {
-                        ServerContext.EnableLogNormalIn = c.EnableLogNormalIn;
-                        ServerContext.EnableLogNormalOut = c.EnableLogNormalOut;
-                        ServerContext.EnableLogUnknownError = c.EnableLogUnknownError;
-                        ServerContext.EnableLogCriticalError = c.EnableLogCriticalError;
-                        ServerContext.EnableLogPerformance = c.EnableLogPerformance;
-                        ServerContext.EnableLogSystem = c.EnableLogSystem;
-                        ServerContext.ServerDebug = c.ServerDebug;
-                        ServerContext.ClientDebug = c.ClientDebug;
-
-                        ServerContext.Shutdown += () =>
+                        if (s.OnChat)
                         {
-                            Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  远程命令退出。");
-                            ExitEvent.Set();
-                        };
-                        if (c.EnableLogConsole)
-                        {
-                            ServerContext.SessionLog += Logger.Push;
-                        }
+                            var ss = s.Chat;
+                            var ServerContext = new ServerContext();
+                            ChatContexts.Add(ServerContext);
 
-                        Logger.Start();
+                            ServerContext.EnableLogNormalIn = c.EnableLogNormalIn;
+                            ServerContext.EnableLogNormalOut = c.EnableLogNormalOut;
+                            ServerContext.EnableLogUnknownError = c.EnableLogUnknownError;
+                            ServerContext.EnableLogCriticalError = c.EnableLogCriticalError;
+                            ServerContext.EnableLogPerformance = c.EnableLogPerformance;
+                            ServerContext.EnableLogSystem = c.EnableLogSystem;
+                            ServerContext.ServerDebug = c.ServerDebug;
+                            ServerContext.ClientDebug = c.ClientDebug;
 
-                        var ServerDict = new Dictionary<VirtualServerConfiguration, IServer>();
-
-                        if (System.Diagnostics.Debugger.IsAttached)
-                        {
-                            foreach (var s in c.Servers)
+                            ServerContext.Shutdown += () =>
                             {
-                                ServerDict.Add(s, StartServer(c, s, ServerContext, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
+                                Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  远程命令退出。");
+                                ExitEvent.Set();
+                            };
+                            if (c.EnableLogConsole)
+                            {
+                                ServerContext.SessionLog += Logger.Push;
                             }
 
-                            ExitEvent.WaitOne();
-                            Console.CancelKeyPress -= CancelKeyPress;
-
-                            foreach (var s in ServerContext.Sessions.AsParallel())
+                            var Protocols = new List<IServer>();
+                            foreach (var p in ss.Protocols)
                             {
-                                s.SessionLock.EnterReadLock();
-                                try
+                                if (System.Diagnostics.Debugger.IsAttached)
                                 {
-                                    if (s.EventPump != null)
+                                    Protocols.Add(StartProtocol(c, p, ServerContext, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
+                                }
+                                else
+                                {
+                                    try
                                     {
-                                        s.EventPump.ServerShutdown(new Communication.ServerShutdownEvent { });
+                                        Protocols.Add(StartProtocol(c, p, ServerContext, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        var Message = Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
+                                        Console.WriteLine(Message);
+                                        FileLoggerSync.WriteLog("Error.log", Message);
                                     }
                                 }
-                                finally
-                                {
-                                    s.SessionLock.ExitReadLock();
-                                }
                             }
 
-                            foreach (var s in c.Servers)
+                            ServerCloses.Add(() =>
                             {
-                                if (ServerDict.ContainsKey(s))
+                                foreach (var Session in ServerContext.Sessions.AsParallel())
                                 {
-                                    var Server = ServerDict[s];
-                                    StopServer(c, s, Server);
+                                    Session.SessionLock.EnterReadLock(); ;
+                                    try
+                                    {
+                                        if (Session.EventPump != null)
+                                        {
+                                            Session.EventPump.ServerShutdown(new Communication.ServerShutdownEvent { });
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        Session.SessionLock.ExitReadLock();
+                                    }
                                 }
-                            }
+
+                                foreach (var p in Protocols)
+                                {
+                                    if (System.Diagnostics.Debugger.IsAttached)
+                                    {
+                                        StopProtocol(p);
+                                    }
+                                    else
+                                    {
+                                        try
+                                        {
+                                            StopProtocol(p);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            var Message = Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
+                                            Console.WriteLine(Message);
+                                            FileLoggerSync.WriteLog("Error.log", Message);
+                                        }
+                                    }
+                                }
+
+                                if (c.EnableLogConsole)
+                                {
+                                    ServerContext.SessionLog -= Logger.Push;
+                                }
+
+                                Console.WriteLine(@"ChatServerContext.RequestCount = {1}".Formats(ServerContext.RequestCount));
+                                Console.WriteLine(@"ChatServerContext.ReplyCount = {1}".Formats(ServerContext.ReplyCount));
+                                Console.WriteLine(@"ChatServerContext.EventCount = {1}".Formats(ServerContext.EventCount));
+                            });
                         }
                         else
                         {
-                            foreach (var s in c.Servers)
-                            {
-                                try
-                                {
-                                    ServerDict.Add(s, StartServer(c, s, ServerContext, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
-                                }
-                                catch (Exception ex)
-                                {
-                                    var Message = Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
-                                    Console.WriteLine(Message);
-                                    FileLoggerSync.WriteLog("Error.log", Message);
-                                }
-                            }
-
-                            ExitEvent.WaitOne();
-                            Console.CancelKeyPress -= CancelKeyPress;
-
-                            foreach (var s in ServerContext.Sessions.AsParallel())
-                            {
-                                s.SessionLock.EnterReadLock();
-                                try
-                                {
-                                    if (s.EventPump != null)
-                                    {
-                                        s.EventPump.ServerShutdown(new Communication.ServerShutdownEvent { });
-                                    }
-                                }
-                                finally
-                                {
-                                    s.SessionLock.ExitReadLock();
-                                }
-                            }
-
-                            foreach (var s in c.Servers)
-                            {
-                                try
-                                {
-                                    if (ServerDict.ContainsKey(s))
-                                    {
-                                        var Server = ServerDict[s];
-                                        StopServer(c, s, Server);
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
-                                }
-                            }
+                            throw new InvalidOperationException("未知服务器类型: " + s._Tag.ToString());
                         }
+                    }
 
-
-                        if (c.EnableLogConsole)
-                        {
-                            ServerContext.SessionLog -= Logger.Push;
-                        }
-
-                        Action<String, Int64> DisplayCountIfNotZero = (Message, Count) =>
-                        {
-                            if (Count == 0) { return; }
-                            Console.WriteLine(Message + Count.ToInvariantString());
-                        };
-
-                        DisplayCountIfNotZero(@"ServerContext.RequestCount = ", ServerContext.RequestCount);
-                        DisplayCountIfNotZero(@"ServerContext.ReplyCount = ", ServerContext.ReplyCount);
-                        DisplayCountIfNotZero(@"ServerContext.EventCount = ", ServerContext.EventCount);
+                    ExitEvent.WaitOne();
+                    Console.CancelKeyPress -= CancelKeyPress;
+                }
+                finally
+                {
+                    foreach (var a in ServerCloses)
+                    {
+                        a();
                     }
                 }
             }
@@ -279,11 +270,11 @@ namespace Server
             Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  服务器进程退出完成。");
         }
 
-        private static IServer StartServer(Configuration c, VirtualServerConfiguration vsc, ServerContext ServerContext, Action<Action> QueueUserWorkItem, Action<Action> PurifierQueueUserWorkItem)
+        private static IServer StartProtocol(Configuration c, ChatProtocolConfiguration pc, ServerContext ServerContext, Action<Action> QueueUserWorkItem, Action<Action> PurifierQueueUserWorkItem)
         {
-            if (vsc.OnTcp)
+            if (pc.OnTcp)
             {
-                var s = vsc.Tcp;
+                var s = pc.Tcp;
 
                 if (!(s.SerializationProtocolType == SerializationProtocolType.Binary || s.SerializationProtocolType == SerializationProtocolType.Json))
                 {
@@ -347,9 +338,9 @@ namespace Server
 
                 return Server;
             }
-            else if (vsc.OnUdp)
+            else if (pc.OnUdp)
             {
-                var s = vsc.Udp;
+                var s = pc.Udp;
 
                 if (!(s.SerializationProtocolType == SerializationProtocolType.Binary || s.SerializationProtocolType == SerializationProtocolType.Json))
                 {
@@ -415,9 +406,9 @@ namespace Server
 
                 return Server;
             }
-            else if (vsc.OnHttp)
+            else if (pc.OnHttp)
             {
-                var s = vsc.Http;
+                var s = pc.Http;
 
                 Func<ISessionContext, KeyValuePair<IServerImplementation, Http<ServerContext>.IHttpVirtualTransportServer>> VirtualTransportServerFactory = Context =>
                 {
@@ -462,59 +453,20 @@ namespace Server
             }
             else
             {
-                throw new InvalidOperationException("未知服务器类型: " + vsc._Tag.ToString());
+                throw new InvalidOperationException("未知服务器类型: " + pc._Tag.ToString());
             }
         }
-        private static void StopServer(Configuration c, VirtualServerConfiguration vsc, IServer Server)
+        private static void StopProtocol(IServer Server)
         {
-            if (vsc.OnTcp)
+            try
             {
-                var s = vsc.Tcp;
+                Server.Stop();
 
-                try
-                {
-                    Server.Stop();
-
-                    Console.WriteLine(@"TCP/{0}服务器已关闭。".Formats(s.SerializationProtocolType.ToString()));
-                }
-                finally
-                {
-                    Server.Dispose();
-                }
+                Console.WriteLine(@"服务器已关闭。");
             }
-            else if (vsc.OnUdp)
+            finally
             {
-                var s = vsc.Udp;
-
-                try
-                {
-                    Server.Stop();
-
-                    Console.WriteLine(@"UDP/{0}服务器已关闭。".Formats(s.SerializationProtocolType.ToString()));
-                }
-                finally
-                {
-                    Server.Dispose();
-                }
-            }
-            else if (vsc.OnHttp)
-            {
-                var s = vsc.Http;
-
-                try
-                {
-                    Server.Stop();
-
-                    Console.WriteLine(@"HTTP/{0}服务器已关闭。".Formats("Json"));
-                }
-                finally
-                {
-                    Server.Dispose();
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException();
+                Server.Dispose();
             }
         }
     }

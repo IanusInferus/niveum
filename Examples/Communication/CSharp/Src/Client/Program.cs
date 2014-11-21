@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2014.10.25.
+//  Version:     2014.11.21.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -202,8 +202,8 @@ namespace Client
             }
             else if (TransportProtocolType == TransportProtocolType.Http)
             {
-                String UrlPrefix = "http://localhost:8003/";
-                String ServiceVirtualPath = "cmd";
+                String UrlPrefix = "http://localhost:8003/api/";
+                String ServiceVirtualPath = "q";
                 if (argv.Length == 3)
                 {
                     UrlPrefix = argv[1];
@@ -258,7 +258,7 @@ namespace Client
             Console.WriteLine(@"Client <TransportProtocol=Tcp> <SerializationProtocol=Json> [<IpAddress=127.0.0.1> <Port=8002>] [/old|/load|/perf|/stable]");
             Console.WriteLine(@"Client <TransportProtocol=Udp> <SerializationProtocol=Binary> [<IpAddress=127.0.0.1> <Port=8001>] [/old|/load|/perf|/stable]");
             Console.WriteLine(@"Client <TransportProtocol=Udp> <SerializationProtocol=Json> [<IpAddress=127.0.0.1> <Port=8002>] [/old|/load|/perf|/stable]");
-            Console.WriteLine(@"Client <TransportProtocol=Http> [<UrlPrefix=http://localhost:8003/> <ServiceVirtualPath=cmd>] [/old|/load|/perf|/stable]");
+            Console.WriteLine(@"Client <TransportProtocol=Http> [<UrlPrefix=http://localhost:8003/api/> <ServiceVirtualPath=q>] [/old|/load|/perf|/stable]");
             Console.WriteLine(@"Protocol 通讯协议，可为Binary|Json|Http，默认为Binary");
             Console.WriteLine(@"IpAddress 服务器IP地址");
             Console.WriteLine(@"Port 服务器端口");
