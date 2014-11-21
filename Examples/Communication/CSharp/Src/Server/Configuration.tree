@@ -1,72 +1,75 @@
 ﻿Configuration
     Servers
         VirtualServer
-            Tcp
-                Bindings
-                    Binding
-                        IpAddress 0.0.0.0
-                        Port 8001
-                SessionIdleTimeout 3600
-                UnauthenticatedSessionIdleTimeout 600
-                MaxConnections 32768
-                MaxConnectionsPerIP 32768
-                MaxUnauthenticatedPerIP 32768
-                MaxBadCommands 8
-                SerializationProtocolType Binary
-        VirtualServer
-            Tcp
-                Bindings
-                    Binding
-                        IpAddress 0.0.0.0
-                        Port 8002
-                SessionIdleTimeout 3600
-                UnauthenticatedSessionIdleTimeout 600
-                MaxConnections 32768
-                MaxConnectionsPerIP 32768
-                MaxUnauthenticatedPerIP 32768
-                MaxBadCommands 8
-                SerializationProtocolType Json
-        VirtualServer
-            Udp
-                Bindings
-                    Binding
-                        IpAddress 0.0.0.0
-                        Port 8001
-                SessionIdleTimeout 3600
-                UnauthenticatedSessionIdleTimeout 600
-                MaxConnections 32768
-                MaxConnectionsPerIP 32768
-                MaxUnauthenticatedPerIP 32768
-                MaxBadCommands 8
-                TimeoutCheckPeriod 30
-                SerializationProtocolType Binary
-        VirtualServer
-            Udp
-                Bindings
-                    Binding
-                        IpAddress 0.0.0.0
-                        Port 8002
-                SessionIdleTimeout 3600
-                UnauthenticatedSessionIdleTimeout 600
-                MaxConnections 32768
-                MaxConnectionsPerIP 32768
-                MaxUnauthenticatedPerIP 32768
-                MaxBadCommands 8
-                TimeoutCheckPeriod 30
-                SerializationProtocolType Json
-        VirtualServer
-            Http
-                Bindings
-                    Binding
-                        Prefix http://*:8003/
-                SessionIdleTimeout 3600
-                UnauthenticatedSessionIdleTimeout 600
-                MaxConnections 32768
-                MaxConnectionsPerIP 32768
-                MaxUnauthenticatedPerIP 32768
-                MaxBadCommands 8
-                TimeoutCheckPeriod 30
-                ServiceVirtualPath cmd
+            Chat
+                Protocols
+                    Protocol
+                        Tcp
+                            Bindings
+                                Binding
+                                    IpAddress 0.0.0.0
+                                    Port 8001
+                            SessionIdleTimeout 120
+                            UnauthenticatedSessionIdleTimeout 30
+                            MaxConnections 32768
+                            MaxConnectionsPerIP 32768
+                            MaxUnauthenticatedPerIP 32768
+                            MaxBadCommands 8
+                            SerializationProtocolType Binary
+                    Protocol
+                        Tcp
+                            Bindings
+                                Binding
+                                    IpAddress 0.0.0.0
+                                    Port 8002
+                            SessionIdleTimeout 120
+                            UnauthenticatedSessionIdleTimeout 30
+                            MaxConnections 32768
+                            MaxConnectionsPerIP 32768
+                            MaxUnauthenticatedPerIP 32768
+                            MaxBadCommands 8
+                            SerializationProtocolType Json
+                    Protocol
+                        Udp
+                            Bindings
+                                Binding
+                                    IpAddress 0.0.0.0
+                                    Port 8001
+                            SessionIdleTimeout 120
+                            UnauthenticatedSessionIdleTimeout 30
+                            MaxConnections 32768
+                            MaxConnectionsPerIP 32768
+                            MaxUnauthenticatedPerIP 32768
+                            MaxBadCommands 8
+                            TimeoutCheckPeriod 30
+                            SerializationProtocolType Binary
+                    Protocol
+                        Udp
+                            Bindings
+                                Binding
+                                    IpAddress 0.0.0.0
+                                    Port 8002
+                            SessionIdleTimeout 120
+                            UnauthenticatedSessionIdleTimeout 30
+                            MaxConnections 32768
+                            MaxConnectionsPerIP 32768
+                            MaxUnauthenticatedPerIP 32768
+                            MaxBadCommands 8
+                            TimeoutCheckPeriod 30
+                            SerializationProtocolType Json
+                    Protocol
+                        Http
+                            Bindings
+                                Binding
+                                    Prefix http://+:8003/api/
+                            SessionIdleTimeout 120
+                            UnauthenticatedSessionIdleTimeout 30
+                            MaxConnections 32768
+                            MaxConnectionsPerIP 32768
+                            MaxUnauthenticatedPerIP 32768
+                            MaxBadCommands 8
+                            TimeoutCheckPeriod 30
+                            ServiceVirtualPath q
     EnableLogNormalIn True
     EnableLogNormalOut True
     EnableLogUnknownError True
@@ -74,6 +77,8 @@
     EnableLogPerformance True
     EnableLogSystem True
     EnableLogConsole True
+    EnableLogDatabase True
     ServerDebug True
     ClientDebug True
-    NumMaxThread 8
+    ServerConnectionTimeout 30
+    NumMaxThread 32
