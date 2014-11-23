@@ -55,10 +55,32 @@ namespace Algorithms
         /// opad = 0x5C
         /// ipad = 0x36
         /// </summary>
-        public static Byte[] HMACSHA1(IEnumerable<Byte> Key, IEnumerable<Byte> Bytes)
+        public static Byte[] HMACSHA1Simple(IEnumerable<Byte> Key, IEnumerable<Byte> Bytes)
         {
             var InnerHash = SHA1(Key.Select(k => unchecked((Byte)(k ^ 0x36))).Concat(Bytes));
             var OuterHash = SHA1(Key.Select(k => unchecked((Byte)(k ^ 0x5C))).Concat(InnerHash));
+            return OuterHash;
+        }
+        /// <summary>
+        /// HMAC = H((K XOR opad) :: H((K XOR ipad) :: Inner))
+        /// H = SHA1
+        /// opad = 0x5C
+        /// ipad = 0x36
+        /// </summary>
+        public static Byte[] HMACSHA1(IEnumerable<Byte> Key, IEnumerable<Byte> Bytes)
+        {
+            const int BlockSize = 64;
+            var KeyValue = Key.ToArray();
+            if (KeyValue.Length > BlockSize)
+            {
+                KeyValue = SHA1(KeyValue);
+            }
+            if (KeyValue.Length < BlockSize)
+            {
+                KeyValue = KeyValue.Concat(Enumerable.Repeat((Byte)(0), BlockSize - KeyValue.Length)).ToArray();
+            }
+            var InnerHash = SHA1(KeyValue.Select(k => unchecked((Byte)(k ^ 0x36))).Concat(Bytes));
+            var OuterHash = SHA1(KeyValue.Select(k => unchecked((Byte)(k ^ 0x5C))).Concat(InnerHash));
             return OuterHash;
         }
 
