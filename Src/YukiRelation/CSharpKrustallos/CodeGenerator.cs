@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos代码生成器
-//  Version:     2014.11.23.
+//  Version:     2014.11.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -562,6 +562,44 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 return GetTemplate("Query").Substitute("Signature", Signature).Substitute("Content", Content);
             }
 
+            public String[] GetLoads()
+            {
+                var l = new List<String>();
+                foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
+                {
+                    var or = InnerTypeDict[e.Name].Record;
+                    var d = or.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
+                    var Keys = KeysDict[e.Name];
+                    var IndexNames = new List<String>();
+                    var Partitions = new List<String>();
+                    var Updates = new List<String>();
+                    foreach (var k in Keys)
+                    {
+                        var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
+                        var FirstColumnName = k.Columns.First().Name;
+                        var FirstColumnType = d[FirstColumnName].Type;
+                        var PartitionIndex = (FirstColumnType.OnTypeRef && FirstColumnType.TypeRef.Name.Equals("Int", StringComparison.OrdinalIgnoreCase)) ? ("v.[[" + FirstColumnName + "]] % Data.[[${IndexName}]].NumPartition") : "0";
+                        IndexNames.Add(IndexName);
+                        Partitions.AddRange(GetTemplate("LoadSave_Partition").Substitute("PartitionIndex", PartitionIndex).Substitute("IndexName", IndexName));
+                        Updates.AddRange(GetTemplate("LoadSave_Update").Substitute("IndexName", IndexName).Substitute("Key", Key));
+                    }
+                    l.AddRange(GetTemplate("LoadSave_Load").Substitute("IndexNames", IndexNames.ToArray()).Substitute("Partitions", Partitions.ToArray()).Substitute("Updates", Updates.ToArray()).Substitute("EntityName", e.Name));
+                }
+                return l.ToArray();
+            }
+
+            public String[] GetSaves()
+            {
+                var l = new List<String>();
+                foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
+                {
+                    var IndexName = e.Name + "By" + String.Join("And", e.PrimaryKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                    l.AddRange(GetTemplate("LoadSave_Save").Substitute("IndexName", IndexName));
+                }
+                return l.ToArray();
+            }
+
             public String[] GetComplexTypes()
             {
                 var l = new List<String>();
@@ -590,6 +628,14 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     ql = ql.Take(ql.Count - 1).ToList();
                 }
                 l.AddRange(GetTemplate("DataAccess").Substitute("Queries", ql.ToArray()));
+                l.Add("");
+
+                var Loads = GetLoads();
+                var Saves = GetSaves();
+                l.AddRange(GetTemplate("LoadSave").Substitute("Hash", Hash).Substitute("Loads", Loads).Substitute("Saves", Saves));
+                l.Add("");
+
+                l.AddRange(GetTemplate("Serializer"));
                 l.Add("");
                 l.AddRange(GetTemplate("DataAccessPool").Substitute("Hash", Hash));
                 l.Add("");
