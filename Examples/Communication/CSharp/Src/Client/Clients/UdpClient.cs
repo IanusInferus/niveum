@@ -37,7 +37,20 @@ namespace Client
                     SessionIdValue.Update(v => value);
                 }
             }
-            private LockedVariable<Boolean> ConnectedValue = new LockedVariable<Boolean>(false);
+            private enum ConnectionState
+            {
+                Initial,
+                Connecting,
+                Connected
+            }
+            private LockedVariable<ConnectionState> ConnectionStateValue = new LockedVariable<ConnectionState>(ConnectionState.Initial);
+            public Boolean IsConnected
+            {
+                get
+                {
+                    return ConnectionStateValue.Check(v => v) == ConnectionState.Connected;
+                }
+            }
             private LockedVariable<SecureContext> SecureContextValue = new LockedVariable<SecureContext>(null);
             public SecureContext SecureContext
             {
@@ -242,12 +255,18 @@ namespace Client
                 }
                 var RemoteEndPoint = this.RemoteEndPoint;
                 int SessionId = 0;
-                var Connected = this.ConnectedValue.Check(v =>
+                var State = ConnectionState.Initial;
+                this.ConnectionStateValue.Check(v =>
                 {
                     SessionId = this.SessionId;
+                    State = v;
+                    if (v == ConnectionState.Initial)
+                    {
+                        return ConnectionState.Connecting;
+                    }
                     return v;
                 });
-                if (Connected && (SessionId == 0))
+                if (State == ConnectionState.Connecting)
                 {
                     throw new InvalidOperationException();
                 }
@@ -302,7 +321,7 @@ namespace Client
 
                         var IsACK = NumIndex > 0;
                         var Flag = 0;
-                        if (!Connected)
+                        if (State == ConnectionState.Initial)
                         {
                             Flag |= 4; //INI
                             IsACK = false;
@@ -404,12 +423,12 @@ namespace Client
 
                 var RemoteEndPoint = this.RemoteEndPoint;
                 int SessionId = 0;
-                var Connected = this.ConnectedValue.Check(v =>
+                var State = this.ConnectionStateValue.Check(v =>
                 {
                     SessionId = this.SessionId;
                     return v;
                 });
-                if (Connected && (SessionId == 0))
+                if (State == ConnectionState.Connecting)
                 {
                     throw new InvalidOperationException();
                 }
@@ -639,11 +658,12 @@ namespace Client
 
                             //只有尚未连接时可以设定
                             var Close = false;
-                            ConnectedValue.Update(v =>
+                            ConnectionStateValue.Update(v =>
                             {
-                                if (!v)
+                                if (v == ConnectionState.Connecting)
                                 {
                                     this.SessionId = SessionId;
+                                    return ConnectionState.Connected;
                                 }
                                 else
                                 {
@@ -651,8 +671,8 @@ namespace Client
                                     {
                                         Close = true;
                                     }
+                                    return v;
                                 }
-                                return true;
                             });
                             if (Close)
                             {
