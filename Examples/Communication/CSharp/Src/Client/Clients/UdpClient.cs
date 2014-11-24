@@ -256,7 +256,7 @@ namespace Client
                 var RemoteEndPoint = this.RemoteEndPoint;
                 int SessionId = 0;
                 var State = ConnectionState.Initial;
-                this.ConnectionStateValue.Check(v =>
+                this.ConnectionStateValue.Update(v =>
                 {
                     SessionId = this.SessionId;
                     State = v;
@@ -423,15 +423,11 @@ namespace Client
 
                 var RemoteEndPoint = this.RemoteEndPoint;
                 int SessionId = 0;
-                var State = this.ConnectionStateValue.Check(v =>
+                this.ConnectionStateValue.Check(v =>
                 {
                     SessionId = this.SessionId;
                     return v;
                 });
-                if (State == ConnectionState.Connecting)
-                {
-                    throw new InvalidOperationException();
-                }
                 var SecureContext = this.SecureContext;
                 var Indices = new List<int>();
                 RawReadingContext.DoAction(c =>
