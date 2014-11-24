@@ -3,6 +3,7 @@ Yuki.Relation:
 修改C# Krustallos代码生成，增加加载和保存数据文件的功能。
 Examples:
 对应修改C#数据库示例。
+修正C#和C++通讯示例，使得UDP初始发出两个或以上数据包时报错。
 
 2014.11.23
 Yuki.Relation:
