@@ -555,15 +555,11 @@ namespace Client
 
                     auto RemoteEndPoint = this->RemoteEndPoint;
                     int SessionId = 0;
-                    auto State = this->ConnectionStateValue.Check<ConnectionState>([&](ConnectionState v)
+                    this->ConnectionStateValue.Check<ConnectionState>([&](ConnectionState v)
                     {
                         SessionId = this->SessionId();
                         return v;
                     });
-                    if (State == ConnectionState_Connecting)
-                    {
-                        throw std::logic_error("InvalidOperation");
-                    }
                     auto SecureContext = this->SecureContextValue.Check<std::shared_ptr<class SecureContext>>([](std::shared_ptr<class SecureContext> v) { return v; });
                     std::vector<int> Indices;
                     RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
