@@ -490,6 +490,10 @@ ObjectSchemaTemplate
                     public partial class KrustallosDataAccess
                     {
                         private const UInt64 Hash = 0x${Hash};
+                        public Version GetReaderVersion()
+                        {
+                            return Transaction.GetReaderVersion();
+                        }
                         public Yuki.RelationSchema.Schema Load(IBinaryReader<IReadableStream> sbr, IBinaryReader<IReadableStream> br, String Path)
                         {
                             using (var s = Streams.OpenReadable(Path))
