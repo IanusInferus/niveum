@@ -48,7 +48,19 @@ namespace Client
                 return SessionIdValue.Check<int>([](int v) { return v; });
             }
         private:
-            BaseSystem::LockedVariable<bool> ConnectedValue;
+            enum ConnectionState
+            {
+                ConnectionState_Initial,
+                ConnectionState_Connecting,
+                ConnectionState_Connected
+            };
+            BaseSystem::LockedVariable<ConnectionState> ConnectionStateValue;
+        public:
+            bool IsConnected()
+            {
+                return ConnectionStateValue.Check<ConnectionState>([](ConnectionState v){ return v; }) == ConnectionState_Connected;
+            }
+        private:
             BaseSystem::LockedVariable<std::shared_ptr<class SecureContext>> SecureContextValue;
         public:
             std::shared_ptr<class SecureContext> SecureContext()
@@ -280,7 +292,7 @@ namespace Client
 
         public:
             UdpClient(boost::asio::io_service &io_service, boost::asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient, std::function<void(boost::system::system_error)> ExceptionHandler = nullptr)
-                : io_service(io_service), Socket(io_service), IsRunningValue(nullptr), SessionIdValue(0), ConnectedValue(false), SecureContextValue(nullptr), RawReadingContext(nullptr), CookedWritingContext(nullptr), IsDisposed(false)
+                : io_service(io_service), Socket(io_service), IsRunningValue(nullptr), SessionIdValue(0), ConnectionStateValue(ConnectionState_Initial), SecureContextValue(nullptr), RawReadingContext(nullptr), CookedWritingContext(nullptr), IsDisposed(false)
             {
                 this->IsRunningValue = std::make_shared<BaseSystem::LockedVariable<bool>>(false);
                 ReadBuffer = std::make_shared<std::vector<std::uint8_t>>();
@@ -350,12 +362,18 @@ namespace Client
                 }
                 auto RemoteEndPoint = this->RemoteEndPoint;
                 int SessionId = 0;
-                auto Connected = this->ConnectedValue.Check<bool>([&](bool v)
+                ConnectionState State = ConnectionState_Initial;
+                this->ConnectionStateValue.Update([&](ConnectionState v)
                 {
                     SessionId = this->SessionId();
+                    State = v;
+                    if (v == ConnectionState_Initial)
+                    {
+                        return ConnectionState_Connecting;
+                    }
                     return v;
                 });
-                if (Connected && (SessionId == 0))
+                if (State == ConnectionState_Connecting)
                 {
                     throw std::logic_error("InvalidOperation");
                 }
@@ -412,7 +430,7 @@ namespace Client
 
                         auto IsACK = NumIndex > 0;
                         auto Flag = 0;
-                        if (!Connected)
+                        if (State == ConnectionState_Initial)
                         {
                             Flag |= 4; //INI
                             IsACK = false;
@@ -537,12 +555,12 @@ namespace Client
 
                     auto RemoteEndPoint = this->RemoteEndPoint;
                     int SessionId = 0;
-                    auto Connected = this->ConnectedValue.Check<bool>([&](bool v)
+                    auto State = this->ConnectionStateValue.Check<ConnectionState>([&](ConnectionState v)
                     {
                         SessionId = this->SessionId();
                         return v;
                     });
-                    if (Connected && (SessionId == 0))
+                    if (State == ConnectionState_Connecting)
                     {
                         throw std::logic_error("InvalidOperation");
                     }
@@ -830,11 +848,12 @@ namespace Client
 
                         //只有尚未连接时可以设定
                         auto Close = false;
-                        ConnectedValue.Update([&](bool v)
+                        ConnectionStateValue.Update([&](ConnectionState v)
                         {
-                            if (!v)
+                            if (v == ConnectionState_Connecting)
                             {
                                 this->SessionIdValue.Update([=](int vv) { return SessionId; });
+                                return ConnectionState_Connected;
                             }
                             else
                             {
@@ -842,8 +861,8 @@ namespace Client
                                 {
                                     Close = true;
                                 }
+                                return v;
                             }
-                            return true;
                         });
                         if (Close)
                         {
