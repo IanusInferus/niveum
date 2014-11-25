@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Haxe模板数据
-      Version:     2013.09.12.
+      Version:     2014.11.26.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -101,7 +101,7 @@ ObjectSchemaTemplate
             PlatformName Int
         PrimitiveMapping
             Name Int64
-            PlatformName Int
+            PlatformName Float
         PrimitiveMapping
             Name Float32
             PlatformName Float
