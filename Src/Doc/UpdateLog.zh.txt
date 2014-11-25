@@ -1,4 +1,8 @@
-﻿2014.11.24
+﻿2014.11.26
+Yuki.Relation:
+将Haxe代码生成中的Int64改为使用Float。
+
+2014.11.24
 Yuki.Relation:
 修改C# Krustallos代码生成，增加加载和保存数据文件的功能。
 修改C# Krustallos代码生成，增加获得当前读取版本的功能。
