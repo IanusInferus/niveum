@@ -124,7 +124,7 @@ namespace Server
                             Action OnSuccessInner = () =>
                             {
                                 sw.Stop();
-                                Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Name = CommandName, Message = String.Format("{0}ms", sw.ElapsedMilliseconds) });
+                                Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "Time", Name = CommandName, Message = String.Format("{0}μs", (sw.ElapsedTicks * 1000000) / Stopwatch.Frequency) });
                                 ssm.NotifyWrite(new Unit());
                                 OnSuccess();
                             };
