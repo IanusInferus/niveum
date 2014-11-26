@@ -1,6 +1,8 @@
 ﻿2014.11.26
 Yuki.Relation:
 将Haxe代码生成中的Int64改为使用Float。
+Examples:
+修改C#通讯示例，将计时单位从毫秒改为微秒。
 
 2014.11.24
 Yuki.Relation:
