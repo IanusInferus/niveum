@@ -734,6 +734,9 @@ namespace Server
                                     catch (HttpListenerException)
                                     {
                                     }
+                                    catch (ObjectDisposedException)
+                                    {
+                                    }
                                     lc.Push(0);
                                 }, null);
                             };
