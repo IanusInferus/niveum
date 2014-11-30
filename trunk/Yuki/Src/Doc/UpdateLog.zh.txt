@@ -1,4 +1,8 @@
-﻿2014.11.26
+﻿2014.11.30
+Examples:
+修正C#通讯示例，捕获Http服务器关闭时的一个异常。
+
+2014.11.26
 Yuki.Relation:
 将Haxe代码生成中的Int64改为使用Float。
 Examples:
