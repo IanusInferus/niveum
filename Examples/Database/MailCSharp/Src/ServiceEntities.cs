@@ -31,7 +31,7 @@ namespace Database.Entities
     public sealed class MailHeader
     {
         /// <summary>邮件ID</summary>
-        public Int32 Id { get; set; }
+        public Int64 Id { get; set; }
         /// <summary>标题</summary>
         public String Title { get; set; }
         /// <summary>发件用户</summary>
@@ -46,7 +46,7 @@ namespace Database.Entities
     public sealed class MailDetail
     {
         /// <summary>邮件ID</summary>
-        public Int32 Id { get; set; }
+        public Int64 Id { get; set; }
         /// <summary>标题</summary>
         public String Title { get; set; }
         /// <summary>发件用户</summary>

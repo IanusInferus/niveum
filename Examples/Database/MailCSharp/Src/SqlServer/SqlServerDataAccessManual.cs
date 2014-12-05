@@ -14,7 +14,7 @@ namespace Database.SqlServer
 {
     public partial class SqlServerDataAccess : IDataAccess
     {
-        public List<String> FromMailAttachmentSelectManyForNameById(Int Id)
+        public List<String> FromMailAttachmentSelectManyForNameById(Int64 Id)
         {
             var cmd = CreateTextCommand();
             cmd.CommandText = @"SELECT [Name] FROM [MailAttachments] WHERE [Id] = @Id";

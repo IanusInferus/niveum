@@ -19,25 +19,25 @@ namespace Database
         Optional<UserProfile> FromUserProfileSelectOptionalByName(String Name);
         Optional<DirectUserAuthentication> FromDirectUserAuthenticationSelectOptionalByName(String Name);
 
-        Mail FromMailSelectOneById(int Id);
-        List<MailTo> FromMailToSelectManyById(int Id);
-        MailOwner FromMailOwnerSelectOneByIdAndOwnerId(int Id, int OwnerId);
-        int FromMailOwnerSelectCountById(int Id);
-        int FromMailOwnerSelectCountByIdAndOwnerId(int Id, int OwnerId);
-        List<MailOwner> FromMailOwnerSelectManyById(int Id);
+        Mail FromMailSelectOneById(Int64 Id);
+        List<MailTo> FromMailToSelectManyById(Int64 Id);
+        MailOwner FromMailOwnerSelectOneByIdAndOwnerId(Int64 Id, int OwnerId);
+        int FromMailOwnerSelectCountById(Int64 Id);
+        int FromMailOwnerSelectCountByIdAndOwnerId(Int64 Id, int OwnerId);
+        List<MailOwner> FromMailOwnerSelectManyById(Int64 Id);
         int FromMailOwnerSelectCountByOwnerId(int OwnerId);
         List<MailOwner> FromMailOwnerSelectRangeByOwnerIdOrderByOwnerIdAndTimeDesc(int OwnerId, int Skip, int Take);
-        List<String> FromMailAttachmentSelectManyForNameById(int Id);
-        List<MailAttachment> FromMailAttachmentSelectManyById(int Id);
+        List<String> FromMailAttachmentSelectManyForNameById(Int64 Id);
+        List<MailAttachment> FromMailAttachmentSelectManyById(Int64 Id);
 
         void FromMailInsertOne(Mail v);
         void FromMailToInsertMany(List<MailTo> l);
         void FromMailOwnerInsertMany(List<MailOwner> l);
         void FromMailAttachmentInsertMany(List<MailAttachment> l);
         void FromMailOwnerUpdateOne(MailOwner v);
-        void FromMailDeleteOneById(int Id);
-        void FromMailDeleteManyToById(int Id);
-        void FromMailOwnerDeleteOneByIdAndOwnerId(int Id, int OwnerId);
-        void FromMailAttachmentDeleteManyById(int Id);
+        void FromMailDeleteOneById(Int64 Id);
+        void FromMailDeleteManyToById(Int64 Id);
+        void FromMailOwnerDeleteOneByIdAndOwnerId(Int64 Id, int OwnerId);
+        void FromMailAttachmentDeleteManyById(Int64 Id);
     }
 }
