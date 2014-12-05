@@ -3,7 +3,7 @@
 //  File:        RelationValueTreeSerializer.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构数据Tree序列化器
-//  Version:     2013.07.16.
+//  Version:     2014.12.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -289,6 +289,59 @@ namespace Yuki.RelationValue
                         };
                     }
                 }
+                else if (TypeName.Equals("Int64", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (EnumParser != null)
+                    {
+                        Reader = TreeRow =>
+                        {
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
+                            if (cvs.Length != 1)
+                            {
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            }
+                            var cv = cvs.Single().Stem.Children.Single().Leaf;
+                            if (EnumParser.ContainsKey(cv))
+                            {
+                                var v = (Int64)(EnumParser[cv]);
+                                return ColumnVal.CreatePrimitive(PrimitiveVal.CreateInt64Value(v));
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    var v = NumericStrings.InvariantParseInt64(cv);
+                                    return ColumnVal.CreatePrimitive(PrimitiveVal.CreateInt64Value(v));
+                                }
+                                catch (FormatException)
+                                {
+                                    throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
+                                }
+                            }
+                        };
+                    }
+                    else
+                    {
+                        Reader = TreeRow =>
+                        {
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
+                            if (cvs.Length != 1)
+                            {
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            }
+                            var cv = cvs.Single().Stem.Children.Single().Leaf;
+                            try
+                            {
+                                var v = NumericStrings.InvariantParseInt64(cv);
+                                return ColumnVal.CreatePrimitive(PrimitiveVal.CreateInt64Value(v));
+                            }
+                            catch (FormatException)
+                            {
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
+                            }
+                        };
+                    }
+                }
                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))
                 {
                     Reader = TreeRow =>
@@ -422,6 +475,61 @@ namespace Yuki.RelationValue
                             {
                                 var v = NumericStrings.InvariantParseInt32(cv);
                                 return ColumnVal.CreateOptional(PrimitiveVal.CreateIntValue(v));
+                            }
+                            catch (FormatException)
+                            {
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
+                            }
+                        };
+                    }
+                }
+                else if (TypeName.Equals("Int64", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (EnumParser != null)
+                    {
+                        Reader = TreeRow =>
+                        {
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
+                            if (cvs.Length != 1)
+                            {
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            }
+                            var cv = cvs.Single().Stem.Children.Single().Leaf;
+                            if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                            if (EnumParser.ContainsKey(cv))
+                            {
+                                var v = (Int64)(EnumParser[cv]);
+                                return ColumnVal.CreateOptional(PrimitiveVal.CreateInt64Value(v));
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    var v = NumericStrings.InvariantParseInt64(cv);
+                                    return ColumnVal.CreateOptional(PrimitiveVal.CreateInt64Value(v));
+                                }
+                                catch (FormatException)
+                                {
+                                    throw new InvalidOperationException(String.Format("InvalidData: {0}.{1} '{2}'", e.Name, c.Name, cv));
+                                }
+                            }
+                        };
+                    }
+                    else
+                    {
+                        Reader = TreeRow =>
+                        {
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
+                            if (cvs.Length != 1)
+                            {
+                                throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
+                            }
+                            var cv = cvs.Single().Stem.Children.Single().Leaf;
+                            if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                            try
+                            {
+                                var v = NumericStrings.InvariantParseInt64(cv);
+                                return ColumnVal.CreateOptional(PrimitiveVal.CreateInt64Value(v));
                             }
                             catch (FormatException)
                             {
@@ -618,6 +726,36 @@ namespace Yuki.RelationValue
                         };
                     }
                 }
+                else if (TypeName.Equals("Int64", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (EnumWriter != null)
+                    {
+                        Writer = v =>
+                        {
+                            if (!v.OnPrimitive) { throw new InvalidOperationException(); }
+                            var vv = v.Primitive;
+                            if (!vv.OnInt64Value) { throw new InvalidOperationException(); }
+                            if (EnumWriter.ContainsKey(vv.Int64Value))
+                            {
+                                return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(EnumWriter[vv.Int64Value]) } });
+                            }
+                            else
+                            {
+                                return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.Int64Value.ToInvariantString()) } });
+                            }
+                        };
+                    }
+                    else
+                    {
+                        Writer = v =>
+                        {
+                            if (!v.OnPrimitive) { throw new InvalidOperationException(); }
+                            var vv = v.Primitive;
+                            if (!vv.OnInt64Value) { throw new InvalidOperationException(); }
+                            return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.Int64Value.ToInvariantString()) } });
+                        };
+                    }
+                }
                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))
                 {
                     Writer = v =>
@@ -686,6 +824,20 @@ namespace Yuki.RelationValue
                         var vv = v.Optional.HasValue;
                         if (!vv.OnIntValue) { throw new InvalidOperationException(); }
                         return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.IntValue.ToInvariantString()) } });
+                    };
+                }
+                else if (TypeName.Equals("Int64", StringComparison.OrdinalIgnoreCase))
+                {
+                    Writer = v =>
+                    {
+                        if (!v.OnOptional) { throw new InvalidOperationException(); }
+                        if (v.Optional.OnNotHasValue)
+                        {
+                            return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateEmpty() } });
+                        }
+                        var vv = v.Optional.HasValue;
+                        if (!vv.OnInt64Value) { throw new InvalidOperationException(); }
+                        return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.Int64Value.ToInvariantString()) } });
                     };
                 }
                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))

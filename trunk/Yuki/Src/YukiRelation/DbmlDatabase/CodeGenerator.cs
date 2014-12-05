@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构Dbml数据库代码生成器
-//  Version:     2013.04.16.
+//  Version:     2014.12.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -43,6 +43,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                 ClrPrimitiveMappings.Add("Boolean", "System.Boolean");
                 ClrPrimitiveMappings.Add("String", "System.String");
                 ClrPrimitiveMappings.Add("Int", "System.Int32");
+                ClrPrimitiveMappings.Add("Int64", "System.Int64");
                 ClrPrimitiveMappings.Add("Real", "System.Double");
                 ClrPrimitiveMappings.Add("Binary", "System.Byte[]");
 
@@ -50,6 +51,7 @@ namespace Yuki.RelationSchema.DbmlDatabase
                 DbPrimitiveMappings.Add("Boolean", "Bit");
                 DbPrimitiveMappings.Add("String", "NVarChar");
                 DbPrimitiveMappings.Add("Int", "Int");
+                DbPrimitiveMappings.Add("Int64", "BigInt");
                 DbPrimitiveMappings.Add("Real", "Float");
                 DbPrimitiveMappings.Add("Binary", "VarBinary");
             }
