@@ -92,7 +92,9 @@ namespace Yuki.RelationValue
         /// <summary>实数</summary>
         RealValue = 3,
         /// <summary>二进制</summary>
-        BinaryValue = 4
+        BinaryValue = 4,
+        /// <summary>64位有符号整数</summary>
+        Int64Value = 5
     }
     /// <summary>基元数值</summary>
     [TaggedUnion]
@@ -110,6 +112,8 @@ namespace Yuki.RelationValue
         public Real RealValue { get; set; }
         /// <summary>二进制</summary>
         public List<Byte> BinaryValue { get; set; }
+        /// <summary>64位有符号整数</summary>
+        public Int64 Int64Value { get; set; }
 
         /// <summary>布尔</summary>
         public static PrimitiveVal CreateBooleanValue(Boolean Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BooleanValue, BooleanValue = Value }; }
@@ -121,6 +125,8 @@ namespace Yuki.RelationValue
         public static PrimitiveVal CreateRealValue(Real Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.RealValue, RealValue = Value }; }
         /// <summary>二进制</summary>
         public static PrimitiveVal CreateBinaryValue(List<Byte> Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BinaryValue, BinaryValue = Value }; }
+        /// <summary>64位有符号整数</summary>
+        public static PrimitiveVal CreateInt64Value(Int64 Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.Int64Value, Int64Value = Value }; }
 
         /// <summary>布尔</summary>
         public Boolean OnBooleanValue { get { return _Tag == PrimitiveValTag.BooleanValue; } }
@@ -132,5 +138,7 @@ namespace Yuki.RelationValue
         public Boolean OnRealValue { get { return _Tag == PrimitiveValTag.RealValue; } }
         /// <summary>二进制</summary>
         public Boolean OnBinaryValue { get { return _Tag == PrimitiveValTag.BinaryValue; } }
+        /// <summary>64位有符号整数</summary>
+        public Boolean OnInt64Value { get { return _Tag == PrimitiveValTag.Int64Value; } }
     }
 }

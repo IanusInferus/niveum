@@ -3,7 +3,7 @@
 //  File:        RelationValueSerializer.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构数据序列化器
-//  Version:     2013.03.28.
+//  Version:     2014.12.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -137,6 +137,10 @@ namespace Yuki.RelationValue
                 {
                     Reader = s => ColumnVal.CreatePrimitive(PrimitiveVal.CreateIntValue(s.ReadInt32()));
                 }
+                else if (TypeName.Equals("Int64", StringComparison.OrdinalIgnoreCase))
+                {
+                    Reader = s => ColumnVal.CreatePrimitive(PrimitiveVal.CreateInt64Value(s.ReadInt64()));
+                }
                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))
                 {
                     Reader = s => ColumnVal.CreatePrimitive(PrimitiveVal.CreateRealValue(s.ReadFloat64()));
@@ -198,6 +202,21 @@ namespace Yuki.RelationValue
                         if (OnHasValue)
                         {
                             return ColumnVal.CreateOptional(PrimitiveVal.CreateIntValue(s.ReadInt32()));
+                        }
+                        else
+                        {
+                            return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty);
+                        }
+                    };
+                }
+                else if (TypeName.Equals("Int64", StringComparison.OrdinalIgnoreCase))
+                {
+                    Reader = s =>
+                    {
+                        var OnHasValue = s.ReadInt32() != 0;
+                        if (OnHasValue)
+                        {
+                            return ColumnVal.CreateOptional(PrimitiveVal.CreateInt64Value(s.ReadInt64()));
                         }
                         else
                         {
@@ -354,6 +373,16 @@ namespace Yuki.RelationValue
                         s.WriteInt32(vv.IntValue);
                     };
                 }
+                else if (TypeName.Equals("Int64", StringComparison.OrdinalIgnoreCase))
+                {
+                    Writer = (s, v) =>
+                    {
+                        if (!v.OnPrimitive) { throw new InvalidOperationException(); }
+                        var vv = v.Primitive;
+                        if (!vv.OnInt64Value) { throw new InvalidOperationException(); }
+                        s.WriteInt64(vv.Int64Value);
+                    };
+                }
                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))
                 {
                     Writer = (s, v) =>
@@ -440,6 +469,25 @@ namespace Yuki.RelationValue
                         var vv = v.Optional.HasValue;
                         if (!vv.OnIntValue) { throw new InvalidOperationException(); }
                         s.WriteInt32(vv.IntValue);
+                    };
+                }
+                else if (TypeName.Equals("Int64", StringComparison.OrdinalIgnoreCase))
+                {
+                    Writer = (s, v) =>
+                    {
+                        if (!v.OnOptional) { throw new InvalidOperationException(); }
+                        if (v.Optional.OnNotHasValue)
+                        {
+                            s.WriteInt32(0);
+                            return;
+                        }
+                        else
+                        {
+                            s.WriteInt32(1);
+                        }
+                        var vv = v.Optional.HasValue;
+                        if (!vv.OnIntValue) { throw new InvalidOperationException(); }
+                        s.WriteInt64(vv.IntValue);
                     };
                 }
                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))

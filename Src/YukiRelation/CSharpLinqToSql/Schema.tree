@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 对象类型结构C# Linq to SQL数据库模板数据
-      Version:     2012.12.13.
+      Version:     2014.12.06.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -22,6 +22,9 @@ ObjectSchemaTemplate
         PrimitiveMapping
             Name Int
             PlatformName System.Int32
+        PrimitiveMapping
+            Name Int64
+            PlatformName System.Int64
         PrimitiveMapping
             Name Real
             PlatformName System.Double

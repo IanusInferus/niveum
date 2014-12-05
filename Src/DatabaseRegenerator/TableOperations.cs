@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2013.06.30.
+//  Version:     2014.12.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -201,6 +201,27 @@ namespace Yuki.DatabaseRegenerator
                                     {
                                         if (!cv.Primitive.OnIntValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
                                         p.Value = cv.Primitive.IntValue;
+                                    }
+                                }
+                                else if (TypeName.Equals("Int64", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    var p = cmd.Add(String.Format("@{0}", f.Name), DbType.Int64);
+                                    if (IsOptional)
+                                    {
+                                        if (cv.Optional == null)
+                                        {
+                                            p.Value = DBNull.Value;
+                                        }
+                                        else
+                                        {
+                                            if (!cv.Optional.HasValue.OnInt64Value) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                            p.Value = cv.Optional.HasValue.Int64Value;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (!cv.Primitive.OnInt64Value) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
+                                        p.Value = cv.Primitive.Int64Value;
                                     }
                                 }
                                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))
