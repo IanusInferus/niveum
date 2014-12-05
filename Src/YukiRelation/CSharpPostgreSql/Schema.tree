@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# PostgreSQL代码模板数据
-      Version:     2014.10.11.
+      Version:     2014.12.06.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -168,6 +168,14 @@ ObjectSchemaTemplate
                             p.Value = Value;
                             cmd.Parameters.Add(p);
                         }
+                        private static void Add(NpgsqlCommand cmd, String ParameterName, Int64 Value)
+                        {
+                            var p = cmd.CreateParameter();
+                            p.ParameterName = ParameterName;
+                            p.DbType = DbType.Int64;
+                            p.Value = Value;
+                            cmd.Parameters.Add(p);
+                        }
                         private static void Add(NpgsqlCommand cmd, String ParameterName, Real Value)
                         {
                             var p = cmd.CreateParameter();
@@ -229,6 +237,21 @@ ObjectSchemaTemplate
                             }
                             cmd.Parameters.Add(p);
                         }
+                        private static void Add(NpgsqlCommand cmd, String ParameterName, Optional<Int64> Value)
+                        {
+                            var p = cmd.CreateParameter();
+                            p.ParameterName = ParameterName;
+                            p.DbType = DbType.Int64;
+                            if (Value.OnHasValue)
+                            {
+                                p.Value = Value.HasValue;
+                            }
+                            else
+                            {
+                                p.Value = DBNull.Value;
+                            }
+                            cmd.Parameters.Add(p);
+                        }
                         private static void Add(NpgsqlCommand cmd, String ParameterName, Optional<Real> Value)
                         {
                             var p = cmd.CreateParameter();
@@ -273,6 +296,10 @@ ObjectSchemaTemplate
                         {
                             return dr.GetInt32(dr.GetOrdinal(FieldName));
                         }
+                        private static Int64 GetInt64(NpgsqlDataReader dr, String FieldName)
+                        {
+                            return dr.GetInt64(dr.GetOrdinal(FieldName));
+                        }
                         private static Real GetReal(NpgsqlDataReader dr, String FieldName)
                         {
                             return dr.GetFloat(dr.GetOrdinal(FieldName));
@@ -300,6 +327,12 @@ ObjectSchemaTemplate
                             var v = dr.GetValue(dr.GetOrdinal(FieldName));
                             if (v == DBNull.Value) { return Optional<Int>.Empty; }
                             return (Int)(v);
+                        }
+                        private static Optional<Int64> GetOptionalOfInt64(NpgsqlDataReader dr, String FieldName)
+                        {
+                            var v = dr.GetValue(dr.GetOrdinal(FieldName));
+                            if (v == DBNull.Value) { return Optional<Int64>.Empty; }
+                            return (Int64)(v);
                         }
                         private static Optional<Real> GetOptionalOfReal(NpgsqlDataReader dr, String FieldName)
                         {

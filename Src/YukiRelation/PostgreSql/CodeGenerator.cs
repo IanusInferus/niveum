@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构PostgreSQL数据库代码生成器
-//  Version:     2013.04.16.
+//  Version:     2014.12.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -242,11 +242,18 @@ namespace Yuki.RelationSchema.PostgreSql
                 l.Add(String.Format("\"{0}\"", f.Name.ToLowerInvariant()));
                 if (f.Attribute.Column.IsIdentity)
                 {
-                    if (!TypeName.Equals("Int", StringComparison.OrdinalIgnoreCase))
+                    if (TypeName.Equals("Int", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Type = "serial";
+                    }
+                    else if (TypeName.Equals("Int64", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Type = "bigserial";
+                    }
+                    else
                     {
                         throw new InvalidOperationException("IdentityTypeNotInt");
                     }
-                    Type = "serial";
                 }
                 l.Add(Type);
                 if (IsNullable)
