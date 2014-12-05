@@ -14,7 +14,7 @@ namespace Database.PostgreSql
 {
     public partial class PostgreSqlDataAccess : IDataAccess
     {
-        public List<String> FromMailAttachmentSelectManyForNameById(Int Id)
+        public List<String> FromMailAttachmentSelectManyForNameById(Int64 Id)
         {
             var cmd = CreateTextCommand();
             cmd.CommandText = @"SELECT ""name"" FROM ""mailattachments"" WHERE ""id"" = @id";
