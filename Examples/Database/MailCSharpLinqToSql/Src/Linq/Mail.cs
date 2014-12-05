@@ -41,32 +41,32 @@ namespace Database.Linq
             return l.Single();
         }
 
-        public Mail FromMailSelectOneById(int Id)
+        public Mail FromMailSelectOneById(Int64 Id)
         {
             return dbr.Mails.ById(Id);
         }
 
-        public List<MailTo> FromMailToSelectManyById(int Id)
+        public List<MailTo> FromMailToSelectManyById(Int64 Id)
         {
             return dbr.MailTos.WhereIdIs(Id).ToList();
         }
 
-        public MailOwner FromMailOwnerSelectOneByIdAndOwnerId(int Id, int OwnerId)
+        public MailOwner FromMailOwnerSelectOneByIdAndOwnerId(Int64 Id, int OwnerId)
         {
             return dbr.MailOwners.ByIdAndOwnerId(Id, OwnerId);
         }
 
-        public int FromMailOwnerSelectCountById(int Id)
+        public int FromMailOwnerSelectCountById(Int64 Id)
         {
             return dbr.MailOwners.WhereIdIs(Id).Count();
         }
 
-        public int FromMailOwnerSelectCountByIdAndOwnerId(int Id, int OwnerId)
+        public int FromMailOwnerSelectCountByIdAndOwnerId(Int64 Id, int OwnerId)
         {
             return dbr.MailOwners.WhereIdAndOwnerIdIs(Id, OwnerId).Count();
         }
 
-        public List<MailOwner> FromMailOwnerSelectManyById(int Id)
+        public List<MailOwner> FromMailOwnerSelectManyById(Int64 Id)
         {
             return dbr.MailOwners.WhereIdIs(Id).ToList();
         }
@@ -81,12 +81,12 @@ namespace Database.Linq
             return dbr.MailOwners.WhereOwnerIdIs(OwnerId).OrderBy(mo => mo.OwnerId).ThenByDescending(mo => mo.Time).Skip(Skip).Take(Take).ToList();
         }
 
-        public List<String> FromMailAttachmentSelectManyForNameById(int Id)
+        public List<String> FromMailAttachmentSelectManyForNameById(Int64 Id)
         {
             return dbr.MailAttachments.WhereIdIs(Id).Select(ma => ma.Name).ToList();
         }
 
-        public List<MailAttachment> FromMailAttachmentSelectManyById(int Id)
+        public List<MailAttachment> FromMailAttachmentSelectManyById(Int64 Id)
         {
             return dbr.MailAttachments.WhereIdIs(Id).ToList();
         }
@@ -120,25 +120,25 @@ namespace Database.Linq
             dbr.SubmitChanges();
         }
 
-        public void FromMailDeleteOneById(int Id)
+        public void FromMailDeleteOneById(Int64 Id)
         {
             dbr.Mails.DeleteAllOnSubmit(dbr.Mails.Where(m => m.Id == Id));
             dbr.SubmitChanges();
         }
 
-        public void FromMailDeleteManyToById(int Id)
+        public void FromMailDeleteManyToById(Int64 Id)
         {
             dbr.MailTos.DeleteAllOnSubmit(dbr.MailTos.Where(m => m.Id == Id));
             dbr.SubmitChanges();
         }
 
-        public void FromMailOwnerDeleteOneByIdAndOwnerId(int Id, int OwnerId)
+        public void FromMailOwnerDeleteOneByIdAndOwnerId(Int64 Id, int OwnerId)
         {
             dbr.MailOwners.DeleteAllOnSubmit(dbr.MailOwners.Where(m => m.Id == Id && m.OwnerId == OwnerId));
             dbr.SubmitChanges();
         }
 
-        public void FromMailAttachmentDeleteManyById(int Id)
+        public void FromMailAttachmentDeleteManyById(Int64 Id)
         {
             dbr.MailAttachments.DeleteAllOnSubmit(dbr.MailAttachments.Where(m => m.Id == Id));
             dbr.SubmitChanges();

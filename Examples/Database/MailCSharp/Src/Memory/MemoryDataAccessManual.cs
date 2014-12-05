@@ -13,7 +13,7 @@ namespace Database.Memory
 {
     public partial class MemoryDataAccess : IDataAccess
     {
-        public List<String> FromMailAttachmentSelectManyForNameById(Int Id)
+        public List<String> FromMailAttachmentSelectManyForNameById(Int64 Id)
         {
             return MemoryDataManipulate.FromMailAttachmentSelectManyById(this.Tables, this.Indices, Id).Select(e => e.Name).ToList();
         }

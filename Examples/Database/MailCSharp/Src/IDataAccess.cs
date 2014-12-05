@@ -7,6 +7,6 @@ namespace Database.Database
 {
     public partial interface IDataAccess
     {
-        List<String> FromMailAttachmentSelectManyForNameById(int Id);
+        List<String> FromMailAttachmentSelectManyForNameById(Int64 Id);
     }
 }
