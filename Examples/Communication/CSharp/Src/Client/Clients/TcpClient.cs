@@ -146,42 +146,49 @@ namespace Client
                 Action<int> Completed = null;
                 Completed = Count =>
                 {
-                    if (Count == 0)
+                    try
                     {
-                        return;
-                    }
-
-                    while (true)
-                    {
-                        var r = VirtualTransportClient.Handle(Count);
-                        if (r.OnContinue)
+                        if (Count == 0)
                         {
-                            break;
+                            return;
                         }
-                        else if (r.OnCommand)
+
+                        while (true)
                         {
-                            DoResultHandle(r.Command.HandleResult);
-                            var RemainCount = VirtualTransportClient.GetReadBuffer().Count;
-                            if (RemainCount <= 0)
+                            var r = VirtualTransportClient.Handle(Count);
+                            if (r.OnContinue)
                             {
                                 break;
                             }
-                            Count = 0;
+                            else if (r.OnCommand)
+                            {
+                                DoResultHandle(r.Command.HandleResult);
+                                var RemainCount = VirtualTransportClient.GetReadBuffer().Count;
+                                if (RemainCount <= 0)
+                                {
+                                    break;
+                                }
+                                Count = 0;
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException();
+                            }
                         }
-                        else
+                        var Buffer = VirtualTransportClient.GetReadBuffer();
+                        var BufferLength = Buffer.Offset + Buffer.Count;
+                        IsRunningValue.DoAction(b =>
                         {
-                            throw new InvalidOperationException();
-                        }
+                            if (b)
+                            {
+                                Socket.ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
+                            }
+                        });
                     }
-                    var Buffer = VirtualTransportClient.GetReadBuffer();
-                    var BufferLength = Buffer.Offset + Buffer.Count;
-                    IsRunningValue.DoAction(b =>
+                    catch (Exception ex)
                     {
-                        if (b)
-                        {
-                            Socket.ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
-                        }
-                    });
+                        Faulted(ex);
+                    }
                 };
 
                 {
