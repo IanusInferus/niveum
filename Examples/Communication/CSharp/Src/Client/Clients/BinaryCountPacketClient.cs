@@ -10,7 +10,7 @@ namespace Client
         {
             private class Context
             {
-                public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[128 * 1024], 0, 0);
+                public ArraySegment<Byte> ReadBuffer;
                 public Object WriteBufferLockee = new Object();
                 public List<Byte[]> WriteBuffer = new List<Byte[]>();
 
@@ -30,9 +30,9 @@ namespace Client
             private Context c;
             private IBinarySerializationClientAdapter bc;
             private IBinaryTransformer Transformer;
-            public BinaryCountPacketClient(IBinarySerializationClientAdapter bc, IBinaryTransformer Transformer = null)
+            public BinaryCountPacketClient(IBinarySerializationClientAdapter bc, IBinaryTransformer Transformer = null, int ReadBufferSize = 128 * 1024)
             {
-                this.c = new Context();
+                this.c = new Context { ReadBuffer = new ArraySegment<Byte>(new Byte[ReadBufferSize], 0, 0) };
                 this.bc = bc;
                 this.Transformer = Transformer;
                 bc.ClientEvent += (String CommandName, UInt32 CommandHash, Byte[] Parameters) =>
