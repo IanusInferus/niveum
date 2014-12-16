@@ -103,6 +103,23 @@ namespace Client
                 std::transform(TransportProtocol.begin(), TransportProtocol.end(), TransportProtocol.begin(), ::tolower);
 
                 boost::asio::io_service IoService;
+                auto Work = std::make_shared<boost::asio::io_service::work>(IoService);
+                boost::thread t([&]()
+                {
+                    auto Exit = false;
+                    while (true)
+                    {
+                        try
+                        {
+                            IoService.run();
+                            Exit = true;
+                        }
+                        catch (std::exception &)
+                        {
+                        }
+                        if (Exit) { break; }
+                    }
+                });
                 if (TransportProtocol == "tcp")
                 {
                     boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
@@ -113,29 +130,13 @@ namespace Client
                     boost::asio::ip::udp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
                     RunUdp(IoService, RemoteEndPoint, ReadLineAndSendLoop);
                 }
-                boost::thread t([&]()
-                {
-                    auto Exit = false;
-                    while (true)
-                    {
-                        try
-                        {
-                            IoService.run();
-                            Exit = true;
-                        }
-                        catch (std::exception &)
-                        {
-                        }
-                        if (Exit) { break; }
-                    }
-                });
+                Work = nullptr;
                 t.join();
             }
             else if (argc == 1)
             {
                 boost::asio::io_service IoService;
-                boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string("127.0.0.1"), 8001);
-                RunTcp(IoService, RemoteEndPoint, ReadLineAndSendLoop);
+                auto Work = std::make_shared<boost::asio::io_service::work>(IoService);
                 boost::thread t([&]()
                 {
                     auto Exit = false;
@@ -152,6 +153,9 @@ namespace Client
                         if (Exit) { break; }
                     }
                 });
+                boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string("127.0.0.1"), 8001);
+                RunTcp(IoService, RemoteEndPoint, ReadLineAndSendLoop);
+                Work = nullptr;
                 t.join();
             }
             else
@@ -282,7 +286,16 @@ namespace Client
             auto ac = bsca->GetApplicationClient();
             auto vtc = std::make_shared<Streamed::BinaryCountPacketClient>(bsca, nullptr);
             auto bsc = std::make_shared<Streamed::TcpClient>(IoService, RemoteEndPoint, vtc);
-            bsc->Connect();
+            try
+            {
+                bsc->Connect();
+            }
+            catch (std::exception &e)
+            {
+                auto Message = s2w(e.what());
+                wprintf(L"%ls\n", Message.c_str());
+                exit(-1);
+            }
 
             boost::mutex Lockee;
             auto DoHandle = [&](std::function<void(void)> a)
@@ -293,7 +306,12 @@ namespace Client
                     a();
                 });
             };
-            bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
+            bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se)
+            {
+                auto Message = s2w(se.message());
+                wprintf(L"%ls\n", Message.c_str());
+                exit(-1);
+            });
 
             Action(ac, Lockee);
 
@@ -323,7 +341,16 @@ namespace Client
             auto ac = bsca->GetApplicationClient();
             auto vtc = std::make_shared<Streamed::BinaryCountPacketClient>(bsca, nullptr);
             auto bsc = std::make_shared<Streamed::UdpClient>(IoService, RemoteEndPoint, vtc);
-            bsc->Connect();
+            try
+            {
+                bsc->Connect();
+            }
+            catch (std::exception &e)
+            {
+                auto Message = s2w(e.what());
+                wprintf(L"%ls\n", Message.c_str());
+                exit(-1);
+            }
 
             boost::mutex Lockee;
             auto DoHandle = [&](std::function<void(void)> a)
@@ -334,7 +361,12 @@ namespace Client
                     a();
                 });
             };
-            bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se) { wprintf(L"%s\n", se.message().c_str()); });
+            bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se)
+            {
+                auto Message = s2w(se.message());
+                wprintf(L"%ls\n", Message.c_str());
+                exit(-1);
+            });
 
             Action(ac, Lockee);
 

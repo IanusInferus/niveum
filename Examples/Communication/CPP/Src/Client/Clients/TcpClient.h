@@ -110,7 +110,6 @@ namespace Client
             static bool IsSocketErrorKnown(const boost::system::error_code &se)
             {
                 if (se == boost::system::errc::connection_aborted) { return true; }
-                if (se == boost::system::errc::connection_reset) { return true; }
                 if (se == boost::asio::error::eof) { return true; }
                 if (se == boost::system::errc::operation_canceled) { return true; }
                 return false;
