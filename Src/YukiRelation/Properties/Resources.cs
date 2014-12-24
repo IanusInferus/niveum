@@ -32,6 +32,7 @@ namespace Yuki.RelationSchema.Properties
         public static Byte[] CSharpCounted { get { return GetResource("CSharpCounted"); } }
         public static Byte[] CSharpKrustallos { get { return GetResource("CSharpKrustallos"); } }
         public static Byte[] CSharpKrustallosMySql { get { return GetResource("CSharpKrustallosMySql"); } }
+        public static Byte[] CSharpKrustallosMySqlLoader { get { return GetResource("CSharpKrustallosMySqlLoader"); } }
         public static Byte[] CSharpLinqToEntities { get { return GetResource("CSharpLinqToEntities"); } }
         public static Byte[] CSharpLinqToSql { get { return GetResource("CSharpLinqToSql"); } }
         public static Byte[] CSharpMemory { get { return GetResource("CSharpMemory"); } }

@@ -1,6 +1,8 @@
 ﻿2014.12.24
 Yuki.Core:
 修改C#二进制和JSON代码生成中KeyValuePair作为键时，使用默认散列函数导致重复值过多时性能降低的问题。
+Yuki.Relation:
+将C# Krustallos-MySQL代码生成拆分成缓存和加载器两部分。
 
 2014.12.16
 Examples:
