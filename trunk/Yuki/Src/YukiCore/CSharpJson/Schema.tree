@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板数据
-      Version:     2013.07.05.
+      Version:     2014.12.24.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -73,12 +73,29 @@ ObjectSchemaTemplate
                         private Dictionary<String, Action<IApplicationServer, String, Action<String>, Action<Exception>>> AsyncClientCommandsWithoutHash;
                         private Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, String, Action<String>, Action<Exception>>> AsyncClientCommands;
 
+                        private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>
+                        {
+                            public Boolean Equals(KeyValuePair<TKey, TValue> x, KeyValuePair<TKey, TValue> y)
+                            {
+                                if (!x.Key.Equals(y.Key)) { return false; }
+                                if (!x.Value.Equals(y.Value)) { return false; }
+                                return true;
+                            }
+
+                            public int GetHashCode(KeyValuePair<TKey, TValue> obj)
+                            {
+                                var KeyHash = obj.Key.GetHashCode();
+                                var ValueHash = obj.Value.GetHashCode();
+                                return KeyHash ^ ((ValueHash << 9) | ((ValueHash >> (32 - 9)) & ((1 << 9) - 1)));
+                            }
+                        }
+
                         public JsonSerializationServer()
                         {
                             ClientCommandsWithoutHash = new Dictionary<String, Func<IApplicationServer, String, String>>(StringComparer.OrdinalIgnoreCase);
-                            ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, String>>();
+                            ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, String>>(new KeyValuePairEqualityComparer<String, UInt32>());
                             AsyncClientCommandsWithoutHash = new Dictionary<String, Action<IApplicationServer, String, Action<String>, Action<Exception>>>(StringComparer.OrdinalIgnoreCase);
-                            AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, String, Action<String>, Action<Exception>>>();
+                            AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, String, Action<String>, Action<Exception>>>(new KeyValuePairEqualityComparer<String, UInt32>());
                             ${ClientCommands}
                         }
 
@@ -189,9 +206,21 @@ ObjectSchemaTemplate
                 $String
                     public sealed class JsonSerializationClient
                     {
-                        public IApplicationClient GetApplicationClient()
+                        private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>
                         {
-                            return c;
+                            public Boolean Equals(KeyValuePair<TKey, TValue> x, KeyValuePair<TKey, TValue> y)
+                            {
+                                if (!x.Key.Equals(y.Key)) { return false; }
+                                if (!x.Value.Equals(y.Value)) { return false; }
+                                return true;
+                            }
+
+                            public int GetHashCode(KeyValuePair<TKey, TValue> obj)
+                            {
+                                var KeyHash = obj.Key.GetHashCode();
+                                var ValueHash = obj.Value.GetHashCode();
+                                return KeyHash ^ ((ValueHash << 9) | ((ValueHash >> (32 - 9)) & ((1 << 9) - 1)));
+                            }
                         }
 
                         private class ApplicationClient : IApplicationClient
@@ -237,8 +266,13 @@ ObjectSchemaTemplate
                             c = new ApplicationClient();
                             c.s = s;
                             c.ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>>();
-                            ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<String>>();
+                            ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<String>>(new KeyValuePairEqualityComparer<String, UInt32>());
                             ${ServerCommands}
+                        }
+
+                        public IApplicationClient GetApplicationClient()
+                        {
+                            return c;
                         }
 
                         public void HandleResult(String CommandName, UInt32 CommandHash, String Parameters)
