@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板数据
-      Version:     2014.09.22.
+      Version:     2014.12.24.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -89,10 +89,27 @@ ObjectSchemaTemplate
                         private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>> ClientCommands;
                         private Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, Byte[], Action<Byte[]>, Action<Exception>>> AsyncClientCommands;
 
+                        private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>
+                        {
+                            public Boolean Equals(KeyValuePair<TKey, TValue> x, KeyValuePair<TKey, TValue> y)
+                            {
+                                if (!x.Key.Equals(y.Key)) { return false; }
+                                if (!x.Value.Equals(y.Value)) { return false; }
+                                return true;
+                            }
+
+                            public int GetHashCode(KeyValuePair<TKey, TValue> obj)
+                            {
+                                var KeyHash = obj.Key.GetHashCode();
+                                var ValueHash = obj.Value.GetHashCode();
+                                return KeyHash ^ ((ValueHash << 9) | ((ValueHash >> (32 - 9)) & ((1 << 9) - 1)));
+                            }
+                        }
+
                         public BinarySerializationServer()
                         {
-                            ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>>();
-                            AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, UInt8[], Action<UInt8[]>, Action<Exception>>>();
+                            ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>>(new KeyValuePairEqualityComparer<String, UInt32>());
+                            AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, UInt8[], Action<UInt8[]>, Action<Exception>>>(new KeyValuePairEqualityComparer<String, UInt32>());
                             ${ClientCommands}
                         }
 
@@ -189,9 +206,21 @@ ObjectSchemaTemplate
                 $String
                     public sealed class BinarySerializationClient
                     {
-                        public IApplicationClient GetApplicationClient()
+                        private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>
                         {
-                            return c;
+                            public Boolean Equals(KeyValuePair<TKey, TValue> x, KeyValuePair<TKey, TValue> y)
+                            {
+                                if (!x.Key.Equals(y.Key)) { return false; }
+                                if (!x.Value.Equals(y.Value)) { return false; }
+                                return true;
+                            }
+
+                            public int GetHashCode(KeyValuePair<TKey, TValue> obj)
+                            {
+                                var KeyHash = obj.Key.GetHashCode();
+                                var ValueHash = obj.Value.GetHashCode();
+                                return KeyHash ^ ((ValueHash << 9) | ((ValueHash >> (32 - 9)) & ((1 << 9) - 1)));
+                            }
                         }
 
                         private class ApplicationClient : IApplicationClient
@@ -237,8 +266,13 @@ ObjectSchemaTemplate
                             c = new ApplicationClient();
                             c.s = s;
                             c.ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<Byte[]>>>>();
-                            ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<Byte[]>>();
+                            ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<Byte[]>>(new KeyValuePairEqualityComparer<String, UInt32>());
                             ${ServerCommands}
+                        }
+
+                        public IApplicationClient GetApplicationClient()
+                        {
+                            return c;
                         }
 
                         public void HandleResult(String CommandName, UInt32 CommandHash, Byte[] Parameters)
@@ -331,7 +365,7 @@ ObjectSchemaTemplate
                             s.PutCounterTranslator(st);
                             return s;
                         }
-                
+
                         public static Byte[] Serialize<T>(T Value)
                         {
                             BinarySerializer bs;
@@ -394,14 +428,14 @@ ObjectSchemaTemplate
                                 }
                             }
                         }
-                
+
                         private class StringTranslator : IProjectorToProjectorDomainTranslator<String, Byte[]>, IProjectorToProjectorRangeTranslator<String, Byte[]>
                         {
                             public Func<String, R> TranslateProjectorToProjectorDomain<R>(Func<Byte[], R> Projector)
                             {
                                 return s => Projector(TextEncoding.UTF16.GetBytes(s));
                             }
-                
+
                             public Func<D, String> TranslateProjectorToProjectorRange<D>(Func<D, Byte[]> Projector)
                             {
                                 return k => TextEncoding.UTF16.GetString(Projector(k));
