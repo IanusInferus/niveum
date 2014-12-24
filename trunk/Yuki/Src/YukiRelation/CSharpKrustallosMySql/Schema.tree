@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Krustallos-MySQL代码模板数据
-      Version:     2014.11.12.
+      Version:     2014.12.24.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -30,8 +30,6 @@ ObjectSchemaTemplate
                         ${ComplexTypes}
                     }
 
-                    ${DataLoad}
-
                 $End
         Template
             Name MainWithoutNamespace
@@ -44,8 +42,6 @@ ObjectSchemaTemplate
                     using Version = Krustallos.Version;
 
                     ${ComplexTypes}
-
-                    ${DataLoad}
 
                 $End
         Template
@@ -226,77 +222,3 @@ ObjectSchemaTemplate
                             return new KrustallosMySqlDataAccess(k, () => new MySqlDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null)));
                         }
                     }
-        Template
-            Name DataLoadWithNamespace
-            //Parameters: ${NamespaceName}, ${Loads}
-            Value
-                $String
-                    namespace [[${NamespaceName}]]
-                    {
-                        public partial class MySqlDataAccess
-                        {
-                            public void Load(KrustallosData Data)
-                            {
-                                ${Loads}
-                            }
-                        }
-                    }
-        Template
-            Name DataLoadWithoutNamespace
-            //Parameters: ${Loads}
-            Value
-                $String
-                    public partial class MySqlDataAccess
-                    {
-                        public void Load(KrustallosData Data)
-                        {
-                            ${Loads}
-                        }
-                    }
-        Template
-            Name DataLoad_Load
-            //Parameters: ${IndexNames}, ${Partitions}, ${Updates}, ${EntityName}, ${SQL}, ${ResultSets}
-            Value
-                $String
-                    {
-                        var cmd = CreateTextCommand();
-                        cmd.CommandText = @"${SQL}";
-                        using (var dr = cmd.ExecuteReader())
-                        {
-                            while (dr.Read())
-                            {
-                                var v = new [[${EntityName}]]
-                                {
-                                    ${ResultSets}
-                                };
-                                ${Partitions}
-                                var [[${IndexNames}]] = [[p${IndexNames}]].GetLastVersionContent();
-                                ${Updates}
-                                [[p${IndexNames}]].PutVersion(new Version(0), [[${IndexNames}]]);
-                            }
-                        }
-                    }
-        Template
-            Name DataLoad_Partition
-            //Parameters: ${PartitionIndex}, ${IndexName}
-            Value
-                $String
-                    var [[p${IndexName}]] = Data.[[${IndexName}]].GetPartition(${PartitionIndex});
-        Template
-            Name DataLoad_Update
-            //Parameters: ${IndexName}, ${Key}
-            Value
-                $String
-                    [[${IndexName}]] = [[${IndexName}]].AddOrSetItem(new Key(${Key}), v);
-        Template
-            Name SelectLock_ResultSet
-            //Parameters: ${ParameterName}, ${TypeGet}
-            Value
-                $String
-                    [[${ParameterName}]] = [[${TypeGet}]](dr, "${ParameterName}"),
-        Template
-            Name SelectLock_ResultSet_Last
-            //Parameters: ${ParameterName}, ${TypeGet}
-            Value
-                $String
-                    [[${ParameterName}]] = [[${TypeGet}]](dr, "${ParameterName}")
