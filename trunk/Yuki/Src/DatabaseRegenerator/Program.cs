@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2014.11.12.
+//  Version:     2015.02.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -230,7 +230,7 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (optNameLower == "regefdbnpgsql")
+                else if (optNameLower == "regenfdbpgsql")
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)
@@ -280,7 +280,7 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"重建MySQL数据库");
             Console.WriteLine(@"/regenmysql:<DataDir>*");
             Console.WriteLine(@"重建FoundationDB/PostgreSQL数据库");
-            Console.WriteLine(@"/regefdbnpgsql:<DataDir>*");
+            Console.WriteLine(@"/regenfdbpgsql:<DataDir>*");
             Console.WriteLine(@"RelationSchemaDir|RelationSchemaFile 关系类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"ConnectionString 数据库连接字符串。");
             Console.WriteLine(@"DataDir 数据目录，里面有若干tree数据文件。");
