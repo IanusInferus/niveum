@@ -1,0 +1,20 @@
+﻿FoundationDB使用PostgreSQL的通讯协议，所以可以使用Npgsql库进行连接。
+
+但是由于语法解析不完善，需要打补丁
+
+Npgsql/NpgsqlCommand.Rewrite.cs中375行附近
+
+        private void AppendParameterValue(Stream dest, NpgsqlParameter parameter)
+        {
+            byte[] serialised = parameter.TypeInfo.ConvertToBackend(parameter.NpgsqlValue, false, Connector.NativeToBackendTypeConverterOptions);
+
+改为
+
+        private void AppendParameterValue(Stream dest, NpgsqlParameter parameter)
+        {
+            byte[] serialised = parameter.TypeInfo.ConvertToBackend(parameter.NpgsqlValue, false, Connector.NativeToBackendTypeConverterOptions);
+
+            dest.WriteBytes(serialised);
+            return;
+
+此外，FoundationDB中的表名和库名均应为小写。

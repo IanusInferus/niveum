@@ -17,6 +17,7 @@ RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csmssql:MailCSharp\Src\SqlServer\SqlServerDataAccess.cs,Database.Database,Database.SqlServer
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2cspgsql:MailCSharp\Src\PostgreSql\PostgreSqlDataAccess.cs,Database.Database,Database.PostgreSql
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csmysql:MailCSharp\Src\MySql\MySqlDataAccess.cs,Database.Database,Database.MySql
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csfdbsql:MailCSharp\Src\FoundationDbSql\FoundationDbSqlDataAccess.cs,Database.Database,Database.FoundationDbSql
 
 :: Test
 
@@ -26,6 +27,7 @@ RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2csmssql:TestCSharp\Src\SqlServer\SqlServerDataAccess.cs,Database.Database,Database.SqlServer
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cspgsql:TestCSharp\Src\PostgreSql\PostgreSqlDataAccess.cs,Database.Database,Database.PostgreSql
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2csmysql:TestCSharp\Src\MySql\MySqlDataAccess.cs,Database.Database,Database.MySql
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2csfdbsql:TestCSharp\Src\FoundationDbSql\FoundationDbSqlDataAccess.cs,Database.Database,Database.FoundationDbSql
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cskrs:TestCSharp\Src\Krustallos\KrustallosDataAccess.cs,Database.Database,Database.Krustallos
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cskrsmysql:TestCSharp\Src\KrustallosMySql\KrustallosMySqlDataAccess.cs,Database.Database,Database.Krustallos,Database.MySql,Database.KrustallosMySql
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cscw:TestCSharp\Src\CountedDataAccessWrapper.cs,Database.Database,Database.Database

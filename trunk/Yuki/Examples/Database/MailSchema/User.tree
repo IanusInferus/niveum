@@ -4,7 +4,7 @@
       File:        User.tree
       Location:    Yuki.Examples <Tree>
       Description: 用户
-      Version:     2014.04.08.
+      Version:     2015.02.05.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -13,10 +13,10 @@
 #Entity UserProfile                                 [CN:UserProfiles][UKC:Name][NK:EmailAddress]用户账号信息
     Id                  Int                         [I]用户号
     Name                String                      [P:32]用户名
-    EmailAddress        String                      [N][P:32]邮件地址
+    EmailAddress        Optional<String>            [P:32]邮件地址
     Gender              Gender                      性别
 
-    DUA                 DirectUserAuthentication    [N][RFK:Name=Name]直接用户名验证
+    DUA                 Optional<DirectUserAuthentication>  [RFK:Name=Name]直接用户名验证
 
 #Enum Gender                                        性别
     Male                0                           男
