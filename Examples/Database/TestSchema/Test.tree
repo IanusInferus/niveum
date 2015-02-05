@@ -4,7 +4,7 @@
       File:        Test.tree
       Location:    Yuki.Examples <Tree>
       Description: 测试
-      Version:     2014.10.25.
+      Version:     2015.02.04.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -22,6 +22,12 @@
     Id                  Int
     A                   String                      [P:32]
     B                   TestEnum
+    C                   List<Byte>                  [P:32]
+    D                   List<Byte>                  [P:max]
+    E                   List<Byte>
+    F                   String                      [P:32]
+    G                   String                      [P:max]
+    H                   String
 
 #Enum TestEnum
     A                   0

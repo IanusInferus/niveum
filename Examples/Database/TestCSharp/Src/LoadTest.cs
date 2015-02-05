@@ -13,25 +13,105 @@ namespace Database
     {
         public static void TestSaveData(int NumUser, int n, TestService s)
         {
-            s.SaveData(n, n);
+            var RetryCount = 0;
+            while (RetryCount < 16)
+            {
+                try
+                {
+                    s.SaveData(n, n);
+                    return;
+                }
+                catch (Npgsql.NpgsqlException ex)
+                {
+                    if ((ex.Code == "40002") || (ex.Code == "40004"))
+                    {
+                        RetryCount += 1;
+                        continue;
+                    }
+                    else
+                    {
+                        throw new AggregateException(ex);
+                    }
+                }
+            }
         }
 
         public static void TestLoadData(int NumUser, int n, TestService s)
         {
-            var v = s.LoadData(n);
-            Trace.Assert(v == n);
+            var RetryCount = 0;
+            while (RetryCount < 16)
+            {
+                try
+                {
+                    var v = s.LoadData(n);
+                    Trace.Assert(v == n);
+                    return;
+                }
+                catch (Npgsql.NpgsqlException ex)
+                {
+                    if ((ex.Code == "40002") || (ex.Code == "40004"))
+                    {
+                        RetryCount += 1;
+                        continue;
+                    }
+                    else
+                    {
+                        throw new AggregateException(ex);
+                    }
+                }
+            }
         }
 
         public static void TestSaveAndLoadData(int NumUser, int n, TestService s)
         {
-            s.SaveData(n, n);
-            var v = s.LoadData(n);
-            Trace.Assert(v == n);
+            var RetryCount = 0;
+            while (RetryCount < 16)
+            {
+                try
+                {
+                    s.SaveData(n, n);
+                    var v = s.LoadData(n);
+                    Trace.Assert(v == n);
+                    return;
+                }
+                catch (Npgsql.NpgsqlException ex)
+                {
+                    if ((ex.Code == "40002") || (ex.Code == "40004"))
+                    {
+                        RetryCount += 1;
+                        continue;
+                    }
+                    else
+                    {
+                        throw new AggregateException(ex);
+                    }
+                }
+            }
         }
 
         public static void TestAddLockData(int NumUser, int n, TestService s)
         {
-            s.AddLockData(1);
+            var RetryCount = 0;
+            while (RetryCount < 16)
+            {
+                try
+                {
+                    s.AddLockData(1);
+                    return;
+                }
+                catch (Npgsql.NpgsqlException ex)
+                {
+                    if ((ex.Code == "40002") || (ex.Code == "40004"))
+                    {
+                        RetryCount += 1;
+                        continue;
+                    }
+                    else
+                    {
+                        throw new AggregateException(ex);
+                    }
+                }
+            }
         }
 
         private static int SumValue;
@@ -54,16 +134,36 @@ namespace Database
             //MySQL 5.7.2 死锁
             //PostgreSQL 9.1 异常
 
-            if (n % 2 == 0)
+            var RetryCount = 0;
+            while (RetryCount < 16)
             {
-                s.AddLockData(1);
-            }
-            else
-            {
-                var v = s.DeleteLockData();
-                lock (Lockee)
+                try
                 {
-                    SumValue += v + 1;
+                    if (n % 2 == 0)
+                    {
+                        s.AddLockData(1);
+                    }
+                    else
+                    {
+                        var v = s.DeleteLockData();
+                        lock (Lockee)
+                        {
+                            SumValue += v + 1;
+                        }
+                    }
+                    return;
+                }
+                catch (Npgsql.NpgsqlException ex)
+                {
+                    if ((ex.Code == "40002") || (ex.Code == "40004"))
+                    {
+                        RetryCount += 1;
+                        continue;
+                    }
+                    else
+                    {
+                        throw new AggregateException(ex);
+                    }
                 }
             }
         }

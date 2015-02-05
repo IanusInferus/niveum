@@ -11,7 +11,8 @@ namespace Database
         SqlServer,
         SqlServerCe,
         PostgreSQL,
-        MySQL
+        MySQL,
+        FoundationDBSQL
     }
 
     /// <summary>线程安全。</summary>
@@ -23,10 +24,12 @@ namespace Database
         private static readonly String SqlServerType = "Database.SqlServer.SqlServerDataAccessPool";
         private static readonly String PostgreSqlType = "Database.PostgreSql.PostgreSqlDataAccessPool";
         private static readonly String MySqlType = "Database.MySql.MySqlDataAccessPool";
+        private static readonly String FoundationDbSqlType = "Database.FoundationDbSql.FoundationDbSqlDataAccessPool";
         private static readonly String MemoryConnectionString = "Mail.md";
         private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Mail";
         private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=mail;";
         private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Mail;";
+        private static readonly String FoundationDbSqlConnectionString = "server=localhost;Port=15432;uid=root;pwd={Password};database=mail;";
 
         private static Type GetType(String FullName, Boolean ThrowOnError = false)
         {
@@ -75,6 +78,13 @@ namespace Database
                     return MySqlConnectionString;
                 }
             }
+            {
+                var t = GetType(FoundationDbSqlType);
+                if (t != null)
+                {
+                    return FoundationDbSqlConnectionString;
+                }
+            }
             throw new InvalidOperationException();
         }
 
@@ -99,6 +109,11 @@ namespace Database
             {
                 var t = GetType(MySqlType, true);
                 return MySqlConnectionString;
+            }
+            else if (Type == DatabaseType.FoundationDBSQL)
+            {
+                var t = GetType(FoundationDbSqlType, true);
+                return FoundationDbSqlConnectionString;
             }
             else
             {
@@ -148,6 +163,16 @@ namespace Database
                     return;
                 }
             }
+            {
+                var t = GetType(FoundationDbSqlType);
+                if (t != null)
+                {
+                    var o = Activator.CreateInstance(t);
+                    var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
+                    ConnectionFactory = () => c(ConnectionString);
+                    return;
+                }
+            }
             throw new InvalidOperationException();
         }
         public DataAccessManager(DatabaseType Type, String ConnectionString)
@@ -176,6 +201,13 @@ namespace Database
             else if (Type == DatabaseType.MySQL)
             {
                 var t = GetType(MySqlType, true);
+                var o = Activator.CreateInstance(t);
+                var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
+                ConnectionFactory = () => c(ConnectionString);
+            }
+            else if (Type == DatabaseType.FoundationDBSQL)
+            {
+                var t = GetType(FoundationDbSqlType, true);
                 var o = Activator.CreateInstance(t);
                 var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
                 ConnectionFactory = () => c(ConnectionString);
