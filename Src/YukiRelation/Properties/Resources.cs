@@ -30,6 +30,7 @@ namespace Yuki.RelationSchema.Properties
         public static Byte[] CppMemory { get { return GetResource("CppMemory"); } }
         public static Byte[] CppPlain { get { return GetResource("CppPlain"); } }
         public static Byte[] CSharpCounted { get { return GetResource("CSharpCounted"); } }
+        public static Byte[] CSharpFoundationDbSql { get { return GetResource("CSharpFoundationDbSql"); } }
         public static Byte[] CSharpKrustallos { get { return GetResource("CSharpKrustallos"); } }
         public static Byte[] CSharpKrustallosMySql { get { return GetResource("CSharpKrustallosMySql"); } }
         public static Byte[] CSharpKrustallosMySqlLoader { get { return GetResource("CSharpKrustallosMySqlLoader"); } }
@@ -40,6 +41,7 @@ namespace Yuki.RelationSchema.Properties
         public static Byte[] CSharpPlain { get { return GetResource("CSharpPlain"); } }
         public static Byte[] CSharpPostgreSql { get { return GetResource("CSharpPostgreSql"); } }
         public static Byte[] CSharpSqlServer { get { return GetResource("CSharpSqlServer"); } }
+        public static Byte[] FoundationDbSql { get { return GetResource("FoundationDbSql"); } }
         public static Byte[] MySql { get { return GetResource("MySql"); } }
         public static Byte[] PostgreSql { get { return GetResource("PostgreSql"); } }
         public static Byte[] TSql { get { return GetResource("TSql"); } }

@@ -2,8 +2,8 @@
 //
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
-//  Description: 关系类型结构PostgreSQL数据库代码生成器
-//  Version:     2014.12.06.
+//  Description: 关系类型结构FoundationDB SQL数据库代码生成器
+//  Version:     2015.02.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -16,13 +16,13 @@ using Firefly;
 using Firefly.TextEncoding;
 using OS = Yuki.ObjectSchema;
 
-namespace Yuki.RelationSchema.PostgreSql
+namespace Yuki.RelationSchema.FoundationDbSql
 {
     public static class CodeGenerator
     {
-        public static String CompileToPostgreSql(this Schema Schema, String DatabaseName, Boolean WithComment = false)
+        public static String CompileToFoundationDbSql(this Schema Schema, String DatabaseName)
         {
-            Writer w = new Writer(Schema, DatabaseName, WithComment);
+            Writer w = new Writer(Schema, DatabaseName, false);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -39,7 +39,7 @@ namespace Yuki.RelationSchema.PostgreSql
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.PostgreSql);
+                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.FoundationDbSql);
             }
 
             public Writer(Schema Schema, String DatabaseName, Boolean WithComment)
@@ -215,11 +215,18 @@ namespace Yuki.RelationSchema.PostgreSql
                 {
                     if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase) && f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
                     {
-                        Type = "text";
+                        Type = "clob";
                     }
-                    else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase)) // PostgreSQL缺少varbinary(n)类型
+                    else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase))
                     {
-                        Type = "bytea";
+                        if (f.Attribute.Column.TypeParameters.Equals("max", StringComparison.OrdinalIgnoreCase))
+                        {
+                            Type = "blob";
+                        }
+                        else
+                        {
+                            Type = String.Format("varchar({0}) for bit data", f.Attribute.Column.TypeParameters);
+                        }
                     }
                     else
                     {
@@ -228,13 +235,13 @@ namespace Yuki.RelationSchema.PostgreSql
                 }
                 else
                 {
-                    if (TypeName.Equals("Boolean", StringComparison.OrdinalIgnoreCase))
+                    if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
                     {
-                        Type = "bit(1)";
+                        Type = "clob";
                     }
-                    else if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
+                    else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase))
                     {
-                        Type = "text";
+                        Type = "blob";
                     }
                 }
 

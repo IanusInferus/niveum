@@ -54,6 +54,7 @@
     <Compile Include="CppMemory\CodeGenerator.cs" />
     <Compile Include="CppPlain\CodeGenerator.cs" />
     <Compile Include="CSharpCounted\CodeGenerator.cs" />
+    <Compile Include="CSharpFoundationDbSql\CodeGenerator.cs" />
     <Compile Include="CSharpKrustallosMySqlLoader\CodeGenerator.cs" />
     <Compile Include="CSharpKrustallosMySql\CodeGenerator.cs" />
     <Compile Include="CSharpKrustallos\CodeGenerator.cs" />
@@ -63,6 +64,7 @@
     <Compile Include="CSharpPlain\CodeGenerator.cs" />
     <Compile Include="CSharpPostgreSql\CodeGenerator.cs" />
     <Compile Include="CSharpSqlServer\CodeGenerator.cs" />
+    <Compile Include="FoundationDbSql\CodeGenerator.cs" />
     <Compile Include="MySql\CodeGenerator.cs" />
     <Compile Include="PostgreSql\CodeGenerator.cs" />
     <Compile Include="RelationSchema\PlainObjectSchemaGenerator.cs" />
@@ -99,6 +101,8 @@
     <EmbeddedResource Include="CSharpKrustallos\Schema.tree" />
     <EmbeddedResource Include="CSharpKrustallosMySql\Schema.tree" />
     <EmbeddedResource Include="CSharpKrustallosMySqlLoader\Schema.tree" />
+    <EmbeddedResource Include="FoundationDbSql\Schema.tree" />
+    <EmbeddedResource Include="CSharpFoundationDbSql\Schema.tree" />
     <None Include="RelationSchema\RelationSchema.tree" />
     <EmbeddedResource Include="CSharpLinqToSql\Schema.tree" />
     <EmbeddedResource Include="TSql\Schema.tree" />

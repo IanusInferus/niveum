@@ -22,7 +22,8 @@ namespace Yuki.DatabaseRegenerator
     {
         SqlServer,
         PostgreSQL,
-        MySQL
+        MySQL,
+        FoundationDBSQL
     }
     public static class TableOperations
     {
@@ -33,7 +34,7 @@ namespace Yuki.DatabaseRegenerator
             {
                 Escape = s => "[" + s + "]";
             }
-            else if (Type == DatabaseType.PostgreSQL)
+            else if ((Type == DatabaseType.PostgreSQL) || (Type == DatabaseType.FoundationDBSQL))
             {
                 Escape = s => "\"" + s.ToLowerInvariant() + "\"";
             }
