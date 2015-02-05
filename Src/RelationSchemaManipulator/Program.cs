@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2014.12.24.
+//  Version:     2015.02.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -28,6 +28,7 @@ using Yuki.ObjectSchema.Cpp;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
+using Yuki.RelationSchema.FoundationDbSql;
 using Yuki.RelationSchema.DbmlDatabase;
 using Yuki.RelationSchema.CSharpLinqToSql;
 using Yuki.RelationSchema.CSharpLinqToEntities;
@@ -36,6 +37,7 @@ using Yuki.RelationSchema.CSharpMemory;
 using Yuki.RelationSchema.CSharpSqlServer;
 using Yuki.RelationSchema.CSharpPostgreSql;
 using Yuki.RelationSchema.CSharpMySql;
+using Yuki.RelationSchema.CSharpFoundationDbSql;
 using Yuki.RelationSchema.CSharpKrustallos;
 using Yuki.RelationSchema.CSharpKrustallosMySql;
 using Yuki.RelationSchema.CSharpKrustallosMySqlLoader;
@@ -231,6 +233,19 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "t2fdbsql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        RelationSchemaToFoundationDbSqlCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "t2dbml")
                 {
                     var args = opt.Arguments;
@@ -332,6 +347,19 @@ namespace Yuki.RelationSchemaManipulator
                     if (args.Length == 3)
                     {
                         RelationSchemaToCSharpMySqlCode(args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "t2csfdbsql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 3)
+                    {
+                        RelationSchemaToCSharpFoundationDbSqlCode(args[0], args[1], args[2]);
                     }
                     else
                     {
@@ -464,6 +492,8 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2pgsql:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成MySQL数据库DROP和CREATE脚本");
             Console.WriteLine(@"/t2mysql:<SqlCodePath>,<DatabaseName>");
+            Console.WriteLine(@"生成FoundationDB SQL数据库DROP和CREATE脚本");
+            Console.WriteLine(@"/t2fdbsql:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成Dbml文件");
             Console.WriteLine(@"/t2dbml:<DbmlCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库Linq to SQL类型");
@@ -480,6 +510,8 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2cspgsql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# MySQL类型");
             Console.WriteLine(@"/t2csmysql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
+            Console.WriteLine(@"生成C# FoundationDB SQL类型");
+            Console.WriteLine(@"/t2csfdbsql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# Krustallos类型");
             Console.WriteLine(@"/t2cskrs:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# Krustallos-MySQL类型");
@@ -570,6 +602,23 @@ namespace Yuki.RelationSchemaManipulator
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToMySql(DatabaseName, true);
+            if (File.Exists(SqlCodePath))
+            {
+                var Original = Txt.ReadFile(SqlCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
+            if (SqlCodeDir != "" && !Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
+            Txt.WriteFile(SqlCodePath, Compiled);
+        }
+
+        public static void RelationSchemaToFoundationDbSqlCode(String SqlCodePath, String DatabaseName)
+        {
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToFoundationDbSql(DatabaseName);
             if (File.Exists(SqlCodePath))
             {
                 var Original = Txt.ReadFile(SqlCodePath);
@@ -719,6 +768,23 @@ namespace Yuki.RelationSchemaManipulator
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCSharpMySql(EntityNamespaceName, ContextNamespaceName);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void RelationSchemaToCSharpFoundationDbSqlCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        {
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToCSharpFoundationDbSql(EntityNamespaceName, ContextNamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
