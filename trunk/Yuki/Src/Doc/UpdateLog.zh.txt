@@ -1,4 +1,11 @@
-﻿2015.02.04
+﻿2015.02.05
+Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
+增加FoundationDB SQL数据库DROP和CREATE脚本生成。
+增加C# FoundationDB SQL数据库代码生成。
+Examples:
+增加C# FoundationDB SQL数据库示例。
+
+2015.02.04
 Yuki.DatabaseRegenerator:
 修正拼写错误。
 

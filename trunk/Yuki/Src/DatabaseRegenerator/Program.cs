@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2015.02.04.
+//  Version:     2015.02.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -24,6 +24,7 @@ using Yuki.RelationSchema;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
+using Yuki.RelationSchema.FoundationDbSql;
 using Yuki.RelationValue;
 
 namespace Yuki.DatabaseRegenerator
@@ -230,12 +231,12 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (optNameLower == "regenfdbpgsql")
+                else if (optNameLower == "regenfdbsql")
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)
                     {
-                        RegenFoundationDBPostgreSQL(Schema(), ConnectionString, DatabaseName, args);
+                        RegenFoundationDBSQL(Schema(), ConnectionString, DatabaseName, args);
                     }
                     else
                     {
@@ -280,7 +281,7 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"重建MySQL数据库");
             Console.WriteLine(@"/regenmysql:<DataDir>*");
             Console.WriteLine(@"重建FoundationDB/PostgreSQL数据库");
-            Console.WriteLine(@"/regenfdbpgsql:<DataDir>*");
+            Console.WriteLine(@"/regenfdbsql:<DataDir>*");
             Console.WriteLine(@"RelationSchemaDir|RelationSchemaFile 关系类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"ConnectionString 数据库连接字符串。");
             Console.WriteLine(@"DataDir 数据目录，里面有若干tree数据文件。");
@@ -706,18 +707,18 @@ namespace Yuki.DatabaseRegenerator
             }
         }
 
-        public static void RegenFoundationDBPostgreSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
+        public static void RegenFoundationDBSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
         {
             var Value = LoadData(s, DataDirs);
 
-            var GenSqls = s.CompileToPostgreSql(DatabaseName, true);
+            var GenSqls = s.CompileToFoundationDbSql(DatabaseName);
             var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
             RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToArray();
             var CreateDatabases = new String[] { String.Format("DROP SCHEMA IF EXISTS \"{0}\" CASCADE", DatabaseName.ToLowerInvariant()), String.Format("CREATE SCHEMA \"{0}\"", DatabaseName.ToLowerInvariant()) };
             var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToArray();
             var Alters = RegenSqls.Where(q => q.StartsWith("ALTER")).ToArray();
 
-            var cf = GetConnectionFactory(DatabaseType.PostgreSQL);
+            var cf = GetConnectionFactory(DatabaseType.FoundationDBSQL);
             using (var c = cf(ConnectionString))
             {
                 c.Open();
@@ -771,24 +772,30 @@ namespace Yuki.DatabaseRegenerator
                 c.ChangeDatabase(DatabaseName.ToLowerInvariant());
                 try
                 {
-                    using (var b = c.BeginTransaction())
+                    foreach (var t in Tables)
                     {
-                        var Success = false;
-                        try
+                        var PartitionSize = 1000;
+                        var NumPartition = (t.Value.Rows.Count + PartitionSize - 1) / PartitionSize;
+                        for (int k = 0; k < NumPartition; k += 1)
                         {
-                            foreach (var t in Tables)
+                            var p = new KeyValuePair<String, TableVal>(t.Key, new TableVal { Rows = t.Value.Rows.Skip(k * PartitionSize).Take(PartitionSize).ToList() });
+                            using (var b = c.BeginTransaction())
                             {
-                                TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.PostgreSQL);
-                            }
+                                var Success = false;
+                                try
+                                {
+                                    TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, p, DatabaseType.FoundationDBSQL);
 
-                            b.Commit();
-                            Success = true;
-                        }
-                        finally
-                        {
-                            if (!Success)
-                            {
-                                b.Rollback();
+                                    b.Commit();
+                                    Success = true;
+                                }
+                                finally
+                                {
+                                    if (!Success)
+                                    {
+                                        b.Rollback();
+                                    }
+                                }
                             }
                         }
                     }
@@ -828,7 +835,7 @@ namespace Yuki.DatabaseRegenerator
             {
                 return GetConnectionFactorySqlServer();
             }
-            else if (Type == DatabaseType.PostgreSQL)
+            else if ((Type == DatabaseType.PostgreSQL) || (Type == DatabaseType.FoundationDBSQL))
             {
                 return GetConnectionFactoryPostgreSQL();
             }
