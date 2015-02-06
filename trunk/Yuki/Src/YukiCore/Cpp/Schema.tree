@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++模板数据
-      Version:     2013.04.18.
+      Version:     2015.02.06.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -225,19 +225,20 @@ ObjectSchemaTemplate
     Templates
         Template
             Name Main
-            //Parameters: ${Header}, ${Includes}, ${Primitives}, ${Contents}
+            //Parameters: ${Header}, ${Includes}, ${Primitives}, ${SimpleTypes}, ${EnumFunctors}, ${ComplexTypes}
             Value
                 $String
                     ${Header}
                     #include ${Includes}
                     ${Primitives}
-
-                    ${Contents}
+                    ${SimpleTypes}
+                    ${EnumFunctors}
+                    ${ComplexTypes}
 
                 $End
         Template
             Name Namespace
-            //Parameters: ${NamespaceName}, ${Contents}
+            //Parameters: ${NamespaceName}, ${ComplexTypes}
             Value
                 $String
                     namespace [[${NamespaceName}]]
@@ -593,6 +594,27 @@ ObjectSchemaTemplate
                     enum [[${Name}]] : ${UnderlyingType}
                     {
                         ${Literals}
+                    };
+        Template
+            Name EnumFunctor
+            //Parameters: ${Name}, ${UnderlyingType}
+            Value
+                $String
+                    template <>
+                    struct hash<[[${Name}]]>
+                    {
+                        size_t operator()(const [[${Name}]] &x) const
+                        {
+                            return hash<${UnderlyingType}>()(x);
+                        }
+                    };
+                    template <>
+                    struct less<[[${Name}]]>
+                    {
+                        bool operator()(const [[${Name}]] &x, const [[${Name}]] &y) const
+                        {
+                            return less<${UnderlyingType}>()(x, y);
+                        }
                     };
         Template
             Name MultiLineXmlComment

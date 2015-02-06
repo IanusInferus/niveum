@@ -1,4 +1,8 @@
-﻿2015.02.05
+﻿2015.02.06
+Yuki.Core, Yuki.Relation:
+修正C++代码生成，使用枚举类型作为Map键时出现编译错误的问题。
+
+2015.02.05
 Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
 增加FoundationDB SQL数据库DROP和CREATE脚本生成。
 增加C# FoundationDB SQL数据库代码生成。

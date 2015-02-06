@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2014.12.06.
+//  Version:     2015.02.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -109,12 +109,12 @@ namespace Yuki.RelationSchema.CppMemory
                     Contents = GetTemplate("NamespaceImplementation").Substitute("EntityNamespaceName", EntityNamespaceName).Substitute("Contents", Contents);
                 }
                 Contents = WrapContents(NamespaceName, Contents);
-                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, new String[] { }, new String[] { }, Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
 
-            public String[] GetMain(String[] Header, String[] Includes, String[] Primitives, String[] Contents)
+            public String[] GetMain(String[] Header, String[] Includes, String[] Primitives, String[] SimpleTypes, String[] EnumFunctors, String[] ComplexTypes)
             {
-                return InnerWriter.GetMain(Header, Includes, Primitives, Contents);
+                return InnerWriter.GetMain(Header, Includes, Primitives, SimpleTypes, EnumFunctors, ComplexTypes);
             }
 
             public String[] WrapContents(String Namespace, String[] Contents)

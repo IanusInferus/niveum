@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2013.12.08.
+//  Version:     2015.02.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -70,23 +70,24 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 var Header = GetHeader();
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
                 var Primitives = GetPrimitives();
+                var SimpleTypes = GetSimpleTypes();
+                var EnumFunctors = GetEnumFunctors();
                 var ComplexTypes = GetComplexTypes();
-                var Contents = ComplexTypes;
-                Contents = WrapContents(NamespaceName, Contents);
-                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, WrapContents(NamespaceName, SimpleTypes), WrapContents("std", EnumFunctors), WrapContents(NamespaceName, ComplexTypes))).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
 
-            public String[] GetMain(String[] Header, String[] Includes, String[] Primitives, String[] Contents)
+            public String[] GetMain(String[] Header, String[] Includes, String[] Primitives, String[] SimpleTypes, String[] EnumFunctors, String[] ComplexTypes)
             {
-                return GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Primitives", Primitives).Substitute("Contents", Contents);
+                return GetTemplate("Main").Substitute("Header", Header).Substitute("Includes", Includes).Substitute("Primitives", Primitives).Substitute("SimpleTypes", SimpleTypes).Substitute("EnumFunctors", EnumFunctors).Substitute("ComplexTypes", ComplexTypes);
             }
 
             public String[] WrapContents(String Namespace, String[] Contents)
             {
+                if (Contents.Length == 0) { return Contents; }
                 var c = Contents;
-                if (NamespaceName != "")
+                if (Namespace != "")
                 {
-                    foreach (var nn in NamespaceName.Split('.').Reverse())
+                    foreach (var nn in Namespace.Split('.').Reverse())
                     {
                         c = GetTemplate("Namespace").Substitute("NamespaceName", nn).Substitute("Contents", c);
                     }
@@ -420,6 +421,15 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 var Literals = GetLiterals(e.Name, e.Literals);
                 return GetTemplate("Enum").Substitute("Name", e.TypeFriendlyName()).Substitute("UnderlyingType", GetEnumTypeString(e.UnderlyingType)).Substitute("Literals", Literals).Substitute("XmlComment", GetXmlComment(e.Description));
             }
+            public String[] GetEnumFunctor(EnumDef e)
+            {
+                var Name = e.TypeFriendlyName();
+                if (NamespaceName != "")
+                {
+                    Name = NamespaceName + "::" + Name;
+                }
+                return GetTemplate("EnumFunctor").Substitute("Name", Name).Substitute("UnderlyingType", GetEnumTypeString(e.UnderlyingType));
+            }
             public String[] GetClientCommand(ClientCommandDef c)
             {
                 var l = new List<String>();
@@ -489,7 +499,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 return l.ToArray();
             }
 
-            public String[] GetComplexTypes()
+            public String[] GetSimpleTypes()
             {
                 List<String> l = new List<String>();
 
@@ -530,6 +540,51 @@ namespace Yuki.ObjectSchema.Cpp.Common
                     l.AddRange(GetTypePredefinition(t.TypeFriendlyName(), "class", new String[] { }));
                 }
                 l.Add("");
+
+                if (l.Count > 0)
+                {
+                    l = l.Take(l.Count - 1).ToList();
+                }
+
+                return l.ToArray();
+            }
+
+            public String[] GetEnumFunctors()
+            {
+                List<String> l = new List<String>();
+
+                List<TypeDef> cl = new List<TypeDef>();
+
+                foreach (var c in Schema.Types)
+                {
+                    if (c.OnEnum)
+                    {
+                        l.AddRange(GetEnumFunctor(c.Enum));
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    l.Add("");
+                }
+
+                if (l.Count > 0)
+                {
+                    l = l.Take(l.Count - 1).ToList();
+                }
+
+                return l.ToArray();
+            }
+
+            public String[] GetComplexTypes()
+            {
+                List<String> l = new List<String>();
+
+                List<TypeDef> cl = new List<TypeDef>();
+
+                var scg = Schema.GetSchemaClosureGenerator();
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
 
                 foreach (var c in Schema.Types)
                 {

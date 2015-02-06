@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2013.12.08.
+//  Version:     2015.02.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -73,14 +73,12 @@ namespace Yuki.ObjectSchema.CppBinary
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes();
-                var Contents = ComplexTypes;
-                Contents = WrapContents(NamespaceName, Contents);
-                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, WrapContents(NamespaceName, ComplexTypes))).Select(Line => Line.TrimEnd(' ')).ToArray();
             }
 
-            public String[] GetMain(String[] Header, String[] Includes, String[] Primitives, String[] Contents)
+            public String[] GetMain(String[] Header, String[] Includes, String[] Primitives, String[] ComplexTypes)
             {
-                return InnerWriter.GetMain(Header, Includes, Primitives, Contents);
+                return InnerWriter.GetMain(Header, Includes, Primitives, new String[] { }, new String[] { }, ComplexTypes);
             }
 
             public String[] WrapContents(String Namespace, String[] Contents)
