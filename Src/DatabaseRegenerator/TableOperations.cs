@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2014.12.06.
+//  Version:     2015.02.09.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -290,9 +290,33 @@ namespace Yuki.DatabaseRegenerator
                     {
                         var cmd = c.CreateCommand();
                         cmd.Transaction = b;
-                        cmd.CommandText = String.Format(@"SELECT setval(pg_get_serial_sequence('{0}', '{1}'), MAX({3})) FROM {2};", CollectionName.ToLowerInvariant(), ic.ToLowerInvariant(), Escape(CollectionName), Escape(ic));
+                        cmd.CommandText = String.Format(@"SELECT setval(pg_get_serial_sequence('{0}', '{1}'), IFNULL(MAX({3}) + 1, 1)) FROM {2};", CollectionName.ToLowerInvariant(), ic.ToLowerInvariant(), Escape(CollectionName), Escape(ic));
                         cmd.CommandType = CommandType.Text;
                         cmd.ExecuteNonQuery();
+                    }
+                }
+                else if (Type == DatabaseType.FoundationDBSQL)
+                {
+                    var IdentityColumns = Meta.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
+                    foreach (var ic in IdentityColumns)
+                    {
+                        Int64 Value;
+
+                        {
+                            var cmd = c.CreateCommand();
+                            cmd.Transaction = b;
+                            cmd.CommandText = String.Format(@"SELECT IFNULL(MAX({1}) + 1, 1) FROM {0};", Escape(CollectionName), Escape(ic));
+                            cmd.CommandType = CommandType.Text;
+                            Value = Convert.ToInt64(cmd.ExecuteScalar());
+                        }
+
+                        {
+                            var cmd = c.CreateCommand();
+                            cmd.Transaction = b;
+                            cmd.CommandText = String.Format(@"ALTER TABLE {0} ALTER COLUMN {1} RESTART WITH {2};", Escape(CollectionName), Escape(ic), Value);
+                            cmd.CommandType = CommandType.Text;
+                            cmd.ExecuteNonQuery();
+                        }
                     }
                 }
             }
