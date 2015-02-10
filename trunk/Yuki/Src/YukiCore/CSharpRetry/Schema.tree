@@ -135,6 +135,7 @@ ObjectSchemaTemplate
                             try
                             {
                                 Inner.[[${Name}]](Request, CallbackInner, OnFailure);
+                                return;
                             }
                             catch (Exception ex)
                             {

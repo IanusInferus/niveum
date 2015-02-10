@@ -1,4 +1,10 @@
-﻿2015.02.09
+﻿2015.02.10
+Examples:
+更新数据库示例Npgsql说明。
+Yuki.Core, Yuki.SchemaManipulator:
+实现C#对象数据结构通讯重试循环代码生成。
+
+2015.02.09
 Yuki.DatabaseRegenerator:
 修正PostgreSQL和FoundationDB SQL导入时serial的初始值不正常的问题。
 Examples:
