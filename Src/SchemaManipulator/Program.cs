@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2014.07.15.
+//  Version:     2015.02.10.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -27,6 +27,7 @@ using Yuki.ObjectSchema.CSharp;
 using Yuki.ObjectSchema.CSharpBinary;
 using Yuki.ObjectSchema.CSharpJson;
 using Yuki.ObjectSchema.CSharpCompatible;
+using Yuki.ObjectSchema.CSharpRetry;
 using Yuki.ObjectSchema.Java;
 using Yuki.ObjectSchema.JavaBinary;
 using Yuki.ObjectSchema.Cpp;
@@ -322,6 +323,23 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "t2csr")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ObjectSchemaToCSharpRetryCode(args[0], "");
+                    }
+                    else if (args.Length == 2)
+                    {
+                        ObjectSchemaToCSharpRetryCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "t2jv")
                 {
                     var args = opt.Arguments;
@@ -533,6 +551,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2csj:<CsCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C#通讯兼容类型");
             Console.WriteLine(@"/t2csc:<CsCodePath>,<ClassName>[,<NamespaceName>]");
+            Console.WriteLine(@"生成C#重试循环类型");
+            Console.WriteLine(@"/t2csr:<CsCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成Java类型");
             Console.WriteLine(@"/t2jv:<JavaCodePath>,<ClassName>[,<PackageName>]");
             Console.WriteLine(@"生成Java二进制类型");
@@ -754,6 +774,23 @@ namespace Yuki.SchemaManipulator
         {
             var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ClassName, AsyncCommands);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToCSharpRetryCode(String CsCodePath, String NamespaceName)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToCSharpRetry(NamespaceName, AsyncCommands);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
