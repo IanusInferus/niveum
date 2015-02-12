@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2015.02.06.
+//  Version:     2015.02.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -426,7 +426,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 var Name = e.TypeFriendlyName();
                 if (NamespaceName != "")
                 {
-                    Name = NamespaceName + "::" + Name;
+                    Name = NamespaceName.Replace(".", "::") + "::" + Name;
                 }
                 return GetTemplate("EnumFunctor").Substitute("Name", Name).Substitute("UnderlyingType", GetEnumTypeString(e.UnderlyingType));
             }
