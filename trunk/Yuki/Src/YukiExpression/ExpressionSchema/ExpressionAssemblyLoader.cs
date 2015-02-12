@@ -73,7 +73,7 @@ namespace Yuki.ExpressionSchema
             }
         }
 
-        private static Regex rFunctionBodyLine = new Regex(@"^ *(?<Name>[A-Za-z_][A-Za-z0-9_]*) +(?<Body>.*)$", RegexOptions.ExplicitCapture);
+        private static Regex rFunctionBodyLine = new Regex(@"^ *(?<Name>[A-Za-z_][A-Za-z0-9_]*) +(?<Body>.*?)( +//.*)?$", RegexOptions.ExplicitCapture);
         private void Load(String TreePath, StreamReader Reader)
         {
             var ps = new TreeFormatParseSetting
@@ -128,7 +128,7 @@ namespace Yuki.ExpressionSchema
                             var fd = FunctionDeclDict[FunctionName];
                             ReachedFunctions.Add(FunctionName);
                             var ep = new ExpressionParser(null, nm.Text);
-                            var BodyRange = new Syntax.TextRange { Start = nm.Text.Calc(Line.Range.Start, gBody.Index), End = Line.Range.End };
+                            var BodyRange = new Syntax.TextRange { Start = nm.Text.Calc(Line.Range.Start, gBody.Index), End = nm.Text.Calc(Line.Range.Start, gBody.Index + gBody.Length) };
                             var func = ep.ParseFunction(new Yuki.Expression.ExpressionRuntimeProvider<int>(), fd, BodyRange);
                             Functions.Add(FunctionName, func.Definition);
                         }
