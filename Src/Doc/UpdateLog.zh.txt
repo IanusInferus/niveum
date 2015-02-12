@@ -1,4 +1,12 @@
-﻿2015.02.10
+﻿2015.02.12
+Yuki.Core:
+修正C++代码生成时，部分命名空间没有使用::导致出错的问题。
+Yuki.Expression, Yuki.ExpressionManipulator:
+增加C++表达式计算二进制程序集加载代码生成。
+Examples:
+增加C++表达式示例。
+
+2015.02.10
 Examples:
 更新数据库示例Npgsql说明。
 Yuki.Core, Yuki.SchemaManipulator:

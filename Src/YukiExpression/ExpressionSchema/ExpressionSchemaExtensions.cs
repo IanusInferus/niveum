@@ -10,15 +10,31 @@ namespace Yuki.ExpressionSchema
 {
     public static class ExpressionSchemaExtensions
     {
+        public static Byte[] GetUnifiedBinaryRepresentation(this Schema s)
+        {
+            var Modules = s.Modules.Select(m => new ModuleDecl { Name = m.Name, Functions = m.Functions.OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase).ToList(), Description = "" }).OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            var ss = new Schema { Modules = Modules, Imports = new List<String> { } };
+
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+            using (var ms = Streams.CreateMemoryStream())
+            {
+                bs.Write(ss, ms);
+                ms.Position = 0;
+
+                var Bytes = ms.Read((int)(ms.Length));
+                return Bytes;
+            }
+        }
+
         public static UInt64 Hash(this Schema s)
         {
-            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+            var Bytes = GetUnifiedBinaryRepresentation(s);
             var sha = new SHA1CryptoServiceProvider();
             Byte[] result;
 
             using (var ms = Streams.CreateMemoryStream())
             {
-                bs.Write(s, ms);
+                ms.Write(Bytes);
                 ms.Position = 0;
 
                 result = sha.ComputeHash(ms.ToUnsafeStream());

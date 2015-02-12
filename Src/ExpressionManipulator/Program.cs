@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.ExpressionManipulator <Visual C#>
 //  Description: 表达式结构处理工具
-//  Version:     2014.04.11.
+//  Version:     2015.02.12.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -26,6 +26,7 @@ using ES = Yuki.ExpressionSchema;
 using Yuki.ObjectSchema;
 using Yuki.ExpressionSchema;
 using Yuki.ExpressionSchema.CSharpBinaryLoader;
+using Yuki.ExpressionSchema.CppBinaryLoader;
 
 namespace Yuki.ExpressionManipulator
 {
@@ -143,6 +144,19 @@ namespace Yuki.ExpressionManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "t2cppbl")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        ExpressionSchemaToCppBinaryLoaderCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else
                 {
                     throw new ArgumentException(opt.Name);
@@ -169,9 +183,12 @@ namespace Yuki.ExpressionManipulator
             Console.WriteLine(@"/t2b:<DataDir>*,<BinaryPath>");
             Console.WriteLine(@"生成C#二进制程序集装载类型");
             Console.WriteLine(@"/t2csbl:<CsCodePath>,<NamespaceName>");
+            Console.WriteLine(@"生成C++二进制程序集装载类型");
+            Console.WriteLine(@"/t2cppbl:<CppCodePath>,<NamespaceName>");
             Console.WriteLine(@"ExpressionSchemaDir|ExpressionSchemaFile 表达式结构Tree文件(夹)路径。");
             Console.WriteLine(@"BinaryPath 二进制程序集文件路径。");
             Console.WriteLine(@"CsCodePath C#代码文件路径。");
+            Console.WriteLine(@"CppCodePath C++代码文件路径。");
             Console.WriteLine(@"NamespaceName 命名空间名称。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
@@ -247,6 +264,23 @@ namespace Yuki.ExpressionManipulator
             var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CsCodePath, Compiled);
+        }
+
+        public static void ExpressionSchemaToCppBinaryLoaderCode(String CppCodePath, String NamespaceName)
+        {
+            var ExpressionSchema = GetExpressionSchema();
+            var Compiled = ExpressionSchema.CompileToCppBinaryLoader(NamespaceName);
+            if (File.Exists(CppCodePath))
+            {
+                var Original = Txt.ReadFile(CppCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CppCodePath, Compiled);
         }
     }
 }
