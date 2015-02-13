@@ -67,6 +67,10 @@
     <Compile Include="FoundationDbSql\CodeGenerator.cs" />
     <Compile Include="MySql\CodeGenerator.cs" />
     <Compile Include="PostgreSql\CodeGenerator.cs" />
+    <Compile Include="RelationSchemaDiff\RelationSchemaDiff.Designer.cs" />
+    <Compile Include="RelationSchemaDiff\RelationSchemaDiffGenerator.cs" />
+    <Compile Include="RelationSchemaDiff\RelationSchemaDiffWriter.cs" />
+    <Compile Include="RelationSchemaDiff\RelationSchemaDiffLoader.cs" />
     <Compile Include="RelationSchema\PlainObjectSchemaGenerator.cs" />
     <Compile Include="RelationSchema\RelationSchemaExtensions.cs" />
     <Compile Include="RelationSchema\RelationSchemaLoader.cs" />
@@ -103,6 +107,7 @@
     <EmbeddedResource Include="CSharpKrustallosMySqlLoader\Schema.tree" />
     <EmbeddedResource Include="FoundationDbSql\Schema.tree" />
     <EmbeddedResource Include="CSharpFoundationDbSql\Schema.tree" />
+    <None Include="RelationSchemaDiff\RelationSchemaDiff.tree" />
     <None Include="RelationSchema\RelationSchema.tree" />
     <EmbeddedResource Include="CSharpLinqToSql\Schema.tree" />
     <EmbeddedResource Include="TSql\Schema.tree" />
@@ -119,8 +124,10 @@
   <Target Name="BeforeBuild">
     <Exec Command="&quot;..\Bin\SchemaManipulator.exe&quot; /loadtyperef:&quot;YukiCore\Common\Common.tree&quot; /loadtype:&quot;YukiRelation\RelationSchema\RelationSchema.tree&quot; /t2cs:&quot;YukiRelation\RelationSchema\RelationSchema.Designer.cs&quot;,Yuki.RelationSchema,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
     <Exec Command="&quot;..\Bin\SchemaManipulator.exe&quot; /loadtyperef:&quot;YukiCore\Common\Common.tree&quot; /loadtype:&quot;YukiRelation\RelationValue\RelationValue.tree&quot; /t2cs:&quot;YukiRelation\RelationValue\RelationValue.Designer.cs&quot;,Yuki.RelationValue,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
+    <Exec Command="&quot;..\Bin\SchemaManipulator.exe&quot; /loadtyperef:&quot;YukiCore\Common\Common.tree&quot; /loadtyperef:&quot;YukiRelation\RelationValue\RelationValue.tree&quot; /loadtype:&quot;YukiRelation\RelationSchemaDiff\RelationSchemaDiff.tree&quot; /import:Yuki.RelationValue /t2cs:&quot;YukiRelation\RelationSchemaDiff\RelationSchemaDiff.Designer.cs&quot;,Yuki.RelationSchemaDiff,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
     <Exec Command="mono &quot;../Bin/SchemaManipulator.exe&quot; /loadtyperef:&quot;YukiCore/Common/Common.tree&quot; /loadtype:&quot;YukiRelation/RelationSchema/RelationSchema.tree&quot; /t2cs:&quot;YukiRelation/RelationSchema/RelationSchema.Designer.cs&quot;,Yuki.RelationSchema,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
     <Exec Command="mono &quot;../Bin/SchemaManipulator.exe&quot; /loadtyperef:&quot;YukiCore/Common/Common.tree&quot; /loadtype:&quot;YukiRelation/RelationValue/RelationValue.tree&quot; /t2cs:&quot;YukiRelation/RelationValue/RelationValue.Designer.cs&quot;,Yuki.RelationValue,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
+    <Exec Command="mono &quot;../Bin/SchemaManipulator.exe&quot; /loadtyperef:&quot;YukiCore/Common/Common.tree&quot; /loadtyperef:&quot;YukiRelation/RelationValue/RelationValue.tree&quot; /loadtype:&quot;YukiRelation/RelationSchemaDiff/RelationSchemaDiff.tree&quot; /import:Yuki.RelationValue /t2cs:&quot;YukiRelation/RelationSchemaDiff/RelationSchemaDiff.Designer.cs&quot;,Yuki.RelationSchemaDiff,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
