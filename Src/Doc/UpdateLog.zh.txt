@@ -3,6 +3,7 @@ Yuki.Core:
 修正C++代码生成时，部分命名空间没有使用::导致出错的问题。
 Yuki.Expression, Yuki.ExpressionManipulator:
 增加C++表达式计算二进制程序集加载代码生成。
+修正C++表达式计算二进制程序集加载代码生成中一处访问控制问题。
 Examples:
 增加C++表达式示例。
 
