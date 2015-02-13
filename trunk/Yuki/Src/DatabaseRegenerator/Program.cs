@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2015.02.05.
+//  Version:     2015.02.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -26,6 +26,7 @@ using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
 using Yuki.RelationSchema.FoundationDbSql;
 using Yuki.RelationValue;
+using Yuki.RelationSchemaDiff;
 
 namespace Yuki.DatabaseRegenerator
 {
@@ -244,6 +245,32 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
+                else if (optNameLower == "diff")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 3)
+                    {
+                        GenerateSchemaDiff(args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "applydiff")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 4)
+                    {
+                        ApplySchemaDiff(args[0], args[1], args[2], args[3]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else
                 {
                     throw new ArgumentException(opt.Name);
@@ -282,10 +309,18 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/regenmysql:<DataDir>*");
             Console.WriteLine(@"重建FoundationDB/PostgreSQL数据库");
             Console.WriteLine(@"/regenfdbsql:<DataDir>*");
+            Console.WriteLine(@"生成数据库结构差异文件");
+            Console.WriteLine(@"/diff:<MemoryDatabaseFileOld>,<MemoryDatabaseFileNew>,<SchemaDiffFile>");
+            Console.WriteLine(@"应用数据库结构差异生成新数据库");
+            Console.WriteLine(@"/applydiff:<MemoryDatabaseFileOld>,<MemoryDatabaseFileNew>,<SchemaDiffFile>,<MemoryDatabaseFileOutput>");
             Console.WriteLine(@"RelationSchemaDir|RelationSchemaFile 关系类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"ConnectionString 数据库连接字符串。");
             Console.WriteLine(@"DataDir 数据目录，里面有若干tree数据文件。");
             Console.WriteLine(@"DataFilePath 数据文件路径。");
+            Console.WriteLine(@"MemoryDatabaseFileOld 旧数据文件路径。");
+            Console.WriteLine(@"MemoryDatabaseFileNew 新数据文件路径。");
+            Console.WriteLine(@"SchemaDiffFile 结构差异文件路径。");
+            Console.WriteLine(@"MemoryDatabaseFileOutput 输出数据文件路径。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:Data.md /regenm:Data,TestData");
@@ -866,6 +901,37 @@ namespace Yuki.DatabaseRegenerator
             var asm = Assembly.Load(AssemblyName.GetAssemblyName(Path));
             var t = asm.GetType("MySql.Data.MySqlClient.MySqlConnection");
             return ConnectionString => (IDbConnection)Activator.CreateInstance(t, ConnectionString);
+        }
+
+        public static void GenerateSchemaDiff(String MemoryDatabaseFileOld, String MemoryDatabaseFileNew, String SchemaDiffFile)
+        {
+            Schema SchemaOld;
+            Schema SchemaNew;
+
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+            using (var ms = Streams.OpenReadable(MemoryDatabaseFileOld))
+            {
+                ms.ReadUInt64();
+                SchemaOld = bs.Read<Schema>(ms);
+            }
+            using (var ms = Streams.OpenReadable(MemoryDatabaseFileNew))
+            {
+                ms.ReadUInt64();
+                SchemaNew = bs.Read<Schema>(ms);
+            }
+
+            var Dir = FileNameHandling.GetFileDirectory(SchemaDiffFile);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+
+            var l = RelationSchemaDiffGenerator.Generate(SchemaOld, SchemaNew);
+            using (var sw = Txt.CreateTextWriter(SchemaDiffFile))
+            {
+                RelationSchemaDiffWriter.Write(sw, l);
+            }
+        }
+        public static void ApplySchemaDiff(String MemoryDatabaseFileOld, String MemoryDatabaseFileNew, String SchemaDiffFile, String MemoryDatabaseFileOutput)
+        {
+            //TODO
         }
     }
 }

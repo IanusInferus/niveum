@@ -1,4 +1,8 @@
-﻿2015.02.12
+﻿2015.02.13
+Yuki.Relation, Yuki.DatabaseRegenerator:
+增加数据库结构变化描述文件的生成和读取。
+
+2015.02.12
 Yuki.Core:
 修正C++代码生成时，部分命名空间没有使用::导致出错的问题。
 Yuki.Expression, Yuki.ExpressionManipulator:
