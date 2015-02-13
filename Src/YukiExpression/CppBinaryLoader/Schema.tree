@@ -88,9 +88,10 @@
                 $String
                     class [[${Name}]]
                     {
-                    public:
+                    private:
                         ${FunctionContexts}
 
+                    public:
                         [[${Name}]](std::shared_ptr<Yuki::ExpressionSchema::ModuleDef> md)
                         {
                             std::unordered_map<std::wstring, std::shared_ptr<Yuki::ExpressionSchema::Expr>> fd;
