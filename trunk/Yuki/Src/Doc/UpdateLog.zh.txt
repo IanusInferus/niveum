@@ -1,4 +1,8 @@
-﻿2015.02.13
+﻿2015.02.14
+Yuki.Relation, Yuki.DatabaseRegenerator:
+增加数据库结构变化描述文件的验证。
+
+2015.02.13
 Yuki.Relation, Yuki.DatabaseRegenerator:
 增加数据库结构变化描述文件的生成和读取。
 

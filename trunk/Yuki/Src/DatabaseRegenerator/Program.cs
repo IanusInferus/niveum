@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2015.02.13.
+//  Version:     2015.02.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -924,6 +924,7 @@ namespace Yuki.DatabaseRegenerator
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
 
             var l = RelationSchemaDiffGenerator.Generate(SchemaOld, SchemaNew);
+            RelationSchemaDiffVerifier.Verifiy(SchemaOld, SchemaNew, l);
             using (var sw = Txt.CreateTextWriter(SchemaDiffFile))
             {
                 RelationSchemaDiffWriter.Write(sw, l);
@@ -931,7 +932,31 @@ namespace Yuki.DatabaseRegenerator
         }
         public static void ApplySchemaDiff(String MemoryDatabaseFileOld, String MemoryDatabaseFileNew, String SchemaDiffFile, String MemoryDatabaseFileOutput)
         {
-            //TODO
+            Schema SchemaOld;
+            Schema SchemaNew;
+
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+            using (var ms = Streams.OpenReadable(MemoryDatabaseFileNew))
+            {
+                ms.ReadUInt64();
+                SchemaNew = bs.Read<Schema>(ms);
+            }
+            var Loader = new RelationSchemaDiffLoader(SchemaNew);
+            Loader.LoadType(SchemaDiffFile);
+            var l = Loader.GetResult();
+
+            using (var ms = Streams.OpenReadable(MemoryDatabaseFileOld))
+            {
+                ms.ReadUInt64();
+                SchemaOld = bs.Read<Schema>(ms);
+
+                RelationSchemaDiffVerifier.Verifiy(SchemaOld, SchemaNew, l);
+
+                var Dir = FileNameHandling.GetFileDirectory(MemoryDatabaseFileOutput);
+                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+
+                //TODO
+            }
         }
     }
 }

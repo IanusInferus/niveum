@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异生成器
-//  Version:     2015.02.13.
+//  Version:     2015.02.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -38,6 +38,15 @@ namespace Yuki.RelationSchemaDiff
                     if (!OldTypes.ContainsKey(t.Key) || !OldTypes[t.Key].OnEntity)
                     {
                         l.Add(new AlterEntity { EntityName = t.Key, Method = AlterEntityMethod.CreateCreate() });
+                    }
+                }
+            }
+            foreach (var t in NewTypes)
+            {
+                if (t.Value.OnEntity)
+                {
+                    if (!OldTypes.ContainsKey(t.Key) || !OldTypes[t.Key].OnEntity)
+                    {
                     }
                     else
                     {
