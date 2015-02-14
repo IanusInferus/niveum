@@ -219,6 +219,16 @@ namespace Yuki.RelationSchemaDiff
                     throw new InvalidOperationException("RedundantFields: " + String.Join(", ", RedundantFields));
                 }
 
+                foreach (var pf in AppliedFields)
+                {
+                    var f = pf.Value;
+                    var nf = NewFields[pf.Key];
+                    if (!Equals(f.Type, nf.Type))
+                    {
+                        throw new InvalidOperationException("TypeIncompatible: " + p.Key + "." + pf.Key);
+                    }
+                }
+
                 var e = new EntityDef { Name = oe.Name, CollectionName = oe.CollectionName, Fields = AppliedFields.Select(f => f.Value).ToList(), Description = oe.Description, PrimaryKey = oe.PrimaryKey, UniqueKeys = oe.UniqueKeys, NonUniqueKeys = oe.NonUniqueKeys };
                 AppliedTypes[p.Key] = TypeDef.CreateEntity(e);
             }
