@@ -68,6 +68,7 @@
     <Compile Include="MySql\CodeGenerator.cs" />
     <Compile Include="PostgreSql\CodeGenerator.cs" />
     <Compile Include="RelationSchemaDiff\RelationSchemaDiff.Designer.cs" />
+    <Compile Include="RelationSchemaDiff\RelationSchemaDiffVerifier.cs" />
     <Compile Include="RelationSchemaDiff\RelationSchemaDiffGenerator.cs" />
     <Compile Include="RelationSchemaDiff\RelationSchemaDiffWriter.cs" />
     <Compile Include="RelationSchemaDiff\RelationSchemaDiffLoader.cs" />
