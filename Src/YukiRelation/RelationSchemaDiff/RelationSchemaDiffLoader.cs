@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异加载器
-//  Version:     2015.02.13.
+//  Version:     2015.02.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -31,6 +31,14 @@ namespace Yuki.RelationSchemaDiff
     // Alter id Delete id
     // Alter id Rename id id
     // Alter id ChangeType id
+    //
+    // 语义限制：
+    // 所有的实体名称不能同时在Create、Rename目标中出现两次。
+    // 所有的实体名称不能同时在Delete、Rename源中出现两次。
+    // Alter中的实体名称是指的在完成Create、Delete、Rename后的实体名称。
+    // 每一个实体名称的所有字段名称，只能在Create、Rename目标、ChangeType中出现一次。
+    // 每一个实体名称的所有字段名称，只能在Delete、Rename源、ChangeType中出现一次。
+    // 这样可以保证差异与顺序无关。
 
     public sealed class RelationSchemaDiffLoader
     {
