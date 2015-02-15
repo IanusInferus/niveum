@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异生成器
-//  Version:     2015.02.14.
+//  Version:     2015.02.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -86,30 +86,55 @@ namespace Yuki.RelationSchemaDiff
             return l;
         }
 
-        private static PrimitiveVal GetDefaultValue(TypeSpec t)
+        private static Optional<PrimitiveVal> GetDefaultValue(TypeSpec t)
         {
-            if (!t.OnTypeRef) { throw new InvalidOperationException(); }
-            if (t.TypeRef == "Boolean")
+            if (t.OnTypeRef)
+            {
+                return GetDefaultValue(t.TypeRef);
+            }
+            else if (t.OnOptional)
+            {
+                return Optional<PrimitiveVal>.Empty;
+            }
+            else if (t.OnList)
+            {
+                if (t.List.Value == "Byte")
+                {
+                    return GetDefaultValue(new TypeRef { Value = "Binary" });
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+        private static PrimitiveVal GetDefaultValue(TypeRef r)
+        {
+            if (r == "Boolean")
             {
                 return PrimitiveVal.CreateBooleanValue(false);
             }
-            else if (t.TypeRef == "String")
+            else if (r == "String")
             {
                 return PrimitiveVal.CreateStringValue("");
             }
-            else if (t.TypeRef == "Int")
+            else if (r == "Int")
             {
                 return PrimitiveVal.CreateIntValue(0);
             }
-            else if (t.TypeRef == "Real")
+            else if (r == "Real")
             {
                 return PrimitiveVal.CreateRealValue(0);
             }
-            else if (t.TypeRef == "Binary")
+            else if (r == "Binary")
             {
                 return PrimitiveVal.CreateBinaryValue(new List<Byte> { });
             }
-            else if (t.TypeRef == "Int64")
+            else if (r == "Int64")
             {
                 return PrimitiveVal.CreateInt64Value(0);
             }
