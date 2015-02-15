@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2015.02.14.
+//  Version:     2015.02.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -951,11 +951,81 @@ namespace Yuki.DatabaseRegenerator
                 SchemaOld = bs.Read<Schema>(ms);
 
                 RelationSchemaDiffVerifier.Verifiy(SchemaOld, SchemaNew, l);
+                var orvs = new RelationValueSerializer(SchemaOld);
+                var nrvs = new RelationValueSerializer(SchemaNew);
+
+                var OldEntities = SchemaOld.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
+                var OldEntityNameToIndex = OldEntities.Select((e, i) => new KeyValuePair<String, int>(e.Name, i)).ToDictionary(p => p.Key, p => p.Value);
+                var NewEntities = SchemaNew.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
+                var dt = new RelationSchemaDiffTranslator(SchemaOld, SchemaNew, l);
 
                 var Dir = FileNameHandling.GetFileDirectory(MemoryDatabaseFileOutput);
                 if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
 
-                //TODO
+                var OldEntityCount = OldEntities.Count;
+
+                var Positions = new Dictionary<int, Int64>();
+                var CurrentEntityTableIndex = 0;
+                var CurrentCount = 0;
+                if (OldEntityCount > 0)
+                {
+                    Positions.Add(0, ms.Position);
+                    CurrentCount = ms.ReadInt32();
+                }
+                Action<int> AdvanceTo = EntityTableIndex =>
+                {
+                    if (Positions.ContainsKey(EntityTableIndex))
+                    {
+                        ms.Position = Positions[EntityTableIndex];
+                        CurrentEntityTableIndex = EntityTableIndex;
+                        CurrentCount = ms.ReadInt32();
+                    }
+                    else
+                    {
+                        if ((EntityTableIndex < 0) || (EntityTableIndex >= OldEntityCount)) { throw new InvalidOperationException(); }
+                        while (CurrentEntityTableIndex < EntityTableIndex)
+                        {
+                            var rr = orvs.GetRowReader(OldEntities[CurrentEntityTableIndex]);
+                            while (CurrentCount > 0)
+                            {
+                                rr(ms);
+                                CurrentCount -= 1;
+                            }
+                            CurrentEntityTableIndex += 1;
+                            if (CurrentEntityTableIndex >= OldEntityCount) { break; }
+                            Positions.Add(CurrentEntityTableIndex, ms.Position);
+                            CurrentCount = ms.ReadInt32();
+                        }
+                    }
+                };
+
+                using (var mso = Streams.CreateResizable(MemoryDatabaseFileOutput))
+                {
+                    mso.WriteUInt64(SchemaNew.Hash());
+                    bs.Write(SchemaNew, mso);
+
+                    foreach (var ne in NewEntities)
+                    {
+                        var oOldEntityName = dt.GetOldEntityName(ne.Name);
+                        if (oOldEntityName.OnNotHasValue)
+                        {
+                            mso.WriteInt32(0);
+                            continue;
+                        }
+                        var Index = OldEntityNameToIndex[oOldEntityName.HasValue];
+                        var rr = orvs.GetRowReader(OldEntities[Index]);
+                        var rw = nrvs.GetRowWriter(ne);
+                        var t = dt.GetTranslator(ne.Name);
+                        AdvanceTo(Index);
+
+                        mso.WriteInt32(CurrentCount);
+                        while (CurrentCount > 0)
+                        {
+                            rw(mso, t(rr(ms)));
+                            CurrentCount -= 1;
+                        }
+                    }
+                }
             }
         }
     }
