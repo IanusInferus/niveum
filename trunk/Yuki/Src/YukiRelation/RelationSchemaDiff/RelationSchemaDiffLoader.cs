@@ -254,6 +254,17 @@ namespace Yuki.RelationSchemaDiff
                             l.Add(nm.MakeLeafNode(v.SingleLineLiteral, pr.Positions[v]));
                         }
                     }
+                    else if (v.OnPreprocessDirective && (v.PreprocessDirective == "Empty"))
+                    {
+                        if (cl != null)
+                        {
+                            cl.Add(nm.MakeEmptyNode(pr.Positions[v]));
+                        }
+                        else
+                        {
+                            l.Add(nm.MakeEmptyNode(pr.Positions[v]));
+                        }
+                    }
                     else
                     {
                         throw new Syntax.InvalidTokenException("UnknownToken", new Syntax.FileTextRange { Text = Text, Range = Range }, Text.GetTextInLine(Range));
@@ -339,7 +350,6 @@ namespace Yuki.RelationSchemaDiff
                             throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                         }
                         var FieldName = GetLeafNodeValue(l[3], nm, "InvalidIdentifier");
-                        var Literal = l[4];
                         if (!EntityFields.ContainsKey(EntityName))
                         {
                             throw new Syntax.InvalidSyntaxException("EntityNotExist", new Syntax.FileTextRange { Text = Text, Range = LineRange });
@@ -349,8 +359,50 @@ namespace Yuki.RelationSchemaDiff
                         {
                             throw new Syntax.InvalidSyntaxException("FieldNotExist", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                         }
+                        var Literal = l[4];
+                        Semantics.Node Value;
                         var f = e[FieldName];
-                        if (!f.Type.OnTypeRef)
+                        if (f.Type.OnTypeRef)
+                        {
+                            if (Literal.OnEmpty)
+                            {
+                                throw new Syntax.InvalidSyntaxException("FieldTypeIncompatible", new Syntax.FileTextRange { Text = Text, Range = LineRange });
+                            }
+                            else
+                            {
+                                Value = MakeStemNode("HasValue", MakeStemNode(f.Type.TypeRef.Value + "Value", Literal));
+                            }
+                        }
+                        else if (f.Type.OnOptional)
+                        {
+                            if (Literal.OnEmpty)
+                            {
+                                Value = MakeStemNode("NotHasValue", MakeEmptyNode());
+                            }
+                            else
+                            {
+                                Value = MakeStemNode("HasValue", MakeStemNode(f.Type.Optional.Value + "Value", Literal));
+                            }
+                        }
+                        else if (f.Type.OnList)
+                        {
+                            if (f.Type.List.Value == "Byte")
+                            {
+                                if (Literal.OnEmpty)
+                                {
+                                    throw new Syntax.InvalidSyntaxException("FieldTypeIncompatible", new Syntax.FileTextRange { Text = Text, Range = LineRange });
+                                }
+                                else
+                                {
+                                    Value = MakeStemNode("HasValue", MakeStemNode("BinaryValue", Literal));
+                                }
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException();
+                            }
+                        }
+                        else
                         {
                             throw new Syntax.InvalidSyntaxException("FieldTypeIncompatible", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                         }
@@ -360,7 +412,7 @@ namespace Yuki.RelationSchemaDiff
                                 MakeStemNode("EntityName", MakeLeafNode(EntityName)),
                                 MakeStemNode("Method", MakeStemNode("Field",
                                     MakeStemNode("FieldName", MakeLeafNode(FieldName)),
-                                    MakeStemNode("Method", MakeStemNode("Create", MakeStemNode(f.Type.TypeRef.Value + "Value", Literal)))
+                                    MakeStemNode("Method", MakeStemNode("Create", Value))
                                 ))
                             )
                         };

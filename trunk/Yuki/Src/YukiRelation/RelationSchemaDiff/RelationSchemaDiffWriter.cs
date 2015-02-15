@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffWriter.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异写入器
-//  Version:     2015.02.13.
+//  Version:     2015.02.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -28,7 +28,7 @@ namespace Yuki.RelationSchemaDiff
             var Lines = new List<Syntax.TextLine>();
             Action<String[]> AddLine = Tokens =>
             {
-                var Text = String.Join(" ", Tokens.Select(t => TreeFormatLiteralWriter.GetLiteral(t, true, false).SingleLine));
+                var Text = String.Join(" ", Tokens.Select(t => t == null ? "$Empty" : TreeFormatLiteralWriter.GetLiteral(t, true, false).SingleLine));
                 Lines.Add(new Syntax.TextLine { Text = Text, Range = new Syntax.TextRange { Start = new Syntax.TextPosition { Row = 1, Column = 1, CharIndex = 0 }, End = new Syntax.TextPosition { Row = 1, Column = 1 + Text.Length, CharIndex = Text.Length } } });
             };
 
@@ -77,6 +77,17 @@ namespace Yuki.RelationSchemaDiff
             TreeFile.WriteRaw(sw, new Syntax.Forest { MultiNodesList = new Syntax.MultiNodes[] { AlterNode } });
         }
 
+        private static String GetPrimitiveValString(Optional<PrimitiveVal> v)
+        {
+            if (v.OnHasValue)
+            {
+                return GetPrimitiveValString(v.HasValue);
+            }
+            else
+            {
+                return null;
+            }
+        }
         private static String GetPrimitiveValString(PrimitiveVal v)
         {
             if (v.OnBooleanValue)
