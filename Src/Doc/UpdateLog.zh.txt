@@ -1,4 +1,8 @@
-﻿2015.02.14
+﻿2015.02.15
+Yuki.Relation:
+增加数据库结构变化描述文件对Optional类型字段的支持。
+
+2015.02.14
 Yuki.Relation, Yuki.DatabaseRegenerator:
 增加数据库结构变化描述文件的验证。
 
