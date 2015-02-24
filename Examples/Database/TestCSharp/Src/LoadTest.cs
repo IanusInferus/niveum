@@ -11,112 +11,32 @@ namespace Database
 {
     class LoadTest
     {
-        public static void TestSaveData(int NumUser, int n, TestService s)
+        public static void TestSaveData(int NumUser, int n, ITestService s)
         {
-            var RetryCount = 0;
-            while (RetryCount < 16)
-            {
-                try
-                {
-                    s.SaveData(n, n);
-                    return;
-                }
-                catch (Npgsql.NpgsqlException ex)
-                {
-                    if ((ex.Code == "40002") || (ex.Code == "40004"))
-                    {
-                        RetryCount += 1;
-                        continue;
-                    }
-                    else
-                    {
-                        throw new AggregateException(ex);
-                    }
-                }
-            }
+            s.SaveData(n, n);
         }
 
-        public static void TestLoadData(int NumUser, int n, TestService s)
+        public static void TestLoadData(int NumUser, int n, ITestService s)
         {
-            var RetryCount = 0;
-            while (RetryCount < 16)
-            {
-                try
-                {
-                    var v = s.LoadData(n);
-                    Trace.Assert(v == n);
-                    return;
-                }
-                catch (Npgsql.NpgsqlException ex)
-                {
-                    if ((ex.Code == "40002") || (ex.Code == "40004"))
-                    {
-                        RetryCount += 1;
-                        continue;
-                    }
-                    else
-                    {
-                        throw new AggregateException(ex);
-                    }
-                }
-            }
+            var v = s.LoadData(n);
+            Trace.Assert(v == n);
         }
 
-        public static void TestSaveAndLoadData(int NumUser, int n, TestService s)
+        public static void TestSaveAndLoadData(int NumUser, int n, ITestService s)
         {
-            var RetryCount = 0;
-            while (RetryCount < 16)
-            {
-                try
-                {
-                    s.SaveData(n, n);
-                    var v = s.LoadData(n);
-                    Trace.Assert(v == n);
-                    return;
-                }
-                catch (Npgsql.NpgsqlException ex)
-                {
-                    if ((ex.Code == "40002") || (ex.Code == "40004"))
-                    {
-                        RetryCount += 1;
-                        continue;
-                    }
-                    else
-                    {
-                        throw new AggregateException(ex);
-                    }
-                }
-            }
+            s.SaveData(n, n);
+            var v = s.LoadData(n);
+            Trace.Assert(v == n);
         }
 
-        public static void TestAddLockData(int NumUser, int n, TestService s)
+        public static void TestAddLockData(int NumUser, int n, ITestService s)
         {
-            var RetryCount = 0;
-            while (RetryCount < 16)
-            {
-                try
-                {
-                    s.AddLockData(1);
-                    return;
-                }
-                catch (Npgsql.NpgsqlException ex)
-                {
-                    if ((ex.Code == "40002") || (ex.Code == "40004"))
-                    {
-                        RetryCount += 1;
-                        continue;
-                    }
-                    else
-                    {
-                        throw new AggregateException(ex);
-                    }
-                }
-            }
+            s.AddLockData(1);
         }
 
         private static int SumValue;
         private static Object Lockee = new Object();
-        public static void TestAddDeleteLockData(int NumUser, int n, TestService s)
+        public static void TestAddDeleteLockData(int NumUser, int n, ITestService s)
         {
             //如果在不使用CascadeLock和TransactionLock的情况下
             //(将Program.cs中的
@@ -134,43 +54,25 @@ namespace Database
             //MySQL 5.7.2 死锁
             //PostgreSQL 9.1 异常
 
-            var RetryCount = 0;
-            while (RetryCount < 16)
+            //必须使用锁或者重试
+
+            if (n % 2 == 0)
             {
-                try
+                s.AddLockData(1);
+            }
+            else
+            {
+                var v = s.DeleteLockData();
+                lock (Lockee)
                 {
-                    if (n % 2 == 0)
-                    {
-                        s.AddLockData(1);
-                    }
-                    else
-                    {
-                        var v = s.DeleteLockData();
-                        lock (Lockee)
-                        {
-                            SumValue += v + 1;
-                        }
-                    }
-                    return;
-                }
-                catch (Npgsql.NpgsqlException ex)
-                {
-                    if ((ex.Code == "40002") || (ex.Code == "40004"))
-                    {
-                        RetryCount += 1;
-                        continue;
-                    }
-                    else
-                    {
-                        throw new AggregateException(ex);
-                    }
+                    SumValue += v + 1;
                 }
             }
         }
 
-        public static void TestForNumUser(DataAccessManager dam, int NumUser, String Title, Action<int, int, TestService> Test)
+        public static void TestForNumUser(DataAccessManager dam, int NumUser, String Title, Action<int, int, ITestService> Test)
         {
-            ThreadLocal<TestService> t = new ThreadLocal<TestService>(() => new TestService(dam));
+            ThreadLocal<ITestService> t = new ThreadLocal<ITestService>(() => new RetryWrapper(new TestService(dam), dam.GetIsRetryable(), 16));
 
             var Time = Environment.TickCount;
             Parallel.For(0, NumUser, i => Test(NumUser, i, t.Value));
@@ -182,7 +84,7 @@ namespace Database
 
         public static int DoTest(DataAccessManager dam)
         {
-            var t = new TestService(dam);
+            var t = new RetryWrapper(new TestService(dam), dam.GetIsRetryable(), 16);
 
             TestForNumUser(dam, 64, "TestSaveData", TestSaveData);
             TestForNumUser(dam, 64, "TestLoadData", TestLoadData);
