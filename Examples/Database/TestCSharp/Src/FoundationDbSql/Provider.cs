@@ -24,10 +24,8 @@ namespace Database.FoundationDbSql
                 if (ex is Npgsql.NpgsqlException)
                 {
                     var x = (Npgsql.NpgsqlException)(ex);
-                    if ((x.Code == "40002") || (x.Code == "40004"))
-                    {
-                        return true;
-                    }
+                    if (x.Code == "40002") { return true; }
+                    if (x.Code == "40004") { return true; }
                 }
                 return false;
             };

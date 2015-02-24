@@ -70,9 +70,21 @@ namespace Database
             }
         }
 
+        private static ITestService CreateTestService(DataAccessManager dam)
+        {
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                return new TestService(dam);
+            }
+            else
+            {
+                return new RetryWrapper(new TestService(dam), dam.GetIsRetryable(), 16);
+            }
+        }
+
         public static void TestForNumUser(DataAccessManager dam, int NumUser, String Title, Action<int, int, ITestService> Test)
         {
-            ThreadLocal<ITestService> t = new ThreadLocal<ITestService>(() => new RetryWrapper(new TestService(dam), dam.GetIsRetryable(), 16));
+            ThreadLocal<ITestService> t = new ThreadLocal<ITestService>(() => CreateTestService(dam));
 
             var Time = Environment.TickCount;
             Parallel.For(0, NumUser, i => Test(NumUser, i, t.Value));
@@ -84,7 +96,7 @@ namespace Database
 
         public static int DoTest(DataAccessManager dam)
         {
-            var t = new RetryWrapper(new TestService(dam), dam.GetIsRetryable(), 16);
+            var t = CreateTestService(dam);
 
             TestForNumUser(dam, 64, "TestSaveData", TestSaveData);
             TestForNumUser(dam, 64, "TestLoadData", TestLoadData);
