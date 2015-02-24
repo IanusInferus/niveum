@@ -30,6 +30,7 @@ RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2csfdbsql:TestCSharp\Src\FoundationDbSql\FoundationDbSqlDataAccess.cs,Database.Database,Database.FoundationDbSql
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cskrs:TestCSharp\Src\Krustallos\KrustallosDataAccess.cs,Database.Database,Database.Krustallos
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cskrsmysql:TestCSharp\Src\KrustallosMySql\KrustallosMySqlDataAccess.cs,Database.Database,Database.Krustallos,Database.MySql,Database.KrustallosMySql
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cskrsmysqlloader:TestCSharp\Src\KrustallosMySql\KrustallosMySqlDataLoader.cs,Database.Database,Database.Krustallos,Database.MySql
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cscw:TestCSharp\Src\CountedDataAccessWrapper.cs,Database.Database,Database.Database
 
 :: C++2011 MySQL
