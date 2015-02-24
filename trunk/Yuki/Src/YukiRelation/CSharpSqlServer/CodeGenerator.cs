@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# SQL Server代码生成器
-//  Version:     2014.10.11.
+//  Version:     2015.02.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -294,7 +294,7 @@ namespace Yuki.RelationSchema.CSharpSqlServer
                 {
                     String[] Template;
                     var IdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).ToArray();
-                    if (IdentityColumns.Length != 0)
+                    if (q.Verb.OnInsert && (IdentityColumns.Length != 0))
                     {
                         if (q.Numeral.OnOne)
                         {
@@ -349,7 +349,7 @@ namespace Yuki.RelationSchema.CSharpSqlServer
                     {
                         throw new InvalidOperationException();
                     }
-                    if (IdentityColumns.Length != 0)
+                    if (q.Verb.OnInsert && (IdentityColumns.Length != 0))
                     {
                         var ResultSets = new List<String>();
                         foreach (var c in IdentityColumns)

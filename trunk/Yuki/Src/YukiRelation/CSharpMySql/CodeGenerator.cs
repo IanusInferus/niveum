@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# MySQL代码生成器
-//  Version:     2014.12.06.
+//  Version:     2015.02.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -286,7 +286,7 @@ namespace Yuki.RelationSchema.CSharpMySql
                 {
                     String[] Template;
                     var IdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).ToArray();
-                    if (IdentityColumns.Length != 0)
+                    if (q.Verb.OnInsert && (IdentityColumns.Length != 0))
                     {
                         if (q.Numeral.OnOne)
                         {
@@ -301,42 +301,38 @@ namespace Yuki.RelationSchema.CSharpMySql
                             throw new InvalidOperationException();
                         }
                     }
-                    else
+                    else if (q.Verb.OnUpsert)
                     {
-                        if (q.Verb.OnUpsert)
+                        if (q.Numeral.OnOne)
                         {
-                            if (q.Numeral.OnOne)
-                            {
-                                Template = GetTemplate("Upsert_One");
-                            }
-                            else if (q.Numeral.OnMany)
-                            {
-                                Template = GetTemplate("Upsert_Many");
-                            }
-                            else
-                            {
-                                throw new InvalidOperationException();
-                            }
+                            Template = GetTemplate("Upsert_One");
+                        }
+                        else if (q.Numeral.OnMany)
+                        {
+                            Template = GetTemplate("Upsert_Many");
                         }
                         else
                         {
-                            if (q.Numeral.OnOptional)
-                            {
-                                if (q.Verb.OnUpsert) { throw new InvalidOperationException(); }
-                                Template = GetTemplate("InsertUpdate_Optional");
-                            }
-                            else if (q.Numeral.OnOne)
-                            {
-                                Template = GetTemplate("InsertUpdate_One");
-                            }
-                            else if (q.Numeral.OnMany)
-                            {
-                                Template = GetTemplate("InsertUpdate_Many");
-                            }
-                            else
-                            {
-                                throw new InvalidOperationException();
-                            }
+                            throw new InvalidOperationException();
+                        }
+                    }
+                    else
+                    {
+                        if (q.Numeral.OnOptional)
+                        {
+                            Template = GetTemplate("InsertUpdate_Optional");
+                        }
+                        else if (q.Numeral.OnOne)
+                        {
+                            Template = GetTemplate("InsertUpdate_One");
+                        }
+                        else if (q.Numeral.OnMany)
+                        {
+                            Template = GetTemplate("InsertUpdate_Many");
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException();
                         }
                     }
                     var SQL = GetQueryString(q);
@@ -359,7 +355,7 @@ namespace Yuki.RelationSchema.CSharpMySql
                     {
                         throw new InvalidOperationException();
                     }
-                    if (IdentityColumns.Length != 0)
+                    if (q.Verb.OnInsert && (IdentityColumns.Length != 0))
                     {
                         var ResultSets = new List<String>();
                         foreach (var c in IdentityColumns)

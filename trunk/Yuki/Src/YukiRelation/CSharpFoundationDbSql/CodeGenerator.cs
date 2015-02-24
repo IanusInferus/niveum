@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# FoundationDB SQL代码生成器
-//  Version:     2015.02.05.
+//  Version:     2015.02.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -174,25 +174,17 @@ namespace Yuki.RelationSchema.CSharpFoundationDbSql
 
                         if (q.Verb.OnUpsert)
                         {
-                            l.Add(@"UPDATE ""{0}""".Formats(e.CollectionName.ToLowerInvariant()));
-                            l.Add("SET {0}".Formats(String.Join(", ", NonPrimaryKeyColumns.Select(c => @"""{0}"" = @{0}".Formats(c.ToLowerInvariant())).ToArray())));
+                            l.Add("DELETE");
+                            l.Add(@"FROM ""{0}""".Formats(e.CollectionName.ToLowerInvariant()));
                             l.Add("WHERE {0};".Formats(String.Join(" AND ", PrimaryKeyColumns.Select(c => @"""{0}"" = @{0}".Formats(c.ToLowerInvariant())).ToArray())));
                         }
                         l.Add("INSERT");
                         l.Add(@"INTO ""{0}""".Formats(e.CollectionName.ToLowerInvariant()));
                         l.Add("({0})".Formats(String.Join(", ", NonIdentityColumns.Select(c => @"""{0}""".Formats(c.ToLowerInvariant())).ToArray())));
-                        if (q.Verb.OnUpsert)
+                        l.Add("VALUES ({0})".Formats(String.Join(", ", NonIdentityColumns.Select(c => "@{0}".Formats(c.ToLowerInvariant())).ToArray())));
+                        if (IdentityColumns.Length != 0)
                         {
-                            l.Add("SELECT {0}".Formats(String.Join(", ", NonIdentityColumns.Select(c => "@{0}".Formats(c.ToLowerInvariant())).ToArray())));
-                            l.Add(@"WHERE NOT EXISTS (SELECT 1 FROM ""{0}"" WHERE {1})".Formats(e.CollectionName.ToLowerInvariant(), String.Join(" AND ", PrimaryKeyColumns.Select(c => @"""{0}"" = @{0}".Formats(c.ToLowerInvariant())))));
-                        }
-                        else
-                        {
-                            l.Add("VALUES ({0})".Formats(String.Join(", ", NonIdentityColumns.Select(c => "@{0}".Formats(c.ToLowerInvariant())).ToArray())));
-                            if (IdentityColumns.Length != 0)
-                            {
-                                l.Add(@"RETURNING ""{0}""".Formats(IdentityColumns.Single().ToLowerInvariant()));
-                            }
+                            l.Add(@"RETURNING ""{0}""".Formats(IdentityColumns.Single().ToLowerInvariant()));
                         }
                     }
                     else if (q.Verb.OnUpdate)
@@ -294,7 +286,7 @@ namespace Yuki.RelationSchema.CSharpFoundationDbSql
                 {
                     String[] Template;
                     var IdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).ToArray();
-                    if (IdentityColumns.Length != 0)
+                    if (q.Verb.OnInsert && (IdentityColumns.Length != 0))
                     {
                         if (q.Numeral.OnOne)
                         {
@@ -309,20 +301,34 @@ namespace Yuki.RelationSchema.CSharpFoundationDbSql
                             throw new InvalidOperationException();
                         }
                     }
+                    else if (q.Verb.OnUpsert)
+                    {
+                        if (q.Numeral.OnOne)
+                        {
+                            Template = GetTemplate("Upsert_One");
+                        }
+                        else if (q.Numeral.OnMany)
+                        {
+                            Template = GetTemplate("Upsert_Many");
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException();
+                        }
+                    }
                     else
                     {
                         if (q.Numeral.OnOptional)
                         {
-                            if (q.Verb.OnUpsert) { throw new InvalidOperationException(); }
                             Template = GetTemplate("InsertUpdate_Optional");
                         }
                         else if (q.Numeral.OnOne)
                         {
-                            Template = GetTemplate("InsertUpdateUpsert_One");
+                            Template = GetTemplate("InsertUpdate_One");
                         }
                         else if (q.Numeral.OnMany)
                         {
-                            Template = GetTemplate("InsertUpdateUpsert_Many");
+                            Template = GetTemplate("InsertUpdate_Many");
                         }
                         else
                         {
@@ -349,7 +355,7 @@ namespace Yuki.RelationSchema.CSharpFoundationDbSql
                     {
                         throw new InvalidOperationException();
                     }
-                    if (IdentityColumns.Length != 0)
+                    if (q.Verb.OnInsert && (IdentityColumns.Length != 0))
                     {
                         var ResultSets = new List<String>();
                         foreach (var c in IdentityColumns)
