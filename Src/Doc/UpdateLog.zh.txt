@@ -4,6 +4,7 @@ Yuki.Relation:
 修改C# FoundationDB SQL代码生成中的Upsert的SQL语句。
 Examples:
 修正数据库示例中的编译错误，将重试逻辑放入单独的包装器中。
+增加数据库示例MySQL的重试逻辑。
 
 2015.02.15
 Yuki.Relation:
