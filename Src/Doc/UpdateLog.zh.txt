@@ -1,4 +1,11 @@
-﻿2015.02.15
+﻿2015.02.24
+Yuki.Relation:
+修正C#数据库代码生成中实体中带有Identity时Update生成为Insert语句内容的问题。
+修改C# FoundationDB SQL代码生成中的Upsert的SQL语句。
+Examples:
+修正数据库示例中的编译错误，将重试逻辑放入单独的包装器中。
+
+2015.02.15
 Yuki.Relation:
 增加数据库结构变化描述文件对Optional类型字段的支持。
 Yuki.Relation, Yuki.DatabaseRegenerator:

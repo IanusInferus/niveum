@@ -573,7 +573,7 @@ ObjectSchemaTemplate
                     cmd.CommandText = @"${SQL}";
                     ${ParameterAdds}
                     var Count = cmd.ExecuteNonQuery();
-                    if (Count != 0 && Count != 1)
+                    if ((Count != 0) && (Count != 1))
                     {
                         throw new InvalidOperationException();
                     }
