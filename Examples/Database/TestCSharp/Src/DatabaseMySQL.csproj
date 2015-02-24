@@ -10,9 +10,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Database</RootNamespace>
     <AssemblyName>DatabaseMySQL</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -52,8 +53,11 @@
     <Compile Include="CountedDataAccessWrapper.cs" />
     <Compile Include="DataAccessManager.cs" />
     <Compile Include="Database.cs" />
+    <Compile Include="ITestService.cs" />
     <Compile Include="LoadTest.cs" />
     <Compile Include="CascadeLock.cs" />
+    <Compile Include="MySql\Provider.cs" />
+    <Compile Include="RetryWrapper.cs" />
     <Compile Include="TransactionLock.cs" />
     <Compile Include="MySql\MySqlDataAccess.cs" />
     <Compile Include="Program.cs" />

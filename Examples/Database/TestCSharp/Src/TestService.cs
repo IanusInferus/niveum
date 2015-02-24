@@ -5,7 +5,7 @@ using DB = Database.Database;
 
 namespace Database
 {
-    public class TestService
+    public class TestService : ITestService
     {
         private DataAccessManager dam;
         public TestService(DataAccessManager dam)
