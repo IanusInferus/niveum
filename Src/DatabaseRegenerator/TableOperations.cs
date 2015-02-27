@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2015.02.09.
+//  Version:     2015.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -138,7 +138,7 @@ namespace Yuki.DatabaseRegenerator
                                             if (!cv.Primitive.OnBooleanValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, k)); }
                                             Value = cv.Primitive.BooleanValue;
                                         }
-                                        var p = cmd.AddPostgreSqlBoolean(String.Format("@{0}", f.Name), Value);
+                                        cmd.AddPostgreSqlBoolean(String.Format("@{0}", f.Name), Value);
                                     }
                                     else
                                     {
