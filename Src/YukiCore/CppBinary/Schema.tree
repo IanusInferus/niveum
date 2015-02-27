@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2013.08.30.
+      Version:     2015.02.27.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -33,7 +33,7 @@ ObjectSchemaTemplate
 
                     #include <cstdint>
                     #include <cwchar>
-                    #include <climits>
+                    #include <limits>
                     #include <cstdlib>
                     #include <string>
                     #include <codecvt>
@@ -127,7 +127,8 @@ ObjectSchemaTemplate
                         if (ServerEvent != nullptr) { ServerEvent(L"${CommandName}", 0x${CommandHash}, bas.ReadBytes(bas.GetLength())); }
                     };
         Template
-            Name IBinarySender
+            Name BinarySerializationClient
+            //Parameters: ${Hash}, ${ApplicationCommands}, ${ServerCommands}
             Value
                 $String
                     class IBinarySender
@@ -137,11 +138,6 @@ ObjectSchemaTemplate
 
                         virtual ~IBinarySender() {}
                     };
-        Template
-            Name BinarySerializationClient
-            //Parameters: ${Hash}, ${ApplicationCommands}, ${ServerCommands}
-            Value
-                $String
                     class BinarySerializationClient /* final */
                     {
                     private:
@@ -196,8 +192,8 @@ ObjectSchemaTemplate
                     private:
                         std::string w2s(std::wstring ws)
                         {
-                            std::size_t n = std::wcstombs(NULL, ws.c_str(), INT_MAX);
-                            if (static_cast<int>(n) < 0) { throw std::logic_error("InvalidOperationException"); }
+                            std::size_t n = std::wcstombs(nullptr, ws.c_str(), std::numeric_limits<std::size_t>::max());
+                            if (n == static_cast<std::size_t>(-1)) { throw std::logic_error("InvalidOperationException"); }
                             std::string s(n, 0);
                             if (n == 0) { return s; }
                             std::wcstombs(&s[0], ws.c_str(), n);

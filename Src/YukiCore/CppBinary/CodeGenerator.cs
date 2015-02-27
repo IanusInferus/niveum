@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2015.02.06.
+//  Version:     2015.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,9 +19,9 @@ namespace Yuki.ObjectSchema.CppBinary
 {
     public static class CodeGenerator
     {
-        public static String CompileToCppBinary(this Schema Schema, String NamespaceName)
+        public static String CompileToCppBinary(this Schema Schema, String NamespaceName, Boolean WithServer = true, Boolean WithClient = true)
         {
-            Writer w = new Writer(Schema, NamespaceName);
+            Writer w = new Writer(Schema, NamespaceName, WithServer, WithClient);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -40,6 +40,8 @@ namespace Yuki.ObjectSchema.CppBinary
             private ISchemaClosureGenerator SchemaClosureGenerator;
             private String NamespaceName;
             private UInt64 Hash;
+            private Boolean WithServer;
+            private Boolean WithClient;
 
             static Writer()
             {
@@ -49,12 +51,14 @@ namespace Yuki.ObjectSchema.CppBinary
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
-            public Writer(Schema Schema, String NamespaceName)
+            public Writer(Schema Schema, String NamespaceName, Boolean WithServer = true, Boolean WithClient = true)
             {
                 this.Schema = Schema;
                 this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.NamespaceName = NamespaceName;
                 this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
+                this.WithServer = WithServer;
+                this.WithClient = WithClient;
 
                 InnerWriter = new Cpp.Common.CodeGenerator.Writer(Schema, NamespaceName);
 
@@ -511,12 +515,16 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     var ca = cl.ToArray();
 
-                    l.AddRange(GetBinarySerializationServer(ca));
-                    l.Add("");
-                    l.AddRange(GetTemplate("IBinarySender"));
-                    l.Add("");
-                    l.AddRange(GetBinarySerializationClient(ca));
-                    l.Add("");
+                    if (WithServer)
+                    {
+                        l.AddRange(GetBinarySerializationServer(ca));
+                        l.Add("");
+                    }
+                    if (WithClient)
+                    {
+                        l.AddRange(GetBinarySerializationClient(ca));
+                        l.Add("");
+                    }
                 }
 
                 if (l.Count > 0)

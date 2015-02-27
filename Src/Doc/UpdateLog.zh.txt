@@ -1,4 +1,8 @@
-﻿2015.02.24
+﻿2015.02.27
+Yuki.Core, Yuki.SchemaManipulator:
+修改C++二进制代码生成，使得通讯的服务器代码和客户端代码可以单独选择是否生成。
+
+2015.02.24
 Yuki.Relation:
 修正C#数据库代码生成中实体中带有Identity时Update生成为Insert语句内容的问题。
 修改C# FoundationDB SQL代码生成中的Upsert的SQL语句。
