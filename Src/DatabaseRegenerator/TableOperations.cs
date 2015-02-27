@@ -48,7 +48,6 @@ namespace Yuki.DatabaseRegenerator
             }
 
             var Meta = EntityMetas[t.Key];
-            var Name = Meta.Name;
             var CollectionName = Meta.CollectionName;
             var Values = t.Value.Rows;
             var Columns = Meta.Fields.Where(f => f.Attribute.OnColumn).ToArray();
