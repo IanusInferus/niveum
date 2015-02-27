@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2015.02.10.
+//  Version:     2015.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -396,11 +396,15 @@ namespace Yuki.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        ObjectSchemaToCppBinaryCode(args[0], "");
+                        ObjectSchemaToCppBinaryCode(args[0], "", true, true);
                     }
                     else if (args.Length == 2)
                     {
-                        ObjectSchemaToCppBinaryCode(args[0], args[1]);
+                        ObjectSchemaToCppBinaryCode(args[0], args[1], true, true);
+                    }
+                    else if (args.Length == 4)
+                    {
+                        ObjectSchemaToCppBinaryCode(args[0], args[1], Boolean.Parse(args[2]), Boolean.Parse(args[3]));
                     }
                     else
                     {
@@ -560,7 +564,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"生成C++2011类型");
             Console.WriteLine(@"/t2cpp:<CppCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C++2011二进制通讯类型");
-            Console.WriteLine(@"/t2cppb:<CppCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"/t2cppb:<CppCodePath>[,<NamespaceName>[,<WithServer=true>,<WithClient=true>]]");
             Console.WriteLine(@"生成ActionScript类型");
             Console.WriteLine(@"/t2as:<AsCodeDir>,<PackageName>");
             Console.WriteLine(@"生成ActionScript二进制通讯类型");
@@ -588,6 +592,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"CsCodePath C#代码文件路径。");
             Console.WriteLine(@"WithFirefly 是否使用Firefly库。");
             Console.WriteLine(@"CppCodePath C++代码文件路径。");
+            Console.WriteLine(@"WithServer 是否生成服务器代码。");
+            Console.WriteLine(@"WithClient 是否生成客户端代码。");
             Console.WriteLine(@"JavaCodePath Java代码文件路径。");
             Console.WriteLine(@"AsCodeDir ActionScript代码文件夹路径。");
             Console.WriteLine(@"HaxeCodePath Haxe代码文件路径。");
@@ -855,10 +861,10 @@ namespace Yuki.SchemaManipulator
             Txt.WriteFile(CppCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCppBinaryCode(String CppCodePath, String NamespaceName)
+        public static void ObjectSchemaToCppBinaryCode(String CppCodePath, String NamespaceName, Boolean WithServer, Boolean WithClient)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCppBinary(NamespaceName);
+            var Compiled = ObjectSchema.CompileToCppBinary(NamespaceName, WithServer, WithClient);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);
