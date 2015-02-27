@@ -1,6 +1,8 @@
 ﻿2015.02.27
 Yuki.Core, Yuki.SchemaManipulator:
 修改C++二进制代码生成，使得通讯的服务器代码和客户端代码可以单独选择是否生成。
+Yuki.DatabaseRegenerator:
+修正编译警告。
 
 2015.02.24
 Yuki.Relation:

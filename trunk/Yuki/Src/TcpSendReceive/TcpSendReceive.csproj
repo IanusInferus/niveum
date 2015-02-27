@@ -74,6 +74,7 @@
     <Compile Include="BaseSystem\ThreadLocalRandom.cs" />
     <Compile Include="BaseSystem\Times.cs" />
     <Compile Include="Configuration.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
