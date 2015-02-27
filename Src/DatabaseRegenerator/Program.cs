@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2015.02.15.
+//  Version:     2015.02.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -451,21 +451,14 @@ namespace Yuki.DatabaseRegenerator
             {
                 var RegenSqls = Regex.Split(s.CompileToTSql(DatabaseName, true), @"\r\nGO(\r\n)+", RegexOptions.ExplicitCapture);
                 c.Open();
-                try
+                foreach (var Sql in RegenSqls)
                 {
-                    foreach (var Sql in RegenSqls)
-                    {
-                        if (Sql == "") { continue; }
+                    if (Sql == "") { continue; }
 
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
                 }
             }
 
@@ -478,57 +471,50 @@ namespace Yuki.DatabaseRegenerator
             {
                 c.Open();
                 c.ChangeDatabase(DatabaseName);
-                try
+                using (var b = c.BeginTransaction())
                 {
-                    using (var b = c.BeginTransaction())
+                    var Success = false;
+                    try
                     {
-                        var Success = false;
-                        try
+                        foreach (var t in EntityMetas)
                         {
-                            foreach (var t in EntityMetas)
-                            {
-                                var CollectionName = t.Value.CollectionName;
+                            var CollectionName = t.Value.CollectionName;
 
-                                {
-                                    IDbCommand cmd = c.CreateCommand();
-                                    cmd.Transaction = b;
-                                    cmd.CommandText = String.Format("ALTER TABLE [{0}] NOCHECK CONSTRAINT ALL", CollectionName);
-                                    cmd.CommandType = CommandType.Text;
-                                    cmd.ExecuteNonQuery();
-                                }
-                            }
-                            foreach (var t in Tables)
                             {
-                                TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.SqlServer);
+                                IDbCommand cmd = c.CreateCommand();
+                                cmd.Transaction = b;
+                                cmd.CommandText = String.Format("ALTER TABLE [{0}] NOCHECK CONSTRAINT ALL", CollectionName);
+                                cmd.CommandType = CommandType.Text;
+                                cmd.ExecuteNonQuery();
                             }
-                            foreach (var t in EntityMetas)
-                            {
-                                var CollectionName = t.Value.CollectionName;
-
-                                {
-                                    IDbCommand cmd = c.CreateCommand();
-                                    cmd.Transaction = b;
-                                    cmd.CommandText = String.Format("ALTER TABLE [{0}] WITH CHECK CHECK CONSTRAINT ALL", CollectionName);
-                                    cmd.CommandType = CommandType.Text;
-                                    cmd.ExecuteNonQuery();
-                                }
-                            }
-
-                            b.Commit();
-                            Success = true;
                         }
-                        finally
+                        foreach (var t in Tables)
                         {
-                            if (!Success)
+                            TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.SqlServer);
+                        }
+                        foreach (var t in EntityMetas)
+                        {
+                            var CollectionName = t.Value.CollectionName;
+
                             {
-                                b.Rollback();
+                                IDbCommand cmd = c.CreateCommand();
+                                cmd.Transaction = b;
+                                cmd.CommandText = String.Format("ALTER TABLE [{0}] WITH CHECK CHECK CONSTRAINT ALL", CollectionName);
+                                cmd.CommandType = CommandType.Text;
+                                cmd.ExecuteNonQuery();
                             }
+                        }
+
+                        b.Commit();
+                        Success = true;
+                    }
+                    finally
+                    {
+                        if (!Success)
+                        {
+                            b.Rollback();
                         }
                     }
-                }
-                finally
-                {
-                    c.Close();
                 }
             }
         }
@@ -548,42 +534,28 @@ namespace Yuki.DatabaseRegenerator
             using (var c = cf(ConnectionString))
             {
                 c.Open();
-                try
+                foreach (var Sql in CreateDatabases)
                 {
-                    foreach (var Sql in CreateDatabases)
-                    {
-                        if (Sql == "") { continue; }
+                    if (Sql == "") { continue; }
 
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
                 }
             }
             using (var c = cf(ConnectionString))
             {
                 c.Open();
                 c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                try
+                foreach (var Sql in Creates)
                 {
-                    foreach (var Sql in Creates)
-                    {
-                        if (Sql == "") { continue; }
+                    if (Sql == "") { continue; }
 
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
                 }
             }
 
@@ -596,33 +568,26 @@ namespace Yuki.DatabaseRegenerator
             {
                 c.Open();
                 c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                try
+                using (var b = c.BeginTransaction())
                 {
-                    using (var b = c.BeginTransaction())
+                    var Success = false;
+                    try
                     {
-                        var Success = false;
-                        try
+                        foreach (var t in Tables)
                         {
-                            foreach (var t in Tables)
-                            {
-                                TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.PostgreSQL);
-                            }
-
-                            b.Commit();
-                            Success = true;
+                            TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.PostgreSQL);
                         }
-                        finally
+
+                        b.Commit();
+                        Success = true;
+                    }
+                    finally
+                    {
+                        if (!Success)
                         {
-                            if (!Success)
-                            {
-                                b.Rollback();
-                            }
+                            b.Rollback();
                         }
                     }
-                }
-                finally
-                {
-                    c.Close();
                 }
             }
 
@@ -630,21 +595,14 @@ namespace Yuki.DatabaseRegenerator
             {
                 c.Open();
                 c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                try
+                foreach (var Sql in Alters)
                 {
-                    foreach (var Sql in Alters)
-                    {
-                        if (Sql == "") { continue; }
+                    if (Sql == "") { continue; }
 
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
                 }
             }
         }
@@ -662,21 +620,14 @@ namespace Yuki.DatabaseRegenerator
             using (var c = cf(ConnectionString))
             {
                 c.Open();
-                try
+                foreach (var Sql in Creates)
                 {
-                    foreach (var Sql in Creates)
-                    {
-                        if (Sql == "") { continue; }
+                    if (Sql == "") { continue; }
 
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
                 }
             }
 
@@ -689,33 +640,26 @@ namespace Yuki.DatabaseRegenerator
             {
                 c.Open();
                 c.ChangeDatabase(DatabaseName);
-                try
+                using (var b = c.BeginTransaction())
                 {
-                    using (var b = c.BeginTransaction())
+                    var Success = false;
+                    try
                     {
-                        var Success = false;
-                        try
+                        foreach (var t in Tables)
                         {
-                            foreach (var t in Tables)
-                            {
-                                TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.MySQL);
-                            }
-
-                            b.Commit();
-                            Success = true;
+                            TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.MySQL);
                         }
-                        finally
+
+                        b.Commit();
+                        Success = true;
+                    }
+                    finally
+                    {
+                        if (!Success)
                         {
-                            if (!Success)
-                            {
-                                b.Rollback();
-                            }
+                            b.Rollback();
                         }
                     }
-                }
-                finally
-                {
-                    c.Close();
                 }
             }
 
@@ -723,21 +667,14 @@ namespace Yuki.DatabaseRegenerator
             {
                 c.Open();
                 c.ChangeDatabase(DatabaseName);
-                try
+                foreach (var Sql in Alters)
                 {
-                    foreach (var Sql in Alters)
-                    {
-                        if (Sql == "") { continue; }
+                    if (Sql == "") { continue; }
 
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
                 }
             }
         }
@@ -757,42 +694,28 @@ namespace Yuki.DatabaseRegenerator
             using (var c = cf(ConnectionString))
             {
                 c.Open();
-                try
+                foreach (var Sql in CreateDatabases)
                 {
-                    foreach (var Sql in CreateDatabases)
-                    {
-                        if (Sql == "") { continue; }
+                    if (Sql == "") { continue; }
 
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
                 }
             }
             using (var c = cf(ConnectionString))
             {
                 c.Open();
                 c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                try
+                foreach (var Sql in Creates)
                 {
-                    foreach (var Sql in Creates)
-                    {
-                        if (Sql == "") { continue; }
+                    if (Sql == "") { continue; }
 
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
                 }
             }
 
@@ -805,39 +728,32 @@ namespace Yuki.DatabaseRegenerator
             {
                 c.Open();
                 c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                try
+                foreach (var t in Tables)
                 {
-                    foreach (var t in Tables)
+                    var PartitionSize = 1000;
+                    var NumPartition = (t.Value.Rows.Count + PartitionSize - 1) / PartitionSize;
+                    for (int k = 0; k < NumPartition; k += 1)
                     {
-                        var PartitionSize = 1000;
-                        var NumPartition = (t.Value.Rows.Count + PartitionSize - 1) / PartitionSize;
-                        for (int k = 0; k < NumPartition; k += 1)
+                        var p = new KeyValuePair<String, TableVal>(t.Key, new TableVal { Rows = t.Value.Rows.Skip(k * PartitionSize).Take(PartitionSize).ToList() });
+                        using (var b = c.BeginTransaction())
                         {
-                            var p = new KeyValuePair<String, TableVal>(t.Key, new TableVal { Rows = t.Value.Rows.Skip(k * PartitionSize).Take(PartitionSize).ToList() });
-                            using (var b = c.BeginTransaction())
+                            var Success = false;
+                            try
                             {
-                                var Success = false;
-                                try
-                                {
-                                    TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, p, DatabaseType.FoundationDBSQL);
+                                TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, p, DatabaseType.FoundationDBSQL);
 
-                                    b.Commit();
-                                    Success = true;
-                                }
-                                finally
+                                b.Commit();
+                                Success = true;
+                            }
+                            finally
+                            {
+                                if (!Success)
                                 {
-                                    if (!Success)
-                                    {
-                                        b.Rollback();
-                                    }
+                                    b.Rollback();
                                 }
                             }
                         }
                     }
-                }
-                finally
-                {
-                    c.Close();
                 }
             }
 
@@ -845,21 +761,14 @@ namespace Yuki.DatabaseRegenerator
             {
                 c.Open();
                 c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                try
+                foreach (var Sql in Alters)
                 {
-                    foreach (var Sql in Alters)
-                    {
-                        if (Sql == "") { continue; }
+                    if (Sql == "") { continue; }
 
-                        var cmd = c.CreateCommand();
-                        cmd.CommandText = Sql;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                finally
-                {
-                    c.Close();
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
                 }
             }
         }
