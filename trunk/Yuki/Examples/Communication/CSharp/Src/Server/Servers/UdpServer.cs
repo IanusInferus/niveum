@@ -5,6 +5,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 using Firefly;
@@ -593,7 +594,25 @@ namespace Server
                             AcceptConsumer = new AsyncConsumer<AcceptingInfo>(QueueUserWorkItem, a => { Accept(a); return true; }, int.MaxValue);
 
                             var Exceptions = new List<Exception>();
+                            var Bindings = new List<IPEndPoint>();
+                            //将所有默认地址换为实际的所有接口地址
                             foreach (var Binding in BindingsValue)
+                            {
+                                if (IPAddress.Equals(Binding.Address, IPAddress.Any) || IPAddress.Equals(Binding.Address, IPAddress.IPv6Any))
+                                {
+                                    foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+                                    {
+                                        foreach (var a in ni.GetIPProperties().UnicastAddresses)
+                                        {
+                                            if (a.Address.AddressFamily == Binding.Address.AddressFamily)
+                                            {
+                                                Bindings.Add(new IPEndPoint(a.Address, Binding.Port));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            foreach (var Binding in Bindings)
                             {
                                 Func<Socket> CreateSocket = () =>
                                 {
