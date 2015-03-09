@@ -1,4 +1,8 @@
-﻿2015.02.27
+﻿2015.03.09
+Examples:
+修正C#通讯示例中UDP监听0.0.0.0且机器有多网卡时，会出现从一个网卡接到包，但从另一个网卡返回的问题。
+
+2015.02.27
 Yuki.Core, Yuki.SchemaManipulator:
 修改C++二进制代码生成，使得通讯的服务器代码和客户端代码可以单独选择是否生成。
 Yuki.DatabaseRegenerator:
