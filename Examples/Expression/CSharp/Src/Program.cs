@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 表达式计算工具
-//  Version:     2014.09.22.
+//  Version:     2015.04.04.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -434,7 +434,20 @@ namespace ExprCalc
             {
                 Console.Write("> ");
                 var OutputStart = "> ".Length;
-                var Line = Console.ReadLine();
+                var Line = "";
+                while (true)
+                {
+                    var TempLine = Console.ReadLine();
+                    if (TempLine.EndsWith(@"\"))
+                    {
+                        Line += TempLine.Substring(0, TempLine.Length - 1);
+                    }
+                    else
+                    {
+                        Line += TempLine;
+                        break;
+                    }
+                }
                 if (Line == "exit")
                 {
                     break;
