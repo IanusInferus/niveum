@@ -25,6 +25,11 @@ namespace Client
                 public String CommandName = "";
                 public UInt32 CommandHash = 0;
                 public Int32 ParametersLength = 0;
+
+                public Context(int ReadBufferSize)
+                {
+                    ReadBuffer = new ArraySegment<Byte>(new Byte[ReadBufferSize], 0, 0);
+                }
             }
 
             private Context c;
@@ -32,7 +37,7 @@ namespace Client
             private IBinaryTransformer Transformer;
             public BinaryCountPacketClient(IBinarySerializationClientAdapter bc, IBinaryTransformer Transformer = null, int ReadBufferSize = 128 * 1024)
             {
-                this.c = new Context { ReadBuffer = new ArraySegment<Byte>(new Byte[ReadBufferSize], 0, 0) };
+                this.c = new Context(ReadBufferSize);
                 this.bc = bc;
                 this.Transformer = Transformer;
                 bc.ClientEvent += (String CommandName, UInt32 CommandHash, Byte[] Parameters) =>
