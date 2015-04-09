@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2014.09.02.
+//  Version:     2015.04.09.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -269,7 +269,7 @@ namespace Client
 
         static void RunTcp(boost::asio::io_service &IoService, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, boost::mutex &)> Action)
         {
-            auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService);
+            auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
             {
                 //std::wprintf(L"%ls\n", (boost::wformat(L"%1% %2%ms") % CommandName % Milliseconds).str().c_str());
@@ -284,7 +284,7 @@ namespace Client
             };
 
             auto ac = bsca->GetApplicationClient();
-            auto vtc = std::make_shared<Streamed::BinaryCountPacketClient>(bsca, nullptr);
+            auto vtc = std::make_shared<Streamed::BinaryCountPacketClient>(bsca, nullptr, 128 * 1024);
             auto bsc = std::make_shared<Streamed::TcpClient>(IoService, RemoteEndPoint, vtc);
             try
             {
@@ -324,7 +324,7 @@ namespace Client
 
         static void RunUdp(boost::asio::io_service &IoService, boost::asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, boost::mutex &)> Action)
         {
-            auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService);
+            auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
             {
                 //std::wprintf(L"%ls\n", (boost::wformat(L"%1% %2%ms") % CommandName % Milliseconds).str().c_str());
@@ -339,7 +339,7 @@ namespace Client
             };
 
             auto ac = bsca->GetApplicationClient();
-            auto vtc = std::make_shared<Streamed::BinaryCountPacketClient>(bsca, nullptr);
+            auto vtc = std::make_shared<Streamed::BinaryCountPacketClient>(bsca, nullptr, 128 * 1024);
             auto bsc = std::make_shared<Streamed::UdpClient>(IoService, RemoteEndPoint, vtc);
             try
             {

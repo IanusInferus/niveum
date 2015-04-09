@@ -12,9 +12,14 @@ namespace Server
         {
             private class Context
             {
-                public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[8 * 1024], 0, 0);
+                public ArraySegment<Byte> ReadBuffer;
                 public Object WriteBufferLockee = new Object();
                 public List<Byte[]> WriteBuffer = new List<Byte[]>();
+
+                public Context(int ReadBufferSize)
+                {
+                    ReadBuffer = new ArraySegment<Byte>(new Byte[ReadBufferSize], 0, 0);
+                }
             }
 
             public delegate Boolean CheckCommandAllowedDelegate(String CommandName);
@@ -23,10 +28,10 @@ namespace Server
             private Context c;
             private CheckCommandAllowedDelegate CheckCommandAllowed;
             private IBinaryTransformer Transformer;
-            public JsonLinePacketServer(IJsonSerializationServerAdapter SerializationServerAdapter, CheckCommandAllowedDelegate CheckCommandAllowed, IBinaryTransformer Transformer = null)
+            public JsonLinePacketServer(IJsonSerializationServerAdapter SerializationServerAdapter, CheckCommandAllowedDelegate CheckCommandAllowed, IBinaryTransformer Transformer = null, int ReadBufferSize = 8 * 1024)
             {
                 this.ss = SerializationServerAdapter;
-                this.c = new Context();
+                this.c = new Context(ReadBufferSize);
                 this.CheckCommandAllowed = CheckCommandAllowed;
                 this.Transformer = Transformer;
                 this.ss.ServerEvent += (CommandName, CommandHash, Parameters) =>

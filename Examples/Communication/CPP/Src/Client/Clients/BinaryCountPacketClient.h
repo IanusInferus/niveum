@@ -41,11 +41,11 @@ namespace Client
                 std::uint32_t CommandHash;
                 std::int32_t ParametersLength;
 
-                Context()
+                Context(int ReadBufferSize)
                     : ReadBufferOffset(0), ReadBufferLength(0), State(0), CommandNameLength(0), CommandName(L""), CommandHash(0), ParametersLength(0)
                 {
                     ReadBuffer = std::make_shared<std::vector<std::uint8_t>>();
-                    ReadBuffer->resize(128 * 1024, 0);
+                    ReadBuffer->resize(ReadBufferSize, 0);
                 }
             };
 
@@ -54,7 +54,8 @@ namespace Client
             std::shared_ptr<IBinaryTransformer> Transformer;
 
         public:
-            BinaryCountPacketClient(std::shared_ptr<IBinarySerializationClientAdapter> bc, std::shared_ptr<IBinaryTransformer> Transformer = nullptr)
+            BinaryCountPacketClient(std::shared_ptr<IBinarySerializationClientAdapter> bc, std::shared_ptr<IBinaryTransformer> Transformer = nullptr, int ReadBufferSize = 128 * 1024)
+                : c(ReadBufferSize)
             {
                 this->bc = bc;
                 this->Transformer = Transformer;

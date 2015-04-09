@@ -23,27 +23,33 @@ namespace Client
     class BinarySerializationClientAdapter : public IBinarySerializationClientAdapter
     {
     private:
-        static int NumTimeoutMilliseconds() { return 20000; }
+        int NumTimeoutMilliseconds;
+        int RequestCount;
+        static int MaxRequestCount() { return 16; }
 
         class BinarySender : public Communication::Binary::IBinarySender
         {
         private:
-            const BinarySerializationClientAdapter &a;
+            BinarySerializationClientAdapter &a;
         public:
-            BinarySender(const BinarySerializationClientAdapter &a)
+            BinarySender(BinarySerializationClientAdapter &a)
                 : a(a)
             {
             }
 
             void Send(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
             {
+                if (a.ClientCommandSent != nullptr)
+                {
+                    a.ClientCommandSent(CommandName);
+                }
                 CommandRequest cq = {};
                 cq.Name = CommandName;
                 auto Time = boost::posix_time::microsec_clock::universal_time();
                 cq.Time = Time;
                 auto Finished = std::make_shared<bool>(false);
                 auto Timer = std::make_shared<boost::asio::deadline_timer>(a.io_service);
-                Timer->expires_from_now(boost::posix_time::milliseconds(NumTimeoutMilliseconds()));
+                Timer->expires_from_now(boost::posix_time::milliseconds(a.NumTimeoutMilliseconds));
                 Timer->async_wait([=](const boost::system::error_code& error)
                 {
                     if (error == boost::system::errc::success)
@@ -67,9 +73,33 @@ namespace Client
                     q->push(cq);
                     (*a.CommandRequests)[CommandName] = q;
                 }
-                if (a.ClientEvent != nullptr)
+                if (a.RequestCount < MaxRequestCount())
                 {
-                    a.ClientEvent(CommandName, CommandHash, Parameters);
+                    if (a.CommandQueue->size() > 0)
+                    {
+                        auto c = std::make_shared<CommandContent>();
+                        c->CommandName = CommandName;
+                        c->CommandHash = CommandHash;
+                        c->Parameters = Parameters;
+                        a.CommandQueue->push(c);
+                        a.SendNotFlushedRequest();
+                    }
+                    else
+                    {
+                        a.RequestCount += 1;
+                        if (a.ClientEvent != nullptr)
+                        {
+                            a.ClientEvent(CommandName, CommandHash, Parameters);
+                        }
+                    }
+                }
+                else
+                {
+                    auto c = std::make_shared<CommandContent>();
+                    c->CommandName = CommandName;
+                    c->CommandHash = CommandHash;
+                    c->Parameters = Parameters;
+                    a.CommandQueue->push(c);
                 }
             }
         };
@@ -84,23 +114,45 @@ namespace Client
             std::shared_ptr<boost::asio::deadline_timer> Timer;
             std::shared_ptr<bool> Finished;
         };
+        struct CommandContent
+        {
+            std::wstring CommandName;
+            std::uint32_t CommandHash;
+            std::shared_ptr<std::vector<std::uint8_t>> Parameters;
+        };
 
         std::shared_ptr<std::unordered_map<std::wstring, std::shared_ptr<std::queue<CommandRequest>>>> CommandRequests;
+        std::shared_ptr<std::queue<std::shared_ptr<CommandContent>>> CommandQueue;
+
+        void SendNotFlushedRequest()
+        {
+            while ((CommandQueue->size() > 0) && (RequestCount < MaxRequestCount()))
+            {
+                RequestCount += 1;
+                auto c = CommandQueue->front();
+                CommandQueue->pop();
+                if (ClientEvent != nullptr)
+                {
+                    ClientEvent(c->CommandName, c->CommandHash, c->Parameters);
+                }
+            }
+        }
 
     public:
+        std::function<void(std::wstring)> ClientCommandSent;
         std::function<void(std::wstring, int)> ClientCommandReceived;
         std::function<void(std::wstring, int)> ClientCommandFailed;
         std::function<void(std::wstring)> ServerCommandReceived;
 
-        BinarySerializationClientAdapter(boost::asio::io_service &io_service)
-            : io_service(io_service)
+        BinarySerializationClientAdapter(boost::asio::io_service &io_service, int NumTimeoutMilliseconds)
+            : io_service(io_service), NumTimeoutMilliseconds(NumTimeoutMilliseconds), RequestCount(0)
         {
             CommandRequests = std::make_shared<std::unordered_map<std::wstring, std::shared_ptr<std::queue<CommandRequest>>>>();
+            CommandQueue = std::make_shared<std::queue<std::shared_ptr<CommandContent>>>();
             this->bc = std::make_shared<Communication::Binary::BinarySerializationClient>(std::make_shared<BinarySender>(*this));
             auto ac = this->bc->GetApplicationClient();
             ac->ErrorCommand = [=](std::shared_ptr<Communication::ErrorCommandEvent> e)
             {
-                this->bc->GetApplicationClient()->DequeueCallback(e->CommandName);
                 auto CommandName = e->CommandName;
                 if (CommandRequests->count(CommandName) > 0)
                 {
@@ -119,7 +171,10 @@ namespace Client
                     {
                         CommandRequests->erase(CommandName);
                     }
+                    RequestCount -= 1;
+                    SendNotFlushedRequest();
                 }
+                this->bc->GetApplicationClient()->DequeueCallback(e->CommandName);
             };
         }
 
@@ -151,6 +206,8 @@ namespace Client
                 {
                     CommandRequests->erase(CommandName);
                 }
+                RequestCount -= 1;
+                SendNotFlushedRequest();
             }
             else
             {

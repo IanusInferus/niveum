@@ -129,6 +129,7 @@ namespace Server
             private Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory;
             private Action<Action> QueueUserWorkItem;
             private Action<Action> PurifierQueueUserWorkItem;
+            private int ReadBufferSize;
 
             private int MaxBadCommandsValue = 8;
             private String[] BindingsValue = { };
@@ -310,12 +311,13 @@ namespace Server
 
             public LockedVariable<Dictionary<ISessionContext, HttpSession>> SessionMappings = new LockedVariable<Dictionary<ISessionContext, HttpSession>>(new Dictionary<ISessionContext, HttpSession>());
 
-            public HttpServer(TServerContext sc, Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem, Action<Action> PurifierQueueUserWorkItem)
+            public HttpServer(TServerContext sc, Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory, Action<Action> QueueUserWorkItem, Action<Action> PurifierQueueUserWorkItem, int ReadBufferSize = 128 * 1024)
             {
                 ServerContext = sc;
                 this.VirtualTransportServerFactory = VirtualTransportServerFactory;
                 this.QueueUserWorkItem = QueueUserWorkItem;
                 this.PurifierQueueUserWorkItem = PurifierQueueUserWorkItem;
+                this.ReadBufferSize = ReadBufferSize;
             }
 
             private Boolean IsMatchBindingName(Uri Url)
@@ -471,7 +473,7 @@ namespace Server
                                         return;
                                     }
 
-                                    if (a.Request.ContentLength64 > 8 * 1024)
+                                    if (a.Request.ContentLength64 > ReadBufferSize)
                                     {
                                         a.Response.StatusCode = 413;
                                         NotifyListenerContextQuit(a);

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2014.11.21.
+//  Version:     2015.04.09.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -244,9 +244,9 @@ namespace Server
                                     ServerContext.SessionLog -= Logger.Push;
                                 }
 
-                                Console.WriteLine(@"ChatServerContext.RequestCount = {1}".Formats(ServerContext.RequestCount));
-                                Console.WriteLine(@"ChatServerContext.ReplyCount = {1}".Formats(ServerContext.ReplyCount));
-                                Console.WriteLine(@"ChatServerContext.EventCount = {1}".Formats(ServerContext.EventCount));
+                                Console.WriteLine(@"ChatServerContext.RequestCount = {0}".Formats(ServerContext.RequestCount));
+                                Console.WriteLine(@"ChatServerContext.ReplyCount = {0}".Formats(ServerContext.ReplyCount));
+                                Console.WriteLine(@"ChatServerContext.EventCount = {0}".Formats(ServerContext.EventCount));
                             });
                         }
                         else
