@@ -11,16 +11,21 @@ namespace Client
         {
             private class Context
             {
-                public ArraySegment<Byte> ReadBuffer = new ArraySegment<Byte>(new Byte[128 * 1024], 0, 0);
+                public ArraySegment<Byte> ReadBuffer;
                 public List<Byte[]> WriteBuffer = new List<Byte[]>();
+
+                public Context(int ReadBufferSize)
+                {
+                    ReadBuffer = new ArraySegment<Byte>(new Byte[ReadBufferSize], 0, 0);
+                }
             }
 
             private Context c;
             private IJsonSerializationClientAdapter jc;
             private IBinaryTransformer Transformer;
-            public JsonLinePacketClient(IJsonSerializationClientAdapter jc, IBinaryTransformer Transformer = null)
+            public JsonLinePacketClient(IJsonSerializationClientAdapter jc, IBinaryTransformer Transformer = null, int ReadBufferSize = 8 * 1024)
             {
-                this.c = new Context();
+                this.c = new Context(ReadBufferSize);
                 this.jc = jc;
                 this.Transformer = Transformer;
                 jc.ClientEvent += (String CommandName, UInt32 CommandHash, String Parameters) =>
@@ -32,7 +37,7 @@ namespace Client
                         Transformer.Transform(Bytes, 0, Bytes.Length);
                     }
                     c.WriteBuffer.Add(Bytes);
-                    if (ClientMethod != null) { ClientMethod(); }
+                    if (this.ClientMethod != null) { ClientMethod(); }
                 };
             }
 
