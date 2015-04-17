@@ -68,6 +68,7 @@ namespace Server
             {
                 var l = new List<String>();
                 l.Add(DecorateWithQoutesIfComplex(Time));
+                l.Add(DecorateWithQoutesIfComplex(Entry.RemoteEndPoint.ToString()));
                 l.Add(DecorateWithQoutesIfComplex(Entry.Token));
                 l.Add(ExtendToMultipleOf(DecorateWithQoutesIfComplex(Entry.Type), 4));
                 l.Add(DecorateWithQoutesIfComplex(Entry.Name));
