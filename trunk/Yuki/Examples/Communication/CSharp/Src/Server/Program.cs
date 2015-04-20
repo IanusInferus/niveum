@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2015.04.09.
+//  Version:     2015.04.20.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -115,9 +115,7 @@ namespace Server
             Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  服务器进程启动。");
 
             var ProcessorCount = Environment.ProcessorCount;
-            var WorkThreadCount = ProcessorCount;
-            //增加后台执行功能使用的线程
-            WorkThreadCount = Math.Max(1, Math.Min(WorkThreadCount, c.NumMaxThread));
+            var WorkThreadCount = c.NumThread.OnHasValue ? Math.Max(1, c.NumThread.Value) : ProcessorCount;
             Console.WriteLine(@"逻辑处理器数量: " + ProcessorCount.ToString());
             Console.WriteLine(@"工作线程数量: {0}".Formats(WorkThreadCount));
 
