@@ -11,7 +11,7 @@
     ServerDebug                 Boolean
     ClientDebug                 Boolean
     ServerConnectionTimeout     Int
-    NumMaxThread                Int
+    NumThread                   Optional<Int>
 
 #TaggedUnion VirtualServerConfiguration
     Chat                        ChatServerConfiguration

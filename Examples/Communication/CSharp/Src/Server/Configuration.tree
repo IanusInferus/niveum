@@ -81,4 +81,4 @@
     ServerDebug True
     ClientDebug True
     ServerConnectionTimeout 30
-    NumMaxThread 32
+    NumThread NotHasValue $Empty
