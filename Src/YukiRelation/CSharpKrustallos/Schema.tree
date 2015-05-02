@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Krustallos代码模板数据
-      Version:     2014.11.24.
+      Version:     2015.05.02.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -610,7 +610,7 @@ ObjectSchemaTemplate
                             }
                         }
 
-                        private ConcurrentDictionary<String, KeyValuePair<Instance, KrustallosData>> Instances = new ConcurrentDictionary<String, KeyValuePair<Instance, KrustallosData>>();
+                        private Dictionary<String, Lazy<KeyValuePair<Instance, KrustallosData>>> Instances = new Dictionary<String, Lazy<KeyValuePair<Instance, KrustallosData>>>();
 
                         public IDataAccess Create(String ConnectionString)
                         {
@@ -638,7 +638,20 @@ ObjectSchemaTemplate
                         }
                         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory, int NumPartition)
                         {
-                            var Pair = Instances.GetOrAdd(ConnectionString, Key => new KeyValuePair<Instance, KrustallosData>(new Instance(), new KrustallosData(NumPartition)));
+                            Lazy<KeyValuePair<Instance, KrustallosData>> LazyPair;
+                            lock (Instances)
+                            {
+                                if (Instances.ContainsKey(ConnectionString))
+                                {
+                                    LazyPair = Instances[ConnectionString];
+                                }
+                                else
+                                {
+                                    LazyPair = new Lazy<KeyValuePair<Instance, KrustallosData>>(() => new KeyValuePair<Instance, KrustallosData>(new Instance(), new KrustallosData(NumPartition)));
+                                    Instances.Add(ConnectionString, LazyPair);
+                                }
+                            }
+                            var Pair = LazyPair.Value;
                             return new KrustallosDataAccess(Pair.Key, Pair.Value, IsolationLevel, TransactionLockFactory);
                         }
                     }
