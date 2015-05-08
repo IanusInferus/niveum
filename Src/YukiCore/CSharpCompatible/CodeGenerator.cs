@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2014.09.26.
+//  Version:     2015.05.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -75,22 +75,28 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             public String[] GetSchema()
             {
                 var Header = GetHeader();
+                var Primitives = GetPrimitives();
                 var EventPump = GetEventPump();
                 var Translators = GetTranslators();
 
                 if (NamespaceName != "")
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("ClassName", ClassName).Substitute("EventPump", EventPump).Substitute("Translators", Translators)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ClassName", ClassName).Substitute("EventPump", EventPump).Substitute("Translators", Translators)).Select(Line => Line.TrimEnd(' ')).ToArray();
                 }
                 else
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports).Substitute("ClassName", ClassName).Substitute("EventPump", EventPump).Substitute("Translators", Translators)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ClassName", ClassName).Substitute("EventPump", EventPump).Substitute("Translators", Translators)).Select(Line => Line.TrimEnd(' ')).ToArray();
                 }
             }
 
             public String[] GetHeader()
             {
                 return GetTemplate("Header");
+            }
+
+            public String[] GetPrimitives()
+            {
+                return InnerWriter.GetPrimitives();
             }
 
             public String GetTypeString(TypeSpec Type)
