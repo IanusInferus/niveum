@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#通讯兼容模板数据
-      Version:     2014.02.11.
+      Version:     2015.05.08.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -17,11 +17,12 @@ ObjectSchemaTemplate
     Templates
         Template
             Name MainWithNamespace
-            //Parameters: ${Header}, ${NamespaceName}, ${Imports}, ${ClassName}, ${EventPump}, ${Translators}
+            //Parameters: ${Header}, ${NamespaceName}, ${Imports}, ${Primitives}, ${ClassName}, ${EventPump}, ${Translators}
             Value
                 $String
                     ${Header}
                     using ${Imports};
+                    ${Primitives}
 
                     namespace [[${NamespaceName}]]
                     {
@@ -36,11 +37,12 @@ ObjectSchemaTemplate
                 $End
         Template
             Name MainWithoutNamespace
-            //Parameters: ${Header}, ${Imports}, ${ClassName}, ${EventPump}, ${Translators}
+            //Parameters: ${Header}, ${Imports}, ${Primitives}, ${ClassName}, ${EventPump}, ${Translators}
             Value
                 $String
                     ${Header}
                     using ${Imports};
+                    ${Primitives}
 
                     public partial class [[${ClassName}]]
                     {
