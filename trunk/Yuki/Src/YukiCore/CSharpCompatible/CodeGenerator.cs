@@ -1019,7 +1019,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 }
                 else
                 {
-                    ValueFrom = GetTemplate("Translator_KeyValueFrom_Identity").Substitute("Name", "Value").Substitute("TypeFriendlyName", ValueTypeSpec.TypeFriendlyName());
+                    ValueFrom = GetTemplate("Translator_KeyValueFrom_Function").Substitute("Name", "Value").Substitute("TypeFriendlyName", ValueTypeSpec.TypeFriendlyName());
                 }
                 var Result = GetTemplate("Translator_MapFrom").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("KeyFrom", KeyFrom).Substitute("ValueFrom", ValueFrom);
                 if (!(IsExistentType(HeadKeyTypeSpec) && IsExistentType(HeadValueTypeSpec)))
