@@ -832,11 +832,11 @@ namespace Yuki.DatabaseRegenerator
             var Dir = FileNameHandling.GetFileDirectory(SchemaDiffFile);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
 
-            var l = RelationSchemaDiffGenerator.Generate(SchemaOld, SchemaNew);
-            RelationSchemaDiffVerifier.Verifiy(SchemaOld, SchemaNew, l);
+            var d = RelationSchemaDiffGenerator.Generate(SchemaOld, SchemaNew);
+            RelationSchemaDiffVerifier.Verifiy(SchemaOld, SchemaNew, d.Mappings);
             using (var sw = Txt.CreateTextWriter(SchemaDiffFile))
             {
-                RelationSchemaDiffWriter.Write(sw, l);
+                RelationSchemaDiffWriter.Write(sw, d);
             }
         }
         public static void ApplySchemaDiff(String MemoryDatabaseFileOld, String MemoryDatabaseFileNew, String SchemaDiffFile, String MemoryDatabaseFileOutput)

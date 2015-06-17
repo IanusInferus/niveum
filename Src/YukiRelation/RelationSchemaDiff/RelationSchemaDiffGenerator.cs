@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异生成器
-//  Version:     2015.02.15.
+//  Version:     2015.06.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -16,19 +16,28 @@ using Yuki.RelationValue;
 
 namespace Yuki.RelationSchemaDiff
 {
+    public sealed class EntityMappingDiff
+    {
+        public List<EntityMapping> Mappings;
+        public HashSet<String> DeletedEntities;
+        public Dictionary<String, HashSet<String>> DeletedFields;
+    }
+
     public sealed class RelationSchemaDiffGenerator
     {
-        public static List<AlterEntity> Generate(Schema Old, Schema New)
+        public static EntityMappingDiff Generate(Schema Old, Schema New)
         {
             var OldTypes = Old.GetMap().ToDictionary(t => t.Key, t => t.Value);
             var NewTypes = New.GetMap().ToDictionary(t => t.Key, t => t.Value);
 
-            var l = new List<AlterEntity>();
+            var Mappings = new List<EntityMapping>();
+            var DeletedEntities = new HashSet<String>();
+            var DeletedFields = new Dictionary<String, HashSet<String>>();
             foreach (var t in OldTypes)
             {
                 if (t.Value.OnEntity && (!NewTypes.ContainsKey(t.Key) || !NewTypes[t.Key].OnEntity))
                 {
-                    l.Add(new AlterEntity { EntityName = t.Key, Method = AlterEntityMethod.CreateDelete() });
+                    DeletedEntities.Add(t.Key);
                 }
             }
             foreach (var t in NewTypes)
@@ -37,7 +46,7 @@ namespace Yuki.RelationSchemaDiff
                 {
                     if (!OldTypes.ContainsKey(t.Key) || !OldTypes[t.Key].OnEntity)
                     {
-                        l.Add(new AlterEntity { EntityName = t.Key, Method = AlterEntityMethod.CreateCreate() });
+                        Mappings.Add(new EntityMapping { EntityName = t.Key, Method = EntityMappingMethod.CreateNew() });
                     }
                 }
             }
@@ -58,7 +67,14 @@ namespace Yuki.RelationSchemaDiff
                         {
                             if (f.Value.Attribute.OnColumn && (!NewFields.ContainsKey(f.Key) || !NewFields[f.Key].Attribute.OnColumn))
                             {
-                                l.Add(new AlterEntity { EntityName = t.Key, Method = AlterEntityMethod.CreateField(new AlterField { FieldName = f.Key, Method = AlterFieldMethod.CreateDelete() }) });
+                                if (DeletedFields.ContainsKey(t.Key))
+                                {
+                                    DeletedFields[t.Key].Add(f.Key);
+                                }
+                                else
+                                {
+                                    DeletedFields.Add(t.Key, new HashSet<String> { f.Key });
+                                }
                             }
                         }
                         foreach (var f in NewFields)
@@ -67,14 +83,14 @@ namespace Yuki.RelationSchemaDiff
                             {
                                 if (!OldFields.ContainsKey(f.Key) || !OldFields[f.Key].Attribute.OnColumn)
                                 {
-                                    l.Add(new AlterEntity { EntityName = t.Key, Method = AlterEntityMethod.CreateField(new AlterField { FieldName = f.Key, Method = AlterFieldMethod.CreateCreate(GetDefaultValue(f.Value.Type)) }) });
+                                    Mappings.Add(new EntityMapping { EntityName = t.Key, Method = EntityMappingMethod.CreateField(new FieldMapping { FieldName = f.Key, Method = FieldMappingMethod.CreateNew(GetDefaultValue(f.Value.Type)) }) });
                                 }
                                 else
                                 {
                                     var of = OldFields[f.Key];
                                     if (!Equals(f.Value.Type, of.Type))
                                     {
-                                        l.Add(new AlterEntity { EntityName = t.Key, Method = AlterEntityMethod.CreateField(new AlterField { FieldName = f.Key, Method = AlterFieldMethod.CreateChangeType() }) });
+                                        Mappings.Add(new EntityMapping { EntityName = t.Key, Method = EntityMappingMethod.CreateField(new FieldMapping { FieldName = f.Key, Method = FieldMappingMethod.CreateCopy(f.Key) }) });
                                     }
                                 }
                             }
@@ -83,7 +99,7 @@ namespace Yuki.RelationSchemaDiff
                 }
             }
 
-            return l;
+            return new EntityMappingDiff { Mappings = Mappings, DeletedEntities = DeletedEntities, DeletedFields = DeletedFields };
         }
 
         private static Optional<PrimitiveVal> GetDefaultValue(TypeSpec t)

@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffWriter.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异写入器
-//  Version:     2015.02.15.
+//  Version:     2015.06.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,7 +23,11 @@ namespace Yuki.RelationSchemaDiff
 {
     public sealed class RelationSchemaDiffWriter
     {
-        public static void Write(StreamWriter sw, List<AlterEntity> l)
+        public static void Write(StreamWriter sw, List<EntityMapping> l)
+        {
+            Write(sw, new EntityMappingDiff { Mappings = l, DeletedEntities = new HashSet<String>(), DeletedFields = new Dictionary<String, HashSet<String>>() });
+        }
+        public static void Write(StreamWriter sw, EntityMappingDiff d)
         {
             var Lines = new List<Syntax.TextLine>();
             Action<String[]> AddLine = Tokens =>
@@ -31,39 +35,48 @@ namespace Yuki.RelationSchemaDiff
                 var Text = String.Join(" ", Tokens.Select(t => t == null ? "$Empty" : TreeFormatLiteralWriter.GetLiteral(t, true, false).SingleLine));
                 Lines.Add(new Syntax.TextLine { Text = Text, Range = new Syntax.TextRange { Start = new Syntax.TextPosition { Row = 1, Column = 1, CharIndex = 0 }, End = new Syntax.TextPosition { Row = 1, Column = 1 + Text.Length, CharIndex = Text.Length } } });
             };
-
-            foreach (var ae in l)
+            Action<String[]> AddCommentLine = Tokens =>
             {
-                if (ae.Method.OnCreate)
+                var Text = "//" + String.Join(" ", Tokens.Select(t => t == null ? "$Empty" : TreeFormatLiteralWriter.GetLiteral(t, true, false).SingleLine));
+                Lines.Add(new Syntax.TextLine { Text = Text, Range = new Syntax.TextRange { Start = new Syntax.TextPosition { Row = 1, Column = 1, CharIndex = 0 }, End = new Syntax.TextPosition { Row = 1, Column = 1 + Text.Length, CharIndex = Text.Length } } });
+            };
+
+            foreach (var m in d.Mappings)
+            {
+                if (m.Method.OnNew)
                 {
-                    AddLine(new String[] { "Create", ae.EntityName });
+                    AddLine(new String[] { "Entity", m.EntityName, "New" });
                 }
-                else if (ae.Method.OnDelete)
+                else if (m.Method.OnCopy)
                 {
-                    AddLine(new String[] { "Delete", ae.EntityName });
+                    AddLine(new String[] { "Entity", m.EntityName, "From", m.Method.Copy });
                 }
-                else if (ae.Method.OnRename)
+                else if (m.Method.OnField)
                 {
-                    AddLine(new String[] { "Rename", ae.EntityName, ae.Method.Rename });
                 }
-                else if (ae.Method.OnField)
+                else
                 {
-                    var f = ae.Method.Field;
-                    if (f.Method.OnCreate)
+                    throw new InvalidOperationException();
+                }
+            }
+            foreach (var m in d.Mappings)
+            {
+                if (m.Method.OnNew)
+                {
+                }
+                else if (m.Method.OnCopy)
+                {
+                }
+                else if (m.Method.OnField)
+                {
+                    var f = m.Method.Field;
+                    if (f.Method.OnNew)
                     {
-                        AddLine(new String[] { "Alter", ae.EntityName, "Create", f.FieldName, GetPrimitiveValString(f.Method.Create) });
+                        AddLine(new String[] { "Entity", m.EntityName, "Field", f.FieldName, "New", GetPrimitiveValString(f.Method.New) });
                     }
-                    else if (f.Method.OnDelete)
+                    else if (f.Method.OnCopy)
                     {
-                        AddLine(new String[] { "Alter", ae.EntityName, "Delete", f.FieldName });
-                    }
-                    else if (f.Method.OnRename)
-                    {
-                        AddLine(new String[] { "Alter", ae.EntityName, "Rename", f.FieldName, f.Method.Rename });
-                    }
-                    else if (f.Method.OnChangeType)
-                    {
-                        AddLine(new String[] { "Alter", ae.EntityName, "ChangeType", f.FieldName });
+                        AddLine(new String[] { "Entity", m.EntityName, "Field", f.FieldName, "From", f.Method.Copy });
                     }
                 }
                 else
@@ -71,8 +84,19 @@ namespace Yuki.RelationSchemaDiff
                     throw new InvalidOperationException();
                 }
             }
+            foreach (var de in d.DeletedEntities)
+            {
+                AddCommentLine(new String[] { "Entity", de, "Delete" });
+            }
+            foreach (var de in d.DeletedFields)
+            {
+                foreach (var df in de.Value)
+                {
+                    AddCommentLine(new String[] { "Entity", de.Key, "Field", df, "Delete" });
+                }
+            }
 
-            var AlterNode = Syntax.MultiNodes.CreateFunctionNodes(new Syntax.FunctionNodes { FunctionDirective = new Syntax.FunctionDirective { Text = "Alter" }, Parameters = new Syntax.Token[] { }, Content = new Syntax.FunctionContent { IndentLevel = 0, Lines = Lines.ToArray() } });
+            var AlterNode = Syntax.MultiNodes.CreateFunctionNodes(new Syntax.FunctionNodes { FunctionDirective = new Syntax.FunctionDirective { Text = "Map" }, Parameters = new Syntax.Token[] { }, Content = new Syntax.FunctionContent { IndentLevel = 0, Lines = Lines.ToArray() } });
 
             TreeFile.WriteRaw(sw, new Syntax.Forest { MultiNodesList = new Syntax.MultiNodes[] { AlterNode } });
         }
