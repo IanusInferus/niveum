@@ -103,6 +103,7 @@ namespace Yuki.RelationSchemaDiff
                     else if (fm.Method.OnCopy)
                     {
                         if (!NewFields.ContainsKey(fm.FieldName)) { throw new InvalidOperationException("NewNotExist: " + EntityName + "." + fm.FieldName); }
+                        if (!OldFields.ContainsKey(fm.Method.Copy)) { throw new InvalidOperationException("OldNotExist: " + EntityName + "." + fm.Method.Copy); }
                         if (AppliedFields.ContainsKey(fm.FieldName)) { throw new InvalidOperationException("AppliedExist: " + EntityName + "." + fm.FieldName); }
                         AppliedFields.Add(fm.FieldName, NewFields[fm.FieldName]);
                     }
@@ -119,6 +120,17 @@ namespace Yuki.RelationSchemaDiff
                         AppliedFields.Add(f.Name, OldFields[f.Name]);
                     }
                 }
+
+                var e = new EntityDef { Name = oe.Name, CollectionName = oe.CollectionName, Fields = AppliedFields.Select(f => f.Value).ToList(), Description = oe.Description, PrimaryKey = oe.PrimaryKey, UniqueKeys = oe.UniqueKeys, NonUniqueKeys = oe.NonUniqueKeys };
+                AppliedTypes[EntityName] = TypeDef.CreateEntity(e);
+            }
+
+            foreach (var EntityName in l.Select(m => m.EntityName).Distinct())
+            {
+                var oe = AppliedTypes[EntityName].Entity;
+                var ne = NewTypes[EntityName].Entity;
+                var AppliedFields = oe.Fields.ToDictionary(f => f.Name);
+                var NewFields = ne.Fields.ToDictionary(f => f.Name);
 
                 var MissingFields = NewFields.Keys.Except(AppliedFields.Keys).ToList();
                 if (MissingFields.Count > 0)
@@ -140,9 +152,6 @@ namespace Yuki.RelationSchemaDiff
                         throw new InvalidOperationException("TypeIncompatible: " + EntityName + "." + pf.Key);
                     }
                 }
-
-                var e = new EntityDef { Name = oe.Name, CollectionName = oe.CollectionName, Fields = AppliedFields.Select(f => f.Value).ToList(), Description = oe.Description, PrimaryKey = oe.PrimaryKey, UniqueKeys = oe.UniqueKeys, NonUniqueKeys = oe.NonUniqueKeys };
-                AppliedTypes[EntityName] = TypeDef.CreateEntity(e);
             }
         }
 
