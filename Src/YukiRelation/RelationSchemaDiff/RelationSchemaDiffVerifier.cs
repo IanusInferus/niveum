@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffVerifier.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异验证器
-//  Version:     2015.02.14.
+//  Version:     2015.06.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -18,129 +18,54 @@ namespace Yuki.RelationSchemaDiff
 {
     public sealed class RelationSchemaDiffVerifier
     {
-        public static void Verifiy(Schema Old, Schema New, List<AlterEntity> l)
+        public static void Verifiy(Schema Old, Schema New, List<EntityMapping> l)
         {
             var OldTypes = Old.GetMap().Where(t => t.Value.OnEntity).ToDictionary(t => t.Key, t => t.Value);
             var NewTypes = New.GetMap().Where(t => t.Value.OnEntity).ToDictionary(t => t.Key, t => t.Value);
 
-            var EntityNameCountAppearedInCreate = l.Where(ae => ae.Method.OnCreate).GroupBy(ae => ae.EntityName).ToDictionary(g => g.Key, g => g.Count());
-            var EntityNameCountAppearedInDelete = l.Where(ae => ae.Method.OnDelete).GroupBy(ae => ae.EntityName).ToDictionary(g => g.Key, g => g.Count());
-            var EntityNameCountAppearedInRenameSource = l.Where(ae => ae.Method.OnRename).GroupBy(ae => ae.EntityName).ToDictionary(g => g.Key, g => g.Count());
-            var EntityNameCountAppearedInRenameDestination = l.Where(ae => ae.Method.OnRename).GroupBy(ae => ae.Method.Rename).ToDictionary(g => g.Key, g => g.Count());
-            var AltersInEntity = l.Where(ae => ae.Method.OnField).GroupBy(ae => ae.EntityName).ToDictionary(g => g.Key, g => g.Select(ae => ae.Method.Field).ToList());
-            var EntityNameCountAppearedInAlter = AltersInEntity.ToDictionary(g => g.Key, g => g.Value.Count);
-
-            var EntityNameAppearedInCreateMany = EntityNameCountAppearedInCreate.Where(c => c.Value > 1).ToList();
-            if (EntityNameAppearedInCreateMany.Count > 0)
+            var EntityNameAppearedInManyNewOrCopy = l.Where(m => m.Method.OnNew).Concat(l.Where(m => m.Method.OnCopy)).GroupBy(m => m.EntityName).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+            if (EntityNameAppearedInManyNewOrCopy.Count > 0)
             {
-                throw new InvalidOperationException("EntityNameAppearedInCreateMany: " + String.Join(", ", EntityNameAppearedInCreateMany));
-            }
-            var EntityNameAppearedInDeleteMany = EntityNameCountAppearedInDelete.Where(c => c.Value > 1).ToList();
-            if (EntityNameAppearedInDeleteMany.Count > 0)
-            {
-                throw new InvalidOperationException("EntityNameAppearedInDeleteMany: " + String.Join(", ", EntityNameAppearedInDeleteMany));
-            }
-            var EntityNameAppearedInRenameSourceMany = EntityNameCountAppearedInRenameSource.Where(c => c.Value > 1).ToList();
-            if (EntityNameAppearedInRenameSourceMany.Count > 0)
-            {
-                throw new InvalidOperationException("EntityNameAppearedInRenameSourceMany: " + String.Join(", ", EntityNameAppearedInRenameSourceMany));
-            }
-            var EntityNameAppearedInRenameDestinationMany = EntityNameCountAppearedInRenameDestination.Where(c => c.Value > 1).ToList();
-            if (EntityNameAppearedInRenameDestinationMany.Count > 0)
-            {
-                throw new InvalidOperationException("EntityNameAppearedInRenameDestinationMany: " + String.Join(", ", EntityNameAppearedInRenameDestinationMany));
+                throw new InvalidOperationException("EntityNameAppearedInManyNewOrCopy: " + String.Join(", ", EntityNameAppearedInManyNewOrCopy));
             }
 
-            var EntityNameAppearedInBothCreateAndRenameDestination = EntityNameCountAppearedInCreate.Select(c => c.Key).Intersect(EntityNameCountAppearedInRenameDestination.Select(c => c.Key)).ToList();
-            if (EntityNameAppearedInBothCreateAndRenameDestination.Count > 0)
+            foreach (var fg in l.Where(m => m.Method.OnField).GroupBy(m => m.EntityName))
             {
-                throw new InvalidOperationException("EntityNameAppearedInBothCreateAndRenameDestination: " + String.Join(", ", EntityNameAppearedInBothCreateAndRenameDestination));
-            }
-            var EntityNameAppearedInBothDeleteAndRenameSource = EntityNameCountAppearedInDelete.Select(c => c.Key).Intersect(EntityNameCountAppearedInRenameSource.Select(c => c.Key)).ToList();
-            if (EntityNameAppearedInBothDeleteAndRenameSource.Count > 0)
-            {
-                throw new InvalidOperationException("EntityNameAppearedInBothDeleteAndRenameSource: " + String.Join(", ", EntityNameAppearedInBothDeleteAndRenameSource));
-            }
+                var EntityName = fg.Key;
+                var FieldMappings = fg.Select(m => m.Method.Field).ToList();
 
-            foreach (var p in AltersInEntity)
-            {
-                var FieldNameCountAppearedInCreate = p.Value.Where(af => af.Method.OnCreate).GroupBy(af => af.FieldName).ToDictionary(g => g.Key, g => g.Count());
-                var FieldNameCountAppearedInDelete = p.Value.Where(af => af.Method.OnDelete).GroupBy(af => af.FieldName).ToDictionary(g => g.Key, g => g.Count());
-                var FieldNameCountAppearedInRenameSource = p.Value.Where(af => af.Method.OnRename).GroupBy(af => af.FieldName).ToDictionary(g => g.Key, g => g.Count());
-                var FieldNameCountAppearedInRenameDestination = p.Value.Where(af => af.Method.OnRename).GroupBy(af => af.Method.Rename).ToDictionary(g => g.Key, g => g.Count());
-                var FieldNameCountAppearedInChangeType = p.Value.Where(af => af.Method.OnChangeType).GroupBy(af => af.FieldName).ToDictionary(g => g.Key, g => g.Count());
-
-                var FieldNameAppearedInCreateMany = FieldNameCountAppearedInCreate.Where(c => c.Value > 1).ToList();
-                if (FieldNameAppearedInCreateMany.Count > 0)
+                var FieldNameAppearedInManyNewOrCopy = FieldMappings.Where(m => m.Method.OnNew).Concat(FieldMappings.Where(m => m.Method.OnCopy)).GroupBy(m => m.FieldName).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+                if (FieldNameAppearedInManyNewOrCopy.Count > 0)
                 {
-                    throw new InvalidOperationException("FieldNameAppearedInCreateMany: " + String.Join(", ", FieldNameAppearedInCreateMany));
-                }
-                var FieldNameAppearedInDeleteMany = FieldNameCountAppearedInDelete.Where(c => c.Value > 1).ToList();
-                if (FieldNameAppearedInDeleteMany.Count > 0)
-                {
-                    throw new InvalidOperationException("FieldNameAppearedInDeleteMany: " + String.Join(", ", FieldNameAppearedInDeleteMany));
-                }
-                var FieldNameAppearedInRenameSourceMany = FieldNameCountAppearedInRenameSource.Where(c => c.Value > 1).ToList();
-                if (FieldNameAppearedInRenameSourceMany.Count > 0)
-                {
-                    throw new InvalidOperationException("FieldNameAppearedInRenameSourceMany: " + String.Join(", ", FieldNameAppearedInRenameSourceMany));
-                }
-                var FieldNameAppearedInRenameDestinationMany = FieldNameCountAppearedInRenameDestination.Where(c => c.Value > 1).ToList();
-                if (FieldNameAppearedInRenameDestinationMany.Count > 0)
-                {
-                    throw new InvalidOperationException("FieldNameAppearedInRenameDestinationMany: " + String.Join(", ", FieldNameAppearedInRenameDestinationMany));
-                }
-                var FieldNameAppearedInChangeTypeMany = FieldNameCountAppearedInChangeType.Where(c => c.Value > 1).ToList();
-                if (FieldNameAppearedInChangeTypeMany.Count > 0)
-                {
-                    throw new InvalidOperationException("FieldNameAppearedInChangeTypeMany: " + String.Join(", ", FieldNameAppearedInChangeTypeMany));
-                }
-
-                var FieldNameAppearedInAnyTwoOfCreateAndRenameDestinationAndChangeType =
-                    (FieldNameCountAppearedInCreate.Select(c => c.Key).Intersect(FieldNameCountAppearedInRenameDestination.Select(c => c.Key)))
-                    .Union(FieldNameCountAppearedInRenameDestination.Select(c => c.Key).Intersect(FieldNameCountAppearedInChangeType.Select(c => c.Key)))
-                    .Union(FieldNameCountAppearedInChangeType.Select(c => c.Key).Intersect(FieldNameCountAppearedInCreate.Select(c => c.Key))).ToList();
-                if (FieldNameAppearedInAnyTwoOfCreateAndRenameDestinationAndChangeType.Count > 0)
-                {
-                    throw new InvalidOperationException("FieldNameAppearedInAnyTwoOfCreateAndRenameDestinationAndChangeType: " + String.Join(", ", FieldNameAppearedInAnyTwoOfCreateAndRenameDestinationAndChangeType));
-                }
-                var FieldNameAppearedInAnyTwoOfDeleteAndRenameSourceAndChangeType =
-                    (FieldNameCountAppearedInDelete.Select(c => c.Key).Intersect(FieldNameCountAppearedInRenameSource.Select(c => c.Key)))
-                    .Union(FieldNameCountAppearedInRenameSource.Select(c => c.Key).Intersect(FieldNameCountAppearedInChangeType.Select(c => c.Key)))
-                    .Union(FieldNameCountAppearedInChangeType.Select(c => c.Key).Intersect(FieldNameCountAppearedInDelete.Select(c => c.Key))).ToList();
-                if (FieldNameAppearedInAnyTwoOfDeleteAndRenameSourceAndChangeType.Count > 0)
-                {
-                    throw new InvalidOperationException("FieldNameAppearedInDeleteAndRenameSource: " + String.Join(", ", FieldNameAppearedInAnyTwoOfDeleteAndRenameSourceAndChangeType));
+                    throw new InvalidOperationException("FieldNameAppearedInManyNewOrCopy: " + EntityName + ".(" + String.Join(", ", FieldNameAppearedInManyNewOrCopy) + ")");
                 }
             }
 
-            var EntityNameAppearedInBothNonAlter =
-                EntityNameCountAppearedInCreate.Select(c => c.Key)
-                .Union(EntityNameCountAppearedInDelete.Select(c => c.Key))
-                .Union(EntityNameCountAppearedInRenameSource.Select(c => c.Key))
-                .Union(EntityNameCountAppearedInRenameDestination.Select(c => c.Key)).ToList();
-            var AppliedTypes = OldTypes.Where(t => !EntityNameAppearedInBothNonAlter.Contains(t.Key)).ToDictionary(t => t.Key, t => t.Value);
-
-            foreach (var ae in l)
+            var AppliedTypes = new Dictionary<String, TypeDef>();
+            foreach (var m in l)
             {
-                if (ae.Method.OnCreate)
+                if (m.Method.OnNew)
                 {
-                    if (!NewTypes.ContainsKey(ae.EntityName)) { throw new InvalidOperationException("NewNotExist: " + ae.EntityName); }
-                    AppliedTypes.Add(ae.EntityName, NewTypes[ae.EntityName]);
+                    if (!NewTypes.ContainsKey(m.EntityName)) { throw new InvalidOperationException("NewNotExist: " + m.EntityName); }
+                    AppliedTypes.Add(m.EntityName, NewTypes[m.EntityName]);
                 }
-                else if (ae.Method.OnDelete)
+                else if (m.Method.OnCopy)
                 {
-                    if (!OldTypes.ContainsKey(ae.EntityName)) { throw new InvalidOperationException("OldNotExist: " + ae.EntityName); }
-                }
-                else if (ae.Method.OnRename)
-                {
-                    var EntityNameDestination = ae.Method.Rename;
-                    if (!OldTypes.ContainsKey(ae.EntityName)) { throw new InvalidOperationException("OldNotExist: " + ae.EntityName); }
-                    if (!NewTypes.ContainsKey(EntityNameDestination)) { throw new InvalidOperationException("NewNotExist: " + EntityNameDestination); }
-                    var oe = OldTypes[ae.EntityName].Entity;
-                    var ne = NewTypes[EntityNameDestination].Entity;
+                    var EntityNameSource = m.Method.Copy;
+                    if (!NewTypes.ContainsKey(m.EntityName)) { throw new InvalidOperationException("NewNotExist: " + m.EntityName); }
+                    if (!OldTypes.ContainsKey(EntityNameSource)) { throw new InvalidOperationException("OldNotExist: " + EntityNameSource); }
+                    var ne = NewTypes[m.EntityName].Entity;
+                    var oe = OldTypes[EntityNameSource].Entity;
                     var e = new EntityDef { Name = ne.Name, CollectionName = ne.CollectionName, Fields = oe.Fields, Description = oe.Description, PrimaryKey = oe.PrimaryKey, UniqueKeys = oe.UniqueKeys, NonUniqueKeys = oe.NonUniqueKeys };
-                    AppliedTypes.Add(EntityNameDestination, TypeDef.CreateEntity(e));
+                    AppliedTypes.Add(m.EntityName, TypeDef.CreateEntity(e));
+                }
+            }
+            foreach (var t in NewTypes)
+            {
+                if (AppliedTypes.ContainsKey(t.Key)) { continue; }
+                if (OldTypes.ContainsKey(t.Key))
+                {
+                    AppliedTypes.Add(t.Key, OldTypes[t.Key]);
                 }
             }
             var MissingEntities = NewTypes.Keys.Except(AppliedTypes.Keys).ToList();
@@ -154,69 +79,56 @@ namespace Yuki.RelationSchemaDiff
                 throw new InvalidOperationException("RedundantEntities: " + String.Join(", ", RedundantEntities));
             }
 
-            foreach (var p in AltersInEntity)
+            foreach (var fg in l.Where(m => m.Method.OnField).GroupBy(m => m.EntityName))
             {
-                if (!AppliedTypes.ContainsKey(p.Key)) { throw new InvalidOperationException("AppliedNotExist: " + p.Key); }
-                if (!NewTypes.ContainsKey(p.Key)) { throw new InvalidOperationException("NewNotExist: " + p.Key); }
+                var EntityName = fg.Key;
+                var FieldMappings = fg.Select(m => m.Method.Field).ToList();
 
-                var oe = AppliedTypes[p.Key].Entity;
-                var ne = NewTypes[p.Key].Entity;
+                if (!AppliedTypes.ContainsKey(EntityName)) { throw new InvalidOperationException("AppliedNotExist: " + EntityName); }
+                if (!NewTypes.ContainsKey(EntityName)) { throw new InvalidOperationException("NewNotExist: " + EntityName); }
+
+                var oe = AppliedTypes[EntityName].Entity;
+                var ne = NewTypes[EntityName].Entity;
                 var OldFields = oe.Fields.ToDictionary(f => f.Name);
                 var NewFields = ne.Fields.ToDictionary(f => f.Name);
-                var AppliedFields = OldFields.ToDictionary(f => f.Key, f => f.Value);
-
-                foreach (var af in p.Value)
+                var AppliedFields = new Dictionary<String, VariableDef>();
+                foreach (var fm in FieldMappings)
                 {
-                    if (af.Method.OnDelete)
+                    if (fm.Method.OnNew)
                     {
-                        if (!OldFields.ContainsKey(af.FieldName)) { throw new InvalidOperationException("OldNotExist: " + p.Key + "." + af.FieldName); }
-                        AppliedFields.Remove(af.FieldName);
+                        if (!NewFields.ContainsKey(fm.FieldName)) { throw new InvalidOperationException("NewNotExist: " + EntityName + "." + fm.FieldName); }
+                        if (AppliedFields.ContainsKey(fm.FieldName)) { throw new InvalidOperationException("AppliedExist: " + EntityName + "." + fm.FieldName); }
+                        AppliedFields.Add(fm.FieldName, NewFields[fm.FieldName]);
                     }
-                    else if (af.Method.OnRename)
+                    else if (fm.Method.OnCopy)
                     {
-                        if (!OldFields.ContainsKey(af.FieldName)) { throw new InvalidOperationException("OldNotExist: " + p.Key + "." + af.FieldName); }
-                        AppliedFields.Remove(af.FieldName);
-                    }
-                }
-                foreach (var af in p.Value)
-                {
-                    if (af.Method.OnCreate)
-                    {
-                        if (!NewFields.ContainsKey(af.FieldName)) { throw new InvalidOperationException("NewNotExist: " + p.Key + "." + af.FieldName); }
-                        if (AppliedFields.ContainsKey(af.FieldName)) { throw new InvalidOperationException("AppliedExist: " + p.Key + "." + af.FieldName); }
-                        AppliedFields.Add(af.FieldName, NewFields[af.FieldName]);
-                    }
-                    else if (af.Method.OnDelete)
-                    {
-                    }
-                    else if (af.Method.OnRename)
-                    {
-                        if (!NewFields.ContainsKey(af.FieldName)) { throw new InvalidOperationException("NewNotExist: " + p.Key + "." + af.FieldName); }
-                        if (AppliedFields.ContainsKey(af.FieldName)) { throw new InvalidOperationException("AppliedExist: " + p.Key + "." + af.FieldName); }
-                        AppliedFields.Add(af.FieldName, NewFields[af.FieldName]);
-                    }
-                    else if (af.Method.OnChangeType)
-                    {
-                        if (!OldFields.ContainsKey(af.FieldName)) { throw new InvalidOperationException("OldNotExist: " + p.Key + "." + af.FieldName); }
-                        if (!NewFields.ContainsKey(af.FieldName)) { throw new InvalidOperationException("NewNotExist: " + p.Key + "." + af.FieldName); }
-                        if (!AppliedFields.ContainsKey(af.FieldName)) { throw new InvalidOperationException("AppliedNotExist: " + p.Key + "." + af.FieldName); }
-                        AppliedFields[af.FieldName] = NewFields[af.FieldName];
+                        if (!NewFields.ContainsKey(fm.FieldName)) { throw new InvalidOperationException("NewNotExist: " + EntityName + "." + fm.FieldName); }
+                        if (AppliedFields.ContainsKey(fm.FieldName)) { throw new InvalidOperationException("AppliedExist: " + EntityName + "." + fm.FieldName); }
+                        AppliedFields.Add(fm.FieldName, NewFields[fm.FieldName]);
                     }
                     else
                     {
                         throw new InvalidOperationException();
                     }
                 }
+                foreach (var f in ne.Fields)
+                {
+                    if (AppliedFields.ContainsKey(f.Name)) { continue; }
+                    if (OldFields.ContainsKey(f.Name))
+                    {
+                        AppliedFields.Add(f.Name, OldFields[f.Name]);
+                    }
+                }
 
                 var MissingFields = NewFields.Keys.Except(AppliedFields.Keys).ToList();
                 if (MissingFields.Count > 0)
                 {
-                    throw new InvalidOperationException("MissingFields: " + String.Join(", ", MissingFields));
+                    throw new InvalidOperationException("MissingFields: " + EntityName + ".(" + String.Join(", ", MissingFields) + ")");
                 }
                 var RedundantFields = AppliedFields.Keys.Except(NewFields.Keys).ToList();
                 if (RedundantFields.Count > 0)
                 {
-                    throw new InvalidOperationException("RedundantFields: " + String.Join(", ", RedundantFields));
+                    throw new InvalidOperationException("RedundantFields: " + EntityName + ".(" + String.Join(", ", RedundantFields) + ")");
                 }
 
                 foreach (var pf in AppliedFields)
@@ -225,12 +137,12 @@ namespace Yuki.RelationSchemaDiff
                     var nf = NewFields[pf.Key];
                     if (!Equals(f.Type, nf.Type))
                     {
-                        throw new InvalidOperationException("TypeIncompatible: " + p.Key + "." + pf.Key);
+                        throw new InvalidOperationException("TypeIncompatible: " + EntityName + "." + pf.Key);
                     }
                 }
 
                 var e = new EntityDef { Name = oe.Name, CollectionName = oe.CollectionName, Fields = AppliedFields.Select(f => f.Value).ToList(), Description = oe.Description, PrimaryKey = oe.PrimaryKey, UniqueKeys = oe.UniqueKeys, NonUniqueKeys = oe.NonUniqueKeys };
-                AppliedTypes[p.Key] = TypeDef.CreateEntity(e);
+                AppliedTypes[EntityName] = TypeDef.CreateEntity(e);
             }
         }
 
