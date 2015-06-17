@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异加载器
-//  Version:     2015.02.14.
+//  Version:     2015.06.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,27 +23,10 @@ using Yuki.RelationSchema;
 
 namespace Yuki.RelationSchemaDiff
 {
-    // 差异文件支持的语法
-    // Create id
-    // Delete id
-    // Rename id id
-    // Alter id Create id literal
-    // Alter id Delete id
-    // Alter id Rename id id
-    // Alter id ChangeType id
-    //
-    // 语义限制：
-    // 所有的实体名称不能同时在Create、Rename目标中出现两次。
-    // 所有的实体名称不能同时在Delete、Rename源中出现两次。
-    // Alter中的实体名称是指的在完成Create、Delete、Rename后的实体名称。
-    // 每一个实体名称的所有字段名称，只能在Create、Rename目标、ChangeType中出现一次。
-    // 每一个实体名称的所有字段名称，只能在Delete、Rename源、ChangeType中出现一次。
-    // 这样可以保证差异与顺序无关。
-
     public sealed class RelationSchemaDiffLoader
     {
         private Dictionary<String, Dictionary<String, VariableDef>> EntityFields;
-        private List<Semantics.Node> Alters;
+        private List<Semantics.Node> EntityMappings;
         private Dictionary<Object, Syntax.FileTextRange> Positions;
         private TreeFormatParseSetting tfpo = null;
         private TreeFormatEvaluateSetting tfeo = null;
@@ -57,18 +40,18 @@ namespace Yuki.RelationSchemaDiff
         public RelationSchemaDiffLoader(RelationSchema.Schema SchemaNew, TreeFormatParseSetting OuterParsingSetting, TreeFormatEvaluateSetting OuterEvaluateSetting)
         {
             EntityFields = SchemaNew.GetMap().Where(p => p.Value.OnEntity).ToDictionary(p => p.Key, p => p.Value.Entity.Fields.ToDictionary(f => f.Name));
-            Alters = new List<Semantics.Node>();
+            EntityMappings = new List<Semantics.Node>();
             Positions = new Dictionary<Object, Syntax.FileTextRange>();
             this.tfpo = OuterParsingSetting;
             this.tfeo = OuterEvaluateSetting;
         }
 
-        public List<AlterEntity> GetResult()
+        public List<EntityMapping> GetResult()
         {
-            var tfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { MakeStemNode("ListOfAlter", Alters.ToArray()) } }, Positions = Positions };
+            var tfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { MakeStemNode("ListOfEntityMapping", EntityMappings.ToArray()) } }, Positions = Positions };
 
             var x = XmlInterop.TreeToXml(tfr);
-            var l = xs.Read<List<AlterEntity>>(x);
+            var l = xs.Read<List<EntityMapping>>(x);
 
             return l;
         }
@@ -119,7 +102,7 @@ namespace Yuki.RelationSchemaDiff
         {
             foreach (var n in t.Value.Nodes)
             {
-                Alters.AddRange(n.Stem.Children);
+                EntityMappings.AddRange(n.Stem.Children);
             }
             foreach (var p in t.Positions)
             {
@@ -129,11 +112,11 @@ namespace Yuki.RelationSchemaDiff
 
         public void LoadType(String TreePath)
         {
-            Load(TreePath, Alters);
+            Load(TreePath, EntityMappings);
         }
         public void LoadType(String TreePath, StreamReader Reader)
         {
-            Load(TreePath, Reader, Alters);
+            Load(TreePath, Reader, EntityMappings);
         }
         private void Load(String TreePath, List<Semantics.Node> Types)
         {
@@ -156,11 +139,11 @@ namespace Yuki.RelationSchemaDiff
                 }
             }
         }
-        private void Load(String TreePath, StreamReader Reader, List<Semantics.Node> Alters)
+        private void Load(String TreePath, StreamReader Reader, List<Semantics.Node> EntityMappings)
         {
-            var Functions = new HashSet<String>() { "Alter" };
+            var Functions = new HashSet<String>() { "Map" };
             var TableParameterFunctions = Functions;
-            var TableContentFunctions = new HashSet<String>(Functions.Except(new List<String> { "Alter" }));
+            var TableContentFunctions = new HashSet<String>(Functions.Except(new List<String> { "Map" }));
             TreeFormatParseSetting ps;
             if (tfpo == null)
             {
@@ -192,7 +175,7 @@ namespace Yuki.RelationSchemaDiff
             var Text = pr.Text;
             var TokenParser = new TreeFormatTokenParser(Text, pr.Positions);
 
-            Func<int, Syntax.TextLine, ISemanticsNodeMaker, Semantics.Node[]> ParseAlterEntityAsSemanticsNodes = (IndentLevel, Line, nm) =>
+            Func<int, Syntax.TextLine, ISemanticsNodeMaker, Semantics.Node[]> ParseEntityMappingsAsSemanticsNodes = (IndentLevel, Line, nm) =>
             {
                 var l = new List<Semantics.Node>();
                 List<Semantics.Node> cl = null;
@@ -284,72 +267,60 @@ namespace Yuki.RelationSchemaDiff
 
                 if (l.Count == 0) { return new Semantics.Node[] { }; }
 
-                if (l.Count < 1)
+                if (l.Count < 3)
                 {
-                    throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
+                    throw new Syntax.InvalidSyntaxException("InvalidEntityMapping", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                 }
-                var FirstVerb = GetLeafNodeValue(l[0], nm, "InvalidVerb");
-                if (FirstVerb == "Create")
+                var EntityToken = GetLeafNodeValue(l[0], nm, "InvalidEntityToken");
+                if (EntityToken != "Entity")
                 {
-                    if (l.Count != 2)
-                    {
-                        throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
-                    }
-                    var EntityName = GetLeafNodeValue(l[1], nm, "InvalidIdentifier");
-                    return new Semantics.Node[]
-                    {
-                        MakeStemNode("AlterEntity",
-                            MakeStemNode("EntityName", MakeLeafNode(EntityName)),
-                            MakeStemNode("Method", MakeStemNode("Create", MakeEmptyNode()))
-                        )
-                    };
+                    throw new Syntax.InvalidSyntaxException("InvalidEntityToken", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                 }
-                else if (FirstVerb == "Delete")
-                {
-                    if (l.Count != 2)
-                    {
-                        throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
-                    }
-                    var EntityName = GetLeafNodeValue(l[1], nm, "InvalidIdentifier");
-                    return new Semantics.Node[]
-                    {
-                        MakeStemNode("AlterEntity",
-                            MakeStemNode("EntityName", MakeLeafNode(EntityName)),
-                            MakeStemNode("Method", MakeStemNode("Delete", MakeEmptyNode()))
-                        )
-                    };
-                }
-                else if (FirstVerb == "Rename")
+                var EntityName = GetLeafNodeValue(l[1], nm, "InvalidEntityName");
+                var EntityMethodToken = GetLeafNodeValue(l[2], nm, "InvalidEntityMethodToken");
+                if (EntityMethodToken == "New")
                 {
                     if (l.Count != 3)
                     {
-                        throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
+                        throw new Syntax.InvalidSyntaxException("InvalidEntityMapping", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                     }
-                    var EntityName = GetLeafNodeValue(l[1], nm, "InvalidIdentifier");
-                    var EntityNameDestination = GetLeafNodeValue(l[2], nm, "InvalidIdentifier");
                     return new Semantics.Node[]
                     {
-                        MakeStemNode("AlterEntity",
+                        MakeStemNode("EntityMapping",
                             MakeStemNode("EntityName", MakeLeafNode(EntityName)),
-                            MakeStemNode("Method", MakeStemNode("Rename", MakeLeafNode(EntityNameDestination)))
+                            MakeStemNode("Method", MakeStemNode("New", MakeEmptyNode()))
                         )
                     };
                 }
-                else if (FirstVerb == "Alter")
+                else if (EntityMethodToken == "From")
                 {
-                    if (l.Count < 3)
+                    if (l.Count != 4)
                     {
-                        throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
+                        throw new Syntax.InvalidSyntaxException("InvalidEntityMapping", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                     }
-                    var EntityName = GetLeafNodeValue(l[1], nm, "InvalidIdentifier");
-                    var SecondVerb = GetLeafNodeValue(l[2], nm, "InvalidVerb");
-                    if (SecondVerb == "Create")
+                    var EntityNameSource = GetLeafNodeValue(l[3], nm, "InvalidEntityName");
+                    return new Semantics.Node[]
                     {
-                        if (l.Count != 5)
+                        MakeStemNode("EntityMapping",
+                            MakeStemNode("EntityName", MakeLeafNode(EntityName)),
+                            MakeStemNode("Method", MakeStemNode("Copy", MakeLeafNode(EntityNameSource)))
+                        )
+                    };
+                }
+                else if (EntityMethodToken == "Field")
+                {
+                    if (l.Count < 6)
+                    {
+                        throw new Syntax.InvalidSyntaxException("InvalidEntityMapping", new Syntax.FileTextRange { Text = Text, Range = LineRange });
+                    }
+                    var FieldName = GetLeafNodeValue(l[3], nm, "InvalidFieldName");
+                    var FieldMethodToken = GetLeafNodeValue(l[4], nm, "InvalidFieldMethodToken");
+                    if (FieldMethodToken == "New")
+                    {
+                        if (l.Count != 6)
                         {
-                            throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
+                            throw new Syntax.InvalidSyntaxException("InvalidEntityMapping", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                         }
-                        var FieldName = GetLeafNodeValue(l[3], nm, "InvalidIdentifier");
                         if (!EntityFields.ContainsKey(EntityName))
                         {
                             throw new Syntax.InvalidSyntaxException("EntityNotExist", new Syntax.FileTextRange { Text = Text, Range = LineRange });
@@ -359,7 +330,7 @@ namespace Yuki.RelationSchemaDiff
                         {
                             throw new Syntax.InvalidSyntaxException("FieldNotExist", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                         }
-                        var Literal = l[4];
+                        var Literal = l[5];
                         Semantics.Node Value;
                         var f = e[FieldName];
                         if (f.Type.OnTypeRef)
@@ -408,78 +379,41 @@ namespace Yuki.RelationSchemaDiff
                         }
                         return new Semantics.Node[]
                         {
-                            MakeStemNode("AlterEntity",
+                            MakeStemNode("EntityMapping",
                                 MakeStemNode("EntityName", MakeLeafNode(EntityName)),
                                 MakeStemNode("Method", MakeStemNode("Field",
                                     MakeStemNode("FieldName", MakeLeafNode(FieldName)),
-                                    MakeStemNode("Method", MakeStemNode("Create", Value))
+                                    MakeStemNode("Method", MakeStemNode("New", Value))
                                 ))
                             )
                         };
                     }
-                    else if (SecondVerb == "Delete")
+                    else if (FieldMethodToken == "From")
                     {
-                        if (l.Count != 4)
+                        if (l.Count != 6)
                         {
-                            throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
+                            throw new Syntax.InvalidSyntaxException("InvalidEntityMapping", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                         }
-                        var FieldName = GetLeafNodeValue(l[3], nm, "InvalidIdentifier");
+                        var FieldNameSource = GetLeafNodeValue(l[5], nm, "InvalidFieldName");
                         return new Semantics.Node[]
                         {
-                            MakeStemNode("AlterEntity",
+                            MakeStemNode("EntityMapping",
                                 MakeStemNode("EntityName", MakeLeafNode(EntityName)),
                                 MakeStemNode("Method", MakeStemNode("Field",
                                     MakeStemNode("FieldName", MakeLeafNode(FieldName)),
-                                    MakeStemNode("Method", MakeStemNode("Delete", MakeEmptyNode()))
-                                ))
-                            )
-                        };
-                    }
-                    else if (SecondVerb == "Rename")
-                    {
-                        if (l.Count != 5)
-                        {
-                            throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
-                        }
-                        var FieldName = GetLeafNodeValue(l[3], nm, "InvalidIdentifier");
-                        var FieldNameDestination = GetLeafNodeValue(l[4], nm, "InvalidIdentifier");
-                        return new Semantics.Node[]
-                        {
-                            MakeStemNode("AlterEntity",
-                                MakeStemNode("EntityName", MakeLeafNode(EntityName)),
-                                MakeStemNode("Method", MakeStemNode("Field",
-                                    MakeStemNode("FieldName", MakeLeafNode(FieldName)),
-                                    MakeStemNode("Method", MakeStemNode("Rename", MakeLeafNode(FieldNameDestination)))
-                                ))
-                            )
-                        };
-                    }
-                    else if (SecondVerb == "ChangeType")
-                    {
-                        if (l.Count != 4)
-                        {
-                            throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
-                        }
-                        var FieldName = GetLeafNodeValue(l[3], nm, "InvalidIdentifier");
-                        return new Semantics.Node[]
-                        {
-                            MakeStemNode("AlterEntity",
-                                MakeStemNode("EntityName", MakeLeafNode(EntityName)),
-                                MakeStemNode("Method", MakeStemNode("Field",
-                                    MakeStemNode("FieldName", MakeLeafNode(FieldName)),
-                                    MakeStemNode("Method", MakeStemNode("ChangeType", MakeEmptyNode()))
+                                    MakeStemNode("Method", MakeStemNode("Copy", MakeLeafNode(FieldNameSource)))
                                 ))
                             )
                         };
                     }
                     else
                     {
-                        throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
+                        throw new Syntax.InvalidSyntaxException("InvalidEntityMapping", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                     }
                 }
                 else
                 {
-                    throw new Syntax.InvalidSyntaxException("InvalidAlter", new Syntax.FileTextRange { Text = Text, Range = LineRange });
+                    throw new Syntax.InvalidSyntaxException("InvalidEntityMapping", new Syntax.FileTextRange { Text = Text, Range = LineRange });
                 }
             };
 
@@ -489,12 +423,12 @@ namespace Yuki.RelationSchemaDiff
                 {
                     if (f.Parameters.Length == 0)
                     {
-                        if (f.Name.Text == "Alter")
+                        if (f.Name.Text == "Map")
                         {
-                            var Nodes = f.Content.Value.LineContent.Lines.SelectMany(Line => ParseAlterEntityAsSemanticsNodes(f.Content.Value.LineContent.IndentLevel, Line, nm)).ToArray();
+                            var Nodes = f.Content.Value.LineContent.Lines.SelectMany(Line => ParseEntityMappingsAsSemanticsNodes(f.Content.Value.LineContent.IndentLevel, Line, nm)).ToArray();
                             return new Semantics.Node[]
                             {
-                                MakeStemNode("ListOfAlterEntity", Nodes)
+                                MakeStemNode("ListOfEntityMapping", Nodes)
                             };
                         }
                         else
@@ -518,7 +452,7 @@ namespace Yuki.RelationSchemaDiff
             var t = tfe.Evaluate();
             foreach (var n in t.Value.Nodes)
             {
-                Alters.AddRange(n.Stem.Children);
+                EntityMappings.AddRange(n.Stem.Children);
             }
             foreach (var p in t.Positions)
             {

@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffTranslator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异转换器
-//  Version:     2015.02.15.
+//  Version:     2015.06.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,37 +23,34 @@ namespace Yuki.RelationSchemaDiff
         private Dictionary<String, TypeDef> NewTypes;
         private Dictionary<String, Optional<String>> NewEntityNameToOldEntityName = new Dictionary<String, Optional<String>>();
         private HashSet<String> NewEntityNameHasExceptionTranslator = new HashSet<String>();
-        private Dictionary<String, List<AlterField>> NewEntityNameToAlterFields = new Dictionary<String, List<AlterField>>();
+        private Dictionary<String, List<FieldMapping>> NewEntityNameToFieldMappings = new Dictionary<String, List<FieldMapping>>();
 
-        public RelationSchemaDiffTranslator(Schema Old, Schema New, List<AlterEntity> l)
+        public RelationSchemaDiffTranslator(Schema Old, Schema New, List<EntityMapping> l)
         {
             OldTypes = Old.GetMap().Where(t => t.Value.OnEntity).ToDictionary(t => t.Key, t => t.Value);
             NewTypes = New.GetMap().Where(t => t.Value.OnEntity).ToDictionary(t => t.Key, t => t.Value);
-            foreach (var ae in l)
+            foreach (var m in l)
             {
-                if (ae.Method.OnCreate)
+                if (m.Method.OnNew)
                 {
-                    NewEntityNameToOldEntityName.Add(ae.EntityName, Optional<String>.Empty);
-                    NewEntityNameHasExceptionTranslator.Add(ae.EntityName);
+                    NewEntityNameToOldEntityName.Add(m.EntityName, Optional<String>.Empty);
+                    NewEntityNameHasExceptionTranslator.Add(m.EntityName);
                 }
-                else if (ae.Method.OnDelete)
+                else if (m.Method.OnCopy)
                 {
+                    var EntityNameSource = m.Method.Copy;
+                    NewEntityNameToOldEntityName.Add(m.EntityName, EntityNameSource);
                 }
-                else if (ae.Method.OnRename)
+                else if (m.Method.OnField)
                 {
-                    var EntityNameDestination = ae.Method.Rename;
-                    NewEntityNameToOldEntityName.Add(EntityNameDestination, ae.EntityName);
-                }
-                else if (ae.Method.OnField)
-                {
-                    if (!NewEntityNameToAlterFields.ContainsKey(ae.EntityName))
+                    if (!NewEntityNameToFieldMappings.ContainsKey(m.EntityName))
                     {
-                        NewEntityNameToOldEntityName.Add(ae.EntityName, ae.EntityName);
-                        NewEntityNameToAlterFields.Add(ae.EntityName, new List<AlterField> { ae.Method.Field });
+                        NewEntityNameToOldEntityName.Add(m.EntityName, m.EntityName);
+                        NewEntityNameToFieldMappings.Add(m.EntityName, new List<FieldMapping> { m.Method.Field });
                     }
                     else
                     {
-                        NewEntityNameToAlterFields[ae.EntityName].Add(ae.Method.Field);
+                        NewEntityNameToFieldMappings[m.EntityName].Add(m.Method.Field);
                     }
                 }
                 else
@@ -78,7 +75,7 @@ namespace Yuki.RelationSchemaDiff
         public Func<RowVal, RowVal> GetTranslator(String NewEntityName)
         {
             if (!NewEntityNameToOldEntityName.ContainsKey(NewEntityName)) { throw new InvalidOperationException(); }
-            if (!NewEntityNameToAlterFields.ContainsKey(NewEntityName))
+            if (!NewEntityNameToFieldMappings.ContainsKey(NewEntityName))
             {
                 if (NewEntityNameHasExceptionTranslator.Contains(NewEntityName))
                 {
@@ -93,7 +90,7 @@ namespace Yuki.RelationSchemaDiff
             var OldEntityName = NewEntityNameToOldEntityName[NewEntityName].ValueOrDefault(null);
             if (OldEntityName == null) { throw new InvalidOperationException(); }
 
-            var AlterFields = NewEntityNameToAlterFields[NewEntityName];
+            var FieldMappings = NewEntityNameToFieldMappings[NewEntityName];
             var OldColumns = OldTypes[OldEntityName].Entity.Fields.Where(f => f.Attribute.OnColumn).ToList();
             var NewColumns = NewTypes[NewEntityName].Entity.Fields.Where(f => f.Attribute.OnColumn).ToList();
 
@@ -103,22 +100,15 @@ namespace Yuki.RelationSchemaDiff
             var NewColumnIndexToOldColumnIndex = new Dictionary<int, int>();
             var NewColumnIndexToCreator = new Dictionary<int, Optional<PrimitiveVal>>();
 
-            foreach (var af in AlterFields)
+            foreach (var fm in FieldMappings)
             {
-                if (af.Method.OnCreate)
+                if (fm.Method.OnNew)
                 {
-                    NewColumnIndexToCreator.Add(NewColumnIndices[af.FieldName], af.Method.Create);
+                    NewColumnIndexToCreator.Add(NewColumnIndices[fm.FieldName], fm.Method.New);
                 }
-                else if (af.Method.OnDelete)
+                else if (fm.Method.OnCopy)
                 {
-                }
-                else if (af.Method.OnRename)
-                {
-                    NewColumnIndexToOldColumnIndex.Add(NewColumnIndices[af.Method.Rename], OldColumnIndices[af.FieldName]);
-                }
-                else if (af.Method.OnChangeType)
-                {
-                    NewColumnIndexToOldColumnIndex.Add(NewColumnIndices[af.FieldName], OldColumnIndices[af.FieldName]);
+                    NewColumnIndexToOldColumnIndex.Add(NewColumnIndices[fm.FieldName], OldColumnIndices[fm.Method.Copy]);
                 }
                 else
                 {
@@ -284,7 +274,7 @@ namespace Yuki.RelationSchemaDiff
             }
             else if (OldType.OnOptional && NewType.OnTypeRef)
             {
-                var t = GetPrimitiveTranslator(OldType.TypeRef, NewType.Optional);
+                var t = GetPrimitiveTranslator(OldType.Optional, NewType.TypeRef);
                 return cv =>
                 {
                     if (!cv.OnOptional)
