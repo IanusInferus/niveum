@@ -485,41 +485,25 @@ namespace Yuki.DatabaseRegenerator
         {
             var rvs = new RelationValueSerializer(s);
 
-            Byte[] Bytes;
-            using (var ms = Streams.CreateMemoryStream())
-            {
-                bs.Write(ms, s);
-                rvs.Write(ms, Value);
-                ms.Position = 0;
-                Bytes = ms.Read((int)(ms.Length));
-            }
-
             var Dir = FileNameHandling.GetFileDirectory(MemoryDatabaseFile);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             using (var fs = Streams.CreateWritable(MemoryDatabaseFile))
             {
                 fs.WriteUInt64(s.Hash());
-                fs.Write(Bytes);
+                bs.Write(fs, s);
+                rvs.Write(fs, Value);
             }
         }
         public static void SaveDataWithoutSchema(RelationSchema.Schema s, String MemoryDatabaseFile, RelationVal Value, Firefly.Mapping.Binary.BinarySerializer bs)
         {
             var rvs = new RelationValueSerializer(s);
 
-            Byte[] Bytes;
-            using (var ms = Streams.CreateMemoryStream())
-            {
-                rvs.Write(ms, Value);
-                ms.Position = 0;
-                Bytes = ms.Read((int)(ms.Length));
-            }
-
             var Dir = FileNameHandling.GetFileDirectory(MemoryDatabaseFile);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             using (var fs = Streams.CreateWritable(MemoryDatabaseFile))
             {
                 fs.WriteUInt64(s.Hash());
-                fs.Write(Bytes);
+                rvs.Write(fs, Value);
             }
         }
 
