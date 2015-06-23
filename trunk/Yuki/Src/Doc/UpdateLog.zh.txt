@@ -1,4 +1,8 @@
-﻿2015.06.17
+﻿2015.06.23
+Yuki.DatabaseRegenerator:
+增加数据库导出为数据文件的功能。
+
+2015.06.17
 Yuki.Relation, Yuki.DatabaseRegenerator:
 重做数据库结构升级功能，修改语法，使得整个变换更像映射，支持将一个字段映射到多个字段上。
 修正数据库结构升级验证的部分遗漏。
