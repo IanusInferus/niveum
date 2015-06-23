@@ -167,12 +167,12 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (optNameLower == "regenm")
+                else if ((optNameLower == "genm") || (optNameLower == "regenm"))
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)
                     {
-                        RegenMemory(Schema(), ConnectionString, args);
+                        GenerateMemoryFileWithoutSchema(Schema(), ConnectionString, args);
                     }
                     else
                     {
@@ -180,12 +180,12 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (optNameLower == "regenms")
+                else if ((optNameLower == "genms") || (optNameLower == "regenms"))
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)
                     {
-                        RegenMemoryWithSchema(Schema(), ConnectionString, args);
+                        GenerateMemoryFileWithSchema(Schema(), ConnectionString, args);
                     }
                     else
                     {
@@ -245,6 +245,58 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
+                else if (optNameLower == "exportmssql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ExportSqlServer(Schema(), ConnectionString, DatabaseName, args[0]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "exportpgsql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ExportPostgreSQL(Schema(), ConnectionString, DatabaseName, args[0]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "exportmysql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ExportMySQL(Schema(), ConnectionString, DatabaseName, args[0]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "exportfdbsql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ExportFoundationDBSQL(Schema(), ConnectionString, DatabaseName, args[0]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "diff")
                 {
                     var args = opt.Arguments;
@@ -297,18 +349,28 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/connect:<ConnectionString>");
             Console.WriteLine(@"指定数据库名称");
             Console.WriteLine(@"/database:<DatabaseName>");
-            Console.WriteLine(@"重建Memory数据库");
-            Console.WriteLine(@"/regenm:<DataDir>*");
-            Console.WriteLine(@"重建Memory数据库(包含Schema)");
-            Console.WriteLine(@"/regenms:<DataDir>*");
+            Console.WriteLine(@"创建Memory数据库(不包含Schema)");
+            Console.WriteLine(@"/genm:(<DataDir>|<MemoryDatabaseFile>)*");
+            Console.WriteLine(@"/regenm:(<DataDir>|<MemoryDatabaseFile>)*");
+            Console.WriteLine(@"创建Memory数据库(包含Schema)");
+            Console.WriteLine(@"/genms:(<DataDir>|<MemoryDatabaseFile>)*");
+            Console.WriteLine(@"/regenms:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"重建SQL Server数据库");
-            Console.WriteLine(@"/regenmssql:<DataDir>*");
+            Console.WriteLine(@"/regenmssql:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"重建PostgreSQL数据库");
-            Console.WriteLine(@"/regenpgsql:<DataDir>*");
+            Console.WriteLine(@"/regenpgsql:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"重建MySQL数据库");
-            Console.WriteLine(@"/regenmysql:<DataDir>*");
+            Console.WriteLine(@"/regenmysql:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"重建FoundationDB/PostgreSQL数据库");
-            Console.WriteLine(@"/regenfdbsql:<DataDir>*");
+            Console.WriteLine(@"/regenfdbsql:(<DataDir>|<MemoryDatabaseFile>)*");
+            Console.WriteLine(@"导出SQL Server数据库");
+            Console.WriteLine(@"/exportmssql:<MemoryDatabaseFile>");
+            Console.WriteLine(@"导出PostgreSQL数据库");
+            Console.WriteLine(@"/exportpgsql:<MemoryDatabaseFile>");
+            Console.WriteLine(@"导出MySQL数据库");
+            Console.WriteLine(@"/exportmysql:<MemoryDatabaseFile>");
+            Console.WriteLine(@"导出FoundationDB/PostgreSQL数据库");
+            Console.WriteLine(@"/exportfdbsql:<MemoryDatabaseFile>");
             Console.WriteLine(@"生成数据库结构差异文件");
             Console.WriteLine(@"/diff:<MemoryDatabaseFileOld>,<MemoryDatabaseFileNew>,<SchemaDiffFile>");
             Console.WriteLine(@"应用数据库结构差异生成新数据库");
@@ -316,20 +378,23 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"RelationSchemaDir|RelationSchemaFile 关系类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"ConnectionString 数据库连接字符串。");
             Console.WriteLine(@"DataDir 数据目录，里面有若干tree数据文件。");
-            Console.WriteLine(@"DataFilePath 数据文件路径。");
-            Console.WriteLine(@"MemoryDatabaseFileOld 旧数据文件路径。");
-            Console.WriteLine(@"MemoryDatabaseFileNew 新数据文件路径。");
+            Console.WriteLine(@"MemoryDatabaseFile 内存数据文件(包含Schema)路径。");
+            Console.WriteLine(@"MemoryDatabaseFileOld 旧数据文件(包含Schema)路径。");
+            Console.WriteLine(@"MemoryDatabaseFileNew 新数据文件(包含Schema)路径。");
             Console.WriteLine(@"SchemaDiffFile 结构差异文件路径。");
-            Console.WriteLine(@"MemoryDatabaseFileOutput 输出数据文件路径。");
+            Console.WriteLine(@"MemoryDatabaseFileOutput 输出数据文件(包含Schema)路径。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
-            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:Data.md /regenm:Data,TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:Data.md /genm:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=.;Integrated Security=True"" /database:Example /regenmssql:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Server=localhost;User ID=postgres;Password=postgres;"" /database:Example /regenpgsql:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root"" /database:Example /regenmysql:Data,TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=.;Integrated Security=True"" /database:Example /exportmssql:Data.md");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Server=localhost;User ID=postgres;Password=postgres;"" /database:Example /exportpgsql:Data.md");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root"" /database:Example /exportmysql:Data.md");
         }
 
-        public static RelationVal LoadData(RelationSchema.Schema s, String[] DataDirs)
+        public static RelationVal LoadData(RelationSchema.Schema s, String[] DataDirOrMemoryDatabaseFiles, Firefly.Mapping.Binary.BinarySerializer bs)
         {
             var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
             var DuplicatedCollectionNames = Entities.GroupBy(e => e.CollectionName).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
@@ -339,12 +404,32 @@ namespace Yuki.DatabaseRegenerator
             }
             var CollectionNameToEntity = Entities.ToDictionary(e => e.CollectionName, StringComparer.OrdinalIgnoreCase);
 
+            var SchemaHash = s.Hash();
+
             var Files = new Dictionary<String, Byte[]>();
-            foreach (var DataDir in DataDirs)
+            var MemoryFiles = new List<RelationVal>();
+            foreach (var DataDirOrMemoryDatabaseFile in DataDirOrMemoryDatabaseFiles)
             {
-                foreach (var f in Directory.GetFiles(DataDir, "*.tree", SearchOption.AllDirectories).OrderBy(ff => ff, StringComparer.OrdinalIgnoreCase))
+                if (Directory.Exists(DataDirOrMemoryDatabaseFile))
                 {
-                    Files.Add(f, System.IO.File.ReadAllBytes(f));
+                    foreach (var f in Directory.GetFiles(DataDirOrMemoryDatabaseFile, "*.tree", SearchOption.AllDirectories).OrderBy(ff => ff, StringComparer.OrdinalIgnoreCase))
+                    {
+                        Files.Add(f, System.IO.File.ReadAllBytes(f));
+                    }
+                }
+                else
+                {
+                    Yuki.RelationValue.RelationVal FileValue;
+                    using (var fs = Streams.OpenReadable(DataDirOrMemoryDatabaseFile))
+                    {
+                        var Hash = fs.ReadUInt64();
+                        if (Hash != SchemaHash) { throw new InvalidOperationException("DatabaseSchemaVersionMismatch"); }
+                        var FileSchema = bs.Read<Yuki.RelationSchema.Schema>(fs);
+                        var rvs = new Yuki.RelationValue.RelationValueSerializer(FileSchema);
+                        FileValue = rvs.Read(fs);
+                        if (fs.Position != fs.Length) { throw new InvalidOperationException(); }
+                    }
+                    MemoryFiles.Add(FileValue);
                 }
             }
             var Forests = Files.AsParallel().Select(p =>
@@ -386,39 +471,20 @@ namespace Yuki.DatabaseRegenerator
 
             var rvts = new RelationValueTreeSerializer(s);
             var Value = rvts.Read(Tables);
+            foreach (var FileValue in MemoryFiles)
+            {
+                for (int k = 0; k < FileValue.Tables.Count; k += 1)
+                {
+                    Value.Tables[k].Rows.AddRange(FileValue.Tables[k].Rows);
+                }
+            }
 
             return Value;
         }
-
-        public static void RegenMemory(RelationSchema.Schema s, String ConnectionString, String[] DataDirs)
+        public static void SaveData(RelationSchema.Schema s, String MemoryDatabaseFile, RelationVal Value, Firefly.Mapping.Binary.BinarySerializer bs)
         {
-            var Value = LoadData(s, DataDirs);
-
             var rvs = new RelationValueSerializer(s);
-            Byte[] Bytes;
-            using (var ms = Streams.CreateMemoryStream())
-            {
-                rvs.Write(ms, Value);
-                ms.Position = 0;
-                Bytes = ms.Read((int)(ms.Length));
-            }
 
-            var Dir = FileNameHandling.GetFileDirectory(ConnectionString);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            using (var fs = Streams.CreateWritable(ConnectionString))
-            {
-                fs.WriteUInt64(s.Hash());
-                fs.Write(Bytes);
-            }
-        }
-
-        public static void RegenMemoryWithSchema(RelationSchema.Schema s, String ConnectionString, String[] DataDirs)
-        {
-            var Value = LoadData(s, DataDirs);
-
-            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
-
-            var rvs = new RelationValueSerializer(s);
             Byte[] Bytes;
             using (var ms = Streams.CreateMemoryStream())
             {
@@ -428,23 +494,63 @@ namespace Yuki.DatabaseRegenerator
                 Bytes = ms.Read((int)(ms.Length));
             }
 
-            var Dir = FileNameHandling.GetFileDirectory(ConnectionString);
+            var Dir = FileNameHandling.GetFileDirectory(MemoryDatabaseFile);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            using (var fs = Streams.CreateWritable(ConnectionString))
+            using (var fs = Streams.CreateWritable(MemoryDatabaseFile))
+            {
+                fs.WriteUInt64(s.Hash());
+                fs.Write(Bytes);
+            }
+        }
+        public static void SaveDataWithoutSchema(RelationSchema.Schema s, String MemoryDatabaseFile, RelationVal Value, Firefly.Mapping.Binary.BinarySerializer bs)
+        {
+            var rvs = new RelationValueSerializer(s);
+
+            Byte[] Bytes;
+            using (var ms = Streams.CreateMemoryStream())
+            {
+                rvs.Write(ms, Value);
+                ms.Position = 0;
+                Bytes = ms.Read((int)(ms.Length));
+            }
+
+            var Dir = FileNameHandling.GetFileDirectory(MemoryDatabaseFile);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            using (var fs = Streams.CreateWritable(MemoryDatabaseFile))
             {
                 fs.WriteUInt64(s.Hash());
                 fs.Write(Bytes);
             }
         }
 
-        public static void RegenSqlServer(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
+        public static void GenerateMemoryFileWithoutSchema(RelationSchema.Schema s, String ConnectionString, String[] DataDirOrMemoryDatabaseFiles)
+        {
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+            var rvs = new RelationValueSerializer(s);
+
+            var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
+            SaveDataWithoutSchema(s, ConnectionString, Value, bs);
+        }
+
+        public static void GenerateMemoryFileWithSchema(RelationSchema.Schema s, String ConnectionString, String[] DataDirOrMemoryDatabaseFiles)
+        {
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+            var rvs = new RelationValueSerializer(s);
+
+            var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
+            SaveData(s, ConnectionString, Value, bs);
+        }
+
+        public static void RegenSqlServer(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirOrMemoryDatabaseFiles)
         {
             if (DatabaseName == "")
             {
                 throw new InvalidOperationException("数据库名称没有指定。");
             }
 
-            var Value = LoadData(s, DataDirs);
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+
+            var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
 
             var cf = GetConnectionFactory(DatabaseType.SqlServer);
             using (var c = cf(ConnectionString))
@@ -462,10 +568,10 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
 
-            var ImportTableInfo = TableOperations.GetImportTableInfo(s, Value);
-            var Tables = ImportTableInfo.Tables;
-            var EntityMetas = ImportTableInfo.EntityMetas;
-            var EnumUnderlyingTypes = ImportTableInfo.EnumUnderlyingTypes;
+            var TableInfo = TableOperations.GetTableInfo(s);
+            var EntityMetas = TableInfo.EntityMetas;
+            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
+            var Tables = TableOperations.GetTableDictionary(s, EntityMetas, Value);
 
             using (var c = cf(ConnectionString))
             {
@@ -519,9 +625,11 @@ namespace Yuki.DatabaseRegenerator
             }
         }
 
-        public static void RegenPostgreSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
+        public static void RegenPostgreSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirOrMemoryDatabaseFiles)
         {
-            var Value = LoadData(s, DataDirs);
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+
+            var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
 
             var GenSqls = s.CompileToPostgreSql(DatabaseName, true);
             var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
@@ -559,10 +667,10 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
 
-            var ImportTableInfo = TableOperations.GetImportTableInfo(s, Value);
-            var Tables = ImportTableInfo.Tables;
-            var EntityMetas = ImportTableInfo.EntityMetas;
-            var EnumUnderlyingTypes = ImportTableInfo.EnumUnderlyingTypes;
+            var TableInfo = TableOperations.GetTableInfo(s);
+            var EntityMetas = TableInfo.EntityMetas;
+            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
+            var Tables = TableOperations.GetTableDictionary(s, EntityMetas, Value);
 
             using (var c = cf(ConnectionString))
             {
@@ -607,9 +715,11 @@ namespace Yuki.DatabaseRegenerator
             }
         }
 
-        public static void RegenMySQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
+        public static void RegenMySQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirOrMemoryDatabaseFiles)
         {
-            var Value = LoadData(s, DataDirs);
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+
+            var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
 
             var GenSqls = s.CompileToMySql(DatabaseName, true);
             var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
@@ -631,10 +741,10 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
 
-            var ImportTableInfo = TableOperations.GetImportTableInfo(s, Value);
-            var Tables = ImportTableInfo.Tables;
-            var EntityMetas = ImportTableInfo.EntityMetas;
-            var EnumUnderlyingTypes = ImportTableInfo.EnumUnderlyingTypes;
+            var TableInfo = TableOperations.GetTableInfo(s);
+            var EntityMetas = TableInfo.EntityMetas;
+            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
+            var Tables = TableOperations.GetTableDictionary(s, EntityMetas, Value);
 
             using (var c = cf(ConnectionString))
             {
@@ -679,9 +789,11 @@ namespace Yuki.DatabaseRegenerator
             }
         }
 
-        public static void RegenFoundationDBSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirs)
+        public static void RegenFoundationDBSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirOrMemoryDatabaseFiles)
         {
-            var Value = LoadData(s, DataDirs);
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+
+            var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
 
             var GenSqls = s.CompileToFoundationDbSql(DatabaseName);
             var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
@@ -719,10 +831,10 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
 
-            var ImportTableInfo = TableOperations.GetImportTableInfo(s, Value);
-            var Tables = ImportTableInfo.Tables;
-            var EntityMetas = ImportTableInfo.EntityMetas;
-            var EnumUnderlyingTypes = ImportTableInfo.EnumUnderlyingTypes;
+            var TableInfo = TableOperations.GetTableInfo(s);
+            var EntityMetas = TableInfo.EntityMetas;
+            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
+            var Tables = TableOperations.GetTableDictionary(s, EntityMetas, Value);
 
             using (var c = cf(ConnectionString))
             {
@@ -771,6 +883,151 @@ namespace Yuki.DatabaseRegenerator
                     cmd.ExecuteNonQuery();
                 }
             }
+        }
+
+        public static void ExportSqlServer(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String MemoryDatabaseFile)
+        {
+            if (DatabaseName == "")
+            {
+                throw new InvalidOperationException("数据库名称没有指定。");
+            }
+
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+
+            var cf = GetConnectionFactory(DatabaseType.SqlServer);
+
+            var TableInfo = TableOperations.GetTableInfo(s);
+            var EntityMetas = TableInfo.EntityMetas;
+            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
+
+            var Value = new RelationVal { Tables = new List<TableVal>() };
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName);
+                using (var b = c.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (var t in EntityMetas)
+                        {
+                            var Table = TableOperations.ExportTable(EntityMetas, EnumUnderlyingTypes, c, b, t.Value.Name, DatabaseType.SqlServer);
+                            Value.Tables.Add(Table);
+                        }
+                    }
+                    finally
+                    {
+                        b.Rollback();
+                    }
+                }
+            }
+
+            SaveData(s, MemoryDatabaseFile, Value, bs);
+        }
+
+        public static void ExportPostgreSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String MemoryDatabaseFile)
+        {
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+
+            var cf = GetConnectionFactory(DatabaseType.PostgreSQL);
+
+            var TableInfo = TableOperations.GetTableInfo(s);
+            var EntityMetas = TableInfo.EntityMetas;
+            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
+
+            var Value = new RelationVal { Tables = new List<TableVal>() };
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
+                using (var b = c.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (var t in EntityMetas)
+                        {
+                            var Table = TableOperations.ExportTable(EntityMetas, EnumUnderlyingTypes, c, b, t.Value.Name, DatabaseType.PostgreSQL);
+                            Value.Tables.Add(Table);
+                        }
+                    }
+                    finally
+                    {
+                        b.Rollback();
+                    }
+                }
+            }
+
+            SaveData(s, MemoryDatabaseFile, Value, bs);
+        }
+
+        public static void ExportMySQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String MemoryDatabaseFile)
+        {
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+
+            var cf = GetConnectionFactory(DatabaseType.MySQL);
+
+            var TableInfo = TableOperations.GetTableInfo(s);
+            var EntityMetas = TableInfo.EntityMetas;
+            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
+
+            var Value = new RelationVal { Tables = new List<TableVal>() };
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName);
+                using (var b = c.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (var t in EntityMetas)
+                        {
+                            var Table = TableOperations.ExportTable(EntityMetas, EnumUnderlyingTypes, c, b, t.Value.Name, DatabaseType.MySQL);
+                            Value.Tables.Add(Table);
+                        }
+                    }
+                    finally
+                    {
+                        b.Rollback();
+                    }
+                }
+            }
+
+            SaveData(s, MemoryDatabaseFile, Value, bs);
+        }
+
+        public static void ExportFoundationDBSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String MemoryDatabaseFile)
+        {
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+
+            var cf = GetConnectionFactory(DatabaseType.FoundationDBSQL);
+
+            var TableInfo = TableOperations.GetTableInfo(s);
+            var EntityMetas = TableInfo.EntityMetas;
+            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
+
+            var Value = new RelationVal { Tables = new List<TableVal>() };
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName);
+                using (var b = c.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (var t in EntityMetas)
+                        {
+                            var Table = TableOperations.ExportTable(EntityMetas, EnumUnderlyingTypes, c, b, t.Value.Name, DatabaseType.FoundationDBSQL);
+                            Value.Tables.Add(Table);
+                        }
+                    }
+                    finally
+                    {
+                        b.Rollback();
+                    }
+                }
+            }
+
+            SaveData(s, MemoryDatabaseFile, Value, bs);
         }
 
         private static Func<String, IDbConnection> GetConnectionFactory(DatabaseType Type)
