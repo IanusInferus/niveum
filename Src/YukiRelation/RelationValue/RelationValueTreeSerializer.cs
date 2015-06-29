@@ -401,7 +401,7 @@ namespace Yuki.RelationValue
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
-                        if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                        if ((cv == null) || (cv == "-")) { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
                         try
                         {
                             var v = Boolean.Parse(cv);
@@ -423,7 +423,7 @@ namespace Yuki.RelationValue
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
-                        if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                        if ((cv == null) || (cv == "-")) { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
                         var v = cv;
                         return ColumnVal.CreateOptional(PrimitiveVal.CreateStringValue(v));
                     };
@@ -440,7 +440,7 @@ namespace Yuki.RelationValue
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
                             var cv = cvs.Single().Stem.Children.Single().Leaf;
-                            if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                            if ((cv == null) || (cv == "-")) { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
                             if (EnumParser.ContainsKey(cv))
                             {
                                 var v = (int)(EnumParser[cv]);
@@ -470,7 +470,7 @@ namespace Yuki.RelationValue
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
                             var cv = cvs.Single().Stem.Children.Single().Leaf;
-                            if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                            if ((cv == null) || (cv == "-")) { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
                             try
                             {
                                 var v = NumericStrings.InvariantParseInt32(cv);
@@ -495,7 +495,7 @@ namespace Yuki.RelationValue
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
                             var cv = cvs.Single().Stem.Children.Single().Leaf;
-                            if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                            if ((cv == null) || (cv == "-")) { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
                             if (EnumParser.ContainsKey(cv))
                             {
                                 var v = (Int64)(EnumParser[cv]);
@@ -525,7 +525,7 @@ namespace Yuki.RelationValue
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
                             var cv = cvs.Single().Stem.Children.Single().Leaf;
-                            if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                            if ((cv == null) || (cv == "-")) { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
                             try
                             {
                                 var v = NumericStrings.InvariantParseInt64(cv);
@@ -548,7 +548,7 @@ namespace Yuki.RelationValue
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
-                        if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                        if ((cv == null) || (cv == "-")) { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
                         try
                         {
                             var v = NumericStrings.InvariantParseFloat64(cv);
@@ -570,7 +570,7 @@ namespace Yuki.RelationValue
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
                         var cv = cvs.Single().Stem.Children.Single().Leaf;
-                        if (cv == "-") { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
+                        if ((cv == null) || (cv == "-")) { return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty); }
                         try
                         {
                             var v = Regex.Split(cv.Trim(" \t\r\n".ToCharArray()), "( |\t|\r|\n)+", RegexOptions.ExplicitCapture).Select(s => Byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToList();
