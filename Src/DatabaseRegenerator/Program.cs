@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2015.02.27.
+//  Version:     2015.06.29.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,6 +19,7 @@ using Firefly;
 using Firefly.Streaming;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
+using Syntax = Firefly.Texting.TreeFormat.Syntax;
 using Firefly.Texting.TreeFormat.Semantics;
 using Yuki.RelationSchema;
 using Yuki.RelationSchema.TSql;
@@ -193,6 +194,32 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
+                else if (optNameLower == "exportcoll")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length >= 1)
+                    {
+                        ExportCollection(ConnectionString, args[0], args.Skip(1).ToArray());
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "importcoll")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length >= 1)
+                    {
+                        ImportCollection(ConnectionString, args);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "regenmssql")
                 {
                     var args = opt.Arguments;
@@ -355,6 +382,10 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"创建Memory数据库(包含Schema)");
             Console.WriteLine(@"/genms:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"/regenms:(<DataDir>|<MemoryDatabaseFile>)*");
+            Console.WriteLine(@"导出数据集，不写名称则导出所有表，无需加载类型");
+            Console.WriteLine(@"/exportcoll:<DataDir>[,<EntityName>*]");
+            Console.WriteLine(@"导入数据集，无需加载类型");
+            Console.WriteLine(@"/importcoll:<DataDir>+");
             Console.WriteLine(@"重建SQL Server数据库");
             Console.WriteLine(@"/regenmssql:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"重建PostgreSQL数据库");
@@ -386,6 +417,8 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:Data.md /genm:Data,TestData");
+            Console.WriteLine(@"DatabaseRegenerator /connect:Data.md /exportcoll:TestData");
+            Console.WriteLine(@"DatabaseRegenerator /connect:Data.md /importcoll:TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=.;Integrated Security=True"" /database:Example /regenmssql:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Server=localhost;User ID=postgres;Password=postgres;"" /database:Example /regenpgsql:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root"" /database:Example /regenmysql:Data,TestData");
@@ -481,6 +514,84 @@ namespace Yuki.DatabaseRegenerator
 
             return Value;
         }
+        public static KeyValuePair<RelationSchema.Schema, RelationVal> LoadData(String MemoryDatabaseFile, Firefly.Mapping.Binary.BinarySerializer bs)
+        {
+            RelationSchema.Schema s;
+            Yuki.RelationValue.RelationVal Value;
+            using (var fs = Streams.OpenReadable(MemoryDatabaseFile))
+            {
+                var Hash = fs.ReadUInt64();
+                s = bs.Read<Yuki.RelationSchema.Schema>(fs);
+                var rvs = new Yuki.RelationValue.RelationValueSerializer(s);
+                Value = rvs.Read(fs);
+                if (fs.Position != fs.Length) { throw new InvalidOperationException(); }
+            }
+            return new KeyValuePair<Schema, RelationVal>(s, Value);
+        }
+        public static Dictionary<String, TableVal> LoadPartialData(RelationSchema.Schema s, String[] DataDirs, Firefly.Mapping.Binary.BinarySerializer bs)
+        {
+            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
+            var DuplicatedCollectionNames = Entities.GroupBy(e => e.CollectionName).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+            if (DuplicatedCollectionNames.Count > 0)
+            {
+                throw new InvalidOperationException("DuplicatedCollectionNames: {0}".Formats(String.Join(" ", DuplicatedCollectionNames)));
+            }
+            var CollectionNameToEntity = Entities.ToDictionary(e => e.CollectionName, StringComparer.OrdinalIgnoreCase);
+            var EntityNameToEntity = Entities.ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
+
+            var SchemaHash = s.Hash();
+
+            var Files = new Dictionary<String, Byte[]>();
+            foreach (var DataDirOrMemoryDatabaseFile in DataDirs)
+            {
+                foreach (var f in Directory.GetFiles(DataDirOrMemoryDatabaseFile, "*.tree", SearchOption.AllDirectories).OrderBy(ff => ff, StringComparer.OrdinalIgnoreCase))
+                {
+                    Files.Add(f, System.IO.File.ReadAllBytes(f));
+                }
+            }
+            var Forests = Files.AsParallel().Select(p =>
+            {
+                using (var bas = new ByteArrayStream(p.Value))
+                {
+                    using (var sr = Txt.CreateTextReader(bas.AsNewReading(), Firefly.TextEncoding.TextEncoding.Default))
+                    {
+                        return TreeFile.ReadDirect(sr, p.Key, new TreeFormatParseSetting(), new TreeFormatEvaluateSetting()).Value.Nodes;
+                    }
+                }
+            }).ToList();
+
+            var Tables = new Dictionary<String, List<Node>>();
+            foreach (var Forest in Forests)
+            {
+                foreach (var n in Forest)
+                {
+                    if (!n.OnStem) { continue; }
+                    var Name = n.Stem.Name;
+                    if (CollectionNameToEntity.ContainsKey(Name))
+                    {
+                        Name = CollectionNameToEntity[Name].Name;
+                    }
+                    if (!Tables.ContainsKey(Name))
+                    {
+                        Tables.Add(Name, new List<Node>());
+                    }
+                    var t = Tables[Name];
+                    t.AddRange(n.Stem.Children);
+                }
+            }
+
+            var rvts = new RelationValueTreeSerializer(s);
+            var TableValues = new Dictionary<String, TableVal>(StringComparer.OrdinalIgnoreCase);
+            foreach (var p in Tables)
+            {
+                var EntityName = p.Key;
+                var e = EntityNameToEntity[EntityName];
+                var tv = rvts.ReadTable(p.Value, e);
+                TableValues.Add(EntityName, tv);
+            }
+
+            return TableValues;
+        }
         public static void SaveData(RelationSchema.Schema s, String MemoryDatabaseFile, RelationVal Value, Firefly.Mapping.Binary.BinarySerializer bs)
         {
             var rvs = new RelationValueSerializer(s);
@@ -510,7 +621,6 @@ namespace Yuki.DatabaseRegenerator
         public static void GenerateMemoryFileWithoutSchema(RelationSchema.Schema s, String ConnectionString, String[] DataDirOrMemoryDatabaseFiles)
         {
             var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
-            var rvs = new RelationValueSerializer(s);
 
             var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
             SaveDataWithoutSchema(s, ConnectionString, Value, bs);
@@ -519,9 +629,63 @@ namespace Yuki.DatabaseRegenerator
         public static void GenerateMemoryFileWithSchema(RelationSchema.Schema s, String ConnectionString, String[] DataDirOrMemoryDatabaseFiles)
         {
             var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
-            var rvs = new RelationValueSerializer(s);
 
             var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
+            SaveData(s, ConnectionString, Value, bs);
+        }
+
+        public static void ExportCollection(String ConnectionString, String DataDir, String[] ExportEntityNames)
+        {
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+
+            var Pair = LoadData(ConnectionString, bs);
+            var s = Pair.Key;
+            var Value = Pair.Value;
+            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
+
+            HashSet<String> ExportEntityNameSet = null;
+            if (ExportEntityNames.Length != 0)
+            {
+                ExportEntityNameSet = new HashSet<String>(ExportEntityNames.Distinct(StringComparer.OrdinalIgnoreCase), StringComparer.OrdinalIgnoreCase);
+            }
+
+            var Dir = FileNameHandling.GetAbsolutePath(DataDir, Environment.CurrentDirectory);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+
+            var rvts = new RelationValueTreeSerializer(s);
+            foreach (var p in Entities.ZipStrict(Value.Tables, (a, b) => new KeyValuePair<EntityDef, TableVal>(a, b)))
+            {
+                var e = p.Key;
+                var tv = p.Value;
+                if ((ExportEntityNameSet == null) || (ExportEntityNameSet.Contains(e.Name)))
+                {
+                    var l = rvts.WriteTable(e, tv);
+                    var t = RelationValueSyntaxTreeBuilder.BuildTable(e, l);
+
+                    var TreeFilePath = FileNameHandling.GetPath(DataDir, e.Name + ".tree");
+                    TreeFile.WriteRaw(TreeFilePath, new Syntax.Forest { MultiNodesList = new Syntax.MultiNodes[] { t } });
+                }
+            }
+        }
+        public static void ImportCollection(String ConnectionString, String[] DataDirs)
+        {
+            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+
+            var Pair = LoadData(ConnectionString, bs);
+            var s = Pair.Key;
+            var Value = Pair.Value;
+            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
+
+            var ValueForImport = LoadPartialData(s, DataDirs, bs);
+            for (int k = 0; k < Value.Tables.Count; k += 1)
+            {
+                var e = Entities[k];
+                var tv = Value.Tables[k];
+                if (ValueForImport.ContainsKey(e.Name))
+                {
+                    Value.Tables[k] = ValueForImport[e.Name];
+                }
+            }
             SaveData(s, ConnectionString, Value, bs);
         }
 

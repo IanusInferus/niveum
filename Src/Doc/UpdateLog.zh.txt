@@ -1,4 +1,8 @@
 ﻿2015.06.23
+Yuki.Relation, Yuki.DatabaseRegenerator:
+增加数据文件导出导入功能。
+
+2015.06.23
 Yuki.DatabaseRegenerator:
 增加数据库导出为数据文件的功能。
 减小将数据库导出时的内存占用。

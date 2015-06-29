@@ -86,6 +86,7 @@
     <Compile Include="RelationValue\RelationValueSerializer.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="RelationValue\RelationValueSyntaxTreeBuilder.cs" />
     <Compile Include="RelationValue\RelationValueTreeSerializer.cs">
       <SubType>Code</SubType>
     </Compile>
