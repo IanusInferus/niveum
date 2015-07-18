@@ -1,7 +1,10 @@
 ﻿#pragma once
 
 #include <functional>
+#include <memory>
 #include <map>
+#include <mutex>
+#include <thread>
 #include <boost/thread.hpp>
 
 namespace BaseSystem
@@ -13,9 +16,9 @@ namespace BaseSystem
     class ThreadLocalVariable : public std::enable_shared_from_this<ThreadLocalVariable<T>>
     {
     private:
-        std::map<boost::thread::id, std::shared_ptr<T>> Mappings;
+        std::map<std::thread::id, std::shared_ptr<T>> Mappings;
         std::function<std::shared_ptr<T>()> Factory;
-        boost::mutex Lockee;
+        std::mutex Lockee;
     public:
         ThreadLocalVariable(std::function<std::shared_ptr<T>()> Factory)
             : Factory(Factory)
@@ -24,17 +27,17 @@ namespace BaseSystem
 
         ~ThreadLocalVariable()
         {
-            boost::unique_lock<boost::mutex> Lock(Lockee);
+            std::unique_lock<std::mutex> Lock(Lockee);
             Mappings.clear();
             Factory = nullptr;
         }
 
         std::shared_ptr<T> Value()
         {
-            auto id = boost::this_thread::get_id();
+            auto id = std::this_thread::get_id();
 
             {
-                boost::unique_lock<boost::mutex> Lock(Lockee);
+                std::unique_lock<std::mutex> Lock(Lockee);
                 if (Mappings.count(id) > 0)
                 {
                     return Mappings[id];
@@ -50,7 +53,7 @@ namespace BaseSystem
                     auto ThisPtr = this->shared_from_this();
                     boost::this_thread::at_thread_exit([ThisPtr, id]()
                     {
-                        boost::unique_lock<boost::mutex> Lock(ThisPtr->Lockee);
+                        std::unique_lock<std::mutex> Lock(ThisPtr->Lockee);
                         if (ThisPtr->Mappings.count(id) > 0)
                         {
                             ThisPtr->Mappings.erase(id);
