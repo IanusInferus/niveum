@@ -21,6 +21,7 @@
 #include <functional>
 #include <chrono>
 #include <asio.hpp>
+#include <asio/steady_timer.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -262,7 +263,7 @@ namespace Client
             public:
                 std::shared_ptr<PartContext> Parts;
                 int WritenIndex;
-                std::shared_ptr<asio::deadline_timer> Timer;
+                std::shared_ptr<asio::steady_timer> Timer;
             };
             BaseSystem::LockedVariable<std::shared_ptr<UdpReadContext>> RawReadingContext;
             BaseSystem::LockedVariable<std::shared_ptr<UdpWriteContext>> CookedWritingContext;
@@ -513,8 +514,8 @@ namespace Client
                     }
                     if (c->Timer == nullptr)
                     {
-                        c->Timer = std::make_shared<asio::deadline_timer>(io_service);
-                        c->Timer->expires_from_now(boost::posix_time::milliseconds(CheckTimeout()));
+                        c->Timer = std::make_shared<asio::steady_timer>(io_service);
+                        c->Timer->expires_from_now(std::chrono::milliseconds(CheckTimeout()));
                         c->Timer->async_wait([=](const asio::error_code& error)
                         {
                             if (!error)
@@ -594,7 +595,7 @@ namespace Client
                         }
                     });
 
-                    std::shared_ptr<asio::deadline_timer> Timer = nullptr;
+                    std::shared_ptr<asio::steady_timer> Timer = nullptr;
                     std::vector<std::shared_ptr<std::vector<std::uint8_t>>> Parts;
                     CookedWritingContext.DoAction([&, IsRunningValue](std::shared_ptr<UdpWriteContext> cc)
                     {
@@ -685,8 +686,8 @@ namespace Client
                                 Wait = static_cast<int>(pWait);
                             }
                         }
-                        cc->Timer = std::make_shared<asio::deadline_timer>(io_service);
-                        cc->Timer->expires_from_now(boost::posix_time::milliseconds(Wait));
+                        cc->Timer = std::make_shared<asio::steady_timer>(io_service);
+                        cc->Timer->expires_from_now(std::chrono::milliseconds(Wait));
                         cc->Timer->async_wait([=](const asio::error_code& error)
                         {
                             if (!error)
@@ -1036,7 +1037,7 @@ namespace Client
                     catch (...)
                     {
                     }
-                    std::shared_ptr<asio::deadline_timer> Timer = nullptr;
+                    std::shared_ptr<asio::steady_timer> Timer = nullptr;
                     CookedWritingContext.DoAction([&](std::shared_ptr<UdpWriteContext> c)
                     {
                         if (c->Timer != nullptr)

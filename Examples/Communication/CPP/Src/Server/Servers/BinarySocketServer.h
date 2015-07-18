@@ -23,17 +23,15 @@
 #include <stdexcept>
 #include <functional>
 #include <thread>
-#include <boost/functional/hash.hpp>
 #include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/format.hpp>
 
 namespace Server
 {
     class BinarySocketSession;
-    class BinarySocketServer : public std::enable_shared_from_this<BinarySocketServer>
+    class BinarySocketServer : public std::enable_shared_from_this < BinarySocketServer >
     {
     private:
         class BindingInfo;
@@ -52,24 +50,39 @@ namespace Server
         typedef std::unordered_set<std::shared_ptr<BinarySocketSession>, SharedPtrHash<BinarySocketSession>> TSessionSet;
         struct IpAddressHash
         {
+            template <class T>
+            static inline void hash_combine(std::size_t& seed, const T& v)
+            {
+                std::hash<T> hasher;
+                seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            }
+
             std::size_t operator() (const asio::ip::address &p) const
             {
                 if (p.is_v4())
                 {
                     auto Bytes = p.to_v4().to_bytes();
-                    auto a = (uint8_t (*)[sizeof(Bytes)])(Bytes.data());
-                    return boost::hash<decltype(*a)>()(*a);
+                    std::size_t s = 0;
+                    for (auto b : Bytes)
+                    {
+                        hash_combine(s, b);
+                    }
+                    return s;
                 }
                 else if (p.is_v6())
                 {
                     auto Bytes = p.to_v6().to_bytes();
-                    auto a = (uint8_t (*)[sizeof(Bytes)])(Bytes.data());
-                    return boost::hash<decltype(*a)>()(*a);
+                    std::size_t s = 0;
+                    for (auto b : Bytes)
+                    {
+                        hash_combine(s, b);
+                    }
+                    return s;
                 }
                 else
                 {
                     auto s = p.to_string();
-                    return boost::hash<decltype(s)>()(s);
+                    return std::hash<decltype(s)>()(s);
                 }
             }
         };
@@ -152,7 +165,7 @@ namespace Server
         bool EnableLogCriticalErrorValue;
         bool EnableLogPerformanceValue;
         bool EnableLogSystemValue;
-        
+
     public:
         std::function<bool(std::shared_ptr<SessionContext>, std::wstring)> GetCheckCommandAllowed() const;
         /// <summary>只能在启动前修改，以保证线程安全</summary>

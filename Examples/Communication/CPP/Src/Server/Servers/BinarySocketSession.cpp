@@ -8,6 +8,8 @@
 
 #include <stdexcept>
 
+#include <asio/steady_timer.hpp>
+
 namespace Server
 {
     class BinarySocketSession::CommandBody
@@ -389,8 +391,8 @@ namespace Server
             auto Bytes = s.ReadBytes(s.GetLength());
             if (IdleTimeout.OnHasValue())
             {
-                auto Timer = std::make_shared<asio::deadline_timer>(IoService);
-                Timer->expires_from_now(boost::posix_time::milliseconds(IdleTimeout.HasValue));
+                auto Timer = std::make_shared<asio::steady_timer>(IoService);
+                Timer->expires_from_now(std::chrono::milliseconds(IdleTimeout.HasValue));
                 Timer->async_wait([=](const asio::error_code& error)
                 {
                     if (!error)
@@ -447,8 +449,8 @@ namespace Server
             };
             if (IdleTimeout.OnHasValue())
             {
-                auto Timer = std::make_shared<asio::deadline_timer>(IoService);
-                Timer->expires_from_now(boost::posix_time::milliseconds(IdleTimeout.HasValue));
+                auto Timer = std::make_shared<asio::steady_timer>(IoService);
+                Timer->expires_from_now(std::chrono::milliseconds(IdleTimeout.HasValue));
                 Timer->async_wait([=](const asio::error_code& error)
                 {
                     if (!error)

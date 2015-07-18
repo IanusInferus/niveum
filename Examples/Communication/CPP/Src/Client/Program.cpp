@@ -31,7 +31,7 @@
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/format.hpp>
+#include <format.h>
 
 namespace Client
 {
@@ -272,11 +272,11 @@ namespace Client
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", (boost::wformat(L"%1% %2%ms") % CommandName % Milliseconds).str().c_str());
+                //std::wprintf(L"%ls\n", fmt::format(L"{0} {1}ms", CommandName, Milliseconds).c_str());
             };
             bsca->ClientCommandFailed = [=](std::wstring CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", (boost::wformat(L"%1% Failed %2%ms") % CommandName % Milliseconds).str().c_str());
+                //std::wprintf(L"%ls\n", fmt::format(L"{0} Failed {1}ms", CommandName, Milliseconds).c_str());
             };
             bsca->ServerCommandReceived = [=](std::wstring CommandName)
             {
@@ -327,11 +327,11 @@ namespace Client
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", (boost::wformat(L"%1% %2%ms") % CommandName % Milliseconds).str().c_str());
+                //std::wprintf(L"%ls\n", fmt::format(L"{0} {1}ms", CommandName, Milliseconds).c_str());
             };
             bsca->ClientCommandFailed = [=](std::wstring CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", (boost::wformat(L"%1% Failed %2%ms") % CommandName % Milliseconds).str().c_str());
+                //std::wprintf(L"%ls\n", fmt::format(L"{0} Failed {1}ms", CommandName, Milliseconds).c_str());
             };
             bsca->ServerCommandReceived = [=](std::wstring CommandName)
             {
