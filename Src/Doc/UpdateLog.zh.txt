@@ -1,4 +1,8 @@
-﻿2015.06.29
+﻿2015.07.17
+Examples:
+C++通讯示例中将系统时间库从使用boost改为使用标准库。
+
+2015.06.29
 Yuki.Relation, Yuki.DatabaseRegenerator:
 增加数据文件导出导入功能。
 
