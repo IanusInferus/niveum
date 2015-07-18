@@ -51,10 +51,10 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);..\Lib\utf8;$(BOOST_ROOT);$(MYSQL_CONNECTOR_C_ROOT)\include;$(MYSQL_CONNECTOR_CXX_ROOT);$(IncludePath)</IncludePath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);$(BOOST_ROOT)\stage\lib;$(MYSQL_CONNECTOR_C_ROOT)\libmysql\Debug;$(MYSQL_CONNECTOR_CXX_ROOT)\driver\Debug</LibraryPath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);..\Lib\utf8;$(BOOST_ROOT);$(MYSQL_CONNECTOR_C_ROOT)\include;$(MYSQL_CONNECTOR_CXX_ROOT);$(IncludePath)</IncludePath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);$(BOOST_ROOT)\stage\lib;$(MYSQL_CONNECTOR_C_ROOT)\libmysql\Release;$(MYSQL_CONNECTOR_CXX_ROOT)\driver\Release</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);..\Lib\utf8;$(SolutionDir)..\Lib\boost;$(BOOST_ROOT);$(MYSQL_CONNECTOR_C_ROOT)\include;$(MYSQL_CONNECTOR_CXX_ROOT);$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);$(SolutionDir)..\Lib\boost\stage\lib;$(BOOST_ROOT)\stage\lib;$(MYSQL_CONNECTOR_C_ROOT)\libmysql\Debug;$(MYSQL_CONNECTOR_CXX_ROOT)\driver\Debug</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);..\Lib\utf8;$(SolutionDir)..\Lib\boost;$(BOOST_ROOT);$(MYSQL_CONNECTOR_C_ROOT)\include;$(MYSQL_CONNECTOR_CXX_ROOT);$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);$(SolutionDir)..\Lib\boost\stage\lib;$(BOOST_ROOT)\stage\lib;$(MYSQL_CONNECTOR_C_ROOT)\libmysql\Release;$(MYSQL_CONNECTOR_CXX_ROOT)\driver\Release</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -119,6 +119,7 @@ if exist "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.pdb" 
     <ClCompile Include="DataAccessManager.cpp" />
     <ClCompile Include="MySql\DataAccessBase.cpp" />
     <ClCompile Include="Program.cpp" />
+    <ClCompile Include="ThreadLocalVariable.cpp" />
     <ClCompile Include="Utility.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

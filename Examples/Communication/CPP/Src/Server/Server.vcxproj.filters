@@ -104,5 +104,8 @@
     <ClCompile Include="BaseSystem\Times.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
+    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

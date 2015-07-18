@@ -186,22 +186,14 @@ namespace Client
                     Connected = b;
                     return false;
                 });
-                try
+                if (Connected)
                 {
-                    if (Connected)
-                    {
-                        Socket.shutdown(asio::ip::tcp::socket::shutdown_both);
-                    }
+                    asio::error_code e;
+                    Socket.shutdown(asio::ip::tcp::socket::shutdown_both, e);
                 }
-                catch (...)
                 {
-                }
-                try
-                {
-                    Socket.close();
-                }
-                catch (...)
-                {
+                    asio::error_code e;
+                    Socket.close(e);
                 }
             }
         };

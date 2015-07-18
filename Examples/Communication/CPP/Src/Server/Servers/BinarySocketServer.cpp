@@ -43,21 +43,10 @@ namespace Server
                     try
                     {
                         auto Socket = std::make_shared<asio::ip::tcp::socket>(IoService);
-                        try
-                        {
-                            Socket->connect(LoopBackEndPoint);
-                        }
-                        catch (std::exception &)
-                        {
-                        }
-                        try
-                        {
-                            Socket->shutdown(asio::ip::tcp::socket::shutdown_both);
-                        }
-                        catch (std::exception &)
-                        {
-                        }
-                        Socket->close();
+                        asio::error_code e;
+                        Socket->connect(LoopBackEndPoint, e);
+                        Socket->shutdown(asio::ip::tcp::socket::shutdown_both, e);
+                        Socket->close(e);
                     }
                     catch (std::exception &)
                     {
@@ -67,12 +56,9 @@ namespace Server
                         Task->join();
                         Task = nullptr;
                     }
-                    try
                     {
-                        a->close();
-                    }
-                    catch (std::exception &)
-                    {
+                        asio::error_code e;
+                        a->close(e);
                     }
                 }
                 return nullptr;
@@ -107,7 +93,8 @@ namespace Server
                     Acceptor.Check<std::shared_ptr<asio::ip::tcp::acceptor>>([](const std::shared_ptr<asio::ip::tcp::acceptor> &a) { return a; })->accept(*Socket, se);
                     if (ListeningTaskToken.IsCancellationRequested())
                     {
-                        Socket->close();
+                        asio::error_code e;
+                        Socket->close(e);
                         return;
                     }
                     if (se)
@@ -130,13 +117,8 @@ namespace Server
             {
                 if (a != nullptr)
                 {
-                    try
-                    {
-                        a->close();
-                    }
-                    catch (std::exception &)
-                    {
-                    }
+                    asio::error_code e;
+                    a->close(e);
                 }
                 auto b = std::make_shared<asio::ip::tcp::acceptor>(IoService, LocalEndPoint);
                 return b;

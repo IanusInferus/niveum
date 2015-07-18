@@ -6,7 +6,6 @@
 #include "BaseSystem/Optional.h"
 #include "BaseSystem/AutoRelease.h"
 #include "Communication.h"
-#include "UtfEncoding.h"
 #include "CommunicationBinary.h"
 #include "Util/SessionLogEntry.h"
 #include "Context/ServerContext.h"

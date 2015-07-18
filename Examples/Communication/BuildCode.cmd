@@ -18,9 +18,9 @@ SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication 
 @if not exist CPP\Src\Server @md CPP\Src\Server
 @if not exist CPP\Src\Client @md CPP\Src\Client
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /t2cpp:CPP\Src\Server\Communication.h,Communication
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /t2cppb:CPP\Src\Server\CommunicationBinary.h,Communication.Binary
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /import:""Communication.h"" /import:""UtfEncoding.h"" /t2cppb:CPP\Src\Server\CommunicationBinary.h,Communication.Binary
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2cpp:CPP\Src\Client\Communication.h,Communication
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2cppb:CPP\Src\Client\CommunicationBinary.h,Communication.Binary
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /import:""Communication.h"" /import:""UtfEncoding.h"" /t2cppb:CPP\Src\Client\CommunicationBinary.h,Communication.Binary
 
 :: ActionScript
 @if not exist ActionScript\src\communication @md ActionScript\src\communication

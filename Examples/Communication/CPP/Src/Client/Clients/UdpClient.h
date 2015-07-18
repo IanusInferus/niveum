@@ -1030,13 +1030,9 @@ namespace Client
                     if (IsDisposed) { return false; }
                     IsDisposed = true;
 
-                    try
-                    {
-                        Socket.close();
-                    }
-                    catch (...)
-                    {
-                    }
+                    asio::error_code e;
+                    Socket.close(e);
+
                     std::shared_ptr<asio::steady_timer> Timer = nullptr;
                     CookedWritingContext.DoAction([&](std::shared_ptr<UdpWriteContext> c)
                     {
