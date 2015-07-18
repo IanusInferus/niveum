@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <functional>
 #include <chrono>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -33,7 +33,7 @@ namespace Client
         {
         private:
             std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient;
-            boost::asio::ip::udp::endpoint RemoteEndPoint;
+            asio::ip::udp::endpoint RemoteEndPoint;
             std::shared_ptr<BaseSystem::LockedVariable<bool>> IsRunningValue;
         public:
             bool IsRunning()
@@ -72,8 +72,8 @@ namespace Client
                 SecureContextValue.Update([=](std::shared_ptr<class SecureContext> v) { return sc; });
             }
         private:
-            boost::asio::io_service &io_service;
-            boost::asio::ip::udp::socket Socket;
+            asio::io_service &io_service;
+            asio::ip::udp::socket Socket;
             std::shared_ptr<std::vector<std::uint8_t>> ReadBuffer;
 
             static int MaxPacketLength() { return 1400; }
@@ -262,7 +262,7 @@ namespace Client
             public:
                 std::shared_ptr<PartContext> Parts;
                 int WritenIndex;
-                std::shared_ptr<boost::asio::deadline_timer> Timer;
+                std::shared_ptr<asio::deadline_timer> Timer;
             };
             BaseSystem::LockedVariable<std::shared_ptr<UdpReadContext>> RawReadingContext;
             BaseSystem::LockedVariable<std::shared_ptr<UdpWriteContext>> CookedWritingContext;
@@ -291,7 +291,7 @@ namespace Client
 #endif
 
         public:
-            UdpClient(boost::asio::io_service &io_service, boost::asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient, std::function<void(boost::system::system_error)> ExceptionHandler = nullptr)
+            UdpClient(asio::io_service &io_service, asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient, std::function<void(asio::system_error)> ExceptionHandler = nullptr)
                 : io_service(io_service), Socket(io_service), IsRunningValue(nullptr), SessionIdValue(0), ConnectionStateValue(ConnectionState_Initial), SecureContextValue(nullptr), RawReadingContext(nullptr), CookedWritingContext(nullptr), IsDisposed(false)
             {
                 this->IsRunningValue = std::make_shared<BaseSystem::LockedVariable<bool>>(false);
@@ -321,15 +321,15 @@ namespace Client
                     IsRunningValue->DoAction([=](bool b)
                     {
                         if (!b) { return; }
-                        OnWrite(*this->VirtualTransportClient, [=]() {}, [=](boost::system::errc::errc_t se)
+                        OnWrite(*this->VirtualTransportClient, [=]() {}, [=](asio::error_code se)
                         {
                             if (ExceptionHandler != nullptr)
                             {
-                                ExceptionHandler(boost::system::system_error(se, boost::system::generic_category()));
+                                ExceptionHandler(asio::system_error(se));
                             }
                             else
                             {
-                                throw boost::system::system_error(se, boost::system::generic_category());
+                                throw asio::system_error(se);
                             }
                         });
                     });
@@ -342,7 +342,7 @@ namespace Client
             }
 
         private:
-            void OnWrite(IStreamedVirtualTransportClient &vtc, std::function<void()> OnSuccess, std::function<void(boost::system::errc::errc_t)> OnFailure)
+            void OnWrite(IStreamedVirtualTransportClient &vtc, std::function<void()> OnSuccess, std::function<void(asio::error_code)> OnFailure)
             {
                 auto IsRunningValue = this->IsRunningValue;
 
@@ -411,7 +411,7 @@ namespace Client
                 {
                     return;
                 }
-                auto se = boost::system::errc::success;
+                auto se = asio::error_code();
                 std::vector<std::shared_ptr<std::vector<std::uint8_t>>> Parts;
                 CookedWritingContext.DoAction([&, IsRunningValue](std::shared_ptr<UdpWriteContext> c)
                 {
@@ -424,7 +424,7 @@ namespace Client
                         auto NumIndex = static_cast<int>(Indices.size());
                         if (NumIndex > 0xFFFF)
                         {
-                            se = boost::system::errc::no_buffer_space;
+                            se = asio::error::no_buffer_space;
                             return;
                         }
 
@@ -504,7 +504,7 @@ namespace Client
                         Part->ResentCount = 0;
                         if (!c->Parts->TryPushPart(Index, Buffer))
                         {
-                            se = boost::system::errc::no_buffer_space;
+                            se = asio::error::no_buffer_space;
                             return;
                         }
                         Parts.push_back(Part->Data);
@@ -513,11 +513,11 @@ namespace Client
                     }
                     if (c->Timer == nullptr)
                     {
-                        c->Timer = std::make_shared<boost::asio::deadline_timer>(io_service);
+                        c->Timer = std::make_shared<asio::deadline_timer>(io_service);
                         c->Timer->expires_from_now(boost::posix_time::milliseconds(CheckTimeout()));
-                        c->Timer->async_wait([=](const boost::system::error_code& error)
+                        c->Timer->async_wait([=](const asio::error_code& error)
                         {
-                            if (error == boost::system::errc::success)
+                            if (!error)
                             {
                                 Check(IsRunningValue);
                             }
@@ -532,11 +532,11 @@ namespace Client
                     }
                     catch (...)
                     {
-                        se = boost::system::errc::interrupted;
+                        se = asio::error::interrupted;
                         break;
                     }
                 }
-                if (se != boost::system::errc::success)
+                if (se)
                 {
                     OnFailure(se);
                 }
@@ -594,7 +594,7 @@ namespace Client
                         }
                     });
 
-                    std::shared_ptr<boost::asio::deadline_timer> Timer = nullptr;
+                    std::shared_ptr<asio::deadline_timer> Timer = nullptr;
                     std::vector<std::shared_ptr<std::vector<std::uint8_t>>> Parts;
                     CookedWritingContext.DoAction([&, IsRunningValue](std::shared_ptr<UdpWriteContext> cc)
                     {
@@ -685,11 +685,11 @@ namespace Client
                                 Wait = static_cast<int>(pWait);
                             }
                         }
-                        cc->Timer = std::make_shared<boost::asio::deadline_timer>(io_service);
+                        cc->Timer = std::make_shared<asio::deadline_timer>(io_service);
                         cc->Timer->expires_from_now(boost::posix_time::milliseconds(Wait));
-                        cc->Timer->async_wait([=](const boost::system::error_code& error)
+                        cc->Timer->async_wait([=](const asio::error_code& error)
                         {
-                            if (error == boost::system::errc::success)
+                            if (!error)
                             {
                                 Check(IsRunningValue);
                             }
@@ -714,9 +714,9 @@ namespace Client
                 });
             }
 
-            void SendPacket(boost::asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<std::vector<std::uint8_t>> Data)
+            void SendPacket(asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<std::vector<std::uint8_t>> Data)
             {
-                Socket.send_to(boost::asio::buffer(*Data), RemoteEndPoint);
+                Socket.send_to(asio::buffer(*Data), RemoteEndPoint);
             }
 
             static int GetMinNotLessPowerOfTwo(int v)
@@ -745,11 +745,11 @@ namespace Client
 
                     if (RemoteEndPoint.address().is_v4())
                     {
-                        Socket.open(boost::asio::ip::udp::v4());
+                        Socket.open(asio::ip::udp::v4());
                     }
                     else
                     {
-                        Socket.open(boost::asio::ip::udp::v6());
+                        Socket.open(asio::ip::udp::v6());
                     }
 
 #if _MSC_VER
@@ -760,11 +760,11 @@ namespace Client
 
                     if (RemoteEndPoint.address().is_v4())
                     {
-                        Socket.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), 0));
+                        Socket.bind(asio::ip::udp::endpoint(asio::ip::address_v4::any(), 0));
                     }
                     else
                     {
-                        Socket.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address_v6::any(), 0));
+                        Socket.bind(asio::ip::udp::endpoint(asio::ip::address_v6::any(), 0));
                     }
 
                     return true;
@@ -774,13 +774,13 @@ namespace Client
             /// <summary>异步连接</summary>
             /// <param name="Completed">正常连接处理函数</param>
             /// <param name="UnknownFaulted">未知错误处理函数</param>
-            void ConnectAsync(boost::asio::ip::udp::endpoint RemoteEndPoint, std::function<void(void)> Completed, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+            void ConnectAsync(asio::ip::udp::endpoint RemoteEndPoint, std::function<void(void)> Completed, std::function<void(const asio::error_code &)> UnknownFaulted)
             {
                 try
                 {
                     Connect();
                 }
-                catch (boost::system::system_error &e)
+                catch (asio::system_error &e)
                 {
                     UnknownFaulted(e.code());
                     return;
@@ -789,16 +789,16 @@ namespace Client
             }
 
         private:
-            static bool IsSocketErrorKnown(const boost::system::error_code &se)
+            static bool IsSocketErrorKnown(const asio::error_code &se)
             {
-                if (se == boost::system::errc::connection_aborted) { return true; }
-                if (se == boost::system::errc::connection_reset) { return true; }
-                if (se == boost::asio::error::eof) { return true; }
-                if (se == boost::system::errc::operation_canceled) { return true; }
+                if (se == asio::error::connection_aborted) { return true; }
+                if (se == asio::error::connection_reset) { return true; }
+                if (se == asio::error::eof) { return true; }
+                if (se == asio::error::operation_aborted) { return true; }
                 return false;
             }
 
-            void CompletedSocket(std::shared_ptr<std::vector<std::uint8_t>> Buffer, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+            void CompletedSocket(std::shared_ptr<std::vector<std::uint8_t>> Buffer, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const asio::error_code &)> UnknownFaulted)
             {
                 try
                 {
@@ -937,7 +937,7 @@ namespace Client
                         auto ReadBufferLength = VirtualTransportClient->GetReadBufferOffset() + VirtualTransportClient->GetReadBufferLength();
                         if (static_cast<int>(p->size()) > static_cast<int>(ReadBuffer->size()) - ReadBufferLength)
                         {
-                            UnknownFaulted(boost::system::error_code(boost::system::errc::no_buffer_space, boost::system::system_category()));
+                            UnknownFaulted(asio::error_code(asio::error::no_buffer_space));
                             return;
                         }
                         ArrayCopy(*p, 0, *ReadBuffer, ReadBufferLength, static_cast<int>(p->size()));
@@ -967,23 +967,23 @@ namespace Client
                         }
                     }
                 }
-                catch (boost::system::system_error &e)
+                catch (asio::system_error &e)
                 {
                     UnknownFaulted(e.code());
                     return;
                 }
             }
 
-            void ReceiveAsyncInner(std::shared_ptr<BaseSystem::LockedVariable<bool>> IsRunningValue, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+            void ReceiveAsyncInner(std::shared_ptr<BaseSystem::LockedVariable<bool>> IsRunningValue, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const asio::error_code &)> UnknownFaulted)
             {
                 IsRunningValue->DoAction([=](bool b)
                 {
                     if (!b) { return; }
                     auto ReadBuffer = this->ReadBuffer;
-                    auto ServerEndPoint = std::make_shared<boost::asio::ip::udp::endpoint>(this->RemoteEndPoint);
-                    auto ReadHandler = [=](const boost::system::error_code &se, std::size_t Count)
+                    auto ServerEndPoint = std::make_shared<asio::ip::udp::endpoint>(this->RemoteEndPoint);
+                    auto ReadHandler = [=](const asio::error_code &se, std::size_t Count)
                     {
-                        if (se != boost::system::errc::success)
+                        if (se)
                         {
                             if (IsSocketErrorKnown(se)) { return; }
                             UnknownFaulted(se);
@@ -1006,14 +1006,14 @@ namespace Client
                         }
                         ReceiveAsyncInner(IsRunningValue, DoResultHandle, UnknownFaulted);
                     };
-                    Socket.async_receive_from(boost::asio::buffer(*ReadBuffer), *ServerEndPoint, ReadHandler);
+                    Socket.async_receive_from(asio::buffer(*ReadBuffer), *ServerEndPoint, ReadHandler);
                 });
             }
         public:
             /// <summary>接收消息</summary>
             /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
             /// <param name="UnknownFaulted">未知错误处理函数</param>
-            void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+            void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const asio::error_code &)> UnknownFaulted)
             {
                 ReceiveAsyncInner(this->IsRunningValue, DoResultHandle, UnknownFaulted);
             }
@@ -1036,7 +1036,7 @@ namespace Client
                     catch (...)
                     {
                     }
-                    std::shared_ptr<boost::asio::deadline_timer> Timer = nullptr;
+                    std::shared_ptr<asio::deadline_timer> Timer = nullptr;
                     CookedWritingContext.DoAction([&](std::shared_ptr<UdpWriteContext> c)
                     {
                         if (c->Timer != nullptr)

@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <string>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -12,7 +12,7 @@ namespace Server
     class SessionLogEntry
     {
     public:
-        boost::asio::ip::tcp::endpoint RemoteEndPoint;
+        asio::ip::tcp::endpoint RemoteEndPoint;
         std::wstring Token;
         std::chrono::system_clock::time_point Time;
         std::wstring Type;

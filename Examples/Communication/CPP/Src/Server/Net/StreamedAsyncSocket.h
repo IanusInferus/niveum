@@ -11,7 +11,7 @@
 #include <string>
 #include <exception>
 #include <stdexcept>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -28,16 +28,16 @@ namespace Net
             int Offset;
             int Count;
             std::function<void()> Completed;
-            std::function<void(const boost::system::error_code &se)> Faulted;
+            std::function<void(const asio::error_code &se)> Faulted;
         };
 
         BaseSystem::AutoResetEvent NumAsyncOperationUpdated;
         BaseSystem::LockedVariable<int> NumAsyncOperation;
-        std::shared_ptr<boost::asio::ip::tcp::socket> InnerSocket;
+        std::shared_ptr<asio::ip::tcp::socket> InnerSocket;
         BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<SendAsyncParameters>>>> SendQueue;
 
     public:
-        StreamedAsyncSocket(std::shared_ptr<boost::asio::ip::tcp::socket> Socket)
+        StreamedAsyncSocket(std::shared_ptr<asio::ip::tcp::socket> Socket)
             :
             NumAsyncOperation(0),
             InnerSocket(Socket),
@@ -84,23 +84,23 @@ namespace Net
                     }
                 });
             };
-            auto WriteHandler = [=](const boost::system::error_code &se, size_t Count)
+            auto WriteHandler = [=](const asio::error_code &se, size_t Count)
             {
                 BaseSystem::AutoRelease ar(Release);
-                if (se == boost::system::errc::success)
-                {
-                    p->Completed();
-                }
-                else
+                if (se)
                 {
                     p->Faulted(se);
                 }
+                else
+                {
+                    p->Completed();
+                }
             };
-            boost::asio::async_write(*InnerSocket, boost::asio::buffer(p->Bytes->data() + p->Offset, p->Count), WriteHandler);
+            asio::async_write(*InnerSocket, asio::buffer(p->Bytes->data() + p->Offset, p->Count), WriteHandler);
         }
 
     public:
-        void SendAsync(std::shared_ptr<std::vector<std::uint8_t>> Bytes, int Offset, int Count, std::function<void()> Completed, std::function<void(const boost::system::error_code &se)> Faulted)
+        void SendAsync(std::shared_ptr<std::vector<std::uint8_t>> Bytes, int Offset, int Count, std::function<void()> Completed, std::function<void(const asio::error_code &se)> Faulted)
         {
             if ((Offset < 0) || (Count < 0) || (Offset + Count > (int)(Bytes->size()))) { throw std::out_of_range(""); }
             SendQueue.DoAction([=](std::shared_ptr<std::queue<std::shared_ptr<SendAsyncParameters>>> &q)
@@ -120,35 +120,35 @@ namespace Net
             });
         }
 
-        void ReceiveAsync(std::shared_ptr<std::vector<std::uint8_t>> Bytes, int Offset, int Count, std::function<void(int)> Completed, std::function<void(const boost::system::error_code &se)> Faulted)
+        void ReceiveAsync(std::shared_ptr<std::vector<std::uint8_t>> Bytes, int Offset, int Count, std::function<void(int)> Completed, std::function<void(const asio::error_code &se)> Faulted)
         {
             if ((Offset < 0) || (Count < 0) || (Offset + Count > (int)(Bytes->size()))) { throw std::out_of_range(""); }
             LockAsyncOperation();
-            auto ReadHandler = [=](const boost::system::error_code &se, size_t Count)
+            auto ReadHandler = [=](const asio::error_code &se, size_t Count)
             {
                 BaseSystem::AutoRelease Final([=]() { this->ReleaseAsyncOperation(); });
                 auto ba = Bytes;
                 ba = nullptr;
-                if (se == boost::system::errc::success)
-                {
-                    Completed(Count);
-                }
-                else
+                if (se)
                 {
                     Faulted(se);
                 }
+                else
+                {
+                    Completed(Count);
+                }
             };
-            InnerSocket->async_read_some(boost::asio::buffer(Bytes->data() + Offset, Count), ReadHandler);
+            InnerSocket->async_read_some(asio::buffer(Bytes->data() + Offset, Count), ReadHandler);
         }
 
         void ShutdownReceive()
         {
-            InnerSocket->shutdown(boost::asio::ip::tcp::socket::shutdown_receive);
+            InnerSocket->shutdown(asio::ip::tcp::socket::shutdown_receive);
         }
 
         void ShutdownBoth()
         {
-            InnerSocket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+            InnerSocket->shutdown(asio::ip::tcp::socket::shutdown_both);
         }
     };
 }

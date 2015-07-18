@@ -13,7 +13,7 @@
 #include <string>
 #include <cmath>
 #include <functional>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -48,15 +48,15 @@ namespace Client
                 auto Time = std::chrono::steady_clock::time_point::clock::now();
                 cq.Time = Time;
                 auto Finished = std::make_shared<bool>(false);
-                auto Timer = std::make_shared<boost::asio::deadline_timer>(a.io_service);
+                auto Timer = std::make_shared<asio::deadline_timer>(a.io_service);
                 Timer->expires_from_now(boost::posix_time::milliseconds(a.NumTimeoutMilliseconds));
-                Timer->async_wait([=](const boost::system::error_code& error)
+                Timer->async_wait([=](const asio::error_code& error)
                 {
-                    if (error == boost::system::errc::success)
+                    if (!error)
                     {
                         if (!*Finished)
                         {
-                            throw boost::system::system_error(boost::system::errc::timed_out, boost::system::generic_category());
+                            throw asio::system_error(asio::error::timed_out);
                         }
                     }
                 });
@@ -105,13 +105,13 @@ namespace Client
         };
 
         std::shared_ptr<Communication::Binary::BinarySerializationClient> bc;
-        boost::asio::io_service &io_service;
+        asio::io_service &io_service;
 
         struct CommandRequest
         {
             std::wstring Name;
             std::chrono::steady_clock::time_point Time;
-            std::shared_ptr<boost::asio::deadline_timer> Timer;
+            std::shared_ptr<asio::deadline_timer> Timer;
             std::shared_ptr<bool> Finished;
         };
         struct CommandContent
@@ -144,7 +144,7 @@ namespace Client
         std::function<void(std::wstring, int)> ClientCommandFailed;
         std::function<void(std::wstring)> ServerCommandReceived;
 
-        BinarySerializationClientAdapter(boost::asio::io_service &io_service, int NumTimeoutMilliseconds)
+        BinarySerializationClientAdapter(asio::io_service &io_service, int NumTimeoutMilliseconds)
             : io_service(io_service), NumTimeoutMilliseconds(NumTimeoutMilliseconds), RequestCount(0)
         {
             CommandRequests = std::make_shared<std::unordered_map<std::wstring, std::shared_ptr<std::queue<CommandRequest>>>>();
