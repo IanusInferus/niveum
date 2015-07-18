@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2015.07.18.
+//  Version:     2015.07.19.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -22,8 +22,8 @@
 #include <string>
 #include <exception>
 #include <stdexcept>
-#include <cstdio>
 #include <clocale>
+#include <cwchar>
 #include <thread>
 #include <asio.hpp>
 #ifdef _MSC_VER

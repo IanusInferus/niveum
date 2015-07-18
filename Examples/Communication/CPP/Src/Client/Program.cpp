@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2015.07.18.
+//  Version:     2015.07.19.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -11,7 +11,6 @@
 
 #include "Utility.h"
 #include "Communication.h"
-#include "UtfEncoding.h"
 #include "CommunicationBinary.h"
 #include "Clients/BinaryCountPacketClient.h"
 #include "Clients/TcpClient.h"
@@ -21,8 +20,8 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
-#include <cstdio>
 #include <clocale>
+#include <cwchar>
 #include <iostream>
 #include <algorithm>
 #include <chrono>
