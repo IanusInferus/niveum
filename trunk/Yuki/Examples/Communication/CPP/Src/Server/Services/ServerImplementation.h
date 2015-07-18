@@ -34,14 +34,14 @@ namespace Server
 
             void RegisterCrossSessionEvents()
             {
-                boost::unique_lock<boost::shared_mutex> WriterLock(c->SessionLock);
+                auto Lock = c->WriterLock();
                 c->MessageReceived = [=](std::shared_ptr<MessageReceivedEvent> e) { if (this->MessageReceived != nullptr) { this->MessageReceived(e); } };
                 c->TestMessageReceived = [=](std::shared_ptr<TestMessageReceivedEvent> e) { if (this->TestMessageReceived != nullptr) { this->TestMessageReceived(e); } };
             }
 
             void UnregisterCrossSessionEvents()
             {
-                boost::unique_lock<boost::shared_mutex> WriterLock(c->SessionLock);
+                auto Lock = c->WriterLock();
                 c->MessageReceived = nullptr;
                 c->TestMessageReceived = nullptr;
             }

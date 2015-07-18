@@ -7,12 +7,30 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <mutex>
 #include <boost/asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/thread.hpp>
 #include <boost/format.hpp>
+
+//在C++11中实现SessionLock
+using _shared_mutex = std::mutex;
+using _shared_lock = std::unique_lock<std::mutex>;
+using _unique_lock = std::unique_lock<std::mutex>;
+
+//在C++17中实现SessionLock
+//#include <shared_mutex>
+//using _shared_mutex = std::shared_mutex;
+//using _shared_lock = std::shared_lock<std::shared_mutex>;
+//using _unique_lock = std::unique_lock<std::shared_mutex>;
+
+//在boost中实现SessionLock
+//#include <boost/thread/shared_mutex.hpp>
+//#include <boost/thread/locks.hpp>
+//using _shared_mutex = boost::shared_mutex;
+//using _shared_lock = boost::shared_lock<boost::shared_mutex>;
+//using _unique_lock = boost::unique_lock<boost::shared_mutex>;
 
 namespace Server
 {
@@ -41,11 +59,12 @@ namespace Server
             return s;
         }
 
-        //跨线程共享读写访问变量锁
-        //#include <boost/thread/locks.hpp>
-        //写时先定义boost::unique_lock<boost::shared_mutex> WriterLock(SessionLock);
-        //读时先定义boost::shared_lock<boost::shared_mutex> ReaderLock(SessionLock);
-        boost::shared_mutex SessionLock;
+
+        //读时先定义auto Lock = ReaderLock();
+        //写时先定义auto Lock = WriterLock();
+        _shared_mutex SessionLock;
+        _shared_lock ReaderLock() { return _shared_lock(SessionLock); }
+        _unique_lock WriterLock() { return _unique_lock(SessionLock); }
 
 
         //跨线程共享读写访问，读写必须通过SessionLock

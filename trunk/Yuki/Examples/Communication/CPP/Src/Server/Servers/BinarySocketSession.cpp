@@ -68,7 +68,7 @@ namespace Server
         IoService(IoService),
         Socket(std::make_shared<Net::StreamedAsyncSocket>(s)),
         IsDisposed(false),
-        IdleTimeout(BaseSystem::Optional<int>::CreateNotHasValue()),
+        IdleTimeout(Optional<int>::CreateNotHasValue()),
         Server(Server),
         si(nullptr),
         bssed(nullptr),
@@ -387,10 +387,10 @@ namespace Server
             s.WriteBytes(cmd->Parameters);
             s.SetPosition(0);
             auto Bytes = s.ReadBytes(s.GetLength());
-            if (IdleTimeout->OnHasValue())
+            if (IdleTimeout.OnHasValue())
             {
                 auto Timer = std::make_shared<boost::asio::deadline_timer>(IoService);
-                Timer->expires_from_now(boost::posix_time::milliseconds(IdleTimeout->HasValue));
+                Timer->expires_from_now(boost::posix_time::milliseconds(IdleTimeout.HasValue));
                 Timer->async_wait([=](const boost::system::error_code& error)
                 {
                     if (error == boost::system::errc::success)
@@ -445,10 +445,10 @@ namespace Server
                 }
                 StopAsync();
             };
-            if (IdleTimeout->OnHasValue())
+            if (IdleTimeout.OnHasValue())
             {
                 auto Timer = std::make_shared<boost::asio::deadline_timer>(IoService);
-                Timer->expires_from_now(boost::posix_time::milliseconds(IdleTimeout->HasValue));
+                Timer->expires_from_now(boost::posix_time::milliseconds(IdleTimeout.HasValue));
                 Timer->async_wait([=](const boost::system::error_code& error)
                 {
                     if (error == boost::system::errc::success)

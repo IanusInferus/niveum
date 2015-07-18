@@ -114,7 +114,7 @@ namespace Server
             auto LocalEndPoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), Port);
             Bindings->push_back(LocalEndPoint);
             Server->SetBindings(Bindings);
-            Server->SetSessionIdleTimeout(BaseSystem::Optional<int>::CreateHasValue(600 * 1000));
+            Server->SetSessionIdleTimeout(Optional<int>::CreateHasValue(600 * 1000));
 
             Server->SetMaxBadCommands(8);
             Server->SetClientDebug(true);

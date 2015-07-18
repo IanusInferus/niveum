@@ -92,9 +92,9 @@ namespace Server
         BaseSystem::LockedVariable<std::shared_ptr<TSessionSet>> StoppingSessions;
 
         std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> BindingsValue;
-        std::shared_ptr<BaseSystem::Optional<int>> SessionIdleTimeoutValue;
-        std::shared_ptr<BaseSystem::Optional<int>> MaxConnectionsValue;
-        std::shared_ptr<BaseSystem::Optional<int>> MaxConnectionsPerIPValue;
+        Optional<int> SessionIdleTimeoutValue;
+        Optional<int> MaxConnectionsValue;
+        Optional<int> MaxConnectionsPerIPValue;
 
     public:
         BinarySocketServer(boost::asio::io_service &IoService);
@@ -106,14 +106,14 @@ namespace Server
         std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> GetBindings() const;
         void SetBindings(std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> Bindings);
 
-        std::shared_ptr<BaseSystem::Optional<int>> GetSessionIdleTimeout() const;
-        void SetSessionIdleTimeout(std::shared_ptr<BaseSystem::Optional<int>> ms);
+        Optional<int> GetSessionIdleTimeout() const;
+        void SetSessionIdleTimeout(Optional<int> ms);
 
-        std::shared_ptr<BaseSystem::Optional<int>> GetMaxConnections() const;
-        void SetMaxConnections(std::shared_ptr<BaseSystem::Optional<int>> v);
+        Optional<int> GetMaxConnections() const;
+        void SetMaxConnections(Optional<int> v);
 
-        std::shared_ptr<BaseSystem::Optional<int>> GetMaxConnectionsPerIP() const;
-        void SetMaxConnectionsPerIP(std::shared_ptr<BaseSystem::Optional<int>> v);
+        Optional<int> GetMaxConnectionsPerIP() const;
+        void SetMaxConnectionsPerIP(Optional<int> v);
 
         void Start();
 
