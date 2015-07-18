@@ -27,7 +27,7 @@
 #include <algorithm>
 #include <chrono>
 #include <thread>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -47,10 +47,10 @@ namespace Client
                 auto TransportProtocol = std::string(argv[1]);
                 std::transform(TransportProtocol.begin(), TransportProtocol.end(), TransportProtocol.begin(), ::tolower);
 
-                boost::asio::io_service IoService(16);
+                asio::io_service IoService(16);
                 if (TransportProtocol == "tcp")
                 {
-                    boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
+                    asio::ip::tcp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
                     for (int k = 0; k < 2048; k += 1)
                     {
                         IoService.post([=, &IoService]() { RunTcp(IoService, RemoteEndPoint, Test); });
@@ -58,7 +58,7 @@ namespace Client
                 }
                 else if (TransportProtocol == "udp")
                 {
-                    boost::asio::ip::udp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
+                    asio::ip::udp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
                     for (int k = 0; k < 2048; k += 1)
                     {
                         IoService.post([=, &IoService]() { RunUdp(IoService, RemoteEndPoint, Test); });
@@ -102,8 +102,8 @@ namespace Client
                 auto TransportProtocol = std::string(argv[1]);
                 std::transform(TransportProtocol.begin(), TransportProtocol.end(), TransportProtocol.begin(), ::tolower);
 
-                boost::asio::io_service IoService;
-                auto Work = std::make_shared<boost::asio::io_service::work>(IoService);
+                asio::io_service IoService;
+                auto Work = std::make_shared<asio::io_service::work>(IoService);
                 std::thread t([&]()
                 {
                     auto Exit = false;
@@ -122,12 +122,12 @@ namespace Client
                 });
                 if (TransportProtocol == "tcp")
                 {
-                    boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
+                    asio::ip::tcp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
                     RunTcp(IoService, RemoteEndPoint, ReadLineAndSendLoop);
                 }
                 else if (TransportProtocol == "udp")
                 {
-                    boost::asio::ip::udp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
+                    asio::ip::udp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
                     RunUdp(IoService, RemoteEndPoint, ReadLineAndSendLoop);
                 }
                 Work = nullptr;
@@ -135,8 +135,8 @@ namespace Client
             }
             else if (argc == 1)
             {
-                boost::asio::io_service IoService;
-                auto Work = std::make_shared<boost::asio::io_service::work>(IoService);
+                asio::io_service IoService;
+                auto Work = std::make_shared<asio::io_service::work>(IoService);
                 std::thread t([&]()
                 {
                     auto Exit = false;
@@ -153,7 +153,7 @@ namespace Client
                         if (Exit) { break; }
                     }
                 });
-                boost::asio::ip::tcp::endpoint RemoteEndPoint(boost::asio::ip::address::from_string("127.0.0.1"), 8001);
+                asio::ip::tcp::endpoint RemoteEndPoint(asio::ip::address::from_string("127.0.0.1"), 8001);
                 RunTcp(IoService, RemoteEndPoint, ReadLineAndSendLoop);
                 Work = nullptr;
                 t.join();
@@ -267,7 +267,7 @@ namespace Client
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
 
-        static void RunTcp(boost::asio::io_service &IoService, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::mutex &)> Action)
+        static void RunTcp(asio::io_service &IoService, asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::mutex &)> Action)
         {
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
@@ -306,7 +306,7 @@ namespace Client
                     a();
                 });
             };
-            bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se)
+            bsc->ReceiveAsync(DoHandle, [](const asio::error_code &se)
             {
                 auto Message = s2w(se.message());
                 wprintf(L"%ls\n", Message.c_str());
@@ -322,7 +322,7 @@ namespace Client
             bsca = nullptr;
         }
 
-        static void RunUdp(boost::asio::io_service &IoService, boost::asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::mutex &)> Action)
+        static void RunUdp(asio::io_service &IoService, asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::mutex &)> Action)
         {
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
@@ -361,7 +361,7 @@ namespace Client
                     a();
                 });
             };
-            bsc->ReceiveAsync(DoHandle, [](const boost::system::error_code &se)
+            bsc->ReceiveAsync(DoHandle, [](const asio::error_code &se)
             {
                 auto Message = s2w(se.message());
                 wprintf(L"%ls\n", Message.c_str());

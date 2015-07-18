@@ -24,7 +24,7 @@
 #include <functional>
 #include <thread>
 #include <boost/functional/hash.hpp>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -52,7 +52,7 @@ namespace Server
         typedef std::unordered_set<std::shared_ptr<BinarySocketSession>, SharedPtrHash<BinarySocketSession>> TSessionSet;
         struct IpAddressHash
         {
-            std::size_t operator() (const boost::asio::ip::address &p) const
+            std::size_t operator() (const asio::ip::address &p) const
             {
                 if (p.is_v4())
                 {
@@ -73,14 +73,14 @@ namespace Server
                 }
             }
         };
-        typedef std::unordered_map<boost::asio::ip::address, int, IpAddressHash> TIpAddressMap;
+        typedef std::unordered_map<asio::ip::address, int, IpAddressHash> TIpAddressMap;
 
     protected:
-        boost::asio::io_service &IoService;
+        asio::io_service &IoService;
 
     private:
         std::vector<std::shared_ptr<BindingInfo>> BindingInfos;
-        BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<boost::asio::ip::tcp::socket>>>> AcceptedSockets;
+        BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<asio::ip::tcp::socket>>>> AcceptedSockets;
         std::shared_ptr<std::thread> AcceptingTask;
         BaseSystem::CancellationToken AcceptingTaskToken;
         BaseSystem::AutoResetEvent AcceptingTaskNotifier;
@@ -91,20 +91,20 @@ namespace Server
         BaseSystem::LockedVariable<std::shared_ptr<TIpAddressMap>> IpSessions;
         BaseSystem::LockedVariable<std::shared_ptr<TSessionSet>> StoppingSessions;
 
-        std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> BindingsValue;
+        std::shared_ptr<std::vector<asio::ip::tcp::endpoint>> BindingsValue;
         Optional<int> SessionIdleTimeoutValue;
         Optional<int> MaxConnectionsValue;
         Optional<int> MaxConnectionsPerIPValue;
 
     public:
-        BinarySocketServer(boost::asio::io_service &IoService);
+        BinarySocketServer(asio::io_service &IoService);
 
         virtual ~BinarySocketServer();
 
         bool IsRunning();
 
-        std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> GetBindings() const;
-        void SetBindings(std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> Bindings);
+        std::shared_ptr<std::vector<asio::ip::tcp::endpoint>> GetBindings() const;
+        void SetBindings(std::shared_ptr<std::vector<asio::ip::tcp::endpoint>> Bindings);
 
         Optional<int> GetSessionIdleTimeout() const;
         void SetSessionIdleTimeout(Optional<int> ms);

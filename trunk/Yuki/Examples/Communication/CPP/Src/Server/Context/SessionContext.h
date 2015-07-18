@@ -8,7 +8,7 @@
 #include <string>
 #include <functional>
 #include <mutex>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -45,7 +45,7 @@ namespace Server
             if (Quit != nullptr) { Quit(); }
         }
 
-        boost::asio::ip::tcp::endpoint RemoteEndPoint;
+        asio::ip::tcp::endpoint RemoteEndPoint;
 
         std::shared_ptr<std::vector<std::uint8_t>> SessionToken;
         std::wstring GetSessionTokenString() const

@@ -10,14 +10,14 @@ namespace Server
     class BinarySocketServer::BindingInfo
     {
     private:
-        boost::asio::io_service &IoService;
-        boost::asio::ip::tcp::endpoint LocalEndPoint;
+        asio::io_service &IoService;
+        asio::ip::tcp::endpoint LocalEndPoint;
         std::shared_ptr<std::thread> Task;
-        BaseSystem::LockedVariable<std::shared_ptr<boost::asio::ip::tcp::acceptor>> Acceptor;
+        BaseSystem::LockedVariable<std::shared_ptr<asio::ip::tcp::acceptor>> Acceptor;
         BaseSystem::CancellationToken ListeningTaskToken;
 
     public:
-        BindingInfo(boost::asio::io_service &IoService)
+        BindingInfo(asio::io_service &IoService)
             : IoService(IoService),
             Task(nullptr),
             Acceptor(nullptr)
@@ -27,22 +27,22 @@ namespace Server
         ~BindingInfo()
         {
             ListeningTaskToken.Cancel();
-            Acceptor.Update([&](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) -> std::shared_ptr<boost::asio::ip::tcp::acceptor>
+            Acceptor.Update([&](const std::shared_ptr<asio::ip::tcp::acceptor> &a) -> std::shared_ptr<asio::ip::tcp::acceptor>
             {
                 if (a != nullptr)
                 {
-                    boost::asio::ip::tcp::endpoint LoopBackEndPoint;
-                    if (LocalEndPoint.protocol() == boost::asio::ip::tcp::v4())
+                    asio::ip::tcp::endpoint LoopBackEndPoint;
+                    if (LocalEndPoint.protocol() == asio::ip::tcp::v4())
                     {
-                        LoopBackEndPoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::loopback(), LocalEndPoint.port());
+                        LoopBackEndPoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), LocalEndPoint.port());
                     }
                     else
                     {
-                        LoopBackEndPoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v6::loopback(), LocalEndPoint.port());
+                        LoopBackEndPoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), LocalEndPoint.port());
                     }
                     try
                     {
-                        auto Socket = std::make_shared<boost::asio::ip::tcp::socket>(IoService);
+                        auto Socket = std::make_shared<asio::ip::tcp::socket>(IoService);
                         try
                         {
                             Socket->connect(LoopBackEndPoint);
@@ -52,7 +52,7 @@ namespace Server
                         }
                         try
                         {
-                            Socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+                            Socket->shutdown(asio::ip::tcp::socket::shutdown_both);
                         }
                         catch (std::exception &)
                         {
@@ -79,18 +79,18 @@ namespace Server
             });
         }
 
-        void Listen(boost::asio::ip::tcp::endpoint LocalEndPoint)
+        void Listen(asio::ip::tcp::endpoint LocalEndPoint)
         {
             if (Task != nullptr) { throw std::logic_error("ThreadStarted"); }
 
             this->LocalEndPoint = LocalEndPoint;
-            Acceptor.Update([=](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) -> std::shared_ptr<boost::asio::ip::tcp::acceptor>
+            Acceptor.Update([=](const std::shared_ptr<asio::ip::tcp::acceptor> &a) -> std::shared_ptr<asio::ip::tcp::acceptor>
             {
-                return std::make_shared<boost::asio::ip::tcp::acceptor>(IoService, LocalEndPoint);
+                return std::make_shared<asio::ip::tcp::acceptor>(IoService, LocalEndPoint);
             });
         }
 
-        void StartAccept(std::function<void(std::shared_ptr<boost::asio::ip::tcp::socket>)> AcceptHandler)
+        void StartAccept(std::function<void(std::shared_ptr<asio::ip::tcp::socket>)> AcceptHandler)
         {
             if (Task != nullptr) { throw std::logic_error("ThreadStarted"); }
 
@@ -102,31 +102,31 @@ namespace Server
                     {
                         return;
                     }
-                    auto Socket = std::make_shared<boost::asio::ip::tcp::socket>(IoService);
-                    boost::system::error_code se;
-                    Acceptor.Check<std::shared_ptr<boost::asio::ip::tcp::acceptor>>([](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) { return a; })->accept(*Socket, se);
+                    auto Socket = std::make_shared<asio::ip::tcp::socket>(IoService);
+                    asio::error_code se;
+                    Acceptor.Check<std::shared_ptr<asio::ip::tcp::acceptor>>([](const std::shared_ptr<asio::ip::tcp::acceptor> &a) { return a; })->accept(*Socket, se);
                     if (ListeningTaskToken.IsCancellationRequested())
                     {
                         Socket->close();
                         return;
                     }
-                    if (se == boost::system::errc::success)
+                    if (se)
                     {
-                        AcceptHandler(Socket);
+                        Relisten(LocalEndPoint);
                     }
                     else
                     {
-                        Relisten(LocalEndPoint);
+                        AcceptHandler(Socket);
                     }
                 }
             });
         }
 
     private:
-        void Relisten(boost::asio::ip::tcp::endpoint LocalEndPoint)
+        void Relisten(asio::ip::tcp::endpoint LocalEndPoint)
         {
             this->LocalEndPoint = LocalEndPoint;
-            Acceptor.Update([=](const std::shared_ptr<boost::asio::ip::tcp::acceptor> &a) -> std::shared_ptr<boost::asio::ip::tcp::acceptor>
+            Acceptor.Update([=](const std::shared_ptr<asio::ip::tcp::acceptor> &a) -> std::shared_ptr<asio::ip::tcp::acceptor>
             {
                 if (a != nullptr)
                 {
@@ -138,21 +138,21 @@ namespace Server
                     {
                     }
                 }
-                auto b = std::make_shared<boost::asio::ip::tcp::acceptor>(IoService, LocalEndPoint);
+                auto b = std::make_shared<asio::ip::tcp::acceptor>(IoService, LocalEndPoint);
                 return b;
             });
         }
     };
 
-    BinarySocketServer::BinarySocketServer(boost::asio::io_service &IoService)
+    BinarySocketServer::BinarySocketServer(asio::io_service &IoService)
         :
         IoService(IoService),
         IsRunningValue(false),
-        AcceptedSockets(std::make_shared<std::queue<std::shared_ptr<boost::asio::ip::tcp::socket>>>()),
+        AcceptedSockets(std::make_shared<std::queue<std::shared_ptr<asio::ip::tcp::socket>>>()),
         Sessions(std::make_shared<TSessionSet>()),
         IpSessions(std::make_shared<TIpAddressMap>()),
         StoppingSessions(std::make_shared<TSessionSet>()),
-        BindingsValue(std::make_shared<std::vector<boost::asio::ip::tcp::endpoint>>()),
+        BindingsValue(std::make_shared<std::vector<asio::ip::tcp::endpoint>>()),
         SessionIdleTimeoutValue(Optional<int>::CreateNotHasValue()),
         MaxConnectionsValue(Optional<int>::CreateNotHasValue()),
         MaxConnectionsPerIPValue(Optional<int>::CreateNotHasValue()),
@@ -200,11 +200,11 @@ namespace Server
         return IsRunningValue.Check<bool>([](const bool &s) { return s; });
     }
 
-    std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> BinarySocketServer::GetBindings() const
+    std::shared_ptr<std::vector<asio::ip::tcp::endpoint>> BinarySocketServer::GetBindings() const
     {
         return BindingsValue;
     }
-    void BinarySocketServer::SetBindings(std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> Bindings)
+    void BinarySocketServer::SetBindings(std::shared_ptr<std::vector<asio::ip::tcp::endpoint>> Bindings)
     {
         IsRunningValue.DoAction([&](bool &b)
         {
@@ -260,8 +260,8 @@ namespace Server
             AcceptingTaskNotifier.WaitOne();
             while (true)
             {
-                std::shared_ptr<boost::asio::ip::tcp::socket> Socket = nullptr;
-                AcceptedSockets.DoAction([&](std::shared_ptr<std::queue<std::shared_ptr<boost::asio::ip::tcp::socket>>> &Sockets)
+                std::shared_ptr<asio::ip::tcp::socket> Socket = nullptr;
+                AcceptedSockets.DoAction([&](std::shared_ptr<std::queue<std::shared_ptr<asio::ip::tcp::socket>>> &Sockets)
                 {
                     if (Sockets->size() > 0)
                     {
@@ -498,9 +498,9 @@ namespace Server
             }
         });
 
-        auto AcceptHandler = [this](std::shared_ptr<boost::asio::ip::tcp::socket> Socket)
+        auto AcceptHandler = [this](std::shared_ptr<asio::ip::tcp::socket> Socket)
         {
-            this->AcceptedSockets.DoAction([=](std::shared_ptr<std::queue<std::shared_ptr<boost::asio::ip::tcp::socket>>> &Sockets)
+            this->AcceptedSockets.DoAction([=](std::shared_ptr<std::queue<std::shared_ptr<asio::ip::tcp::socket>>> &Sockets)
             {
                 Sockets->push(Socket);
             });
