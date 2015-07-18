@@ -63,7 +63,7 @@ namespace Server
 
     static BaseSystem::ThreadLocalRandom RNG;
 
-    BinarySocketSession::BinarySocketSession(boost::asio::io_service &IoService, std::shared_ptr<BinarySocketServer> Server, std::shared_ptr<boost::asio::ip::tcp::socket> s)
+    BinarySocketSession::BinarySocketSession(asio::io_service &IoService, std::shared_ptr<BinarySocketServer> Server, std::shared_ptr<asio::ip::tcp::socket> s)
         :
         IoService(IoService),
         Socket(std::make_shared<Net::StreamedAsyncSocket>(s)),
@@ -389,11 +389,11 @@ namespace Server
             auto Bytes = s.ReadBytes(s.GetLength());
             if (IdleTimeout.OnHasValue())
             {
-                auto Timer = std::make_shared<boost::asio::deadline_timer>(IoService);
+                auto Timer = std::make_shared<asio::deadline_timer>(IoService);
                 Timer->expires_from_now(boost::posix_time::milliseconds(IdleTimeout.HasValue));
-                Timer->async_wait([=](const boost::system::error_code& error)
+                Timer->async_wait([=](const asio::error_code& error)
                 {
-                    if (error == boost::system::errc::success)
+                    if (!error)
                     {
                         if (Server != nullptr)
                         {
@@ -401,7 +401,7 @@ namespace Server
                         }
                     }
                 });
-                Socket->SendAsync(Bytes, 0, Bytes->size(), [=]() { Timer->cancel(); }, [=](const boost::system::error_code &se)
+                Socket->SendAsync(Bytes, 0, Bytes->size(), [=]() { Timer->cancel(); }, [=](const asio::error_code &se)
                 {
                     Timer->cancel();
                     if (!IsSocketErrorKnown(se))
@@ -413,7 +413,7 @@ namespace Server
             }
             else
             {
-                Socket->SendAsync(Bytes, 0, Bytes->size(), [=]() { }, [=](const boost::system::error_code &se)
+                Socket->SendAsync(Bytes, 0, Bytes->size(), [=]() { }, [=](const asio::error_code &se)
                 {
                     if (!IsSocketErrorKnown(se))
                     {
@@ -437,7 +437,7 @@ namespace Server
                     StopAsync();
                 }
             };
-            auto Faulted = [=](const boost::system::error_code &se)
+            auto Faulted = [=](const asio::error_code &se)
             {
                 if (!IsSocketErrorKnown(se))
                 {
@@ -447,11 +447,11 @@ namespace Server
             };
             if (IdleTimeout.OnHasValue())
             {
-                auto Timer = std::make_shared<boost::asio::deadline_timer>(IoService);
+                auto Timer = std::make_shared<asio::deadline_timer>(IoService);
                 Timer->expires_from_now(boost::posix_time::milliseconds(IdleTimeout.HasValue));
-                Timer->async_wait([=](const boost::system::error_code& error)
+                Timer->async_wait([=](const asio::error_code& error)
                 {
-                    if (error == boost::system::errc::success)
+                    if (!error)
                     {
                         if (Server != nullptr)
                         {
@@ -472,7 +472,7 @@ namespace Server
                         StopAsync();
                     }
                 };
-                auto Faulted = [=](const boost::system::error_code &se)
+                auto Faulted = [=](const asio::error_code &se)
                 {
                     Timer->cancel();
                     if (!IsSocketErrorKnown(se))
@@ -563,12 +563,12 @@ namespace Server
     {
         PushCommand(sc);
     }
-    bool BinarySocketSession::IsSocketErrorKnown(const boost::system::error_code &se)
+    bool BinarySocketSession::IsSocketErrorKnown(const asio::error_code &se)
     {
-        if (se == boost::system::errc::connection_aborted) { return true; }
-        if (se == boost::system::errc::connection_reset) { return true; }
-        if (se == boost::asio::error::eof) { return true; }
-        if (se == boost::system::errc::operation_canceled) { return true; }
+        if (se == asio::error::connection_aborted) { return true; }
+        if (se == asio::error::connection_reset) { return true; }
+        if (se == asio::error::eof) { return true; }
+        if (se == asio::error::operation_aborted) { return true; }
         return false;
     }
 

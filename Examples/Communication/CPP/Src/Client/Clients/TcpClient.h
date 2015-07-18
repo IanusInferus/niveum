@@ -12,7 +12,7 @@
 #include <exception>
 #include <stdexcept>
 #include <functional>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -25,8 +25,8 @@ namespace Client
         {
         private:
             std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient;
-            boost::asio::ip::tcp::endpoint RemoteEndPoint;
-            boost::asio::ip::tcp::socket Socket;
+            asio::ip::tcp::endpoint RemoteEndPoint;
+            asio::ip::tcp::socket Socket;
             BaseSystem::LockedVariable<bool> IsRunningValue;
         public:
             bool IsRunning()
@@ -34,7 +34,7 @@ namespace Client
                 return IsRunningValue.Check<bool>([](bool v) { return v; });
             }
 
-            TcpClient(boost::asio::io_service &io_service, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient, std::function<void(boost::system::system_error)> ExceptionHandler = nullptr)
+            TcpClient(asio::io_service &io_service, asio::ip::tcp::endpoint RemoteEndPoint, std::shared_ptr<IStreamedVirtualTransportClient> VirtualTransportClient, std::function<void(asio::system_error)> ExceptionHandler = nullptr)
                 : Socket(io_service), IsRunningValue(false), IsDisposed(false)
             {
                 this->RemoteEndPoint = RemoteEndPoint;
@@ -42,23 +42,23 @@ namespace Client
                 VirtualTransportClient->ClientMethod = [=]()
                 {
                     auto ByteArrays = this->VirtualTransportClient->TakeWriteBuffer();
-                    std::vector<boost::asio::const_buffer> Buffers;
+                    std::vector<asio::const_buffer> Buffers;
                     for (auto b : ByteArrays)
                     {
-                        Buffers.push_back(boost::asio::buffer(*b));
+                        Buffers.push_back(asio::buffer(*b));
                     }
 
-                    boost::system::error_code ec;
-                    boost::asio::write(Socket, Buffers, ec);
-                    if (ec != boost::system::errc::success)
+                    asio::error_code ec;
+                    asio::write(Socket, Buffers, ec);
+                    if (ec)
                     {
                         if (ExceptionHandler != nullptr)
                         {
-                            ExceptionHandler(boost::system::system_error(ec.value(), ec.category()));
+                            ExceptionHandler(asio::system_error(ec.value(), ec.category()));
                         }
                         else
                         {
-                            throw boost::system::system_error(ec.value(), ec.category());
+                            throw asio::system_error(ec.value(), ec.category());
                         }
                     }
                 };
@@ -82,40 +82,40 @@ namespace Client
             /// <summary>异步连接</summary>
             /// <param name="Completed">正常连接处理函数</param>
             /// <param name="UnknownFaulted">未知错误处理函数</param>
-            void ConnectAsync(boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(void)> Completed, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+            void ConnectAsync(asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(void)> Completed, std::function<void(const asio::error_code &)> UnknownFaulted)
             {
                 IsRunningValue.Update([](bool b)
                 {
                     if (b) { throw std::logic_error("InvalidOperationException"); }
                     return true;
                 });
-                auto ConnectHandler = [=](const boost::system::error_code &se)
+                auto ConnectHandler = [=](const asio::error_code &se)
                 {
-                    if (se == boost::system::errc::success)
-                    {
-                        Completed();
-                    }
-                    else
+                    if (se)
                     {
                         if (!IsSocketErrorKnown(se))
                         {
                             UnknownFaulted(se);
                         }
                     }
+                    else
+                    {
+                        Completed();
+                    }
                 };
                 Socket.async_connect(RemoteEndPoint, ConnectHandler);
             }
 
         private:
-            static bool IsSocketErrorKnown(const boost::system::error_code &se)
+            static bool IsSocketErrorKnown(const asio::error_code &se)
             {
-                if (se == boost::system::errc::connection_aborted) { return true; }
-                if (se == boost::asio::error::eof) { return true; }
-                if (se == boost::system::errc::operation_canceled) { return true; }
+                if (se == asio::error::connection_aborted) { return true; }
+                if (se == asio::error::eof) { return true; }
+                if (se == asio::error::operation_aborted) { return true; }
                 return false;
             }
 
-            void Completed(std::size_t Count, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+            void Completed(std::size_t Count, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const asio::error_code &)> UnknownFaulted)
             {
                 if (Count == 0)
                 {
@@ -151,25 +151,25 @@ namespace Client
             /// <summary>接收消息</summary>
             /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
             /// <param name="UnknownFaulted">未知错误处理函数</param>
-            void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const boost::system::error_code &)> UnknownFaulted)
+            void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const asio::error_code &)> UnknownFaulted)
             {
-                auto ReadHandler = [=](const boost::system::error_code &se, std::size_t Count)
+                auto ReadHandler = [=](const asio::error_code &se, std::size_t Count)
                 {
-                    if (se == boost::system::errc::success)
-                    {
-                        Completed(Count, DoResultHandle, UnknownFaulted);
-                    }
-                    else
+                    if (se)
                     {
                         if (!IsSocketErrorKnown(se))
                         {
                             UnknownFaulted(se);
                         }
                     }
+                    else
+                    {
+                        Completed(Count, DoResultHandle, UnknownFaulted);
+                    }
                 };
                 auto Buffer = VirtualTransportClient->GetReadBuffer();
                 auto BufferLength = VirtualTransportClient->GetReadBufferOffset() + VirtualTransportClient->GetReadBufferLength();
-                Socket.async_read_some(boost::asio::buffer(&(*Buffer)[BufferLength], Buffer->size() - BufferLength), ReadHandler);
+                Socket.async_read_some(asio::buffer(&(*Buffer)[BufferLength], Buffer->size() - BufferLength), ReadHandler);
             }
 
         private:
@@ -190,7 +190,7 @@ namespace Client
                 {
                     if (Connected)
                     {
-                        Socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+                        Socket.shutdown(asio::ip::tcp::socket::shutdown_both);
                     }
                 }
                 catch (...)

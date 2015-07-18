@@ -22,7 +22,7 @@
 #include <random>
 #include <exception>
 #include <stdexcept>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -33,15 +33,15 @@ namespace Server
     class BinarySocketSession : public std::enable_shared_from_this<BinarySocketSession>
     {
     protected:
-        boost::asio::io_service &IoService;
+        asio::io_service &IoService;
     private:
         std::shared_ptr<Net::StreamedAsyncSocket> Socket;
         bool IsDisposed;
     public:
-        boost::asio::ip::tcp::endpoint RemoteEndPoint;
+        asio::ip::tcp::endpoint RemoteEndPoint;
         Optional<int> IdleTimeout;
 
-        BinarySocketSession(boost::asio::io_service &IoService, std::shared_ptr<BinarySocketServer> Server, std::shared_ptr<boost::asio::ip::tcp::socket> s);
+        BinarySocketSession(asio::io_service &IoService, std::shared_ptr<BinarySocketServer> Server, std::shared_ptr<asio::ip::tcp::socket> s);
 
         virtual ~BinarySocketSession();
 
@@ -75,7 +75,7 @@ namespace Server
 
         void PushCommand(std::shared_ptr<SessionCommand> sc);
         void QueueCommand(std::shared_ptr<SessionCommand> sc);
-        static bool IsSocketErrorKnown(const boost::system::error_code &se);
+        static bool IsSocketErrorKnown(const asio::error_code &se);
         
         std::shared_ptr<BufferStateMachine> bsm;
         std::shared_ptr<std::vector<uint8_t>> Buffer;

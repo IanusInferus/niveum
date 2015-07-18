@@ -25,7 +25,7 @@
 #include <cstdio>
 #include <clocale>
 #include <thread>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -93,8 +93,8 @@ namespace Server
 
             std::wprintf(L"%ls\n", (L"逻辑处理器数量: " + ToString(ProcessorCount)).c_str());
 
-            auto IoService = std::make_shared<boost::asio::io_service>(ProcessorCount * 2 + 1);
-            boost::asio::io_service::work Work(*IoService);
+            auto IoService = std::make_shared<asio::io_service>(ProcessorCount * 2 + 1);
+            asio::io_service::work Work(*IoService);
 
             ConsoleLogger cl;
 
@@ -110,8 +110,8 @@ namespace Server
                 ExitEvent->Set();
             });
 
-            auto Bindings = std::make_shared<std::vector<boost::asio::ip::tcp::endpoint>>();
-            auto LocalEndPoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), Port);
+            auto Bindings = std::make_shared<std::vector<asio::ip::tcp::endpoint>>();
+            auto LocalEndPoint = asio::ip::tcp::endpoint(asio::ip::tcp::v4(), Port);
             Bindings->push_back(LocalEndPoint);
             Server->SetBindings(Bindings);
             Server->SetSessionIdleTimeout(Optional<int>::CreateHasValue(600 * 1000));
