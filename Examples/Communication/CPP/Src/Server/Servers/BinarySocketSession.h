@@ -26,7 +26,6 @@
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/thread.hpp>
 
 namespace Server
 {

@@ -12,7 +12,7 @@ namespace Server
     private:
         boost::asio::io_service &IoService;
         boost::asio::ip::tcp::endpoint LocalEndPoint;
-        std::shared_ptr<boost::thread> Task;
+        std::shared_ptr<std::thread> Task;
         BaseSystem::LockedVariable<std::shared_ptr<boost::asio::ip::tcp::acceptor>> Acceptor;
         BaseSystem::CancellationToken ListeningTaskToken;
 
@@ -94,7 +94,7 @@ namespace Server
         {
             if (Task != nullptr) { throw std::logic_error("ThreadStarted"); }
 
-            Task = std::make_shared<boost::thread>([=]()
+            Task = std::make_shared<std::thread>([=]()
             {
                 while (true)
                 {
@@ -548,9 +548,9 @@ namespace Server
                 }
             }
 
-            AcceptingTask = std::make_shared<boost::thread>(AcceptingHandler);
+            AcceptingTask = std::make_shared<std::thread>(AcceptingHandler);
 
-            PurifieringTask = std::make_shared<boost::thread>(PurifieringHandler);
+            PurifieringTask = std::make_shared<std::thread>(PurifieringHandler);
 
             Success = true;
 
