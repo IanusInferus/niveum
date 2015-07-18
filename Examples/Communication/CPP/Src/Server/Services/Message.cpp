@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <string>
-#include <boost/thread.hpp>
 
 using namespace std;
 using namespace Communication;
@@ -21,7 +20,7 @@ shared_ptr<SendMessageReply> ServerImplementation::SendMessage(shared_ptr<SendMe
     {
         auto rc = (*Sessions)[k];
         {
-            boost::unique_lock<boost::shared_mutex> WriterLock(rc->SessionLock);
+            auto Lock = rc->WriterLock();
             rc->ReceivedMessageCount += 1;
             if (rc->MessageReceived != nullptr)
             {

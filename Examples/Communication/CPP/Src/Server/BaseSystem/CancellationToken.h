@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <boost/thread.hpp>
+#include <mutex>
 
 namespace BaseSystem
 {
@@ -8,7 +8,7 @@ namespace BaseSystem
     {
     private:
         bool Cancelled;
-        boost::mutex Lockee;
+        std::mutex Lockee;
     public:
         CancellationToken()
             : Cancelled(false)
@@ -17,13 +17,13 @@ namespace BaseSystem
 
         bool IsCancellationRequested()
         {
-            boost::unique_lock<boost::mutex> Lock(Lockee);
+            std::unique_lock<std::mutex> Lock(Lockee);
             return Cancelled;
         }
 
         void Cancel()
         {
-            boost::unique_lock<boost::mutex> Lock(Lockee);
+            std::unique_lock<std::mutex> Lock(Lockee);
             Cancelled = true;
         }
     };

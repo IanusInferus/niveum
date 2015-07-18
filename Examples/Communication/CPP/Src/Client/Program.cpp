@@ -183,7 +183,7 @@ namespace Client
             std::wprintf(L"%ls\n", L"Port 服务器端口，默认为8001");
         }
 
-        static void ReadLineAndSendLoop(std::shared_ptr<Communication::IApplicationClient> InnerClient, boost::mutex &Lockee)
+        static void ReadLineAndSendLoop(std::shared_ptr<Communication::IApplicationClient> InnerClient, std::mutex &Lockee)
         {
             InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
             {
@@ -201,7 +201,7 @@ namespace Client
                 std::getline(std::wcin, Line);
 
                 {
-                    boost::unique_lock<boost::mutex> Lock(Lockee);
+                    std::unique_lock<std::mutex> Lock(Lockee);
                     if (Line == L"exit") { break; }
                     if (Line == L"shutdown")
                     {
@@ -227,10 +227,10 @@ namespace Client
             }
         }
 
-        static void Test(std::shared_ptr<Communication::IApplicationClient> InnerClient, boost::mutex &Lockee)
+        static void Test(std::shared_ptr<Communication::IApplicationClient> InnerClient, std::mutex &Lockee)
         {
             {
-                boost::unique_lock<boost::mutex> Lock(Lockee);
+                std::unique_lock<std::mutex> Lock(Lockee);
                 InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
                 {
                     auto m = e->Message;
@@ -246,7 +246,7 @@ namespace Client
             }
 
             {
-                boost::unique_lock<boost::mutex> Lock(Lockee);
+                std::unique_lock<std::mutex> Lock(Lockee);
                 InnerClient->ServerTime(std::make_shared<Communication::ServerTimeRequest>(), [=](std::shared_ptr<Communication::ServerTimeReply> r2)
                 {
                     auto Request = std::make_shared<Communication::SendMessageRequest>();
@@ -267,7 +267,7 @@ namespace Client
             boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
         }
 
-        static void RunTcp(boost::asio::io_service &IoService, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, boost::mutex &)> Action)
+        static void RunTcp(boost::asio::io_service &IoService, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::mutex &)> Action)
         {
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
@@ -297,12 +297,12 @@ namespace Client
                 exit(-1);
             }
 
-            boost::mutex Lockee;
+            std::mutex Lockee;
             auto DoHandle = [&](std::function<void(void)> a)
             {
                 IoService.post([&, a]()
                 {
-                    boost::unique_lock<boost::mutex> Lock(Lockee);
+                    std::unique_lock<std::mutex> Lock(Lockee);
                     a();
                 });
             };
@@ -322,7 +322,7 @@ namespace Client
             bsca = nullptr;
         }
 
-        static void RunUdp(boost::asio::io_service &IoService, boost::asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, boost::mutex &)> Action)
+        static void RunUdp(boost::asio::io_service &IoService, boost::asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::mutex &)> Action)
         {
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
@@ -352,12 +352,12 @@ namespace Client
                 exit(-1);
             }
 
-            boost::mutex Lockee;
+            std::mutex Lockee;
             auto DoHandle = [&](std::function<void(void)> a)
             {
                 IoService.post([&, a]()
                 {
-                    boost::unique_lock<boost::mutex> Lock(Lockee);
+                    std::unique_lock<std::mutex> Lock(Lockee);
                     a();
                 });
             };
@@ -371,7 +371,7 @@ namespace Client
             Action(ac, Lockee);
 
             {
-                boost::unique_lock<boost::mutex> Lock(Lockee);
+                std::unique_lock<std::mutex> Lock(Lockee);
                 bsc->Close();
                 bsc = nullptr;
                 vtc = nullptr;

@@ -153,9 +153,9 @@ namespace Server
         IpSessions(std::make_shared<TIpAddressMap>()),
         StoppingSessions(std::make_shared<TSessionSet>()),
         BindingsValue(std::make_shared<std::vector<boost::asio::ip::tcp::endpoint>>()),
-        SessionIdleTimeoutValue(BaseSystem::Optional<int>::CreateNotHasValue()),
-        MaxConnectionsValue(BaseSystem::Optional<int>::CreateNotHasValue()),
-        MaxConnectionsPerIPValue(BaseSystem::Optional<int>::CreateNotHasValue()),
+        SessionIdleTimeoutValue(Optional<int>::CreateNotHasValue()),
+        MaxConnectionsValue(Optional<int>::CreateNotHasValue()),
+        MaxConnectionsPerIPValue(Optional<int>::CreateNotHasValue()),
         CheckCommandAllowedValue(nullptr),
         ShutdownValue(nullptr),
         MaxBadCommandsValue(8),
@@ -213,11 +213,11 @@ namespace Server
         });
     }
 
-    std::shared_ptr<BaseSystem::Optional<int>> BinarySocketServer::GetSessionIdleTimeout() const
+    Optional<int> BinarySocketServer::GetSessionIdleTimeout() const
     {
         return SessionIdleTimeoutValue;
     }
-    void BinarySocketServer::SetSessionIdleTimeout(std::shared_ptr<BaseSystem::Optional<int>> ms)
+    void BinarySocketServer::SetSessionIdleTimeout(Optional<int> ms)
     {
         IsRunningValue.DoAction([&](bool &b)
         {
@@ -226,11 +226,11 @@ namespace Server
         });
     }
 
-    std::shared_ptr<BaseSystem::Optional<int>> BinarySocketServer::GetMaxConnections() const
+    Optional<int> BinarySocketServer::GetMaxConnections() const
     {
         return MaxConnectionsValue;
     }
-    void BinarySocketServer::SetMaxConnections(std::shared_ptr<BaseSystem::Optional<int>> v)
+    void BinarySocketServer::SetMaxConnections(Optional<int> v)
     {
         IsRunningValue.DoAction([&](bool &b)
         {
@@ -239,11 +239,11 @@ namespace Server
         });
     }
 
-    std::shared_ptr<BaseSystem::Optional<int>> BinarySocketServer::GetMaxConnectionsPerIP() const
+    Optional<int> BinarySocketServer::GetMaxConnectionsPerIP() const
     {
         return MaxConnectionsPerIPValue;
     }
-    void BinarySocketServer::SetMaxConnectionsPerIP(std::shared_ptr<BaseSystem::Optional<int>> v)
+    void BinarySocketServer::SetMaxConnectionsPerIP(Optional<int> v)
     {
         IsRunningValue.DoAction([&](bool &b)
         {
@@ -278,14 +278,14 @@ namespace Server
                 s->RemoteEndPoint = Socket->remote_endpoint();
                 s->IdleTimeout = SessionIdleTimeoutValue;
 
-                if (MaxConnectionsValue->OnHasValue())
+                if (MaxConnectionsValue.OnHasValue())
                 {
                     int SessionCount = Sessions.Check<int>([=](std::shared_ptr<TSessionSet> ss) -> int
                     {
                         return (int)(ss->size());
                     });
 
-                    if (SessionCount >= MaxConnectionsValue->HasValue)
+                    if (SessionCount >= MaxConnectionsValue.HasValue)
                     {
                         PurifyOneInSession();
                     }
@@ -295,7 +295,7 @@ namespace Server
                         return (int)(ss->size());
                     });
 
-                    if (SessionCount >= MaxConnectionsValue->HasValue)
+                    if (SessionCount >= MaxConnectionsValue.HasValue)
                     {
                         BaseSystem::AutoRelease Final([&]()
                         {
@@ -308,14 +308,14 @@ namespace Server
                 }
 
                 auto Address = s->RemoteEndPoint.address();
-                if (MaxConnectionsPerIPValue->OnHasValue())
+                if (MaxConnectionsPerIPValue.OnHasValue())
                 {
                     int IpSessionCount = IpSessions.Check<int>([=](std::shared_ptr<TIpAddressMap> iss) -> int
                     {
                         return iss->count(Address) > 0 ? (*iss)[Address] : 0;
                     });
 
-                    if (IpSessionCount >= MaxConnectionsPerIPValue->HasValue)
+                    if (IpSessionCount >= MaxConnectionsPerIPValue.HasValue)
                     {
                         BaseSystem::AutoRelease Final([&]()
                         {

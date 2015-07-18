@@ -40,7 +40,7 @@ namespace Server
         bool IsDisposed;
     public:
         boost::asio::ip::tcp::endpoint RemoteEndPoint;
-        std::shared_ptr<BaseSystem::Optional<int>> IdleTimeout;
+        Optional<int> IdleTimeout;
 
         BinarySocketSession(boost::asio::io_service &IoService, std::shared_ptr<BinarySocketServer> Server, std::shared_ptr<boost::asio::ip::tcp::socket> s);
 

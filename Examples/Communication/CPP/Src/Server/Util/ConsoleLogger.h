@@ -8,6 +8,7 @@
 #include <string>
 #include <queue>
 #include <cstdio>
+#include <mutex>
 #include <boost/thread.hpp>
 
 namespace Server
@@ -18,7 +19,7 @@ namespace Server
         std::shared_ptr<boost::thread> LogThread;
         BaseSystem::AutoResetEvent LogNotifier;
 
-        boost::mutex Lockee;
+        std::mutex Lockee;
         std::queue<std::shared_ptr<SessionLogEntry>> Entries;
         bool IsExited;
 
@@ -32,7 +33,7 @@ namespace Server
                     if (IsExited) { return; }
                     std::shared_ptr<SessionLogEntry> e = nullptr;
                     {
-                        boost::unique_lock<boost::mutex> Lock(Lockee);
+                        std::unique_lock<std::mutex> Lock(Lockee);
                         if (Entries.size() > 0)
                         {
                             e = Entries.front();
@@ -61,7 +62,7 @@ namespace Server
         ~ConsoleLogger()
         {
             {
-                boost::unique_lock<boost::mutex> Lock(Lockee);
+                std::unique_lock<std::mutex> Lock(Lockee);
                 IsExited = true;
             }
             LogNotifier.Set();
@@ -75,7 +76,7 @@ namespace Server
         void Log(std::shared_ptr<SessionLogEntry> e)
         {
             {
-                boost::unique_lock<boost::mutex> Lock(Lockee);
+                std::unique_lock<std::mutex> Lock(Lockee);
                 Entries.push(e);
             }
             LogNotifier.Set();
