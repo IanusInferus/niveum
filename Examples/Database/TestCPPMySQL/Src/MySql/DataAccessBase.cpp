@@ -8,13 +8,13 @@
 #include <string>
 #include <vector>
 #include <iterator>
+#include <mutex>
 #include <codecvt>
 #include "UtfEncoding.h"
 #include <streambuf>
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/thread.hpp>
 
 #include <cppconn/driver.h>
 #include <cppconn/connection.h>
@@ -28,7 +28,7 @@ namespace Database
         using namespace std;
         using namespace sql;
 
-        static boost::mutex DriverMutex;
+        static std::mutex DriverMutex;
 
         DataAccessBase::DataAccessBase(wstring ConnectionString)
         {
@@ -111,7 +111,7 @@ namespace Database
             }
 
             {
-                boost::unique_lock<boost::mutex> Lock(DriverMutex);
+                std::unique_lock<std::mutex> Lock(DriverMutex);
                 sql::Driver *driver = get_driver_instance();
                 sql::ConnectOptionsMap connectionProperties;
                 connectionProperties["hostName"] = w2s(Server);
@@ -136,7 +136,7 @@ namespace Database
                 auto stmt = shared_ptr<Statement>(con->createStatement());
                 stmt->execute("ROLLBACK");
                 {
-                    boost::unique_lock<boost::mutex> Lock(DriverMutex);
+                    std::unique_lock<std::mutex> Lock(DriverMutex);
                     con->close();
                     con = nullptr;
                     sql::Driver *driver = get_driver_instance();
@@ -150,7 +150,7 @@ namespace Database
             auto stmt = shared_ptr<Statement>(con->createStatement());
             stmt->execute("COMMIT");
             {
-                boost::unique_lock<boost::mutex> Lock(DriverMutex);
+                std::unique_lock<std::mutex> Lock(DriverMutex);
                 con->close();
                 con = nullptr;
                 sql::Driver *driver = get_driver_instance();
