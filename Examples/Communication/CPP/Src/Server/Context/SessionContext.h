@@ -12,7 +12,7 @@
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/format.hpp>
+#include <format.h>
 
 //在C++11中实现SessionLock
 using _shared_mutex = std::mutex;
@@ -54,7 +54,7 @@ namespace Server
             for (int k = 0; k < (int)(SessionToken->size()); k += 1)
             {
                 auto b = (*SessionToken)[k];
-                s += (boost::wformat(L"%2X") % b).str();
+                s += fmt::format(L"{:02X}", b);
             }
             return s;
         }
