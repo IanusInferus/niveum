@@ -22,12 +22,12 @@
 #include <exception>
 #include <stdexcept>
 #include <functional>
+#include <thread>
 #include <boost/functional/hash.hpp>
 #include <boost/asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/thread.hpp>
 #include <boost/format.hpp>
 
 namespace Server
@@ -81,10 +81,10 @@ namespace Server
     private:
         std::vector<std::shared_ptr<BindingInfo>> BindingInfos;
         BaseSystem::LockedVariable<std::shared_ptr<std::queue<std::shared_ptr<boost::asio::ip::tcp::socket>>>> AcceptedSockets;
-        std::shared_ptr<boost::thread> AcceptingTask;
+        std::shared_ptr<std::thread> AcceptingTask;
         BaseSystem::CancellationToken AcceptingTaskToken;
         BaseSystem::AutoResetEvent AcceptingTaskNotifier;
-        std::shared_ptr<boost::thread> PurifieringTask;
+        std::shared_ptr<std::thread> PurifieringTask;
         BaseSystem::CancellationToken PurifieringTaskToken;
         BaseSystem::AutoResetEvent PurifieringTaskNotifier;
         BaseSystem::LockedVariable<std::shared_ptr<TSessionSet>> Sessions;
