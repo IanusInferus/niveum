@@ -89,6 +89,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp" />
     <ClCompile Include="ExpressionCalculator.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Utility.cpp" />

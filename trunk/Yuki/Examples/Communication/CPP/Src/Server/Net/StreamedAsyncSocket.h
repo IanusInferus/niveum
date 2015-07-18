@@ -46,7 +46,8 @@ namespace Net
         }
         ~StreamedAsyncSocket()
         {
-            InnerSocket->close();
+            asio::error_code e;
+            InnerSocket->close(e);
             while (NumAsyncOperation.Check<bool>([](const int &n) { return n != 0; }))
             {
                 NumAsyncOperationUpdated.WaitOne();
@@ -143,12 +144,14 @@ namespace Net
 
         void ShutdownReceive()
         {
-            InnerSocket->shutdown(asio::ip::tcp::socket::shutdown_receive);
+            asio::error_code e;
+            InnerSocket->shutdown(asio::ip::tcp::socket::shutdown_receive, e);
         }
 
         void ShutdownBoth()
         {
-            InnerSocket->shutdown(asio::ip::tcp::socket::shutdown_both);
+            asio::error_code e;
+            InnerSocket->shutdown(asio::ip::tcp::socket::shutdown_both, e);
         }
     };
 }

@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "Communication.h"
-#include "UtfEncoding.h"
 #include "CommunicationBinary.h"
 #include "Context/ServerContext.h"
 #include "Context/SessionContext.h"

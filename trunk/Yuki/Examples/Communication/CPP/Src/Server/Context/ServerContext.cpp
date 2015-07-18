@@ -1,6 +1,4 @@
-﻿#pragma once
-
-#include "ServerContext.h"
+﻿#include "ServerContext.h"
 #include "CommunicationBinary.h"
 #include "Utility.h"
 
