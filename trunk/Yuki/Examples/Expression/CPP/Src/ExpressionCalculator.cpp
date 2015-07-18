@@ -111,8 +111,8 @@ namespace Yuki
         {
             auto vv = v * Expression::pow(10.0, (double)(NumFractionDigit));
             auto scale = Expression::pow(0.1, (double)(NumFractionDigit));
-            int l = std::floor(vv);
-            int u = std::ceil(vv);
+            int l = static_cast<int>(std::floor(vv));
+            int u = static_cast<int>(std::ceil(vv));
             if (l == u) { return l * scale; }
             if ((l & 1) != 0)
             {
