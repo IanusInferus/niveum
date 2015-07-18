@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2015.07.17.
+//  Version:     2015.07.18.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -24,11 +24,11 @@
 #include <stdexcept>
 #include <cstdio>
 #include <clocale>
+#include <thread>
 #include <boost/asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/thread.hpp>
 #include <boost/format.hpp>
 
 namespace Server
@@ -89,7 +89,7 @@ namespace Server
         {
             auto ExitEvent = std::make_shared<BaseSystem::AutoResetEvent>();
 
-            int ProcessorCount = (int)(boost::thread::hardware_concurrency());
+            int ProcessorCount = (int)(std::thread::hardware_concurrency());
 
             std::wprintf(L"%ls\n", (L"逻辑处理器数量: " + ToString(ProcessorCount)).c_str());
 
@@ -131,10 +131,10 @@ namespace Server
 
             std::wprintf(L"%ls\n", (L"TCP/Binary服务器已启动。结点: " + s2w(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port()) + L"(TCP)").c_str());
 
-            std::vector<std::shared_ptr<boost::thread>> Threads;
+            std::vector<std::shared_ptr<std::thread>> Threads;
             for (int i = 0; i < ProcessorCount; i += 1)
             {
-                auto t = std::make_shared<boost::thread>([&]()
+                auto t = std::make_shared<std::thread>([&]()
                 {
                     IoService->run();
                 });

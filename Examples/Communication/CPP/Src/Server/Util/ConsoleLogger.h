@@ -9,14 +9,14 @@
 #include <queue>
 #include <cstdio>
 #include <mutex>
-#include <boost/thread.hpp>
+#include <thread>
 
 namespace Server
 {
     class ConsoleLogger
     {
     private:
-        std::shared_ptr<boost::thread> LogThread;
+        std::shared_ptr<std::thread> LogThread;
         BaseSystem::AutoResetEvent LogNotifier;
 
         std::mutex Lockee;
@@ -56,7 +56,7 @@ namespace Server
             : LogThread(nullptr),
               IsExited(false)
         {
-            LogThread = std::make_shared<boost::thread>([=]() { Consume(); });
+            LogThread = std::make_shared<std::thread>([=]() { Consume(); });
         }
 
         ~ConsoleLogger()

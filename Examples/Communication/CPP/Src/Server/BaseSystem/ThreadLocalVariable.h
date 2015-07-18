@@ -1,8 +1,10 @@
 ﻿#pragma once
 
 #include <functional>
+#include <memory>
 #include <map>
 #include <mutex>
+#include <thread>
 #include <boost/thread.hpp>
 
 namespace BaseSystem
@@ -14,7 +16,7 @@ namespace BaseSystem
     class ThreadLocalVariable : public std::enable_shared_from_this<ThreadLocalVariable<T>>
     {
     private:
-        std::map<boost::thread::id, std::shared_ptr<T>> Mappings;
+        std::map<std::thread::id, std::shared_ptr<T>> Mappings;
         std::function<std::shared_ptr<T>()> Factory;
         std::mutex Lockee;
     public:
@@ -32,7 +34,7 @@ namespace BaseSystem
 
         std::shared_ptr<T> Value()
         {
-            auto id = boost::this_thread::get_id();
+            auto id = std::this_thread::get_id();
 
             {
                 std::unique_lock<std::mutex> Lock(Lockee);

@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2015.07.17.
+//  Version:     2015.07.18.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -25,12 +25,12 @@
 #include <clocale>
 #include <iostream>
 #include <algorithm>
+#include <chrono>
+#include <thread>
 #include <boost/asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/thread.hpp>
-#include <boost/date_time/time.hpp>
 #include <boost/format.hpp>
 
 namespace Client
@@ -64,10 +64,10 @@ namespace Client
                         IoService.post([=, &IoService]() { RunUdp(IoService, RemoteEndPoint, Test); });
                     }
                 }
-                std::vector<std::shared_ptr<boost::thread>> Threads;
+                std::vector<std::shared_ptr<std::thread>> Threads;
                 for (int k = 0; k < 16; k += 1)
                 {
-                    Threads.push_back(std::make_shared<boost::thread>([&]()
+                    Threads.push_back(std::make_shared<std::thread>([&]()
                     {
                         auto Exit = false;
                         while (true)
@@ -104,7 +104,7 @@ namespace Client
 
                 boost::asio::io_service IoService;
                 auto Work = std::make_shared<boost::asio::io_service::work>(IoService);
-                boost::thread t([&]()
+                std::thread t([&]()
                 {
                     auto Exit = false;
                     while (true)
@@ -137,7 +137,7 @@ namespace Client
             {
                 boost::asio::io_service IoService;
                 auto Work = std::make_shared<boost::asio::io_service::work>(IoService);
-                boost::thread t([&]()
+                std::thread t([&]()
                 {
                     auto Exit = false;
                     while (true)
@@ -264,7 +264,7 @@ namespace Client
                 });
             }
 
-            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
 
         static void RunTcp(boost::asio::io_service &IoService, boost::asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::mutex &)> Action)
