@@ -2,7 +2,7 @@
 
 软件需要
 
-Visual Studio 2012
+Visual Studio 2013
 
 MySQL 5.5.24.1
 http://cdn.mysql.com/Downloads/MySQLInstaller/mysql-installer-5.5.24.1.msi
@@ -63,8 +63,8 @@ SET(CPACK_PACKAGE_DESCRIPTION_FILE    "${CMAKE_SOURCE_DIR}/README")
 
 PATH %SystemRoot%\Microsoft.NET\Framework\v4.0.30319;%PATH%
 
-MSBuild libmysql.sln /t:Rebuild /p:Configuration=Debug
-MSBuild libmysql.sln /t:Rebuild /p:Configuration=Release
+MSBuild libmysql.sln /t:Rebuild /p:Configuration=Debug /p:VCTargetsPath="%ProgramFiles(x86)%\MSBuild\Microsoft.Cpp\v4.0\V120
+MSBuild libmysql.sln /t:Rebuild /p:Configuration=Release /p:VCTargetsPath="%ProgramFiles(x86)%\MSBuild\Microsoft.Cpp\v4.0\V120
 pause
 
 在环境变量中添加MYSQL_CONNECTOR_C_ROOT，指向MySQL Connector C的根目录。
@@ -95,8 +95,8 @@ LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/test/framework/$(ConfigurationName))
 
 PATH %SystemRoot%\Microsoft.NET\Framework\v4.0.30319;%PATH%
 
-MSBuild MYSQLCPPCONN.sln /t:Rebuild /p:Configuration=Debug
-MSBuild MYSQLCPPCONN.sln /t:Rebuild /p:Configuration=Release
+MSBuild MYSQLCPPCONN.sln /t:Rebuild /p:Configuration=Debug /p:VCTargetsPath="%ProgramFiles(x86)%\MSBuild\Microsoft.Cpp\v4.0\V120
+MSBuild MYSQLCPPCONN.sln /t:Rebuild /p:Configuration=Release /p:VCTargetsPath="%ProgramFiles(x86)%\MSBuild\Microsoft.Cpp\v4.0\V120
 pause
 
 在环境变量中添加MYSQL_CONNECTOR_CXX_ROOT，指向MySQL Connector C++的根目录。
