@@ -2,11 +2,11 @@
 #include "Servers/BinarySocketServer.h"
 
 #include "Utility.h"
+#include "BaseSystem/Times.h"
 #include "BaseSystem/ThreadLocalRandom.h"
 #include "BaseSystem/ThreadLocalVariable.h"
 
 #include <stdexcept>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace Server
 {
@@ -59,9 +59,9 @@ namespace Server
         Boolean OnReadRaw() { return _Tag == SessionCommandTag_ReadRaw; }
     };
 
-    PRIVATE std::shared_ptr<BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>> bsss(std::make_shared<BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>>([]() { return std::make_shared<Communication::Binary::BinarySerializationServer>(); }));
+    static std::shared_ptr<BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>> bsss(std::make_shared<BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>>([]() { return std::make_shared<Communication::Binary::BinarySerializationServer>(); }));
 
-    PRIVATE BaseSystem::ThreadLocalRandom RNG;
+    static BaseSystem::ThreadLocalRandom RNG;
 
     BinarySocketSession::BinarySocketSession(boost::asio::io_service &IoService, std::shared_ptr<BinarySocketServer> Server, std::shared_ptr<boost::asio::ip::tcp::socket> s)
         :
@@ -132,7 +132,7 @@ namespace Server
                 auto e = std::make_shared<SessionLogEntry>();
                 e->RemoteEndPoint = RemoteEndPoint;
                 e->Token = Context->GetSessionTokenString();
-                e->Time = boost::posix_time::second_clock::universal_time();
+                e->Time = UtcNow();
                 e->Type = L"Sys";
                 e->Name = L"SessionEnter";
                 e->Message = L"";
@@ -161,7 +161,7 @@ namespace Server
                 auto e = std::make_shared<SessionLogEntry>();
                 e->RemoteEndPoint = RemoteEndPoint;
                 e->Token = Context->GetSessionTokenString();
-                e->Time = boost::posix_time::second_clock::universal_time();
+                e->Time = UtcNow();
                 e->Type = L"Sys";
                 e->Name = L"SessionExit";
                 e->Message = L"";
@@ -614,7 +614,7 @@ namespace Server
             auto e = std::make_shared<SessionLogEntry>();
             e->RemoteEndPoint = RemoteEndPoint;
             e->Token = Context->GetSessionTokenString();
-            e->Time = boost::posix_time::second_clock::universal_time();
+            e->Time = UtcNow();
             e->Type = L"In";
             e->Name = cmd->CommandName;
             e->Message = L"{...}";
@@ -677,7 +677,7 @@ namespace Server
             auto e = std::make_shared<SessionLogEntry>();
             e->RemoteEndPoint = RemoteEndPoint;
             e->Token = Context->GetSessionTokenString();
-            e->Time = boost::posix_time::second_clock::universal_time();
+            e->Time = UtcNow();
             e->Type = L"Out";
             e->Name = CommandName;
             e->Message = L"{...}";
@@ -711,7 +711,7 @@ namespace Server
             auto e = std::make_shared<SessionLogEntry>();
             e->RemoteEndPoint = RemoteEndPoint;
             e->Token = Context->GetSessionTokenString();
-            e->Time = boost::posix_time::second_clock::universal_time();
+            e->Time = UtcNow();
             e->Type = L"Unk";
             e->Name = L"Exception";
             e->Message = Info;
@@ -728,7 +728,7 @@ namespace Server
             auto e = std::make_shared<SessionLogEntry>();
             e->RemoteEndPoint = RemoteEndPoint;
             e->Token = Context->GetSessionTokenString();
-            e->Time = boost::posix_time::second_clock::universal_time();
+            e->Time = UtcNow();
             e->Type = L"Unk";
             e->Name = L"Exception";
             e->Message = Info;

@@ -11,9 +11,9 @@
 #include <queue>
 #include <unordered_map>
 #include <string>
+#include <cmath>
 #include <functional>
 #include <boost/asio.hpp>
-#include <boost/date_time.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -45,7 +45,7 @@ namespace Client
                 }
                 CommandRequest cq = {};
                 cq.Name = CommandName;
-                auto Time = boost::posix_time::microsec_clock::universal_time();
+                auto Time = std::chrono::steady_clock::time_point::clock::now();
                 cq.Time = Time;
                 auto Finished = std::make_shared<bool>(false);
                 auto Timer = std::make_shared<boost::asio::deadline_timer>(a.io_service);
@@ -110,7 +110,7 @@ namespace Client
         struct CommandRequest
         {
             std::wstring Name;
-            boost::posix_time::ptime Time;
+            std::chrono::steady_clock::time_point Time;
             std::shared_ptr<boost::asio::deadline_timer> Timer;
             std::shared_ptr<bool> Finished;
         };
@@ -160,8 +160,8 @@ namespace Client
                     auto &cq = q->front();
 
                     *cq.Finished = true;
-                    auto TimeSpan = boost::posix_time::microsec_clock::universal_time() - cq.Time;
-                    auto Milliseconds = (int)(TimeSpan.total_milliseconds());
+                    auto TimeSpan = std::chrono::duration<double, std::chrono::milliseconds::period>(std::chrono::steady_clock::time_point::clock::now() - cq.Time);
+                    auto Milliseconds = (int)(std::round(TimeSpan.count()));
                     if (ClientCommandFailed != nullptr)
                     {
                         ClientCommandFailed(cq.Name, Milliseconds);
@@ -195,8 +195,8 @@ namespace Client
                 auto &cq = q->front();
 
                 *cq.Finished = true;
-                auto TimeSpan = boost::posix_time::microsec_clock::universal_time() - cq.Time;
-                auto Milliseconds = (int)(TimeSpan.total_milliseconds());
+                auto TimeSpan = std::chrono::duration<double, std::chrono::milliseconds::period>(std::chrono::steady_clock::time_point::clock::now() - cq.Time);
+                auto Milliseconds = (int)(std::round(TimeSpan.count()));
                 if (ClientCommandReceived != nullptr)
                 {
                     ClientCommandReceived(cq.Name, Milliseconds);
