@@ -1,6 +1,7 @@
 ﻿#pragma once
 
-#include <boost/thread.hpp>
+#include <mutex>
+#include <condition_variable>
 
  namespace BaseSystem
  {
@@ -8,8 +9,8 @@
      {
      private:
          bool SetValue;
-         boost::mutex Lockee;
-         boost::condition_variable ConditionVariable;
+         std::mutex Lockee;
+         std::condition_variable ConditionVariable;
      public:
          AutoResetEvent()
              : SetValue(false)
@@ -18,7 +19,7 @@
 
          void WaitOne()
          {
-             boost::unique_lock<boost::mutex> Lock(Lockee);
+             std::unique_lock<std::mutex> Lock(Lockee);
              while (!SetValue)
              {
                  ConditionVariable.wait(Lock);
@@ -29,7 +30,7 @@
          void Set()
          {
              {
-                 boost::unique_lock<boost::mutex> Lock(Lockee);
+                 std::unique_lock<std::mutex> Lock(Lockee);
                  SetValue = true;
              }
              ConditionVariable.notify_one();

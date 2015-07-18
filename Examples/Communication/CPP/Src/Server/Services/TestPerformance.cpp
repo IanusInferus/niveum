@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <string>
-#include <boost/thread.hpp>
 
 using namespace std;
 using namespace Communication;
@@ -44,7 +43,7 @@ std::shared_ptr<TestMessageReply> ServerImplementation::TestMessage(std::shared_
         auto rc = (*Sessions)[k];
         if (rc == c->shared_from_this()) { continue; }
         {
-            boost::unique_lock<boost::shared_mutex> WriterLock(rc->SessionLock);
+            auto Lock = rc->WriterLock();
             rc->ReceivedMessageCount += 1;
             if (rc->TestMessageReceived != nullptr)
             {
