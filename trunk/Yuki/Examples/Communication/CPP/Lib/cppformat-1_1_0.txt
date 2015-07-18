@@ -1,0 +1,5 @@
+﻿C++ Format库引用
+
+请按以下地址下载C++ Format 1.1.0库，并将其解压放在当前目录的cppformat目录，可以看到文件Lib/cppformat/README。
+https://github.com/cppformat/cppformat/releases/download/1.1.0/cppformat-1.1.0.zip
+即配置好C++ Format库。

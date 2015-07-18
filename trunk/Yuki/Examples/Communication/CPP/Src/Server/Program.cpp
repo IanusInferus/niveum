@@ -29,7 +29,6 @@
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/format.hpp>
 
 namespace Server
 {

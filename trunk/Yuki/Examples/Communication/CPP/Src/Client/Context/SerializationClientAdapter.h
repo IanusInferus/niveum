@@ -14,6 +14,7 @@
 #include <cmath>
 #include <functional>
 #include <asio.hpp>
+#include <asio/steady_timer.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -48,8 +49,8 @@ namespace Client
                 auto Time = std::chrono::steady_clock::time_point::clock::now();
                 cq.Time = Time;
                 auto Finished = std::make_shared<bool>(false);
-                auto Timer = std::make_shared<asio::deadline_timer>(a.io_service);
-                Timer->expires_from_now(boost::posix_time::milliseconds(a.NumTimeoutMilliseconds));
+                auto Timer = std::make_shared<asio::steady_timer>(a.io_service);
+                Timer->expires_from_now(std::chrono::milliseconds(a.NumTimeoutMilliseconds));
                 Timer->async_wait([=](const asio::error_code& error)
                 {
                     if (!error)
@@ -111,7 +112,7 @@ namespace Client
         {
             std::wstring Name;
             std::chrono::steady_clock::time_point Time;
-            std::shared_ptr<asio::deadline_timer> Timer;
+            std::shared_ptr<asio::steady_timer> Timer;
             std::shared_ptr<bool> Finished;
         };
         struct CommandContent
