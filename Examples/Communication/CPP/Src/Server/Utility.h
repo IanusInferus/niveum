@@ -1,23 +1,9 @@
-﻿//==========================================================================
-//
-//  File:        Utility.h
-//  Location:    Yuki.Examples <C++ 2011>
-//  Description: 工具函数
-//  Version:     2013.12.09.
-//  Author:      F.R.C.
-//  Copyright(C) Public Domain
-//
-//==========================================================================
-
-#pragma once
+﻿#pragma once
 #include <string>
 #include <memory>
-#include <vector>
 #include <sstream>
 #include <exception>
 #include <stdexcept>
-
-#define PRIVATE static
 
 bool EqualIgnoreCase(const std::wstring& l, const std::wstring& r);
 bool EqualIgnoreCase(std::shared_ptr<std::wstring> l, const std::wstring& r);

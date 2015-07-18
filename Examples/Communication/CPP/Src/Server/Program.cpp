@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2014.08.07.
+//  Version:     2015.07.17.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -30,7 +30,6 @@
 #endif
 #include <boost/thread.hpp>
 #include <boost/format.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace Server
 {

@@ -1,19 +1,18 @@
 ﻿#include "Services/ServerImplementation.h"
 
+#include "BaseSystem/Times.h"
+
 #include <memory>
 #include <string>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace std;
-using namespace boost::posix_time;
 using namespace Communication;
 using namespace Server;
 
 /// <summary>服务器时间</summary>
 shared_ptr<ServerTimeReply> ServerImplementation::ServerTime(shared_ptr<ServerTimeRequest> r)
 {
-    ptime now = second_clock::universal_time();
-    auto s = to_iso_extended_wstring(now) + L"Z"; //yyyy-MM-ddTHH:mm:ssZ
+    auto s = DateTimeUtcToString(UtcNow());
     return ServerTimeReply::CreateSuccess(s);
 }
 

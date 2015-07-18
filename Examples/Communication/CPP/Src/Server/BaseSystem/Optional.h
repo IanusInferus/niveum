@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <functional>
-#include <boost/thread.hpp>
 
 #ifndef _UNIT_TYPE_
 typedef struct {} Unit;
