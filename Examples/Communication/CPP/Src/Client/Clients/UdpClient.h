@@ -19,8 +19,8 @@
 #include <exception>
 #include <stdexcept>
 #include <functional>
+#include <chrono>
 #include <boost/asio.hpp>
-#include <boost/date_time.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
@@ -106,7 +106,7 @@ namespace Client
             public:
                 int Index;
                 std::shared_ptr<std::vector<std::uint8_t>> Data;
-                boost::posix_time::ptime ResendTime;
+                std::chrono::steady_clock::time_point ResendTime;
                 int ResentCount;
             };
             class PartContext
@@ -172,7 +172,7 @@ namespace Client
                     auto p = std::make_shared<Part>();
                     p->Index = Index;
                     p->Data = b;
-                    p->ResendTime = boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(GetTimeoutMilliseconds(0));
+                    p->ResendTime = std::chrono::steady_clock::time_point::clock::now() + std::chrono::milliseconds(GetTimeoutMilliseconds(0));
                     p->ResentCount = 0;
                     Parts[Index] = p;
                     return true;
@@ -186,7 +186,7 @@ namespace Client
                     auto p = std::make_shared<Part>();
                     p->Index = Index;
                     p->Data = Data;
-                    p->ResendTime = boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(GetTimeoutMilliseconds(0));
+                    p->ResendTime = std::chrono::steady_clock::time_point::clock::now() + std::chrono::milliseconds(GetTimeoutMilliseconds(0));
                     p->ResentCount = 0;
                     Parts[Index] = p;
                     return true;
@@ -231,7 +231,7 @@ namespace Client
                     }
                 }
 
-                void ForEachTimedoutPacket(int SessionId, boost::posix_time::ptime Time, std::function<void(int, std::shared_ptr<std::vector<std::uint8_t>>)> f)
+                void ForEachTimedoutPacket(int SessionId, std::chrono::steady_clock::time_point Time, std::function<void(int, std::shared_ptr<std::vector<std::uint8_t>>)> f)
                 {
                     for (auto p : Parts)
                     {
@@ -240,7 +240,7 @@ namespace Client
                         if (Value->ResendTime <= Time)
                         {
                             f(Key, Value->Data);
-                            Value->ResendTime = boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(GetTimeoutMilliseconds(Value->ResentCount));
+                            Value->ResendTime = std::chrono::steady_clock::time_point::clock::now() + std::chrono::milliseconds(GetTimeoutMilliseconds(Value->ResentCount));
                             Value->ResentCount += 1;
                         }
                     }
@@ -251,9 +251,9 @@ namespace Client
             public:
                 std::shared_ptr<PartContext> Parts;
                 std::set<int> NotAcknowledgedIndices;
-                boost::posix_time::ptime LastCheck;
+                std::chrono::steady_clock::time_point LastCheck;
                 UdpReadContext()
-                    : LastCheck(boost::posix_time::microsec_clock::universal_time())
+                    : LastCheck(std::chrono::steady_clock::time_point::clock::now())
                 {
                 }
             };
@@ -415,7 +415,7 @@ namespace Client
                 std::vector<std::shared_ptr<std::vector<std::uint8_t>>> Parts;
                 CookedWritingContext.DoAction([&, IsRunningValue](std::shared_ptr<UdpWriteContext> c)
                 {
-                    auto Time = boost::posix_time::microsec_clock::universal_time();
+                    auto Time = std::chrono::steady_clock::time_point::clock::now();
                     auto WritingOffset = 0;
                     while (WritingOffset < TotalLength)
                     {
@@ -499,7 +499,7 @@ namespace Client
 
                         auto Part = std::make_shared<class Part>();
                         Part->Index = Index;
-                        Part->ResendTime = Time + boost::posix_time::milliseconds(GetTimeoutMilliseconds(0));
+                        Part->ResendTime = Time + std::chrono::milliseconds(GetTimeoutMilliseconds(0));
                         Part->Data = Buffer;
                         Part->ResentCount = 0;
                         if (!c->Parts->TryPushPart(Index, Buffer))
@@ -565,8 +565,8 @@ namespace Client
                     RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
                     {
                         if (c->NotAcknowledgedIndices.size() == 0) { return; }
-                        auto CurrentTime = boost::posix_time::microsec_clock::universal_time();
-                        if ((CurrentTime - c->LastCheck).total_milliseconds() + 1 < CheckTimeout()) { return; }
+                        auto CurrentTime = std::chrono::steady_clock::time_point::clock::now();
+                        if (std::chrono::duration<double, std::chrono::milliseconds::period>(CurrentTime - c->LastCheck).count() + 1 < CheckTimeout()) { return; }
                         c->LastCheck = CurrentTime;
                         auto NotAcknowledgedIndices = std::set<int>(c->NotAcknowledgedIndices.begin(), c->NotAcknowledgedIndices.end());
                         auto MaxHandled = c->Parts->MaxHandled;
@@ -673,13 +673,13 @@ namespace Client
                         }
 
                         if (cc->Parts->Parts.size() == 0) { return; }
-                        auto t = boost::posix_time::microsec_clock::universal_time();
+                        auto t = std::chrono::steady_clock::time_point::clock::now();
                         cc->Parts->ForEachTimedoutPacket(SessionId, t, [&](int i, std::shared_ptr<std::vector<std::uint8_t>> d) { Parts.push_back(d); });
                         auto Wait = std::numeric_limits<int>::max();
                         for (auto Pair : cc->Parts->Parts)
                         {
                             auto p = std::get<1>(Pair);
-                            auto pWait = (p->ResendTime - t).total_milliseconds() + 1;
+                            auto pWait = std::chrono::duration<double, std::chrono::milliseconds::period>(p->ResendTime - t).count() + 1;
                             if (pWait < Wait)
                             {
                                 Wait = static_cast<int>(pWait);

@@ -18,6 +18,7 @@
     <ClInclude Include="BaseSystem\Optional.h" />
     <ClInclude Include="BaseSystem\ThreadLocalRandom.h" />
     <ClInclude Include="BaseSystem\ThreadLocalVariable.h" />
+    <ClInclude Include="BaseSystem\Times.h" />
     <ClInclude Include="Communication.h" />
     <ClInclude Include="CommunicationBinary.h" />
     <ClInclude Include="Context\ServerContext.h" />
@@ -32,6 +33,7 @@
     <ClInclude Include="Util\SessionLogEntry.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BaseSystem\Times.cpp" />
     <ClCompile Include="Context\ServerContext.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Servers\BinarySocketServer.cpp" />

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "BaseSystem/AutoResetEvent.h"
+#include "BaseSystem/Times.h"
 #include "Util/SessionLogEntry.h"
 
 #include <memory>
@@ -43,7 +44,7 @@ namespace Server
                         break;
                     }
 
-                    auto Line = boost::posix_time::to_iso_extended_wstring(e->Time) + L"Z" + L" " + e->Token + L" " + e->Type + L" " + e->Name + L" " + e->Message;
+                    auto Line = DateTimeUtcToString(e->Time) + L" " + e->Token + L" " + e->Type + L" " + e->Name + L" " + e->Message;
                     std::wprintf(L"%ls\n", Line.c_str());
                 }
             }

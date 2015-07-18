@@ -5,7 +5,7 @@
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <chrono>
 
 namespace Server
 {
@@ -14,7 +14,7 @@ namespace Server
     public:
         boost::asio::ip::tcp::endpoint RemoteEndPoint;
         std::wstring Token;
-        boost::posix_time::ptime Time;
+        std::chrono::system_clock::time_point Time;
         std::wstring Type;
         std::wstring Name;
         std::wstring Message;
