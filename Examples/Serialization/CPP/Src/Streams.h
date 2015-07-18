@@ -1,15 +1,4 @@
-﻿//==========================================================================
-//
-//  File:        Streams.h
-//  Location:    Yuki.Examples <C++ 2011>
-//  Description: 文件流
-//  Version:     2012.04.26.
-//  Author:      F.R.C.
-//  Copyright(C) Public Domain
-//
-//==========================================================================
-
-#pragma once
+﻿#pragma once
 
 #include "World.h"
 #include "WorldBinary.h"

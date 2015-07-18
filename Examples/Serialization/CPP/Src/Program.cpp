@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 数据复制工具
-//  Version:     2012.05.03.
+//  Version:     2015.07.18.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //

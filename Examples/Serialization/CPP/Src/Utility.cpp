@@ -1,15 +1,4 @@
-﻿//==========================================================================
-//
-//  File:        Utility.cpp
-//  Location:    Yuki.Examples <C++ 2011>
-//  Description: 工具函数
-//  Version:     2012.05.24.
-//  Author:      F.R.C.
-//  Copyright(C) Public Domain
-//
-//==========================================================================
-
-#include "Utility.h"
+﻿#include "Utility.h"
 
 #include <climits>
 
