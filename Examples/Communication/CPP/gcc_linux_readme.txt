@@ -7,15 +7,15 @@ yum install cmake
 
 2.安装g++ 4.8.2
 cd /etc/yum.repos.d
-wget http://people.centos.org/tru/devtools-2/devtools-2.repo 
+wget http://people.centos.org/tru/devtools-2/devtools-2.repo
 yum --enablerepo=testing-devtools-2-centos-6 install devtoolset-2-binutils devtoolset-2-gcc devtoolset-2-gcc-c++
 
-export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc  
+export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
 export CPP=/opt/rh/devtoolset-2/root/usr/bin/cpp
 export CXX=/opt/rh/devtoolset-2/root/usr/bin/c++
 
 3.编译程序
-进入Src\Server文件夹，运行
+进入CMakeLists.txt所在文件夹，运行
 cmake .
 生成调试版Makefile
 或者运行
