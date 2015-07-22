@@ -1,6 +1,6 @@
 ﻿#include "Strings.h"
 
-#include <climits>
+#include <limits>
 
 bool EqualIgnoreCase(const std::wstring& l, const std::wstring& r)
 {
@@ -32,21 +32,21 @@ bool EqualIgnoreCase(std::shared_ptr<std::wstring> l, std::shared_ptr<std::wstri
 
 std::wstring s2w(const std::string& s)
 {
-    int n = static_cast<int>(mbstowcs(NULL, s.c_str(), INT_MAX));
-    if (n < 0) { throw std::logic_error("InvalidOperationException"); }
+    int n = static_cast<int>(std::mbstowcs(nullptr, s.c_str(), std::numeric_limits<std::size_t>::max()));
+    if (n == static_cast<std::size_t>(-1)) { throw std::logic_error("InvalidOperationException"); }
     std::wstring ws(n, 0);
     if (n == 0) { return ws; }
-    mbstowcs(&ws[0], s.c_str(), n);
+    std::mbstowcs(&ws[0], s.c_str(), n);
     return ws;
 }
 
 std::string w2s(const std::wstring& ws)
 {
-    int n = static_cast<int>(wcstombs(NULL, ws.c_str(), INT_MAX));
-    if (n < 0) { throw std::logic_error("InvalidOperationException"); }
+    int n = static_cast<int>(std::wcstombs(nullptr, ws.c_str(), std::numeric_limits<std::size_t>::max()));
+    if (n == static_cast<std::size_t>(-1)) { throw std::logic_error("InvalidOperationException"); }
     std::string s(n, 0);
     if (n == 0) { return s; }
-    wcstombs(&s[0], ws.c_str(), n);
+    std::wcstombs(&s[0], ws.c_str(), n);
     return s;
 }
 
