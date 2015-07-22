@@ -89,6 +89,7 @@
   <ItemGroup>
     <ClInclude Include="BaseSystem\Cryptography.h" />
     <ClInclude Include="BaseSystem\LockedVariable.h" />
+    <ClInclude Include="BaseSystem\Strings.h" />
     <ClInclude Include="Clients\BinaryCountPacketClient.h" />
     <ClInclude Include="Clients\IContext.h" />
     <ClInclude Include="Clients\ISerializationClient.h" />
@@ -100,12 +101,11 @@
     <ClInclude Include="Clients\TcpClient.h" />
     <ClInclude Include="Communication.h" />
     <ClInclude Include="CommunicationBinary.h" />
-    <ClInclude Include="Utility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseSystem\Cryptography.cpp" />
+    <ClCompile Include="BaseSystem\Strings.cpp" />
     <ClCompile Include="Program.cpp" />
-    <ClCompile Include="Utility.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

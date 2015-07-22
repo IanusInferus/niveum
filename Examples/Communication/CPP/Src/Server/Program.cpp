@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2015.07.19.
+//  Version:     2015.07.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -13,7 +13,7 @@
 #include "Servers/BinarySocketSession.h"
 #include "Servers/BinarySocketServer.h"
 
-#include "Utility.h"
+#include "BaseSystem/Strings.h"
 #include "BaseSystem/AutoResetEvent.h"
 #include "BaseSystem/Optional.h"
 #include "Util/ConsoleLogger.h"

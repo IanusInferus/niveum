@@ -2,7 +2,6 @@
 #include <string>
 #include <memory>
 #include <sstream>
-#include <exception>
 #include <stdexcept>
 
 bool EqualIgnoreCase(const std::wstring& l, const std::wstring& r);
@@ -56,7 +55,45 @@ T Parse(std::shared_ptr<std::wstring> str)
     return Parse<T>(*str);
 }
 
-std::shared_ptr<std::wstring> s2w(std::shared_ptr<std::string> s);
-std::shared_ptr<std::string> w2s(std::shared_ptr<std::wstring> ws);
+template<typename CharT>
+std::basic_string<CharT> ReplaceAllCopy(const std::basic_string<CharT> &Input, const std::basic_string<CharT> &Match, const std::basic_string<CharT> &Replacement)
+{
+    if (Match.length() == 0)
+    {
+        throw std::logic_error("InvalidArgument");
+    }
+    std::basic_string<CharT> Output;
+    auto InputSize = Input.size();
+    decltype(InputSize) Index = 0;
+    while (Index < InputSize)
+    {
+        if (Input.compare(Index, Match.size(), Match) == 0)
+        {
+            Output.append(Replacement);
+            Index += Match.size();
+        }
+        else
+        {
+            Output.push_back(Input[Index]);
+            Index += 1;
+        }
+    }
+    return std::move(Output);
+}
+
+template<typename CharT>
+std::basic_string<CharT> ReplaceAllCopy(const std::basic_string<CharT> &Input, const CharT *Match, const CharT *Replacement)
+{
+    return ReplaceAllCopy(Input, std::basic_string<CharT>(Match), std::basic_string<CharT>(Replacement));
+}
+
+template<typename CharT>
+std::basic_string<CharT> ReplaceAllCopy(const CharT *Input, const CharT *Match, const CharT *Replacement)
+{
+    return ReplaceAllCopy(std::basic_string<CharT>(Input), std::basic_string<CharT>(Match), std::basic_string<CharT>(Replacement));
+}
+
 std::wstring s2w(const std::string& s);
 std::string w2s(const std::wstring& ws);
+std::shared_ptr<std::wstring> s2w(std::shared_ptr<std::string> s);
+std::shared_ptr<std::string> w2s(std::shared_ptr<std::wstring> ws);
