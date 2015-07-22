@@ -9,7 +9,7 @@
 //
 //==========================================================================
 
-#include "BaseSystem/Strings.h"
+#include "BaseSystem/StringUtilities.h"
 #include "Communication.h"
 #include "CommunicationBinary.h"
 #include "Clients/BinaryCountPacketClient.h"

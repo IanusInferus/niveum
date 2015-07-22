@@ -1,4 +1,4 @@
-﻿#include "BaseSystem/Strings.h"
+﻿#include "BaseSystem/StringUtilities.h"
 #include "DataAccessBase.h"
 
 #include <exception>

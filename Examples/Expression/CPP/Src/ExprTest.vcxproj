@@ -89,13 +89,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BaseSystem\Strings.cpp" />
+    <ClCompile Include="BaseSystem\StringUtilities.cpp" />
     <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp" />
     <ClCompile Include="ExpressionCalculator.cpp" />
     <ClCompile Include="Program.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BaseSystem\Strings.h" />
+    <ClInclude Include="BaseSystem\StringUtilities.h" />
     <ClInclude Include="BaseSystem\ThreadLocalRandom.h" />
     <ClInclude Include="BaseSystem\ThreadLocalVariable.h" />
     <ClInclude Include="Calculation.h" />

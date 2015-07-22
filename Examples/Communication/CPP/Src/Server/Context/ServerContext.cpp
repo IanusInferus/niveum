@@ -1,6 +1,6 @@
 ﻿#include "ServerContext.h"
 #include "CommunicationBinary.h"
-#include "BaseSystem/Strings.h"
+#include "BaseSystem/StringUtilities.h"
 
 using namespace Server;
 

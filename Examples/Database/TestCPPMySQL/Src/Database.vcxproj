@@ -103,7 +103,7 @@ if exist "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.pdb" 
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AutoResetEvent.h" />
-    <ClInclude Include="BaseSystem\Strings.h" />
+    <ClInclude Include="BaseSystem\StringUtilities.h" />
     <ClInclude Include="DataAccessManager.h" />
     <ClInclude Include="Database.h" />
     <ClInclude Include="LoadTest.h" />
@@ -116,7 +116,7 @@ if exist "$(MYSQL_CONNECTOR_CXX_ROOT)\driver\$(Configuration)\mysqlcppconn.pdb" 
     <ClInclude Include="UtfEncoding.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BaseSystem\Strings.cpp" />
+    <ClCompile Include="BaseSystem\StringUtilities.cpp" />
     <ClCompile Include="DataAccessManager.cpp" />
     <ClCompile Include="MySql\DataAccessBase.cpp" />
     <ClCompile Include="Program.cpp" />

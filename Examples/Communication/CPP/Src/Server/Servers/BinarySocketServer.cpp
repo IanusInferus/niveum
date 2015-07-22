@@ -1,7 +1,7 @@
 ﻿#include "Servers/BinarySocketSession.h"
 #include "Servers/BinarySocketServer.h"
 
-#include "BaseSystem/Strings.h"
+#include "BaseSystem/StringUtilities.h"
 
 #include <stdexcept>
 

@@ -6,7 +6,7 @@
     <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
-    <ClCompile Include="BaseSystem\Strings.cpp">
+    <ClCompile Include="BaseSystem\StringUtilities.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>
@@ -22,7 +22,7 @@
     <ClInclude Include="BaseSystem\ThreadLocalVariable.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
-    <ClInclude Include="BaseSystem\Strings.h">
+    <ClInclude Include="BaseSystem\StringUtilities.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
   </ItemGroup>

@@ -9,7 +9,7 @@
 //
 //==========================================================================
 
-#include "BaseSystem/Strings.h"
+#include "BaseSystem/StringUtilities.h"
 #include "World.h"
 #include "WorldBinary.h"
 #include "Streams.h"

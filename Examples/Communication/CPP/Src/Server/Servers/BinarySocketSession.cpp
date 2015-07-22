@@ -1,7 +1,7 @@
 ﻿#include "Servers/BinarySocketSession.h"
 #include "Servers/BinarySocketServer.h"
 
-#include "BaseSystem/Strings.h"
+#include "BaseSystem/StringUtilities.h"
 #include "BaseSystem/Times.h"
 #include "BaseSystem/ThreadLocalRandom.h"
 #include "BaseSystem/ThreadLocalVariable.h"
