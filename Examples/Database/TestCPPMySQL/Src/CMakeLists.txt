@@ -13,7 +13,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories("/usr/include/mysql-connector")
 include_directories(".")
 
-file(GLOB_RECURSE SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp") 
+file(GLOB_RECURSE SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp")
 string(REGEX REPLACE "CMakeFiles/[^;]+;?" "" SRCS "${SRCS}")
 add_executable(Database ${SRCS})
 target_link_libraries(Database ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} mysqlcppconn)
