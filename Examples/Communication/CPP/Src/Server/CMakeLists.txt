@@ -9,7 +9,7 @@ include_directories("../../Lib/asio/include")
 include_directories("../../Lib_Gcc")
 include_directories(".")
 
-file(GLOB_RECURSE SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp") 
+file(GLOB_RECURSE SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp")
 string(REGEX REPLACE "CMakeFiles/[^;]+;?" "" SRCS "${SRCS}")
 add_executable(Server ${SRCS})
 target_link_libraries(Server ${CMAKE_THREAD_LIBS_INIT})
