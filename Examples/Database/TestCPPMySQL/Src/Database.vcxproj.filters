@@ -16,7 +16,7 @@
     <ClInclude Include="AutoResetEvent.h" />
     <ClInclude Include="UtfEncoding.h" />
     <ClInclude Include="Database.h" />
-    <ClInclude Include="BaseSystem\Strings.h">
+    <ClInclude Include="BaseSystem\StringUtilities.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
   </ItemGroup>
@@ -27,7 +27,7 @@
       <Filter>MySql</Filter>
     </ClCompile>
     <ClCompile Include="ThreadLocalVariable.cpp" />
-    <ClCompile Include="BaseSystem\Strings.cpp">
+    <ClCompile Include="BaseSystem\StringUtilities.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>

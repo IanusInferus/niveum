@@ -4,13 +4,13 @@
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldBinary.h" />
     <ClInclude Include="Streams.h" />
-    <ClInclude Include="BaseSystem\Strings.h">
+    <ClInclude Include="BaseSystem\StringUtilities.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
-    <ClCompile Include="BaseSystem\Strings.cpp">
+    <ClCompile Include="BaseSystem\StringUtilities.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>

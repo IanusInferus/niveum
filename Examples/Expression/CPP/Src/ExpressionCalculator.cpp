@@ -1,5 +1,5 @@
 ﻿#include "ExpressionCalculator.h"
-#include "BaseSystem/Strings.h"
+#include "BaseSystem/StringUtilities.h"
 #include "BaseSystem/ThreadLocalRandom.h"
 
 #include <stdexcept>

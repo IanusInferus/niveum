@@ -34,7 +34,7 @@
     <ClInclude Include="Clients\UdpClient.h">
       <Filter>Clients</Filter>
     </ClInclude>
-    <ClInclude Include="BaseSystem\Strings.h">
+    <ClInclude Include="BaseSystem\StringUtilities.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
   </ItemGroup>
@@ -43,7 +43,7 @@
     <ClCompile Include="BaseSystem\Cryptography.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
-    <ClCompile Include="BaseSystem\Strings.cpp">
+    <ClCompile Include="BaseSystem\StringUtilities.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>

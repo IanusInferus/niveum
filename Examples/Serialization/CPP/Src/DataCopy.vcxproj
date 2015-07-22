@@ -77,13 +77,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BaseSystem\Strings.h" />
+    <ClInclude Include="BaseSystem\StringUtilities.h" />
     <ClInclude Include="Streams.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldBinary.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BaseSystem\Strings.cpp" />
+    <ClCompile Include="BaseSystem\StringUtilities.cpp" />
     <ClCompile Include="Program.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

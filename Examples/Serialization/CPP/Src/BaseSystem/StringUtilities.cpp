@@ -1,4 +1,4 @@
-﻿#include "Strings.h"
+﻿#include "StringUtilities.h"
 
 #include <limits>
 
