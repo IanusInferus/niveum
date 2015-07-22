@@ -4,6 +4,7 @@ Examples:
 将C++各示例的命令行显示的编码更改为Unicode。
 修正C++各示例的CMakeList文件中的空格。
 将C++各示例的Strings.h进行整理，使其全部为C++风格。
+将C++各示例的Strings.h改名为StringUtilities.h，防止重名。
 
 2015.07.21
 Examples:
