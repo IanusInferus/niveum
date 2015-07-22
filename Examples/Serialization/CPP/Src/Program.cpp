@@ -17,6 +17,7 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
+#include <cwchar>
 
 using namespace World;
 using namespace ::World::Streams;
@@ -88,6 +89,7 @@ int main(int argc, char **argv)
     }
     catch (std::exception &ex)
     {
-        printf("Error:\n%s\n", ex.what());
+        std::wprintf(L"Error:\n%ls\n", s2w(ex.what()).c_str());
     }
 }
+
