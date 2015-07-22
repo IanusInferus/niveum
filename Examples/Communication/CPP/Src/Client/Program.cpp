@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2015.07.19.
+//  Version:     2015.07.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -20,7 +20,6 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
-#include <clocale>
 #include <cwchar>
 #include <iostream>
 #include <algorithm>
@@ -381,9 +380,27 @@ namespace Client
     };
 }
 
+#ifdef _MSC_VER
+
+#include <io.h>
+#include <fcntl.h>
+
+void ModifyStdoutUnicode()
+{
+    _setmode(_fileno(stdout), _O_U16TEXT);
+}
+
+#else
+
+void ModifyStdoutUnicode()
+{
+}
+
+#endif
+
 int main(int argc, char **argv)
 {
-    std::setlocale(LC_ALL, "");
+    ModifyStdoutUnicode();
 
 #if _DEBUG
     return Client::Program::MainInner(argc, argv);

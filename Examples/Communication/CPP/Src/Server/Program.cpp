@@ -22,7 +22,6 @@
 #include <string>
 #include <exception>
 #include <stdexcept>
-#include <clocale>
 #include <cwchar>
 #include <thread>
 #include <asio.hpp>
@@ -159,9 +158,27 @@ namespace Server
     };
 }
 
+#ifdef _MSC_VER
+
+#include <io.h>
+#include <fcntl.h>
+
+void ModifyStdoutUnicode()
+{
+    _setmode(_fileno(stdout), _O_U16TEXT);
+}
+
+#else
+
+void ModifyStdoutUnicode()
+{
+}
+
+#endif
+
 int main(int argc, char **argv)
 {
-    std::setlocale(LC_ALL, "");
+    ModifyStdoutUnicode();
 
     try
     {

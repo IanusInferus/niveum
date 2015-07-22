@@ -17,11 +17,7 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
-#include <cstdio>
-#include <clocale>
-#include <iostream>
-
-#include <boost/algorithm/string.hpp>
+#include <cwchar>
 
 namespace Database
 {
@@ -36,14 +32,13 @@ namespace Database
             {
                 auto ConnectionString = s2w(argv[1]);
                 auto Option = s2w(argv[2]);
-                boost::algorithm::to_lower(Option);
 
                 auto dam = std::make_shared<DataAccessManager>(ConnectionString);
-                if (Option == L"/load")
+                if (EqualIgnoreCase(Option, L"/load"))
                 {
                     LoadTest::DoTest(dam);
                 }
-                else if (Option == L"/perf")
+                else if (EqualIgnoreCase(Option, L"/perf"))
                 {
                     PerformanceTest::DoTest(dam);
                 }
@@ -81,9 +76,27 @@ namespace Database
     };
 }
 
+#ifdef _MSC_VER
+
+#include <io.h>
+#include <fcntl.h>
+
+void ModifyStdoutUnicode()
+{
+    _setmode(_fileno(stdout), _O_U16TEXT);
+}
+
+#else
+
+void ModifyStdoutUnicode()
+{
+}
+
+#endif
+
 int main(int argc, char **argv)
 {
-    std::setlocale(LC_ALL, "");
+    ModifyStdoutUnicode();
 
     try
     {
