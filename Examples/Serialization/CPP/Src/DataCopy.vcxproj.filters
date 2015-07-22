@@ -4,10 +4,19 @@
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldBinary.h" />
     <ClInclude Include="Streams.h" />
-    <ClInclude Include="Utility.h" />
+    <ClInclude Include="BaseSystem\Strings.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
-    <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="BaseSystem\Strings.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="BaseSystem">
+      <UniqueIdentifier>{cb9346fd-054e-41b3-92e9-589e5f4b8efb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

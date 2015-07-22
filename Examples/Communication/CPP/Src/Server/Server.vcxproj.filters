@@ -29,7 +29,6 @@
     </ClInclude>
     <ClInclude Include="Communication.h" />
     <ClInclude Include="CommunicationBinary.h" />
-    <ClInclude Include="Utility.h" />
     <ClInclude Include="Servers\BinarySocketServer.h">
       <Filter>Servers</Filter>
     </ClInclude>
@@ -73,10 +72,12 @@
     <ClInclude Include="BaseSystem\Times.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
+    <ClInclude Include="BaseSystem\Strings.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
-    <ClCompile Include="Utility.cpp" />
     <ClCompile Include="Services\Base.cpp">
       <Filter>Services</Filter>
     </ClCompile>
@@ -105,6 +106,9 @@
       <Filter>BaseSystem</Filter>
     </ClCompile>
     <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseSystem\Strings.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>

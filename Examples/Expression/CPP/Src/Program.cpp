@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 表达式计算工具
-//  Version:     2015.02.12.
+//  Version:     2015.07.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -13,7 +13,7 @@
 #include "ExpressionSchemaBinary.h"
 #include "Streams.h"
 #include "Calculation.h"
-#include "Utility.h"
+#include "BaseSystem/Strings.h"
 
 #include <memory>
 #include <exception>

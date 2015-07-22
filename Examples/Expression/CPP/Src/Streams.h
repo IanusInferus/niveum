@@ -1,28 +1,17 @@
-﻿//==========================================================================
-//
-//  File:        Streams.h
-//  Location:    Yuki.Examples <C++ 2011>
-//  Description: 文件流
-//  Version:     2015.02.11.
-//  Author:      F.R.C.
-//  Copyright(C) Public Domain
-//
-//==========================================================================
-
-#pragma once
+﻿#pragma once
 
 #include "ExpressionSchema.h"
 #include "ExpressionSchemaBinary.h"
-#include "Utility.h"
+#include "BaseSystem/Strings.h"
 
+#include <cstdint>
 #include <cstdio>
+#include <stdexcept>
 
 namespace Yuki
 {
     namespace ExpressionSchema
     {
-        using namespace std;
-
         class ReadableStream : public IReadableStream
         {
         private:
@@ -33,7 +22,7 @@ namespace Yuki
                 f = fopen(w2s(Path).c_str(), "rb");
                 if (f == NULL)
                 {
-                    throw runtime_error("IOException");
+                    throw std::runtime_error("IOException");
                 }
             }
             ~ReadableStream()
@@ -46,13 +35,13 @@ namespace Yuki
                 uint8_t b = 0;
                 if (fread(&b, 1, 1, f) != 1)
                 {
-                    throw runtime_error("IOException");
+                    throw std::runtime_error("IOException");
                 }
                 return b;
             }
-            shared_ptr<vector<uint8_t>> ReadBytes(size_t Size)
+            std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(size_t Size)
             {
-                throw runtime_error("NotSupported");
+                throw std::runtime_error("NotSupported");
             }
         };
 
@@ -66,7 +55,7 @@ namespace Yuki
                 f = fopen(w2s(Path).c_str(), "wb");
                 if (f == NULL)
                 {
-                    throw runtime_error("IOException");
+                    throw std::runtime_error("IOException");
                 }
             }
             ~WritableStream()
@@ -74,16 +63,16 @@ namespace Yuki
                 fclose(f);
             }
 
-            virtual void WriteByte(uint8_t b)
+            virtual void WriteByte(std::uint8_t b)
             {
                 if (fwrite(&b, 1, 1, f) != 1)
                 {
-                    throw runtime_error("IOException");
+                    throw std::runtime_error("IOException");
                 }
             }
-            virtual void WriteBytes(shared_ptr<vector<uint8_t>> l)
+            virtual void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l)
             {
-                throw runtime_error("NotSupported");
+                throw std::runtime_error("NotSupported");
             }
         };
     }

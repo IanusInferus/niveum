@@ -3,13 +3,13 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 数据库示例程序
-//  Version:     2013.04.15.
+//  Version:     2015.07.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
 //==========================================================================
 
-#include "Utility.h"
+#include "BaseSystem/Strings.h"
 #include "DataAccessManager.h"
 #include "LoadTest.h"
 #include "PerformanceTest.h"
