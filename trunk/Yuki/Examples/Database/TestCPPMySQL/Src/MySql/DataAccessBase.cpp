@@ -14,7 +14,6 @@
 #include <streambuf>
 
 #include <boost/regex.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include <cppconn/driver.h>
 #include <cppconn/connection.h>
@@ -68,26 +67,25 @@ namespace Database
 
                 auto Name = boost::regex_replace(Parts[0], rWhitespace, L"");
                 auto Value = boost::regex_replace(Parts[1], rWhitespace, L"");
-                boost::algorithm::to_lower(Name);
 
-                if (Name == L"server")
+                if (EqualIgnoreCase(Name, L"server"))
                 {
                     Server = Value;
                 }
-                else if (Name == L"port")
+                else if (EqualIgnoreCase(Name, L"port"))
                 {
                     if (!boost::regex_match(Value, rPort)) { throw logic_error("ConnectionStringInvalid: " + w2s(f)); }
                     Port = Value;
                 }
-                else if (Name == L"uid")
+                else if (EqualIgnoreCase(Name, L"uid"))
                 {
                     Uid = Value;
                 }
-                else if (Name == L"pwd")
+                else if (EqualIgnoreCase(Name, L"pwd"))
                 {
                     Pwd = Value;
                 }
-                else if (Name == L"database")
+                else if (EqualIgnoreCase(Name, L"database"))
                 {
                     DbName = Value;
                 }
