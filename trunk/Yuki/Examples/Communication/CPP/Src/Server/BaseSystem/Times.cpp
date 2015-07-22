@@ -1,6 +1,6 @@
 ﻿#include "Times.h"
 
-#include "Strings.h"
+#include "StringUtilities.h"
 
 #include <sstream>
 #include <iomanip>

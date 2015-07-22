@@ -13,7 +13,7 @@
 #include "ExpressionSchemaBinary.h"
 #include "Streams.h"
 #include "Calculation.h"
-#include "BaseSystem/Strings.h"
+#include "BaseSystem/StringUtilities.h"
 
 #include <memory>
 #include <exception>

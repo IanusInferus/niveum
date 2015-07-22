@@ -2,7 +2,7 @@
 
 #include "ExpressionSchema.h"
 #include "ExpressionSchemaBinary.h"
-#include "BaseSystem/Strings.h"
+#include "BaseSystem/StringUtilities.h"
 
 #include <cstdint>
 #include <cstdio>

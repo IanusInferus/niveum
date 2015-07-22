@@ -13,7 +13,7 @@
 #include "Servers/BinarySocketSession.h"
 #include "Servers/BinarySocketServer.h"
 
-#include "BaseSystem/Strings.h"
+#include "BaseSystem/StringUtilities.h"
 #include "BaseSystem/AutoResetEvent.h"
 #include "BaseSystem/Optional.h"
 #include "Util/ConsoleLogger.h"

@@ -16,7 +16,7 @@
     <ClInclude Include="BaseSystem\CancellationToken.h" />
     <ClInclude Include="BaseSystem\LockedVariable.h" />
     <ClInclude Include="BaseSystem\Optional.h" />
-    <ClInclude Include="BaseSystem\Strings.h" />
+    <ClInclude Include="BaseSystem\StringUtilities.h" />
     <ClInclude Include="BaseSystem\ThreadLocalRandom.h" />
     <ClInclude Include="BaseSystem\ThreadLocalVariable.h" />
     <ClInclude Include="BaseSystem\Times.h" />
@@ -33,7 +33,7 @@
     <ClInclude Include="Util\SessionLogEntry.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BaseSystem\Strings.cpp" />
+    <ClCompile Include="BaseSystem\StringUtilities.cpp" />
     <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp" />
     <ClCompile Include="BaseSystem\Times.cpp" />
     <ClCompile Include="Context\ServerContext.cpp" />

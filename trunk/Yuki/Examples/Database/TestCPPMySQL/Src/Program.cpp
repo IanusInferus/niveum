@@ -9,7 +9,7 @@
 //
 //==========================================================================
 
-#include "BaseSystem/Strings.h"
+#include "BaseSystem/StringUtilities.h"
 #include "DataAccessManager.h"
 #include "LoadTest.h"
 #include "PerformanceTest.h"
