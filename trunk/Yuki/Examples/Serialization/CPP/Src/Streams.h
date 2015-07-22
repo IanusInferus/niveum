@@ -3,14 +3,14 @@
 #include "World.h"
 #include "WorldBinary.h"
 
+#include <cstdint>
 #include <cstdio>
+#include <stdexcept>
 
 namespace World
 {
     namespace Streams
     {
-        using namespace std;
-
         class ReadableStream : public IReadableStream
         {
         private:
@@ -21,7 +21,7 @@ namespace World
                 f = fopen(w2s(Path).c_str(), "rb");
                 if (f == NULL)
                 {
-                    throw runtime_error("IOException");
+                    throw std::runtime_error("IOException");
                 }
             }
             ~ReadableStream()
@@ -34,13 +34,13 @@ namespace World
                 uint8_t b = 0;
                 if (fread(&b, 1, 1, f) != 1)
                 {
-                    throw runtime_error("IOException");
+                    throw std::runtime_error("IOException");
                 }
                 return b;
             }
-            shared_ptr<vector<uint8_t>> ReadBytes(size_t Size)
+            std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(size_t Size)
             {
-                throw runtime_error("NotSupported");
+                throw std::runtime_error("NotSupported");
             }
         };
 
@@ -54,7 +54,7 @@ namespace World
                 f = fopen(w2s(Path).c_str(), "wb");
                 if (f == NULL)
                 {
-                    throw runtime_error("IOException");
+                    throw std::runtime_error("IOException");
                 }
             }
             ~WritableStream()
@@ -62,16 +62,16 @@ namespace World
                 fclose(f);
             }
 
-            virtual void WriteByte(uint8_t b)
+            virtual void WriteByte(std::uint8_t b)
             {
                 if (fwrite(&b, 1, 1, f) != 1)
                 {
-                    throw runtime_error("IOException");
+                    throw std::runtime_error("IOException");
                 }
             }
-            virtual void WriteBytes(shared_ptr<vector<uint8_t>> l)
+            virtual void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l)
             {
-                throw runtime_error("NotSupported");
+                throw std::runtime_error("NotSupported");
             }
         };
     }

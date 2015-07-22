@@ -8,7 +8,7 @@ mysql-community-server、mysql-workbench
 cmake
 直接用YaST从光盘安装。
 
-gcc-c++、gcc46-c++、libpth-devel
+gcc-c++、gcc48-c++、libpth-devel
 直接用YaST从光盘安装。
 
 p7zip
@@ -36,7 +36,7 @@ libmysqlcppconn-devel
 find . -type f -name '*.sh' -exec chmod +x {} \;
 使得所有的.sh文件可以执行，然后运行
 ./bootstrap.sh
-./bjam --with-system --with-thread --with-date_time --with-regex --with-serialization --toolset=gcc-4.6 stage
+./bjam --with-system --with-thread --with-date_time --with-regex --with-serialization --toolset=gcc-4.8 stage
 即配置好boost库。
 
 2)编译程序

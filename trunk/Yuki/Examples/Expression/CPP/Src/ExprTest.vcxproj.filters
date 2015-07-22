@@ -2,15 +2,16 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
-    <ClCompile Include="Utility.cpp" />
     <ClCompile Include="ExpressionCalculator.cpp" />
     <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseSystem\Strings.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Calculation.h" />
-    <ClInclude Include="Utility.h" />
     <ClInclude Include="ExpressionSchema.h" />
     <ClInclude Include="ExpressionSchemaBinary.h" />
     <ClInclude Include="Streams.h" />
@@ -19,6 +20,9 @@
       <Filter>BaseSystem</Filter>
     </ClInclude>
     <ClInclude Include="BaseSystem\ThreadLocalVariable.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\Strings.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
   </ItemGroup>

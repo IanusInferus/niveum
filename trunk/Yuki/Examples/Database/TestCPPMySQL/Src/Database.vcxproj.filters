@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="Utility.h" />
     <ClInclude Include="DataAccessManager.h" />
     <ClInclude Include="LoadTest.h" />
     <ClInclude Include="PerformanceTest.h" />
@@ -17,19 +16,27 @@
     <ClInclude Include="AutoResetEvent.h" />
     <ClInclude Include="UtfEncoding.h" />
     <ClInclude Include="Database.h" />
+    <ClInclude Include="BaseSystem\Strings.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
-    <ClCompile Include="Utility.cpp" />
     <ClCompile Include="DataAccessManager.cpp" />
     <ClCompile Include="MySql\DataAccessBase.cpp">
       <Filter>MySql</Filter>
     </ClCompile>
     <ClCompile Include="ThreadLocalVariable.cpp" />
+    <ClCompile Include="BaseSystem\Strings.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="MySql">
       <UniqueIdentifier>{8a85fa27-8b5d-4a09-b465-048fe9039b52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BaseSystem">
+      <UniqueIdentifier>{fef616b2-d198-4daf-bab7-6f89e20a542b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
