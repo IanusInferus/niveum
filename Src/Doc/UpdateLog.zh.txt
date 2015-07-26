@@ -1,4 +1,8 @@
-﻿2015.07.22
+﻿2015.07.26
+Examples:
+修正C++通讯示例中ThreadLocalVariable的实现。
+
+2015.07.22
 Examples:
 将C++各示例的Utility.h更名为Strings.h，并对代码进行整理。
 将C++各示例的命令行显示的编码更改为Unicode。
