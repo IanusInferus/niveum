@@ -1,10 +1,40 @@
 ﻿#include <functional>
 
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
+#if defined(_MSC_VER)
 
-#elif 0 //C++11
+#include <windows.h>
 
-#else //do_at_thread_exit
+struct Context
+{
+    HANDLE WaitHandle;
+    HANDLE hThread2;
+    std::function<void()> f;
+};
+
+static void CALLBACK Callback(_In_ PVOID lpParameter, _In_ BOOLEAN TimerOrWaitFired)
+{
+    auto c = (Context *)lpParameter;
+    if (UnregisterWait(c->WaitHandle) == 0) { throw "UnexpectedReturnValue"; }
+    if (CloseHandle(c->hThread2) == 0) { throw "UnexpectedReturnValue"; }
+    c->f();
+}
+
+void do_at_thread_exit(std::function<void()> f)
+{
+    auto hProcess = GetCurrentProcess();
+    auto hThread = GetCurrentThread();
+    HANDLE hThread2;
+    if (DuplicateHandle(hProcess, hThread, hProcess, &hThread2, NULL, FALSE, DUPLICATE_SAME_ACCESS) == 0) { throw "UnexpectedReturnValue"; }
+
+    auto c = new Context();
+    c->WaitHandle = NULL;
+    c->hThread2 = hThread2;
+    c->f = f;
+
+    if (RegisterWaitForSingleObject(&c->WaitHandle, hThread2, Callback, c, INFINITE, WT_EXECUTEINWAITTHREAD | WT_EXECUTEONLYONCE) == 0) { throw "UnexpectedReturnValue"; }
+}
+
+#else
 
 //#include <boost/thread.hpp>
 //void do_at_thread_exit(std::function<void()> f)
