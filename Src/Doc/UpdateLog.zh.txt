@@ -1,4 +1,8 @@
-﻿2015.07.26
+﻿2015.07.27
+Examples:
+修正C++表达式示例和数据库示例中ThreadLocalVariable的实现。
+
+2015.07.26
 Examples:
 修正C++通讯示例中ThreadLocalVariable的实现。
 
