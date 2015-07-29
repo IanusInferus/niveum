@@ -1,12 +1,9 @@
 ﻿#pragma once
 #include <string>
 #include <memory>
+#include <vector>
 #include <sstream>
 #include <stdexcept>
-
-bool EqualIgnoreCase(const std::wstring& l, const std::wstring& r);
-bool EqualIgnoreCase(std::shared_ptr<std::wstring> l, const std::wstring& r);
-bool EqualIgnoreCase(std::shared_ptr<std::wstring> l, std::shared_ptr<std::wstring> r);
 
 template<typename T>
 std::wstring ToString(T value)
@@ -93,7 +90,97 @@ std::basic_string<CharT> ReplaceAllCopy(const CharT *Input, const CharT *Match, 
     return ReplaceAllCopy(std::basic_string<CharT>(Input), std::basic_string<CharT>(Match), std::basic_string<CharT>(Replacement));
 }
 
-std::wstring s2w(const std::string& s);
-std::string w2s(const std::wstring& ws);
-std::shared_ptr<std::wstring> s2w(std::shared_ptr<std::string> s);
-std::shared_ptr<std::string> w2s(std::shared_ptr<std::wstring> ws);
+template<typename CharT, typename RangeT>
+std::basic_string<CharT> JoinStrings(const RangeT &Value, const std::basic_string<CharT> &Separator)
+{
+    std::basic_string<CharT> s;
+    bool First = true;
+    for (std::basic_string<CharT> v : Value)
+    {
+        if (First)
+        {
+            s += v;
+            First = false;
+        }
+        else
+        {
+            s += Separator;
+            s += v;
+        }
+    }
+    return std::move(s);
+}
+
+template<typename CharT, typename RangeT>
+std::basic_string<CharT> JoinStrings(const RangeT &Value, const CharT *Separator)
+{
+    return JoinStrings(Value, std::basic_string<CharT>(Separator));
+}
+
+template<typename CharT, typename RangeT>
+std::vector<std::basic_string<CharT>> SplitString(const std::basic_string<CharT> &Input, const RangeT &Separators)
+{
+    std::vector<std::basic_string<CharT>> l;
+    std::basic_string<CharT> s;
+    for (CharT c : Input)
+    {
+        bool Splitted = false;
+        for (CharT Separator : Separators)
+        {
+            if (c == Separator)
+            {
+                l.push_back(s);
+                s.clear();
+                Splitted = true;
+                break;
+            }
+        }
+        if (Splitted)
+        {
+            continue;
+        }
+        s += c;
+    }
+    l.push_back(s);
+    return std::move(l);
+}
+
+template<typename CharT>
+std::vector<std::basic_string<CharT>> SplitString(const std::basic_string<CharT> &Input, const CharT *Separators)
+{
+    return SplitString(Input, std::basic_string<CharT>(Separators));
+}
+
+template<typename CharT>
+bool StartWith(const std::basic_string<CharT> &Input, const std::basic_string<CharT> &Match)
+{
+    if (Input.length() < Match.length()) { return false; }
+    return Input.compare(0, Match.length(), Match) == 0;
+}
+
+template<typename CharT>
+bool StartWith(const std::basic_string<CharT> &Input, const CharT *Match)
+{
+    return StartWith(Input, std::basic_string<CharT>(Match));
+}
+
+template<typename CharT>
+bool EndWith(const std::basic_string<CharT> &Input, const std::basic_string<CharT> &Match)
+{
+    if (Input.length() < Match.length()) { return false; }
+    return Input.compare(Input.length() - Match.length(), Match.length(), Match) == 0;
+}
+
+template<typename CharT>
+bool EndWith(const std::basic_string<CharT> &Input, const CharT *Match)
+{
+    return EndWith(Input, std::basic_string<CharT>(Match));
+}
+
+bool EqualIgnoreCase(const std::wstring &l, const std::wstring &r);
+
+std::wstring ToLower(const std::wstring &Input);
+std::wstring ToUpper(const std::wstring &Input);
+
+std::wstring s2w(const std::string &s);
+std::string w2s(const std::wstring &ws);
