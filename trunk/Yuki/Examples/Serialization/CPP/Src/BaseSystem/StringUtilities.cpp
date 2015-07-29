@@ -20,14 +20,24 @@ bool EqualIgnoreCase(const std::wstring& l, const std::wstring& r)
     return true;
 }
 
-bool EqualIgnoreCase(std::shared_ptr<std::wstring> l, const std::wstring& r)
+std::wstring ToLower(const std::wstring &Input)
 {
-    return EqualIgnoreCase(*l, r);
+    auto s = Input;
+    for (size_t i = 0; i < s.length(); i += 1)
+    {
+        s[i] = tolower(s[i]);
+    }
+    return std::move(s);
 }
 
-bool EqualIgnoreCase(std::shared_ptr<std::wstring> l, std::shared_ptr<std::wstring> r)
+std::wstring ToUpper(const std::wstring &Input)
 {
-    return EqualIgnoreCase(*l, *r);
+    auto s = Input;
+    for (size_t i = 0; i < s.length(); i += 1)
+    {
+        s[i] = toupper(s[i]);
+    }
+    return std::move(s);
 }
 
 std::wstring s2w(const std::string& s)
@@ -48,14 +58,4 @@ std::string w2s(const std::wstring& ws)
     if (n == 0) { return s; }
     std::wcstombs(&s[0], ws.c_str(), n);
     return s;
-}
-
-std::shared_ptr<std::wstring> s2w(std::shared_ptr<std::string> s)
-{
-    return std::make_shared<std::wstring>(s2w(*s));
-}
-
-std::shared_ptr<std::string> w2s(std::shared_ptr<std::wstring> ws)
-{
-    return std::make_shared<std::string>(w2s(*ws));
 }
