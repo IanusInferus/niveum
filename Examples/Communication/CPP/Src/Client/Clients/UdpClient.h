@@ -99,6 +99,7 @@ namespace Client
                 if (DestinationIndex < 0) { throw std::logic_error("InvalidArgument"); }
                 if (SourceIndex + Length > static_cast<int>(Source.size())) { throw std::logic_error("InvalidArgument"); }
                 if (DestinationIndex + Length > static_cast<int>(Destination.size())) { throw std::logic_error("InvalidArgument"); }
+                if (Length == 0) { return; }
                 memcpy(&Destination[DestinationIndex], &Source[SourceIndex], Length);
             }
 
