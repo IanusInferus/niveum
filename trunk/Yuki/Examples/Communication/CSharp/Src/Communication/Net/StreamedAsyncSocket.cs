@@ -12,9 +12,8 @@ namespace Net
     public sealed class StreamedAsyncSocket : IDisposable
     {
         private Object Lockee = new Object();
-        private HashSet<SocketAsyncOperation> AsyncOperations = new HashSet<SocketAsyncOperation>();
+        private Dictionary<SocketAsyncOperation, AsyncOperationContext> AsyncOperations = new Dictionary<SocketAsyncOperation, AsyncOperationContext>();
         private Boolean IsDisposed = false;
-        private Boolean IsDisposingFinished = false;
 
         private Socket InnerSocket;
         private LockedVariable<int?> TimeoutSecondsValue = new LockedVariable<int?>(null);
@@ -161,7 +160,7 @@ namespace Net
             this.QueueUserWorkItem = QueueUserWorkItem;
         }
 
-        private Boolean TryLockAsyncOperation(SocketAsyncOperation OperationIdentifier)
+        private Boolean TryLockAsyncOperation(SocketAsyncOperation OperationIdentifier, AsyncOperationContext Context)
         {
             var Success = false;
             while (!Success)
@@ -169,7 +168,15 @@ namespace Net
                 lock (Lockee)
                 {
                     if (IsDisposed) { return false; }
-                    Success = AsyncOperations.Add(OperationIdentifier);
+                    if (AsyncOperations.ContainsKey(OperationIdentifier))
+                    {
+                        Success = false;
+                    }
+                    else
+                    {
+                        AsyncOperations.Add(OperationIdentifier, Context);
+                        Success = true;
+                    }
                 }
                 Thread.SpinWait(10);
             }
@@ -179,30 +186,27 @@ namespace Net
         {
             lock (Lockee)
             {
+                var Context = AsyncOperations[OperationIdentifier];
                 if (!AsyncOperations.Remove(OperationIdentifier))
                 {
                     throw new InvalidOperationException();
                 }
-                if (IsDisposed && !IsDisposingFinished && (AsyncOperations.Count == 0))
-                {
-                    IsDisposingFinished = true;
-                    InnerDispose();
-                }
+                Context.Dispose();
             }
         }
 
-        private void DoAsync(SocketAsyncOperation OperationIdentifier, Func<AsyncOperationContext> GetContext, Func<SocketAsyncEventArgs, Boolean> Operation, Func<SocketAsyncEventArgs, Action> ResultToCompleted, Action<Exception> Faulted)
+        private void DoAsync(SocketAsyncOperation OperationIdentifier, Func<SocketAsyncEventArgs, Boolean> Operation, Func<SocketAsyncEventArgs, Action> ResultToCompleted, Action<Exception> Faulted)
         {
-            if (!TryLockAsyncOperation(OperationIdentifier))
+            var Context = new AsyncOperationContext();
+            if (!TryLockAsyncOperation(OperationIdentifier, Context))
             {
+                Context.Dispose();
                 Faulted(new SocketException((int)(SocketError.Shutdown)));
                 return;
             }
             var Success = false;
-            AsyncOperationContext Context;
             try
             {
-                Context = GetContext();
                 Context.ResultToCompleted = ResultToCompleted;
                 Context.Faulted = Faulted;
                 var TimeoutSeconds = this.TimeoutSeconds;
@@ -256,23 +260,14 @@ namespace Net
             }
         }
 
-        private AsyncOperationContext ConnectContext;
         public void ConnectAsync(EndPoint RemoteEndPoint, Action Completed, Action<Exception> Faulted)
         {
-            Func<AsyncOperationContext> GetContext = () =>
-            {
-                if (ConnectContext == null)
-                {
-                    ConnectContext = new AsyncOperationContext();
-                }
-                return ConnectContext;
-            };
             Func<SocketAsyncEventArgs, Boolean> Operation = socketEventArg =>
             {
                 socketEventArg.RemoteEndPoint = RemoteEndPoint;
                 return InnerSocket.ConnectAsync(socketEventArg);
             };
-            DoAsync(SocketAsyncOperation.Connect, GetContext, Operation, e => Completed, Faulted);
+            DoAsync(SocketAsyncOperation.Connect, Operation, e => Completed, Faulted);
         }
 
         public void Bind(EndPoint LocalEndPoint)
@@ -285,17 +280,8 @@ namespace Net
             InnerSocket.Listen(Backlog);
         }
 
-        private AsyncOperationContext AcceptContext;
         public void AcceptAsync(Action<StreamedAsyncSocket> Completed, Action<Exception> Faulted)
         {
-            Func<AsyncOperationContext> GetContext = () =>
-            {
-                if (AcceptContext == null)
-                {
-                    AcceptContext = new AsyncOperationContext();
-                }
-                return AcceptContext;
-            };
             Func<SocketAsyncEventArgs, Boolean> Operation = socketEventArg =>
             {
                 return InnerSocket.AcceptAsync(socketEventArg);
@@ -306,57 +292,30 @@ namespace Net
                 if (Completed == null) { return null; }
                 return () => Completed(new StreamedAsyncSocket(a, TimeoutSeconds, QueueUserWorkItem));
             };
-            DoAsync(SocketAsyncOperation.Accept, GetContext, Operation, ResultToCompleted, Faulted);
+            DoAsync(SocketAsyncOperation.Accept, Operation, ResultToCompleted, Faulted);
         }
 
-        private AsyncOperationContext DisconnectContext;
         public void DisconnectAsync(Action Completed, Action<Exception> Faulted)
         {
-            Func<AsyncOperationContext> GetContext = () =>
-            {
-                if (DisconnectContext == null)
-                {
-                    DisconnectContext = new AsyncOperationContext();
-                }
-                return DisconnectContext;
-            };
             Func<SocketAsyncEventArgs, Boolean> Operation = socketEventArg =>
             {
                 return InnerSocket.DisconnectAsync(socketEventArg);
             };
-            DoAsync(SocketAsyncOperation.Disconnect, GetContext, Operation, e => Completed, Faulted);
+            DoAsync(SocketAsyncOperation.Disconnect, Operation, e => Completed, Faulted);
         }
 
-        private AsyncOperationContext SendContext;
         public void SendAsync(Byte[] SendBuffer, int Offset, int Count, Action Completed, Action<Exception> Faulted)
         {
-            Func<AsyncOperationContext> GetContext = () =>
-            {
-                if (SendContext == null)
-                {
-                    SendContext = new AsyncOperationContext();
-                }
-                return SendContext;
-            };
             Func<SocketAsyncEventArgs, Boolean> Operation = socketEventArg =>
             {
                 socketEventArg.SetBuffer(SendBuffer, Offset, Count);
                 return InnerSocket.SendAsync(socketEventArg);
             };
-            DoAsync(SocketAsyncOperation.Send, GetContext, Operation, e => Completed, Faulted);
+            DoAsync(SocketAsyncOperation.Send, Operation, e => Completed, Faulted);
         }
 
-        private AsyncOperationContext ReceiveContext;
         public void ReceiveAsync(Byte[] ReceiveBuffer, int Offset, int Count, Action<int> Completed, Action<Exception> Faulted)
         {
-            Func<AsyncOperationContext> GetContext = () =>
-            {
-                if (ReceiveContext == null)
-                {
-                    ReceiveContext = new AsyncOperationContext();
-                }
-                return ReceiveContext;
-            };
             Func<SocketAsyncEventArgs, Boolean> Operation = socketEventArg =>
             {
                 socketEventArg.SetBuffer(ReceiveBuffer, Offset, Count);
@@ -368,7 +327,7 @@ namespace Net
                 if (Completed == null) { return null; }
                 return () => Completed(c);
             };
-            DoAsync(SocketAsyncOperation.Receive, GetContext, Operation, ResultToCompleted, Faulted);
+            DoAsync(SocketAsyncOperation.Receive, Operation, ResultToCompleted, Faulted);
         }
 
         public void Shutdown(SocketShutdown How)
@@ -390,34 +349,6 @@ namespace Net
             }
         }
 
-        private void InnerDispose()
-        {
-            if (ConnectContext != null)
-            {
-                ConnectContext.Dispose();
-                ConnectContext = null;
-            }
-            if (AcceptContext != null)
-            {
-                AcceptContext.Dispose();
-                AcceptContext = null;
-            }
-            if (DisconnectContext != null)
-            {
-                DisconnectContext.Dispose();
-                DisconnectContext = null;
-            }
-            if (SendContext != null)
-            {
-                SendContext.Dispose();
-                SendContext = null;
-            }
-            if (ReceiveContext != null)
-            {
-                ReceiveContext.Dispose();
-                ReceiveContext = null;
-            }
-        }
         public void Dispose()
         {
             lock (Lockee)
@@ -431,11 +362,6 @@ namespace Net
                 finally
                 {
                     InnerSocket.Dispose();
-                }
-                if (!IsDisposingFinished && (AsyncOperations.Count == 0))
-                {
-                    IsDisposingFinished = true;
-                    InnerDispose();
                 }
             }
         }
