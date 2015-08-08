@@ -782,27 +782,27 @@ namespace Client
                 };
 
                 Action Receive = null;
+                EventHandler<SocketAsyncEventArgs> Completed = (sender, e) =>
+                {
+                    if (e.SocketError != SocketError.Success)
+                    {
+                        e.Dispose();
+                        Faulted(new SocketException((int)(e.SocketError)));
+                        return;
+                    }
+                    var Count = e.BytesTransferred;
+                    var Buffer = new Byte[Count];
+                    Array.Copy(e.Buffer, Buffer, Count);
+                    e.Dispose();
+                    CompletedSocket(Buffer);
+                    Buffer = null;
+                    Receive();
+                };
                 Receive = () =>
                 {
                     if (!IsRunning) { return; }
 
                     var ServerEndPoint = this.RemoteEndPoint;
-                    EventHandler<SocketAsyncEventArgs> Completed = (sender, e) =>
-                    {
-                        if (e.SocketError != SocketError.Success)
-                        {
-                            e.Dispose();
-                            Faulted(new SocketException((int)(e.SocketError)));
-                            return;
-                        }
-                        var Count = e.BytesTransferred;
-                        var Buffer = new Byte[Count];
-                        Array.Copy(e.Buffer, Buffer, Count);
-                        e.Dispose();
-                        CompletedSocket(Buffer);
-                        Buffer = null;
-                        Receive();
-                    };
                     var ae = new SocketAsyncEventArgs();
                     ae.RemoteEndPoint = ServerEndPoint;
                     ae.SetBuffer(ReadBuffer, 0, ReadBuffer.Length);
