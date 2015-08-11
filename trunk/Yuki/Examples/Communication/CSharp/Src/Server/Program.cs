@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2015.04.20.
+//  Version:     2015.08.11.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -279,7 +279,7 @@ namespace Server
                     throw new InvalidOperationException("未知协议类型: " + s.SerializationProtocolType.ToString());
                 }
 
-                Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
+                Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
                 if (s.SerializationProtocolType == SerializationProtocolType.Binary)
                 {
                     VirtualTransportServerFactory = (Context, t) =>
@@ -287,8 +287,8 @@ namespace Server
                         var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Context);
                         var si = p.Key;
                         var a = p.Value;
-                        var bcps = new Streamed<ServerContext>.BinaryCountPacketServer(a, CommandName => true, t);
-                        return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
+                        var bcps = new BinaryCountPacketServer(a, CommandName => true, t);
+                        return new KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>(si, bcps);
                     };
                 }
                 else if (s.SerializationProtocolType == SerializationProtocolType.Json)
@@ -298,8 +298,8 @@ namespace Server
                         var p = ServerContext.CreateServerImplementationWithJsonAdapter(Context);
                         var si = p.Key;
                         var a = p.Value;
-                        var bcps = new Streamed<ServerContext>.JsonLinePacketServer(a, CommandName => true, t);
-                        return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
+                        var bcps = new JsonLinePacketServer(a, CommandName => true, t);
+                        return new KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>(si, bcps);
                     };
                 }
                 else
@@ -307,7 +307,7 @@ namespace Server
                     throw new InvalidOperationException();
                 }
 
-                var Server = new Streamed<ServerContext>.TcpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
+                var Server = new TcpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
                 var Success = false;
 
                 try
@@ -345,7 +345,7 @@ namespace Server
                     throw new InvalidOperationException("未知协议类型: " + s.SerializationProtocolType.ToString());
                 }
 
-                Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
+                Func<ISessionContext, IBinaryTransformer, KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>> VirtualTransportServerFactory;
                 if (s.SerializationProtocolType == SerializationProtocolType.Binary)
                 {
                     VirtualTransportServerFactory = (Context, t) =>
@@ -353,8 +353,8 @@ namespace Server
                         var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Context);
                         var si = p.Key;
                         var a = p.Value;
-                        var bcps = new Streamed<ServerContext>.BinaryCountPacketServer(a, CommandName => true, t);
-                        return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
+                        var bcps = new BinaryCountPacketServer(a, CommandName => true, t);
+                        return new KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>(si, bcps);
                     };
                 }
                 else if (s.SerializationProtocolType == SerializationProtocolType.Json)
@@ -364,8 +364,8 @@ namespace Server
                         var p = ServerContext.CreateServerImplementationWithJsonAdapter(Context);
                         var si = p.Key;
                         var a = p.Value;
-                        var bcps = new Streamed<ServerContext>.JsonLinePacketServer(a, CommandName => true, t);
-                        return new KeyValuePair<IServerImplementation, Streamed<ServerContext>.IStreamedVirtualTransportServer>(si, bcps);
+                        var bcps = new JsonLinePacketServer(a, CommandName => true, t);
+                        return new KeyValuePair<IServerImplementation, IStreamedVirtualTransportServer>(si, bcps);
                     };
                 }
                 else
@@ -373,7 +373,7 @@ namespace Server
                     throw new InvalidOperationException();
                 }
 
-                var Server = new Streamed<ServerContext>.UdpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
+                var Server = new UdpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
                 var Success = false;
 
                 try
@@ -408,16 +408,16 @@ namespace Server
             {
                 var s = pc.Http;
 
-                Func<ISessionContext, KeyValuePair<IServerImplementation, Http<ServerContext>.IHttpVirtualTransportServer>> VirtualTransportServerFactory = Context =>
+                Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory = Context =>
                 {
                     var p = ServerContext.CreateServerImplementationWithJsonAdapter(Context);
                     var si = p.Key;
                     var a = p.Value;
-                    var jhps = new Http<ServerContext>.JsonHttpPacketServer(a, CommandName => true);
-                    return new KeyValuePair<IServerImplementation, Http<ServerContext>.IHttpVirtualTransportServer>(si, jhps);
+                    var jhps = new JsonHttpPacketServer(a, CommandName => true);
+                    return new KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>(si, jhps);
                 };
 
-                var Server = new Http<ServerContext>.HttpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
+                var Server = new HttpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
                 var Success = false;
 
                 try
