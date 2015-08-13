@@ -3,7 +3,6 @@
 #include <memory>
 #include <string>
 
-using namespace std;
 using namespace Communication;
 using namespace Server;
 
@@ -34,14 +33,14 @@ std::shared_ptr<TestTextReply> ServerImplementation::TestText(std::shared_ptr<Te
 /// <summary>群发消息</summary>
 std::shared_ptr<TestMessageReply> ServerImplementation::TestMessage(std::shared_ptr<TestMessageRequest> r)
 {
-    auto m = make_shared<TestMessageReceivedEvent>();
+    auto m = std::make_shared<TestMessageReceivedEvent>();
     m->Message = r->Message;
-    c->SendMessageCount += 1;
-    auto Sessions = sc->Sessions();
+    SessionContext->SendMessageCount += 1;
+    auto Sessions = ServerContext->Sessions();
     for (int k = 0; k < (int)(Sessions->size()); k += 1)
     {
         auto rc = (*Sessions)[k];
-        if (rc == c->shared_from_this()) { continue; }
+        if (rc == SessionContext->shared_from_this()) { continue; }
         {
             auto Lock = rc->WriterLock();
             rc->ReceivedMessageCount += 1;

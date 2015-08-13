@@ -2,13 +2,12 @@
 
 #include <memory>
 
-using namespace std;
 using namespace Communication;
 using namespace Server;
 
 /// <summary>关闭服务器</summary>
-shared_ptr<ShutdownReply> ServerImplementation::Shutdown(shared_ptr<ShutdownRequest> r)
+std::shared_ptr<ShutdownReply> ServerImplementation::Shutdown(std::shared_ptr<ShutdownRequest> r)
 {
-    sc->RaiseShutdown();
+    ServerContext->RaiseShutdown();
     return ShutdownReply::CreateSuccess();
 }

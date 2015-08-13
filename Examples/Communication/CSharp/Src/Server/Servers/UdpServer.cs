@@ -36,6 +36,7 @@ namespace Server
     {
         private class BindingInfo
         {
+            public IPEndPoint EndPoint;
             public LockedVariable<Socket> Socket;
             public Byte[] ReadBuffer = new Byte[UdpSession.MaxPacketLength];
             public AsyncConsumer<SocketAsyncEventArgs> ListenConsumer;
@@ -43,15 +44,8 @@ namespace Server
         }
 
         private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
-        public Boolean IsRunning
-        {
-            get
-            {
-                return IsRunningValue.Check(b => b);
-            }
-        }
 
-        private Dictionary<IPEndPoint, BindingInfo> BindingInfos = new Dictionary<IPEndPoint, BindingInfo>();
+        private List<BindingInfo> BindingInfos = new List<BindingInfo>();
         private CancellationTokenSource ListeningTaskTokenSource;
         private class AcceptingInfo
         {
@@ -100,8 +94,14 @@ namespace Server
             }
             set
             {
-                if (IsRunning) { throw new InvalidOperationException(); }
-                MaxBadCommandsValue = value;
+                IsRunningValue.DoAction
+                (
+                    b =>
+                    {
+                        if (b) { throw new InvalidOperationException(); }
+                        MaxBadCommandsValue = value;
+                    }
+                );
             }
         }
 
@@ -247,9 +247,6 @@ namespace Server
             this.VirtualTransportServerFactory = VirtualTransportServerFactory;
             this.QueueUserWorkItem = QueueUserWorkItem;
             this.PurifierQueueUserWorkItem = PurifierQueueUserWorkItem;
-
-            this.MaxConnectionsExceeded += OnMaxConnectionsExceeded;
-            this.MaxConnectionsPerIPExceeded += OnMaxConnectionsPerIPExceeded;
         }
 
         private void OnMaxConnectionsExceeded(UdpSession s)
@@ -361,10 +358,7 @@ namespace Server
                                         try
                                         {
                                             s.Start();
-                                            if (MaxConnectionsExceeded != null)
-                                            {
-                                                MaxConnectionsExceeded(s);
-                                            }
+                                            OnMaxConnectionsExceeded(s);
                                         }
                                         finally
                                         {
@@ -378,10 +372,7 @@ namespace Server
                                         try
                                         {
                                             s.Start();
-                                            if (MaxConnectionsPerIPExceeded != null)
-                                            {
-                                                MaxConnectionsPerIPExceeded(s);
-                                            }
+                                            OnMaxConnectionsPerIPExceeded(s);
                                         }
                                         finally
                                         {
@@ -395,10 +386,7 @@ namespace Server
                                         try
                                         {
                                             s.Start();
-                                            if (MaxConnectionsPerIPExceeded != null)
-                                            {
-                                                MaxConnectionsPerIPExceeded(s);
-                                            }
+                                            OnMaxConnectionsPerIPExceeded(s);
                                         }
                                         finally
                                         {
@@ -639,8 +627,8 @@ namespace Server
                             }
 
                             var BindingInfo = new BindingInfo();
+                            BindingInfo.EndPoint = Binding;
                             BindingInfo.Socket = new LockedVariable<Socket>(Socket);
-                            Action Start = null;
                             Func<SocketAsyncEventArgs, Boolean> Completed = args =>
                             {
                                 try
@@ -669,7 +657,6 @@ namespace Server
                                                 }
                                                 var NewSocket = CreateSocket();
                                                 NewSocket.Bind(Binding);
-                                                Socket = NewSocket;
                                                 return NewSocket;
                                             }
                                         );
@@ -679,10 +666,11 @@ namespace Server
                                 {
                                     args.Dispose();
                                 }
-                                Start();
+                                BindingInfo.Start();
                                 return true;
                             };
-                            Start = () =>
+                            BindingInfo.ListenConsumer = new AsyncConsumer<SocketAsyncEventArgs>(QueueUserWorkItem, Completed, 1);
+                            BindingInfo.Start = () =>
                             {
                                 var EventArgs = new SocketAsyncEventArgs();
                                 EventArgs.RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
@@ -700,10 +688,8 @@ namespace Server
                                 {
                                 }
                             };
-                            BindingInfo.ListenConsumer = new AsyncConsumer<SocketAsyncEventArgs>(QueueUserWorkItem, Completed, 1);
-                            BindingInfo.Start = Start;
 
-                            BindingInfos.Add(Binding, BindingInfo);
+                            BindingInfos.Add(BindingInfo);
                         }
                         if (BindingInfos.Count == 0)
                         {
@@ -765,7 +751,7 @@ namespace Server
                             }, null, TimePeriod, TimePeriod);
                         }
 
-                        foreach (var BindingInfo in BindingInfos.Values)
+                        foreach (var BindingInfo in BindingInfos)
                         {
                             BindingInfo.Start();
                         }
@@ -803,7 +789,7 @@ namespace Server
                     {
                         ListeningTaskTokenSource.Cancel();
                     }
-                    foreach (var BindingInfo in BindingInfos.Values)
+                    foreach (var BindingInfo in BindingInfos)
                     {
                         BindingInfo.Socket.DoAction
                         (
@@ -819,7 +805,7 @@ namespace Server
                             }
                         );
                     }
-                    foreach (var BindingInfo in BindingInfos.Values)
+                    foreach (var BindingInfo in BindingInfos)
                     {
                         BindingInfo.ListenConsumer.Dispose();
                     }
@@ -883,9 +869,6 @@ namespace Server
                 }
             );
         }
-
-        private event Action<UdpSession> MaxConnectionsExceeded;
-        private event Action<UdpSession> MaxConnectionsPerIPExceeded;
 
         public void Dispose()
         {

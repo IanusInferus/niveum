@@ -19,30 +19,35 @@ namespace Server
         /// <summary>
         /// 本类的所有公共成员均是线程安全的。
         /// </summary>
-        class ServerImplementation : public IApplicationServer
+        class ServerImplementation : public IApplicationServer, public IServerImplementation
         {
         private:
-            std::shared_ptr<ServerContext> sc;
-            std::shared_ptr<SessionContext> c;
+            std::shared_ptr<class ServerContext> ServerContext;
+            std::shared_ptr<class SessionContext> SessionContext;
         public:
-            ServerImplementation(std::shared_ptr<ServerContext> sc, std::shared_ptr<SessionContext> c)
+            ServerImplementation(std::shared_ptr<class ServerContext> sc, std::shared_ptr<class SessionContext> c)
             {
-                this->sc = sc;
-                this->c = c;
+                this->ServerContext = sc;
+                this->SessionContext = c;
+                RegisterCrossSessionEvents();
+            }
+            ~ServerImplementation()
+            {
+                UnregisterCrossSessionEvents();
             }
 
             void RegisterCrossSessionEvents()
             {
-                auto Lock = c->WriterLock();
-                c->MessageReceived = [=](std::shared_ptr<MessageReceivedEvent> e) { if (this->MessageReceived != nullptr) { this->MessageReceived(e); } };
-                c->TestMessageReceived = [=](std::shared_ptr<TestMessageReceivedEvent> e) { if (this->TestMessageReceived != nullptr) { this->TestMessageReceived(e); } };
+                auto Lock = SessionContext->WriterLock();
+                SessionContext->MessageReceived = [=](std::shared_ptr<MessageReceivedEvent> e) { if (this->MessageReceived != nullptr) { this->MessageReceived(e); } };
+                SessionContext->TestMessageReceived = [=](std::shared_ptr<TestMessageReceivedEvent> e) { if (this->TestMessageReceived != nullptr) { this->TestMessageReceived(e); } };
             }
 
             void UnregisterCrossSessionEvents()
             {
-                auto Lock = c->WriterLock();
-                c->MessageReceived = nullptr;
-                c->TestMessageReceived = nullptr;
+                auto Lock = SessionContext->WriterLock();
+                SessionContext->MessageReceived = nullptr;
+                SessionContext->TestMessageReceived = nullptr;
             }
 
             void RaiseError(std::wstring CommandName, std::wstring Message)
