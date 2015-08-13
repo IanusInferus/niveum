@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2015.07.22.
+//  Version:     2015.08.13.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -15,6 +15,7 @@
 #include "Clients/BinaryCountPacketClient.h"
 #include "Clients/TcpClient.h"
 #include "Clients/UdpClient.h"
+#include "Clients/Rc4PacketClientTransformer.h"
 #include "Context/SerializationClientAdapter.h"
 
 #include <exception>
@@ -181,7 +182,7 @@ namespace Client
             std::wprintf(L"%ls\n", L"Port 服务器端口，默认为8001");
         }
 
-        static void ReadLineAndSendLoop(std::shared_ptr<Communication::IApplicationClient> InnerClient, std::mutex &Lockee)
+        static void ReadLineAndSendLoop(std::shared_ptr<Communication::IApplicationClient> InnerClient, std::function<void(std::shared_ptr<SecureContext>)> SetSecureContext, std::mutex &Lockee)
         {
             InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
             {
@@ -200,7 +201,33 @@ namespace Client
 
                 {
                     std::unique_lock<std::mutex> Lock(Lockee);
-                    if (Line == L"exit") { break; }
+                    if (Line == L"exit")
+                    {
+                        InnerClient->Quit(std::make_shared<Communication::QuitRequest>(), [](std::shared_ptr<Communication::QuitReply> r)
+                        {
+                        });
+                        break;
+                    }
+                    if (Line == L"secure")
+                    {
+                        auto RequestSecure = std::make_shared<Communication::SendMessageRequest>();
+                        RequestSecure->Content = Line;
+                        InnerClient->SendMessage(RequestSecure, [=](std::shared_ptr<Communication::SendMessageReply> r)
+                        {
+                            //生成测试用确定Key
+                            auto sc = std::make_shared<SecureContext>();
+                            for (int i = 0; i < 41; i += 1)
+                            {
+                                sc->ServerToken.push_back(static_cast<std::uint8_t>(i));
+                            }
+                            for (int i = 0; i < 41; i += 1)
+                            {
+                                sc->ClientToken.push_back(static_cast<std::uint8_t>(40 - i));
+                            }
+                            SetSecureContext(sc);
+                        });
+                        continue;
+                    }
                     if (Line == L"shutdown")
                     {
                         InnerClient->Shutdown(std::make_shared<Communication::ShutdownRequest>(), [](std::shared_ptr<Communication::ShutdownReply> r)
@@ -225,7 +252,7 @@ namespace Client
             }
         }
 
-        static void Test(std::shared_ptr<Communication::IApplicationClient> InnerClient, std::mutex &Lockee)
+        static void Test(std::shared_ptr<Communication::IApplicationClient> InnerClient, std::function<void(std::shared_ptr<SecureContext>)> SetSecureContext, std::mutex &Lockee)
         {
             {
                 std::unique_lock<std::mutex> Lock(Lockee);
@@ -265,7 +292,7 @@ namespace Client
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
 
-        static void RunTcp(asio::io_service &IoService, asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::mutex &)> Action)
+        static void RunTcp(asio::io_service &IoService, asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::function<void(std::shared_ptr<SecureContext>)>, std::mutex &)> Action)
         {
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
@@ -281,12 +308,13 @@ namespace Client
                 //std::wprintf(L"%ls\n", CommandName.c_str());
             };
 
+            auto bt = std::make_shared<Rc4PacketClientTransformer>();
             auto ac = bsca->GetApplicationClient();
-            auto vtc = std::make_shared<Streamed::BinaryCountPacketClient>(bsca, nullptr, 128 * 1024);
-            auto bsc = std::make_shared<Streamed::TcpClient>(IoService, RemoteEndPoint, vtc);
+            auto vtc = std::make_shared<BinaryCountPacketClient>(bsca, bt, 128 * 1024);
+            auto bc = std::make_shared<TcpClient>(IoService, RemoteEndPoint, vtc);
             try
             {
-                bsc->Connect();
+                bc->Connect();
             }
             catch (std::exception &e)
             {
@@ -294,6 +322,7 @@ namespace Client
                 wprintf(L"%ls\n", Message.c_str());
                 exit(-1);
             }
+            std::wprintf(L"%ls\n", L"输入login登录，输入secure启用安全连接。");
 
             std::mutex Lockee;
             auto DoHandle = [&](std::function<void(void)> a)
@@ -304,23 +333,28 @@ namespace Client
                     a();
                 });
             };
-            bsc->ReceiveAsync(DoHandle, [](const asio::error_code &se)
+            bc->ReceiveAsync(DoHandle, [](const asio::error_code &se)
             {
                 auto Message = s2w(se.message());
                 wprintf(L"%ls\n", Message.c_str());
                 exit(-1);
             });
 
-            Action(ac, Lockee);
+            auto SetSecureContext = [=](std::shared_ptr<SecureContext> c)
+            {
+                bt->SetSecureContext(c);
+            };
 
-            bsc->Close();
-            bsc = nullptr;
+            Action(ac, SetSecureContext, Lockee);
+
+            bc->Close();
+            bc = nullptr;
             vtc = nullptr;
             ac = nullptr;
             bsca = nullptr;
         }
 
-        static void RunUdp(asio::io_service &IoService, asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::mutex &)> Action)
+        static void RunUdp(asio::io_service &IoService, asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::function<void(std::shared_ptr<SecureContext>)>, std::mutex &)> Action)
         {
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
@@ -336,12 +370,13 @@ namespace Client
                 //std::wprintf(L"%ls\n", CommandName.c_str());
             };
 
+            auto bt = std::make_shared<Rc4PacketClientTransformer>();
             auto ac = bsca->GetApplicationClient();
-            auto vtc = std::make_shared<Streamed::BinaryCountPacketClient>(bsca, nullptr, 128 * 1024);
-            auto bsc = std::make_shared<Streamed::UdpClient>(IoService, RemoteEndPoint, vtc);
+            auto vtc = std::make_shared<BinaryCountPacketClient>(bsca, bt, 128 * 1024);
+            auto bc = std::make_shared<UdpClient>(IoService, RemoteEndPoint, vtc);
             try
             {
-                bsc->Connect();
+                bc->Connect();
             }
             catch (std::exception &e)
             {
@@ -349,6 +384,7 @@ namespace Client
                 wprintf(L"%ls\n", Message.c_str());
                 exit(-1);
             }
+            std::wprintf(L"%ls\n", L"输入login登录，输入secure启用安全连接。");
 
             std::mutex Lockee;
             auto DoHandle = [&](std::function<void(void)> a)
@@ -359,19 +395,25 @@ namespace Client
                     a();
                 });
             };
-            bsc->ReceiveAsync(DoHandle, [](const asio::error_code &se)
+            bc->ReceiveAsync(DoHandle, [](const asio::error_code &se)
             {
                 auto Message = s2w(se.message());
                 wprintf(L"%ls\n", Message.c_str());
                 exit(-1);
             });
 
-            Action(ac, Lockee);
+            auto SetSecureContext = [=](std::shared_ptr<SecureContext> c)
+            {
+                bt->SetSecureContext(c);
+                bc->SecureContext(c);
+            };
+
+            Action(ac, SetSecureContext, Lockee);
 
             {
                 std::unique_lock<std::mutex> Lock(Lockee);
-                bsc->Close();
-                bsc = nullptr;
+                bc->Close();
+                bc = nullptr;
                 vtc = nullptr;
                 ac = nullptr;
                 bsca = nullptr;
@@ -390,9 +432,20 @@ void ModifyStdoutUnicode()
     _setmode(_fileno(stdout), _O_U16TEXT);
 }
 
+#include <locale.h>
+
+void SetLocale()
+{
+    setlocale(LC_ALL, "");
+}
+
 #else
 
 void ModifyStdoutUnicode()
+{
+}
+
+void SetLocale()
 {
 }
 
@@ -401,6 +454,7 @@ void ModifyStdoutUnicode()
 int main(int argc, char **argv)
 {
     ModifyStdoutUnicode();
+    SetLocale();
 
 #if _DEBUG
     return Client::Program::MainInner(argc, argv);

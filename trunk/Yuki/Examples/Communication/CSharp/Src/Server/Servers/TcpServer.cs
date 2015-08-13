@@ -18,19 +18,13 @@ namespace Server
     {
         private class BindingInfo
         {
+            public IPEndPoint EndPoint;
             public LockedVariable<Socket> Socket;
             public AsyncConsumer<SocketAsyncEventArgs> ListenConsumer;
             public Action Start;
         }
 
         private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
-        public Boolean IsRunning
-        {
-            get
-            {
-                return IsRunningValue.Check(b => b);
-            }
-        }
 
         private class IpSessionInfo
         {
@@ -38,7 +32,7 @@ namespace Server
             public HashSet<TcpSession> Authenticated = new HashSet<TcpSession>();
         }
 
-        private Dictionary<IPEndPoint, BindingInfo> BindingInfos = new Dictionary<IPEndPoint, BindingInfo>();
+        private List<BindingInfo> BindingInfos = new List<BindingInfo>();
         private CancellationTokenSource ListeningTaskTokenSource;
         private AsyncConsumer<Socket> AcceptConsumer;
         private AsyncConsumer<TcpSession> PurifyConsumer;
@@ -72,8 +66,14 @@ namespace Server
             }
             set
             {
-                if (IsRunning) { throw new InvalidOperationException(); }
-                MaxBadCommandsValue = value;
+                IsRunningValue.DoAction
+                (
+                    b =>
+                    {
+                        if (b) { throw new InvalidOperationException(); }
+                        MaxBadCommandsValue = value;
+                    }
+                );
             }
         }
 
@@ -200,9 +200,6 @@ namespace Server
             this.VirtualTransportServerFactory = VirtualTransportServerFactory;
             this.QueueUserWorkItem = QueueUserWorkItem;
             this.PurifierQueueUserWorkItem = PurifierQueueUserWorkItem;
-
-            this.MaxConnectionsExceeded += OnMaxConnectionsExceeded;
-            this.MaxConnectionsPerIPExceeded += OnMaxConnectionsPerIPExceeded;
         }
 
         private void OnMaxConnectionsExceeded(TcpSession s)
@@ -290,10 +287,7 @@ namespace Server
                                 try
                                 {
                                     s.Start();
-                                    if (MaxConnectionsExceeded != null)
-                                    {
-                                        MaxConnectionsExceeded(s);
-                                    }
+                                    OnMaxConnectionsExceeded(s);
                                 }
                                 finally
                                 {
@@ -307,10 +301,7 @@ namespace Server
                                 try
                                 {
                                     s.Start();
-                                    if (MaxConnectionsPerIPExceeded != null)
-                                    {
-                                        MaxConnectionsPerIPExceeded(s);
-                                    }
+                                    OnMaxConnectionsPerIPExceeded(s);
                                 }
                                 finally
                                 {
@@ -324,10 +315,7 @@ namespace Server
                                 try
                                 {
                                     s.Start();
-                                    if (MaxConnectionsPerIPExceeded != null)
-                                    {
-                                        MaxConnectionsPerIPExceeded(s);
-                                    }
+                                    OnMaxConnectionsPerIPExceeded(s);
                                 }
                                 finally
                                 {
@@ -381,8 +369,8 @@ namespace Server
                             Socket.Listen(MaxConnectionsValue.HasValue ? (MaxConnectionsValue.Value + 1) : 128);
 
                             var BindingInfo = new BindingInfo();
+                            BindingInfo.EndPoint = Binding;
                             BindingInfo.Socket = new LockedVariable<Socket>(Socket);
-                            Action Start = null;
                             Func<SocketAsyncEventArgs, Boolean> Completed = args =>
                             {
                                 try
@@ -409,7 +397,6 @@ namespace Server
                                                 var NewSocket = CreateSocket();
                                                 NewSocket.Bind(Binding);
                                                 NewSocket.Listen(MaxConnectionsValue.HasValue ? (MaxConnectionsValue.Value + 1) : 128);
-                                                Socket = NewSocket;
                                                 return NewSocket;
                                             }
                                         );
@@ -419,14 +406,19 @@ namespace Server
                                 {
                                     args.Dispose();
                                 }
-                                Start();
+                                BindingInfo.Start();
                                 return true;
                             };
-                            Start = () =>
+                            BindingInfo.ListenConsumer = new AsyncConsumer<SocketAsyncEventArgs>(QueueUserWorkItem, Completed, 1);
+                            BindingInfo.Start = () =>
                             {
                                 var EventArgs = new SocketAsyncEventArgs();
                                 var bs = BindingInfo.Socket.Check(s => s);
-                                EventArgs.Completed += (o, args) => BindingInfo.ListenConsumer.Push(args);
+                                EventArgs.Completed += (o, args) =>
+                                {
+                                    if (ListeningTaskToken.IsCancellationRequested) { return; }
+                                    BindingInfo.ListenConsumer.Push(args);
+                                };
                                 try
                                 {
                                     if (!bs.AcceptAsync(EventArgs))
@@ -438,10 +430,8 @@ namespace Server
                                 {
                                 }
                             };
-                            BindingInfo.ListenConsumer = new AsyncConsumer<SocketAsyncEventArgs>(QueueUserWorkItem, Completed, 1);
-                            BindingInfo.Start = Start;
 
-                            BindingInfos.Add(Binding, BindingInfo);
+                            BindingInfos.Add(BindingInfo);
                         }
                         if (BindingInfos.Count == 0)
                         {
@@ -450,7 +440,7 @@ namespace Server
 
                         PurifyConsumer = new AsyncConsumer<TcpSession>(PurifierQueueUserWorkItem, s => { Purify(s); return true; }, int.MaxValue);
 
-                        foreach (var BindingInfo in BindingInfos.Values)
+                        foreach (var BindingInfo in BindingInfos)
                         {
                             BindingInfo.Start();
                         }
@@ -482,7 +472,7 @@ namespace Server
                     {
                         ListeningTaskTokenSource.Cancel();
                     }
-                    foreach (var BindingInfo in BindingInfos.Values)
+                    foreach (var BindingInfo in BindingInfos)
                     {
                         BindingInfo.Socket.DoAction
                         (
@@ -498,7 +488,7 @@ namespace Server
                             }
                         );
                     }
-                    foreach (var BindingInfo in BindingInfos.Values)
+                    foreach (var BindingInfo in BindingInfos)
                     {
                         BindingInfo.ListenConsumer.Dispose();
                     }
@@ -562,9 +552,6 @@ namespace Server
                 }
             );
         }
-
-        private event Action<TcpSession> MaxConnectionsExceeded;
-        private event Action<TcpSession> MaxConnectionsPerIPExceeded;
 
         public void Dispose()
         {

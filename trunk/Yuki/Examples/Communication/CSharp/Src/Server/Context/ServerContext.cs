@@ -46,9 +46,6 @@ namespace Server
             if (Shutdown != null) { Shutdown(); }
         }
 
-        public ICollection<SessionContext> Sessions { get { return SessionSet.Check(ss => ss.ToArray()); } }
-        private LockedVariable<HashSet<SessionContext>> SessionSet = new LockedVariable<HashSet<SessionContext>>(new HashSet<SessionContext>());
-
         public event Action<SessionLogEntry> SessionLog;
         public void RaiseSessionLog(SessionLogEntry Entry)
         {
@@ -58,15 +55,19 @@ namespace Server
             }
         }
 
+        private LockedVariable<HashSet<SessionContext>> SessionSet = new LockedVariable<HashSet<SessionContext>>(new HashSet<SessionContext>());
+        public ICollection<SessionContext> Sessions { get { return SessionSet.Check(ss => ss.ToArray()); } }
         public void RegisterSession(ISessionContext SessionContext)
         {
             var sc = (SessionContext)(SessionContext);
+            if (sc == null) { throw new InvalidOperationException(); }
             SessionSet.DoAction(ss => ss.Add(sc));
         }
 
         public bool TryUnregisterSession(ISessionContext SessionContext)
         {
             var sc = (SessionContext)(SessionContext);
+            if (sc == null) { throw new InvalidOperationException(); }
             var Success = false;
             SessionSet.DoAction(ss =>
             {
@@ -88,6 +89,27 @@ namespace Server
         {
             var si = new ServerImplementation(this, Context);
             return si;
+        }
+
+        public KeyValuePair<IServerImplementation, IBinarySerializationServerAdapter> CreateServerImplementationWithBinaryAdapter(ISessionContext SessionContext)
+        {
+            var sc = (SessionContext)(SessionContext);
+            if (sc == null) { throw new InvalidOperationException(); }
+            var si = CreateServerImplementation(sc);
+            var law = new JsonLogAspectWrapper(si);
+            HookLog(sc, law);
+            var a = new BinarySerializationServerAdapter(law);
+            return new KeyValuePair<IServerImplementation, IBinarySerializationServerAdapter>(si, a);
+        }
+        public KeyValuePair<IServerImplementation, IJsonSerializationServerAdapter> CreateServerImplementationWithJsonAdapter(ISessionContext SessionContext)
+        {
+            var sc = (SessionContext)(SessionContext);
+            if (sc == null) { throw new InvalidOperationException(); }
+            var si = CreateServerImplementation(sc);
+            var law = new JsonLogAspectWrapper(si);
+            HookLog(sc, law);
+            var a = new JsonSerializationServerAdapter(law);
+            return new KeyValuePair<IServerImplementation, IJsonSerializationServerAdapter>(si, a);
         }
 
         private Int64 RequestCountValue = 0;
@@ -141,25 +163,6 @@ namespace Server
                     RaiseSessionLog(new SessionLogEntry { Token = Context.SessionTokenString, RemoteEndPoint = Context.RemoteEndPoint, Time = DateTime.UtcNow, Type = "Out", Name = CommandName, Message = Parameters });
                 }
             };
-        }
-
-        public KeyValuePair<IServerImplementation, IBinarySerializationServerAdapter> CreateServerImplementationWithBinaryAdapter(ISessionContext SessionContext)
-        {
-            var Context = (SessionContext)(SessionContext);
-            var si = CreateServerImplementation(Context);
-            var law = new JsonLogAspectWrapper(si);
-            HookLog(Context, law);
-            var a = new BinarySerializationServerAdapter(law);
-            return new KeyValuePair<IServerImplementation, IBinarySerializationServerAdapter>(si, a);
-        }
-        public KeyValuePair<IServerImplementation, IJsonSerializationServerAdapter> CreateServerImplementationWithJsonAdapter(ISessionContext SessionContext)
-        {
-            var Context = (SessionContext)(SessionContext);
-            var si = CreateServerImplementation(Context);
-            var law = new JsonLogAspectWrapper(si);
-            HookLog(Context, law);
-            var a = new JsonSerializationServerAdapter(law);
-            return new KeyValuePair<IServerImplementation, IJsonSerializationServerAdapter>(si, a);
         }
     }
 }
