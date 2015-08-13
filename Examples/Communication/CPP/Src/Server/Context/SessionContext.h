@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Communication.h"
+#include "Servers/IContext.h"
 
 #include <memory>
 #include <cstdint>
@@ -34,29 +35,69 @@ using _unique_lock = std::unique_lock<std::mutex>;
 
 namespace Server
 {
-    class SessionContext : public std::enable_shared_from_this<SessionContext>
+    class SessionContext : public ISessionContext, public std::enable_shared_from_this<SessionContext>
     {
     public:
+        SessionContext(const std::vector<std::uint8_t> &SessionTokenValue)
+            :
+            IsSecureConnection(false),
+            SessionTokenValue(SessionTokenValue),
+            ReceivedMessageCount(0),
+            SendMessageCount(0),
+            Version(L"")
+        {
+            std::wstring s;
+            for (std::size_t k = 0; k < SessionTokenValue.size(); k += 1)
+            {
+                auto b = SessionTokenValue[k];
+                s += fmt::format(L"{:02X}", b);
+            }
+            SessionTokenStringValue = s;
+        }
+
         //跨线程共享只读访问
 
-        std::function<void()> Quit; //跨线程事件(订阅者需要保证线程安全)
         void RaiseQuit()
         {
             if (Quit != nullptr) { Quit(); }
         }
 
-        asio::ip::tcp::endpoint RemoteEndPoint;
-
-        std::shared_ptr<std::vector<std::uint8_t>> SessionToken;
-        std::wstring GetSessionTokenString() const
+        void RaiseAuthenticated()
         {
-            std::wstring s;
-            for (int k = 0; k < (int)(SessionToken->size()); k += 1)
-            {
-                auto b = (*SessionToken)[k];
-                s += fmt::format(L"{:02X}", b);
-            }
-            return s;
+            if (Authenticated != nullptr) { Authenticated(); }
+        }
+
+        void RaiseSecureConnectionRequired(std::shared_ptr<SecureContext> c)
+        {
+            if (SecureConnectionRequired != nullptr) { SecureConnectionRequired(c); }
+            IsSecureConnection = true;
+        }
+        bool IsSecureConnection;
+
+        std::wstring RemoteEndPoint()
+        {
+            return RemoteEndPointValue;
+        }
+        void RemoteEndPoint(std::wstring value)
+        {
+            RemoteEndPointValue = value;
+        }
+
+    private:
+        std::wstring RemoteEndPointValue;
+
+        std::vector<std::uint8_t> SessionTokenValue;
+        std::wstring SessionTokenStringValue;
+
+    public:
+        /// <summary>长度为4</summary>
+        std::vector<std::uint8_t> SessionToken()
+        {
+            return SessionTokenValue;
+        }
+        std::wstring SessionTokenString()
+        {
+            return SessionTokenStringValue;
         }
 
 
@@ -71,6 +112,8 @@ namespace Server
 
         int ReceivedMessageCount; //跨线程变量
 
+        std::wstring Version;
+
         std::function<void(std::shared_ptr<Communication::MessageReceivedEvent>)> MessageReceived;
 
         std::function<void(std::shared_ptr<Communication::TestMessageReceivedEvent>)> TestMessageReceived;
@@ -79,12 +122,16 @@ namespace Server
 
         int SendMessageCount;
 
-
-        SessionContext()
-            : SessionToken(std::make_shared<std::vector<std::uint8_t>>()),
-              ReceivedMessageCount(0),
-              SendMessageCount(0)
+        std::chrono::system_clock::time_point RequestTime()
         {
+            return RequestTimeValue;
         }
+        void RequestTime(std::chrono::system_clock::time_point value)
+        {
+            RequestTimeValue = value;
+        }
+
+    private:
+        std::chrono::system_clock::time_point RequestTimeValue;
     };
 }

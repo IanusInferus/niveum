@@ -29,12 +29,6 @@
     </ClInclude>
     <ClInclude Include="Communication.h" />
     <ClInclude Include="CommunicationBinary.h" />
-    <ClInclude Include="Servers\BinarySocketServer.h">
-      <Filter>Servers</Filter>
-    </ClInclude>
-    <ClInclude Include="Servers\BinarySocketSession.h">
-      <Filter>Servers</Filter>
-    </ClInclude>
     <ClInclude Include="Services\ServerImplementation.h">
       <Filter>Services</Filter>
     </ClInclude>
@@ -75,6 +69,42 @@
     <ClInclude Include="BaseSystem\StringUtilities.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
+    <ClInclude Include="Servers\IContext.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
+    <ClInclude Include="Servers\ISerializationServer.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
+    <ClInclude Include="Servers\Concept.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
+    <ClInclude Include="Servers\StreamedServer.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
+    <ClInclude Include="Servers\SessionStateMachine.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
+    <ClInclude Include="Servers\Rc4PacketServerTransformer.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\Cryptography.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Servers\TcpServer.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
+    <ClInclude Include="Servers\TcpSession.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\AsyncConsumer.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Context\SerializationServerAdapter.h">
+      <Filter>Context</Filter>
+    </ClInclude>
+    <ClInclude Include="Servers\BinaryCountPacketServer.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
@@ -84,14 +114,8 @@
     <ClCompile Include="Services\Message.cpp">
       <Filter>Services</Filter>
     </ClCompile>
-    <ClCompile Include="Servers\BinarySocketServer.cpp">
-      <Filter>Servers</Filter>
-    </ClCompile>
     <ClCompile Include="Services\TestPerformance.cpp">
       <Filter>Services</Filter>
-    </ClCompile>
-    <ClCompile Include="Servers\BinarySocketSession.cpp">
-      <Filter>Servers</Filter>
     </ClCompile>
     <ClCompile Include="Services\Admin.cpp">
       <Filter>Services</Filter>
@@ -110,6 +134,18 @@
     </ClCompile>
     <ClCompile Include="BaseSystem\StringUtilities.cpp">
       <Filter>BaseSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseSystem\Cryptography.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Servers\TcpServer.cpp">
+      <Filter>Servers</Filter>
+    </ClCompile>
+    <ClCompile Include="Servers\TcpSession.cpp">
+      <Filter>Servers</Filter>
+    </ClCompile>
+    <ClCompile Include="Context\SerializationServerAdapter.cpp">
+      <Filter>Context</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

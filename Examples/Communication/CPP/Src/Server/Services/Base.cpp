@@ -5,28 +5,27 @@
 #include <memory>
 #include <string>
 
-using namespace std;
 using namespace Communication;
 using namespace Server;
 
 /// <summary>服务器时间</summary>
-shared_ptr<ServerTimeReply> ServerImplementation::ServerTime(shared_ptr<ServerTimeRequest> r)
+std::shared_ptr<ServerTimeReply> ServerImplementation::ServerTime(std::shared_ptr<ServerTimeRequest> r)
 {
     auto s = DateTimeUtcToString(UtcNow());
     return ServerTimeReply::CreateSuccess(s);
 }
 
 /// <summary>退出</summary>
-shared_ptr<QuitReply> ServerImplementation::Quit(shared_ptr<QuitRequest> r)
+std::shared_ptr<QuitReply> ServerImplementation::Quit(std::shared_ptr<QuitRequest> r)
 {
-    c->RaiseQuit();
+    SessionContext->RaiseQuit();
     return QuitReply::CreateSuccess();
 }
 
 /// <summary>检测类型结构版本</summary>
 std::shared_ptr<CheckSchemaVersionReply> ServerImplementation::CheckSchemaVersion(std::shared_ptr<CheckSchemaVersionRequest> r)
 {
-    if (r->Hash == sc->HeadCommunicationSchemaHash)
+    if (r->Hash == ServerContext->HeadCommunicationSchemaHash)
     {
         return CheckSchemaVersionReply::CreateHead();
     }

@@ -9,39 +9,57 @@
 
 @PATH %CD%\..\..\..\Bin;%PATH%
 
-@set SchemaDirs=
-@for /D %%a in (..\PreviousSchemas\*) do @set SchemaDirs=!SchemaDirs! %%~nxa
-@call :qSort %SchemaDirs%
-@set SchemaDirs=%return%
+@for %%b in ("") do @(
+    @set TypeName=%%~b
 
-SchemaManipulator.exe /loadtype:Common /loadtype:Communication /save:Communication.tree
-
-@for /D %%a in (..\PreviousSchemas\*) do (
-  SchemaManipulator.exe /loadtype:"%%a\Common" /loadtype:"%%a\Communication" /save:"%%a\Communication.tree"
-)
-
-@set OldDir=
-@set NewDir=
-@for %%a in (%SchemaDirs% "") do (
-  @set NewDir=%%~nxa
-  @if not "!OldDir!"=="" (
-    @set OldPath=..\PreviousSchemas\!OldDir!
-    @if "!NewDir!"=="" (
-      @set NewDir=Head
-      @set NewPath=.
-    ) else (
-      @set NewPath=..\PreviousSchemas\!NewDir!
+    @for %%a in (Compatibility!TypeName!\*) do @(
+      @set DirName=%%~na
+      @if not exist "Previous\!DirName!\Communication!TypeName!" (
+        del "%%a"
+      )
     )
-    SchemaManipulator.exe /load:"!NewPath!\Communication.tree" /gencom:"!OldPath!\Communication.tree","!OldDir!","!NewPath!\Communication.tree","!NewDir!","Compatibility\!OldDir!.tree"
-  )
-  @set OldDir=!NewDir!
-)
 
-@for /D %%a in (..\PreviousSchemas\*) do (
-  del "%%a\Communication.tree"
-)
+    @set SchemaDirs=
+    @for /D %%a in (Previous\*) do @(
+      @if exist "%%a\Communication!TypeName!" (
+        @set SchemaDirs=!SchemaDirs! %%~nxa
+      )
+    )
+    @call :qSort !SchemaDirs!
+    @set SchemaDirs=!return!
+    @echo Generating compatible schema for '!TypeName!' at : !SchemaDirs!
 
-del Communication.tree
+    SchemaManipulator.exe /loadtype:Common /loadtype:Communication!TypeName! /save:Communication!TypeName!.tree
+
+    @for %%a in (!SchemaDirs!) do @(
+      @set DirPath=Previous\%%a
+      SchemaManipulator.exe /loadtype:"!DirPath!\Common" /loadtype:"!DirPath!\Communication!TypeName!" /save:"!DirPath!\Communication!TypeName!.tree"
+    )
+
+    @set OldDir=
+    @set NewDir=
+    @for %%a in (!SchemaDirs! "") do @(
+      @set NewDir=%%~nxa
+      @if not "!OldDir!"=="" (
+        @set OldPath=Previous\!OldDir!
+        @if "!NewDir!"=="" (
+          @set NewDir=Head
+          @set NewPath=.
+        ) else (
+          @set NewPath=Previous\!NewDir!
+        )
+        SchemaManipulator.exe /load:Communication!TypeName!.tree /gencom:"!OldPath!\Communication!TypeName!.tree","!OldDir!","!NewPath!\Communication!TypeName!.tree","!NewDir!","Compatibility!TypeName!\!OldDir!.tree"
+      )
+      @set OldDir=!NewDir!
+    )
+
+    @for %%a in (!SchemaDirs!) do @(
+      @set DirPath=Previous\%%a
+      del "!DirPath!\Communication!TypeName!.tree"
+    )
+
+    del Communication!TypeName!.tree
+)
 
 @set EXIT_CODE=%ERRORLEVEL%
 

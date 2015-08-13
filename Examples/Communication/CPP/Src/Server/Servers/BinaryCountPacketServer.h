@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include "IContext.h"
-#include "ISerializationClient.h"
-#include "StreamedClient.h"
+#include "ISerializationServer.h"
+#include "StreamedServer.h"
 
 #include "CommunicationBinary.h"
 
@@ -15,9 +15,9 @@
 #include <functional>
 #include <mutex>
 
-namespace Client
+namespace Server
 {
-    class BinaryCountPacketClient : public IStreamedVirtualTransportClient
+    class BinaryCountPacketServer : public IStreamedVirtualTransportServer
     {
     private:
         class Context
@@ -40,26 +40,29 @@ namespace Client
             std::wstring CommandName;
             std::uint32_t CommandHash;
             std::int32_t ParametersLength;
+            std::size_t InputCommandByteLength;
 
             Context(int ReadBufferSize)
-                : ReadBufferOffset(0), ReadBufferLength(0), State(0), CommandNameLength(0), CommandName(L""), CommandHash(0), ParametersLength(0)
+                : ReadBufferOffset(0), ReadBufferLength(0), State(0), CommandNameLength(0), CommandName(L""), CommandHash(0), ParametersLength(0), InputCommandByteLength(0)
             {
                 ReadBuffer = std::make_shared<std::vector<std::uint8_t>>();
                 ReadBuffer->resize(ReadBufferSize, 0);
             }
         };
 
+        std::shared_ptr<IBinarySerializationServerAdapter> ss;
         Context c;
-        std::shared_ptr<IBinarySerializationClientAdapter> bc;
+        std::function<bool(std::wstring)> CheckCommandAllowed;
         std::shared_ptr<IBinaryTransformer> Transformer;
 
     public:
-        BinaryCountPacketClient(std::shared_ptr<IBinarySerializationClientAdapter> bc, std::shared_ptr<IBinaryTransformer> Transformer = nullptr, int ReadBufferSize = 128 * 1024)
+        BinaryCountPacketServer(std::shared_ptr<IBinarySerializationServerAdapter> SerializationServerAdapter, std::function<bool(std::wstring)> CheckCommandAllowed, std::shared_ptr<IBinaryTransformer> Transformer = nullptr, int ReadBufferSize = 8 * 1024)
             : c(ReadBufferSize)
         {
-            this->bc = bc;
+            this->ss = SerializationServerAdapter;
+            this->CheckCommandAllowed = CheckCommandAllowed;
             this->Transformer = Transformer;
-            bc->ClientEvent = [=](std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
+            this->ss->ServerEvent = [=](std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
             {
                 Communication::Binary::ByteArrayStream s;
                 s.WriteString(CommandName);
@@ -68,6 +71,7 @@ namespace Client
                 s.WriteBytes(Parameters);
                 s.SetPosition(0);
                 auto Bytes = s.ReadBytes(s.GetLength());
+                auto BytesLength = Bytes->size();
                 {
                     std::unique_lock<std::mutex> Lock(c.WriteBufferLockee);
                     if (Transformer != nullptr)
@@ -76,7 +80,14 @@ namespace Client
                     }
                 }
                 c.WriteBuffer.push_back(Bytes);
-                if (ClientMethod != nullptr) { ClientMethod(); }
+                if (OutputByteLengthReport != nullptr)
+                {
+                    OutputByteLengthReport(CommandName, BytesLength);
+                }
+                if (this->ServerEvent != nullptr)
+                {
+                    this->ServerEvent();
+                }
             };
         }
 
@@ -103,9 +114,9 @@ namespace Client
             }
         }
 
-        std::shared_ptr<StreamedVirtualTransportClientHandleResult> Handle(int Count)
+        std::shared_ptr<StreamedVirtualTransportServerHandleResult> Handle(int Count)
         {
-            auto ret = StreamedVirtualTransportClientHandleResult::CreateContinue();
+            auto ret = StreamedVirtualTransportServerHandleResult::CreateContinue();
 
             auto Buffer = c.ReadBuffer;
             auto FirstPosition = c.ReadBufferOffset;
@@ -130,11 +141,50 @@ namespace Client
                     auto CommandName = r->Command->CommandName;
                     auto CommandHash = r->Command->CommandHash;
                     auto Parameters = r->Command->Parameters;
-                    auto Command = std::make_shared<StreamedVirtualTransportClientHandleResultCommand>();
-                    Command->CommandName = CommandName;
-                    auto bc = this->bc;
-                    Command->HandleResult = [=]() { bc->HandleResult(CommandName, CommandHash, Parameters); };
-                    ret = StreamedVirtualTransportClientHandleResult::CreateCommand(Command);
+                    if (InputByteLengthReport != nullptr)
+                    {
+                        InputByteLengthReport(CommandName, r->Command->ByteLength);
+                    }
+                    if (ss->HasCommand(CommandName, CommandHash) && (CheckCommandAllowed != nullptr ? CheckCommandAllowed(CommandName) : true))
+                    {
+                        auto Command = std::make_shared<StreamedVirtualTransportServerHandleResultCommand>();
+                        Command->CommandName = CommandName;
+                        Command->ExecuteCommand = [=](std::function<void()> OnSuccess, std::function<void(const std::exception &)> OnFailure)
+                        {
+                            auto OnSuccessInner = [=](std::shared_ptr<std::vector<std::uint8_t>> OutputParameters)
+                            {
+                                Communication::Binary::ByteArrayStream s;
+                                s.WriteString(CommandName);
+                                s.WriteUInt32(CommandHash);
+                                s.WriteInt32(static_cast<std::int32_t>(OutputParameters->size()));
+                                s.WriteBytes(OutputParameters);
+                                s.SetPosition(0);
+                                auto Bytes = s.ReadBytes(s.GetLength());
+                                auto BytesLength = Bytes->size();
+                                {
+                                    std::unique_lock<std::mutex> Lock(c.WriteBufferLockee);
+                                    if (Transformer != nullptr)
+                                    {
+                                        Transformer->Transform(*Bytes, 0, static_cast<int>(Bytes->size()));
+                                    }
+                                    c.WriteBuffer.push_back(Bytes);
+                                }
+                                if (OutputByteLengthReport != nullptr)
+                                {
+                                    OutputByteLengthReport(CommandName, BytesLength);
+                                }
+                                OnSuccess();
+                            };
+                            ss->ExecuteCommand(CommandName, CommandHash, Parameters, OnSuccessInner, OnFailure);
+                        };
+                        ret = StreamedVirtualTransportServerHandleResult::CreateCommand(Command);
+                    }
+                    else
+                    {
+                        auto BadCommand = std::make_shared<StreamedVirtualTransportServerHandleResultBadCommand>();
+                        BadCommand->CommandName = CommandName;
+                        ret = StreamedVirtualTransportServerHandleResult::CreateBadCommand(BadCommand);
+                    }
                     break;
                 }
             }
@@ -165,7 +215,7 @@ namespace Client
 
         std::uint64_t Hash()
         {
-            return bc->Hash();
+            return ss->Hash();
         }
 
     private:
@@ -175,6 +225,7 @@ namespace Client
             std::wstring CommandName;
             std::uint32_t CommandHash;
             std::shared_ptr<std::vector<uint8_t>> Parameters;
+            std::int32_t ByteLength;
         };
 
         class TryShiftResult
@@ -201,6 +252,7 @@ namespace Client
                     auto r = std::make_shared<TryShiftResult>();
                     r->Command = nullptr;
                     r->Position = Position + 4;
+                    bc.InputCommandByteLength += 4;
                     bc.State = 1;
                     return r;
                 }
@@ -221,6 +273,7 @@ namespace Client
                     auto r = std::make_shared<TryShiftResult>();
                     r->Command = nullptr;
                     r->Position = Position + bc.CommandNameLength;
+                    bc.InputCommandByteLength += bc.CommandNameLength;
                     bc.State = 2;
                     return r;
                 }
@@ -240,6 +293,7 @@ namespace Client
                     auto r = std::make_shared<TryShiftResult>();
                     r->Command = nullptr;
                     r->Position = Position + 4;
+                    bc.InputCommandByteLength += 4;
                     bc.State = 3;
                     return r;
                 }
@@ -260,6 +314,7 @@ namespace Client
                     auto r = std::make_shared<TryShiftResult>();
                     r->Command = nullptr;
                     r->Position = Position + 4;
+                    bc.InputCommandByteLength += 4;
                     bc.State = 4;
                     return r;
                 }
@@ -275,10 +330,12 @@ namespace Client
                     {
                         (*Parameters)[k] = (*Buffer)[Position + k];
                     }
+                    bc.InputCommandByteLength += bc.ParametersLength;
                     auto cmd = std::make_shared<Command>();
                     cmd->CommandName = bc.CommandName;
                     cmd->CommandHash = bc.CommandHash;
                     cmd->Parameters = Parameters;
+                    cmd->ByteLength = bc.InputCommandByteLength;
                     auto r = std::make_shared<TryShiftResult>();
                     r->Command = cmd;
                     r->Position = Position + bc.ParametersLength;
@@ -286,6 +343,7 @@ namespace Client
                     bc.CommandName = L"";
                     bc.CommandHash = 0;
                     bc.ParametersLength = 0;
+                    bc.InputCommandByteLength = 0;
                     bc.State = 0;
                     return r;
                 }

@@ -15,7 +15,7 @@ namespace Client
     class IBinaryTransformer
     {
     public:
-        virtual void Transform(std::uint8_t *prgBuffer, int Start, int Count) = 0;
-        virtual void Inverse(std::uint8_t *prgBuffer, int Start, int Count) = 0;
+        virtual void Transform(std::vector<std::uint8_t> &Buffer, int Start, int Count) = 0;
+        virtual void Inverse(std::vector<std::uint8_t> &Buffer, int Start, int Count) = 0;
     };
 }
