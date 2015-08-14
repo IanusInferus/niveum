@@ -3,6 +3,7 @@
 #include <queue>
 #include <functional>
 #include <mutex>
+#include <memory>
 
 namespace BaseSystem
 {
@@ -10,7 +11,7 @@ namespace BaseSystem
     /// 本类的所有公共成员均是线程安全的。
     /// </summary>
     template<typename T>
-    class AsyncConsumer
+    class AsyncConsumer : public std::enable_shared_from_this<AsyncConsumer<T>>
     {
     private:
         std::function<void(std::function<void()>)> QueueUserWorkItem;
@@ -45,7 +46,8 @@ namespace BaseSystem
             }
             if (NeedToRun)
             {
-                QueueUserWorkItem([this]() { Run(); });
+                auto ThisPtr = this->shared_from_this();
+                QueueUserWorkItem([ThisPtr]() { ThisPtr->Run(); });
             }
         }
 
@@ -78,7 +80,8 @@ namespace BaseSystem
                 RunningCount -= 1;
                 return;
             }
-            QueueUserWorkItem([this]() { Run(); });
+            auto ThisPtr = this->shared_from_this();
+            QueueUserWorkItem([ThisPtr]() { ThisPtr->Run(); });
         }
 
     public:

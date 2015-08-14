@@ -87,7 +87,7 @@ namespace Client
             if (ResentCount == 2) { return 1600; }
             if (ResentCount == 3) { return 2000; }
             if (ResentCount == 4) { return 3000; }
-            return 4100;
+            return 4000;
         }
 
         static void ArrayCopy(const std::vector<std::uint8_t> &Source, int SourceIndex, std::vector<std::uint8_t> &Destination, int DestinationIndex, int Length)
@@ -98,7 +98,7 @@ namespace Client
             if (SourceIndex + Length > static_cast<int>(Source.size())) { throw std::logic_error("InvalidArgument"); }
             if (DestinationIndex + Length > static_cast<int>(Destination.size())) { throw std::logic_error("InvalidArgument"); }
             if (Length == 0) { return; }
-            memcpy(&Destination[DestinationIndex], &Source[SourceIndex], Length);
+            std::memcpy(&Destination[DestinationIndex], &Source[SourceIndex], Length);
         }
 
         class Part
@@ -172,7 +172,7 @@ namespace Client
                 auto p = std::make_shared<Part>();
                 p->Index = Index;
                 p->Data = b;
-                p->ResendTime = std::chrono::steady_clock::time_point::clock::now() + std::chrono::milliseconds(GetTimeoutMilliseconds(0));
+                p->ResendTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(GetTimeoutMilliseconds(0));
                 p->ResentCount = 0;
                 Parts[Index] = p;
                 return true;
@@ -186,7 +186,7 @@ namespace Client
                 auto p = std::make_shared<Part>();
                 p->Index = Index;
                 p->Data = Data;
-                p->ResendTime = std::chrono::steady_clock::time_point::clock::now() + std::chrono::milliseconds(GetTimeoutMilliseconds(0));
+                p->ResendTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(GetTimeoutMilliseconds(0));
                 p->ResentCount = 0;
                 Parts[Index] = p;
                 return true;
@@ -240,7 +240,7 @@ namespace Client
                     if (Value->ResendTime <= Time)
                     {
                         f(Key, Value->Data);
-                        Value->ResendTime = std::chrono::steady_clock::time_point::clock::now() + std::chrono::milliseconds(GetTimeoutMilliseconds(Value->ResentCount));
+                        Value->ResendTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(GetTimeoutMilliseconds(Value->ResentCount));
                         Value->ResentCount += 1;
                     }
                 }
@@ -253,7 +253,7 @@ namespace Client
             std::set<int> NotAcknowledgedIndices;
             std::chrono::steady_clock::time_point LastCheck;
             UdpReadContext()
-                : LastCheck(std::chrono::steady_clock::time_point::clock::now())
+                : LastCheck(std::chrono::steady_clock::now())
             {
             }
         };
@@ -415,7 +415,7 @@ namespace Client
             std::vector<std::shared_ptr<std::vector<std::uint8_t>>> Parts;
             CookedWritingContext.DoAction([&, IsRunningValue](std::shared_ptr<UdpWriteContext> c)
             {
-                auto Time = std::chrono::steady_clock::time_point::clock::now();
+                auto Time = std::chrono::steady_clock::now();
                 auto WritingOffset = 0;
                 while (WritingOffset < TotalLength)
                 {
@@ -565,7 +565,7 @@ namespace Client
                 RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
                 {
                     if (c->NotAcknowledgedIndices.size() == 0) { return; }
-                    auto CurrentTime = std::chrono::steady_clock::time_point::clock::now();
+                    auto CurrentTime = std::chrono::steady_clock::now();
                     if (std::chrono::duration<double, std::chrono::milliseconds::period>(CurrentTime - c->LastCheck).count() + 1 < CheckTimeout()) { return; }
                     c->LastCheck = CurrentTime;
                     auto NotAcknowledgedIndices = std::set<int>(c->NotAcknowledgedIndices.begin(), c->NotAcknowledgedIndices.end());
@@ -673,7 +673,7 @@ namespace Client
                     }
 
                     if (cc->Parts->Parts.size() == 0) { return; }
-                    auto t = std::chrono::steady_clock::time_point::clock::now();
+                    auto t = std::chrono::steady_clock::now();
                     cc->Parts->ForEachTimedoutPacket(SessionId, t, [&](int i, std::shared_ptr<std::vector<std::uint8_t>> d) { Parts.push_back(d); });
                     auto Wait = std::numeric_limits<int>::max();
                     for (auto Pair : cc->Parts->Parts)
@@ -867,7 +867,7 @@ namespace Client
                 }
 
                 int Offset = 12;
-                std::vector<int> Indices;
+                std::shared_ptr<std::vector<int>> Indices = nullptr;
                 if ((Flag & 1) != 0)
                 {
                     auto NumIndex = (*Buffer)[Offset] | (static_cast<std::int32_t>((*Buffer)[Offset + 1]) << 8);
@@ -876,23 +876,24 @@ namespace Client
                         return;
                     }
                     Offset += 2;
-                    Indices.resize(NumIndex, 0);
+                    Indices = std::make_shared<std::vector<int>>();
+                    Indices->resize(NumIndex, 0);
                     for (int k = 0; k < NumIndex; k += 1)
                     {
-                        Indices[k] = (*Buffer)[Offset + k * 2] | (static_cast<std::int32_t>((*Buffer)[Offset + k * 2 + 1]) << 8);
+                        (*Indices)[k] = (*Buffer)[Offset + k * 2] | (static_cast<std::int32_t>((*Buffer)[Offset + k * 2 + 1]) << 8);
                     }
                     Offset += NumIndex * 2;
                 }
 
                 auto Length = static_cast<std::int32_t>(Buffer->size()) - Offset;
 
-                if (Indices.size() > 0)
+                if ((Indices != nullptr) && (Indices->size() > 0))
                 {
                     CookedWritingContext.DoAction([&](std::shared_ptr<UdpWriteContext> c)
                     {
-                        auto First = Indices[0];
-                        Indices.erase(Indices.begin());
-                        c->Parts->Acknowledge(First, Indices, c->WritenIndex);
+                        auto First = (*Indices)[0];
+                        Indices->erase(Indices->begin());
+                        c->Parts->Acknowledge(First, *Indices, c->WritenIndex);
                     });
                 }
 

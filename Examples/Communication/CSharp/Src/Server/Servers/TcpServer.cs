@@ -26,17 +26,16 @@ namespace Server
 
         private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
 
-        private class IpSessionInfo
-        {
-            public int Count = 0;
-            public HashSet<TcpSession> Authenticated = new HashSet<TcpSession>();
-        }
-
         private List<BindingInfo> BindingInfos = new List<BindingInfo>();
         private CancellationTokenSource ListeningTaskTokenSource;
         private AsyncConsumer<Socket> AcceptConsumer;
         private AsyncConsumer<TcpSession> PurifyConsumer;
 
+        private class IpSessionInfo
+        {
+            public int Count = 0;
+            public HashSet<TcpSession> Authenticated = new HashSet<TcpSession>();
+        }
         private class ServerSessionSets
         {
             public HashSet<TcpSession> Sessions = new HashSet<TcpSession>();
@@ -266,17 +265,17 @@ namespace Server
 
                         Action<Socket> Accept = a =>
                         {
-                            IPEndPoint e;
+                            IPEndPoint ep;
                             try
                             {
-                                e = (IPEndPoint)(a.RemoteEndPoint);
+                                ep = (IPEndPoint)(a.RemoteEndPoint);
                             }
                             catch
                             {
                                 a.Dispose();
                                 return;
                             }
-                            var s = new TcpSession(this, new StreamedAsyncSocket(a, UnauthenticatedSessionIdleTimeoutValue, QueueUserWorkItem), e, VirtualTransportServerFactory, QueueUserWorkItem);
+                            var s = new TcpSession(this, new StreamedAsyncSocket(a, UnauthenticatedSessionIdleTimeoutValue, QueueUserWorkItem), ep, VirtualTransportServerFactory, QueueUserWorkItem);
 
                             if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
                             {
@@ -296,7 +295,7 @@ namespace Server
                                 return;
                             }
 
-                            if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
+                            if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(ep.Address) ? ss.IpSessions[ep.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
                             {
                                 try
                                 {
@@ -310,7 +309,7 @@ namespace Server
                                 return;
                             }
 
-                            if (MaxUnauthenticatedPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address].Count : 0) >= MaxUnauthenticatedPerIPValue.Value))
+                            if (MaxUnauthenticatedPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(ep.Address) ? ss.IpSessions[ep.Address].Count : 0) >= MaxUnauthenticatedPerIPValue.Value))
                             {
                                 try
                                 {
@@ -329,15 +328,15 @@ namespace Server
                                 ss =>
                                 {
                                     ss.Sessions.Add(s);
-                                    if (ss.IpSessions.ContainsKey(e.Address))
+                                    if (ss.IpSessions.ContainsKey(ep.Address))
                                     {
-                                        ss.IpSessions[e.Address].Count += 1;
+                                        ss.IpSessions[ep.Address].Count += 1;
                                     }
                                     else
                                     {
                                         var isi = new IpSessionInfo();
                                         isi.Count += 1;
-                                        ss.IpSessions.Add(e.Address, isi);
+                                        ss.IpSessions.Add(ep.Address, isi);
                                     }
                                 }
                             );

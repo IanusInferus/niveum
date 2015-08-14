@@ -46,7 +46,7 @@ namespace Client
                 }
                 CommandRequest cq = {};
                 cq.Name = CommandName;
-                auto Time = std::chrono::steady_clock::time_point::clock::now();
+                auto Time = std::chrono::steady_clock::now();
                 cq.Time = Time;
                 auto Finished = std::make_shared<bool>(false);
                 auto Timer = std::make_shared<asio::steady_timer>(a.io_service);
@@ -161,7 +161,7 @@ namespace Client
                     auto &cq = q->front();
 
                     *cq.Finished = true;
-                    auto TimeSpan = std::chrono::duration<double, std::chrono::milliseconds::period>(std::chrono::steady_clock::time_point::clock::now() - cq.Time);
+                    auto TimeSpan = std::chrono::duration<double, std::chrono::milliseconds::period>(std::chrono::steady_clock::now() - cq.Time);
                     auto Milliseconds = (int)(std::round(TimeSpan.count()));
                     if (ClientCommandFailed != nullptr)
                     {
@@ -196,7 +196,7 @@ namespace Client
                 auto &cq = q->front();
 
                 *cq.Finished = true;
-                auto TimeSpan = std::chrono::duration<double, std::chrono::milliseconds::period>(std::chrono::steady_clock::time_point::clock::now() - cq.Time);
+                auto TimeSpan = std::chrono::duration<double, std::chrono::milliseconds::period>(std::chrono::steady_clock::now() - cq.Time);
                 auto Milliseconds = (int)(std::round(TimeSpan.count()));
                 if (ClientCommandReceived != nullptr)
                 {

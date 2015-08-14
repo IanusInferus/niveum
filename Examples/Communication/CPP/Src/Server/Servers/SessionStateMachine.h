@@ -296,7 +296,7 @@ namespace Server
     public:
         void NotifyExit()
         {
-            c.DoAction([](std::shared_ptr<Context> cc)
+            c.DoAction([&](std::shared_ptr<Context> cc)
             {
                 if (cc->State != 4)
                 {
@@ -309,7 +309,7 @@ namespace Server
 
         bool IsExited()
         {
-            return c.Check<bool>([](std::shared_ptr<Context> cc) { return cc->State == 4; });
+            return c.Check<bool>([](std::shared_ptr<Context> cc) { return cc->State == 4; }) && ActionQueue.Check<bool>([=](std::shared_ptr<SessionActionQueue> q) { return !q->IsRunning; });
         }
 
         void AddToActionQueue(std::function<void()> Action)

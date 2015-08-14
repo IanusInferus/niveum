@@ -27,7 +27,6 @@
     <ClInclude Include="Context\SerializationServerAdapter.h" />
     <ClInclude Include="Context\ServerContext.h" />
     <ClInclude Include="Context\SessionContext.h" />
-    <ClInclude Include="Net\StreamedAsyncSocket.h" />
     <ClInclude Include="Servers\BinaryCountPacketServer.h" />
     <ClInclude Include="Servers\Concept.h" />
     <ClInclude Include="Servers\IContext.h" />
@@ -37,6 +36,8 @@
     <ClInclude Include="Servers\StreamedServer.h" />
     <ClInclude Include="Servers\TcpServer.h" />
     <ClInclude Include="Servers\TcpSession.h" />
+    <ClInclude Include="Servers\UdpServer.h" />
+    <ClInclude Include="Servers\UdpSession.h" />
     <ClInclude Include="Services\ServerImplementation.h" />
     <ClInclude Include="UtfEncoding.h" />
     <ClInclude Include="Util\ConsoleLogger.h" />
@@ -52,6 +53,8 @@
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Servers\TcpServer.cpp" />
     <ClCompile Include="Servers\TcpSession.cpp" />
+    <ClCompile Include="Servers\UdpServer.cpp" />
+    <ClCompile Include="Servers\UdpSession.cpp" />
     <ClCompile Include="Services\Admin.cpp" />
     <ClCompile Include="Services\Base.cpp" />
     <ClCompile Include="Services\Compatibility.cpp" />
