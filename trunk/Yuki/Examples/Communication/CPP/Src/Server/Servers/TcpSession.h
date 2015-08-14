@@ -45,7 +45,7 @@ namespace Server
         std::shared_ptr<IServerImplementation> si;
         std::shared_ptr<IStreamedVirtualTransportServer> vts;
         int NumBadCommands = 0;
-        bool IsDisposed = false;
+        bool IsDisposed;
 
         std::shared_ptr<std::vector<std::uint8_t>> WriteBuffer;
         std::shared_ptr<SessionStateMachine<std::shared_ptr<StreamedVirtualTransportServerHandleResult>, Unit>> ssm;

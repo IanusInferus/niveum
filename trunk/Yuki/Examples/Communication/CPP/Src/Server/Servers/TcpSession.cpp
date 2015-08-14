@@ -23,7 +23,8 @@ namespace Server
     {
         ssm = std::make_shared<SessionStateMachine<std::shared_ptr<StreamedVirtualTransportServerHandleResult>, Unit>>(
             [](const std::exception &ex) { return dynamic_cast<const asio::system_error *>(&ex) != nullptr; },
-            [this](const std::exception &ex) { return OnCriticalError(ex); }, [this]() { return OnShutdownRead(); },
+            [this](const std::exception &ex) { return OnCriticalError(ex); },
+            [this]() { return OnShutdownRead(); },
             [this]() { return OnShutdownWrite(); },
             [this](Unit w, std::function<void()> OnSuccess, std::function<void()> OnFailure) { return OnWrite(w, OnSuccess, OnFailure); },
             [this](std::shared_ptr<StreamedVirtualTransportServerHandleResult> r, std::function<void()> OnSuccess, std::function<void()> OnFailure) { return OnExecute(r, OnSuccess, OnFailure); },

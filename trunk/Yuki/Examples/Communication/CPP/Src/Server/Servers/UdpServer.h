@@ -8,6 +8,7 @@
 #include "IContext.h"
 #include "StreamedServer.h"
 
+#include <cstdint>
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
@@ -23,26 +24,43 @@
 
 namespace Server
 {
-    class TcpSession;
+    class UdpSession;
 
     /// <summary>
     /// 本类的所有非继承的公共成员均是线程安全的。
+    /// UDP数据包
+    /// Packet ::= SessionId:Int32 Flag:UInt16 Index:UInt16 Verification:Int32 Inner:Byte*
+    /// 所有数据均为little-endian
+    /// SessionId，当INI存在时，为初始包，服务器收到包后分配SessionId，建议初始包的SessionId和Index均为0
+    /// Flag，标记，1 ACK，表示Inner中包含确认收到的包索引，2 ENC，表示数据已加密，4 INI，表示初始化，8 AUX，表示从客户端发到服务器的包为没有数据的辅助确认包
+    /// Index，序列号，当AUX存在时，必须为LowerIndex
+    /// Verification，当ENC存在时，为Inner的MAC验证码，否则为CRC32验证码，其中HMAC的验证码的计算方式为
+    ///     Key = SessionKey XOR SHA1(Flag :: Index)
+    ///     MAC = HMAC(Key, SessionId :: Flag :: Index :: 0 :: Inner).Take(4)
+    ///     HMAC = H((K XOR opad) :: H((K XOR ipad) :: Inner))
+    ///     H = SHA1
+    ///     opad = 0x5C
+    ///     ipad = 0x36
+    /// Inner ::= NumIndex:UInt16 LowerIndex:UInt16 Index:UInt16{NumIndex - 1} Payload:Byte*，当ACK存在时
+    ///         |= Payload:Byte*
     /// </summary>
-    class TcpServer : public IServer
+    class UdpServer : public IServer
     {
     private:
         class AcceptResult
         {
         public:
             asio::error_code ec;
-            std::shared_ptr<asio::ip::tcp::socket> AcceptSocket;
+            std::size_t BytesTransferred;
+            asio::ip::udp::endpoint RemoteEndPoint;
         };
 
         class BindingInfo
         {
         public:
-            asio::ip::tcp::endpoint EndPoint;
-            std::shared_ptr<BaseSystem::LockedVariable<std::shared_ptr<asio::ip::tcp::acceptor>>> Socket;
+            asio::ip::udp::endpoint EndPoint;
+            std::shared_ptr<BaseSystem::LockedVariable<std::shared_ptr<asio::ip::udp::socket>>> Socket;
+            std::shared_ptr<std::vector<std::uint8_t>> ReadBuffer;
             std::shared_ptr<BaseSystem::AsyncConsumer<std::shared_ptr<AcceptResult>>> ListenConsumer;
             std::function<void()> Start;
         };
@@ -54,8 +72,15 @@ namespace Server
 
         std::vector<std::shared_ptr<BindingInfo>> BindingInfos;
         std::shared_ptr<BaseSystem::CancellationToken> ListeningTaskToken;
-        std::shared_ptr<BaseSystem::AsyncConsumer<std::shared_ptr<asio::ip::tcp::socket>>> AcceptConsumer;
-        std::shared_ptr<BaseSystem::AsyncConsumer<std::shared_ptr<TcpSession>>> PurifyConsumer;
+        class AcceptingInfo
+        {
+        public:
+            std::shared_ptr<asio::ip::udp::socket> Socket;
+            std::shared_ptr<std::vector<std::uint8_t>> ReadBuffer;
+            asio::ip::udp::endpoint RemoteEndPoint;
+        };
+        std::shared_ptr<BaseSystem::AsyncConsumer<std::shared_ptr<AcceptingInfo>>> AcceptConsumer;
+        std::shared_ptr<BaseSystem::AsyncConsumer<std::shared_ptr<UdpSession>>> PurifyConsumer;
         std::shared_ptr<asio::steady_timer> LastActiveTimeCheckTimer;
 
         struct IpAddressHash
@@ -101,7 +126,7 @@ namespace Server
         {
         public:
             int Count;
-            std::unordered_set<std::shared_ptr<TcpSession>> Authenticated;
+            std::unordered_set<std::shared_ptr<UdpSession>> Authenticated;
 
             IpSessionInfo()
                 : Count(0)
@@ -111,8 +136,9 @@ namespace Server
         class ServerSessionSets
         {
         public:
-            std::unordered_set<std::shared_ptr<TcpSession>> Sessions;
+            std::unordered_set<std::shared_ptr<UdpSession>> Sessions;
             std::unordered_map<asio::ip::address, std::shared_ptr<IpSessionInfo>, IpAddressHash> IpSessions;
+            std::unordered_map<int, std::shared_ptr<UdpSession>> SessionIdToSession;
         };
         BaseSystem::LockedVariable<std::shared_ptr<ServerSessionSets>> SessionSets;
 
@@ -133,7 +159,7 @@ namespace Server
         std::function<void(std::function<void()>)> PurifierQueueUserWorkItem;
 
         int MaxBadCommandsValue;
-        std::shared_ptr<std::vector<asio::ip::tcp::endpoint>> BindingsValue;
+        std::shared_ptr<std::vector<asio::ip::udp::endpoint>> BindingsValue;
         Optional<int> SessionIdleTimeoutValue;
         Optional<int> UnauthenticatedSessionIdleTimeoutValue;
         Optional<int> MaxConnectionsValue;
@@ -157,11 +183,11 @@ namespace Server
         }
 
         /// <summary>只能在启动前修改，以保证线程安全</summary>
-        std::shared_ptr<std::vector<asio::ip::tcp::endpoint>> Bindings() const
+        std::shared_ptr<std::vector<asio::ip::udp::endpoint>> Bindings() const
         {
             return BindingsValue;
         }
-        void Bindings(std::shared_ptr<std::vector<asio::ip::tcp::endpoint>> value)
+        void Bindings(std::shared_ptr<std::vector<asio::ip::udp::endpoint>> value)
         {
             IsRunningValue.DoAction([=](bool b)
             {
@@ -248,22 +274,22 @@ namespace Server
             });
         }
 
-        BaseSystem::LockedVariable<std::shared_ptr<std::unordered_map<std::shared_ptr<ISessionContext>, std::shared_ptr<TcpSession>>>> SessionMappings;
+        BaseSystem::LockedVariable<std::shared_ptr<std::unordered_map<std::shared_ptr<ISessionContext>, std::shared_ptr<UdpSession>>>> SessionMappings;
 
-        TcpServer(asio::io_service &IoService, std::shared_ptr<IServerContext> sc, std::function<std::pair<std::shared_ptr<IServerImplementation>, std::shared_ptr<IStreamedVirtualTransportServer>>(std::shared_ptr<ISessionContext>, std::shared_ptr<IBinaryTransformer>)> VirtualTransportServerFactory, std::function<void(std::function<void()>)> QueueUserWorkItem, std::function<void(std::function<void()>)> PurifierQueueUserWorkItem);
+        UdpServer(asio::io_service &IoService, std::shared_ptr<IServerContext> sc, std::function<std::pair<std::shared_ptr<IServerImplementation>, std::shared_ptr<IStreamedVirtualTransportServer>>(std::shared_ptr<ISessionContext>, std::shared_ptr<IBinaryTransformer>)> VirtualTransportServerFactory, std::function<void(std::function<void()>)> QueueUserWorkItem, std::function<void(std::function<void()>)> PurifierQueueUserWorkItem);
 
     private:
-        void OnMaxConnectionsExceeded(std::shared_ptr<TcpSession> s);
-        void OnMaxConnectionsPerIPExceeded(std::shared_ptr<TcpSession> s);
+        void OnMaxConnectionsExceeded(std::shared_ptr<UdpSession> s);
+        void OnMaxConnectionsPerIPExceeded(std::shared_ptr<UdpSession> s);
         void DoTimeoutCheck();
 
     public:
         void Start();
         void Stop();
 
-        void NotifySessionQuit(std::shared_ptr<TcpSession> s);
-        void NotifySessionAuthenticated(std::shared_ptr<TcpSession> s);
+        void NotifySessionQuit(std::shared_ptr<UdpSession> s);
+        void NotifySessionAuthenticated(std::shared_ptr<UdpSession> s);
 
-        ~TcpServer();
+        ~UdpServer();
     };
 }

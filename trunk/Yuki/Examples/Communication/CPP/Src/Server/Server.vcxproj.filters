@@ -16,9 +16,6 @@
     <Filter Include="Util">
       <UniqueIdentifier>{c0b87016-8ebf-4a4d-8408-1ddc70c37728}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Net">
-      <UniqueIdentifier>{de601411-e602-43b6-8dc7-9233c114fe56}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Context\ServerContext.h">
@@ -57,9 +54,6 @@
       <Filter>Util</Filter>
     </ClInclude>
     <ClInclude Include="UtfEncoding.h" />
-    <ClInclude Include="Net\StreamedAsyncSocket.h">
-      <Filter>Net</Filter>
-    </ClInclude>
     <ClInclude Include="BaseSystem\ThreadLocalRandom.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
@@ -105,6 +99,12 @@
     <ClInclude Include="Servers\BinaryCountPacketServer.h">
       <Filter>Servers</Filter>
     </ClInclude>
+    <ClInclude Include="Servers\UdpServer.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
+    <ClInclude Include="Servers\UdpSession.h">
+      <Filter>Servers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
@@ -146,6 +146,12 @@
     </ClCompile>
     <ClCompile Include="Context\SerializationServerAdapter.cpp">
       <Filter>Context</Filter>
+    </ClCompile>
+    <ClCompile Include="Servers\UdpServer.cpp">
+      <Filter>Servers</Filter>
+    </ClCompile>
+    <ClCompile Include="Servers\UdpSession.cpp">
+      <Filter>Servers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

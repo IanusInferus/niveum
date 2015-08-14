@@ -3,15 +3,15 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2015.08.13.
+//  Version:     2015.08.15.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
 //==========================================================================
 
 #include "Services/ServerImplementation.h"
-#include "Servers/TcpSession.h"
 #include "Servers/TcpServer.h"
+#include "Servers/UdpServer.h"
 #include "Servers/BinaryCountPacketServer.h"
 
 #include "BaseSystem/StringUtilities.h"
@@ -124,7 +124,7 @@ namespace Server
             {
                 ServerContext->SessionLog = [&](std::shared_ptr<SessionLogEntry> e)
                 {
-                    IoServicePurifier->post([e, &cl]() { cl.Log(e); });
+                    IoServiceLog->post([e, &cl]() { cl.Log(e); });
                 };
             }
 
@@ -141,23 +141,51 @@ namespace Server
                 return std::make_pair(si, bcps);
             };
 
-            auto Server = std::make_shared<TcpServer>(*IoService, ServerContext, VirtualTransportServerFactory, [=](std::function<void()> a) { IoService->post(a); }, [=](std::function<void()> a) { IoServicePurifier->post(a); });
+            auto Servers = std::make_shared<std::vector<std::shared_ptr<IServer>>>();
 
-            auto Bindings = std::make_shared<std::vector<asio::ip::tcp::endpoint>>();
-            auto LocalEndPoint = asio::ip::tcp::endpoint(asio::ip::tcp::v4(), Port);
-            Bindings->push_back(LocalEndPoint);
-            Server->Bindings(Bindings);
-            Server->SessionIdleTimeout(120);
-            Server->UnauthenticatedSessionIdleTimeout(30);
-            Server->MaxConnections(32768);
-            Server->MaxConnectionsPerIP(32768);
-            Server->MaxUnauthenticatedPerIP(32768);
-            Server->MaxBadCommands(8);
-            Server->TimeoutCheckPeriod(30);
+            {
+                auto Server = std::make_shared<TcpServer>(*IoService, ServerContext, VirtualTransportServerFactory, [=](std::function<void()> a) { IoService->post(a); }, [=](std::function<void()> a) { IoServicePurifier->post(a); });
 
-            Server->Start();
+                auto Bindings = std::make_shared<std::vector<asio::ip::tcp::endpoint>>();
+                auto LocalEndPoint = asio::ip::tcp::endpoint(asio::ip::tcp::v4(), Port);
+                Bindings->push_back(LocalEndPoint);
+                Server->Bindings(Bindings);
+                Server->SessionIdleTimeout(120);
+                Server->UnauthenticatedSessionIdleTimeout(30);
+                Server->MaxConnections(32768);
+                Server->MaxConnectionsPerIP(32768);
+                Server->MaxUnauthenticatedPerIP(32768);
+                Server->MaxBadCommands(8);
+                Server->TimeoutCheckPeriod(30);
 
-            std::wprintf(L"%ls\n", (L"TCP/Binary服务器已启动。结点: " + s2w(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port()) + L"(TCP)").c_str());
+                Server->Start();
+
+                std::wprintf(L"%ls\n", (L"TCP/Binary服务器已启动。结点: " + s2w(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port()) + L"(TCP)").c_str());
+
+                Servers->push_back(Server);
+            }
+
+            {
+                auto Server = std::make_shared<UdpServer>(*IoService, ServerContext, VirtualTransportServerFactory, [=](std::function<void()> a) { IoService->post(a); }, [=](std::function<void()> a) { IoServicePurifier->post(a); });
+
+                auto Bindings = std::make_shared<std::vector<asio::ip::udp::endpoint>>();
+                auto LocalEndPoint = asio::ip::udp::endpoint(asio::ip::udp::v4(), Port);
+                Bindings->push_back(LocalEndPoint);
+                Server->Bindings(Bindings);
+                Server->SessionIdleTimeout(120);
+                Server->UnauthenticatedSessionIdleTimeout(30);
+                Server->MaxConnections(32768);
+                Server->MaxConnectionsPerIP(32768);
+                Server->MaxUnauthenticatedPerIP(32768);
+                Server->MaxBadCommands(8);
+                Server->TimeoutCheckPeriod(30);
+
+                Server->Start();
+
+                std::wprintf(L"%ls\n", (L"UDP/Binary服务器已启动。结点: " + s2w(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port()) + L"(UDP)").c_str());
+
+                Servers->push_back(Server);
+            }
 
             std::vector<std::shared_ptr<std::thread>> Threads;
             for (int i = 0; i < IoServiceLogNumThread; i += 1)
@@ -187,8 +215,11 @@ namespace Server
 
             ExitEvent->WaitOne();
 
-            Server->Stop();
-            Server = nullptr;
+            for (auto Server : *Servers)
+            {
+                Server->Stop();
+            }
+            Servers->clear();
 
             IoService->stop();
             IoServicePurifier->stop();

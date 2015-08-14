@@ -148,13 +148,13 @@ namespace Server
             auto Accept = [=](std::shared_ptr<asio::ip::tcp::socket> a)
             {
                 asio::error_code ec;
-                auto e = a->remote_endpoint(ec);
+                auto ep = a->remote_endpoint(ec);
                 if (ec)
                 {
                     a->close(ec);
                     return;
                 }
-                auto s = std::make_shared<TcpSession>(*this, a, e, VirtualTransportServerFactory, QueueUserWorkItem);
+                auto s = std::make_shared<TcpSession>(*this, a, ep, VirtualTransportServerFactory, QueueUserWorkItem);
 
                 if (MaxConnectionsValue.OnHasValue() && (SessionSets.Check<int>([=](std::shared_ptr<ServerSessionSets> ss) { return static_cast<int>(ss->Sessions.size()); }) >= MaxConnectionsValue.Value()))
                 {
@@ -171,7 +171,7 @@ namespace Server
                     return;
                 }
 
-                if (MaxConnectionsPerIPValue.OnHasValue() && (SessionSets.Check<int>([=](std::shared_ptr<ServerSessionSets> ss) { return ss->IpSessions.count(e.address()) > 0 ? ss->IpSessions[e.address()]->Count : 0; }) >= MaxConnectionsPerIPValue.Value()))
+                if (MaxConnectionsPerIPValue.OnHasValue() && (SessionSets.Check<int>([=](std::shared_ptr<ServerSessionSets> ss) { return ss->IpSessions.count(ep.address()) > 0 ? ss->IpSessions[ep.address()]->Count : 0; }) >= MaxConnectionsPerIPValue.Value()))
                 {
                     BaseSystem::AutoRelease ar([&]()
                     {
@@ -182,7 +182,7 @@ namespace Server
                     return;
                 }
 
-                if (MaxUnauthenticatedPerIPValue.OnHasValue() && (SessionSets.Check<int>([=](std::shared_ptr<ServerSessionSets> ss) { return ss->IpSessions.count(e.address()) > 0 ? ss->IpSessions[e.address()]->Count : 0; }) >= MaxUnauthenticatedPerIPValue.Value()))
+                if (MaxUnauthenticatedPerIPValue.OnHasValue() && (SessionSets.Check<int>([=](std::shared_ptr<ServerSessionSets> ss) { return ss->IpSessions.count(ep.address()) > 0 ? ss->IpSessions[ep.address()]->Count : 0; }) >= MaxUnauthenticatedPerIPValue.Value()))
                 {
                     BaseSystem::AutoRelease ar([&]()
                     {
@@ -196,15 +196,15 @@ namespace Server
                 SessionSets.DoAction([=](std::shared_ptr<ServerSessionSets> ss)
                 {
                     ss->Sessions.insert(s);
-                    if (ss->IpSessions.count(e.address()) > 0)
+                    if (ss->IpSessions.count(ep.address()) > 0)
                     {
-                        ss->IpSessions[e.address()]->Count += 1;
+                        ss->IpSessions[ep.address()]->Count += 1;
                     }
                     else
                     {
                         auto isi = std::make_shared<IpSessionInfo>();
                         isi->Count += 1;
-                        ss->IpSessions[e.address()] = isi;
+                        ss->IpSessions[ep.address()] = isi;
                     }
                 });
 
@@ -213,7 +213,7 @@ namespace Server
             AcceptConsumer = std::make_shared<BaseSystem::AsyncConsumer<std::shared_ptr<asio::ip::tcp::socket>>>(QueueUserWorkItem, [=](std::shared_ptr<asio::ip::tcp::socket> a) { Accept(a); return true; }, std::numeric_limits<int>::max());
 
             auto Exceptions = std::make_shared<std::vector<asio::error_code>>();
-            for (auto &Binding : *BindingsValue)
+            for (auto Binding : *BindingsValue)
             {
                 auto CreateSocket = [=]() -> std::shared_ptr<asio::ip::tcp::acceptor>
                 {
