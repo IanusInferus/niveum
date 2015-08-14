@@ -315,7 +315,7 @@ namespace Server
 
                         Action<AcceptingInfo> Accept = a =>
                         {
-                            var e = a.RemoteEndPoint;
+                            var ep = a.RemoteEndPoint;
                             UdpSession s = null;
 
                             try
@@ -346,7 +346,7 @@ namespace Server
                                     if ((Flag & 8) != 0) { return; }
                                     var Offset = 12;
 
-                                    s = new UdpSession(this, a.Socket, e, VirtualTransportServerFactory, QueueUserWorkItem);
+                                    s = new UdpSession(this, a.Socket, ep, VirtualTransportServerFactory, QueueUserWorkItem);
                                     SessionId = s.SessionId;
 
                                     if (MaxConnectionsValue.HasValue && (SessionSets.Check(ss => ss.Sessions.Count) >= MaxConnectionsValue.Value))
@@ -367,7 +367,7 @@ namespace Server
                                         return;
                                     }
 
-                                    if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? ss.IpSessions[e.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
+                                    if (MaxConnectionsPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(ep.Address) ? ss.IpSessions[ep.Address].Count : 0) >= MaxConnectionsPerIPValue.Value))
                                     {
                                         try
                                         {
@@ -381,7 +381,7 @@ namespace Server
                                         return;
                                     }
 
-                                    if (MaxUnauthenticatedPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(e.Address) ? (ss.IpSessions[e.Address].Count - ss.IpSessions[e.Address].Authenticated.Count) : 0) >= MaxUnauthenticatedPerIPValue.Value))
+                                    if (MaxUnauthenticatedPerIPValue.HasValue && (SessionSets.Check(ss => ss.IpSessions.ContainsKey(ep.Address) ? (ss.IpSessions[ep.Address].Count - ss.IpSessions[ep.Address].Authenticated.Count) : 0) >= MaxUnauthenticatedPerIPValue.Value))
                                     {
                                         try
                                         {
@@ -400,19 +400,19 @@ namespace Server
                                         ss =>
                                         {
                                             ss.Sessions.Add(s);
-                                            if (ss.IpSessions.ContainsKey(e.Address))
+                                            if (ss.IpSessions.ContainsKey(ep.Address))
                                             {
-                                                ss.IpSessions[e.Address].Count += 1;
+                                                ss.IpSessions[ep.Address].Count += 1;
                                             }
                                             else
                                             {
                                                 var isi = new IpSessionInfo();
                                                 isi.Count += 1;
-                                                ss.IpSessions.Add(e.Address, isi);
+                                                ss.IpSessions.Add(ep.Address, isi);
                                             }
                                             while ((SessionId == 0) || ss.SessionIdToSession.ContainsKey(SessionId))
                                             {
-                                                s = new UdpSession(this, a.Socket, e, VirtualTransportServerFactory, QueueUserWorkItem);
+                                                s = new UdpSession(this, a.Socket, ep, VirtualTransportServerFactory, QueueUserWorkItem);
                                                 SessionId = s.SessionId;
                                             }
                                             ss.SessionIdToSession.Add(SessionId, s);
@@ -422,7 +422,7 @@ namespace Server
                                     s.Start();
                                     s.PrePush(() =>
                                     {
-                                        if (!s.Push(e, Index, null, Buffer, Offset, Buffer.Length - Offset))
+                                        if (!s.Push(ep, Index, null, Buffer, Offset, Buffer.Length - Offset))
                                         {
                                             PurifyConsumer.Push(s);
                                         }
@@ -501,7 +501,7 @@ namespace Server
                                         }
 
                                         var PreviousRemoteEndPoint = s.RemoteEndPoint;
-                                        if (!PreviousRemoteEndPoint.Equals(e))
+                                        if (!PreviousRemoteEndPoint.Equals(ep))
                                         {
                                             SessionSets.DoAction
                                             (
@@ -525,16 +525,16 @@ namespace Server
 
                                                     {
                                                         IpSessionInfo isi;
-                                                        if (ss.IpSessions.ContainsKey(e.Address))
+                                                        if (ss.IpSessions.ContainsKey(ep.Address))
                                                         {
-                                                            isi = ss.IpSessions[e.Address];
+                                                            isi = ss.IpSessions[ep.Address];
                                                             isi.Count += 1;
                                                         }
                                                         else
                                                         {
                                                             isi = new IpSessionInfo();
                                                             isi.Count += 1;
-                                                            ss.IpSessions.Add(e.Address, isi);
+                                                            ss.IpSessions.Add(ep.Address, isi);
                                                         }
                                                         if (Authenticated)
                                                         {
@@ -542,21 +542,21 @@ namespace Server
                                                         }
                                                     }
 
-                                                    s.RemoteEndPoint = e;
+                                                    s.RemoteEndPoint = ep;
                                                 }
                                             );
                                         }
 
                                         if ((Flag & 8) != 0)
                                         {
-                                            if (!s.PushAux(e, Indices))
+                                            if (!s.PushAux(ep, Indices))
                                             {
                                                 PurifyConsumer.Push(s);
                                             }
                                         }
                                         else
                                         {
-                                            if (!s.Push(e, Index, Indices, Buffer, Offset, Buffer.Length - Offset))
+                                            if (!s.Push(ep, Index, Indices, Buffer, Offset, Buffer.Length - Offset))
                                             {
                                                 PurifyConsumer.Push(s);
                                             }
@@ -568,7 +568,7 @@ namespace Server
                             {
                                 if (ServerContext.EnableLogSystem)
                                 {
-                                    ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = ExceptionInfo.GetExceptionInfo(ex) });
+                                    ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = ep, Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = ExceptionInfo.GetExceptionInfo(ex) });
                                 }
                                 if (s != null)
                                 {
@@ -595,6 +595,10 @@ namespace Server
                                         }
                                     }
                                 }
+                            }
+                            else
+                            {
+                                Bindings.Add(Binding);
                             }
                         }
                         foreach (var Binding in Bindings)
@@ -829,6 +833,7 @@ namespace Server
                             Sessions = ss.Sessions.ToList();
                             ss.Sessions.Clear();
                             ss.IpSessions.Clear();
+                            ss.SessionIdToSession.Clear();
                         }
                     );
                     foreach (var s in Sessions)

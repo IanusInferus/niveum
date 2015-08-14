@@ -1,43 +1,87 @@
-﻿openSUSE下环境配置指南
+﻿CentOS下环境配置指南
 
-首先安装openSUSE 12.1 64 bit系统。
-下载地址http://software.opensuse.org/121/en
+1)安装Mono
+（以下的二进制安装因为Mono官方一直没有发布新的Linux二进制版本，无法使用。）
+如果需要从二进制安装，从
+http://download.mono-project.com/archive/3.0.4/linux/x64/
+下载mono-core、mono-data、mono-devel、mono-extras。
+wget http://download.mono-project.com/archive/3.0.4/linux/x64/mono-core-3.0.4-0.x86_64.rpm
+wget http://download.mono-project.com/archive/3.0.4/linux/x64/mono-data-3.0.4-0.x86_64.rpm
+wget http://download.mono-project.com/archive/3.0.4/linux/x64/mono-devel-3.0.4-0.x86_64.rpm
+wget http://download.mono-project.com/archive/3.0.4/linux/x64/mono-extras-3.0.4-0.x86_64.rpm
 
-然后需要一些软件：
+安装
+rpm -ivh --nodeps mono-core-3.0.4-0.x86_64.rpm
+rpm -ivh --nodeps mono-data-3.0.4-0.x86_64.rpm
+rpm -ivh --nodeps mono-devel-3.0.4-0.x86_64.rpm
+rpm -ivh --nodeps mono-extras-3.0.4-0.x86_64.rpm
 
-1)vsftpd，用于远程管理文件系统
-直接用YaST从光盘安装，安装之后在su进入root权限之后用vi编辑/etc/vsftpd.conf，修改write_enable的值为write_enable=YES。
-可以通过/etc/init.d/vsftpd start运行服务。
+如果需要卸载，执行
+rpm -e --nodeps mono-core
+rpm -e --nodeps mono-data
+rpm -e --nodeps mono-devel
+rpm -e --nodeps mono-extras
 
-2)mono-core，用于运行.Net程序
-直接用YaST从光盘安装。
+如果需要从源代码安装，执行
+yum install bison gettext glib2 freetype fontconfig libpng libpng-devel libX11 libX11-devel glib2-devel libgdi* libexif glibc-devel urw-fonts java unzip gcc gcc-c++ automake autoconf libtool make bzip2 wget
+cd /usr/local/src
+wget http://download.mono-project.com/sources/mono/mono-4.0.2.5.tar.bz2
+tar jxf mono-4.0.2.5.tar.bz2
+cd mono-4.0.2
+./configure --prefix=/usr/local
+make
+make install
 
-在Windows上编译完成后，用su提升到root权限，运行
+如果安装后用mono --version得到的版本不对，需要
+增加初始化文件
+vi /etc/profile.d/usr_local_bin.sh
+
+填入内容
+pathmunge () {
+    case ":${PATH}:" in
+        *:"$1":*)
+            ;;
+        *)
+            if [ "$2" = "after" ] ; then
+                PATH=$PATH:$1
+            else
+                PATH=$1:$PATH
+            fi
+    esac
+}
+
+pathmunge /usr/local/bin
+
+如果需要支持访问https的网页，需要导入CA证书
+cert-sync /etc/ssl/ca-bundle.pem
+
+2)设置TCP，调节服务器最大socket数量和socket回收速度
+用su提升到root权限，运行
 ulimit -a
 查看限制socket连接数的最大支持的文件描述符数量(open files)和最大用户进程数(max user processes)
 然后
 ulimit -n 65536
 ulimit -u 65536
 改变成较大的值。
-运行mono Server.exe
-注意此时若退出root状态ulimit会还原。
 若要永久更改配置，需要
 在/etc/pam.d/login中添加
-session  required       pam_limits.so
+session    required     pam_limits.so
 然后在/etc/security/limits.conf中添加
 *                soft    nofile          65536
 *                hard    nofile          65536
 *                soft    nproc           65536
 *                hard    nproc           65536
-
-这样服务器端程序就成功运行起来了。
-客户端程序Client.exe也是通过类似操作即可。
+如果有/etc/security/limits.d/90-nproc.conf，也需要修改其中的
+*          soft    nproc     1024
+为
+*          soft    nproc     65536
 
 此外，由于Linux下TCP连接关闭后，还会占用端口一段时间，可能导致端口数量不足等问题。
 可以通过下面的方法解决。
 
-编辑/etc/sysctl.conf文件，增加三行：
+编辑/etc/sysctl.conf文件，在
 net.ipv4.tcp_syncookies = 1
+下增加两行：
 net.ipv4.tcp_tw_reuse = 1
 net.ipv4.tcp_tw_recycle = 1
 
@@ -59,11 +103,3 @@ TIME_WAIT 962
 [修改Linux内核参数，减少TCP连接中的TIME-WAIT sockets by 张宴 http://blog.s135.com/post/271/]
 
 还可以用socklist查看当前打开的TCP连接数。
-
-3)mono-core、mono-devel，用于编译.Net程序，需要使用最新3.0.3版。
-http://download.mono-project.com/archive/3.0.3/linux/x64/
-编译方法，在Src文件夹执行
-xbuild
-
-4)monodevelop、monodevelop-debugger-mdb、libgnomeui，用于调试，最好用3.0以上，以免打开最开始出错。
-http://download.opensuse.org/repositories/Mono/openSUSE_12.1/
