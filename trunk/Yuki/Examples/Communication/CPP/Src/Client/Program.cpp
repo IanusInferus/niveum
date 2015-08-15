@@ -184,6 +184,8 @@ namespace Client
 
         static void ReadLineAndSendLoop(std::shared_ptr<Communication::IApplicationClient> InnerClient, std::function<void(std::shared_ptr<SecureContext>)> SetSecureContext, std::mutex &Lockee)
         {
+            std::wprintf(L"%ls\n", L"输入login登录，输入secure启用安全连接。");
+
             InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
             {
                 auto m = e->Message;
@@ -322,7 +324,6 @@ namespace Client
                 wprintf(L"%ls\n", Message.c_str());
                 exit(-1);
             }
-            std::wprintf(L"%ls\n", L"输入login登录，输入secure启用安全连接。");
 
             std::mutex Lockee;
             auto DoHandle = [&](std::function<void(void)> a)
@@ -384,7 +385,6 @@ namespace Client
                 wprintf(L"%ls\n", Message.c_str());
                 exit(-1);
             }
-            std::wprintf(L"%ls\n", L"输入login登录，输入secure启用安全连接。");
 
             std::mutex Lockee;
             auto DoHandle = [&](std::function<void(void)> a)
@@ -432,24 +432,20 @@ void ModifyStdoutUnicode()
     _setmode(_fileno(stdout), _O_U16TEXT);
 }
 
-#include <locale.h>
-
-void SetLocale()
-{
-    setlocale(LC_ALL, "");
-}
-
 #else
 
 void ModifyStdoutUnicode()
 {
 }
 
+#endif
+
+#include <locale.h>
+
 void SetLocale()
 {
+    setlocale(LC_ALL, "");
 }
-
-#endif
 
 int main(int argc, char **argv)
 {

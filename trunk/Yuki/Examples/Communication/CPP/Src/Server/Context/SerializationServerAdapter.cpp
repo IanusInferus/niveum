@@ -1,6 +1,4 @@
-﻿#pragma once
-
-#include "SerializationServerAdapter.h"
+﻿#include "SerializationServerAdapter.h"
 
 #include "BaseSystem/ThreadLocalVariable.h"
 

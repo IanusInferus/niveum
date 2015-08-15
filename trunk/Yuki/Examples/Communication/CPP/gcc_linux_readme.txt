@@ -14,9 +14,40 @@ export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
 export CPP=/opt/rh/devtoolset-2/root/usr/bin/cpp
 export CXX=/opt/rh/devtoolset-2/root/usr/bin/c++
 
+如果要调试，则还需要
+yum --enablerepo=testing-devtools-2-centos-6 install devtoolset-2-binutils devtoolset-2-gdb
+yum install /usr/bin/debuginfo-install
+当使用gdb调试时如果显示Missing separate debuginfos，则按提示执行debuginfo-install。
+如果提示找不到文件，则修改/etc/yum.repos.d/CentOS-Debuginfo.repo中的[debug]下的
+enabled=0
+为
+enabled=1
+
+如果文件不存在，则新建如下文件
+# CentOS-Base.repo
+#
+# The mirror system uses the connecting IP address of the client and the
+# update status of each mirror to pick mirrors that are updated to and
+# geographically close to the client.  You should use this for CentOS updates
+# unless you are manually picking other mirrors.
+#
+
+# All debug packages from all the various CentOS-5 releases
+# are merged into a single repo, split by BaseArch
+#
+# Note: packages in the debuginfo repo are currently not signed
+#
+
+[debug]
+name=CentOS-6 - Debuginfo
+baseurl=http://debuginfo.centos.org/6/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-Debug-6
+enabled=1
+
 3.编译程序
 进入CMakeLists.txt所在文件夹，运行
-cmake .
+cmake -DCMAKE_BUILD_TYPE=Debug .
 生成调试版Makefile
 或者运行
 cmake -DCMAKE_BUILD_TYPE=Release .

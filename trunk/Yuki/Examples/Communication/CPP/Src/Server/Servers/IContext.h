@@ -18,6 +18,7 @@ namespace Server
     public:
         virtual ~IServerImplementation() {}
 
+        virtual void Stop() = 0;
         virtual void RaiseError(std::wstring CommandName, std::wstring Message) = 0;
     };
 

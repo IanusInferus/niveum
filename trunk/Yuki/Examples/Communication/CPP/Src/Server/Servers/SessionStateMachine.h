@@ -108,7 +108,7 @@ namespace Server
                             cc->State = 2;
                             auto w = cc->Writes.front();
                             cc->Writes.pop();
-                            AfterAction = [=]() { AddToActionQueue([=]() { Write(w); }); };
+                            AfterAction = [=]() { AddToActionQueue([this, w]() { Write(w); }); };
                             return;
                         }
                     }
@@ -119,7 +119,7 @@ namespace Server
                             cc->State = 3;
                             auto r = cc->Reads.front();
                             cc->Reads.pop();
-                            AfterAction = [=]() { AddToActionQueue([=]() { Execute(r); }); };
+                            AfterAction = [=]() { AddToActionQueue([this, r]() { Execute(r); }); };
                             return;
                         }
                         if (!cc->IsInRawRead)
@@ -309,7 +309,11 @@ namespace Server
 
         bool IsExited()
         {
-            return c.Check<bool>([](std::shared_ptr<Context> cc) { return cc->State == 4; }) && ActionQueue.Check<bool>([=](std::shared_ptr<SessionActionQueue> q) { return !q->IsRunning; });
+            auto CheckStateFinished = [](std::shared_ptr<Context> cc) { return cc->State == 4; };
+            auto CheckQueueFinished = [](std::shared_ptr<SessionActionQueue> q) { return !q->IsRunning; };
+            auto IsStateFinished = c.template Check<bool>(CheckStateFinished);
+            auto IsQueueFinished = ActionQueue.template Check<bool>(CheckQueueFinished);
+            return IsStateFinished && IsQueueFinished;
         }
 
         void AddToActionQueue(std::function<void()> Action)
