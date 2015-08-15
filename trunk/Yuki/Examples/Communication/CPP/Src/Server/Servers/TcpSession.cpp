@@ -317,6 +317,7 @@ namespace Server
         Server.ServerContext()->TryUnregisterSession(Context);
 
         si = nullptr;
+        vts = nullptr;
 
         IsRunningValue.Update([](bool b) { return false; });
 
