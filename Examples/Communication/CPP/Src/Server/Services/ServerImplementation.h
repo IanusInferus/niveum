@@ -33,6 +33,10 @@ namespace Server
             }
             ~ServerImplementation()
             {
+                Stop();
+            }
+            void Stop()
+            {
                 UnregisterCrossSessionEvents();
             }
 

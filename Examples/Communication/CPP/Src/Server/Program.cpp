@@ -249,24 +249,20 @@ void ModifyStdoutUnicode()
     _setmode(_fileno(stdout), _O_U16TEXT);
 }
 
-#include <locale.h>
-
-void SetLocale()
-{
-    setlocale(LC_ALL, "");
-}
-
 #else
 
 void ModifyStdoutUnicode()
 {
 }
 
+#endif
+
+#include <locale.h>
+
 void SetLocale()
 {
+    setlocale(LC_ALL, "");
 }
-
-#endif
 
 int main(int argc, char **argv)
 {

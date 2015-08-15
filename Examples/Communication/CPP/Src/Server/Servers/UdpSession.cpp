@@ -492,6 +492,7 @@ namespace Server
         });
         Server.ServerContext()->TryUnregisterSession(Context);
 
+        si->Stop();
         si = nullptr;
         vts = nullptr;
 
