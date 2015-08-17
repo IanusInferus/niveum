@@ -1,4 +1,11 @@
-﻿2015.08.17
+﻿2015.08.18
+Yuki.Relation:
+增加C# Krustallos代码生成对Identity字段的支持。
+修正C# Krustallos代码生成中的隔离等级为Serializable。
+Examples:
+增加C# Krustallos代码生成的Mail示例。
+
+2015.08.17
 Examples:
 删除通讯示例中关于Linux的一些注释。
 

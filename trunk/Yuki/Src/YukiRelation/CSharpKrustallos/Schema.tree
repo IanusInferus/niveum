@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Krustallos代码模板数据
-      Version:     2015.05.02.
+      Version:     2015.08.18.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -60,9 +60,7 @@ ObjectSchemaTemplate
 
                     using System;
                     using System.Collections.Generic;
-                    using System.Collections.Concurrent;
                     using System.Linq;
-                    using System.Diagnostics;
                     using System.Data;
                     using Firefly;
                     using Firefly.Mapping;
@@ -73,17 +71,17 @@ ObjectSchemaTemplate
                     using ${EntityNamespaceName};
         Template
             Name Data
-            //Parameters: ${IndiceDefinitions}, ${IndiceInitializations}
+            //Parameters: ${IndexAndSequenceDefinitions}, ${IndexAndSequenceInitializations}
             Value
                 $String
                     public class KrustallosData
                     {
-                        ${IndiceDefinitions}
+                        ${IndexAndSequenceDefinitions}
 
                         public KrustallosData(int NumPartition)
                         {
                             if (NumPartition < 1) { throw new ArgumentException(); }
-                            ${IndiceInitializations}
+                            ${IndexAndSequenceInitializations}
                         }
                     }
         Template
@@ -93,11 +91,23 @@ ObjectSchemaTemplate
                 $String
                     public VersionedStore<[[${IndexType}]]> [[${IndexName}]];
         Template
+            Name Data_SequenceDefinition
+            //Parameters: ${SequenceName}, ${SequenceType}
+            Value
+                $String
+                    public [[${SequenceType}]] [[${SequenceName}]];
+        Template
             Name Data_IndexInitialization
             //Parameters: ${Index}, ${IndexName}, ${IndexType}, ${KeyComparer}, ${NumPartition}
             Value
                 $String
                     this.[[${IndexName}]] = new VersionedStore<[[${IndexType}]]>(new String[] { ${Index} }, () => new [[${IndexType}]](${KeyComparer}), ${NumPartition});
+        Template
+            Name Data_SequenceInitialization
+            //Parameters: ${SequenceName}, ${SequenceType}
+            Value
+                $String
+                    this.[[${SequenceName}]] = new [[${SequenceType}]]();
         Template
             Name DataAccessBase
             //Parameters:
@@ -283,21 +293,29 @@ ObjectSchemaTemplate
                     if (TransactionLock != null) { TransactionLock.Enter(new Object[] { ${EntityNameAndParameterAndValues} }); }
         Template
             Name Insert_OptionalOne
-            //Parameters: ${UpdateStatements}
+            //Parameters: ${IdentityStatements}, ${UpdateStatements}
             Value
                 $String
+                    ${IdentityStatements}
                     var _v_ = Clone(v);
                     ${UpdateStatements}
         Template
             Name Insert_Many
-            //Parameters: ${UpdateStatements}
+            //Parameters: ${IdentityStatements}, ${UpdateStatements}
             Value
                 $String
                     foreach (var v in l)
                     {
+                        ${IdentityStatements}
                         var _v_ = Clone(v);
                         ${UpdateStatements}
                     }
+        Template
+            Name Insert_IdentityStatement
+            //Parameters: ${SequenceName}, ${FieldName}
+            Value
+                $String
+                    v.[[${FieldName}]] = this.Data.[[${SequenceName}]].NextValue();
         Template
             Name Insert_UpdateStatement
             //Parameters: ${IndexName}, ${Function}, ${PartitionIndex}, ${Key}
@@ -552,6 +570,12 @@ ObjectSchemaTemplate
                 $String
                     [[${IndexName}]] = [[${IndexName}]].AddOrSetItem(new Key(${Key}), v);
         Template
+            Name LoadSave_UpdateSequence
+            //Parameters: ${SequenceName}, ${FieldName}
+            Value
+                $String
+                    this.Data.[[${SequenceName}]].SkipPass(v.[[${FieldName}]]);
+        Template
             Name LoadSave_Save
             //Parameters: ${IndexName}
             Value
@@ -614,11 +638,11 @@ ObjectSchemaTemplate
 
                         public IDataAccess Create(String ConnectionString)
                         {
-                            return Create(ConnectionString, IsolationLevel.ReadCommitted, (ITransactionLock)(null));
+                            return Create(ConnectionString, IsolationLevel.Serializable, (ITransactionLock)(null));
                         }
                         public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
                         {
-                            return Create(ConnectionString, IsolationLevel.ReadCommitted, TransactionLock);
+                            return Create(ConnectionString, IsolationLevel.Serializable, TransactionLock);
                         }
                         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel)
                         {

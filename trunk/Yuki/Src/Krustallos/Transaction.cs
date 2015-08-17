@@ -41,7 +41,7 @@ namespace Krustallos
         public Transaction(Instance Instance, IsolationLevel IsolationLevel)
         {
             this.Instance = Instance;
-            if (IsolationLevel != System.Data.IsolationLevel.ReadCommitted) { throw new NotSupportedException(); }
+            if (IsolationLevel != System.Data.IsolationLevel.Serializable) { throw new NotSupportedException(); }
             UpdateStores = new SortedDictionary<String[], SortedDictionary<int, UpdatePartitionInfo>>(new StringArrayComparer());
             Updates = new List<Func<Version, Boolean>>();
         }
