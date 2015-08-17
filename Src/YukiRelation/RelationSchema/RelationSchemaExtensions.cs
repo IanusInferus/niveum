@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2014.10.25.
+//  Version:     2015.08.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,6 +20,34 @@ using Firefly.TextEncoding;
 
 namespace Yuki.RelationSchema
 {
+    public class KeyColumnComparer : IEqualityComparer<KeyColumn>
+    {
+        public Boolean Equals(KeyColumn x, KeyColumn y)
+        {
+            return (x.Name == y.Name) && (x.IsDescending == y.IsDescending);
+        }
+
+        public int GetHashCode(KeyColumn obj)
+        {
+            return obj.Name.GetHashCode() ^ (obj.IsDescending ? 1 : 0);
+        }
+    }
+
+    public class KeyComparer : IEqualityComparer<Key>
+    {
+        private KeyColumnComparer c = new KeyColumnComparer();
+
+        public Boolean Equals(Key x, Key y)
+        {
+            return x.Columns.SequenceEqual(y.Columns, c) && (x.IsClustered == y.IsClustered);
+        }
+
+        public int GetHashCode(Key obj)
+        {
+            return obj.Columns.Select(o => c.GetHashCode(o)).Aggregate((a, b) => a ^ b) ^ (obj.IsClustered ? 1 : 0);
+        }
+    }
+
     public class ForeignKey
     {
         public String ThisTableName;

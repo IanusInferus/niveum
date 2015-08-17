@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos-MySQL加载代码生成器
-//  Version:     2014.12.24.
+//  Version:     2015.08.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -166,7 +166,7 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySqlLoader
                 {
                     var or = InnerTypeDict[e.Name].Record;
                     var d = or.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
-                    var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys.Select(k => ConvertNonUniqueKeyToUniqueKey(k, e.PrimaryKey))).ToArray();
+                    var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys.Select(k => ConvertNonUniqueKeyToUniqueKey(k, e.PrimaryKey))).Select(k => new Key { Columns = k.Columns, IsClustered = false }).Distinct(new KeyComparer()).ToArray();
                     var IndexNames = new List<String>();
                     var Partitions = new List<String>();
                     var Updates = new List<String>();
