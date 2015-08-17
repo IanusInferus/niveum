@@ -85,7 +85,10 @@ public struct Optional<T>
     }
     public override Boolean Equals(Object obj)
     {
-        return Equals(this, obj);
+        if (obj == null) { return Equals(this, null); }
+        if (obj.GetType() != typeof(Optional<T>)) { return false; }
+        var o = (Optional<T>)(obj);
+        return Equals(this, o);
     }
     public override Int32 GetHashCode()
     {
@@ -118,6 +121,20 @@ public struct Optional<T>
         return Equals(Left.Value, Right.Value);
     }
 
+    public T Value
+    {
+        get
+        {
+            if (OnHasValue)
+            {
+                return HasValue;
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+    }
     public T ValueOrDefault(T Default)
     {
         if (OnHasValue)
@@ -127,6 +144,18 @@ public struct Optional<T>
         else
         {
             return Default;
+        }
+    }
+
+    public override String ToString()
+    {
+        if (OnHasValue)
+        {
+            return HasValue.ToString();
+        }
+        else
+        {
+            return "-";
         }
     }
 }

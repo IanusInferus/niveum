@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{F066A479-9D36-4E44-A1F0-58A150F7818A}</ProjectGuid>
+    <ProjectGuid>{ACB55E49-58F8-4A5C-8955-AE44AD2757D1}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Database</RootNamespace>
-    <AssemblyName>DatabasePostgreSQL</AssemblyName>
+    <AssemblyName>DatabaseKrustallos</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
@@ -40,22 +40,49 @@
     <Reference Include="Firefly.Core">
       <HintPath>..\..\..\..\Bin\Firefly.Core.dll</HintPath>
     </Reference>
+    <Reference Include="Yuki.Core">
+      <HintPath>..\..\..\..\Bin\Yuki.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Yuki.Relation">
+      <HintPath>..\..\..\..\Bin\Yuki.Relation.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
-    <Reference Include="Npgsql">
-      <HintPath>..\..\..\..\Bin\Npgsql.dll</HintPath>
-    </Reference>
-    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\..\Src\Krustallos\ConcurrentComparer.cs">
+      <Link>Krustallos\ConcurrentComparer.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\ImmutableSortedDictionary.cs">
+      <Link>Krustallos\ImmutableSortedDictionary.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\Instance.cs">
+      <Link>Krustallos\Instance.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\Key.cs">
+      <Link>Krustallos\Key.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\Sequence.cs">
+      <Link>Krustallos\Sequence.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\Transaction.cs">
+      <Link>Krustallos\Transaction.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\Version.cs">
+      <Link>Krustallos\Version.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\VersionedStore.cs">
+      <Link>Krustallos\VersionedStore.cs</Link>
+    </Compile>
     <Compile Include="CascadeLock.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="DataAccessManager.cs" />
     <Compile Include="Database.cs" />
-    <Compile Include="PostgreSql\PostgreSqlDataAccess.cs" />
-    <Compile Include="PostgreSql\PostgreSqlDataAccessManual.cs" />
-    <Compile Include="PostgreSql\Provider.cs" />
+    <Compile Include="Krustallos\KrustallosDataAccess.cs" />
+    <Compile Include="Krustallos\KrustallosDataAccessManual.cs" />
+    <Compile Include="Krustallos\Provider.cs" />
+    <Compile Include="Krustallos\ReliableFileWriteStream.cs" />
     <Compile Include="ServiceEntities.cs" />
     <Compile Include="IDataAccess.cs" />
     <Compile Include="Program.cs" />

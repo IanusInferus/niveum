@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BaseSystem;
 using Database.Database;
 
 namespace Database
@@ -12,24 +13,37 @@ namespace Database
         SqlServerCe,
         PostgreSQL,
         MySQL,
-        FoundationDBSQL
+        FoundationDBSQL,
+        Krustallos
+    }
+
+    public interface IDataAccessProvider : IDisposable
+    {
+        /// <summary>返回值应线程安全。</summary>
+        Func<String, ITransactionLock, IDataAccess> GetConnectionFactory();
+        /// <summary>返回值应线程安全。</summary>
+        Func<Exception, Boolean> GetIsRetryable();
     }
 
     /// <summary>线程安全。</summary>
-    public class DataAccessManager
+    public class DataAccessManager : IDisposable
     {
         private Func<IDataAccess> ConnectionFactory;
+        private Func<Exception, Boolean> IsRetryable;
+        private Action Dispose;
 
         private static readonly String MemoryType = "Database.Memory.MemoryDataAccessPool";
-        private static readonly String SqlServerType = "Database.SqlServer.SqlServerDataAccessPool";
-        private static readonly String PostgreSqlType = "Database.PostgreSql.PostgreSqlDataAccessPool";
-        private static readonly String MySqlType = "Database.MySql.MySqlDataAccessPool";
-        private static readonly String FoundationDbSqlType = "Database.FoundationDbSql.FoundationDbSqlDataAccessPool";
+        private static readonly String SqlServerType = "Database.SqlServer.Provider";
+        private static readonly String PostgreSqlType = "Database.PostgreSql.Provider";
+        private static readonly String MySqlType = "Database.MySql.Provider";
+        private static readonly String FoundationDbSqlType = "Database.FoundationDbSql.Provider";
+        private static readonly String KrustallosType = "Database.Krustallos.Provider";
         private static readonly String MemoryConnectionString = "Mail.md";
         private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Mail";
         private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=mail;";
         private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Mail;";
         private static readonly String FoundationDbSqlConnectionString = "server=localhost;Port=15432;uid=root;pwd={Password};database=mail;";
+        private static readonly String KrustallosConnectionString = "File=Mail.kd";
 
         private static Type GetType(String FullName, Boolean ThrowOnError = false)
         {
@@ -46,6 +60,31 @@ namespace Database
                 }
             }
             return Types.Single();
+        }
+
+        private class TransactionLock : Database.ITransactionLock
+        {
+            private BaseSystem.TransactionLock InnerLock;
+            public TransactionLock(BaseSystem.TransactionLock InnerLock)
+            {
+                this.InnerLock = InnerLock;
+            }
+            public void Enter(IEnumerable<object> LockPath)
+            {
+                InnerLock.Enter(LockPath);
+            }
+            public void Exit(IEnumerable<object> LockPath)
+            {
+                InnerLock.Exit(LockPath);
+            }
+            public void ExitAll()
+            {
+                InnerLock.ExitAll();
+            }
+            public void Dispose()
+            {
+                InnerLock.Dispose();
+            }
         }
 
         public static String GetConnectionStringExample()
@@ -85,6 +124,13 @@ namespace Database
                     return FoundationDbSqlConnectionString;
                 }
             }
+            {
+                var t = GetType(KrustallosType);
+                if (t != null)
+                {
+                    return KrustallosConnectionString;
+                }
+            }
             throw new InvalidOperationException();
         }
 
@@ -115,112 +161,112 @@ namespace Database
                 var t = GetType(FoundationDbSqlType, true);
                 return FoundationDbSqlConnectionString;
             }
+            else if (Type == DatabaseType.Krustallos)
+            {
+                var t = GetType(KrustallosType, true);
+                return KrustallosConnectionString;
+            }
             else
             {
                 throw new InvalidOperationException();
             }
         }
 
-        public DataAccessManager(String ConnectionString)
+        public DataAccessManager(String ConnectionString, ICascadeLock CascadeLock)
         {
+            Type t = null;
+            if (t == null)
             {
-                var t = GetType(MemoryType);
-                if (t != null)
-                {
-                    var o = Activator.CreateInstance(t);
-                    var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
-                    ConnectionFactory = () => c(ConnectionString);
-                    return;
-                }
+                t = GetType(MemoryType);
             }
+            if (t == null)
             {
-                var t = GetType(SqlServerType);
-                if (t != null)
-                {
-                    var o = Activator.CreateInstance(t);
-                    var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
-                    ConnectionFactory = () => c(ConnectionString);
-                    return;
-                }
+                t = GetType(SqlServerType);
             }
+            if (t == null)
             {
-                var t = GetType(PostgreSqlType);
-                if (t != null)
-                {
-                    var o = Activator.CreateInstance(t);
-                    var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
-                    ConnectionFactory = () => c(ConnectionString);
-                    return;
-                }
+                t = GetType(PostgreSqlType);
             }
+            if (t == null)
             {
-                var t = GetType(MySqlType);
-                if (t != null)
-                {
-                    var o = Activator.CreateInstance(t);
-                    var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
-                    ConnectionFactory = () => c(ConnectionString);
-                    return;
-                }
+                t = GetType(MySqlType);
             }
+            if (t == null)
             {
-                var t = GetType(FoundationDbSqlType);
-                if (t != null)
-                {
-                    var o = Activator.CreateInstance(t);
-                    var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
-                    ConnectionFactory = () => c(ConnectionString);
-                    return;
-                }
+                t = GetType(FoundationDbSqlType);
+            }
+            if (t == null)
+            {
+                t = GetType(KrustallosType);
+            }
+            if (t != null)
+            {
+                var o = Activator.CreateInstance(t);
+                var p = (IDataAccessProvider)(o);
+                var c = p.GetConnectionFactory();
+                ConnectionFactory = () => c(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
+                IsRetryable = p.GetIsRetryable();
+                Dispose = p.Dispose;
+                return;
             }
             throw new InvalidOperationException();
         }
-        public DataAccessManager(DatabaseType Type, String ConnectionString)
+        public DataAccessManager(DatabaseType Type, String ConnectionString, ICascadeLock CascadeLock)
         {
+            Type t = null;
             if (Type == DatabaseType.Memory)
             {
-                var t = GetType(MemoryType, true);
-                var o = Activator.CreateInstance(t);
-                var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
-                ConnectionFactory = () => c(ConnectionString);
+                t = GetType(MemoryType, true);
             }
             else if (Type == DatabaseType.SqlServer)
             {
-                var t = GetType(SqlServerType, true);
-                var o = Activator.CreateInstance(t);
-                var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
-                ConnectionFactory = () => c(ConnectionString);
+                t = GetType(SqlServerType, true);
             }
             else if (Type == DatabaseType.PostgreSQL)
             {
-                var t = GetType(PostgreSqlType, true);
-                var o = Activator.CreateInstance(t);
-                var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
-                ConnectionFactory = () => c(ConnectionString);
+                t = GetType(PostgreSqlType, true);
             }
             else if (Type == DatabaseType.MySQL)
             {
-                var t = GetType(MySqlType, true);
-                var o = Activator.CreateInstance(t);
-                var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
-                ConnectionFactory = () => c(ConnectionString);
+                t = GetType(MySqlType, true);
             }
             else if (Type == DatabaseType.FoundationDBSQL)
             {
-                var t = GetType(FoundationDbSqlType, true);
-                var o = Activator.CreateInstance(t);
-                var c = (Func<String, IDataAccess>)(Delegate.CreateDelegate(typeof(Func<String, IDataAccess>), o, t.GetMethod("Create", new Type[] { typeof(String) })));
-                ConnectionFactory = () => c(ConnectionString);
+                t = GetType(FoundationDbSqlType, true);
+            }
+            else if (Type == DatabaseType.Krustallos)
+            {
+                t = GetType(KrustallosType, true);
             }
             else
             {
                 throw new InvalidOperationException();
             }
+            var o = Activator.CreateInstance(t);
+            var p = (IDataAccessProvider)(o);
+            var c = p.GetConnectionFactory();
+            ConnectionFactory = () => c(ConnectionString, CascadeLock != null ? new TransactionLock(new BaseSystem.TransactionLock(CascadeLock)) : null);
+            IsRetryable = p.GetIsRetryable();
+            Dispose = p.Dispose;
         }
 
         public IDataAccess Create()
         {
             return ConnectionFactory();
+        }
+
+        public Func<Exception, Boolean> GetIsRetryable()
+        {
+            return IsRetryable;
+        }
+
+        void IDisposable.Dispose()
+        {
+            if (Dispose != null)
+            {
+                Dispose();
+                Dispose = null;
+            }
         }
     }
 }
