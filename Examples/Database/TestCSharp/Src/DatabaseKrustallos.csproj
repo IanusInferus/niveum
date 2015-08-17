@@ -64,6 +64,9 @@
     <Compile Include="..\..\..\..\Src\Krustallos\Key.cs">
       <Link>Krustallos\Key.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\..\Src\Krustallos\Sequence.cs">
+      <Link>Krustallos\Sequence.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\..\Src\Krustallos\Transaction.cs">
       <Link>Krustallos\Transaction.cs</Link>
     </Compile>
@@ -81,6 +84,7 @@
     <Compile Include="Krustallos\Provider.cs" />
     <Compile Include="Krustallos\TestComparer.cs" />
     <Compile Include="Krustallos\TestDictionary.cs" />
+    <Compile Include="Krustallos\TestSequence.cs" />
     <Compile Include="LoadTest.cs" />
     <Compile Include="CascadeLock.cs" />
     <Compile Include="RetryWrapper.cs" />

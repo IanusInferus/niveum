@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 邮件管理程序
-//  Version:     2012.06.29.
+//  Version:     2015.08.18.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -16,6 +16,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using Firefly;
+using BaseSystem;
 using Database.Entities;
 
 namespace Database
@@ -66,36 +67,39 @@ namespace Database
 
             var ConnectionString = argv[0];
 
-            var dam = new DataAccessManager(ConnectionString);
-            s = new MailService(dam);
-
-            Console.WriteLine("输入help获得命令列表。");
-
-            while (true)
+            using (var cl = new CascadeLock())
+            using (var dam = new DataAccessManager(ConnectionString, cl))
             {
-                Console.Write("#");
-                var Line = Console.ReadLine();
+                s = new MailService(dam);
 
-                if (System.Diagnostics.Debugger.IsAttached)
+                Console.WriteLine("输入help获得命令列表。");
+
+                while (true)
                 {
-                    if (!RunLine(Line))
-                    {
-                        break;
-                    }
-                }
-                else
-                {
-                    try
+                    Console.Write("#");
+                    var Line = Console.ReadLine();
+
+                    if (System.Diagnostics.Debugger.IsAttached)
                     {
                         if (!RunLine(Line))
                         {
                             break;
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
-                        return -1;
+                        try
+                        {
+                            if (!RunLine(Line))
+                            {
+                                break;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ExceptionInfo.GetExceptionInfo(ex));
+                            return -1;
+                        }
                     }
                 }
             }

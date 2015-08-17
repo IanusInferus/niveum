@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseMemory", "DatabaseM
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseFoundationDBSQL", "DatabaseFoundationDBSQL.csproj", "{573C64A0-8FB2-480B-AAB4-D5F025F31838}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseKrustallos", "DatabaseKrustallos.csproj", "{ACB55E49-58F8-4A5C-8955-AE44AD2757D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{573C64A0-8FB2-480B-AAB4-D5F025F31838}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{573C64A0-8FB2-480B-AAB4-D5F025F31838}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{573C64A0-8FB2-480B-AAB4-D5F025F31838}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACB55E49-58F8-4A5C-8955-AE44AD2757D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACB55E49-58F8-4A5C-8955-AE44AD2757D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACB55E49-58F8-4A5C-8955-AE44AD2757D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACB55E49-58F8-4A5C-8955-AE44AD2757D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

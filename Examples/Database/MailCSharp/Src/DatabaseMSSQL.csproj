@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CascadeLock.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="DataAccessManager.cs" />
     <Compile Include="Database.cs" />
@@ -54,8 +55,10 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MailService.cs" />
+    <Compile Include="SqlServer\Provider.cs" />
     <Compile Include="SqlServer\SqlServerDataAccess.cs" />
     <Compile Include="SqlServer\SqlServerDataAccessManual.cs" />
+    <Compile Include="TransactionLock.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
