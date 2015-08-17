@@ -18,6 +18,7 @@ RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2cspgsql:MailCSharp\Src\PostgreSql\PostgreSqlDataAccess.cs,Database.Database,Database.PostgreSql
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csmysql:MailCSharp\Src\MySql\MySqlDataAccess.cs,Database.Database,Database.MySql
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csfdbsql:MailCSharp\Src\FoundationDbSql\FoundationDbSqlDataAccess.cs,Database.Database,Database.FoundationDbSql
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2cskrs:MailCSharp\Src\Krustallos\KrustallosDataAccess.cs,Database.Database,Database.Krustallos
 
 :: Test
 

@@ -49,16 +49,19 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CascadeLock.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="DataAccessManager.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="MySql\MySqlDataAccess.cs" />
     <Compile Include="MySql\MySqlDataAccessManual.cs" />
+    <Compile Include="MySql\Provider.cs" />
     <Compile Include="ServiceEntities.cs" />
     <Compile Include="IDataAccess.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MailService.cs" />
+    <Compile Include="TransactionLock.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
