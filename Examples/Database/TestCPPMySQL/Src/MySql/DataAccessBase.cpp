@@ -1,5 +1,7 @@
-﻿#include "BaseSystem/StringUtilities.h"
-#include "DataAccessBase.h"
+﻿#include "DataAccessBase.h"
+
+#include "BaseSystem/StringUtilities.h"
+#include "UtfEncoding.h"
 
 #include <exception>
 #include <stdexcept>
@@ -10,10 +12,8 @@
 #include <iterator>
 #include <mutex>
 #include <codecvt>
-#include "UtfEncoding.h"
 #include <streambuf>
-
-#include <boost/regex.hpp>
+#include <regex>
 
 #include <cppconn/driver.h>
 #include <cppconn/connection.h>
@@ -31,13 +31,10 @@ namespace Database
 
         DataAccessBase::DataAccessBase(wstring ConnectionString)
         {
-            boost::wregex rFieldDelimiter(L";");
-            boost::wregex rPartDelimiter(L"=");
-            boost::wregex rWhitespace(L"\\A\\s+|\\s+\\Z");
-            boost::wregex rPort(L"\\d+");
+            std::wregex rWhitespace(L"^\\s+|\\s+$");
+            std::wregex rPort(L"\\d+");
 
-            vector<wstring> Fields;
-            boost::regex_split(back_inserter(Fields), std::wstring(ConnectionString), rFieldDelimiter);
+            auto Fields = SplitString(ConnectionString, L";");
 
             wstring Server;
             wstring Port = L"3306";
@@ -47,26 +44,13 @@ namespace Database
 
             for (int i = 0; i < static_cast<int>(Fields.size()); i += 1)
             {
-                auto f = Fields[i];
-                vector<wstring> Parts;
-                boost::regex_split(back_inserter(Parts), std::wstring(f), rPartDelimiter);
-
-                if (boost::regex_search(f, rPartDelimiter))
-                {
-                    if (Parts.size() == 0)
-                    {
-                        Parts.push_back(L"");
-                        Parts.push_back(L"");
-                    }
-                    else if (Parts.size() == 1)
-                    {
-                        Parts.push_back(L"");
-                    }
-                }
+                auto f = std::regex_replace(Fields[i], rWhitespace, L"");
+                if (f == L"") { continue; }
+                auto Parts = SplitString(f, L"=");
                 if (Parts.size() != 2) { throw logic_error("ConnectionStringInvalid: " + w2s(f)); }
 
-                auto Name = boost::regex_replace(Parts[0], rWhitespace, L"");
-                auto Value = boost::regex_replace(Parts[1], rWhitespace, L"");
+                auto Name = std::regex_replace(Parts[0], rWhitespace, L"");
+                auto Value = std::regex_replace(Parts[1], rWhitespace, L"");
 
                 if (EqualIgnoreCase(Name, L"server"))
                 {
@@ -74,7 +58,7 @@ namespace Database
                 }
                 else if (EqualIgnoreCase(Name, L"port"))
                 {
-                    if (!boost::regex_match(Value, rPort)) { throw logic_error("ConnectionStringInvalid: " + w2s(f)); }
+                    if (!std::regex_match(Value, rPort)) { throw logic_error("ConnectionStringInvalid: " + w2s(f)); }
                     Port = Value;
                 }
                 else if (EqualIgnoreCase(Name, L"uid"))

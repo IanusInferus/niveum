@@ -12,8 +12,7 @@
 #include <stdexcept>
 #include <cstdio>
 #include <thread>
-
-#include <boost/asio.hpp>
+#include <mutex>
 
 namespace Database
 {
@@ -59,15 +58,40 @@ namespace Database
             auto tf = std::make_shared<BaseSystem::ThreadLocalVariable<TestService>>(Factory);
 
             int ProcessorCount = (int)(std::thread::hardware_concurrency());
-            auto IoService = std::make_shared<boost::asio::io_service>(ProcessorCount * 2 + 1);
-            boost::asio::io_service::work Work(*IoService);
+            auto ThreadCount = ProcessorCount * 2 + 1;
+
+            std::mutex Lockee;
+            auto TaskQueue = std::make_shared<std::queue<std::function<void()>>>();
 
             std::vector<std::shared_ptr<std::thread>> Threads;
             for (int i = 0; i < ProcessorCount; i += 1)
             {
                 auto t = std::make_shared<std::thread>([&]()
                 {
-                    IoService->run();
+                    while (true)
+                    {
+                        std::function<void()> a = nullptr;
+                        {
+                            std::unique_lock<std::mutex> Lock(Lockee);
+                            if (TaskQueue == nullptr) { return; }
+                            if (TaskQueue->size() > 0)
+                            {
+                                a = TaskQueue->front();
+                                TaskQueue->pop();
+                            }
+                        }
+                        if (a != nullptr)
+                        {
+                            try
+                            {
+                                a();
+                            }
+                            catch (std::exception &ex)
+                            {
+                                std::wprintf(L"Error:\n%ls\n", s2w(ex.what()).c_str());
+                            }
+                        }
+                    }
                 });
                 Threads.push_back(t);
             }
@@ -79,7 +103,7 @@ namespace Database
 
             for (int i = 0; i < NumUser; i += 1)
             {
-                IoService->post([=, &eNum, &vNum]()
+                auto a = [=, &eNum, &vNum]()
                 {
                     for (int k = 0; k < NumRequestPerUser; k += 1)
                     {
@@ -87,7 +111,11 @@ namespace Database
                     }
                     vNum.Update([](const int &n) { return n - 1; });
                     eNum.Set();
-                });
+                };
+                {
+                    std::unique_lock<std::mutex> Lock(Lockee);
+                    TaskQueue->push(a);
+                }
             }
 
             while(vNum.Check<bool>([](const int &n) { return n > 0; }))
@@ -95,7 +123,10 @@ namespace Database
                 eNum.WaitOne();
             }
 
-            IoService->stop();
+            {
+                std::unique_lock<std::mutex> Lock(Lockee);
+                TaskQueue = nullptr;
+            }
 
             for (int i = 0; i < (int)(Threads.size()); i += 1)
             {
