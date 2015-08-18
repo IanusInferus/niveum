@@ -25,6 +25,9 @@
     <ClInclude Include="BaseSystem\StringUtilities.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
+    <ClInclude Include="BaseSystem\Any.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="BaseSystem">
