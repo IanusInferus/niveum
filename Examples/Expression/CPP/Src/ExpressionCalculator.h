@@ -7,7 +7,7 @@
 #include <functional>
 #include <vector>
 #include <unordered_map>
-#include <boost/any.hpp>
+#include "BaseSystem/Any.h"
 
 namespace Yuki
 {
@@ -37,7 +37,7 @@ namespace Yuki
         class ExpressionParameterContext
         {
         public:
-            std::unordered_map<std::wstring, boost::any> Parameters;
+            std::unordered_map<std::wstring, Any> Parameters;
         };
 
         class ExpressionParameterTypeProvider
@@ -70,11 +70,11 @@ namespace Yuki
             std::function<T(ExpressionParameterContext &)> BuildExpression(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Yuki::ExpressionSchema::Expr> e)
             {
                 auto f = BuildExpr(eptp, e);
-                return boost::any_cast<std::function<T(ExpressionParameterContext &)>>(f);
+                return AnyCast<std::function<T(ExpressionParameterContext &)>>(f);
             }
 
         private:
-            boost::any BuildExpr(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Yuki::ExpressionSchema::Expr> e);
+            Any BuildExpr(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Yuki::ExpressionSchema::Expr> e);
         };
     }
 }
