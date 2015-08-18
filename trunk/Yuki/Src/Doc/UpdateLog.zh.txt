@@ -1,4 +1,8 @@
-﻿2015.08.18
+﻿2015.08.19
+Examples:
+C++数据库示例去除对boost代码的使用，但Mysql Connector C++仍然依赖于boost。
+
+2015.08.18
 Yuki.Relation:
 增加C# Krustallos代码生成对Identity字段的支持。
 修正C# Krustallos代码生成中的隔离等级为Serializable。
