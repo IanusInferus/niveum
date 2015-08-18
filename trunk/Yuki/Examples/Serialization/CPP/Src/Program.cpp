@@ -79,9 +79,17 @@ void ModifyStdoutUnicode()
 
 #endif
 
+#include <locale.h>
+
+void SetLocale()
+{
+    setlocale(LC_ALL, "");
+}
+
 int main(int argc, char **argv)
 {
     ModifyStdoutUnicode();
+    SetLocale();
 
     try
     {
