@@ -4,6 +4,7 @@ Yuki.Relation:
 修正C# Krustallos代码生成中的隔离等级为Serializable。
 Examples:
 增加C# Krustallos代码生成的Mail示例。
+C++表达式示例去除对boost的依赖，自行实现any类型。
 
 2015.08.17
 Examples:
