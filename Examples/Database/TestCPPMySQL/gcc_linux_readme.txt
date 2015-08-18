@@ -19,8 +19,8 @@ mono-core、mono-data
 
 库需要
 
-boost 1.49.0
-https://sourceforge.net/projects/boost/files/boost/1.49.0/boost_1_49_0.7z/download
+boost 1.57.0
+https://sourceforge.net/projects/boost/files/boost/1.57.0/boost_1_57_0.7z/download
 
 libmysqlclient-devel
 直接用YaST从光盘安装。
@@ -42,7 +42,7 @@ find . -type f -name '*.sh' -exec chmod +x {} \;
 2)编译程序
 
 进入Src文件夹，运行
-cmake .
+cmake -DCMAKE_BUILD_TYPE=Debug .
 生成调试版Makefile
 或者运行
 cmake -DCMAKE_BUILD_TYPE=Release .

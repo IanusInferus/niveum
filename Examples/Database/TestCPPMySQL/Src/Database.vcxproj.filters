@@ -14,11 +14,11 @@
     </ClInclude>
     <ClInclude Include="LockedVariable.h" />
     <ClInclude Include="AutoResetEvent.h" />
-    <ClInclude Include="UtfEncoding.h" />
     <ClInclude Include="Database.h" />
     <ClInclude Include="BaseSystem\StringUtilities.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
+    <ClInclude Include="UtfEncoding.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
