@@ -7,9 +7,9 @@ using namespace Communication;
 using namespace Server;
 
 /// <summary>加法</summary>
-std::shared_ptr<TestAddReply> ServerImplementation::TestAdd(std::shared_ptr<TestAddRequest> r)
+void ServerImplementation::TestAdd(std::shared_ptr<TestAddRequest> r, std::function<void(std::shared_ptr<TestAddReply>)> Callback, std::function<void(const std::exception &)> OnFailure)
 {
-    return TestAddReply::CreateResult(r->Left + r->Right);
+    Callback(TestAddReply::CreateResult(r->Left + r->Right));
 }
 
 /// <summary>两百万次浮点乘法</summary>

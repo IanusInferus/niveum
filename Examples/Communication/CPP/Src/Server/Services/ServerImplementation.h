@@ -95,7 +95,7 @@ namespace Server
             /// <summary>发送消息</summary>
             std::shared_ptr<SendMessageAt1Reply> SendMessageAt1(std::shared_ptr<SendMessageAt1Request> r);
             /// <summary>加法</summary>
-            std::shared_ptr<TestAddReply> TestAdd(std::shared_ptr<TestAddRequest> r);
+            void TestAdd(std::shared_ptr<TestAddRequest> r, std::function<void(std::shared_ptr<TestAddReply>)> Callback, std::function<void(const std::exception &)> OnFailure);
             /// <summary>两百万次浮点乘法</summary>
             std::shared_ptr<TestMultiplyReply> TestMultiply(std::shared_ptr<TestMultiplyRequest> r);
             /// <summary>文本原样返回</summary>
@@ -103,7 +103,7 @@ namespace Server
             /// <summary>群发消息</summary>
             std::shared_ptr<TestMessageReply> TestMessage(std::shared_ptr<TestMessageRequest> r);
             /// <summary>加法</summary>
-            std::shared_ptr<TestAddAt1Reply> TestAddAt1(std::shared_ptr<TestAddAt1Request> r);
+            void TestAddAt1(std::shared_ptr<TestAddAt1Request> r, std::function<void(std::shared_ptr<TestAddAt1Reply>)> Callback, std::function<void(const std::exception &)> OnFailure);
         };
     }
     typedef _Impl::ServerImplementation ServerImplementation;

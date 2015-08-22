@@ -9,7 +9,8 @@ std::shared_ptr<SendMessageAt1Reply> ServerImplementation::SendMessageAt1(std::s
     throw std::logic_error("NotSupported");
 }
 
-std::shared_ptr<TestAddAt1Reply> ServerImplementation::TestAddAt1(std::shared_ptr<TestAddAt1Request> r)
+/// <summary>加法</summary>
+void ServerImplementation::TestAddAt1(std::shared_ptr<TestAddAt1Request> r, std::function<void(std::shared_ptr<TestAddAt1Reply>)> Callback, std::function<void(const std::exception &)> OnFailure)
 {
-    return TestAddAt1Reply::CreateResult(r->Operand1 + r->Operand2);
+    Callback(TestAddAt1Reply::CreateResult(r->Operand1 + r->Operand2));
 }
