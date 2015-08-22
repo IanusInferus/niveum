@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2015.02.27.
+//  Version:     2015.08.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -541,6 +541,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/import:<NamespaceName>");
             Console.WriteLine(@"增加异步命令指定");
             Console.WriteLine(@"/async:<AsyncCommandListFile>");
+            Console.WriteLine(@"指定所有命令为异步");
+            Console.WriteLine(@"/async:*");
             Console.WriteLine(@"将Tree格式数据转化为二进制数据");
             Console.WriteLine(@"/t2b:<TreeFile>,<BinaryFile>,<MainType>");
             Console.WriteLine(@"将二进制数据转化为Tree格式数据");
@@ -615,6 +617,7 @@ namespace Yuki.SchemaManipulator
         private static Assembly osa = null;
         private static TreeBinaryConverter tbc = null;
         private static HashSet<String> AsyncCommands = new HashSet<String>();
+        private static bool AsyncAll = false;
         private static OS.Schema GetObjectSchema()
         {
             if (os != null) { return os; }
@@ -662,6 +665,11 @@ namespace Yuki.SchemaManipulator
         }
         private static void LoadAsync(String AsyncCommandListFilePath)
         {
+            if (AsyncCommandListFilePath == "*")
+            {
+                AsyncAll = true;
+                return;
+            }
             var f = Txt.ReadFile(AsyncCommandListFilePath);
             var Commands = f.UnifyNewLineToLf().Split('\n');
             foreach (var c in Commands)
@@ -671,6 +679,17 @@ namespace Yuki.SchemaManipulator
                 {
                     AsyncCommands.Add(c);
                 }
+            }
+        }
+        private static HashSet<String> GetAsyncCommands(ObjectSchema.Schema s)
+        {
+            if (AsyncAll)
+            {
+                return new HashSet<String>(s.Types.Where(t => t.OnClientCommand).Select(t => t.ClientCommand.Name));
+            }
+            else
+            {
+                return AsyncCommands;
             }
         }
 
@@ -728,7 +747,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCSharpCode(String CsCodePath, String NamespaceName, Boolean WithFirefly)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharp(NamespaceName, AsyncCommands, WithFirefly);
+            var Compiled = ObjectSchema.CompileToCSharp(NamespaceName, GetAsyncCommands(ObjectSchema), WithFirefly);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -745,7 +764,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCSharpBinaryCode(String CsCodePath, String NamespaceName, Boolean WithFirefly)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpBinary(NamespaceName, AsyncCommands, WithFirefly);
+            var Compiled = ObjectSchema.CompileToCSharpBinary(NamespaceName, GetAsyncCommands(ObjectSchema), WithFirefly);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -762,7 +781,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCSharpJsonCode(String CsCodePath, String NamespaceName)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpJson(NamespaceName, AsyncCommands);
+            var Compiled = ObjectSchema.CompileToCSharpJson(NamespaceName, GetAsyncCommands(ObjectSchema));
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -779,7 +798,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCSharpCompatibleCode(String CsCodePath, String ClassName, String NamespaceName)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ClassName, AsyncCommands);
+            var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ClassName, GetAsyncCommands(ObjectSchema));
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -796,7 +815,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCSharpRetryCode(String CsCodePath, String NamespaceName)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpRetry(NamespaceName, AsyncCommands);
+            var Compiled = ObjectSchema.CompileToCSharpRetry(NamespaceName, GetAsyncCommands(ObjectSchema));
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -847,7 +866,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCppCode(String CppCodePath, String NamespaceName)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCpp(NamespaceName);
+            var Compiled = ObjectSchema.CompileToCpp(NamespaceName, GetAsyncCommands(ObjectSchema));
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);
@@ -864,7 +883,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCppBinaryCode(String CppCodePath, String NamespaceName, Boolean WithServer, Boolean WithClient)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCppBinary(NamespaceName, WithServer, WithClient);
+            var Compiled = ObjectSchema.CompileToCppBinary(NamespaceName, GetAsyncCommands(ObjectSchema), WithServer, WithClient);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);

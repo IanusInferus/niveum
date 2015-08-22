@@ -572,7 +572,9 @@ namespace TcpSendReceive
                 c.Mode = Mode.Binary;
                 c.SchemaPaths = new List<String>
                 {
-                    "../Examples/Communication/Schema"
+                    "../Examples/Communication/Schema/Common",
+                    "../Examples/Communication/Schema/Communication",
+                    "../Examples/Communication/Schema/Compatibility"
                 };
             }
 
