@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制模板数据
-      Version:     2015.02.27.
+      Version:     2015.08.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -61,6 +61,7 @@ ObjectSchemaTemplate
                             }
                         };
                         std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<std::shared_ptr<std::vector<std::uint8_t>>(std::shared_ptr<IApplicationServer>, std::shared_ptr<std::vector<std::uint8_t>>)>, Hash> ClientCommands;
+                        std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<void(std::shared_ptr<IApplicationServer>, std::shared_ptr<std::vector<std::uint8_t>>, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)>, std::function<void(const std::exception &)>)>, Hash> AsyncClientCommands;
 
                     public:
                         BinarySerializationServer()
@@ -77,11 +78,20 @@ ObjectSchemaTemplate
                         {
                             return ClientCommands.count(std::pair<String, std::uint32_t>(CommandName, CommandHash)) > 0;
                         }
+                        Boolean HasCommandAsync(std::wstring CommandName, std::uint32_t CommandHash)
+                        {
+                            return AsyncClientCommands.count(std::pair<String, std::uint32_t>(CommandName, CommandHash)) > 0;
+                        }
 
                         std::shared_ptr<std::vector<std::uint8_t>> ExecuteCommand(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
                         {
                             auto cmd = ClientCommands[std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash)];
                             return cmd(s, Parameters);
+                        }
+                        void ExecuteCommandAsync(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> Callback, std::function<void(const std::exception &)> OnFailure)
+                        {
+                            auto cmd = AsyncClientCommands[std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash)];
+                            cmd(s, Parameters, Callback, OnFailure);
                         }
                     };
                     class BinarySerializationServerEventDispatcher /* final */
@@ -113,6 +123,27 @@ ObjectSchemaTemplate
                         BinaryTranslator::[[${Name}ReplyToBinary]](bas, Reply);
                         bas.SetPosition(0);
                         return bas.ReadBytes(bas.GetLength());
+                    };
+        Template
+            Name BinarySerializationServer_ClientCommandAsync
+            //Parameters: ${CommandName}, ${Name}, ${CommandHash}
+            Value
+                $String
+                    AsyncClientCommands[std::pair<std::wstring, std::uint32_t>(L"${CommandName}", 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::shared_ptr<std::vector<std::uint8_t>> p, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void
+                    {
+                        ByteArrayStream bas;
+                        bas.WriteBytes(p);
+                        bas.SetPosition(0);
+                        auto Request = BinaryTranslator::[[${Name}RequestFromBinary]](bas);
+                        s->[[${Name}]](Request, [=](std::shared_ptr<class [[${Name}Reply]]> Reply)
+                        {
+                            ByteArrayStream bas;
+                            bas.SetPosition(0);
+                            bas.SetLength(0);
+                            BinaryTranslator::[[${Name}ReplyToBinary]](bas, Reply);
+                            bas.SetPosition(0);
+                            Callback(bas.ReadBytes(bas.GetLength()));
+                        }, OnFailure);
                     };
         Template
             Name BinarySerializationServer_ServerCommand

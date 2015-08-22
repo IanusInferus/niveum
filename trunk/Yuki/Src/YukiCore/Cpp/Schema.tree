@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++模板数据
-      Version:     2015.02.06.
+      Version:     2015.08.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -443,6 +443,7 @@ ObjectSchemaTemplate
                     #include <unordered_map>
                     #include <memory>
                     #include <functional>
+                    #include <exception>
                     #include <stdexcept>
         Template
             Name Primitive
@@ -649,6 +650,13 @@ ObjectSchemaTemplate
                 $String
                     ${XmlComment}
                     virtual std::shared_ptr<class [[${Name}Reply]]> [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r) = 0;
+        Template
+            Name IApplicationServer_ClientCommandAsync
+            //Parameters: ${Name}, ${XmlComment}
+            Value
+                $String
+                    ${XmlComment}
+                    virtual void [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r, std::function<void(std::shared_ptr<class [[${Name}Reply]]>)> Callback, std::function<void(const std::exception &)> OnFailure) = 0;
         Template
             Name IApplicationServer_ServerCommand
             //Parameters: ${Name}, ${XmlComment}

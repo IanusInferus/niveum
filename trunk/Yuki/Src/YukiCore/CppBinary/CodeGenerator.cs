@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2015.02.27.
+//  Version:     2015.08.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,15 +19,15 @@ namespace Yuki.ObjectSchema.CppBinary
 {
     public static class CodeGenerator
     {
-        public static String CompileToCppBinary(this Schema Schema, String NamespaceName, Boolean WithServer = true, Boolean WithClient = true)
+        public static String CompileToCppBinary(this Schema Schema, String NamespaceName, HashSet<String> AsyncCommands, Boolean WithServer = true, Boolean WithClient = true)
         {
-            Writer w = new Writer(Schema, NamespaceName, WithServer, WithClient);
+            Writer w = new Writer(Schema, NamespaceName, AsyncCommands, WithServer, WithClient);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
         public static String CompileToCppBinary(this Schema Schema)
         {
-            return CompileToCppBinary(Schema, "");
+            return CompileToCppBinary(Schema, "", new HashSet<String> { });
         }
 
         public class Writer
@@ -39,6 +39,7 @@ namespace Yuki.ObjectSchema.CppBinary
             private Schema Schema;
             private ISchemaClosureGenerator SchemaClosureGenerator;
             private String NamespaceName;
+            private HashSet<String> AsyncCommands;
             private UInt64 Hash;
             private Boolean WithServer;
             private Boolean WithClient;
@@ -51,16 +52,17 @@ namespace Yuki.ObjectSchema.CppBinary
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
-            public Writer(Schema Schema, String NamespaceName, Boolean WithServer = true, Boolean WithClient = true)
+            public Writer(Schema Schema, String NamespaceName, HashSet<String> AsyncCommands, Boolean WithServer = true, Boolean WithClient = true)
             {
                 this.Schema = Schema;
                 this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.NamespaceName = NamespaceName;
+                this.AsyncCommands = AsyncCommands;
                 this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
                 this.WithServer = WithServer;
                 this.WithClient = WithClient;
 
-                InnerWriter = new Cpp.Common.CodeGenerator.Writer(Schema, NamespaceName);
+                InnerWriter = new Cpp.Common.CodeGenerator.Writer(Schema, NamespaceName, AsyncCommands);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
@@ -126,7 +128,14 @@ namespace Yuki.ObjectSchema.CppBinary
                     if (c.OnClientCommand)
                     {
                         var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
-                        l.AddRange(GetTemplate("BinarySerializationServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                        if (AsyncCommands.Contains(c.ClientCommand.Name))
+                        {
+                            l.AddRange(GetTemplate("BinarySerializationServer_ClientCommandAsync").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                        }
+                        else
+                        {
+                            l.AddRange(GetTemplate("BinarySerializationServer_ClientCommand").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
+                        }
                     }
                 }
                 return l.ToArray();
