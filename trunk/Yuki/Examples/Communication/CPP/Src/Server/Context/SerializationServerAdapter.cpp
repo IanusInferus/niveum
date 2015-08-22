@@ -33,7 +33,7 @@ namespace Server
     }
     bool BinarySerializationServerAdapter::HasCommand(std::wstring CommandName, std::uint32_t CommandHash)
     {
-        return ss->HasCommand(CommandName, CommandHash);
+        return ss->HasCommand(CommandName, CommandHash) || ss->HasCommandAsync(CommandName, CommandHash);
     }
     void BinarySerializationServerAdapter::ExecuteCommand(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> OnSuccess, std::function<void(const std::exception &)> OnFailure)
     {
@@ -43,6 +43,20 @@ namespace Server
             {
                 auto OutParameters = ss->ExecuteCommand(s, CommandName, CommandHash, Parameters);
                 OnSuccess(OutParameters);
+            }
+            catch (std::exception &ex)
+            {
+                OnFailure(ex);
+            }
+        }
+        else if (ss->HasCommandAsync(CommandName, CommandHash))
+        {
+            try
+            {
+                ss->ExecuteCommandAsync(s, CommandName, CommandHash, Parameters, [=](std::shared_ptr<std::vector<std::uint8_t>> OutParameters)
+                {
+                    OnSuccess(OutParameters);
+                }, OnFailure);
             }
             catch (std::exception &ex)
             {
