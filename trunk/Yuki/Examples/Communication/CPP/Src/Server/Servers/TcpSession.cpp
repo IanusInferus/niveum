@@ -432,7 +432,7 @@ namespace Server
         if (SourceIndex + Length > static_cast<int>(Source.size())) { throw std::logic_error("InvalidArgument"); }
         if (DestinationIndex + Length > static_cast<int>(Destination.size())) { throw std::logic_error("InvalidArgument"); }
         if (Length == 0) { return; }
-        memcpy(&Destination[DestinationIndex], &Source[SourceIndex], Length);
+        std::memcpy(&Destination[DestinationIndex], &Source[SourceIndex], Length);
     }
 
     void TcpSession::RaiseError(std::wstring CommandName, std::wstring Message)
