@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2015.02.11.
+//  Version:     2015.08.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,15 +19,15 @@ namespace Yuki.ObjectSchema.Cpp
 {
     public static class CodeGenerator
     {
-        public static String CompileToCpp(this Schema Schema, String NamespaceName)
+        public static String CompileToCpp(this Schema Schema, String NamespaceName, HashSet<String> AsyncCommands)
         {
-            var w = new Common.CodeGenerator.Writer(Schema, NamespaceName);
+            var w = new Common.CodeGenerator.Writer(Schema, NamespaceName, AsyncCommands);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
         public static String CompileToCpp(this Schema Schema)
         {
-            return CompileToCpp(Schema, "");
+            return CompileToCpp(Schema, "", new HashSet<String> { });
         }
     }
 }
@@ -42,6 +42,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
 
             private Schema Schema;
             private String NamespaceName;
+            private HashSet<String> AsyncCommands;
 
             static Writer()
             {
@@ -49,10 +50,11 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(b);
             }
 
-            public Writer(Schema Schema, String NamespaceName)
+            public Writer(Schema Schema, String NamespaceName, HashSet<String> AsyncCommands)
             {
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
+                this.AsyncCommands = AsyncCommands;
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
@@ -469,7 +471,14 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 {
                     if (c.OnClientCommand)
                     {
-                        l.AddRange(GetTemplate("IApplicationServer_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
+                        if (AsyncCommands.Contains(c.ClientCommand.Name))
+                        {
+                            l.AddRange(GetTemplate("IApplicationServer_ClientCommandAsync").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
+                        }
+                        else
+                        {
+                            l.AddRange(GetTemplate("IApplicationServer_ClientCommand").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
+                        }
                     }
                     else if (c.OnServerCommand)
                     {

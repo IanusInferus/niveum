@@ -1,4 +1,12 @@
-﻿2015.08.19
+﻿2015.08.22
+Yuki.Core:
+增加C++通讯代码生成对异步调用的支持。
+Yuki.SchemaManipulator:
+增加对所有通讯命令使用异步调用的选项。
+Examples:
+C++通讯示例增加对异步调用的使用。
+
+2015.08.19
 Examples:
 C++数据库示例去除对boost代码的使用，但Mysql Connector C++仍然依赖于boost。
 
