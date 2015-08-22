@@ -1,4 +1,8 @@
-﻿2015.08.22
+﻿2015.08.23
+Examples:
+C++通讯示例修正写法。
+
+2015.08.22
 Yuki.Core:
 增加C++通讯代码生成对异步调用的支持。
 Yuki.SchemaManipulator:
