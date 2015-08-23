@@ -14,9 +14,26 @@ namespace BaseSystem
             this->ReleaseAction = ReleaseAction;
         }
 
+        void Execute()
+        {
+            if (ReleaseAction != nullptr)
+            {
+                ReleaseAction();
+                ReleaseAction = nullptr;
+            }
+        }
+
+        void Suppress()
+        {
+            ReleaseAction = nullptr;
+        }
+
         ~AutoRelease()
         {
-            ReleaseAction();
+            if (ReleaseAction != nullptr)
+            {
+                ReleaseAction();
+            }
         }
     };
 }
