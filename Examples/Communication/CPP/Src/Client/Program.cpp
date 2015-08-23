@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2015.08.15.
+//  Version:     2015.08.24.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -296,7 +296,7 @@ namespace Client
 
         static void RunTcp(asio::io_service &IoService, asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::function<void(std::shared_ptr<SecureContext>)>, std::mutex &)> Action)
         {
-            auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
+            auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30 * 1000);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
             {
                 //std::wprintf(L"%ls\n", fmt::format(L"{0} {1}ms", CommandName, Milliseconds).c_str());
@@ -357,7 +357,7 @@ namespace Client
 
         static void RunUdp(asio::io_service &IoService, asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::function<void(std::shared_ptr<SecureContext>)>, std::mutex &)> Action)
         {
-            auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30);
+            auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30 * 1000);
             bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
             {
                 //std::wprintf(L"%ls\n", fmt::format(L"{0} {1}ms", CommandName, Milliseconds).c_str());
