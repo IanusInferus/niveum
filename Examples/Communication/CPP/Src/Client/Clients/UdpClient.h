@@ -774,7 +774,7 @@ namespace Client
         /// <summary>异步连接</summary>
         /// <param name="Completed">正常连接处理函数</param>
         /// <param name="UnknownFaulted">未知错误处理函数</param>
-        void ConnectAsync(asio::ip::udp::endpoint RemoteEndPoint, std::function<void(void)> Completed, std::function<void(const asio::error_code &)> UnknownFaulted)
+        void ConnectAsync(std::function<void(void)> Completed, std::function<void(const asio::error_code &)> UnknownFaulted)
         {
             try
             {
