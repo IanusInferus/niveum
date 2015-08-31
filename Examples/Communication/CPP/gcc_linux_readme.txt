@@ -76,3 +76,7 @@ session    required     pam_limits.so
 *          soft    nproc     1024
 为
 *          soft    nproc     65536
+
+5.异常信息
+如果出现异常信息需要知道对应的源代码行号，可以将异常信息存到文件中（如error.log），然后执行
+cat error.log | sed -n 's/^.*\[0x\([0-9A-Fa-f]*\)\].*$/\1/p' | xargs addr2line -e ExceptionStackTrace

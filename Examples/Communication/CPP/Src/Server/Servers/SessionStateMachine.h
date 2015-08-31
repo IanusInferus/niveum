@@ -1,12 +1,14 @@
 ﻿#pragma once
 
 #include "BaseSystem/LockedVariable.h"
+#include "BaseSystem/ExceptionStackTrace.h"
 
 #include <queue>
 #include <list>
 #include <functional>
 #include <memory>
 #include <exception>
+#include <typeinfo>
 
 namespace Server
 {
@@ -352,17 +354,25 @@ namespace Server
                 {
                     return;
                 }
-                try
+                if (ExceptionStackTrace::IsDebuggerAttached())
                 {
                     a();
                 }
-                catch (std::exception &ex)
+                else
                 {
-                    if (!IsKnownException(ex))
+                    try
                     {
-                        OnCriticalError(ex);
+                        ExceptionStackTrace::Execute(a);
                     }
-                    NotifyFailure();
+                    catch (const std::exception &ex)
+                    {
+                        if (!IsKnownException(ex))
+                        {
+                            auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace();
+                            OnCriticalError(std::runtime_error(Message));
+                        }
+                        NotifyFailure();
+                    }
                 }
                 Count -= 1;
                 if (Count == 0) { break; }

@@ -439,7 +439,7 @@ namespace Client
             };
             if (UseOld)
             {
-                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = "98301A7C877EDA6E" }, CheckSchemaVersionHandler);
+                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = "E0FF01B4A754245C" }, CheckSchemaVersionHandler);
             }
             else
             {

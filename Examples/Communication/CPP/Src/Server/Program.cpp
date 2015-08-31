@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2015.08.15.
+//  Version:     2015.08.31.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -17,6 +17,7 @@
 #include "BaseSystem/StringUtilities.h"
 #include "BaseSystem/AutoResetEvent.h"
 #include "BaseSystem/Optional.h"
+#include "BaseSystem/ExceptionStackTrace.h"
 #include "Util/ConsoleLogger.h"
 
 #include <vector>
@@ -25,6 +26,7 @@
 #include <stdexcept>
 #include <cwchar>
 #include <thread>
+#include <typeinfo>
 #include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
@@ -269,13 +271,34 @@ int main(int argc, char **argv)
     ModifyStdoutUnicode();
     SetLocale();
 
-    try
+    if (ExceptionStackTrace::IsDebuggerAttached())
     {
         return Server::Program::MainInner(argc, argv);
     }
-    catch (std::exception &ex)
+    else
     {
-        std::wprintf(L"Error:\n%ls\n", s2w(ex.what()).c_str());
-        return -1;
+        try
+        {
+            return ExceptionStackTrace::Execute([=]() { return Server::Program::MainInner(argc, argv); });
+        }
+        catch (const std::exception &ex)
+        {
+            auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace();
+            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            return -1;
+        }
+        catch (const char *ex)
+        {
+            auto Message = std::string() + ex + "\r\n" + ExceptionStackTrace::GetStackTrace();
+            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            return -1;
+        }
+        catch (...)
+        {
+            // 在Visual C++下需要指定/EHa才能捕捉到SEH异常
+            auto Message = std::string() + "SEHException\r\n" + ExceptionStackTrace::GetStackTrace();
+            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            return -1;
+        }
     }
 }

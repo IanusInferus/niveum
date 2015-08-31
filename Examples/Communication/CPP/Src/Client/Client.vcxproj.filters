@@ -37,6 +37,12 @@
     <ClInclude Include="BaseSystem\StringUtilities.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
+    <ClInclude Include="BaseSystem\ExceptionStackTrace.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\ThreadLocalVariable.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
@@ -44,6 +50,12 @@
       <Filter>BaseSystem</Filter>
     </ClCompile>
     <ClCompile Include="BaseSystem\StringUtilities.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseSystem\ExceptionStackTrace.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>

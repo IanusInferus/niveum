@@ -105,6 +105,9 @@
     <ClInclude Include="Servers\UdpSession.h">
       <Filter>Servers</Filter>
     </ClInclude>
+    <ClInclude Include="BaseSystem\ExceptionStackTrace.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
@@ -152,6 +155,9 @@
     </ClCompile>
     <ClCompile Include="Servers\UdpSession.cpp">
       <Filter>Servers</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseSystem\ExceptionStackTrace.cpp">
+      <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

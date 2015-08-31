@@ -3,11 +3,13 @@
 
 #include "BaseSystem/StringUtilities.h"
 #include "BaseSystem/Times.h"
+#include "BaseSystem/ExceptionStackTrace.h"
 #include "Rc4PacketServerTransformer.h"
 
 #include <cstring>
 #include <chrono>
 #include <stdexcept>
+#include <typeinfo>
 
 namespace Server
 {
@@ -437,11 +439,11 @@ namespace Server
                 std::shared_ptr<StreamedVirtualTransportServerHandleResult> Result;
                 try
                 {
-                    Result = vts->Handle(c);
+                    ExceptionStackTrace::Execute([&]() { Result = vts->Handle(c); });
                 }
-                catch (std::exception &ex)
+                catch (const std::exception &ex)
                 {
-                    if (dynamic_cast<std::logic_error *>(&ex) != nullptr)
+                    if (dynamic_cast<const std::logic_error *>(&ex) != nullptr)
                     {
                         auto e = std::make_shared<SessionLogEntry>();
                         e->Token = Context->SessionTokenString();
@@ -449,12 +451,13 @@ namespace Server
                         e->Time = UtcNow();
                         e->Type = L"Known";
                         e->Name = L"Exception";
-                        e->Message = s2w(ex.what());
+                        e->Message = s2w(std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace());
                         Server.ServerContext()->RaiseSessionLog(e);
                     }
                     else if (!IsSocketErrorKnown(ex))
                     {
-                        OnCriticalError(ex);
+                        auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace();
+                        OnCriticalError(std::runtime_error(Message));
                     }
                     OnFailure();
                     return;
@@ -548,27 +551,31 @@ namespace Server
 
         try
         {
-            Context->RemoteEndPoint(s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port()));
-
-            Server.ServerContext()->RegisterSession(Context);
-            Server.SessionMappings.DoAction([=](std::shared_ptr<std::unordered_map<std::shared_ptr<ISessionContext>, std::shared_ptr<UdpSession>>> Mappings) { (*Mappings)[Context] = this->shared_from_this(); });
-
-            if (Server.ServerContext()->EnableLogSystem())
+            ExceptionStackTrace::Execute([=]
             {
-                auto e = std::make_shared<SessionLogEntry>();
-                e->Token = Context->SessionTokenString();
-                e->RemoteEndPoint = s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port());
-                e->Time = UtcNow();
-                e->Type = L"Sys";
-                e->Name = L"SessionEnter";
-                e->Message = L"";
-                Server.ServerContext()->RaiseSessionLog(e);
-            }
-            ssm->Start();
+                Context->RemoteEndPoint(s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port()));
+
+                Server.ServerContext()->RegisterSession(Context);
+                Server.SessionMappings.DoAction([=](std::shared_ptr<std::unordered_map<std::shared_ptr<ISessionContext>, std::shared_ptr<UdpSession>>> Mappings) { (*Mappings)[Context] = this->shared_from_this(); });
+
+                if (Server.ServerContext()->EnableLogSystem())
+                {
+                    auto e = std::make_shared<SessionLogEntry>();
+                    e->Token = Context->SessionTokenString();
+                    e->RemoteEndPoint = s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port());
+                    e->Time = UtcNow();
+                    e->Type = L"Sys";
+                    e->Name = L"SessionEnter";
+                    e->Message = L"";
+                    Server.ServerContext()->RaiseSessionLog(e);
+                }
+                ssm->Start();
+            });
         }
-        catch (std::exception &ex)
+        catch (const std::exception &ex)
         {
-            OnCriticalError(ex);
+            auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace();
+            OnCriticalError(std::runtime_error(Message));
             ssm->NotifyFailure();
         }
     }
