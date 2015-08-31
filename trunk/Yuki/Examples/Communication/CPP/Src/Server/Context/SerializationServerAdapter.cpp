@@ -1,6 +1,7 @@
 ﻿#include "SerializationServerAdapter.h"
 
 #include "BaseSystem/ThreadLocalVariable.h"
+#include "BaseSystem/ExceptionStackTrace.h"
 
 #include <cstdint>
 #include <vector>
@@ -8,6 +9,7 @@
 #include <functional>
 #include <memory>
 #include <exception>
+#include <typeinfo>
 
 namespace Server
 {
@@ -37,30 +39,40 @@ namespace Server
     }
     void BinarySerializationServerAdapter::ExecuteCommand(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> OnSuccess, std::function<void(const std::exception &)> OnFailure)
     {
+        std::function<void()> a;
         if (ss->HasCommand(CommandName, CommandHash))
         {
-            try
+            a = [=]
             {
                 auto OutParameters = ss->ExecuteCommand(s, CommandName, CommandHash, Parameters);
                 OnSuccess(OutParameters);
-            }
-            catch (std::exception &ex)
-            {
-                OnFailure(ex);
-            }
+            };
         }
         else if (ss->HasCommandAsync(CommandName, CommandHash))
         {
-            try
+            a = [=]
             {
                 ss->ExecuteCommandAsync(s, CommandName, CommandHash, Parameters, [=](std::shared_ptr<std::vector<std::uint8_t>> OutParameters)
                 {
                     OnSuccess(OutParameters);
                 }, OnFailure);
-            }
-            catch (std::exception &ex)
+            };
+        }
+        if (a == nullptr) { return; }
+        if (ExceptionStackTrace::IsDebuggerAttached())
+        {
+            a();
+        }
+        else
+        {
+            try
             {
-                OnFailure(ex);
+                ExceptionStackTrace::Execute(a);
+            }
+            catch (const std::exception &ex)
+            {
+                auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace();
+                OnFailure(std::runtime_error(Message));
             }
         }
     }

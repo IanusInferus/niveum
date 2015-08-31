@@ -3,13 +3,14 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2015.08.24.
+//  Version:     2015.08.31.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
 //==========================================================================
 
 #include "BaseSystem/StringUtilities.h"
+#include "BaseSystem/ExceptionStackTrace.h"
 #include "Communication.h"
 #include "CommunicationBinary.h"
 #include "Clients/BinaryCountPacketClient.h"
@@ -26,6 +27,7 @@
 #include <algorithm>
 #include <chrono>
 #include <thread>
+#include <typeinfo>
 #include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
@@ -76,7 +78,7 @@ namespace Client
                                 IoService.run();
                                 Exit = true;
                             }
-                            catch (std::exception &)
+                            catch (const std::exception &)
                             {
                             }
                             if (Exit) { break; }
@@ -113,7 +115,7 @@ namespace Client
                             IoService.run();
                             Exit = true;
                         }
-                        catch (std::exception &)
+                        catch (const std::exception &)
                         {
                         }
                         if (Exit) { break; }
@@ -146,7 +148,7 @@ namespace Client
                             IoService.run();
                             Exit = true;
                         }
-                        catch (std::exception &)
+                        catch (const std::exception &)
                         {
                         }
                         if (Exit) { break; }
@@ -452,17 +454,34 @@ int main(int argc, char **argv)
     ModifyStdoutUnicode();
     SetLocale();
 
-#if _DEBUG
-    return Client::Program::MainInner(argc, argv);
-#else
-    try
+    if (ExceptionStackTrace::IsDebuggerAttached())
     {
         return Client::Program::MainInner(argc, argv);
     }
-    catch (std::exception &ex)
+    else
     {
-        std::wprintf(L"Error:\n%ls\n", s2w(ex.what()).c_str());
-        return -1;
+        try
+        {
+            return ExceptionStackTrace::Execute([=]() { return Client::Program::MainInner(argc, argv); });
+        }
+        catch (const std::exception &ex)
+        {
+            auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace();
+            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            return -1;
+        }
+        catch (const char *ex)
+        {
+            auto Message = std::string() + ex + "\r\n" + ExceptionStackTrace::GetStackTrace();
+            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            return -1;
+        }
+        catch (...)
+        {
+            // 在Visual C++下需要指定/EHa才能捕捉到SEH异常
+            auto Message = std::string() + "SEHException\r\n" + ExceptionStackTrace::GetStackTrace();
+            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            return -1;
+        }
     }
-#endif
 }

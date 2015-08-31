@@ -16,6 +16,7 @@
     <ClInclude Include="BaseSystem\AutoResetEvent.h" />
     <ClInclude Include="BaseSystem\CancellationToken.h" />
     <ClInclude Include="BaseSystem\Cryptography.h" />
+    <ClInclude Include="BaseSystem\ExceptionStackTrace.h" />
     <ClInclude Include="BaseSystem\LockedVariable.h" />
     <ClInclude Include="BaseSystem\Optional.h" />
     <ClInclude Include="BaseSystem\StringUtilities.h" />
@@ -45,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseSystem\Cryptography.cpp" />
+    <ClCompile Include="BaseSystem\ExceptionStackTrace.cpp" />
     <ClCompile Include="BaseSystem\StringUtilities.cpp" />
     <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp" />
     <ClCompile Include="BaseSystem\Times.cpp" />
@@ -112,6 +114,7 @@
       <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_UNICODE;UNICODE;FMT_HEADER_ONLY;ASIO_STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4345;4503;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -127,6 +130,7 @@
       <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_UNICODE;UNICODE;FMT_HEADER_ONLY;ASIO_STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4345;4503;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
