@@ -61,6 +61,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_UNICODE;UNICODE;FMT_HEADER_ONLY;ASIO_STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4345;4503;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -76,6 +77,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_UNICODE;UNICODE;FMT_HEADER_ONLY;ASIO_STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4345;4503;4819;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -86,8 +88,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BaseSystem\Cryptography.h" />
+    <ClInclude Include="BaseSystem\ExceptionStackTrace.h" />
     <ClInclude Include="BaseSystem\LockedVariable.h" />
     <ClInclude Include="BaseSystem\StringUtilities.h" />
+    <ClInclude Include="BaseSystem\ThreadLocalVariable.h" />
     <ClInclude Include="Clients\BinaryCountPacketClient.h" />
     <ClInclude Include="Clients\IContext.h" />
     <ClInclude Include="Clients\ISerializationClient.h" />
@@ -102,7 +106,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseSystem\Cryptography.cpp" />
+    <ClCompile Include="BaseSystem\ExceptionStackTrace.cpp" />
     <ClCompile Include="BaseSystem\StringUtilities.cpp" />
+    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp" />
     <ClCompile Include="Program.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
