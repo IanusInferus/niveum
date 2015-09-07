@@ -26,7 +26,8 @@ namespace Client
     private:
         int NumTimeoutMilliseconds;
         int RequestCount;
-        static int MaxRequestCount() { return 16; }
+        bool FirstFinished;
+        int MaxRequestCount() { return FirstFinished ? 16 : 1; }
 
         class BinarySender : public Communication::Binary::IBinarySender
         {
@@ -74,7 +75,7 @@ namespace Client
                     q->push(cq);
                     (*a.CommandRequests)[CommandName] = q;
                 }
-                if (a.RequestCount < MaxRequestCount())
+                if (a.RequestCount < a.MaxRequestCount())
                 {
                     if (a.CommandQueue->size() > 0)
                     {
@@ -146,7 +147,7 @@ namespace Client
         std::function<void(std::wstring)> ServerCommandReceived;
 
         BinarySerializationClientAdapter(asio::io_service &io_service, int NumTimeoutMilliseconds)
-            : io_service(io_service), NumTimeoutMilliseconds(NumTimeoutMilliseconds), RequestCount(0)
+            : io_service(io_service), NumTimeoutMilliseconds(NumTimeoutMilliseconds), RequestCount(0), FirstFinished(false)
         {
             CommandRequests = std::make_shared<std::unordered_map<std::wstring, std::shared_ptr<std::queue<CommandRequest>>>>();
             CommandQueue = std::make_shared<std::queue<std::shared_ptr<CommandContent>>>();
@@ -201,6 +202,7 @@ namespace Client
                 if (ClientCommandReceived != nullptr)
                 {
                     ClientCommandReceived(cq.Name, Milliseconds);
+                    FirstFinished = true;
                 }
                 q->pop();
                 if (q->size() == 0)
