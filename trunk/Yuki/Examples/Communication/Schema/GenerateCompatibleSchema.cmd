@@ -12,6 +12,10 @@
 @for %%b in ("") do @(
     @set TypeName=%%~b
 
+    @if not exist "Compatibility!TypeName!" (
+      md "Compatibility!TypeName!"
+    )
+
     @for %%a in (Compatibility!TypeName!\*) do @(
       @set DirName=%%~na
       @if not exist "Previous\!DirName!\Communication!TypeName!" (
