@@ -53,7 +53,6 @@
     <ClInclude Include="Util\ConsoleLogger.h">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="UtfEncoding.h" />
     <ClInclude Include="BaseSystem\ThreadLocalRandom.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
@@ -108,6 +107,7 @@
     <ClInclude Include="BaseSystem\ExceptionStackTrace.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
+    <ClInclude Include="Workaround.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />

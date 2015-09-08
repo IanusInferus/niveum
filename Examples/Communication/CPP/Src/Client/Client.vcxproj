@@ -99,10 +99,10 @@
     <ClInclude Include="Clients\StreamedClient.h" />
     <ClInclude Include="Clients\UdpClient.h" />
     <ClInclude Include="Context\SerializationClientAdapter.h" />
-    <ClInclude Include="UtfEncoding.h" />
     <ClInclude Include="Clients\TcpClient.h" />
     <ClInclude Include="Communication.h" />
     <ClInclude Include="CommunicationBinary.h" />
+    <ClInclude Include="Workaround.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseSystem\Cryptography.cpp" />
