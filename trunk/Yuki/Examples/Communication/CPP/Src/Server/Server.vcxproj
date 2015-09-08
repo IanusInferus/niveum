@@ -40,9 +40,9 @@
     <ClInclude Include="Servers\UdpServer.h" />
     <ClInclude Include="Servers\UdpSession.h" />
     <ClInclude Include="Services\ServerImplementation.h" />
-    <ClInclude Include="UtfEncoding.h" />
     <ClInclude Include="Util\ConsoleLogger.h" />
     <ClInclude Include="Util\SessionLogEntry.h" />
+    <ClInclude Include="Workaround.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseSystem\Cryptography.cpp" />

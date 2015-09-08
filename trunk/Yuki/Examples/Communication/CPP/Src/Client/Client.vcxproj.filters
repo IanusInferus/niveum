@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClInclude Include="Communication.h" />
     <ClInclude Include="CommunicationBinary.h" />
-    <ClInclude Include="UtfEncoding.h" />
     <ClInclude Include="Clients\ISerializationClient.h">
       <Filter>Clients</Filter>
     </ClInclude>
@@ -43,6 +42,7 @@
     <ClInclude Include="BaseSystem\ThreadLocalVariable.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
+    <ClInclude Include="Workaround.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
