@@ -3,8 +3,7 @@
 #include "IContext.h"
 #include "ISerializationClient.h"
 #include "StreamedClient.h"
-
-#include "CommunicationBinary.h"
+#include "Workaround.h"
 
 #include <memory>
 #include <cstdint>
@@ -20,6 +19,285 @@ namespace Client
     class BinaryCountPacketClient : public IStreamedVirtualTransportClient
     {
     private:
+        class IReadableStream
+        {
+        public:
+            virtual std::uint8_t ReadByte() = 0;
+            virtual std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(std::size_t Size) = 0;
+
+            Unit ReadUnit()
+            {
+                return Unit();
+            }
+            Boolean ReadBoolean()
+            {
+                return ReadByte() != 0;
+            }
+
+            std::uint8_t ReadUInt8()
+            {
+                return ReadByte();
+            }
+            std::uint16_t ReadUInt16()
+            {
+                std::uint16_t o;
+                o = static_cast<std::uint16_t>(static_cast<std::uint16_t>(ReadByte()) & static_cast<std::uint16_t>(0xFF));
+                o = static_cast<std::uint16_t>(o | ((static_cast<std::uint16_t>(ReadByte()) & 0xFF) << 8));
+                return o;
+            }
+            std::uint32_t ReadUInt32()
+            {
+                std::uint32_t o;
+                o = static_cast<std::uint32_t>(ReadByte()) & 0xFF;
+                o = o | ((static_cast<std::uint32_t>(ReadByte()) & 0xFF) << 8);
+                o = o | ((static_cast<std::uint32_t>(ReadByte()) & 0xFF) << 16);
+                o = o | ((static_cast<std::uint32_t>(ReadByte()) & 0xFF) << 24);
+                return o;
+            }
+            std::uint64_t ReadUInt64()
+            {
+                std::uint64_t o;
+                o = static_cast<std::uint64_t>(ReadByte()) & 0xFF;
+                o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 8);
+                o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 16);
+                o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 24);
+                o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 32);
+                o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 40);
+                o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 48);
+                o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 56);
+                return o;
+            }
+            std::int8_t ReadInt8()
+            {
+                return static_cast<std::int8_t>(ReadByte());
+            }
+            std::int16_t ReadInt16()
+            {
+                std::int16_t o;
+                o = static_cast<std::int16_t>(static_cast<std::int16_t>(ReadByte()) & static_cast<std::int16_t>(0xFF));
+                o = static_cast<std::int16_t>(o | ((static_cast<std::int16_t>(ReadByte()) & 0xFF) << 8));
+                return o;
+            }
+            std::int32_t ReadInt32()
+            {
+                std::int32_t o;
+                o = static_cast<std::int32_t>(ReadByte()) & 0xFF;
+                o = o | ((static_cast<std::int32_t>(ReadByte()) & 0xFF) << 8);
+                o = o | ((static_cast<std::int32_t>(ReadByte()) & 0xFF) << 16);
+                o = o | ((static_cast<std::int32_t>(ReadByte()) & 0xFF) << 24);
+                return o;
+            }
+            std::int64_t ReadInt64()
+            {
+                std::int64_t o;
+                o = static_cast<std::int64_t>(ReadByte()) & 0xFF;
+                o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 8);
+                o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 16);
+                o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 24);
+                o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 32);
+                o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 40);
+                o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 48);
+                o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 56);
+                return o;
+            }
+
+            float ReadFloat32()
+            {
+                std::int32_t i = ReadInt32();
+                return *reinterpret_cast<float *>(&i);
+            }
+            double ReadFloat64()
+            {
+                std::int64_t i = ReadInt64();
+                return *reinterpret_cast<double *>(&i);
+            }
+
+            String ReadString()
+            {
+                std::int32_t Length = ReadInt32();
+                int n = static_cast<int>(Length);
+                std::vector<std::uint8_t> Bytes;
+                for (int k = 0; k < n; k += 1)
+                {
+                    Bytes.push_back(ReadByte());
+                }
+                std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
+                return conv.from_bytes(reinterpret_cast<const char *>(Bytes.data()), reinterpret_cast<const char *>(Bytes.data() + Bytes.size()));
+            }
+
+            virtual ~IReadableStream() {}
+        };
+
+        class IWritableStream
+        {
+        public:
+            virtual void WriteByte(std::uint8_t b) = 0;
+            virtual void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l) = 0;
+
+            void WriteUnit(Unit v)
+            {
+            }
+            void WriteBoolean(Boolean v)
+            {
+                if (v)
+                {
+                    WriteByte(0xFF);
+                }
+                else
+                {
+                    WriteByte(0);
+                }
+            }
+
+            void WriteUInt8(std::uint8_t v)
+            {
+                WriteByte(v);
+            }
+            void WriteUInt16(std::uint16_t v)
+            {
+                WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+            }
+            void WriteUInt32(std::uint32_t v)
+            {
+                WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
+            }
+            void WriteUInt64(std::uint64_t v)
+            {
+                WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 32) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 40) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 48) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 56) & 0xFF));
+            }
+            void WriteInt8(std::int8_t v)
+            {
+                WriteByte(static_cast<std::uint8_t>(v));
+            }
+            void WriteInt16(std::int16_t v)
+            {
+                WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+            }
+            void WriteInt32(std::int32_t v)
+            {
+                WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
+            }
+            void WriteInt64(std::int64_t v)
+            {
+                WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 32) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 40) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 48) & 0xFF));
+                WriteByte(static_cast<std::uint8_t>((v >> 56) & 0xFF));
+            }
+
+            void WriteFloat32(float v)
+            {
+                WriteInt32(*reinterpret_cast<std::int32_t *>(&v));
+            }
+            void WriteFloat64(double v)
+            {
+                WriteInt64(*reinterpret_cast<std::int64_t *>(&v));
+            }
+
+            void WriteString(String v)
+            {
+                std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
+                auto Bytes = conv.to_bytes(v);
+                int n = static_cast<int>(Bytes.size());
+                WriteInt32((std::int32_t)(n));
+                for (int k = 0; k < n; k += 1)
+                {
+                    WriteByte(static_cast<std::uint8_t>(Bytes[k]));
+                }
+            }
+
+            virtual ~IWritableStream() {}
+        };
+
+        class IReadableWritableStream : public IReadableStream, public IWritableStream
+        {
+        public:
+            virtual ~IReadableWritableStream() {}
+        };
+
+        class ByteArrayStream : public IReadableWritableStream /* final */
+        {
+        private:
+            std::vector<std::uint8_t> Buffer;
+            std::size_t Position;
+        public:
+            ByteArrayStream() : Position(0)
+            {
+            }
+
+            std::uint8_t ReadByte()
+            {
+                if (Position + 1 > Buffer.size()) { throw std::out_of_range(""); }
+                std::uint8_t b = Buffer[Position];
+                Position += 1;
+                return b;
+            }
+            std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(std::size_t Size)
+            {
+                if (Position + Size > Buffer.size()) { throw std::out_of_range(""); }
+                auto l = std::make_shared<std::vector<std::uint8_t>>();
+                l->resize(Size, 0);
+                if (Size == 0) { return l; }
+                std::copy(Buffer.data() + Position, Buffer.data() + Position + Size, l->data());
+                Position += Size;
+                return l;
+            }
+
+            void WriteByte(std::uint8_t b)
+            {
+                if (Position + 1 > Buffer.size()) { Buffer.resize(Position + 1, 0); }
+                Buffer[Position] = b;
+                Position += 1;
+            }
+            void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l)
+            {
+                auto Size = l->size();
+                if (Size == 0) { return; }
+                if (Position + Size > Buffer.size()) { Buffer.resize(Position + Size, 0); }
+                std::copy(l->data(), l->data() + Size, Buffer.data() + Position);
+                Position += Size;
+            }
+
+            std::size_t GetPosition()
+            {
+                return Position;
+            }
+
+            void SetPosition(std::size_t Position)
+            {
+                this->Position = Position;
+            }
+
+            std::size_t GetLength()
+            {
+                return Buffer.size();
+            }
+
+            void SetLength(std::size_t Length)
+            {
+                Buffer.resize(Length, 0);
+            }
+        };
+
         class Context
         {
         public:
@@ -61,7 +339,7 @@ namespace Client
             this->Transformer = Transformer;
             bc->ClientEvent = [=](std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
             {
-                Communication::Binary::ByteArrayStream s;
+                ByteArrayStream s;
                 s.WriteString(CommandName);
                 s.WriteUInt32(CommandHash);
                 s.WriteInt32(static_cast<std::int32_t>(Parameters->size()));
@@ -190,7 +468,7 @@ namespace Client
             {
                 if (Length >= 4)
                 {
-                    Communication::Binary::ByteArrayStream s;
+                    ByteArrayStream s;
                     for (int k = 0; k < 4; k += 1)
                     {
                         s.WriteByte((*Buffer)[Position + k]);
@@ -210,7 +488,7 @@ namespace Client
             {
                 if (Length >= bc.CommandNameLength)
                 {
-                    Communication::Binary::ByteArrayStream s;
+                    ByteArrayStream s;
                     s.WriteInt32(bc.CommandNameLength);
                     for (int k = 0; k < bc.CommandNameLength; k += 1)
                     {
@@ -230,7 +508,7 @@ namespace Client
             {
                 if (Length >= 4)
                 {
-                    Communication::Binary::ByteArrayStream s;
+                    ByteArrayStream s;
                     for (int k = 0; k < 4; k += 1)
                     {
                         s.WriteByte((*Buffer)[Position + k]);
@@ -249,7 +527,7 @@ namespace Client
             {
                 if (Length >= 4)
                 {
-                    Communication::Binary::ByteArrayStream s;
+                    ByteArrayStream s;
                     for (int k = 0; k < 4; k += 1)
                     {
                         s.WriteByte((*Buffer)[Position + k]);
