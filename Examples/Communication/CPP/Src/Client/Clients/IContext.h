@@ -8,8 +8,8 @@ namespace Client
     class SecureContext
     {
     public:
-        std::vector<std::uint8_t> ServerToken;
-        std::vector<std::uint8_t> ClientToken;
+        std::vector<std::uint8_t> ServerToken; //服务器到客户端数据的Token
+        std::vector<std::uint8_t> ClientToken; //客户端到服务器数据的Token
     };
 
     class IBinaryTransformer

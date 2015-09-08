@@ -34,8 +34,8 @@ namespace Server
 
     public class SecureContext
     {
-        public Byte[] ServerToken;
-        public Byte[] ClientToken;
+        public Byte[] ServerToken; //服务器到客户端数据的Token
+        public Byte[] ClientToken; //客户端到服务器数据的Token
     }
 
     public interface IBinaryTransformer
