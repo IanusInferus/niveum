@@ -5,6 +5,7 @@
 #include "StreamedClient.h"
 
 #include "BaseSystem/LockedVariable.h"
+#include "BaseSystem/ExceptionStackTrace.h"
 #include "BaseSystem/Cryptography.h"
 
 #include <memory>
@@ -798,9 +799,9 @@ namespace Client
             return false;
         }
 
-        void CompletedSocket(std::shared_ptr<std::vector<std::uint8_t>> Buffer, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const asio::error_code &)> UnknownFaulted)
+        void CompletedSocket(std::shared_ptr<std::vector<std::uint8_t>> Buffer, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::wstring &)> UnknownFaulted)
         {
-            try
+            auto a = [&]()
             {
                 if (Buffer->size() < 12)
                 {
@@ -938,7 +939,7 @@ namespace Client
                     auto ReadBufferLength = VirtualTransportClient->GetReadBufferOffset() + VirtualTransportClient->GetReadBufferLength();
                     if (static_cast<int>(p->size()) > static_cast<int>(ReadBuffer->size()) - ReadBufferLength)
                     {
-                        UnknownFaulted(asio::error_code(asio::error::no_buffer_space));
+                        UnknownFaulted(s2w(asio::error_code(asio::error::no_buffer_space).message()));
                         return;
                     }
                     ArrayCopy(*p, 0, *ReadBuffer, ReadBufferLength, static_cast<int>(p->size()));
@@ -967,15 +968,31 @@ namespace Client
                         }
                     }
                 }
-            }
-            catch (asio::system_error &e)
+            };
+            if (ExceptionStackTrace::IsDebuggerAttached())
             {
-                UnknownFaulted(e.code());
-                return;
+                a();
+            }
+            else
+            {
+                try
+                {
+                    ExceptionStackTrace::Execute(a);
+                }
+                catch (const asio::system_error &ex)
+                {
+                    auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.code().message() + "\r\n" + ExceptionStackTrace::GetStackTrace();
+                    UnknownFaulted(s2w(Message));
+                }
+                catch (const std::exception &ex)
+                {
+                    auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace();
+                    UnknownFaulted(s2w(Message));
+                }
             }
         }
 
-        void ReceiveAsyncInner(std::shared_ptr<BaseSystem::LockedVariable<bool>> IsRunningValue, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const asio::error_code &)> UnknownFaulted)
+        void ReceiveAsyncInner(std::shared_ptr<BaseSystem::LockedVariable<bool>> IsRunningValue, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::wstring &)> UnknownFaulted)
         {
             IsRunningValue->DoAction([=](bool b)
             {
@@ -987,7 +1004,7 @@ namespace Client
                     if (se)
                     {
                         if (IsSocketErrorKnown(se)) { return; }
-                        UnknownFaulted(se);
+                        UnknownFaulted(s2w(se.message()));
                         return;
                     }
                     auto IsRunning = IsRunningValue->Check<bool>([=](bool b)
@@ -1014,7 +1031,7 @@ namespace Client
         /// <summary>接收消息</summary>
         /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
         /// <param name="UnknownFaulted">未知错误处理函数</param>
-        void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const asio::error_code &)> UnknownFaulted)
+        void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::wstring &)> UnknownFaulted)
         {
             ReceiveAsyncInner(this->IsRunningValue, DoResultHandle, UnknownFaulted);
         }

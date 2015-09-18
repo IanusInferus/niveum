@@ -144,7 +144,7 @@ namespace Client
             Action<int> Completed = null;
             Completed = Count =>
             {
-                try
+                Action a = () =>
                 {
                     if (Count == 0)
                     {
@@ -182,10 +182,21 @@ namespace Client
                             Socket.ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
                         }
                     });
-                }
-                catch (Exception ex)
+                };
+                if (System.Diagnostics.Debugger.IsAttached)
                 {
-                    Faulted(ex);
+                    a();
+                }
+                else
+                {
+                    try
+                    {
+                        a();
+                    }
+                    catch (Exception ex)
+                    {
+                        Faulted(ex);
+                    }
                 }
             };
 
