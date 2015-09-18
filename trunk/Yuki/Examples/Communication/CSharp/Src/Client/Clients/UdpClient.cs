@@ -615,7 +615,7 @@ namespace Client
 
             Action<Byte[]> CompletedSocket = Buffer =>
             {
-                try
+                Action a = () =>
                 {
                     if (Buffer.Length < 12)
                     {
@@ -772,10 +772,21 @@ namespace Client
                             }
                         }
                     }
-                }
-                catch (Exception ex)
+                };
+                if (System.Diagnostics.Debugger.IsAttached)
                 {
-                    UnknownFaulted(ex);
+                    a();
+                }
+                else
+                {
+                    try
+                    {
+                        a();
+                    }
+                    catch (Exception ex)
+                    {
+                        UnknownFaulted(ex);
+                    }
                 }
             };
 
