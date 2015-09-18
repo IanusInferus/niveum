@@ -336,9 +336,8 @@ namespace Client
                     a();
                 });
             };
-            bc->ReceiveAsync(DoHandle, [](const asio::error_code &se)
+            bc->ReceiveAsync(DoHandle, [](const std::wstring &Message)
             {
-                auto Message = s2w(se.message());
                 wprintf(L"%ls\n", Message.c_str());
                 exit(-1);
             });
@@ -397,9 +396,8 @@ namespace Client
                     a();
                 });
             };
-            bc->ReceiveAsync(DoHandle, [](const asio::error_code &se)
+            bc->ReceiveAsync(DoHandle, [](const std::wstring &Message)
             {
-                auto Message = s2w(se.message());
                 wprintf(L"%ls\n", Message.c_str());
                 exit(-1);
             });
