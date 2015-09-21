@@ -871,7 +871,15 @@ namespace Client
                 std::shared_ptr<std::vector<int>> Indices = nullptr;
                 if ((Flag & 1) != 0)
                 {
+                    if (Buffer->size() < 14)
+                    {
+                        return;
+                    }
                     auto NumIndex = (*Buffer)[Offset] | (static_cast<std::int32_t>((*Buffer)[Offset + 1]) << 8);
+                    if (Buffer->size() < 14 + NumIndex * 2)
+                    {
+                        return;
+                    }
                     if (NumIndex > WritingWindowSize()) //若Index数量较大，则丢弃包
                     {
                         return;
