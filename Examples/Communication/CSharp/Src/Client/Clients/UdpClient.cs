@@ -678,7 +678,15 @@ namespace Client
                     int[] Indices = null;
                     if ((Flag & 1) != 0)
                     {
+                        if (Buffer.Length < 14)
+                        {
+                            return;
+                        }
                         var NumIndex = Buffer[Offset] | ((Int32)(Buffer[Offset + 1]) << 8);
+                        if (Buffer.Length < 14 + NumIndex * 2)
+                        {
+                            return;
+                        }
                         if (NumIndex > WritingWindowSize) //若Index数量较大，则丢弃包
                         {
                             return;
