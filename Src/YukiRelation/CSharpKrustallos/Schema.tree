@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Krustallos代码模板数据
-      Version:     2015.08.18.
+      Version:     2015.09.26.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -638,11 +638,11 @@ ObjectSchemaTemplate
 
                         public IDataAccess Create(String ConnectionString)
                         {
-                            return Create(ConnectionString, IsolationLevel.Serializable, (ITransactionLock)(null));
+                            return Create(ConnectionString, IsolationLevel.Snapshot, (ITransactionLock)(null));
                         }
                         public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
                         {
-                            return Create(ConnectionString, IsolationLevel.Serializable, TransactionLock);
+                            return Create(ConnectionString, IsolationLevel.Snapshot, TransactionLock);
                         }
                         public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel)
                         {

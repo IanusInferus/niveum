@@ -1,4 +1,10 @@
-﻿2015.09.24.0
+﻿2015.09.26
+Yuki.Relation:
+修正C# Krustallos代码生成中的隔离等级为Snapshot。
+Examples:
+修正C#数据库示例中Krustallos的隔离等级。
+
+2015.09.24.0
 
 2015.09.21
 Examples:
