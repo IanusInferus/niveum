@@ -41,7 +41,21 @@ namespace Krustallos
         public Transaction(Instance Instance, IsolationLevel IsolationLevel)
         {
             this.Instance = Instance;
-            if (IsolationLevel != System.Data.IsolationLevel.Serializable) { throw new NotSupportedException(); }
+
+            //支持的级别为Snapshot，需要配合predicative lock按照pessimistic concurrency模型使用，否则不能保证写入时原始数据的版本和读取数据时数据的版本一致
+            //如果两个事务读取重叠的数据而做出不重叠的修改，可能导致事务无法看作序列化的(Serializable)，此时可以通过将部分读取数据手动加predicative lock视为写来保持数据的一致性
+            //如果隔离级别比Snapshot低，则看作Snapshot
+            if (!((IsolationLevel == System.Data.IsolationLevel.Snapshot)
+                || (IsolationLevel == System.Data.IsolationLevel.RepeatableRead)
+                || (IsolationLevel == System.Data.IsolationLevel.ReadCommitted)
+                || (IsolationLevel == System.Data.IsolationLevel.ReadUncommitted)
+                || (IsolationLevel == System.Data.IsolationLevel.Chaos)
+                || (IsolationLevel == System.Data.IsolationLevel.Unspecified))
+                )
+            {
+                throw new NotSupportedException();
+            }
+
             UpdateStores = new SortedDictionary<String[], SortedDictionary<int, UpdatePartitionInfo>>(new StringArrayComparer());
             Updates = new List<Func<Version, Boolean>>();
         }
