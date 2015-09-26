@@ -18,7 +18,7 @@ namespace Database.Krustallos
 
         public Func<String, ITransactionLock, IDataAccess> GetConnectionFactory()
         {
-            return (ConnectionString, TransactionLock) => Inner.Create(ConnectionString, System.Data.IsolationLevel.Serializable, t => TransactionLock, 16);
+            return (ConnectionString, TransactionLock) => Inner.Create(ConnectionString, System.Data.IsolationLevel.Snapshot, t => TransactionLock, 16);
         }
 
         public Func<Exception, Boolean> GetIsRetryable()
@@ -154,7 +154,7 @@ namespace Database.Krustallos
                     var i = p.Value;
                     DateTime Time;
                     Version Version;
-                    using (var da = new KrustallosDataAccess(i.Instance, i.Data, IsolationLevel.Serializable, (ITransactionLock)(null)))
+                    using (var da = new KrustallosDataAccess(i.Instance, i.Data, IsolationLevel.Snapshot, (ITransactionLock)(null)))
                     {
                         Version = da.GetReaderVersion();
                         Time = DateTime.UtcNow;
