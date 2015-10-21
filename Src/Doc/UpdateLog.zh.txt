@@ -1,4 +1,8 @@
-﻿2015.09.26
+﻿2015.10.21
+Examples:
+修正C#通讯示例中http服务器有时候接收连接会崩溃的问题。
+
+2015.09.26
 Yuki.Relation:
 修正C# Krustallos代码生成中的隔离等级为Snapshot。
 Examples:
