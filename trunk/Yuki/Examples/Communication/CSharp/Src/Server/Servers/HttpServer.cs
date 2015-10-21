@@ -421,43 +421,44 @@ namespace Server
 
                         Action<HttpListenerContext> Accept = a =>
                         {
-                            var e = (IPEndPoint)a.Request.RemoteEndPoint;
-                            var XForwardedFor = a.Request.Headers["X-Forwarded-For"];
-                            var Address = e.Address;
-                            if ((XForwardedFor != null) && (XForwardedFor != ""))
-                            {
-                                try
-                                {
-                                    IPAddress addr;
-                                    if (IPAddress.TryParse(XForwardedFor.Split(',')[0].Trim(' '), out addr))
-                                    {
-                                        Address = addr;
-                                    }
-                                }
-                                catch
-                                {
-                                }
-                            }
-                            var XForwardedPort = a.Request.Headers["X-Forwarded-Port"];
-                            var Port = e.Port;
-                            if ((XForwardedPort != null) && (XForwardedPort != ""))
-                            {
-                                try
-                                {
-                                    int p;
-                                    if (int.TryParse(XForwardedPort.Split(',')[0].Trim(' '), out p))
-                                    {
-                                        Port = p;
-                                    }
-                                }
-                                catch
-                                {
-                                }
-                            }
-                            e = new IPEndPoint(Address, Port);
-
+                            IPEndPoint e = null;
                             try
                             {
+                                e = (IPEndPoint)a.Request.RemoteEndPoint;
+                                var XForwardedFor = a.Request.Headers["X-Forwarded-For"];
+                                var Address = e.Address;
+                                if ((XForwardedFor != null) && (XForwardedFor != ""))
+                                {
+                                    try
+                                    {
+                                        IPAddress addr;
+                                        if (IPAddress.TryParse(XForwardedFor.Split(',')[0].Trim(' '), out addr))
+                                        {
+                                            Address = addr;
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
+                                }
+                                var XForwardedPort = a.Request.Headers["X-Forwarded-Port"];
+                                var Port = e.Port;
+                                if ((XForwardedPort != null) && (XForwardedPort != ""))
+                                {
+                                    try
+                                    {
+                                        int p;
+                                        if (int.TryParse(XForwardedPort.Split(',')[0].Trim(' '), out p))
+                                        {
+                                            Port = p;
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
+                                }
+                                e = new IPEndPoint(Address, Port);
+
                                 if (ServerContext.EnableLogSystem)
                                 {
                                     ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Name = "RequestIn", Message = "" });
@@ -624,7 +625,14 @@ namespace Server
                             {
                                 if (ServerContext.EnableLogSystem)
                                 {
-                                    ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e, Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = ExceptionInfo.GetExceptionInfo(ex) });
+                                    ServerContext.RaiseSessionLog(new SessionLogEntry { Token = "", RemoteEndPoint = e ?? new IPEndPoint(IPAddress.Any, 0), Time = DateTime.UtcNow, Type = "Sys", Name = "Exception", Message = ExceptionInfo.GetExceptionInfo(ex) });
+                                }
+                                try
+                                {
+                                    a.Response.StatusCode = 500;
+                                }
+                                catch
+                                {
                                 }
                                 NotifyListenerContextQuit(a);
                             }
