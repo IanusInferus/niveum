@@ -6,7 +6,7 @@
 
 #include <cstdint>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <set>
 #include <functional>
 #include <chrono>
@@ -106,7 +106,7 @@ namespace Server
             }
 
             int MaxHandled;
-            std::map<int, std::shared_ptr<Part>> Parts;
+            std::unordered_map<int, std::shared_ptr<Part>> Parts;
             std::shared_ptr<Part> TryTakeFirstPart()
             {
                 if (Parts.size() == 0) { return nullptr; }
@@ -146,7 +146,7 @@ namespace Server
             }
             bool TryPushPart(int Index, std::shared_ptr<std::vector<std::uint8_t>> Data, int Offset, int Length)
             {
-                if (((Index - MaxHandled + IndexSpace()) % IndexSpace()) > WindowSize)
+                if (((Index - MaxHandled + IndexSpace()) % IndexSpace()) >= WindowSize)
                 {
                     return false;
                 }
@@ -163,7 +163,7 @@ namespace Server
             }
             bool TryPushPart(int Index, std::shared_ptr<std::vector<std::uint8_t>> Data)
             {
-                if (((Index - MaxHandled + IndexSpace()) % IndexSpace()) > WindowSize)
+                if (((Index - MaxHandled + IndexSpace()) % IndexSpace()) >= WindowSize)
                 {
                     return false;
                 }
@@ -178,65 +178,48 @@ namespace Server
 
             void Acknowledge(int Index, const std::vector<int> &Indices, int MaxWritten)
             {
-                if (IsEqualOrAfter(Index, MaxHandled))
+                // Parts (= [MaxHandled, MaxWritten]
+                // Index (- [MaxHandled, MaxWritten]
+                // Indices (= (Index, MaxWritten]
+                // |[MaxHandled, MaxWritten]| < WindowSize
+                // any i (- [0, IndexSpace - 1]
+
+                if (MaxWritten == MaxHandled) { return; }
+                if (!IsEqualOrAfter(MaxWritten, MaxHandled)) { return; }
+                if ((Index < 0) || (Index >= IndexSpace())) { return; }
+                if (!IsEqualOrAfter(Index, MaxHandled)) { return; }
+                if (!IsEqualOrAfter(MaxWritten, Index)) { return; }
+                for (auto i : Indices)
                 {
-                    MaxHandled = Index;
-                    if (Parts.count(Index) > 0)
+                    if ((i < 0) || (i >= IndexSpace())) { return; }
+                    if (IsEqualOrAfter(Index, i)) { return; }
+                    if (!IsEqualOrAfter(MaxWritten, i)) { return; }
+                }
+
+                while (MaxHandled != Index)
+                {
+                    auto i = GetSuccessor(MaxHandled);
+                    if (Parts.count(i) > 0)
                     {
-                        Parts.erase(Index);
+                        Parts.erase(i);
                     }
-                    while (true)
-                    {
-                        if (Parts.size() == 0) { break; }
-                        auto First = *Parts.begin();
-                        auto Key = std::get<0>(First);
-                        auto Value = std::get<1>(First);
-                        if (IsEqualOrAfter(Index, Key))
-                        {
-                            Parts.erase(Key);
-                        }
-                        if (IsEqualOrAfter(Key, Index))
-                        {
-                            break;
-                        }
-                    }
-                    while (true)
-                    {
-                        if (Parts.size() == 0) { break; }
-                        auto Last = *Parts.rbegin();
-                        auto Key = std::get<0>(Last);
-                        auto Value = std::get<1>(Last);
-                        if (IsEqualOrAfter(Index, Key))
-                        {
-                            Parts.erase(Key);
-                        }
-                        if (IsEqualOrAfter(Key, Index))
-                        {
-                            break;
-                        }
-                    }
+                    MaxHandled = i;
                 }
                 for (auto i : Indices)
                 {
-                    if (IsEqualOrAfter(i, MaxHandled))
+                    if (Parts.count(i) > 0)
                     {
-                        if (Parts.count(i) > 0)
-                        {
-                            Parts.erase(i);
-                        }
+                        Parts.erase(i);
                     }
                 }
-                while ((MaxHandled != MaxWritten) && IsEqualOrAfter(MaxWritten, MaxHandled))
+                while (MaxHandled != MaxWritten)
                 {
-                    auto Next = GetSuccessor(MaxHandled);
-                    if (Parts.count(Next) == 0)
-                    {
-                        MaxHandled = Next;
-                    }
-                    else
+                    auto i = GetSuccessor(MaxHandled);
+                    if (Parts.count(i) > 0)
                     {
                         break;
                     }
+                    MaxHandled = i;
                 }
             }
 

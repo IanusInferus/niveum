@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
@@ -85,102 +84,6 @@ namespace Client
             public DateTime ResendTime;
             public int ResentCount;
         }
-        private class SortedDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
-        {
-            private class Comparer : IComparer<KeyValuePair<TKey, TValue>>
-            {
-                private IComparer<TKey> c = Comparer<TKey>.Default;
-
-                public int Compare(KeyValuePair<TKey, TValue> x, KeyValuePair<TKey, TValue> y)
-                {
-                    return c.Compare(x.Key, y.Key);
-                }
-            }
-
-            private SortedSet<KeyValuePair<TKey, TValue>> Set;
-            public SortedDictionary()
-            {
-                Set = new SortedSet<KeyValuePair<TKey, TValue>>(new Comparer());
-            }
-
-            public TValue this[TKey Key]
-            {
-                get
-                {
-                    if (Key == null) { throw new ArgumentNullException(); }
-                    var p = new KeyValuePair<TKey, TValue>(Key, default(TValue));
-                    var v = Set.GetViewBetween(p, p);
-                    if (v.Count != 1) { throw new KeyNotFoundException(); }
-                    return v.Single().Value;
-                }
-
-                set
-                {
-                    if (Key == null) { throw new ArgumentNullException(); }
-                    var p = new KeyValuePair<TKey, TValue>(Key, value);
-                    if (!Set.Remove(p))
-                    {
-                        throw new KeyNotFoundException();
-                    }
-                    Set.Add(p);
-                }
-            }
-
-            public int Count
-            {
-                get
-                {
-                    return Set.Count;
-                }
-            }
-
-            public bool ContainsKey(TKey Key)
-            {
-                if (Key == null) { throw new ArgumentNullException(); }
-                var p = new KeyValuePair<TKey, TValue>(Key, default(TValue));
-                return Set.Contains(p);
-            }
-            public void Add(TKey Key, TValue Value)
-            {
-                if (Key == null) { throw new ArgumentNullException(); }
-                var p = new KeyValuePair<TKey, TValue>(Key, Value);
-                if (!Set.Add(p))
-                {
-                    throw new ArgumentException();
-                }
-            }
-            public bool Remove(TKey Key)
-            {
-                if (Key == null) { throw new ArgumentNullException(); }
-                var p = new KeyValuePair<TKey, TValue>(Key, default(TValue));
-                return Set.Remove(p);
-            }
-
-            public KeyValuePair<TKey, TValue> Min
-            {
-                get
-                {
-                    return Set.Min;
-                }
-            }
-            public KeyValuePair<TKey, TValue> Max
-            {
-                get
-                {
-                    return Set.Max;
-                }
-            }
-
-            public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-            {
-                return ((IEnumerable<KeyValuePair<TKey, TValue>>)Set).GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return ((IEnumerable<KeyValuePair<TKey, TValue>>)Set).GetEnumerator();
-            }
-        }
         private class PartContext
         {
             private int WindowSize;
@@ -190,7 +93,7 @@ namespace Client
             }
 
             public int MaxHandled = IndexSpace - 1;
-            public SortedDictionary<int, Part> Parts = new SortedDictionary<int, Part>();
+            public Dictionary<int, Part> Parts = new Dictionary<int, Part>();
             public Part TryTakeFirstPart()
             {
                 if (Parts.Count == 0) { return null; }
@@ -230,7 +133,7 @@ namespace Client
             }
             public Boolean TryPushPart(int Index, Byte[] Data, int Offset, int Length)
             {
-                if (((Index - MaxHandled + IndexSpace) % IndexSpace) > WindowSize)
+                if (((Index - MaxHandled + IndexSpace) % IndexSpace) >= WindowSize)
                 {
                     return false;
                 }
@@ -241,7 +144,7 @@ namespace Client
             }
             public Boolean TryPushPart(int Index, Byte[] Data)
             {
-                if (((Index - MaxHandled + IndexSpace) % IndexSpace) > WindowSize)
+                if (((Index - MaxHandled + IndexSpace) % IndexSpace) >= WindowSize)
                 {
                     return false;
                 }
@@ -251,65 +154,48 @@ namespace Client
 
             public void Acknowledge(int Index, IEnumerable<int> Indices, int MaxWritten)
             {
-                if (IsEqualOrAfter(Index, MaxHandled))
+                // Parts (= [MaxHandled, MaxWritten]
+                // Index (- [MaxHandled, MaxWritten]
+                // Indices (= (Index, MaxWritten]
+                // |[MaxHandled, MaxWritten]| < WindowSize
+                // any i (- [0, IndexSpace - 1]
+
+                if (MaxWritten == MaxHandled) { return; }
+                if (!IsEqualOrAfter(MaxWritten, MaxHandled)) { return; }
+                if ((Index < 0) || (Index >= IndexSpace)) { return; }
+                if (!IsEqualOrAfter(Index, MaxHandled)) { return; }
+                if (!IsEqualOrAfter(MaxWritten, Index)) { return; }
+                foreach (var i in Indices)
                 {
-                    MaxHandled = Index;
-                    if (Parts.ContainsKey(Index))
+                    if ((i < 0) || (i >= IndexSpace)) { return; }
+                    if (IsEqualOrAfter(Index, i)) { return; }
+                    if (!IsEqualOrAfter(MaxWritten, i)) { return; }
+                }
+
+                while (MaxHandled != Index)
+                {
+                    var i = GetSuccessor(MaxHandled);
+                    if (Parts.ContainsKey(i))
                     {
-                        Parts.Remove(Index);
+                        Parts.Remove(i);
                     }
-                    while (true)
-                    {
-                        if (Parts.Count == 0) { break; }
-                        var First = Parts.Min;
-                        var Key = First.Key;
-                        var Value = First.Value;
-                        if (IsEqualOrAfter(Index, Key))
-                        {
-                            Parts.Remove(Key);
-                        }
-                        if (IsEqualOrAfter(Key, Index))
-                        {
-                            break;
-                        }
-                    }
-                    while (true)
-                    {
-                        if (Parts.Count == 0) { break; }
-                        var Last = Parts.Max;
-                        var Key = Last.Key;
-                        var Value = Last.Value;
-                        if (IsEqualOrAfter(Index, Key))
-                        {
-                            Parts.Remove(Key);
-                        }
-                        if (IsEqualOrAfter(Key, Index))
-                        {
-                            break;
-                        }
-                    }
+                    MaxHandled = i;
                 }
                 foreach (var i in Indices)
                 {
-                    if (IsEqualOrAfter(i, MaxHandled))
+                    if (Parts.ContainsKey(i))
                     {
-                        if (Parts.ContainsKey(i))
-                        {
-                            Parts.Remove(i);
-                        }
+                        Parts.Remove(i);
                     }
                 }
-                while ((MaxHandled != MaxWritten) && IsEqualOrAfter(MaxWritten, MaxHandled))
+                while (MaxHandled != MaxWritten)
                 {
-                    var Next = GetSuccessor(MaxHandled);
-                    if (!Parts.ContainsKey(Next))
-                    {
-                        MaxHandled = Next;
-                    }
-                    else
+                    var i = GetSuccessor(MaxHandled);
+                    if (Parts.ContainsKey(i))
                     {
                         break;
                     }
+                    MaxHandled = i;
                 }
             }
 
@@ -452,6 +338,11 @@ namespace Client
 
                     var Length = Math.Min(12 + (IsACK ? 2 + NumIndex * 2 : 0) + TotalLength - WritingOffset, MaxPacketLength);
                     var DataLength = Length - (12 + (IsACK ? 2 + NumIndex * 2 : 0));
+                    if (DataLength < 0)
+                    {
+                        se = SocketError.NoBufferSpaceAvailable;
+                        return;
+                    }
                     var Buffer = new Byte[Length];
                     Buffer[0] = (Byte)(SessionId & 0xFF);
                     Buffer[1] = (Byte)((SessionId >> 8) & 0xFF);
@@ -603,6 +494,10 @@ namespace Client
                     var Flag = 8; //AUX
 
                     var Length = 12 + 2 + NumIndex * 2;
+                    if (Length > MaxPacketLength)
+                    {
+                        return;
+                    }
                     var Buffer = new Byte[Length];
                     Buffer[0] = (Byte)(SessionId & 0xFF);
                     Buffer[1] = (Byte)((SessionId >> 8) & 0xFF);

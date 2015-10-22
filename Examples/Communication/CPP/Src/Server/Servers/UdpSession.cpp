@@ -190,6 +190,11 @@ namespace Server
 
                 auto Length = std::min(12 + (IsACK ? 2 + NumIndex * 2 : 0) + TotalLength - WritingOffset, MaxPacketLength());
                 auto DataLength = Length - (12 + (IsACK ? 2 + NumIndex * 2 : 0));
+                if (DataLength < 0)
+                {
+                    Success = false;
+                    return;
+                }
                 auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
                 Buffer->resize(Length, 0);
                 (*Buffer)[0] = static_cast<std::uint8_t>(SessionId & 0xFF);
