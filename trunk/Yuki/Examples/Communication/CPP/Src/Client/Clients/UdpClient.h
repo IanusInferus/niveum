@@ -126,13 +126,12 @@ namespace Client
             std::shared_ptr<Part> TryTakeFirstPart()
             {
                 if (Parts.size() == 0) { return nullptr; }
-                auto First = *Parts.begin();
-                auto Key = std::get<0>(First);
-                auto Value = std::get<1>(First);
-                if (IsSuccessor(Key, MaxHandled))
+                auto Successor = GetSuccessor(MaxHandled);
+                if (Parts.count(Successor) > 0)
                 {
-                    Parts.erase(Key);
-                    MaxHandled = Key;
+                    auto Value = Parts[Successor];
+                    Parts.erase(Successor);
+                    MaxHandled = Successor;
                     return Value;
                 }
                 return nullptr;
@@ -193,32 +192,57 @@ namespace Client
                 return true;
             }
 
-            void Acknowledge(int Index, const std::vector<int> &Indices, int WritenIndex)
+            void Acknowledge(int Index, const std::vector<int> &Indices, int MaxWritten)
             {
-                MaxHandled = Index;
-                while (true)
+                if (IsEqualOrAfter(Index, MaxHandled))
                 {
-                    if (Parts.size() == 0) { return; }
-                    auto First = *Parts.begin();
-                    auto Key = std::get<0>(First);
-                    auto Value = std::get<1>(First);
-                    if (Key <= Index)
+                    MaxHandled = Index;
+                    if (Parts.count(Index) > 0)
                     {
-                        Parts.erase(Key);
+                        Parts.erase(Index);
                     }
-                    if (Key >= Index)
+                    while (true)
                     {
-                        break;
+                        if (Parts.size() == 0) { break; }
+                        auto First = *Parts.begin();
+                        auto Key = std::get<0>(First);
+                        auto Value = std::get<1>(First);
+                        if (IsEqualOrAfter(Index, Key))
+                        {
+                            Parts.erase(Key);
+                        }
+                        if (IsEqualOrAfter(Key, Index))
+                        {
+                            break;
+                        }
+                    }
+                    while (true)
+                    {
+                        if (Parts.size() == 0) { break; }
+                        auto Last = *Parts.rbegin();
+                        auto Key = std::get<0>(Last);
+                        auto Value = std::get<1>(Last);
+                        if (IsEqualOrAfter(Index, Key))
+                        {
+                            Parts.erase(Key);
+                        }
+                        if (IsEqualOrAfter(Key, Index))
+                        {
+                            break;
+                        }
                     }
                 }
                 for (auto i : Indices)
                 {
-                    if (Parts.count(i) > 0)
+                    if (IsEqualOrAfter(i, MaxHandled))
                     {
-                        Parts.erase(i);
+                        if (Parts.count(i) > 0)
+                        {
+                            Parts.erase(i);
+                        }
                     }
                 }
-                while ((MaxHandled != WritenIndex) && IsEqualOrAfter(WritenIndex, MaxHandled))
+                while ((MaxHandled != MaxWritten) && IsEqualOrAfter(MaxWritten, MaxHandled))
                 {
                     auto Next = GetSuccessor(MaxHandled);
                     if (Parts.count(Next) == 0)
@@ -384,22 +408,22 @@ namespace Client
             {
                 if (c->NotAcknowledgedIndices.size() == 0) { return; }
                 auto MaxHandled = c->Parts->MaxHandled;
-                while (c->NotAcknowledgedIndices.size() > 0)
+                std::vector<int> Acknowledged;
+                for (auto i : c->NotAcknowledgedIndices)
                 {
-                    auto First = *c->NotAcknowledgedIndices.begin();
-                    if (c->Parts->IsEqualOrAfter(MaxHandled, First))
+                    if (c->Parts->IsEqualOrAfter(MaxHandled, i))
                     {
-                        c->NotAcknowledgedIndices.erase(First);
+                        Acknowledged.push_back(i);
                     }
-                    else if (PartContext::IsSuccessor(First, MaxHandled))
+                    else if (PartContext::IsSuccessor(i, MaxHandled))
                     {
-                        c->NotAcknowledgedIndices.erase(First);
-                        MaxHandled = First;
+                        Acknowledged.push_back(i);
+                        MaxHandled = i;
                     }
-                    else
-                    {
-                        break;
-                    }
+                }
+                for (auto i : Acknowledged)
+                {
+                    c->NotAcknowledgedIndices.erase(i);
                 }
                 Indices.push_back(MaxHandled);
                 for (auto i : c->NotAcknowledgedIndices)
@@ -571,22 +595,22 @@ namespace Client
                     c->LastCheck = CurrentTime;
                     auto NotAcknowledgedIndices = std::set<int>(c->NotAcknowledgedIndices.begin(), c->NotAcknowledgedIndices.end());
                     auto MaxHandled = c->Parts->MaxHandled;
-                    while (NotAcknowledgedIndices.size() > 0)
+                    std::vector<int> Acknowledged;
+                    for (auto i : NotAcknowledgedIndices)
                     {
-                        auto First = *NotAcknowledgedIndices.begin();
-                        if (c->Parts->IsEqualOrAfter(MaxHandled, First))
+                        if (c->Parts->IsEqualOrAfter(MaxHandled, i))
                         {
-                            NotAcknowledgedIndices.erase(First);
+                            Acknowledged.push_back(i);
                         }
-                        else if (PartContext::IsSuccessor(First, MaxHandled))
+                        else if (PartContext::IsSuccessor(i, MaxHandled))
                         {
-                            NotAcknowledgedIndices.erase(First);
-                            MaxHandled = First;
+                            Acknowledged.push_back(i);
+                            MaxHandled = i;
                         }
-                        else
-                        {
-                            break;
-                        }
+                    }
+                    for (auto i : Acknowledged)
+                    {
+                        NotAcknowledgedIndices.erase(i);
                     }
                     Indices.push_back(MaxHandled);
                     for (auto i : NotAcknowledgedIndices)
@@ -919,17 +943,17 @@ namespace Client
                     if (Pushed)
                     {
                         c->NotAcknowledgedIndices.insert(Index);
-                        while (c->NotAcknowledgedIndices.size() > 0)
+                        std::vector<int> Acknowledged;
+                        for (auto i : c->NotAcknowledgedIndices)
                         {
-                            auto First = *c->NotAcknowledgedIndices.begin();
-                            if (c->Parts->IsEqualOrAfter(c->Parts->MaxHandled, First))
+                            if (c->Parts->IsEqualOrAfter(c->Parts->MaxHandled, i))
                             {
-                                c->NotAcknowledgedIndices.erase(First);
+                                Acknowledged.push_back(i);
                             }
-                            else
-                            {
-                                break;
-                            }
+                        }
+                        for (auto i : Acknowledged)
+                        {
+                            c->NotAcknowledgedIndices.erase(i);
                         }
 
                         while (true)

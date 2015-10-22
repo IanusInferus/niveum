@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
@@ -84,6 +85,102 @@ namespace Client
             public DateTime ResendTime;
             public int ResentCount;
         }
+        private class SortedDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            private class Comparer : IComparer<KeyValuePair<TKey, TValue>>
+            {
+                private IComparer<TKey> c = Comparer<TKey>.Default;
+
+                public int Compare(KeyValuePair<TKey, TValue> x, KeyValuePair<TKey, TValue> y)
+                {
+                    return c.Compare(x.Key, y.Key);
+                }
+            }
+
+            private SortedSet<KeyValuePair<TKey, TValue>> Set;
+            public SortedDictionary()
+            {
+                Set = new SortedSet<KeyValuePair<TKey, TValue>>(new Comparer());
+            }
+
+            public TValue this[TKey Key]
+            {
+                get
+                {
+                    if (Key == null) { throw new ArgumentNullException(); }
+                    var p = new KeyValuePair<TKey, TValue>(Key, default(TValue));
+                    var v = Set.GetViewBetween(p, p);
+                    if (v.Count != 1) { throw new KeyNotFoundException(); }
+                    return v.Single().Value;
+                }
+
+                set
+                {
+                    if (Key == null) { throw new ArgumentNullException(); }
+                    var p = new KeyValuePair<TKey, TValue>(Key, value);
+                    if (!Set.Remove(p))
+                    {
+                        throw new KeyNotFoundException();
+                    }
+                    Set.Add(p);
+                }
+            }
+
+            public int Count
+            {
+                get
+                {
+                    return Set.Count;
+                }
+            }
+
+            public bool ContainsKey(TKey Key)
+            {
+                if (Key == null) { throw new ArgumentNullException(); }
+                var p = new KeyValuePair<TKey, TValue>(Key, default(TValue));
+                return Set.Contains(p);
+            }
+            public void Add(TKey Key, TValue Value)
+            {
+                if (Key == null) { throw new ArgumentNullException(); }
+                var p = new KeyValuePair<TKey, TValue>(Key, Value);
+                if (!Set.Add(p))
+                {
+                    throw new ArgumentException();
+                }
+            }
+            public bool Remove(TKey Key)
+            {
+                if (Key == null) { throw new ArgumentNullException(); }
+                var p = new KeyValuePair<TKey, TValue>(Key, default(TValue));
+                return Set.Remove(p);
+            }
+
+            public KeyValuePair<TKey, TValue> Min
+            {
+                get
+                {
+                    return Set.Min;
+                }
+            }
+            public KeyValuePair<TKey, TValue> Max
+            {
+                get
+                {
+                    return Set.Max;
+                }
+            }
+
+            public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+            {
+                return ((IEnumerable<KeyValuePair<TKey, TValue>>)Set).GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return ((IEnumerable<KeyValuePair<TKey, TValue>>)Set).GetEnumerator();
+            }
+        }
         private class PartContext
         {
             private int WindowSize;
@@ -97,12 +194,13 @@ namespace Client
             public Part TryTakeFirstPart()
             {
                 if (Parts.Count == 0) { return null; }
-                var First = Parts.First();
-                if (IsSuccessor(First.Key, MaxHandled))
+                var Successor = GetSuccessor(MaxHandled);
+                if (Parts.ContainsKey(Successor))
                 {
-                    Parts.Remove(First.Key);
-                    MaxHandled = First.Key;
-                    return First.Value;
+                    var Value = Parts[Successor];
+                    Parts.Remove(Successor);
+                    MaxHandled = Successor;
+                    return Value;
                 }
                 return null;
             }
@@ -151,30 +249,57 @@ namespace Client
                 return true;
             }
 
-            public void Acknowledge(int Index, IEnumerable<int> Indices, int WritenIndex)
+            public void Acknowledge(int Index, IEnumerable<int> Indices, int MaxWritten)
             {
-                MaxHandled = Index;
-                while (true)
+                if (IsEqualOrAfter(Index, MaxHandled))
                 {
-                    if (Parts.Count == 0) { return; }
-                    var First = Parts.First();
-                    if (First.Key <= Index)
+                    MaxHandled = Index;
+                    if (Parts.ContainsKey(Index))
                     {
-                        Parts.Remove(First.Key);
+                        Parts.Remove(Index);
                     }
-                    if (First.Key >= Index)
+                    while (true)
                     {
-                        break;
+                        if (Parts.Count == 0) { break; }
+                        var First = Parts.Min;
+                        var Key = First.Key;
+                        var Value = First.Value;
+                        if (IsEqualOrAfter(Index, Key))
+                        {
+                            Parts.Remove(Key);
+                        }
+                        if (IsEqualOrAfter(Key, Index))
+                        {
+                            break;
+                        }
+                    }
+                    while (true)
+                    {
+                        if (Parts.Count == 0) { break; }
+                        var Last = Parts.Max;
+                        var Key = Last.Key;
+                        var Value = Last.Value;
+                        if (IsEqualOrAfter(Index, Key))
+                        {
+                            Parts.Remove(Key);
+                        }
+                        if (IsEqualOrAfter(Key, Index))
+                        {
+                            break;
+                        }
                     }
                 }
                 foreach (var i in Indices)
                 {
-                    if (Parts.ContainsKey(i))
+                    if (IsEqualOrAfter(i, MaxHandled))
                     {
-                        Parts.Remove(i);
+                        if (Parts.ContainsKey(i))
+                        {
+                            Parts.Remove(i);
+                        }
                     }
                 }
-                while ((MaxHandled != WritenIndex) && IsEqualOrAfter(WritenIndex, MaxHandled))
+                while ((MaxHandled != MaxWritten) && IsEqualOrAfter(MaxWritten, MaxHandled))
                 {
                     var Next = GetSuccessor(MaxHandled);
                     if (!Parts.ContainsKey(Next))
@@ -274,22 +399,22 @@ namespace Client
             {
                 if (c.NotAcknowledgedIndices.Count == 0) { return; }
                 var MaxHandled = c.Parts.MaxHandled;
-                while (c.NotAcknowledgedIndices.Count > 0)
+                var Acknowledged = new List<int>();
+                foreach (var i in c.NotAcknowledgedIndices)
                 {
-                    var First = c.NotAcknowledgedIndices.First();
-                    if (c.Parts.IsEqualOrAfter(MaxHandled, First))
+                    if (c.Parts.IsEqualOrAfter(MaxHandled, i))
                     {
-                        c.NotAcknowledgedIndices.Remove(First);
+                        Acknowledged.Add(i);
                     }
-                    else if (PartContext.IsSuccessor(First, MaxHandled))
+                    else if (PartContext.IsSuccessor(i, MaxHandled))
                     {
-                        c.NotAcknowledgedIndices.Remove(First);
-                        MaxHandled = First;
+                        Acknowledged.Add(i);
+                        MaxHandled = i;
                     }
-                    else
-                    {
-                        break;
-                    }
+                }
+                foreach (var i in Acknowledged)
+                {
+                    c.NotAcknowledgedIndices.Remove(i);
                 }
                 Indices.Add(MaxHandled);
                 Indices.AddRange(c.NotAcknowledgedIndices);
@@ -436,22 +561,22 @@ namespace Client
                 c.LastCheck = CurrentTime;
                 var NotAcknowledgedIndices = new SortedSet<int>(c.NotAcknowledgedIndices);
                 var MaxHandled = c.Parts.MaxHandled;
-                while (NotAcknowledgedIndices.Count > 0)
+                var Acknowledged = new List<int>();
+                foreach (var i in NotAcknowledgedIndices)
                 {
-                    var First = NotAcknowledgedIndices.First();
-                    if (c.Parts.IsEqualOrAfter(MaxHandled, First))
+                    if (c.Parts.IsEqualOrAfter(MaxHandled, i))
                     {
-                        NotAcknowledgedIndices.Remove(First);
+                        Acknowledged.Add(i);
                     }
-                    else if (PartContext.IsSuccessor(First, MaxHandled))
+                    else if (PartContext.IsSuccessor(i, MaxHandled))
                     {
-                        NotAcknowledgedIndices.Remove(First);
-                        MaxHandled = First;
+                        Acknowledged.Add(i);
+                        MaxHandled = i;
                     }
-                    else
-                    {
-                        break;
-                    }
+                }
+                foreach (var i in Acknowledged)
+                {
+                    NotAcknowledgedIndices.Remove(i);
                 }
                 Indices.Add(MaxHandled);
                 Indices.AddRange(NotAcknowledgedIndices);
@@ -723,17 +848,17 @@ namespace Client
                         if (Pushed)
                         {
                             c.NotAcknowledgedIndices.Add(Index);
-                            while (c.NotAcknowledgedIndices.Count > 0)
+                            var Acknowledged = new List<int>();
+                            foreach (var i in c.NotAcknowledgedIndices)
                             {
-                                var First = c.NotAcknowledgedIndices.First();
-                                if (c.Parts.IsEqualOrAfter(c.Parts.MaxHandled, First))
+                                if (c.Parts.IsEqualOrAfter(c.Parts.MaxHandled, i))
                                 {
-                                    c.NotAcknowledgedIndices.Remove(First);
+                                    Acknowledged.Add(i);
                                 }
-                                else
-                                {
-                                    break;
-                                }
+                            }
+                            foreach (var i in Acknowledged)
+                            {
+                                c.NotAcknowledgedIndices.Remove(i);
                             }
 
                             while (true)
