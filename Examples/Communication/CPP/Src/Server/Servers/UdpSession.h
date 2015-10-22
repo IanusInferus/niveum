@@ -110,13 +110,12 @@ namespace Server
             std::shared_ptr<Part> TryTakeFirstPart()
             {
                 if (Parts.size() == 0) { return nullptr; }
-                auto First = *Parts.begin();
-                auto Key = std::get<0>(First);
-                auto Value = std::get<1>(First);
-                if (IsSuccessor(Key, MaxHandled))
+                auto Successor = GetSuccessor(MaxHandled);
+                if (Parts.count(Successor) > 0)
                 {
-                    Parts.erase(Key);
-                    MaxHandled = Key;
+                    auto Value = Parts[Successor];
+                    Parts.erase(Successor);
+                    MaxHandled = Successor;
                     return Value;
                 }
                 return nullptr;
@@ -177,32 +176,57 @@ namespace Server
                 return true;
             }
 
-            void Acknowledge(int Index, const std::vector<int> &Indices, int WritenIndex)
+            void Acknowledge(int Index, const std::vector<int> &Indices, int MaxWritten)
             {
-                MaxHandled = Index;
-                while (true)
+                if (IsEqualOrAfter(Index, MaxHandled))
                 {
-                    if (Parts.size() == 0) { return; }
-                    auto First = *Parts.begin();
-                    auto Key = std::get<0>(First);
-                    auto Value = std::get<1>(First);
-                    if (Key <= Index)
+                    MaxHandled = Index;
+                    if (Parts.count(Index) > 0)
                     {
-                        Parts.erase(Key);
+                        Parts.erase(Index);
                     }
-                    if (Key >= Index)
+                    while (true)
                     {
-                        break;
+                        if (Parts.size() == 0) { break; }
+                        auto First = *Parts.begin();
+                        auto Key = std::get<0>(First);
+                        auto Value = std::get<1>(First);
+                        if (IsEqualOrAfter(Index, Key))
+                        {
+                            Parts.erase(Key);
+                        }
+                        if (IsEqualOrAfter(Key, Index))
+                        {
+                            break;
+                        }
+                    }
+                    while (true)
+                    {
+                        if (Parts.size() == 0) { break; }
+                        auto Last = *Parts.rbegin();
+                        auto Key = std::get<0>(Last);
+                        auto Value = std::get<1>(Last);
+                        if (IsEqualOrAfter(Index, Key))
+                        {
+                            Parts.erase(Key);
+                        }
+                        if (IsEqualOrAfter(Key, Index))
+                        {
+                            break;
+                        }
                     }
                 }
                 for (auto i : Indices)
                 {
-                    if (Parts.count(i) > 0)
+                    if (IsEqualOrAfter(i, MaxHandled))
                     {
-                        Parts.erase(i);
+                        if (Parts.count(i) > 0)
+                        {
+                            Parts.erase(i);
+                        }
                     }
                 }
-                while ((MaxHandled != WritenIndex) && IsEqualOrAfter(WritenIndex, MaxHandled))
+                while ((MaxHandled != MaxWritten) && IsEqualOrAfter(MaxWritten, MaxHandled))
                 {
                     auto Next = GetSuccessor(MaxHandled);
                     if (Parts.count(Next) == 0)

@@ -140,22 +140,22 @@ namespace Server
         {
             if (c->NotAcknowledgedIndices.size() == 0) { return; }
             auto MaxHandled = c->Parts->MaxHandled;
-            while (c->NotAcknowledgedIndices.size() > 0)
+            std::vector<int> Acknowledged;
+            for (auto i : c->NotAcknowledgedIndices)
             {
-                auto First = *c->NotAcknowledgedIndices.begin();
-                if (c->Parts->IsEqualOrAfter(MaxHandled, First))
+                if (c->Parts->IsEqualOrAfter(MaxHandled, i))
                 {
-                    c->NotAcknowledgedIndices.erase(First);
+                    Acknowledged.push_back(i);
                 }
-                else if (PartContext::IsSuccessor(First, MaxHandled))
+                else if (PartContext::IsSuccessor(i, MaxHandled))
                 {
-                    c->NotAcknowledgedIndices.erase(First);
-                    MaxHandled = First;
+                    Acknowledged.push_back(i);
+                    MaxHandled = i;
                 }
-                else
-                {
-                    break;
-                }
+            }
+            for (auto i : Acknowledged)
+            {
+                c->NotAcknowledgedIndices.erase(i);
             }
             Indices.push_back(MaxHandled);
             for (auto i : c->NotAcknowledgedIndices)
@@ -673,17 +673,17 @@ namespace Server
             if (Pushed)
             {
                 c->NotAcknowledgedIndices.insert(Index);
-                while (c->NotAcknowledgedIndices.size() > 0)
+                std::vector<int> Acknowledged;
+                for (auto i : c->NotAcknowledgedIndices)
                 {
-                    auto First = *c->NotAcknowledgedIndices.begin();
-                    if (c->Parts->IsEqualOrAfter(c->Parts->MaxHandled, First))
+                    if (c->Parts->IsEqualOrAfter(c->Parts->MaxHandled, i))
                     {
-                        c->NotAcknowledgedIndices.erase(First);
+                        Acknowledged.push_back(i);
                     }
-                    else
-                    {
-                        break;
-                    }
+                }
+                for (auto i : Acknowledged)
+                {
+                    c->NotAcknowledgedIndices.erase(i);
                 }
 
                 if ((c->OnSuccess != nullptr) && (c->OnFailure != nullptr))
