@@ -15,7 +15,7 @@
 #include <cstring>
 #include <vector>
 #include <set>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <exception>
 #include <stdexcept>
@@ -122,7 +122,7 @@ namespace Client
             }
 
             int MaxHandled;
-            std::map<int, std::shared_ptr<Part>> Parts;
+            std::unordered_map<int, std::shared_ptr<Part>> Parts;
             std::shared_ptr<Part> TryTakeFirstPart()
             {
                 if (Parts.size() == 0) { return nullptr; }
@@ -162,7 +162,7 @@ namespace Client
             }
             bool TryPushPart(int Index, std::shared_ptr<std::vector<std::uint8_t>> Data, int Offset, int Length)
             {
-                if (((Index - MaxHandled + IndexSpace()) % IndexSpace()) > WindowSize)
+                if (((Index - MaxHandled + IndexSpace()) % IndexSpace()) >= WindowSize)
                 {
                     return false;
                 }
@@ -179,7 +179,7 @@ namespace Client
             }
             bool TryPushPart(int Index, std::shared_ptr<std::vector<std::uint8_t>> Data)
             {
-                if (((Index - MaxHandled + IndexSpace()) % IndexSpace()) > WindowSize)
+                if (((Index - MaxHandled + IndexSpace()) % IndexSpace()) >= WindowSize)
                 {
                     return false;
                 }
@@ -194,65 +194,48 @@ namespace Client
 
             void Acknowledge(int Index, const std::vector<int> &Indices, int MaxWritten)
             {
-                if (IsEqualOrAfter(Index, MaxHandled))
+                // Parts (= [MaxHandled, MaxWritten]
+                // Index (- [MaxHandled, MaxWritten]
+                // Indices (= (Index, MaxWritten]
+                // |[MaxHandled, MaxWritten]| < WindowSize
+                // any i (- [0, IndexSpace - 1]
+
+                if (MaxWritten == MaxHandled) { return; }
+                if (!IsEqualOrAfter(MaxWritten, MaxHandled)) { return; }
+                if ((Index < 0) || (Index >= IndexSpace())) { return; }
+                if (!IsEqualOrAfter(Index, MaxHandled)) { return; }
+                if (!IsEqualOrAfter(MaxWritten, Index)) { return; }
+                for (auto i : Indices)
                 {
-                    MaxHandled = Index;
-                    if (Parts.count(Index) > 0)
+                    if ((i < 0) || (i >= IndexSpace())) { return; }
+                    if (IsEqualOrAfter(Index, i)) { return; }
+                    if (!IsEqualOrAfter(MaxWritten, i)) { return; }
+                }
+
+                while (MaxHandled != Index)
+                {
+                    auto i = GetSuccessor(MaxHandled);
+                    if (Parts.count(i) > 0)
                     {
-                        Parts.erase(Index);
+                        Parts.erase(i);
                     }
-                    while (true)
-                    {
-                        if (Parts.size() == 0) { break; }
-                        auto First = *Parts.begin();
-                        auto Key = std::get<0>(First);
-                        auto Value = std::get<1>(First);
-                        if (IsEqualOrAfter(Index, Key))
-                        {
-                            Parts.erase(Key);
-                        }
-                        if (IsEqualOrAfter(Key, Index))
-                        {
-                            break;
-                        }
-                    }
-                    while (true)
-                    {
-                        if (Parts.size() == 0) { break; }
-                        auto Last = *Parts.rbegin();
-                        auto Key = std::get<0>(Last);
-                        auto Value = std::get<1>(Last);
-                        if (IsEqualOrAfter(Index, Key))
-                        {
-                            Parts.erase(Key);
-                        }
-                        if (IsEqualOrAfter(Key, Index))
-                        {
-                            break;
-                        }
-                    }
+                    MaxHandled = i;
                 }
                 for (auto i : Indices)
                 {
-                    if (IsEqualOrAfter(i, MaxHandled))
+                    if (Parts.count(i) > 0)
                     {
-                        if (Parts.count(i) > 0)
-                        {
-                            Parts.erase(i);
-                        }
+                        Parts.erase(i);
                     }
                 }
-                while ((MaxHandled != MaxWritten) && IsEqualOrAfter(MaxWritten, MaxHandled))
+                while (MaxHandled != MaxWritten)
                 {
-                    auto Next = GetSuccessor(MaxHandled);
-                    if (Parts.count(Next) == 0)
-                    {
-                        MaxHandled = Next;
-                    }
-                    else
+                    auto i = GetSuccessor(MaxHandled);
+                    if (Parts.count(i) > 0)
                     {
                         break;
                     }
+                    MaxHandled = i;
                 }
             }
 
@@ -463,6 +446,11 @@ namespace Client
 
                     auto Length = std::min(12 + (IsACK ? 2 + NumIndex * 2 : 0) + TotalLength - WritingOffset, MaxPacketLength());
                     auto DataLength = Length - (12 + (IsACK ? 2 + NumIndex * 2 : 0));
+                    if (DataLength < 0)
+                    {
+                        se = asio::error::no_buffer_space;
+                        return;
+                    }
                     auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
                     Buffer->resize(Length, 0);
                     (*Buffer)[0] = static_cast<std::uint8_t>(SessionId & 0xFF);
@@ -641,6 +629,10 @@ namespace Client
                         auto Flag = 8; //AUX
 
                         auto Length = 12 + 2 + NumIndex * 2;
+                        if (Length > MaxPacketLength())
+                        {
+                            return;
+                        }
                         auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
                         Buffer->resize(Length, 0);
                         (*Buffer)[0] = static_cast<std::uint8_t>(SessionId & 0xFF);
