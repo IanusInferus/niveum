@@ -330,12 +330,30 @@ namespace Server
                                 Buffer[9] = 0;
                                 Buffer[10] = 0;
                                 Buffer[11] = 0;
-                                //Debug.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + " Receive SessionId: " + SessionId.ToString("X8") + " Index: " + Index.ToString());
+                                if (ServerContext.EnableLogTransport)
+                                {
+                                    //按Flag中是否包含AUX分别生成日志
+                                    if ((Flag & 8) != 0)
+                                    {
+                                        ServerContext.RaiseSessionLog(new SessionLogEntry { Token = SessionId.ToString("X8"), RemoteEndPoint = ep, Time = DateTime.UtcNow, Type = "UdpTransport", Name = "ReceiveAux", Message = "AckIndex: " + Index.ToInvariantString() + " Length: " + Buffer.Length.ToInvariantString() });
+                                    }
+                                    else
+                                    {
+                                        ServerContext.RaiseSessionLog(new SessionLogEntry { Token = SessionId.ToString("X8"), RemoteEndPoint = ep, Time = DateTime.UtcNow, Type = "UdpTransport", Name = "Receive", Message = "Index: " + Index.ToInvariantString() + " Length: " + Buffer.Length.ToInvariantString() });
+                                    }
+                                }
 
                                 //如果Flag中不包含ENC，则验证CRC32
                                 if ((Flag & 2) == 0)
                                 {
-                                    if (Cryptography.CRC32(Buffer) != Verification) { return; }
+                                    if (Cryptography.CRC32(Buffer) != Verification)
+                                    {
+                                        if (ServerContext.EnableLogTransport)
+                                        {
+                                            ServerContext.RaiseSessionLog(new SessionLogEntry { Token = SessionId.ToString("X8"), RemoteEndPoint = ep, Time = DateTime.UtcNow, Type = "UdpTransport", Name = "Receive", Message = "Index: " + Index.ToInvariantString() + " CRC32Failed" });
+                                        }
+                                        return;
+                                    }
                                 }
 
                                 //如果Flag中包含INI，则初始化
@@ -448,10 +466,6 @@ namespace Server
                                         return;
                                     }
 
-                                    if (s.IsPushed(Index))
-                                    {
-                                        return;
-                                    }
                                     s.PrePush(() =>
                                     {
                                         var IsEncrypted = (Flag & 2) != 0;
@@ -473,7 +487,14 @@ namespace Server
                                             var Key = SecureContext.ClientToken.Concat(Cryptography.SHA1(Buffer.Skip(4).Take(4)));
                                             var HMACBytes = Cryptography.HMACSHA1Simple(Key, Buffer).Take(4).ToArray();
                                             var HMAC = HMACBytes[0] | ((Int32)(HMACBytes[1]) << 8) | ((Int32)(HMACBytes[2]) << 16) | ((Int32)(HMACBytes[3]) << 24);
-                                            if (HMAC != Verification) { return; }
+                                            if (HMAC != Verification)
+                                            {
+                                                if (ServerContext.EnableLogTransport)
+                                                {
+                                                    ServerContext.RaiseSessionLog(new SessionLogEntry { Token = SessionId.ToString("X8"), RemoteEndPoint = ep, Time = DateTime.UtcNow, Type = "UdpTransport", Name = "Receive", Message = "Index: " + Index.ToInvariantString() + " HMACFailed" });
+                                                }
+                                                return;
+                                            }
                                         }
 
                                         var Offset = 12;

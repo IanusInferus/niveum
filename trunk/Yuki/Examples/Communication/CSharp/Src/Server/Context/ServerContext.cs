@@ -37,6 +37,7 @@ namespace Server
         public Boolean EnableLogCriticalError { get; set; }
         public Boolean EnableLogPerformance { get; set; }
         public Boolean EnableLogSystem { get; set; }
+        public Boolean EnableLogTransport { get; set; }
         public Boolean ServerDebug { get; set; }
         public Boolean ClientDebug { get; set; }
 

@@ -291,7 +291,6 @@ namespace Server
     public:
         bool PushAux(asio::ip::udp::endpoint RemoteEndPoint, std::shared_ptr<std::vector<int>> Indices);
 
-        bool IsPushed(int Index);
         void PrePush(std::function<void()> a);
         bool Push(asio::ip::udp::endpoint RemoteEndPoint, int Index, std::shared_ptr<std::vector<int>> Indices, std::shared_ptr<std::vector<std::uint8_t>> Buffer, int Offset, int Length);
 

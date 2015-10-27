@@ -197,16 +197,15 @@ namespace Server
                 }
             }
 
-            public void ForEachTimedoutPacket(int SessionId, DateTime Time, Action<int, Byte[]> f)
+            public void ForEachTimedoutPacket(int SessionId, DateTime Time, Action<int, Byte[], int> f)
             {
                 foreach (var p in Parts)
                 {
                     if (p.Value.ResendTime <= Time)
                     {
-                        f(p.Key, p.Value.Data);
+                        f(p.Key, p.Value.Data, p.Value.ResentCount + 1);
                         p.Value.ResendTime = Time.AddIntMilliseconds(GetTimeoutMilliseconds(p.Value.ResentCount));
                         p.Value.ResentCount += 1;
-                        //Debug.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + " Resend SessionId: " + SessionId.ToString("X8") + " Index: " + p.Key.ToString() + " Count: " + p.Value.ResentCount.ToString());
                     }
                 }
             }
@@ -414,7 +413,10 @@ namespace Server
                         return;
                     }
                     Parts.Add(Part.Data);
-                    //Debug.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + " Send SessionId: " + SessionId.ToString("X8") + " Index: " + Index.ToString());
+                    if (Server.ServerContext.EnableLogTransport)
+                    {
+                        Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = SessionId.ToString("X8"), RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "UdpTransport", Name = "Send", Message = "Index: " + Index.ToInvariantString() + " Length: " + Part.Data.Length.ToInvariantString() });
+                    }
 
                     c.WritenIndex = Index;
                 }
@@ -708,7 +710,20 @@ namespace Server
                 CookedWritingContext.DoAction(c =>
                 {
                     c.Parts.Acknowledge(Indices.First(), Indices.Skip(1), c.WritenIndex);
-                    c.Parts.ForEachTimedoutPacket(SessionId, Time, (i, d) => l.Add(d));
+                });
+            }
+            {
+                var l = new List<Byte[]>();
+                CookedWritingContext.DoAction(c =>
+                {
+                    c.Parts.ForEachTimedoutPacket(SessionId, Time, (i, d, ResentCount) =>
+                    {
+                        l.Add(d);
+                        if (Server.ServerContext.EnableLogTransport)
+                        {
+                            Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = SessionId.ToString("X8"), RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "UdpTransport", Name = "Resend", Message = "Index: " + i.ToInvariantString() + " Length: " + d.Length.ToInvariantString() + " Count: " + ResentCount.ToInvariantString() });
+                        }
+                    });
                 });
                 foreach (var p in l)
                 {
@@ -725,19 +740,6 @@ namespace Server
             return true;
         }
 
-        public bool IsPushed(int Index)
-        {
-            var Pushed = false;
-            RawReadingContext.DoAction(c =>
-            {
-                if (c.Parts.HasPart(Index))
-                {
-                    Pushed = true;
-                    return;
-                }
-            });
-            return Pushed;
-        }
         public void PrePush(Action a)
         {
             ssm.AddToActionQueue(a);
@@ -752,7 +754,20 @@ namespace Server
                 CookedWritingContext.DoAction(c =>
                 {
                     c.Parts.Acknowledge(Indices.First(), Indices.Skip(1), c.WritenIndex);
-                    c.Parts.ForEachTimedoutPacket(SessionId, Time, (i, d) => l.Add(d));
+                });
+            }
+            {
+                var l = new List<Byte[]>();
+                CookedWritingContext.DoAction(c =>
+                {
+                    c.Parts.ForEachTimedoutPacket(SessionId, Time, (i, d, ResentCount) =>
+                    {
+                        l.Add(d);
+                        if (Server.ServerContext.EnableLogTransport)
+                        {
+                            Server.ServerContext.RaiseSessionLog(new SessionLogEntry { Token = SessionId.ToString("X8"), RemoteEndPoint = RemoteEndPoint, Time = DateTime.UtcNow, Type = "UdpTransport", Name = "Resend", Message = "Index: " + i.ToInvariantString() + " Length: " + d.Length.ToInvariantString() + " Count: " + ResentCount.ToInvariantString() });
+                        }
+                    });
                 });
                 foreach (var p in l)
                 {

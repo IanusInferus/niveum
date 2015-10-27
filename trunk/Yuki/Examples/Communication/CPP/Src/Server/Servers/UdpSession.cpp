@@ -242,7 +242,7 @@ namespace Server
                     Key.resize(SecureContext->ServerToken.size() + SHA1.size());
                     ArrayCopy(SecureContext->ServerToken, 0, Key, 0, static_cast<int>(SecureContext->ServerToken.size()));
                     ArrayCopy(SHA1, 0, Key, SecureContext->ServerToken.size(), static_cast<int>(SHA1.size()));
-                    auto HMACBytes = Algorithms::Cryptography::HMACSHA1(Key, *Buffer);
+                    auto HMACBytes = Algorithms::Cryptography::HMACSHA1Simple(Key, *Buffer);
                     HMACBytes.resize(4);
                     Verification = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
                 }
@@ -596,12 +596,17 @@ namespace Server
         auto Time = std::chrono::steady_clock::now();
         if ((Indices != nullptr) && (Indices->size() > 0))
         {
-            auto l = std::make_shared<std::vector<std::shared_ptr<std::vector<std::uint8_t>>>>();
             CookedWritingContext.DoAction([=](std::shared_ptr<UdpWriteContext> c)
             {
                 auto IndicesWithoutFirst = *Indices;
                 IndicesWithoutFirst.erase(IndicesWithoutFirst.begin());
                 c->Parts->Acknowledge((*Indices)[0], IndicesWithoutFirst, c->WritenIndex);
+            });
+        }
+        {
+            auto l = std::make_shared<std::vector<std::shared_ptr<std::vector<std::uint8_t>>>>();
+            CookedWritingContext.DoAction([=](std::shared_ptr<UdpWriteContext> c)
+            {
                 c->Parts->ForEachTimedoutPacket(SessionId, Time, [=](int i, std::shared_ptr<std::vector<std::uint8_t>> d) { l->push_back(d); });
             });
             for (auto p : *l)
@@ -619,19 +624,6 @@ namespace Server
         return true;
     }
 
-    bool UdpSession::IsPushed(int Index)
-    {
-        auto Pushed = false;
-        RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
-        {
-            if (c->Parts->HasPart(Index))
-            {
-                Pushed = true;
-                return;
-            }
-        });
-        return Pushed;
-    }
     void UdpSession::PrePush(std::function<void()> a)
     {
         ssm->AddToActionQueue(a);
@@ -642,12 +634,17 @@ namespace Server
         auto Time = std::chrono::steady_clock::now();
         if ((Indices != nullptr) && (Indices->size() > 0))
         {
-            auto l = std::make_shared<std::vector<std::shared_ptr<std::vector<std::uint8_t>>>>();
             CookedWritingContext.DoAction([=](std::shared_ptr<UdpWriteContext> c)
             {
                 auto IndicesWithoutFirst = *Indices;
                 IndicesWithoutFirst.erase(IndicesWithoutFirst.begin());
                 c->Parts->Acknowledge((*Indices)[0], IndicesWithoutFirst, c->WritenIndex);
+            });
+        }
+        {
+            auto l = std::make_shared<std::vector<std::shared_ptr<std::vector<std::uint8_t>>>>();
+            CookedWritingContext.DoAction([=](std::shared_ptr<UdpWriteContext> c)
+            {
                 c->Parts->ForEachTimedoutPacket(SessionId, Time, [=](int i, std::shared_ptr<std::vector<std::uint8_t>> d) { l->push_back(d); });
             });
             for (auto p : *l)
