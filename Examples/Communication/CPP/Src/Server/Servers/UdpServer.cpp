@@ -309,10 +309,6 @@ namespace Server
                                 return;
                             }
 
-                            if (s->IsPushed(Index))
-                            {
-                                return;
-                            }
                             s->PrePush([=]()
                             {
                                 auto IsEncrypted = (Flag & 2) != 0;
@@ -339,7 +335,7 @@ namespace Server
                                     Key.resize(SecureContext->ClientToken.size() + SHA1.size());
                                     ArrayCopy(SecureContext->ClientToken, 0, Key, 0, static_cast<int>(SecureContext->ClientToken.size()));
                                     ArrayCopy(SHA1, 0, Key, SecureContext->ClientToken.size(), static_cast<int>(SHA1.size()));
-                                    auto HMACBytes = Algorithms::Cryptography::HMACSHA1(Key, *Buffer);
+                                    auto HMACBytes = Algorithms::Cryptography::HMACSHA1Simple(Key, *Buffer);
                                     HMACBytes.resize(4);
                                     auto HMAC = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
                                     if (HMAC != Verification) { return; }

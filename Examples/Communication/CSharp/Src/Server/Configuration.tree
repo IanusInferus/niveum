@@ -76,6 +76,7 @@
     EnableLogCriticalError True
     EnableLogPerformance True
     EnableLogSystem True
+    EnableLogTransport True
     EnableLogConsole True
     EnableLogDatabase True
     ServerDebug True
