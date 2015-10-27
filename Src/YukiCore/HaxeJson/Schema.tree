@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Haxe JSON通讯模板数据
-      Version:     2014.09.07.
+      Version:     2015.10.27.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -175,7 +175,7 @@ ObjectSchemaTemplate
                         }
                         private static function getField(o : Dynamic, field : String) : Dynamic
                         {
-                            if (!Reflect.hasField(o, field)) { throw "InvalidOperationException"; }
+                            if (!Reflect.hasField(o, field)) { throw "InvalidOperation"; }
                             return Reflect.field(o, field);
                         }
                         private static function setField(o : Dynamic, field : String, value : Dynamic) : Void
@@ -440,7 +440,7 @@ ObjectSchemaTemplate
                     public static function [[${name}FromJson]](j : Dynamic) : [[${Name}]]
                     {
                         ${AlternativeFroms}
-                        throw "InvalidOperationException";
+                        throw "InvalidOperation";
                     }
                     public static function [[${name}ToJson]](o : [[${Name}]]) : Dynamic
                     {
@@ -544,7 +544,7 @@ ObjectSchemaTemplate
                             var v = [[${elementTypeFriendlyName}FromJson]](getField(j, "hasValue"));
                             return v;
                         }
-                        throw "InvalidOperationException";
+                        throw "InvalidOperation";
                     }
                     public static function [[${typeFriendlyName}ToJson]](o : [[${TypeString}]]) : Dynamic
                     {

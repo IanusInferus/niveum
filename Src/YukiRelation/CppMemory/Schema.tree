@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Memory代码模板数据
-      Version:     2014.07.03.
+      Version:     2015.10.27.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -86,7 +86,7 @@ ObjectSchemaTemplate
                                 bas.WriteBytes(Buffer);
                                 bas.SetPosition(0);
                                 auto Hash = bas.ReadUInt64();
-                                if (Hash != 0x${Hash}) { throw std::logic_error("InvalidOperationException"); }
+                                if (Hash != 0x${Hash}) { throw std::logic_error("InvalidOperation"); }
                                 Tables = BinaryTranslator::MemoryDataTablesFromBinary(bas);
                             }
                             Indices = std::make_shared<MemoryDataIndices>();
