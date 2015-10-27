@@ -163,6 +163,7 @@ namespace Server
                             ServerContext.EnableLogCriticalError = c.EnableLogCriticalError;
                             ServerContext.EnableLogPerformance = c.EnableLogPerformance;
                             ServerContext.EnableLogSystem = c.EnableLogSystem;
+                            ServerContext.EnableLogTransport = c.EnableLogTransport;
                             ServerContext.ServerDebug = c.ServerDebug;
                             ServerContext.ClientDebug = c.ClientDebug;
 

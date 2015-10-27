@@ -6,6 +6,7 @@
     EnableLogCriticalError      Boolean
     EnableLogPerformance        Boolean
     EnableLogSystem             Boolean
+    EnableLogTransport          Boolean
     EnableLogConsole            Boolean
     EnableLogDatabase           Boolean
     ServerDebug                 Boolean

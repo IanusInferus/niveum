@@ -9,7 +9,7 @@ namespace Algorithms
     {
         std::int32_t CRC32(const std::vector<std::uint8_t> &Bytes);
         std::vector<std::uint8_t> SHA1(const std::vector<std::uint8_t> &Bytes);
-        std::vector<std::uint8_t> HMACSHA1(const std::vector<std::uint8_t> &Key, const std::vector<std::uint8_t> &Bytes);
+        std::vector<std::uint8_t> HMACSHA1Simple(const std::vector<std::uint8_t> &Key, const std::vector<std::uint8_t> &Bytes);
     }
 
     class RC4

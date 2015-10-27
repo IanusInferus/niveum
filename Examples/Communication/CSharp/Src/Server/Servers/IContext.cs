@@ -19,6 +19,7 @@ namespace Server
         Boolean EnableLogCriticalError { get; }
         Boolean EnableLogPerformance { get; }
         Boolean EnableLogSystem { get; }
+        Boolean EnableLogTransport { get; }
         Boolean ServerDebug { get; }
         Boolean ClientDebug { get; }
 
