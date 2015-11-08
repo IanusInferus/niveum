@@ -1,4 +1,9 @@
-﻿2015.10.27
+﻿2015.11.08
+Examples:
+增加C#通讯示例中的静态HTTP服务器，使得Haxe网页代码能够不需要Linux就能访问。
+删除Haxe通讯示例中的一些无用代码。
+
+2015.10.27
 Yuki.Core, Yuki.Relation:
 修正C++和Haxe代码生成中部分错误信息不统一的问题。
 Examples:
