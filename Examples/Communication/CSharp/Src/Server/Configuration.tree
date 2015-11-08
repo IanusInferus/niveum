@@ -70,6 +70,21 @@
                             MaxBadCommands 8
                             TimeoutCheckPeriod 30
                             ServiceVirtualPath q
+                    Protocol
+                        HttpStatic
+                            Bindings
+                                Binding
+                                    Prefix http://+:8003/haxe/
+                            SessionIdleTimeout 120
+                            UnauthenticatedSessionIdleTimeout 30
+                            MaxConnections 32768
+                            MaxConnectionsPerIP 32768
+                            MaxUnauthenticatedPerIP 32768
+                            MaxBadCommands 8
+                            TimeoutCheckPeriod 30
+                            ServiceVirtualPath .*
+                            PhysicalPath ../../Haxe/bin/
+                            Indices index.html
     EnableLogNormalIn True
     EnableLogNormalOut True
     EnableLogUnknownError True

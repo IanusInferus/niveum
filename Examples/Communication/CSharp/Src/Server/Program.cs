@@ -450,6 +450,42 @@ namespace Server
 
                 return Server;
             }
+            else if (pc.OnHttpStatic)
+            {
+                var s = pc.HttpStatic;
+
+                var Server = new StaticHttpServer(ServerContext, QueueUserWorkItem, 8 * 1024);
+                var Success = false;
+
+                try
+                {
+                    Server.Bindings = s.Bindings.Select(b => b.Prefix).ToArray();
+                    Server.SessionIdleTimeout = Math.Min(s.SessionIdleTimeout, s.UnauthenticatedSessionIdleTimeout);
+                    Server.MaxConnections = s.MaxConnections;
+                    Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
+                    Server.MaxBadCommands = s.MaxBadCommands;
+                    Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
+
+                    Server.ServiceVirtualPath = s.ServiceVirtualPath;
+                    Server.PhysicalPath = s.PhysicalPath;
+                    Server.Indices = s.Indices.Split(',').Select(Index => Index.Trim(' ')).Where(Index => Index != "").ToArray();
+
+                    Server.Start();
+
+                    Console.WriteLine(@"HTTP静态服务器已启动。结点: {0}".Formats(String.Join(", ", Server.Bindings.Select(b => b.ToString()))));
+
+                    Success = true;
+                }
+                finally
+                {
+                    if (!Success)
+                    {
+                        Server.Dispose();
+                    }
+                }
+
+                return Server;
+            }
             else
             {
                 throw new InvalidOperationException("未知服务器类型: " + pc._Tag.ToString());
