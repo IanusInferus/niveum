@@ -10,3 +10,7 @@ netsh int ipv6 show dynamicport udp
 设置端口范围
 netsh int ipv4 set dynamic udp start=16384 num=49152
 netsh int ipv6 set dynamic udp start=16384 num=49152
+
+2)设置HTTP监听权限
+以管理员权限运行
+netsh http add urlacl url=http://+:8003/ user=%USERDOMAIN%\%USERNAME%

@@ -24,6 +24,7 @@
     Tcp                         TcpServerConfiguration
     Udp                         UdpServerConfiguration
     Http                        HttpServerConfiguration
+    HttpStatic                  StaticHttpServerConfiguration
 
 #Record TcpServerConfiguration
     Bindings                    List<TcpBinding>
@@ -71,6 +72,20 @@
 
     TimeoutCheckPeriod          Int
     ServiceVirtualPath          String
+
+#Record StaticHttpServerConfiguration
+    Bindings                    List<HttpBinding>
+    SessionIdleTimeout          Int
+    UnauthenticatedSessionIdleTimeout   Int
+    MaxConnections              Int
+    MaxConnectionsPerIP         Int
+    MaxUnauthenticatedPerIP     Int
+    MaxBadCommands              Int
+
+    TimeoutCheckPeriod          Int
+    ServiceVirtualPath          String
+    PhysicalPath                String
+    Indices                     String
 
 #Record HttpBinding
     Prefix                      String
