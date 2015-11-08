@@ -3,8 +3,8 @@
 Windows平台下需要软件
 .Net Framework 4.0
 Haxe 3.0.0
-nginx
-FlashDevelop，可选，编辑环境
+nginx，可选，部署环境
+FlashDevelop，可选，开发环境
 Chrome，可选，调试环境，支持Source map功能，可以直接调试Haxe代码
 
 1)配置Haxe
@@ -18,9 +18,9 @@ http://94.142.242.48/builds/windows/?C=M;O=D
 运行外层目录BuildCode.cmd。
 运行外层目录CSharp\Src\Build.cmd。
 运行CSharp\Bin\Server.exe，若没有权限则按提示增加权限。
-CSharp服务器默认在8003端口监听HTTP请求。
+CSharp服务器默认在80端口监听HTTP请求。
 
-3)配置nginx
+3)配置nginx，可选
 从http://nginx.org/下载nginx。
 安装nginx，修改配置文件conf/nginx.conf，删去原来的location /，增加如下配置。
         location / {
@@ -40,6 +40,10 @@ CSharp服务器默认在8003端口监听HTTP请求。
 
 4)编译运行例子
 运行Build.cmd编译，运行Run.cmd从Chrome打开网页。
+或用任意浏览器进入
+http://localhost:8003/haxe/
+或
+http://localhost/haxe/
 
 5)编辑
 打开Client.hxproj，可以在FlashDevelop中编辑脚本。
