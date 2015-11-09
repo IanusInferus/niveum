@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN"
+    "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Client Example</title>
+    <meta name="description" content="" />
+    <script id="tmpl_template" type="text/x-jsrender">
+        {{for users}}
+        <tr><td>{{>id}}</td><td>{{>name}}</td></tr>
+        {{/for}}
+    </script>
+    <script id="tmpl_paragraph" type="text/x-jsrender">
+        <p>{{>content}}</p>
+    </script>
+    <script type="text/javascript" src="jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="jsrender.min.js"></script>
+    <script type="text/javascript" src="bridge.js"></script>
+    <script type="text/javascript" src="Browser.js"></script>
+</head>
+<!--
+    为了与HTML兼容，以下Tag必须使用自闭合语法（如<meta />）
+        area, base, br, col, embed, hr, img, input, keygen, link, menuitem, meta, param, source, track, wbr
+    其他Tag不得使用自闭合语法（使用如<script></script>）
+-->
+<body>
+    <div>测试</div>
+
+    <button id="button_alert">Test Alert</button>
+    <div id="div_alert"></div>
+    
+    <button id="button_template">Test Template</button>
+    <div>
+        <table cellspacing="0" cellpadding="3" border="1">
+            <tbody id="tbody_template">
+            </tbody>
+        </table>
+    </div>
+
+    <button id="button_ajax">Test AJAX</button>
+    <div>
+        <table cellspacing="0" cellpadding="3" border="1">
+            <tbody id="tbody_ajax">
+            </tbody>
+        </table>
+    </div>
+
+    <button id="button_servertime">Test ServerTime</button>
+    <div id="div_servertime"></div>
+</body>
+</html>

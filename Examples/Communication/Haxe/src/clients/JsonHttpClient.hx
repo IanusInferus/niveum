@@ -38,7 +38,7 @@ class JsonHttpClient
     private function getTimeAndRandom() : String
     {
         var Time = DateTools.format(Date.now(), "%Y%m%d%H%M%S");
-        var Random = StringTools.lpad(Std.string(Std.random(100)), "0", 2);
+        var Random = StringTools.lpad(Std.string(Std.random(10000)), "0", 4);
         return Time + Random;
     }
     private function sendRaw(jo : Dynamic, _callback : String -> String -> String -> Void)
