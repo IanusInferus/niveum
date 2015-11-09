@@ -13,6 +13,10 @@ SchemaManipulator.exe /loadtype:Schema\Common /t2cs:CSharp\Src\Client\Generated\
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /async:CSharp\Src\CommunicationAsync.lst /t2cs:CSharp\Src\Client\Generated\Communication.cs,Communication,false
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /async:CSharp\Src\CommunicationAsync.lst /t2csb:CSharp\Src\Client\Generated\CommunicationBinary.cs,Communication.Binary,false
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /async:CSharp\Src\CommunicationAsync.lst /t2csj:CSharp\Src\Client\Generated\CommunicationJson.cs,Communication.Json
+@if not exist CSharpBrowser\Src\Browser\Generated @md CSharpBrowser\Src\Browser\Generated
+SchemaManipulator.exe /loadtype:Schema\Common /t2cs:CSharpBrowser\Src\Browser\Generated\Common.cs,"",false
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2cs:CSharpBrowser\Src\Browser\Generated\Communication.cs,Communication,false
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csj:CSharpBrowser\Src\Browser\Generated\CommunicationJson.cs,Communication.Json
 
 :: C++2011
 @if not exist CPP\Src\Server @md CPP\Src\Server
