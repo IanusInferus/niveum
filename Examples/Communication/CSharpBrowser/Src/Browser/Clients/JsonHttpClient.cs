@@ -70,7 +70,7 @@ namespace Client
                 }
                 else
                 {
-                    url = Prefix + ServiceVirtualPath + "?sessionid=" + Global.EncodeURI(SessionId) + "&callback=?";
+                    url = Prefix + ServiceVirtualPath + "?sessionid=" + Global.EncodeURIComponent(SessionId) + "&callback=?";
                 }
                 jQuery.GetJSON(url, new { data = JSON.Stringify(new[] { jo }) }, OnSuccess);
             }
@@ -83,7 +83,7 @@ namespace Client
                 }
                 else
                 {
-                    url = Prefix + ServiceVirtualPath + "?sessionid=" + Global.EncodeURI(SessionId);
+                    url = Prefix + ServiceVirtualPath + "?sessionid=" + Global.EncodeURIComponent(SessionId);
                 }
                 jQuery.Post(url, JSON.Stringify(new[] { jo }), OnSuccess);
             }

@@ -11,8 +11,10 @@ public class App
 {
     [Template("$({0})")]
     public static jQuery Q(String Selector) { throw new InvalidOperationException(); }
+    [Template("$({0})")]
+    public static jQuery Q(Object obj) { throw new InvalidOperationException(); }
     [Template("$({0}, {1})")]
-    public static jQuery Q(Object obj, Object context = null) { throw new InvalidOperationException(); }
+    public static jQuery Q(Object obj, Object context) { throw new InvalidOperationException(); }
     public interface ITemplate
     {
         String Render(Object Data);
