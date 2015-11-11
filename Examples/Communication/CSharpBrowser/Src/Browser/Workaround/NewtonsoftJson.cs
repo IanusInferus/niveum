@@ -61,7 +61,15 @@ namespace Newtonsoft.Json.Linq
         {
             if (j is JValue) { return ((JValue)(j)).Value; }
             if (j is JArray) { return ((JArray)(j)).Children().Select(e => FromTokens(e)).ToArray(); }
-            if (j is JObject) { return ((JObject)(j)).ToDictionary(p => p.Key, p => FromTokens(p.Value)); }
+            if (j is JObject)
+            {
+                var o = new Object();
+                foreach (var p in (JObject)(j))
+                {
+                    o[p.Key] = FromTokens(p.Value);
+                }
+                return o;
+            }
             throw new InvalidOperationException();
         }
         private static JToken ToTokens(Object o)
