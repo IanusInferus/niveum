@@ -1,9 +1,42 @@
-﻿using Bridge.Html5;
+﻿using System;
+using System.Collections.Generic;
+using Bridge.Html5;
 
 namespace System
 {
     public static class Convert
     {
+        private static String codes = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+        public static String ToBase64String(byte[] inArray)
+        {
+            var l = new List<Char>();
+            for (int i = 0; i < inArray.Length; i += 3)
+            {
+                var b = inArray[i];
+                l.Add(codes[(b >> 2) & 0x3F]);
+                if (i + 1 >= inArray.Length)
+                {
+                    l.Add(codes[(b & 3) << 4]);
+                    l.Add('=');
+                    l.Add('=');
+                    break;
+                }
+                var b2 = inArray[i + 1];
+                l.Add(codes[((b & 3) << 4) | ((b2 >> 4) & 0xF)]);
+                if (i + 2 >= inArray.Length)
+                {
+                    l.Add(codes[(b2 & 0xF) << 2]);
+                    l.Add('=');
+                    break;
+                }
+                var b3 = inArray[i + 2];
+                l.Add(codes[((b2 & 0xF) << 2) | ((b3 >> 6) & 3)]);
+                l.Add(codes[b3 & 0x3F]);
+            }
+
+            return new String(l.ToArray());
+        }
+
         public static Boolean ToBoolean(Object value)
         {
             if (value is Boolean) { return (Boolean)(value); }
