@@ -1,3 +1,3 @@
 ﻿Project          : Bridge.jQuery
-Release Date     : 2015-05-04
-Current Version  : 2.2.0
+Release Date     : 2015-09-21
+Current Version  : 2.7.0
