@@ -1,6 +1,8 @@
 ﻿2015.11.25
 Yuki.SchemaManipulator:
 修正命令行说明。
+Examples:
+更新C#通讯浏览器示例的Bridge.NET到1.10，删除部分workaround。
 
 2015.11.11
 Examples:
