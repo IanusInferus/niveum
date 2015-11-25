@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2015.08.22.
+//  Version:     2015.11.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -579,7 +579,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2hxj:<HaxeCodePath>,<PackageName>");
             Console.WriteLine(@"生成XHTML文档");
             Console.WriteLine(@"/t2xhtml:<XhtmlDir>,<Title>,<CopyrightText>");
-            Console.WriteLine(@"生成兼容类型结构Tree文件(当前加载的类型结构为Head，生成的兼容用对象类型结构为Old - New中的通讯命令 - Head中的类型)");
+            Console.WriteLine(@"生成兼容类型结构Tree文件(当前加载的类型结构为Head，生成的兼容用对象类型结构为Old - New中的通讯命令 + Head中的类型)");
             Console.WriteLine(@"/gencom:<OldCookedObjectSchemaFile>,<OldVersion>,<NewCookedObjectSchemaFile>,<NewVersion>,<CompatibilityObjectSchemaFile>");
             Console.WriteLine(@"CookedObjectSchemaFile 已编译过的对象类型结构Tree文件路径。");
             Console.WriteLine(@"ObjectSchemaDir|ObjectSchemaFile 对象类型结构Tree文件(夹)路径。");
