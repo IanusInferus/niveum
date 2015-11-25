@@ -50,7 +50,7 @@
             a hidden class to fill several public classes' methods).
             </remarks>
         </member>
-        <member name="T:Bridge.IgnoreAttribute">
+        <member name="T:Bridge.ExternalAttribute">
             <summary>
             Makes it so the code with this attribute is not built into the assembly files.
             Useful for stubbed out code to match JavaScript.
@@ -229,6 +229,26 @@
             </summary>
             <param name="component">A component of a URI.</param>
             <returns></returns>
+        </member>
+        <member name="P:System.Exception.Data">
+            <summary>
+            Gets a collection of key/value pairs that provide additional user-defined information about the exception.
+            </summary>
+        </member>
+        <member name="P:System.Exception.Message">
+            <summary>
+            Gets a message that describes the current exception.
+            </summary>
+        </member>
+        <member name="P:System.Exception.InnerException">
+            <summary>
+            Gets the Exception instance that caused the current exception.
+            </summary>
+        </member>
+        <member name="P:System.Exception.StackTrace">
+            <summary>
+            Gets a string representation of the immediate frames on the call stack.
+            </summary>
         </member>
         <member name="P:System.ArgumentException.ParamName">
             <summary>
@@ -5289,13 +5309,6 @@
             the grouping size of the fraction part of the number
             </summary>
         </member>
-        <member name="T:System.ComponentModel.BrowsableAttribute">
-            <summary>
-            This attribute marks a field, property, event or method as
-            "browsable", i.e. present in the type descriptor associated with
-            the type.
-            </summary>
-        </member>
         <member name="T:System.LocaleOptions">
             <summary>
             An object with some or all of the following properties:
@@ -5393,85 +5406,28 @@
             </summary>
             <param name="dateString"></param>
         </member>
-        <member name="P:System.Exception.Data">
-            <summary>
-            Gets a collection of key/value pairs that provide additional user-defined information about the exception.
-            </summary>
+        <member name="P:System.AttributeUsageAttribute.AllowMultiple">
+            <summary>Gets or sets a Boolean value indicating whether more than one instance of the indicated attribute can be specified for a single program element.</summary>
+            <returns>true if more than one instance is allowed to be specified; otherwise, false. The default is false.</returns>
         </member>
-        <member name="P:System.Exception.Message">
-            <summary>
-            Gets a message that describes the current exception.
-            </summary>
+        <member name="P:System.AttributeUsageAttribute.Inherited">
+            <summary>Gets or sets a Boolean value indicating whether the indicated attribute can be inherited by derived classes and overriding members.</summary>
+            <returns>true if the attribute can be inherited by derived classes and overriding members; otherwise, false. The default is true.</returns>
         </member>
-        <member name="P:System.Exception.InnerException">
-            <summary>
-            Gets the Exception instance that caused the current exception.
-            </summary>
-        </member>
-        <member name="P:System.Exception.StackTrace">
-            <summary>
-            Gets a string representation of the immediate frames on the call stack.
-            </summary>
+        <member name="P:System.AttributeUsageAttribute.ValidOn">
+            <summary>Gets a set of values identifying which program elements that the indicated attribute can be applied to.</summary>
+            <returns>One or several <see cref="T:System.AttributeTargets"/> values. The default is All.</returns>
         </member>
         <member name="T:System.Runtime.CompilerServices.DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor">
             <summary>
             If a constructor for a value type takes an instance of this type as a parameter, any attribute applied to that constructor will instead be applied to the default (undeclarable) constructor.
             </summary>
         </member>
-        <member name="T:System.Threading.Tasks.IPromise">
+        <member name="T:System.ComponentModel.BrowsableAttribute">
             <summary>
-            CommonJS Promise/A interface
-            http://wiki.commonjs.org/wiki/Promises/A
-            </summary>
-        </member>
-        <member name="M:System.Threading.Tasks.IPromise.Then(System.Delegate,System.Delegate)">
-            <summary>
-            Adds a fulfilledHandler, errorHandler to be called for completion of a promise.
-            </summary>
-            <param name="fulfilledHandler">The fulfilledHandler is called when the promise is fulfilled</param>
-            <param name="errorHandler">The errorHandler is called when a promise fails.</param>
-        </member>
-        <member name="F:System.Threading.Tasks.TaskStatus.Created">
-            <summary>
-            The task has been initialized but has not yet been scheduled.
-            </summary>
-        </member>
-        <member name="F:System.Threading.Tasks.TaskStatus.WaitingForActivation">
-            <summary>
-            The task is waiting to be activated and scheduled internally by the .NET Framework infrastructure.
-            </summary>
-        </member>
-        <member name="F:System.Threading.Tasks.TaskStatus.WaitingToRun">
-            <summary>
-            The task has been scheduled for execution but has not yet begun executing.
-            </summary>
-        </member>
-        <member name="F:System.Threading.Tasks.TaskStatus.Running">
-            <summary>
-            The task is running but has not yet completed.
-            </summary>
-        </member>
-        <member name="F:System.Threading.Tasks.TaskStatus.WaitingForChildrenToComplete">
-            <summary>
-            The task has finished executing and is implicitly waiting for
-            attached child tasks to complete.
-            </summary>
-        </member>
-        <member name="F:System.Threading.Tasks.TaskStatus.RanToCompletion">
-            <summary>
-            The task completed execution successfully.
-            </summary>
-        </member>
-        <member name="F:System.Threading.Tasks.TaskStatus.Canceled">
-            <summary>
-            The task acknowledged cancellation by throwing an OperationCanceledException with its own CancellationToken
-            while the token was in signaled state, or the task's CancellationToken was already signaled before the
-            task started executing.
-            </summary>
-        </member>
-        <member name="F:System.Threading.Tasks.TaskStatus.Faulted">
-            <summary>
-            The task completed due to an unhandled exception.
+            This attribute marks a field, property, event or method as
+            "browsable", i.e. present in the type descriptor associated with
+            the type.
             </summary>
         </member>
         <member name="T:System.String">
@@ -5759,21 +5715,6 @@
             <param name="comparisonType">One of the enumeration values that specifies the rules for the search.</param>
             <returns>The zero-based index position of value if that string is found, or -1 if it is not. If value is System.String.Empty, the return value is 0.</returns>
         </member>
-        <member name="M:System.String.LastIndexOf(System.String)">
-            <summary>
-            The lastIndexOf() method returns the index within the calling String object of the last occurrence of the specified value, or -1 if not found. The calling string is searched backward, starting at fromIndex.
-            </summary>
-            <param name="searchValue">A string representing the value to search for.</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.String.LastIndexOf(System.String,System.Int32)">
-            <summary>
-            The lastIndexOf() method returns the index within the calling String object of the last occurrence of the specified value, or -1 if not found. The calling string is searched backward, starting at fromIndex.
-            </summary>
-            <param name="searchValue">A string representing the value to search for.</param>
-            <param name="fromIndex">The location within the calling string to start the search at, indexed from left to right. It can be any integer. The default value is searchValue.length - 1. If fromIndex &lt; 0 or fromIndex &gt;= searchValue.length, the method will return -1.</param>
-            <returns></returns>
-        </member>
         <member name="M:System.String.LocaleCompare(System.String)">
             <summary>
             The localeCompare() method returns a number indicating whether a reference string comes before or after or is the same as the given string in sort order.
@@ -5924,44 +5865,14 @@
             <param name="endSlice">The zero-based index at which to end extraction. If omitted, slice extracts to the end of the string. If negative, it is treated as (sourceLength-endSlice) where sourceLength is the length of the string.</param>
             <returns></returns>
         </member>
-        <member name="M:System.String.Split(System.String)">
-            <summary>
-            The split() method splits a String object into an array of strings by separating the string into substrings.
-            </summary>
-            <param name="separator">Specifies the character(s) to use for separating the string. The separator is treated as a string or a regular expression. If separator is omitted, the array returned contains one element consisting of the entire string. If separator is an empty string, str is converted to an array of characters.</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.String.Split(System.Text.RegularExpressions.Regex)">
-            <summary>
-            The split() method splits a String object into an array of strings by separating the string into substrings.
-            </summary>
-            <param name="separator">Specifies the character(s) to use for separating the string. The separator is treated as a string or a regular expression. If separator is omitted, the array returned contains one element consisting of the entire string. If separator is an empty string, str is converted to an array of characters.</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.String.Split(System.String,System.Int32)">
-            <summary>
-            The split() method splits a String object into an array of strings by separating the string into substrings.
-            </summary>
-            <param name="separator">Specifies the character(s) to use for separating the string. The separator is treated as a string or a regular expression. If separator is omitted, the array returned contains one element consisting of the entire string. If separator is an empty string, str is converted to an array of characters.</param>
-            <param name="limit">Integer specifying a limit on the number of splits to be found. The split method still splits on every match of separator, but it truncates the returned array to at most limit elements.</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.String.Split(System.Text.RegularExpressions.Regex,System.Int32)">
-            <summary>
-            The split() method splits a String object into an array of strings by separating the string into substrings.
-            </summary>
-            <param name="separator">Specifies the character(s) to use for separating the string. The separator is treated as a string or a regular expression. If separator is omitted, the array returned contains one element consisting of the entire string. If separator is an empty string, str is converted to an array of characters.</param>
-            <param name="limit">Integer specifying a limit on the number of splits to be found. The split method still splits on every match of separator, but it truncates the returned array to at most limit elements.</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.String.Substring(System.Int32)">
+        <member name="M:System.String.JsSubstring(System.Int32)">
             <summary>
             The substring() method returns a subset of a string between one index and another, or through the end of the string.
             </summary>
             <param name="indexA">An integer between 0 and the length of the string.</param>
             <returns></returns>
         </member>
-        <member name="M:System.String.Substring(System.Int32,System.Int32)">
+        <member name="M:System.String.JsSubstring(System.Int32,System.Int32)">
             <summary>
             The substring() method returns a subset of a string between one index and another, or through the end of the string.
             </summary>
@@ -5976,7 +5887,22 @@
             <param name="start">Location at which to begin extracting characters. If a negative number is given, it is treated as strLength+start where strLength = to the length of the string (for example, if start is -3 it is treated as strLength-3.)</param>
             <returns></returns>
         </member>
+        <member name="M:System.String.Substring(System.Int32)">
+            <summary>
+            The substr() method returns the characters in a string beginning at the specified location through the specified number of characters.
+            </summary>
+            <param name="start">Location at which to begin extracting characters. If a negative number is given, it is treated as strLength+start where strLength = to the length of the string (for example, if start is -3 it is treated as strLength-3.)</param>
+            <returns></returns>
+        </member>
         <member name="M:System.String.Substr(System.Int32,System.Int32)">
+            <summary>
+            The substr() method returns the characters in a string beginning at the specified location through the specified number of characters.
+            </summary>
+            <param name="start">Location at which to begin extracting characters. If a negative number is given, it is treated as strLength+start where strLength = to the length of the string (for example, if start is -3 it is treated as strLength-3.)</param>
+            <param name="length">The number of characters to extract.</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.String.Substring(System.Int32,System.Int32)">
             <summary>
             The substr() method returns the characters in a string beginning at the specified location through the specified number of characters.
             </summary>
@@ -6106,6 +6032,62 @@
              Returns:
                  A copy of format in which the format items have been replaced by the string representations
                  of arg0, arg1, and arg2.
+        </member>
+        <member name="T:System.Threading.Tasks.IPromise">
+            <summary>
+            CommonJS Promise/A interface
+            http://wiki.commonjs.org/wiki/Promises/A
+            </summary>
+        </member>
+        <member name="M:System.Threading.Tasks.IPromise.Then(System.Delegate,System.Delegate)">
+            <summary>
+            Adds a fulfilledHandler, errorHandler to be called for completion of a promise.
+            </summary>
+            <param name="fulfilledHandler">The fulfilledHandler is called when the promise is fulfilled</param>
+            <param name="errorHandler">The errorHandler is called when a promise fails.</param>
+        </member>
+        <member name="F:System.Threading.Tasks.TaskStatus.Created">
+            <summary>
+            The task has been initialized but has not yet been scheduled.
+            </summary>
+        </member>
+        <member name="F:System.Threading.Tasks.TaskStatus.WaitingForActivation">
+            <summary>
+            The task is waiting to be activated and scheduled internally by the .NET Framework infrastructure.
+            </summary>
+        </member>
+        <member name="F:System.Threading.Tasks.TaskStatus.WaitingToRun">
+            <summary>
+            The task has been scheduled for execution but has not yet begun executing.
+            </summary>
+        </member>
+        <member name="F:System.Threading.Tasks.TaskStatus.Running">
+            <summary>
+            The task is running but has not yet completed.
+            </summary>
+        </member>
+        <member name="F:System.Threading.Tasks.TaskStatus.WaitingForChildrenToComplete">
+            <summary>
+            The task has finished executing and is implicitly waiting for
+            attached child tasks to complete.
+            </summary>
+        </member>
+        <member name="F:System.Threading.Tasks.TaskStatus.RanToCompletion">
+            <summary>
+            The task completed execution successfully.
+            </summary>
+        </member>
+        <member name="F:System.Threading.Tasks.TaskStatus.Canceled">
+            <summary>
+            The task acknowledged cancellation by throwing an OperationCanceledException with its own CancellationToken
+            while the token was in signaled state, or the task's CancellationToken was already signaled before the
+            task started executing.
+            </summary>
+        </member>
+        <member name="F:System.Threading.Tasks.TaskStatus.Faulted">
+            <summary>
+            The task completed due to an unhandled exception.
+            </summary>
         </member>
     </members>
 </doc>
