@@ -876,6 +876,19 @@
             The template element is used to declare fragments of HTML that can be cloned and inserted in the document by script.
             </summary>
         </member>
+        <member name="T:Bridge.Html5.Element`1">
+            <summary>
+            A generic version of the Element class. The type parameter is a type of Events' CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type of all Element's events</typeparam>
+        </member>
+        <member name="T:Bridge.Html5.Element">
+            <summary>
+            The Element interface represents an object of a Document. This interface describes methods and properties common to all kinds of elements.
+            Specific behaviors are described in interfaces which inherit from Element but add additional functionality.
+            For example, the HTMLElement interface is the base interface for HTML elements, while the SVGElement interface is the basis for all SVG elements.
+            </summary>
+        </member>
         <member name="T:Bridge.Html5.Node">
             <summary>
             A Node is an interface from which a number of DOM types inherit, and allows these various types to be treated (or tested) similarly.
@@ -1712,6 +1725,326 @@
             Makes the element the current keyboard focus.
             </summary>
         </member>
+        <member name="F:Bridge.Html5.Element`1.OnAbort">
+            <summary>
+             EventHandler representing the code to be called when the abort event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnBlur">
+            <summary>
+            EventHandler representing the code to be called when the blur event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnFocus">
+            <summary>
+            EventHandler representing the code to be called when the focus event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnCancel">
+            <summary>
+            EventHandler representing the code to be called when the cancel event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnCanPlay">
+            <summary>
+            EventHandler representing the code to be called when the canplay event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnCanPlayThrough">
+            <summary>
+            EventHandler representing the code to be called when the canplaythrough event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnChange">
+            <summary>
+            EventHandler representing the code to be called when the change event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnClick">
+            <summary>
+            EventHandler representing the code to be called when the click event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnClose">
+            <summary>
+            EventHandler representing the code to be called when the close event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnContextMenu">
+            <summary>
+            EventHandler representing the code to be called when the contextmenu event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnCueChange">
+            <summary>
+            EventHandler representing the code to be called when the cuechange event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnDblClick">
+            <summary>
+            EventHandler representing the code to be called when the dblclick event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnDrag">
+            <summary>
+            EventHandler representing the code to be called when the drag event is raised.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnDragEnd">
+            <summary>
+            Is an EventHandler representing the code to be called when the dragend event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnDragEnter">
+            <summary>
+            Is an EventHandler representing the code to be called when the dragenter event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnDragExit">
+            <summary>
+            Is an EventHandler representing the code to be called when the dragexit event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnDragLeave">
+            <summary>
+            Is an EventHandler representing the code to be called when the dragleave event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnDragOver">
+            <summary>
+            Is an EventHandler representing the code to be called when the dragover event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnDragStart">
+            <summary>
+            Is an EventHandler representing the code to be called when the dragstart event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnDrop">
+            <summary>
+            Is an EventHandler representing the code to be called when the drop event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnDurationChange">
+            <summary>
+            Is an EventHandler representing the code to be called when the durationchange event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnEmptied">
+            <summary>
+            Is an EventHandler representing the code to be called when the emptied event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnEnded">
+            <summary>
+            Is an EventHandler representing the code to be called when the ended event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnInput">
+            <summary>
+            Is an EventHandler representing the code to be called when the input event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnInvalid">
+            <summary>
+            Is an EventHandler representing the code to be called when the invalid event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnKeyDown">
+            <summary>
+            Is an EventHandler representing the code to be called when the keydown event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnKeyPress">
+            <summary>
+            Is an EventHandler representing the code to be called when the keypress event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnKeyUp">
+            <summary>
+            Is an EventHandler representing the code to be called when the keyup event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnLoad">
+            <summary>
+            Is an EventHandler representing the code to be called when the load event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnLoadedData">
+            <summary>
+            Is an EventHandler representing the code to be called when the loadeddata event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnLoadedMetaData">
+            <summary>
+            Is an EventHandler representing the code to be called when the loadedmetadata event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnLoadStart">
+            <summary>
+            Is an EventHandler representing the code to be called when the loadstart event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnMouseDown">
+            <summary>
+            Is an EventHandler representing the code to be called when the mousedown event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnMouseEnter">
+            <summary>
+            Is an EventHandler representing the code to be called when the mouseenter event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnMouseLeave">
+            <summary>
+            Is an EventHandler representing the code to be called when the mouseleave event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnMouseMove">
+            <summary>
+            Is an EventHandler representing the code to be called when the mousemove event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnMouseOut">
+            <summary>
+            Is an EventHandler representing the code to be called when the mouseout event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnMouseOver">
+            <summary>
+            Is an EventHandler representing the code to be called when the mouseover event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnMouseUp">
+            <summary>
+            Is an EventHandler representing the code to be called when the mouseup event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnMouseWheel">
+            <summary>
+            Is an EventHandler representing the code to be called when the mousewheel event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnPause">
+            <summary>
+            Is an EventHandler representing the code to be called when the pause event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnPlay">
+            <summary>
+            Is an EventHandler representing the code to be called when the play event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnPlaying">
+            <summary>
+            Is an EventHandler representing the code to be called when the playing event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnProgress">
+            <summary>
+            Is an EventHandler representing the code to be called when the progress event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnRateChange">
+            <summary>
+            Is an EventHandler representing the code to be called when the ratechange event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnReset">
+            <summary>
+            Is an EventHandler representing the code to be called when the reset event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnScroll">
+            <summary>
+            Is an EventHandler representing the code to be called when the scroll event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnSeeked">
+            <summary>
+            Is an EventHandler representing the code to be called when the seeked event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnSeeking">
+            <summary>
+            Is an EventHandler representing the code to be called when the seeking event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnSelect">
+            <summary>
+            Is an EventHandler representing the code to be called when the select event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnShow">
+            <summary>
+            Is an EventHandler representing the code to be called when the show event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnSort">
+            <summary>
+            Is an EventHandler representing the code to be called when the sort event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnStalled">
+            <summary>
+            Is an EventHandler representing the code to be called when the stalled event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnSubmit">
+            <summary>
+            Is an EventHandler representing the code to be called when the submit event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnSuspend">
+            <summary>
+            Is an EventHandler representing the code to be called when the suspend event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnTimeUpdate">
+            <summary>
+            Is an EventHandler representing the code to be called when the timeupdate event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnVolumeChange">
+            <summary>
+            Is an EventHandler representing the code to be called when the volumechange event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnWaiting">
+            <summary>
+            Is an EventHandler representing the code to be called when the waiting event is raised
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnTouchStart">
+            <summary>
+            Returns the event handling code for the touchstart event.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnTouchEnd">
+            <summary>
+            Returns the event handling code for the touchend event.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnTouchMove">
+            <summary>
+            Returns the event handling code for the touchmove event.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnTouchEnter">
+            <summary>
+            Returns the event handling code for the touchenter event.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnTouchLeave">
+            <summary>
+            Returns the event handling code for the touchleave event.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.Element`1.OnTouchCancel">
+            <summary>
+            Returns the event handling code for the touchcancel event.
+            </summary>
+        </member>
         <member name="F:Bridge.Html5.TemplateElement.Content">
             <summary>
             The content IDL attribute must return the template element's template contents.
@@ -1732,7 +2065,7 @@
             <summary>
             The toLocaleLowerCase() method returns the calling string value converted to lower case, according to any locale-specific case mappings.
             </summary>
-            <returns></returns>        
+            <returns></returns>
         </member>
         <member name="M:Bridge.Html5.StringPrototype.ToUpperCase(System.String)">
             <summary>
@@ -1754,6 +2087,446 @@
             using the object's methods, or using standard array index syntax (that is, using bracket
             notation).
             </summary>
+        </member>
+        <member name="T:Bridge.Html5.TypedArray.Prototype`2">
+            <summary>
+            Represents the prototype for TypedArray constructors.
+            TypedArray instances inherit from TypedArray.prototype. You can use the constructor's prototype
+            object to add properties or methods to all TypedArray instances, where TypedArray is one of the
+            typed array types.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.TypedArray.Prototype`2.Buffer">
+            <summary>
+            Returns the ArrayBuffer referenced by the typed array. Fixed at construction time and thus
+            read only.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.TypedArray.Prototype`2.ByteLength">
+            <summary>
+            Returns the length (in bytes) of the typed array from the start of its ArrayBuffer.
+            Fixed at construction time and thus read only
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.TypedArray.Prototype`2.ByteOffset">
+            <summary>
+            Returns the offset (in bytes) of the typed array from the start of its ArrayBuffer.
+            Fixed at construction time and thus read only.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.TypedArray.Prototype`2.Length">
+            <summary>
+            Returns the number of elements hold in the typed array. Fixed at construction time and thus
+            read only.
+            </summary>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.CopyWithin(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Copies a sequence of array elements within the array to the position starting at target.
+            The copy is taken from the index positions of the second and third arguments start and end.
+            The end argument is optional and defaults to the length of the array.
+            </summary>
+            <param name="target">Target start index position where to copy the elements to.</param>
+            <param name="start">Source start index position where to start copying elements from.</param>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.CopyWithin(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Copies a sequence of array elements within the array to the position starting at target.
+            The copy is taken from the index positions of the second and third arguments start and end.
+            The end argument is optional and defaults to the length of the array.
+            </summary>
+            <param name="target">Target start index position where to copy the elements to.</param>
+            <param name="start">Source start index position where to start copying elements from.</param>
+            <param name="end">Optional. Source end index position where to end copying elements from.</param>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Every(System.Func{`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,System.Boolean},`0)">
+            <summary>
+            Tests whether all elements in the array pass the test provided by a function.
+            </summary>
+            <param name="callback">
+            Function to test for each element, taking three arguments:
+            currentValue: The current element being processed in the typed array.
+            index: The index of the current element being processed in the typed array.
+            array: The typed array every was called upon.
+            </param>
+            <param name="thisArg">Optional. Value to use as this when executing callback.</param>
+            <returns>True if callback returns true for all elements on array, false otherwise.</returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Fill(`1)">
+            <summary>
+            Fills all the elements of an array from a start index to an end index with a static value.
+            </summary>
+            <param name="value">Value to fill the typed array with.</param>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Fill(`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Fills all the elements of an array from a start index to an end index with a static value.
+            </summary>
+            <param name="value">Value to fill the typed array with.</param>
+            <param name="start">Optional. Start index. Defaults to 0.</param>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Fill(`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Fills all the elements of an array from a start index to an end index with a static value.
+            </summary>
+            <param name="value">Value to fill the typed array with.</param>
+            <param name="start">Optional. Start index. Defaults to 0.</param>
+            <param name="end">Optional. End index. Defaults to 0.</param>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Filter(System.Func{`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,System.Boolean},`0)">
+            <summary>
+            Creates a new array with all of the elements of this array for which the provided filtering
+            function returns true.
+            </summary>
+            <param name="callback">
+            Function to test each element of the typed array. Invoked with arguments
+            (element, index, typedarray). Return true to keep the element, false otherwise.
+            </param>
+            <param name="thisArg">Value to use as this when executing callback.</param>
+            <returns></returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.ForEach(System.Func{`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,`1},`0)">
+            <summary>
+            Calls a function for each element in the array.
+            </summary>
+            <param name="callback">
+            Function that produces an element of the new typed array, taking three arguments:
+            currentValue: The current element being processed in the typed array.
+            index: The index of the current element being processed in the typed array.
+            array: The array forEach() was called upon.
+            </param>
+            <param name="thisArg">Optional. Value to use as 'this' when executing callback.</param>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.IndexOf(`1)">
+            <summary>
+            Returns the first (least) index of an element within the array equal to the specified
+            value, or -1 if none is found.
+            </summary>
+            <param name="searchElement">Element to locate in the typed array.</param>
+            <returns>
+            The first index at which a given element can be found in the typed array, or -1 if it is
+            not present.
+            </returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.IndexOf(`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Returns the first (least) index of an element within the array equal to the specified
+            value, or -1 if none is found.
+            </summary>
+            <param name="searchElement">Element to locate in the typed array.</param>
+            <param name="fromIndex">
+            The index to start the search at. If the index is greater than or equal to the typed array's
+            length, -1 is returned, which means the typed array will not be searched. If the provided
+            index value is a negative number, it is taken as the offset from the end of the typed array.
+            Note: if the provided index is negative, the typed array is still searched from front to back.
+            If the calculated index is less than 0, then the whole typed array will be searched.
+            Default: 0 (entire typed array is searched).
+            </param>
+            <returns>
+            The first index at which a given element can be found in the typed array, or -1 if it is
+            not present.
+            </returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Join(System.Char)">
+            <summary>
+            Joins all elements of an array into a string.
+            </summary>
+            <param name="separator">
+            Optional. Specifies a string to separate each element. The separator is converted to a string
+            if necessary. If omitted, the typed array elements are separated with a comma (",").
+            </param>
+            <returns>A string containing the elements, separated by "," or the specified separator.</returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Join(System.String)">
+            <summary>
+            Joins all elements of an array into a string.
+            </summary>
+            <param name="separator">
+            Optional. Specifies a string to separate each element. The separator is converted to a string
+            if necessary. If omitted, the typed array elements are separated with a comma (",").
+            </param>
+            <returns>A string containing the elements, separated by "," or the specified separator.</returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.LastIndexOf(`1)">
+            <summary>
+            Returns the last (greatest) index of an element within the array equal to the specified
+            value, or -1 if none is found.
+            </summary>
+            <param name="searchElement">Element to locate in the typed array.</param>
+            <returns>
+            The last index at which a given element can be found in the typed array, or -1 if it is
+            not present.
+            </returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.LastIndexOf(`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Returns the last (greatest) index of an element within the array equal to the specified
+            value, or -1 if none is found.
+            </summary>
+            <param name="searchElement">Element to locate in the typed array.</param>
+            <param name="fromIndex">
+            The index at which to start searching backwards. Defaults to the typed array's length, i.e.
+            the whole typed array will be searched. If the index is greater than or equal to the length
+            of the typed array, the whole typed array will be searched. If negative, it is taken as the
+            offset from the end of the typed array. Note that even when the index is negative, the typed
+            array is still searched from back to front. If the calculated index is less than 0, -1 is
+            returned, i.e. the typed array will not be searched.
+            </param>
+            <returns>
+            The last index at which a given element can be found in the typed array, or -1 if it is
+            not present.
+            </returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Map(System.Func{`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,`1},`0)">
+            <summary>
+            Creates a new array with the results of calling a provided function on every element in this array.
+            </summary>
+            <param name="callback">
+            Function that produces an element of the new typed array, taking three arguments:
+            currentValue: The current element being processed in the typed array.
+            index: The index of the current element being processed in the typed array.
+            array: The array forEach() was called upon.
+            </param>
+            <param name="thisArg">Optional. Value to use as 'this' when executing callback.</param>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Reduce(System.Func{`1,`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,`1},`1)">
+            <summary>
+            Apply a function against an accumulator and each value of the array (from left-to-right)
+            as to reduce it to a single value.
+            </summary>
+            <param name="callback">
+            Function to execute on each value in the typed array, taking four arguments:
+            previousValue: The value previously returned in the last invocation of the callback, or initialValue,
+            if supplied (see below).
+            currentValue: The current element being processed in the typed array.
+            index: The index of the current element being processed in the typed array.
+            array: The typed array reduce was called upon.
+            </param>
+            <param name="initialValue">
+            Optional. Object to use as the first argument to the first call of the callback.
+            </param>
+            <returns></returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.ReduceRight(System.Func{`1,`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,`1},`1)">
+            <summary>
+            Apply a function against an accumulator and each value of the array (from right-to-left)
+            as to reduce it to a single value.
+            </summary>
+            <param name="callback">
+            Function to execute on each value in the typed array, taking four arguments:
+            previousValue: The value previously returned in the last invocation of the callback, or initialValue,
+            if supplied (see below).
+            currentValue: The current element being processed in the typed array.
+            index: The index of the current element being processed in the typed array.
+            array: The typed array reduce was called upon.
+            </param>
+            <param name="initialValue">
+            Optional. Object to use as the first argument to the first call of the callback.
+            </param>
+            <returns></returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Reverse">
+            <summary>
+            Reverses the order of the elements of an array — the first becomes the last,
+            and the last becomes the first.
+            </summary>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Set(System.Array)">
+            <summary>
+            Stores multiple values in the typed array, reading input values from a specified array.
+            </summary>
+            <param name="array">
+            The array from which to copy values. All values from the source array are copied into the
+            target array, unless the length of the source array plus the offset exceeds the length of
+            the target array, in which case an exception is thrown.
+            </param>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Set(System.Array,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Stores multiple values in the typed array, reading input values from a specified array.
+            </summary>
+            <param name="array">
+            The array from which to copy values. All values from the source array are copied into the
+            target array, unless the length of the source array plus the offset exceeds the length of
+            the target array, in which case an exception is thrown.
+            </param>
+            <param name="offset">
+            The offset into the target array at which to begin writing values from the source array.
+            If you omit this value, 0 is assumed (that is, the source array will overwrite values in
+            the target array starting at index 0).
+            </param>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Set(`0,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Stores multiple values in the typed array, reading input values from a specified array.
+            </summary>
+            <param name="typedArray">
+            If the source array is a typed array, the two arrays may share the same underlying
+            ArrayBuffer; the browser will intelligently copy the source range of the buffer to the
+            destination range.
+            </param>
+            <param name="offset">
+            The offset into the target array at which to begin writing values from the source array.
+            If you omit this value, 0 is assumed (that is, the source array will overwrite values in
+            the target array starting at index 0).
+            </param>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Slice">
+            <summary>
+            Extracts a section of an array and returns a new array.
+            </summary>
+            <returns>A shallow copy of elements from the original typed array</returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Slice(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Extracts a section of an array and returns a new array.
+            </summary>
+            <param name="begin">
+            Zero-based index at which to begin extraction.
+            As a negative index, begin indicates an offset from the end of the sequence.
+            slice(-2) extracts the last two elements in the sequence.
+            If begin is omitted, slice begins from index 0.
+            </param>
+            <returns>A shallow copy of elements from the original typed array</returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Slice(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Extracts a section of an array and returns a new array.
+            </summary>
+            <param name="begin">
+            Zero-based index at which to begin extraction.
+            As a negative index, begin indicates an offset from the end of the sequence.
+            slice(-2) extracts the last two elements in the sequence.
+            If begin is omitted, slice begins from index 0.
+            </param>
+            <param name="end">
+            Zero-based index at which to end extraction.
+            slice() extracts up to but not including end.slice(1,4) extracts the second element up to
+            the fourth element (elements indexed 1, 2, and 3).
+            As a negative index, end indicates an offset from the end of the sequence.
+            slice(2,-1) extracts the third element through the second-to-last element in the sequence.
+            If end is omitted, slice extracts to the end of the sequence (arr.length).
+            </param>
+            <returns>A shallow copy of elements from the original typed array</returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Some(System.Func{`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,`1},`0)">
+            <summary>
+            Returns true if at least one element in this array satisfies the provided testing function.
+            </summary>
+            <param name="callback">
+            Function to test for each element, taking three arguments:
+            currentValue: The current element being processed in the typed array.
+            index: The index of the current element being processed in the typed array.
+            array: The array some() was called upon.
+            </param>
+            <param name="thisArg">Optional. Value to use as 'this' when executing callback.</param>
+            <returns>
+            True if at least one element in this array satisfies the provided testing function.
+            False otherwise.
+            </returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Sort">
+            <summary>
+            Sorts the elements of an array in place and returns the array.
+            </summary>
+            <returns>Sorted TypedArray.</returns>
+            <remarks>Most browsers do not support this yet.</remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Sort(System.Func{`1,`1,System.Int64})">
+             <summary>
+             Sorts the elements of an array in place and returns the array.
+             </summary>
+             <param name="compareFunction">
+             Specifies a function that defines the sort order. If omitted, the array is sorted according to
+             each character's Unicode code point value, according to the string conversion of each element.
+             Example: long compareFunction(a, b) { ... };
+             </param>
+             <remarks>
+             Most browsers do not support this yet.
+            
+             If compareFunction is supplied, the array elements are sorted according to the return value of the
+             compare function. If a and b are two elements being compared, then:
+             • If compareFunction(a, b) is less than 0, sort a to a lower index than b, i.e. a comes first.
+             • If compareFunction(a, b) returns 0, leave a and b unchanged with respect to each other, but sorted
+               with respect to all different elements. Note: the ECMAscript standard does not guarantee this
+               behaviour, and thus not all browsers (e.g. Mozilla versions dating back to at least 2003) respect
+               this.
+             • If compareFunction(a, b) is greater than 0, sort b to a lower index than a.
+             • compareFunction(a, b) must always return the same value when given a specific pair of elements a
+               and b as its two arguments. If inconsistent results are returned then the sort order is undefined.
+             </remarks>
+             <returns>Sorted TypedArray.</returns>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.SubArray">
+            <summary>
+            Returns a new TypedArray from the given start and end element index.
+            </summary>
+            <returns>
+            A new TypedArray on the same ArrayBuffer store and with the same element types
+            as for this TypedArray object.
+            </returns>
+            <remarks>
+            Some browsers do not support this yet (may require begin and end parameters).
+            </remarks>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.SubArray(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Returns a new TypedArray from the given start and end element index.
+            </summary>
+            <param name="begin">Element to begin at. The offset is inclusive.</param>
+            <returns>
+            A new TypedArray on the same ArrayBuffer store and with the same element types
+            as for this TypedArray object.
+            </returns>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.SubArray(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
+            <summary>
+            Returns a new TypedArray from the given start and end element index.
+            </summary>
+            <param name="begin">Element to begin at. The offset is inclusive.</param>
+            <param name="end">
+            Element to end at. The offset is exclusive. If not specified, all elements from the one
+            specified by begin to the end of the array are included in the new view.
+            </param>
+            <returns>
+            A new TypedArray on the same ArrayBuffer store and with the same element types
+            as for this TypedArray object.
+            </returns>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.ToLocaleString">
+            <summary>
+            The elements are converted to Strings using their toLocaleString methods and these Strings
+            are separated by a locale-specific String (such as a comma “,”).
+            </summary>
+            <returns>A localized string representing the array and its elements.</returns>
+        </member>
+        <member name="M:Bridge.Html5.TypedArray.Prototype`2.ToString">
+            <summary>
+            Joins the array and returns one string containing each array element separated by commas.
+            </summary>
+            <returns>A string representing the array and its elements.</returns>
         </member>
         <member name="F:Bridge.Html5.Float32Array.BYTES_PER_ELEMENT">
             <summary>
@@ -1795,11 +2568,6 @@
             <param name="buffer">Arraybuffer to use as base for contents.</param>
             <param name="byteOffset">Optional. Position in the buffer to start reading data from.</param>
             <param name="length">Optional. Number of elements to consider while creating the array.</param>
-        </member>
-        <member name="F:Bridge.Html5.Float32Array.Prototype">
-            <summary>
-            Prototype for the TypedArray objects.
-            </summary>
         </member>
         <member name="P:Bridge.Html5.Float32Array.Item(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
             <summary>
@@ -1858,11 +2626,6 @@
             <param name="byteOffset">Optional. Position in the buffer to start reading data from.</param>
             <param name="length">Optional. Number of elements to consider while creating the array.</param>
         </member>
-        <member name="F:Bridge.Html5.Float64Array.Prototype">
-            <summary>
-            Prototype for the TypedArray objects.
-            </summary>
-        </member>
         <member name="P:Bridge.Html5.Float64Array.Item(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
             <summary>
             Allows index operations on the array.
@@ -1918,11 +2681,6 @@
             <param name="buffer">Arraybuffer to use as base for contents.</param>
             <param name="byteOffset">Optional. Position in the buffer to start reading data from.</param>
             <param name="length">Optional. Number of elements to consider while creating the array.</param>
-        </member>
-        <member name="F:Bridge.Html5.Int16Array.Prototype">
-            <summary>
-            Prototype for the TypedArray objects.
-            </summary>
         </member>
         <member name="P:Bridge.Html5.Int16Array.Item(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
             <summary>
@@ -1980,11 +2738,6 @@
             <param name="byteOffset">Optional. Position in the buffer to start reading data from.</param>
             <param name="length">Optional. Number of elements to consider while creating the array.</param>
         </member>
-        <member name="F:Bridge.Html5.Int32Array.Prototype">
-            <summary>
-            Prototype for the TypedArray objects.
-            </summary>
-        </member>
         <member name="P:Bridge.Html5.Int32Array.Item(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
             <summary>
             Allows index operations on the array.
@@ -2039,11 +2792,6 @@
             <param name="buffer">Arraybuffer to use as base for contents.</param>
             <param name="byteOffset">Optional. Position in the buffer to start reading data from.</param>
             <param name="length">Optional. Number of elements to consider while creating the array.</param>
-        </member>
-        <member name="F:Bridge.Html5.Int8Array.Prototype">
-            <summary>
-            Prototype for the TypedArray objects.
-            </summary>
         </member>
         <member name="P:Bridge.Html5.Int8Array.Item(Bridge.Any{System.Int32,System.UInt32,System.Int64,System.UInt64})">
             <summary>
@@ -4730,11 +5478,6 @@
             The background-color CSS property sets the background color of an element, either through a color value or the keyword transparent.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.CSSStyleDeclaration.BackgroundColorString">
-            <summary>
-            The background-color CSS property sets the background color of an element, either through a color value or the keyword transparent.
-            </summary>
-        </member>
         <member name="F:Bridge.Html5.CSSStyleDeclaration.BackgroundImage">
             <summary>
             The CSS background-image property sets one or several background images for an element. The images are drawn on successive stacking context layers, with the first specified being drawn as if it is the closest to the user. The borders of the element are then drawn on top of them, and the background-color is drawn beneath them.
@@ -4780,11 +5523,6 @@
             The border-bottom-color CSS property sets the color of the bottom border of an element. Note that in many cases the shorthand CSS properties border-color or border-bottom are more convenient and preferable.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.CSSStyleDeclaration.BorderBottomColorString">
-            <summary>
-            The border-bottom-color CSS property sets the color of the bottom border of an element. Note that in many cases the shorthand CSS properties border-color or border-bottom are more convenient and preferable.
-            </summary>
-        </member>
         <member name="F:Bridge.Html5.CSSStyleDeclaration.BorderBottomLeftRadius">
             <summary>
             The border-bottom-left-radius CSS property sets the rounding of the bottom-left corner of the element. The rounding can be a circle or an ellipse, or if one of the value is 0 no rounding is done and the corner is square.
@@ -4816,11 +5554,6 @@
             </summary>
         </member>
         <member name="F:Bridge.Html5.CSSStyleDeclaration.BorderColor">
-            <summary>
-            The border-color CSS property is a shorthand for setting the color of the four sides of an element's border: border-top-color, border-right-color, border-bottom-color, border-left-color
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.CSSStyleDeclaration.BorderColorString">
             <summary>
             The border-color CSS property is a shorthand for setting the color of the four sides of an element's border: border-top-color, border-right-color, border-bottom-color, border-left-color
             </summary>
@@ -4870,11 +5603,6 @@
             The border-left-color CSS property sets the color of the bottom border of an element. Note that in many cases the shorthand CSS properties border-color or border-left are more convenient and preferable.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.CSSStyleDeclaration.BorderLeftColorString">
-            <summary>
-            The border-left-color CSS property sets the color of the bottom border of an element. Note that in many cases the shorthand CSS properties border-color or border-left are more convenient and preferable.
-            </summary>
-        </member>
         <member name="F:Bridge.Html5.CSSStyleDeclaration.BorderLeftStyle">
             <summary>
             The border-left-style CSS property sets the line style of the left border of a box.
@@ -4901,11 +5629,6 @@
             </summary>
         </member>
         <member name="F:Bridge.Html5.CSSStyleDeclaration.BorderRightColor">
-            <summary>
-            The border-right-color CSS property sets the color of the right border of an element. Note that in many cases the shorthand CSS properties  border-color or border-right are more convenient and preferable.
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.CSSStyleDeclaration.BorderRightColorString">
             <summary>
             The border-right-color CSS property sets the color of the right border of an element. Note that in many cases the shorthand CSS properties  border-color or border-right are more convenient and preferable.
             </summary>
@@ -4941,11 +5664,6 @@
             </summary>
         </member>
         <member name="F:Bridge.Html5.CSSStyleDeclaration.BorderTopColor">
-            <summary>
-            The border-top-color CSS property sets the color of the top border of an element. Note that in many cases the shorthand CSS properties border-color or border-top are more convenient and preferable.
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.CSSStyleDeclaration.BorderTopColorString">
             <summary>
             The border-top-color CSS property sets the color of the top border of an element. Note that in many cases the shorthand CSS properties border-color or border-top are more convenient and preferable.
             </summary>
@@ -5032,11 +5750,6 @@
             The CSS color property sets the foreground color of an element's text content, and its decorations. It doesn't affect any other characteristic of the element; it should really be called text-color and would have been named so, save for historical reasons and its appearance in CSS Level 1.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.CSSStyleDeclaration.ColorString">
-            <summary>
-            The CSS color property sets the foreground color of an element's text content, and its decorations. It doesn't affect any other characteristic of the element; it should really be called text-color and would have been named so, save for historical reasons and its appearance in CSS Level 1.
-            </summary>
-        </member>
         <member name="F:Bridge.Html5.CSSStyleDeclaration.Columns">
             <summary>
             The columns CSS property is a shorthand property allowing to set both the column-width and the column-count properties at the same time.
@@ -5063,11 +5776,6 @@
             </summary>
         </member>
         <member name="F:Bridge.Html5.CSSStyleDeclaration.ColumnRuleColor">
-            <summary>
-            The column-rule-color CSS property lets you set the color of the rule drawn between columns in multi-column layouts.
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.CSSStyleDeclaration.ColumnRuleColorString">
             <summary>
             The column-rule-color CSS property lets you set the color of the rule drawn between columns in multi-column layouts.
             </summary>
@@ -5594,11 +6302,6 @@
             The outline-color CSS property sets the color of the outline of an element. An outline is a line that is drawn around elements, outside the border edge, to make the element stand out.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.CSSStyleDeclaration.OutlineColorString">
-            <summary>
-            The outline-color CSS property sets the color of the outline of an element. An outline is a line that is drawn around elements, outside the border edge, to make the element stand out.
-            </summary>
-        </member>
         <member name="F:Bridge.Html5.CSSStyleDeclaration.OutlineOffset">
             <summary>
             The outline-offset CSS property is used to set space between an outline and the edge or border of an element. An outline is a line that is drawn around elements, outside the border edge.
@@ -5755,11 +6458,6 @@
             </summary>
         </member>
         <member name="F:Bridge.Html5.CSSStyleDeclaration.TextDecorationColor">
-            <summary>
-            The text-decoration-color CSS property sets the color used when drawing underlines, overlines, or strike-throughs specified by text-decoration-line.
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.CSSStyleDeclaration.TextDecorationColorString">
             <summary>
             The text-decoration-color CSS property sets the color used when drawing underlines, overlines, or strike-throughs specified by text-decoration-line.
             </summary>
@@ -11080,83 +11778,84 @@
             The HTML &lt;audio&gt; element is used to embed sound content in documents. It may contain several audio sources, represented using the src attribute or the &lt;source&gt; element; the browser will choose the most suitable one.
             </summary>
         </member>
-        <member name="T:Bridge.Html5.MediaElement">
+        <member name="T:Bridge.Html5.MediaElement`1">
             <summary>
             The HTMLMediaElement interface has special properties and methods (beyond the properties and methods available for all children of HTMLElement), that are common to all media-related objects.
             This interface is inherited by HTMLVideoElement and HTMLAudioElement.
             </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type of all MediaElement's events</typeparam>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.AutoPlay">
+        <member name="F:Bridge.Html5.MediaElement`1.AutoPlay">
             <summary>
             Reflects the autoplay HTML attribute, indicating whether playback should automatically begin as soon as enough media is available to do so without interruption.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Buffered">
+        <member name="F:Bridge.Html5.MediaElement`1.Buffered">
             <summary>
             The ranges of the media source that the browser has buffered (if any) at the moment the buffered property is accessed. The returned TimeRanges object is normalized.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Controls">
+        <member name="F:Bridge.Html5.MediaElement`1.Controls">
             <summary>
             Reflects the controls HTML attribute, indicating whether user interface items for controlling the resource should be displayed.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.CrossOrigin">
+        <member name="F:Bridge.Html5.MediaElement`1.CrossOrigin">
             <summary>
             The CORS setting for this image element.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.CurrentSrc">
+        <member name="F:Bridge.Html5.MediaElement`1.CurrentSrc">
             <summary>
             The absolute URL of the chosen media resource (if, for example, the server selects a media file based on the resolution of the user's display), or an empty string if the networkState is EMPTY.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.CurrentTime">
+        <member name="F:Bridge.Html5.MediaElement`1.CurrentTime">
             <summary>
             The current playback time, in seconds. Setting this value seeks the media to the new time.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.DefaultMuted">
+        <member name="F:Bridge.Html5.MediaElement`1.DefaultMuted">
             <summary>
             Reflects the muted HTML attribute, indicating whether the media element's audio output should be muted by default. This property has no dynamic effect, to mute and unmute the audio output, use the muted property.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.DefaultPlaybackRate">
+        <member name="F:Bridge.Html5.MediaElement`1.DefaultPlaybackRate">
             <summary>
             The default playback rate for the media. 1.0 is "normal speed," values lower than 1.0 make the media play slower than normal, higher values make it play faster. The value 0.0 is invalid and throws a NOT_SUPPORTED_ERR exception.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Duration">
+        <member name="F:Bridge.Html5.MediaElement`1.Duration">
             <summary>
             The length of the media in seconds, or zero if no media data is available.  If the media data is available but the length is unknown, this value is NaN.  If the media is streamed and has no predefined length, the value is Inf.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Ended">
+        <member name="F:Bridge.Html5.MediaElement`1.Ended">
             <summary>
             Indicates whether the media element has ended playback.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Error">
+        <member name="F:Bridge.Html5.MediaElement`1.Error">
             <summary>
             The MediaError object for the most recent error, or null if there has not been an error.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Loop">
+        <member name="F:Bridge.Html5.MediaElement`1.Loop">
             <summary>
             Reflects the loop HTML attribute, indicating whether the media element should start over when it reaches the end.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.MediaGroup">
+        <member name="F:Bridge.Html5.MediaElement`1.MediaGroup">
             <summary>
             Reflects the mediagroup HTML attribute, indicating the name of the group of elements it belongs to. A group of media elements shares a common controller.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Muted">
+        <member name="F:Bridge.Html5.MediaElement`1.Muted">
             <summary>
             True if the audio is muted, and false otherwise.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.NetworkState">
+        <member name="F:Bridge.Html5.MediaElement`1.NetworkState">
             <summary>
             The current state of fetching the media over the network.
             NETWORK_EMPTY 	    0 	There is no data yet.  The readyState is also HAVE_NOTHING.
@@ -11165,12 +11864,12 @@
             NETWORK_NO_SOURCE 	3
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Paused">
+        <member name="F:Bridge.Html5.MediaElement`1.Paused">
             <summary>
             Indicates whether the media element is paused.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.PlaybackRate">
+        <member name="F:Bridge.Html5.MediaElement`1.PlaybackRate">
             <summary>
             The current rate at which the media is being played back. This is used to implement user controls for fast forward, slow motion, and so forth. The normal playback rate is multiplied by this value to obtain the current rate, so a value of 1.0 indicates normal speed.
             If the playbackRate is negative, the media is played backwards.
@@ -11178,12 +11877,12 @@
             The pitch of the audio is corrected by default and is the same for every speed. Some navigators implement the non-standard preservespitch property to control this.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Played">
+        <member name="F:Bridge.Html5.MediaElement`1.Played">
             <summary>
             The ranges of the media source that the browser has played, if any.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Preload">
+        <member name="F:Bridge.Html5.MediaElement`1.Preload">
             <summary>
             Reflects the preload HTML attribute, indicating what data should be preloaded, if any.
             It may have one of the following values:
@@ -11193,7 +11892,7 @@
                 the empty string: which is a synonym of the auto value.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.ReadyState">
+        <member name="F:Bridge.Html5.MediaElement`1.ReadyState">
             <summary>
             The readiness state of the media.
             HAVE_NOTHING 	    0 	No information is available about the media resource.
@@ -11203,32 +11902,32 @@
             HAVE_ENOUGH_DATA 	4 	Enough data is available—and the download rate is high enough—that the media can be played through to the end without interruption.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Seekable">
+        <member name="F:Bridge.Html5.MediaElement`1.Seekable">
             <summary>
             The time ranges that the user is able to seek to, if any.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Seeking">
+        <member name="F:Bridge.Html5.MediaElement`1.Seeking">
             <summary>
             Indicates whether the media is in the process of seeking to a new position.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Src">
+        <member name="F:Bridge.Html5.MediaElement`1.Src">
             <summary>
             Reflects the src HTML attribute, containing the URL of a media resource to use.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.TextTracks">
+        <member name="F:Bridge.Html5.MediaElement`1.TextTracks">
             <summary>
             Represents the list of TextTrack objects contained in the element.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.MediaElement.Volume">
+        <member name="F:Bridge.Html5.MediaElement`1.Volume">
             <summary>
             The audio volume, from 0.0 (silent) to 1.0 (loudest).
             </summary>
         </member>
-        <member name="M:Bridge.Html5.MediaElement.CanPlayType(System.String)">
+        <member name="M:Bridge.Html5.MediaElement`1.CanPlayType(System.String)">
              <summary>
              Determines whether the specified media type can be played back.
              Returns:
@@ -11240,23 +11939,23 @@
              <param name="type">The media type</param>
              <returns>The string representing that the specified type may be played or not</returns>
         </member>
-        <member name="M:Bridge.Html5.MediaElement.FastSeek(System.Double)">
+        <member name="M:Bridge.Html5.MediaElement`1.FastSeek(System.Double)">
             <summary>
             Directly seek to the given time.
             </summary>
             <param name="time">The time to seek</param>
         </member>
-        <member name="M:Bridge.Html5.MediaElement.Load">
+        <member name="M:Bridge.Html5.MediaElement`1.Load">
             <summary>
             Begins loading the media content from the server.
             </summary>
         </member>
-        <member name="M:Bridge.Html5.MediaElement.Pause">
+        <member name="M:Bridge.Html5.MediaElement`1.Pause">
             <summary>
             Pauses the media playback.
             </summary>
         </member>
-        <member name="M:Bridge.Html5.MediaElement.Play">
+        <member name="M:Bridge.Html5.MediaElement`1.Play">
             <summary>
             Begins playback of the media. If you have changed the src attribute of the media element since the page was loaded, you must call load() before play(), otherwise the original media plays again.
             </summary>
@@ -11633,6 +12332,11 @@
             Sets a custom validity message for the field set. If this message is not the empty string, then the field set is suffering from a custom validity error, and does not validate.
             </summary>
             <param name="error"></param>
+        </member>
+        <member name="T:Bridge.Html5.MediaElement">
+            <summary>
+            The non-generic MediaElement class. Events' CurrentTarget has the MediaElement type.
+            </summary>
         </member>
         <member name="T:Bridge.Html5.TimeRanges">
             <summary>
@@ -12774,30 +13478,36 @@
             The HTMLTableCaptionElement interface special properties (beyond the regular HTMLElement interface it also has available to it by inheritance) for manipulating table caption elements.
             </summary>
         </member>
-        <member name="T:Bridge.Html5.TableCellElement">
+        <member name="T:Bridge.Html5.TableCellElement`1">
             <summary>
             The HTMLTableCellElement interface provides special properties and methods (beyond the regular HTMLElement interface it also has available to it by inheritance) for manipulating the layout and presentation of table cells, either header or data cells, in an HTML document.
             The HTML elements implementing this interface: &lt;th&gt; and &lt;td&gt;.
             </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type of all TableCellElement's events</typeparam>
         </member>
-        <member name="F:Bridge.Html5.TableCellElement.ColSpan">
+        <member name="F:Bridge.Html5.TableCellElement`1.ColSpan">
             <summary>
             Is an unsigned long that represents the number of columns this cell must span. It reflects the colspan attribute.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.TableCellElement.RowSpan">
+        <member name="F:Bridge.Html5.TableCellElement`1.RowSpan">
             <summary>
             Is an unsigned long that represents the number of rows this cell must span. It reflects the rowspan attribute.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.TableCellElement.Headers">
+        <member name="F:Bridge.Html5.TableCellElement`1.Headers">
             <summary>
             Is a DOMSettableTokenList describing a list of id of &lt;th&gt; elements that represents headers associated with the cell. It reflects the headers attribute.
             </summary>
         </member>
-        <member name="F:Bridge.Html5.TableCellElement.CellIndex">
+        <member name="F:Bridge.Html5.TableCellElement`1.CellIndex">
             <summary>
             Is a long representing the cell position in the cells collection of the &lt;tr&gt; it belongs to. If the cell doesn't belong to a &lt;tr&gt;, it returns -1.
+            </summary>
+        </member>
+        <member name="T:Bridge.Html5.TableCellElement">
+            <summary>
+            The non-generic TableCellElement class. Events' CurrentTarget has the TableCellElement type.
             </summary>
         </member>
         <member name="T:Bridge.Html5.TableColElement">
@@ -14423,6 +15133,11 @@
             The AnimationEvent interface represents events providing information related to animations.
             </summary>
         </member>
+        <member name="T:Bridge.Html5.Event">
+            <summary>
+            The Event interface represents any event of the DOM. It contains common properties and methods to any event.
+            </summary>
+        </member>
         <member name="F:Bridge.Html5.Event.Bubbles">
             <summary>
             Indicates whether the given event bubbles up through the DOM or not.
@@ -14611,6 +15326,18 @@
         <member name="F:Bridge.Html5.CustomEventInit.Detail">
             <summary>
             The data passed when initializing the event.
+            </summary>
+        </member>
+        <member name="T:Bridge.Html5.Event`1">
+            <summary>
+            A generic version of the Event class. The type parameters is a type of CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
+        </member>
+        <member name="F:Bridge.Html5.Event`1.CurrentTarget">
+            <summary>
+            Identifies the current target for the event, as the event traverses the DOM. It always refers to the element the event handler has been attached to as opposed to event.target which identifies the element on which the event occurred.
+            On Internet Explorer 6 through 8, the event model is different. Event listeners are attached with the non-standard element.attachEvent method. In this model, there is no equivalent to event.currentTarget and this is the global object.
             </summary>
         </member>
         <member name="T:Bridge.Html5.EventType">
@@ -18691,25 +19418,22 @@
             <returns>A new ArrayBuffer object.</returns>
         </member>
         <member name="T:Bridge.Html5.ArrayBufferView">
-            <summary>
-            The ArrayBufferView type describes a particular view on the contents of an ArrayBuffer's data.
-            Of note is that you may create multiple views into the same buffer, each looking at the buffer's contents starting at a particular offset. This makes it possible to set up views of different data types to read the contents of a buffer based on the types of data at specific offsets into the buffer.
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.ArrayBufferView.Buffer">
-            <summary>
-            The buffer this view references. Read only.
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.ArrayBufferView.ByteLength">
-            <summary>
-            The length, in bytes, of the view. Read only.
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.ArrayBufferView.ByteOffset">
-            <summary>
-            The offset, in bytes, to the first byte of the view within the ArrayBuffer. Read only.
-            </summary>
+             <summary>
+             ArrayBufferView is a helper type representing any of the following JavaScript TypedArray types:
+            
+                 Int8Array,
+                 Uint8Array,
+                 Uint8ClampedArray,
+                 Int16Array,
+                 Uint16Array,
+                 Int32Array,
+                 Uint32Array,
+                 Float32Array,
+                 Float64Array or
+                 DataView.
+            
+             This is a helper type to simplify the specification, it isn't an interface and there are no objects implementing it.
+             </summary>
         </member>
         <member name="T:Bridge.Html5.DataView">
             <summary>
@@ -18737,6 +19461,21 @@
             <param name="buffer">An existing ArrayBuffer to use as the storage for the new DataView object.</param>
             <param name="byteOffset">The offset, in bytes, to the first byte in the specified buffer for the new view to reference. If not specified, the view of the buffer will start with the first byte.</param>
             <param name="byteLength">The number of elements in the byte array. If unspecified, length of the view will match the buffer's length.</param>
+        </member>
+        <member name="F:Bridge.Html5.DataView.Buffer">
+            <summary>
+            The buffer this view references. Read only.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.DataView.ByteLength">
+            <summary>
+            The length, in bytes, of the view. Read only.
+            </summary>
+        </member>
+        <member name="F:Bridge.Html5.DataView.ByteOffset">
+            <summary>
+            The offset, in bytes, to the first byte of the view within the ArrayBuffer. Read only.
+            </summary>
         </member>
         <member name="M:Bridge.Html5.DataView.GetInt8(System.Int64)">
             <summary>
@@ -18812,418 +19551,6 @@
             <param name="littleEndian">Indicates whether the 32-bit int is stored in little- or big-endian format. If false or undefined, a big-endian value is read.</param>
             <returns></returns>
         </member>
-        <member name="T:Bridge.Html5.TypedArray.Prototype`2">
-            <summary>
-            Represents the prototype for TypedArray constructors.
-            TypedArray instances inherit from TypedArray.prototype. You can use the constructor's prototype
-            object to add properties or methods to all TypedArray instances, where TypedArray is one of the
-            typed array types.
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.TypedArray.Prototype`2.Buffer">
-            <summary>
-            Returns the ArrayBuffer referenced by the typed array. Fixed at construction time and thus
-            read only.
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.TypedArray.Prototype`2.ByteLength">
-            <summary>
-            Returns the length (in bytes) of the typed array from the start of its ArrayBuffer.
-            Fixed at construction time and thus read only
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.TypedArray.Prototype`2.ByteOffset">
-            <summary>
-            Returns the offset (in bytes) of the typed array from the start of its ArrayBuffer.
-            Fixed at construction time and thus read only.
-            </summary>
-        </member>
-        <member name="F:Bridge.Html5.TypedArray.Prototype`2.Length">
-            <summary>
-            Returns the number of elements hold in the typed array. Fixed at construction time and thus
-            read only.
-            </summary>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.CopyWithin(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Copies a sequence of array elements within the array to the position starting at target.
-            The copy is taken from the index positions of the second and third arguments start and end.
-            The end argument is optional and defaults to the length of the array.
-            </summary>
-            <param name="target">Target start index position where to copy the elements to.</param>
-            <param name="start">Source start index position where to start copying elements from.</param>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.CopyWithin(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Copies a sequence of array elements within the array to the position starting at target.
-            The copy is taken from the index positions of the second and third arguments start and end.
-            The end argument is optional and defaults to the length of the array.
-            </summary>
-            <param name="target">Target start index position where to copy the elements to.</param>
-            <param name="start">Source start index position where to start copying elements from.</param>
-            <param name="end">Optional. Source end index position where to end copying elements from.</param>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Every(System.Func{`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,System.Boolean},`0)">
-            <summary>
-            Tests whether all elements in the array pass the test provided by a function.
-            </summary>
-            <param name="callback">
-            Function to test for each element, taking three arguments:
-            currentValue: The current element being processed in the typed array.
-            index: The index of the current element being processed in the typed array.
-            array: The typed array every was called upon.
-            </param>
-            <param name="thisArg">Optional. Value to use as this when executing callback.</param>
-            <returns>True if callback returns true for all elements on array, false otherwise.</returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Fill(`1)">
-            <summary>
-            Fills all the elements of an array from a start index to an end index with a static value.
-            </summary>
-            <param name="value">Value to fill the typed array with.</param>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Fill(`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Fills all the elements of an array from a start index to an end index with a static value.
-            </summary>
-            <param name="value">Value to fill the typed array with.</param>
-            <param name="start">Optional. Start index. Defaults to 0.</param>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Fill(`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Fills all the elements of an array from a start index to an end index with a static value.
-            </summary>
-            <param name="value">Value to fill the typed array with.</param>
-            <param name="start">Optional. Start index. Defaults to 0.</param>
-            <param name="end">Optional. End index. Defaults to 0.</param>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Filter(System.Func{`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,System.Boolean},`0)">
-            <summary>
-            Creates a new array with all of the elements of this array for which the provided filtering
-            function returns true.
-            </summary>
-            <param name="callback">
-            Function to test each element of the typed array. Invoked with arguments
-            (element, index, typedarray). Return true to keep the element, false otherwise.
-            </param>
-            <param name="thisArg">Value to use as this when executing callback.</param>
-            <returns></returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.ForEach(System.Func{`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,`1},`0)">
-            <summary>
-            Calls a function for each element in the array.
-            </summary>
-            <param name="callback">
-            Function that produces an element of the new typed array, taking three arguments:
-            currentValue: The current element being processed in the typed array.
-            index: The index of the current element being processed in the typed array.
-            array: The array forEach() was called upon.
-            </param>
-            <param name="thisArg">Optional. Value to use as 'this' when executing callback.</param>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.IndexOf(`1)">
-            <summary>
-            Returns the first (least) index of an element within the array equal to the specified
-            value, or -1 if none is found.
-            </summary>
-            <param name="searchElement">Element to locate in the typed array.</param>
-            <returns>
-            The first index at which a given element can be found in the typed array, or -1 if it is
-            not present.
-            </returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.IndexOf(`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Returns the first (least) index of an element within the array equal to the specified
-            value, or -1 if none is found.
-            </summary>
-            <param name="searchElement">Element to locate in the typed array.</param>
-            <param name="fromIndex">
-            The index to start the search at. If the index is greater than or equal to the typed array's
-            length, -1 is returned, which means the typed array will not be searched. If the provided
-            index value is a negative number, it is taken as the offset from the end of the typed array.
-            Note: if the provided index is negative, the typed array is still searched from front to back.
-            If the calculated index is less than 0, then the whole typed array will be searched.
-            Default: 0 (entire typed array is searched).
-            </param>
-            <returns>
-            The first index at which a given element can be found in the typed array, or -1 if it is
-            not present.
-            </returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Join(System.Char)">
-            <summary>
-            Joins all elements of an array into a string.
-            </summary>
-            <param name="separator">
-            Optional. Specifies a string to separate each element. The separator is converted to a string
-            if necessary. If omitted, the typed array elements are separated with a comma (",").
-            </param>
-            <returns>A string containing the elements, separated by "," or the specified separator.</returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Join(System.String)">
-            <summary>
-            Joins all elements of an array into a string.
-            </summary>
-            <param name="separator">
-            Optional. Specifies a string to separate each element. The separator is converted to a string
-            if necessary. If omitted, the typed array elements are separated with a comma (",").
-            </param>
-            <returns>A string containing the elements, separated by "," or the specified separator.</returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.LastIndexOf(`1)">
-            <summary>
-            Returns the last (greatest) index of an element within the array equal to the specified
-            value, or -1 if none is found.
-            </summary>
-            <param name="searchElement">Element to locate in the typed array.</param>
-            <returns>
-            The last index at which a given element can be found in the typed array, or -1 if it is
-            not present.
-            </returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.LastIndexOf(`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Returns the last (greatest) index of an element within the array equal to the specified
-            value, or -1 if none is found.
-            </summary>
-            <param name="searchElement">Element to locate in the typed array.</param>
-            <param name="fromIndex">
-            The index at which to start searching backwards. Defaults to the typed array's length, i.e.
-            the whole typed array will be searched. If the index is greater than or equal to the length
-            of the typed array, the whole typed array will be searched. If negative, it is taken as the
-            offset from the end of the typed array. Note that even when the index is negative, the typed
-            array is still searched from back to front. If the calculated index is less than 0, -1 is
-            returned, i.e. the typed array will not be searched.
-            </param>
-            <returns>
-            The last index at which a given element can be found in the typed array, or -1 if it is
-            not present.
-            </returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Map(System.Func{`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,`1},`0)">
-            <summary>
-            Creates a new array with the results of calling a provided function on every element in this array.
-            </summary>
-            <param name="callback">
-            Function that produces an element of the new typed array, taking three arguments:
-            currentValue: The current element being processed in the typed array.
-            index: The index of the current element being processed in the typed array.
-            array: The array forEach() was called upon.
-            </param>
-            <param name="thisArg">Optional. Value to use as 'this' when executing callback.</param>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Reduce(System.Func{`1,`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,`1},`1)">
-            <summary>
-            Apply a function against an accumulator and each value of the array (from left-to-right)
-            as to reduce it to a single value.
-            </summary>
-            <param name="callback">
-            Function to execute on each value in the typed array, taking four arguments:
-            previousValue: The value previously returned in the last invocation of the callback, or initialValue,
-            if supplied (see below).
-            currentValue: The current element being processed in the typed array.
-            index: The index of the current element being processed in the typed array.
-            array: The typed array reduce was called upon.
-            </param>
-            <param name="initialValue">
-            Optional. Object to use as the first argument to the first call of the callback.
-            </param>
-            <returns></returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.ReduceRight(System.Func{`1,`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,`1},`1)">
-            <summary>
-            Apply a function against an accumulator and each value of the array (from right-to-left)
-            as to reduce it to a single value.
-            </summary>
-            <param name="callback">
-            Function to execute on each value in the typed array, taking four arguments:
-            previousValue: The value previously returned in the last invocation of the callback, or initialValue,
-            if supplied (see below).
-            currentValue: The current element being processed in the typed array.
-            index: The index of the current element being processed in the typed array.
-            array: The typed array reduce was called upon.
-            </param>
-            <param name="initialValue">
-            Optional. Object to use as the first argument to the first call of the callback.
-            </param>
-            <returns></returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Reverse">
-            <summary>
-            Reverses the order of the elements of an array — the first becomes the last,
-            and the last becomes the first.
-            </summary>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Set(System.Array)">
-            <summary>
-            Stores multiple values in the typed array, reading input values from a specified array.
-            </summary>
-            <param name="array">
-            The array from which to copy values. All values from the source array are copied into the
-            target array, unless the length of the source array plus the offset exceeds the length of
-            the target array, in which case an exception is thrown.
-            </param>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Set(System.Array,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Stores multiple values in the typed array, reading input values from a specified array.
-            </summary>
-            <param name="array">
-            The array from which to copy values. All values from the source array are copied into the
-            target array, unless the length of the source array plus the offset exceeds the length of
-            the target array, in which case an exception is thrown.
-            </param>
-            <param name="offset">
-            The offset into the target array at which to begin writing values from the source array.
-            If you omit this value, 0 is assumed (that is, the source array will overwrite values in
-            the target array starting at index 0).
-            </param>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Set(`0,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Stores multiple values in the typed array, reading input values from a specified array.
-            </summary>
-            <param name="typedArray">
-            If the source array is a typed array, the two arrays may share the same underlying
-            ArrayBuffer; the browser will intelligently copy the source range of the buffer to the
-            destination range.
-            </param>
-            <param name="offset">
-            The offset into the target array at which to begin writing values from the source array.
-            If you omit this value, 0 is assumed (that is, the source array will overwrite values in
-            the target array starting at index 0).
-            </param>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Slice">
-            <summary>
-            Extracts a section of an array and returns a new array.
-            </summary>
-            <returns>A shallow copy of elements from the original typed array</returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Slice(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Extracts a section of an array and returns a new array.
-            </summary>
-            <param name="begin">
-            Zero-based index at which to begin extraction.
-            As a negative index, begin indicates an offset from the end of the sequence.
-            slice(-2) extracts the last two elements in the sequence.
-            If begin is omitted, slice begins from index 0.
-            </param>
-            <returns>A shallow copy of elements from the original typed array</returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Slice(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Extracts a section of an array and returns a new array.
-            </summary>
-            <param name="begin">
-            Zero-based index at which to begin extraction.
-            As a negative index, begin indicates an offset from the end of the sequence.
-            slice(-2) extracts the last two elements in the sequence.
-            If begin is omitted, slice begins from index 0.
-            </param>
-            <param name="end">
-            Zero-based index at which to end extraction.
-            slice() extracts up to but not including end.slice(1,4) extracts the second element up to
-            the fourth element (elements indexed 1, 2, and 3).
-            As a negative index, end indicates an offset from the end of the sequence.
-            slice(2,-1) extracts the third element through the second-to-last element in the sequence.
-            If end is omitted, slice extracts to the end of the sequence (arr.length).
-            </param>
-            <returns>A shallow copy of elements from the original typed array</returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Some(System.Func{`1,Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},`0,`1},`0)">
-            <summary>
-            Returns true if at least one element in this array satisfies the provided testing function.
-            </summary>
-            <param name="callback">
-            Function to test for each element, taking three arguments:
-            currentValue: The current element being processed in the typed array.
-            index: The index of the current element being processed in the typed array.
-            array: The array some() was called upon.
-            </param>
-            <param name="thisArg">Optional. Value to use as 'this' when executing callback.</param>
-            <returns>
-            True if at least one element in this array satisfies the provided testing function.
-            False otherwise.
-            </returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Sort">
-            <summary>
-            Sorts the elements of an array in place and returns the array.
-            </summary>
-            <returns>Sorted TypedArray.</returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.Sort(System.Func{`1,`1,System.Int64})">
-            <summary>
-            Sorts the elements of an array in place and returns the array.
-            </summary>
-            <param name="compareFunction">
-            Specifies a function that defines the sort order. If omitted, the array is sorted according to
-            each character's Unicode code point value, according to the string conversion of each element.
-            Example: long compareFunction(a, b) { ... };
-            </param>
-            <remarks>
-            If compareFunction is supplied, the array elements are sorted according to the return value of the
-            compare function. If a and b are two elements being compared, then:
-            • If compareFunction(a, b) is less than 0, sort a to a lower index than b, i.e. a comes first.
-            • If compareFunction(a, b) returns 0, leave a and b unchanged with respect to each other, but sorted
-              with respect to all different elements. Note: the ECMAscript standard does not guarantee this
-              behaviour, and thus not all browsers (e.g. Mozilla versions dating back to at least 2003) respect
-              this.
-            • If compareFunction(a, b) is greater than 0, sort b to a lower index than a.
-            • compareFunction(a, b) must always return the same value when given a specific pair of elements a
-              and b as its two arguments. If inconsistent results are returned then the sort order is undefined.
-            </remarks>
-            <returns>Sorted TypedArray.</returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.SubArray">
-            <summary>
-            Returns a new TypedArray from the given start and end element index.
-            </summary>
-            <returns>
-            A new TypedArray on the same ArrayBuffer store and with the same element types
-            as for this TypedArray object.
-            </returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.SubArray(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Returns a new TypedArray from the given start and end element index.
-            </summary>
-            <param name="begin">Element to begin at. The offset is inclusive.</param>
-            <returns>
-            A new TypedArray on the same ArrayBuffer store and with the same element types
-            as for this TypedArray object.
-            </returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.SubArray(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64},Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
-            <summary>
-            Returns a new TypedArray from the given start and end element index.
-            </summary>
-            <param name="begin">Element to begin at. The offset is inclusive.</param>
-            <param name="end">
-            Element to end at. The offset is exclusive. If not specified, all elements from the one
-            specified by begin to the end of the array are included in the new view.
-            </param>
-            <returns>
-            A new TypedArray on the same ArrayBuffer store and with the same element types
-            as for this TypedArray object.
-            </returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.ToLocaleString">
-            <summary>
-            The elements are converted to Strings using their toLocaleString methods and these Strings
-            are separated by a locale-specific String (such as a comma “,”).
-            </summary>
-            <returns>A localized string representing the array and its elements.</returns>
-        </member>
-        <member name="M:Bridge.Html5.TypedArray.Prototype`2.ToString">
-            <summary>
-            Joins the array and returns one string containing each array element separated by commas.
-            </summary>
-            <returns>A string representing the array and its elements.</returns>
-        </member>
         <member name="T:Bridge.Html5.Uint16Array">
             <summary>
             Represents an array of 16-bit unsigned integers in the platform byte order.
@@ -19272,11 +19599,6 @@
             <param name="buffer">Arraybuffer to use as base for contents.</param>
             <param name="byteOffset">Optional. Position in the buffer to start reading data from.</param>
             <param name="length">Optional. Number of elements to consider while creating the array.</param>
-        </member>
-        <member name="F:Bridge.Html5.Uint16Array.Prototype">
-            <summary>
-            Prototype for the TypedArray objects.
-            </summary>
         </member>
         <member name="P:Bridge.Html5.Uint16Array.Item(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
             <summary>
@@ -19334,11 +19656,6 @@
             <param name="byteOffset">Optional. Position in the buffer to start reading data from.</param>
             <param name="length">Optional. Number of elements to consider while creating the array.</param>
         </member>
-        <member name="F:Bridge.Html5.Uint32Array.Prototype">
-            <summary>
-            Prototype for the TypedArray objects.
-            </summary>
-        </member>
         <member name="P:Bridge.Html5.Uint32Array.Item(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
             <summary>
             Allows index operations on the array.
@@ -19394,11 +19711,6 @@
             <param name="byteOffset">Optional. Position in the buffer to start reading data from.</param>
             <param name="length">Optional. Number of elements to consider while creating the array.</param>
         </member>
-        <member name="F:Bridge.Html5.Uint8Array.Prototype">
-            <summary>
-            Prototype for the TypedArray objects.
-            </summary>
-        </member>
         <member name="P:Bridge.Html5.Uint8Array.Item(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
             <summary>
             Allows index operations on the array.
@@ -19453,11 +19765,6 @@
             <param name="buffer">Arraybuffer to use as base for contents.</param>
             <param name="byteOffset">Optional. Position in the buffer to start reading data from.</param>
             <param name="length">Optional. Number of elements to consider while creating the array.</param>
-        </member>
-        <member name="F:Bridge.Html5.Uint8ClampedArray.Prototype">
-            <summary>
-            Prototype for the TypedArray objects.
-            </summary>
         </member>
         <member name="P:Bridge.Html5.Uint8ClampedArray.Item(Bridge.Any{System.Int32,System.Int64,System.UInt32,System.UInt64})">
             <summary>

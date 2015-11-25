@@ -1,14 +1,14 @@
-﻿Project          : Bridge
-Release Date     : 2015-09-21
-Current Version  : 1.9
-Previous Version : 1.8
+Project          : Bridge
+Release Date     : 2015-11-23
+Current Version  : 1.10
+Previous Version : 1.9
 
 Use Bridge.NET to build platform independent applications for mobile, web 
 and desktop. Run on iOS, Windows, Mac, Linux and billions of other devices 
 with JavaScript support.
 
-The foundation of Bridge.NET is a C# to JavaScript source-to-source 
-compiler, also known as a Cross Compiler or Transpiler. Using Bridge.NET 
+The foundation of Bridge.NET is a C#-to-JavaScript source-to-source 
+compiler, also known as a Cross Compiler or Transpiler. Using Bridge.NET, 
 you write your code in C# and Bridge.NET will magically transform into 
 JavaScript. 
 
@@ -82,7 +82,7 @@ Initial Release. No BREAKING CHANGES.
 VII. CREDITS
 --------------------------------------------------------------------------
 
-1.  NRefactory by  ICSharpCode
+1.  NRefactory by ICSharpCode
 
     https://www.nuget.org/packages/ICSharpCode.NRefactory
 
