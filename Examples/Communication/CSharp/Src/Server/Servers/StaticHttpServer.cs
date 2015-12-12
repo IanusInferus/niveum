@@ -39,12 +39,15 @@ namespace Server
         public String PhysicalPath { get; set; }
         /// <summary>只能在启动前修改，以保证线程安全</summary>
         public String[] Indices { get; set; }
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public Func<String, Optional<String>> RelativePathTranslator { get; set; }
 
         public StaticHttpServer(IServerContext sc, Action<Action> QueueUserWorkItem, int ReadBufferSize = 8 * 1024)
         {
             ServerContext = sc;
             this.QueueUserWorkItem = QueueUserWorkItem;
             this.ReadBufferSize = ReadBufferSize;
+            this.Indices = new String[] { };
         }
         
         public void Start()
@@ -145,6 +148,17 @@ namespace Server
                     return;
                 }
 
+                if (RelativePathTranslator != null)
+                {
+                    var oRelativePath = RelativePathTranslator(RelativePath);
+                    if (oRelativePath.OnNotHasValue)
+                    {
+                        a.Response.StatusCode = 404;
+                        OnSuccess();
+                        return;
+                    }
+                    RelativePath = oRelativePath.Value;
+                }
                 var Path = FileNameHandling.GetAbsolutePath(RelativePath, Root);
                 if ((RelativePath != "") && !Path.StartsWith(Root))
                 {
