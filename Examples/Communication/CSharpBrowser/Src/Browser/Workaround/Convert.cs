@@ -9,6 +9,8 @@ namespace System
         private static String codes = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
         public static String ToBase64String(byte[] inArray)
         {
+            var sl = new List<String>();
+
             var l = new List<Char>();
             for (int i = 0; i < inArray.Length; i += 3)
             {
@@ -32,9 +34,17 @@ namespace System
                 var b3 = inArray[i + 2];
                 l.Add(codes[((b2 & 0xF) << 2) | ((b3 >> 6) & 3)]);
                 l.Add(codes[b3 & 0x3F]);
-            }
 
-            return new String(l.ToArray());
+                if (l.Count >= 1024)
+                {
+                    sl.Add(new String(l.ToArray()));
+                    l.Clear();
+                }
+            }
+            sl.Add(new String(l.ToArray()));
+            l.Clear();
+
+            return String.Join("", sl);
         }
 
         public static Boolean ToBoolean(Object value)
