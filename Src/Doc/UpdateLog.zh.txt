@@ -1,4 +1,13 @@
-﻿2015.11.25
+﻿2015.12.12
+Examples:
+增加C#通讯示例静态服务器转向功能。
+优化C#通讯浏览器示例的Base64编码的性能。
+
+2015.12.05
+Examples:
+更新C#通讯浏览器示例的Bridge.NET到1.10.2。
+
+2015.11.25
 Yuki.SchemaManipulator:
 修正命令行说明。
 Examples:
