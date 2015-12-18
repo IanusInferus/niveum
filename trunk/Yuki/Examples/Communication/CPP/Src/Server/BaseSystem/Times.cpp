@@ -115,6 +115,65 @@ std::chrono::system_clock::time_point StringToDateTimeUtc(std::wstring s)
     return t;
 }
 
+// time to ISO 8601 string 'yyyy-MM-ddTHH:mm:ss.fffZ'
+std::wstring DateTimeUtcWithMillisecondsToString(std::chrono::system_clock::time_point Time)
+{
+    auto t = Time.time_since_epoch();
+    auto days_from_epoch = std::chrono::duration_cast<days>(t);
+    auto tu = civil_from_days<int>(days_from_epoch.count());
+    auto year = std::get<0>(tu);
+    auto month = std::get<1>(tu);
+    auto day = std::get<2>(tu);
+    t -= days_from_epoch;
+    auto hour = std::chrono::duration_cast<std::chrono::hours>(t);
+    t -= hour;
+    auto minute = std::chrono::duration_cast<std::chrono::minutes>(t);
+    t -= minute;
+    auto second = std::chrono::duration_cast<std::chrono::seconds>(t);
+    t -= second;
+    auto millisecond = std::chrono::duration_cast<std::chrono::milliseconds>(t);
+    t -= millisecond;
+
+    std::wstringstream s;
+    s.fill('0');
+    s << std::setw(4) << year << L'-' << std::setw(2) << month << L'-' << std::setw(2) << day;
+    s << L'T';
+    s << std::setw(2) << hour.count() << L':' << std::setw(2) << minute.count() << L':' << std::setw(2) << second.count() << L"." << std::setw(3) << millisecond.count();
+    s << L'Z';
+
+    return std::wstring(s.str());
+}
+
+// parse ISO 8601 string 'yyyy-MM-ddTHH:mm:ss.fffZ'
+std::chrono::system_clock::time_point StringToDateTimeUtcWithMillisecond(std::wstring s)
+{
+    static std::wregex rIso8601(L"(-?[0-9]+)-([0-9]+)-([0-9]+)T([0-9]+):([0-9]+):([0-9]+).([0-9]+)Z");
+
+    std::wsmatch m;
+
+    if (!std::regex_match(s, m, rIso8601))
+    {
+        throw std::logic_error("InvalidFormat");
+    }
+
+    auto year = Parse<int>(m[1].str());
+    auto month = Parse<unsigned>(m[2].str());
+    auto day = Parse<unsigned>(m[3].str());
+    auto hour = Parse<unsigned>(m[4].str());
+    auto minute = Parse<unsigned>(m[5].str());
+    auto second = Parse<unsigned>(m[6].str());
+    auto millisecond = Parse<unsigned>(m[7].str());
+
+    auto days_from_epoch = (days)(days_from_civil(year, month, day));
+    auto t = (std::chrono::system_clock::time_point)(days_from_epoch);
+    t += (std::chrono::hours)(hour);
+    t += (std::chrono::minutes)(minute);
+    t += (std::chrono::seconds)(second);
+    t += (std::chrono::milliseconds)(millisecond);
+
+    return t;
+}
+
 std::chrono::system_clock::time_point UtcNow()
 {
     auto now = std::chrono::system_clock::now();
