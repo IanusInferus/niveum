@@ -17,7 +17,7 @@ namespace Algorithms
         {
             throw std::logic_error("NotImplemented");
         }
-        std::vector<std::uint8_t> HMACSHA1(const std::vector<std::uint8_t> &Key, const std::vector<std::uint8_t> &Bytes)
+        std::vector<std::uint8_t> HMACSHA1Simple(const std::vector<std::uint8_t> &Key, const std::vector<std::uint8_t> &Bytes)
         {
             throw std::logic_error("NotImplemented");
         }
