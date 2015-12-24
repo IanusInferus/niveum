@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2015.08.31.
+//  Version:     2015.12.24.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -197,6 +197,24 @@ namespace Client
             {
                 wprintf(L"%ls\n", e->Content.c_str());
             };
+
+            auto csvr = std::make_shared<Communication::CheckSchemaVersionRequest>();
+            csvr->Hash = ReplaceAllCopy(ToHexString(InnerClient->Hash()), L" ", L"");
+            InnerClient->CheckSchemaVersion(csvr, [](std::shared_ptr<Communication::CheckSchemaVersionReply> r)
+            {
+                if (r->OnHead())
+                {
+                }
+                else if (r->OnSupported())
+                {
+                    std::wprintf(L"%ls\n", L"客户端不是最新版本，但服务器可以支持。");
+                }
+                else if (r->OnNotSupported())
+                {
+                    std::wprintf(L"%ls\n", L"客户端版本不受支持。");
+                    exit(-1);
+                }
+            });
 
             while (true)
             {

@@ -15225,6 +15225,24 @@
             Is a DOMString, starting with '::', containing the name of the pseudo-element the animation runs on. If the animation doesn't run on a pseudo-element but on the element, an empty string: ''.
             </summary>
         </member>
+        <member name="T:Bridge.Html5.AnimationEvent`1">
+            <summary>
+            A generic version of the AnimationEvent class. The type parameter is a type of CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
+        </member>
+        <member name="T:Bridge.Html5.Event`1">
+            <summary>
+            A generic version of the Event class. The type parameter is a type of CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
+        </member>
+        <member name="F:Bridge.Html5.Event`1.CurrentTarget">
+            <summary>
+            Identifies the current target for the event, as the event traverses the DOM. It always refers to the element the event handler has been attached to as opposed to event.target which identifies the element on which the event occurred.
+            On Internet Explorer 6 through 8, the event model is different. Event listeners are attached with the non-standard element.attachEvent method. In this model, there is no equivalent to event.currentTarget and this is the global object.
+            </summary>
+        </member>
         <member name="T:Bridge.Html5.CompositionEvent">
             <summary>
             The DOM CompositionEvent represents events that occur due to the user indirectly entering text.
@@ -15291,6 +15309,18 @@
             The locale of current input method (for example, the keyboard layout locale if the composition is associated with IME).
             </summary>
         </member>
+        <member name="T:Bridge.Html5.CompositionEvent`1">
+            <summary>
+            A generic version of the CompositionEvent class. The type parameter is a type of CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
+        </member>
+        <member name="T:Bridge.Html5.UIEvent`1">
+            <summary>
+            A generic version of the UIEvent class. The type parameter is a type of CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
+        </member>
         <member name="T:Bridge.Html5.CustomEvent">
             <summary>
             The DOM CustomEvent are events initialized by an application for any purpose.
@@ -15328,17 +15358,11 @@
             The data passed when initializing the event.
             </summary>
         </member>
-        <member name="T:Bridge.Html5.Event`1">
+        <member name="T:Bridge.Html5.CustomEvent`1">
             <summary>
-            A generic version of the Event class. The type parameters is a type of CurrentTarget.
+            A generic version of the CustomEvent class. The type parameter is a type of CurrentTarget.
             </summary>
             <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
-        </member>
-        <member name="F:Bridge.Html5.Event`1.CurrentTarget">
-            <summary>
-            Identifies the current target for the event, as the event traverses the DOM. It always refers to the element the event handler has been attached to as opposed to event.target which identifies the element on which the event occurred.
-            On Internet Explorer 6 through 8, the event model is different. Event listeners are attached with the non-standard element.attachEvent method. In this model, there is no equivalent to event.currentTarget and this is the global object.
-            </summary>
         </member>
         <member name="T:Bridge.Html5.EventType">
             <summary>
@@ -16144,6 +16168,12 @@
             The FocusEvent.relatedTarget read-only property represents a secondary target for this event, which will depend of the event itself. As in some cases (like when tabbing in or out a page), this property may be set to null for security reasons.
             </summary>
         </member>
+        <member name="T:Bridge.Html5.FocusEvent`1">
+            <summary>
+            A generic version of the FocusEvent class. The type parameter is a type of CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
+        </member>
         <member name="T:Bridge.Html5.HashChangeEvent">
              <summary>
             
@@ -16158,6 +16188,12 @@
             <summary>
             The previous URL from which the window was navigated.
             </summary>
+        </member>
+        <member name="T:Bridge.Html5.HashChangeEvent`1">
+            <summary>
+            A generic version of the HashChangeEvent class. The type parameter is a type of CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
         </member>
         <member name="M:Bridge.Html5.IEventListener.HandleEvent(Bridge.Html5.Event)">
             <summary>
@@ -17270,6 +17306,12 @@
             The key was a button on a game controller or a joystick on a mobile device.
             </summary>
         </member>
+        <member name="T:Bridge.Html5.KeyboardEvent`1">
+            <summary>
+            A generic version of the KeyboardEvent class. The type parameter is a type of CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
+        </member>
         <member name="F:Bridge.Html5.MouseEvent.AltKey">
             <summary>
             Indicates whether the ALT key was pressed when the event fired.
@@ -17431,6 +17473,12 @@
             Returns the vertical coordinate of the event within the screen as a whole.
             </summary>
         </member>
+        <member name="T:Bridge.Html5.MouseEvent`1">
+            <summary>
+            A generic version of the MouseEvent class. The type parameter is a type of CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
+        </member>
         <member name="T:Bridge.Html5.ProgressEvent">
             <summary>
             The ProgressEvent interface represents events measuring progress of an underlying process, like an HTTP request (for an XMLHttpRequest, or the loading of the underlying resource of an &lt;img&gt;, &lt;audio&gt;, &lt;video&gt;, &lt;style&gt; or &lt;link&gt;).
@@ -17450,6 +17498,12 @@
             <summary>
             Is an unsigned long long representing the total amount of work that the underlying process is in the progress of performing. When downloading a resource using HTTP, this only represent the content itself, not headers and other overhead.
             </summary>
+        </member>
+        <member name="T:Bridge.Html5.ProgressEvent`1">
+            <summary>
+            A generic version of the ProgressEvent class. The type parameter is a type of CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
         </member>
         <member name="T:Bridge.Html5.WheelEvent">
             <summary>
@@ -17496,6 +17550,12 @@
             The delta values are specified in pages.
             </summary>
         </member>
+        <member name="T:Bridge.Html5.WheelEvent`1">
+            <summary>
+            A generic version of the WheelEvent class. The type parameter is a type of CurrentTarget.
+            </summary>
+            <typeparam name="TCurrentTarget">The CurrentTarget type</typeparam>
+        </member>
         <member name="T:Bridge.Html5.Blob">
             <summary>
             A Blob object represents a file-like object of immutable, raw data. Blobs represent data that isn't necessarily in a JavaScript-native format. The File interface is based on Blob, inheriting blob functionality and expanding it to support files on the user's system.
@@ -17507,13 +17567,13 @@
             
              </summary>
         </member>
-        <member name="M:Bridge.Html5.Blob.#ctor(Bridge.Any{Bridge.Html5.ArrayBuffer,Bridge.Html5.ArrayBufferView,Bridge.Html5.Blob,System.String}[])">
+        <member name="M:Bridge.Html5.Blob.#ctor(Bridge.Html5.BlobDataObject[])">
              <summary>
             
              </summary>
              <param name="parts">An Array of data objects to put into the new Blob object. This can be any number of ArrayBuffer, ArrayBufferView (typed array), Blob, or strings, in any order.</param>
         </member>
-        <member name="M:Bridge.Html5.Blob.#ctor(Bridge.Any{Bridge.Html5.ArrayBuffer,Bridge.Html5.ArrayBufferView,Bridge.Html5.Blob,System.String}[],Bridge.Html5.BlobPropertyBag)">
+        <member name="M:Bridge.Html5.Blob.#ctor(Bridge.Html5.BlobDataObject[],Bridge.Html5.BlobPropertyBag)">
              <summary>
             
              </summary>
