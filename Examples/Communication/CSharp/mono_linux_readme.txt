@@ -55,7 +55,7 @@ pathmunge /usr/local/bin
 如果需要支持访问https的网页，需要导入CA证书
 cert-sync /etc/ssl/ca-bundle.pem
 
-2)设置TCP，调节服务器最大socket数量和socket回收速度
+2)设置TCP，调节服务器最大socket数量
 用su提升到root权限，运行
 ulimit -a
 查看限制socket连接数的最大支持的文件描述符数量(open files)和最大用户进程数(max user processes)

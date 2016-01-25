@@ -338,7 +338,7 @@ namespace Net
                 //Mono（3.0.4）上在对方先Shutdown的时候后，某个时候Connected会变为False，但时机不确定，所以需要判断和捕捉异常。
                 try
                 {
-                    if (!InnerSocket.Connected)
+                    if (InnerSocket.Connected)
                     {
                         InnerSocket.Shutdown(How);
                     }
