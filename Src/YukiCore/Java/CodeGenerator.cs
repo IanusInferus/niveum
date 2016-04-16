@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java代码生成器
-//  Version:     2013.12.08.
+//  Version:     2016.04.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -163,7 +163,7 @@ namespace Yuki.ObjectSchema.Java.Common
                         {
                             if (Type.GenericTypeSpec.GenericParameterValues.Count() == 1 && Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
                             {
-                                return "Opt" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => MapToReferenceType(GetTypeString(p.TypeSpec))).ToArray());
+                                return "Opt" + Type.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName();
                             }
                             if (Type.GenericTypeSpec.GenericParameterValues.Count() > 0 && Type.GenericTypeSpec.GenericParameterValues.All(gpv => gpv.OnTypeSpec))
                             {
