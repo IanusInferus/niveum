@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaWriter.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构写入器
-//  Version:     2014.05.01.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,6 +17,7 @@ using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Syntax = Firefly.Texting.TreeFormat.Syntax;
+using TreeFormat = Firefly.Texting.TreeFormat;
 
 namespace Yuki.ObjectSchema
 {
@@ -26,7 +27,7 @@ namespace Yuki.ObjectSchema
         {
         }
 
-        public String Write(TypeDef[] Types, String Comment = null)
+        public String Write(List<TypeDef> Types, String Comment = null)
         {
             var f = WriteToForest(Types, Comment);
 
@@ -47,17 +48,17 @@ namespace Yuki.ObjectSchema
             return Compiled;
         }
 
-        private Syntax.Forest WriteToForest(TypeDef[] Types, String Comment)
+        private Syntax.Forest WriteToForest(List<TypeDef> Types, String Comment)
         {
             var MultiNodesList = new List<Syntax.MultiNodes>();
             if (Comment != "")
             {
-                var mlc = new Syntax.MultiLineComment { SingleLineComment = Opt<Syntax.SingleLineComment>.Empty, Content = new Syntax.FreeContent { Text = Comment }, EndDirective = Opt<Syntax.EndDirective>.Empty };
+                var mlc = new Syntax.MultiLineComment { SingleLineComment = TreeFormat.Optional<Syntax.SingleLineComment>.Empty, Content = new Syntax.FreeContent { Text = Comment }, EndDirective = TreeFormat.Optional<Syntax.EndDirective>.Empty };
                 MultiNodesList.Add(Syntax.MultiNodes.CreateNode(Syntax.Node.CreateMultiLineComment(mlc)));
             }
             foreach (var t in Types)
             {
-                var LineTokens = new List<String[]>();
+                var LineTokens = new List<List<String>>();
                 if (t.OnPrimitive)
                 {
                     var p = t.Primitive;
@@ -67,7 +68,7 @@ namespace Yuki.ObjectSchema
                 {
                     var a = t.Alias;
                     LineTokens.AddRange(a.GenericParameters.Select(v => WriteToTokens(v, true)));
-                    LineTokens.Add(new String[] { GetTypeString(a.Type) });
+                    LineTokens.Add(new List<String> { GetTypeString(a.Type) });
                 }
                 else if (t.OnRecord)
                 {
@@ -90,7 +91,7 @@ namespace Yuki.ObjectSchema
                 {
                     var cc = t.ClientCommand;
                     LineTokens.AddRange(cc.OutParameters.Select(v => WriteToTokens(v, false)));
-                    LineTokens.Add(new String[] { ">" });
+                    LineTokens.Add(new List<String> { ">" });
                     LineTokens.AddRange(cc.InParameters.Select(v => WriteToTokens(v, false)));
                 }
                 else if (t.OnServerCommand)
@@ -102,11 +103,11 @@ namespace Yuki.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
-                var LineLiterals = LineTokens.Select(l => (l.Length == 1 && l.Single() == ">") ? l : l.Select(Token => TreeFormatLiteralWriter.GetLiteral(Token, true, false).SingleLine).ToArray()).ToArray();
+                var LineLiterals = LineTokens.Select(l => (l.Count == 1 && l.Single() == ">") ? l : l.Select(Token => TreeFormatLiteralWriter.GetLiteral(Token, true, false).SingleLine).ToList()).ToList();
                 var NumColumn = 0;
                 foreach (var l in LineLiterals)
                 {
-                    NumColumn = Math.Max(NumColumn, l.Length);
+                    NumColumn = Math.Max(NumColumn, l.Count);
                 }
                 var ColumnWidths = new List<int>();
                 for (int k = 0; k <= NumColumn - 2; k += 1)
@@ -114,7 +115,7 @@ namespace Yuki.ObjectSchema
                     int Width = 28;
                     foreach (var l in LineLiterals)
                     {
-                        if (k < l.Length)
+                        if (k < l.Count)
                         {
                             var Column = l[k];
                             Width = Math.Max(Width, CalculateCharWidth(Column).CeilToMultipleOf(4) + 4);
@@ -126,10 +127,10 @@ namespace Yuki.ObjectSchema
                 foreach (var l in LineLiterals)
                 {
                     var Line = new List<String>();
-                    for (int k = 0; k < l.Length; k += 1)
+                    for (int k = 0; k < l.Count; k += 1)
                     {
                         var Column = l[k];
-                        if ((k != l.Length - 1) && (k < ColumnWidths.Count))
+                        if ((k != l.Count - 1) && (k < ColumnWidths.Count))
                         {
                             var Width = ColumnWidths[k];
                             Line.Add(Column + new String(' ', Width - CalculateCharWidth(Column)));
@@ -160,14 +161,14 @@ namespace Yuki.ObjectSchema
             {
                 FunctionDirective = new Syntax.FunctionDirective { Text = Directive },
                 Parameters = Parameters.ToArray(),
-                SingleLineComment = Opt<Syntax.SingleLineComment>.Empty,
+                SingleLineComment = TreeFormat.Optional<Syntax.SingleLineComment>.Empty,
                 Content = new Syntax.FunctionContent { IndentLevel = 0, Lines = Lines },
-                EndDirective = Opt<Syntax.EndDirective>.Empty
+                EndDirective = TreeFormat.Optional<Syntax.EndDirective>.Empty
             };
             return fn;
         }
 
-        private String[] WriteToTokens(VariableDef v, bool IsGenericParameter)
+        private List<String> WriteToTokens(VariableDef v, bool IsGenericParameter)
         {
             var l = new List<String>();
             if (IsGenericParameter)
@@ -183,10 +184,10 @@ namespace Yuki.ObjectSchema
             {
                 l.Add(v.Description);
             }
-            return l.ToArray();
+            return l;
         }
 
-        private String[] WriteToTokens(LiteralDef Literal)
+        private List<String> WriteToTokens(LiteralDef Literal)
         {
             var l = new List<String>();
             l.Add(Literal.Name);
@@ -195,7 +196,7 @@ namespace Yuki.ObjectSchema
             {
                 l.Add(Literal.Description);
             }
-            return l.ToArray();
+            return l;
         }
 
         private String GetTypeString(TypeSpec Type)
@@ -207,9 +208,9 @@ namespace Yuki.ObjectSchema
                 case TypeSpecTag.GenericParameterRef:
                     return "'" + Type.GenericParameterRef.Value;
                 case TypeSpecTag.Tuple:
-                    return "Tuple<" + String.Join(", ", Type.Tuple.Types.Select(t => GetTypeString(t)).ToArray()) + ">";
+                    return "Tuple<" + String.Join(", ", Type.Tuple.Types.Select(t => GetTypeString(t))) + ">";
                 case TypeSpecTag.GenericTypeSpec:
-                    return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p)).ToArray()) + ">";
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p))) + ">";
                 default:
                     throw new InvalidOperationException();
             }

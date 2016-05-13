@@ -3,7 +3,7 @@
 //  File:        PlainObjectSchemaGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 简单对象类型结构生成器
-//  Version:     2012.11.27.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,7 +21,7 @@ namespace Yuki.RelationSchema
     {
         public static OS.Schema Generate(RS.Schema Schema, Boolean ForcePrimitive = true)
         {
-            var s = (new Generator { Schema = Schema, AdditionalTypeRefs = new OS.TypeDef[] { } }).Generate(ForcePrimitive);
+            var s = (new Generator { Schema = Schema, AdditionalTypeRefs = new List<OS.TypeDef> { } }).Generate(ForcePrimitive);
             return s;
         }
         public static OS.Schema TrimAsRelationSchema(OS.Schema Schema)
@@ -35,39 +35,39 @@ namespace Yuki.RelationSchema
         private class Generator
         {
             public RS.Schema Schema;
-            public OS.TypeDef[] AdditionalTypeRefs;
+            public List<OS.TypeDef> AdditionalTypeRefs;
 
             public OS.Schema Generate(Boolean ForcePrimitive)
             {
-                var TypeRefs = Schema.TypeRefs.Where(t => !(t.OnPrimitive && t.Primitive.Name == "Binary")).SelectMany(t => TranslateTypeDef(t)).ToArray();
+                var TypeRefs = Schema.TypeRefs.Where(t => !(t.OnPrimitive && t.Primitive.Name == "Binary")).SelectMany(t => TranslateTypeDef(t)).ToList();
                 var Types = Schema.Types.Where(t => !(t.OnPrimitive && t.Primitive.Name == "Binary")).SelectMany(t => TranslateTypeDef(t)).ToList();
                 if ((ForcePrimitive || UnitUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Unit", StringComparison.OrdinalIgnoreCase)).Any())
                 {
-                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Unit", GenericParameters = new OS.VariableDef[] { }, Description = "" }));
+                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Unit", GenericParameters = new List<OS.VariableDef> { }, Description = "" }));
                 }
                 if ((ForcePrimitive || ByteUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Byte", StringComparison.OrdinalIgnoreCase)).Any())
                 {
-                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Byte", GenericParameters = new OS.VariableDef[] { }, Description = "" }));
+                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Byte", GenericParameters = new List<OS.VariableDef> { }, Description = "" }));
                 }
                 if (ForcePrimitive && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Int", StringComparison.OrdinalIgnoreCase)).Any())
                 {
-                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Int", GenericParameters = new OS.VariableDef[] { }, Description = "" }));
+                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Int", GenericParameters = new List<OS.VariableDef> { }, Description = "" }));
                 }
                 if ((ForcePrimitive || ListUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("List", StringComparison.OrdinalIgnoreCase)).Any())
                 {
                     var GenericParameter = new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" };
-                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "List", GenericParameters = new OS.VariableDef[] { GenericParameter }, Description = "" }));
+                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "List", GenericParameters = new List<OS.VariableDef> { GenericParameter }, Description = "" }));
                 }
                 if ((ForcePrimitive || TypeUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Type", StringComparison.OrdinalIgnoreCase)).Any())
                 {
-                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Type", GenericParameters = new OS.VariableDef[] { }, Description = "" }));
+                    Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Type", GenericParameters = new List<OS.VariableDef> { }, Description = "" }));
                 }
                 if ((ForcePrimitive || OptionalUsed) && !Types.Concat(TypeRefs).Concat(AdditionalTypeRefs).Where(t => t.OnPrimitive && t.Primitive.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase)).Any())
                 {
-                    var GenericParameters = new OS.VariableDef[] { new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" } };
+                    var GenericParameters = new List<OS.VariableDef> { new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" } };
                     Types.Add(OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Optional", GenericParameters = GenericParameters, Description = "" }));
                 }
-                return new OS.Schema { Types = Types.ToArray(), TypeRefs = TypeRefs, Imports = Schema.Imports.ToArray(), TypePaths = new OS.TypePath[] { } };
+                return new OS.Schema { Types = Types, TypeRefs = TypeRefs, Imports = Schema.Imports, TypePaths = new List<OS.TypePath> { } };
             }
 
             private OS.TypeDef[] TranslateTypeDef(RS.TypeDef t)
@@ -100,18 +100,18 @@ namespace Yuki.RelationSchema
                 {
                     TypeUsed = true;
                     var GenericParameter = new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" };
-                    return new OS.PrimitiveDef { Name = "List", GenericParameters = new OS.VariableDef[] { GenericParameter }, Description = "" };
+                    return new OS.PrimitiveDef { Name = "List", GenericParameters = new List<OS.VariableDef> { GenericParameter }, Description = "" };
                 }
                 else if (e.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase))
                 {
                     UnitUsed = true;
                     TypeUsed = true;
-                    var GenericParameters = new OS.VariableDef[] { new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" } };
+                    var GenericParameters = new List<OS.VariableDef> { new OS.VariableDef { Name = "T", Type = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Type", Version = "" }), Description = "" } };
                     return new OS.PrimitiveDef { Name = "Optional", GenericParameters = GenericParameters, Description = "" };
                 }
                 else
                 {
-                    return new OS.PrimitiveDef { Name = e.Name, GenericParameters = new OS.VariableDef[] { }, Description = e.Description };
+                    return new OS.PrimitiveDef { Name = e.Name, GenericParameters = new List<OS.VariableDef> { }, Description = e.Description };
                 }
             }
 
@@ -121,7 +121,7 @@ namespace Yuki.RelationSchema
             }
             private OS.EnumDef TranslateEnum(RS.EnumDef e)
             {
-                return new OS.EnumDef { Name = e.Name, Version = "", UnderlyingType = TranslateTypeSpec(e.UnderlyingType), Literals = e.Literals.Select(l => TranslateLiteral(l)).ToArray(), Description = e.Description };
+                return new OS.EnumDef { Name = e.Name, Version = "", UnderlyingType = TranslateTypeSpec(e.UnderlyingType), Literals = e.Literals.Select(l => TranslateLiteral(l)).ToList(), Description = e.Description };
             }
 
             private Boolean UnitUsed = false;
@@ -140,7 +140,7 @@ namespace Yuki.RelationSchema
                         TypeUsed = true;
                         var tBinary = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "List", Version = "" });
                         var tByte = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Byte", Version = "" });
-                        return OS.TypeSpec.CreateGenericTypeSpec(new OS.GenericTypeSpec { TypeSpec = tBinary, GenericParameterValues = new OS.GenericParameterValue[] { OS.GenericParameterValue.CreateTypeSpec(tByte) } });
+                        return OS.TypeSpec.CreateGenericTypeSpec(new OS.GenericTypeSpec { TypeSpec = tBinary, GenericParameterValues = new List<OS.GenericParameterValue> { OS.GenericParameterValue.CreateTypeSpec(tByte) } });
                     }
                     else
                     {
@@ -153,7 +153,7 @@ namespace Yuki.RelationSchema
                     TypeUsed = true;
                     OptionalUsed = true;
                     var Underlying = TranslateTypeSpec(RS.TypeSpec.CreateTypeRef(t.Optional));
-                    return OS.TypeSpec.CreateGenericTypeSpec(new OS.GenericTypeSpec { TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Optional", Version = "" }), GenericParameterValues = new OS.GenericParameterValue[] { OS.GenericParameterValue.CreateTypeSpec(Underlying) } });
+                    return OS.TypeSpec.CreateGenericTypeSpec(new OS.GenericTypeSpec { TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Optional", Version = "" }), GenericParameterValues = new List<OS.GenericParameterValue> { OS.GenericParameterValue.CreateTypeSpec(Underlying) } });
                 }
                 else
                 {
@@ -167,8 +167,8 @@ namespace Yuki.RelationSchema
             }
             private OS.RecordDef TranslateRecord(RS.EntityDef r)
             {
-                var Fields = r.Fields.Where(f => f.Attribute.OnColumn).Select(f => TranslateField(f)).ToArray();
-                return new OS.RecordDef { Name = r.Name, Version = "", GenericParameters = new OS.VariableDef[] { }, Fields = Fields, Description = r.Description };
+                var Fields = r.Fields.Where(f => f.Attribute.OnColumn).Select(f => TranslateField(f)).ToList();
+                return new OS.RecordDef { Name = r.Name, Version = "", GenericParameters = new List<OS.VariableDef> { }, Fields = Fields, Description = r.Description };
             }
         }
     }

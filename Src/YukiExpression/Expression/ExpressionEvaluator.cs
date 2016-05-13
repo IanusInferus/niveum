@@ -3,7 +3,7 @@
 //  File:        ExpressionEvaluator.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式求值工具
-//  Version:     2014.09.22.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,7 +17,7 @@ namespace Yuki.Expression
 {
     public interface IVariableProvider<T> : IVariableTypeProvider
     {
-        Delegate[] GetValue(String Name, PrimitiveType[] ParameterTypes, Delegate[] Parameters);
+        List<Delegate> GetValue(String Name, List<PrimitiveType> ParameterTypes, List<Delegate> Parameters);
     }
 
     /// <summary>
@@ -32,19 +32,19 @@ namespace Yuki.Expression
             this.Providers = Providers;
         }
 
-        public FunctionParameterAndReturnTypes[] GetOverloads(String Name)
+        public List<FunctionParameterAndReturnTypes> GetOverloads(String Name)
         {
-            return Providers.SelectMany(p => p.GetOverloads(Name)).ToArray();
+            return Providers.SelectMany(p => p.GetOverloads(Name)).ToList();
         }
 
-        public PrimitiveType[] GetMatched(String Name, PrimitiveType[] ParameterTypes)
+        public List<PrimitiveType> GetMatched(String Name, List<PrimitiveType> ParameterTypes)
         {
-            return Providers.SelectMany(p => p.GetMatched(Name, ParameterTypes)).ToArray();
+            return Providers.SelectMany(p => p.GetMatched(Name, ParameterTypes)).ToList();
         }
 
-        public Delegate[] GetValue(String Name, PrimitiveType[] ParameterTypes, Delegate[] Parameters)
+        public List<Delegate> GetValue(String Name, List<PrimitiveType> ParameterTypes, List<Delegate> Parameters)
         {
-            return Providers.SelectMany(p => p.GetValue(Name, ParameterTypes, Parameters)).ToArray();
+            return Providers.SelectMany(p => p.GetValue(Name, ParameterTypes, Parameters)).ToList();
         }
     }
 
@@ -121,11 +121,11 @@ namespace Yuki.Expression
             {
                 var Name = e.Variable.Name;
                 var f = VariableProvider.GetValue(Name, null, null);
-                if (f.Length == 0)
+                if (f.Count == 0)
                 {
                     throw new InvalidOperationException(String.Format("VariableNotExist: {0}", Name));
                 }
-                else if (f.Length > 1)
+                else if (f.Count > 1)
                 {
                     throw new InvalidOperationException(String.Format("MultipleVariableExist: {0}", Name));
                 }
@@ -134,13 +134,13 @@ namespace Yuki.Expression
             else if (e.OnFunction)
             {
                 var Name = e.Function.Name;
-                var ParameterFuncs = e.Function.Parameters.Select(p => BuildExpr(p)).ToArray();
-                var f = VariableProvider.GetValue(Name, ParameterFuncs.Select(pf => GetReturnType(pf)).ToArray(), ParameterFuncs);
-                if (f.Length == 0)
+                var ParameterFuncs = e.Function.Parameters.Select(p => BuildExpr(p)).ToList();
+                var f = VariableProvider.GetValue(Name, ParameterFuncs.Select(pf => GetReturnType(pf)).ToList(), ParameterFuncs);
+                if (f.Count == 0)
                 {
                     throw new InvalidOperationException(String.Format("FunctionNotExist: {0}", Name));
                 }
-                else if (f.Length > 1)
+                else if (f.Count > 1)
                 {
                     throw new InvalidOperationException(String.Format("MultipleFunctionExist: {0}", Name));
                 }

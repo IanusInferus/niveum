@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异加载器
-//  Version:     2015.06.17.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,6 +19,7 @@ using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Syntax = Firefly.Texting.TreeFormat.Syntax;
 using Semantics = Firefly.Texting.TreeFormat.Semantics;
+using TreeFormat = Firefly.Texting.TreeFormat;
 using Yuki.RelationSchema;
 
 namespace Yuki.RelationSchemaDiff
@@ -88,7 +89,7 @@ namespace Yuki.RelationSchemaDiff
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = Opt<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -134,7 +135,7 @@ namespace Yuki.RelationSchemaDiff
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = Opt<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }

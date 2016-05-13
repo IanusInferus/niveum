@@ -3,7 +3,7 @@
 //  File:        ExpressionSchemaLoader.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式Schema加载器
-//  Version:     2013.03.28.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,6 +17,7 @@ using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Syntax = Firefly.Texting.TreeFormat.Syntax;
 using Semantics = Firefly.Texting.TreeFormat.Semantics;
+using TreeFormat = Firefly.Texting.TreeFormat;
 using Firefly.Texting.TreeFormat.Semantics;
 
 namespace Yuki.ExpressionSchema
@@ -65,7 +66,7 @@ namespace Yuki.ExpressionSchema
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = Opt<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }

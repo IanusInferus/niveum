@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2015.02.27.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -50,7 +50,7 @@ namespace Yuki.DatabaseRegenerator
             var Meta = EntityMetas[t.Key];
             var CollectionName = Meta.CollectionName;
             var Values = t.Value.Rows;
-            var Columns = Meta.Fields.Where(f => f.Attribute.OnColumn).ToArray();
+            var Columns = Meta.Fields.Where(f => f.Attribute.OnColumn).ToList();
 
             if (Type == DatabaseType.SqlServer)
             {
@@ -73,8 +73,8 @@ namespace Yuki.DatabaseRegenerator
                     cmd.ExecuteNonQuery();
                 }
                 {
-                    var ColumnStr = String.Join(", ", Columns.Select(col => Escape(col.Name)).ToArray());
-                    var ParamStr = String.Join(", ", Columns.Select(col => String.Format("@{0}", col.Name)).ToArray());
+                    var ColumnStr = String.Join(", ", Columns.Select(col => Escape(col.Name)));
+                    var ParamStr = String.Join(", ", Columns.Select(col => String.Format("@{0}", col.Name)));
                     var cmd = c.CreateCommand();
                     cmd.Transaction = b;
                     cmd.CommandText = String.Format("INSERT INTO {0}({1}) VALUES ({2})", Escape(CollectionName), ColumnStr, ParamStr);
@@ -287,7 +287,7 @@ namespace Yuki.DatabaseRegenerator
                 }
                 if (Type == DatabaseType.PostgreSQL)
                 {
-                    var IdentityColumns = Meta.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
+                    var IdentityColumns = Meta.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToList();
                     foreach (var ic in IdentityColumns)
                     {
                         var cmd = c.CreateCommand();
@@ -299,7 +299,7 @@ namespace Yuki.DatabaseRegenerator
                 }
                 else if (Type == DatabaseType.FoundationDBSQL)
                 {
-                    var IdentityColumns = Meta.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
+                    var IdentityColumns = Meta.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToList();
                     foreach (var ic in IdentityColumns)
                     {
                         Int64 Value;
@@ -361,9 +361,9 @@ namespace Yuki.DatabaseRegenerator
             var Meta = EntityMetas[EntityName];
             var CollectionName = Meta.CollectionName;
             var Values = new List<RowVal>();
-            var Columns = Meta.Fields.Where(f => f.Attribute.OnColumn).ToArray();
+            var Columns = Meta.Fields.Where(f => f.Attribute.OnColumn).ToList();
 
-            var ColumnStr = String.Join(", ", Columns.Select(col => Escape(col.Name)).ToArray());
+            var ColumnStr = String.Join(", ", Columns.Select(col => Escape(col.Name)));
             var cmd = c.CreateCommand();
             cmd.Transaction = b;
             cmd.CommandText = String.Format("SELECT {1} FROM {0}", Escape(CollectionName), ColumnStr);
@@ -635,8 +635,8 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
 
-            var NotExists = Tables.Keys.Except(EntityMetas.Keys).ToArray();
-            if (NotExists.Length > 0)
+            var NotExists = Tables.Keys.Except(EntityMetas.Keys).ToList();
+            if (NotExists.Count > 0)
             {
                 throw new InvalidOperationException("TableUnknown: " + String.Join(" ", NotExists));
             }

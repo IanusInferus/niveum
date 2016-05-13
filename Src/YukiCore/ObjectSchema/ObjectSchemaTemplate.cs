@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaTemplate.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构模板
-//  Version:     2012.04.11.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -24,7 +24,7 @@ namespace Yuki.ObjectSchema
 {
     public class ObjectSchemaTemplate
     {
-        public String[] Keywords;
+        public List<String> Keywords;
         public PrimitiveMapping[] PrimitiveMappings;
         public Template[] Templates;
     }

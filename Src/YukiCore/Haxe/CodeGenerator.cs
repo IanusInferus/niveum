@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Haxe代码生成器
-//  Version:     2013.12.08.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -66,21 +66,21 @@ namespace Yuki.ObjectSchema.Haxe.Common
                 EnumDict = Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).ToDictionary(c => c.VersionedName(), c => c.Enum, StringComparer.OrdinalIgnoreCase);
             }
 
-            public String[] GetSchema()
+            public List<String> GetSchema()
             {
                 var Types = GetTypes(Schema);
 
                 if (PackageName != "")
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", PackageName).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", PackageName).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
                 else
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", new String[] { }).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", new List<String> { }).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
             }
 
-            public String[] GetPrimitive(String Name, String PlatformName)
+            public List<String> GetPrimitive(String Name, String PlatformName)
             {
                 return GetTemplate("Primitive").Substitute("Name", Name).Substitute("PlatformName", PlatformName);
             }
@@ -114,7 +114,7 @@ namespace Yuki.ObjectSchema.Haxe.Common
                         {
                             if (Type.GenericTypeSpec.GenericParameterValues.Count() > 0 && Type.GenericTypeSpec.GenericParameterValues.All(gpv => gpv.OnTypeSpec))
                             {
-                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p.TypeSpec)).ToArray()) + ">";
+                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p.TypeSpec)).ToList()) + ">";
                             }
                             else
                             {
@@ -130,62 +130,62 @@ namespace Yuki.ObjectSchema.Haxe.Common
                         throw new InvalidOperationException();
                 }
             }
-            public String GetGenericParameters(VariableDef[] GenericParameters)
+            public String GetGenericParameters(List<VariableDef> GenericParameters)
             {
-                if (GenericParameters.Length == 0)
+                if (GenericParameters.Count == 0)
                 {
                     return "";
                 }
                 else
                 {
-                    return "<" + String.Join(", ", GenericParameters.Select(gp => gp.Name).ToArray()) + ">";
+                    return "<" + String.Join(", ", GenericParameters.Select(gp => gp.Name)) + ">";
                 }
             }
-            public String[] GetAlias(AliasDef a)
+            public List<String> GetAlias(AliasDef a)
             {
                 var Name = a.TypeFriendlyName() + GetGenericParameters(a.GenericParameters);
                 return GetTemplate("Alias").Substitute("Name", Name).Substitute("Type", GetTypeString(a.Type)).Substitute("XmlComment", GetXmlComment(a.Description));
             }
-            public String[] GetTupleElement(Int64 NameIndex, TypeSpec Type)
+            public List<String> GetTupleElement(Int64 NameIndex, TypeSpec Type)
             {
                 return GetTemplate("TupleElement").Substitute("NameIndex", NameIndex.ToInvariantString()).Substitute("Type", GetTypeString(Type));
             }
-            public String[] GetTupleElements(TypeSpec[] Types)
+            public List<String> GetTupleElements(List<TypeSpec> Types)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 var n = 0;
                 foreach (var e in Types)
                 {
                     l.AddRange(GetTupleElement(n, e));
                     n += 1;
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetTuple(String Name, TupleDef t)
+            public List<String> GetTuple(String Name, TupleDef t)
             {
                 var TupleElements = GetTupleElements(t.Types);
                 return GetTemplate("Tuple").Substitute("Name", Name).Substitute("TupleElements", TupleElements);
             }
-            public String[] GetField(VariableDef f)
+            public List<String> GetField(VariableDef f)
             {
                 return GetTemplate("Field").Substitute("Name", f.Name).Substitute("Type", GetTypeString(f.Type)).Substitute("XmlComment", GetXmlComment(f.Description));
             }
-            public String[] GetFields(VariableDef[] Fields)
+            public List<String> GetFields(List<VariableDef> Fields)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var f in Fields)
                 {
                     l.AddRange(GetField(f));
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetRecord(RecordDef r)
+            public List<String> GetRecord(RecordDef r)
             {
                 var Name = r.TypeFriendlyName() + GetGenericParameters(r.GenericParameters);
                 var Fields = GetFields(r.Fields);
                 return GetTemplate("Record").Substitute("Name", Name).Substitute("Fields", Fields).Substitute("XmlComment", GetXmlComment(r.Description));
             }
-            public String[] GetAlternative(VariableDef a)
+            public List<String> GetAlternative(VariableDef a)
             {
                 if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name.Equals("Unit", StringComparison.OrdinalIgnoreCase)))
                 {
@@ -196,58 +196,58 @@ namespace Yuki.ObjectSchema.Haxe.Common
                     return GetTemplate("Alternative").Substitute("Name", a.Name).Substitute("Type", GetTypeString(a.Type)).Substitute("XmlComment", GetXmlComment(a.Description));
                 }
             }
-            public String[] GetAlternatives(VariableDef[] Alternatives)
+            public List<String> GetAlternatives(List<VariableDef> Alternatives)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var a in Alternatives)
                 {
                     l.AddRange(GetAlternative(a));
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetTaggedUnion(TaggedUnionDef tu)
+            public List<String> GetTaggedUnion(TaggedUnionDef tu)
             {
                 var Name = tu.TypeFriendlyName() + GetGenericParameters(tu.GenericParameters);
                 var Alternatives = GetAlternatives(tu.Alternatives);
                 return GetTemplate("TaggedUnion").Substitute("Name", Name).Substitute("Alternatives", Alternatives).Substitute("XmlComment", GetXmlComment(tu.Description));
             }
-            public String[] GetLiteral(EnumDef e, LiteralDef lrl)
+            public List<String> GetLiteral(EnumDef e, LiteralDef lrl)
             {
                 return GetTemplate("Literal").Substitute("Name", lrl.Name).Substitute("Value", lrl.Value.ToInvariantString()).Substitute("UnderlyingType", GetTypeString(e.UnderlyingType)).Substitute("XmlComment", GetXmlComment(lrl.Description));
             }
-            public String[] GetLiterals(EnumDef e)
+            public List<String> GetLiterals(EnumDef e)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var lrl in e.Literals)
                 {
                     l.AddRange(GetLiteral(e, lrl));
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetEnum(EnumDef e)
+            public List<String> GetEnum(EnumDef e)
             {
                 var Literals = GetLiterals(e);
                 return GetTemplate("Enum").Substitute("Name", e.TypeFriendlyName()).Substitute("UnderlyingType", GetTypeString(e.UnderlyingType)).Substitute("Literals", Literals).Substitute("XmlComment", GetXmlComment(e.Description));
             }
-            public String[] GetClientCommand(ClientCommandDef c)
+            public List<String> GetClientCommand(ClientCommandDef c)
             {
                 var l = new List<String>();
-                l.AddRange(GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description }));
-                l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new VariableDef[] { }, Alternatives = c.InParameters, Description = c.Description }));
-                return l.ToArray();
+                l.AddRange(GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Description = c.Description }));
+                l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Description = c.Description }));
+                return l;
             }
-            public String[] GetServerCommand(ServerCommandDef c)
+            public List<String> GetServerCommand(ServerCommandDef c)
             {
-                return GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description });
+                return GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Description = c.Description });
             }
-            public String[] GetXmlComment(String Description)
+            public List<String> GetXmlComment(String Description)
             {
-                if (Description == "") { return new String[] { }; }
+                if (Description == "") { return new List<String> { }; }
 
                 var d = Description.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;").Replace("'", "&apos;");
 
-                var Lines = d.UnifyNewLineToLf().Split('\n');
-                if (Lines.Length == 1)
+                var Lines = d.UnifyNewLineToLf().Split('\n').ToList();
+                if (Lines.Count == 1)
                 {
                     return GetTemplate("SingleLineXmlComment").Substitute("Description", d);
                 }
@@ -257,13 +257,13 @@ namespace Yuki.ObjectSchema.Haxe.Common
                 }
             }
 
-            public String[] GetIApplicationClient(TypeDef[] Commands)
+            public List<String> GetIApplicationClient(List<TypeDef> Commands)
             {
                 return GetTemplate("IApplicationClient").Substitute("Commands", GetIApplicationClientCommands(Commands));
             }
-            public String[] GetIApplicationClientCommands(TypeDef[] Commands)
+            public List<String> GetIApplicationClientCommands(List<TypeDef> Commands)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var c in Commands)
                 {
                     if (c.OnClientCommand)
@@ -275,14 +275,14 @@ namespace Yuki.ObjectSchema.Haxe.Common
                         l.AddRange(GetTemplate("IApplicationClient_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ServerCommand.Description)));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetTypes(Schema Schema)
+            public List<String> GetTypes(Schema Schema)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
 
-                if (Schema.TypeRefs.Length == 0)
+                if (Schema.TypeRefs.Count == 0)
                 {
                     l.AddRange(GetTemplate("PredefinedTypes"));
                 }
@@ -342,7 +342,7 @@ namespace Yuki.ObjectSchema.Haxe.Common
                 }
 
                 var scg = Schema.GetSchemaClosureGenerator();
-                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new List<TypeSpec> { });
                 var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
                 foreach (var t in Tuples)
                 {
@@ -350,8 +350,8 @@ namespace Yuki.ObjectSchema.Haxe.Common
                     l.Add("");
                 }
 
-                var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Where(t => t.Version() == "").ToArray();
-                if (Commands.Length > 0)
+                var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Where(t => t.Version() == "").ToList();
+                if (Commands.Count > 0)
                 {
                     l.AddRange(GetIApplicationClient(Commands));
                     l.Add("");
@@ -362,16 +362,16 @@ namespace Yuki.ObjectSchema.Haxe.Common
                     l = l.Take(l.Count - 1).ToList();
                 }
 
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetTemplate(String Name)
+            public List<String> GetTemplate(String Name)
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static String[] GetLines(String Value)
+            public static List<String> GetLines(String Value)
             {
-                return Value.UnifyNewLineToLf().Split('\n');
+                return Value.UnifyNewLineToLf().Split('\n').ToList();
             }
             public static String GetEscapedIdentifier(String Identifier)
             {
@@ -387,16 +387,16 @@ namespace Yuki.ObjectSchema.Haxe.Common
                         l.Add(IdentifierPart);
                     }
                 }
-                return String.Join(".", l.ToArray());
+                return String.Join(".", l);
             }
             private static Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
-            public static String[] EvaluateEscapedIdentifiers(String[] Lines)
+            public static List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
-                return Lines.Select(Line => rIdentifier.Replace(Line, s => GetEscapedIdentifier(s.Result("${Identifier}"))).Replace("[[[[", "[[").Replace("]]]]", "]]")).ToArray();
+                return Lines.Select(Line => rIdentifier.Replace(Line, s => GetEscapedIdentifier(s.Result("${Identifier}"))).Replace("[[[[", "[[").Replace("]]]]", "]]")).ToList();
             }
         }
 
-        public static String[] Substitute(this String[] Lines, String Parameter, String Value)
+        public static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
             var ParameterString = "${" + Parameter + "}";
             var LowercaseParameterString = "${" + LowercaseCamelize(Parameter) + "}";
@@ -404,7 +404,7 @@ namespace Yuki.ObjectSchema.Haxe.Common
             var UppercaseCapitalizeString = "${" + Parameter.ToUpper() + "}";
             var UppercaseValue = Value.ToUpper();
 
-            List<String> l = new List<String>();
+            var l = new List<String>();
             foreach (var Line in Lines)
             {
                 var NewLine = Line;
@@ -426,7 +426,7 @@ namespace Yuki.ObjectSchema.Haxe.Common
 
                 l.Add(NewLine);
             }
-            return l.ToArray();
+            return l;
         }
         public static String LowercaseCamelize(String PascalName)
         {
@@ -443,9 +443,9 @@ namespace Yuki.ObjectSchema.Haxe.Common
 
             return new String(l.ToArray()) + new String(PascalName.Skip(l.Count).ToArray());
         }
-        public static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
+        public static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
-            List<String> l = new List<String>();
+            var l = new List<String>();
             foreach (var Line in Lines)
             {
                 var ParameterString = "${" + Parameter + "}";
@@ -461,7 +461,7 @@ namespace Yuki.ObjectSchema.Haxe.Common
                     l.Add(Line);
                 }
             }
-            return l.ToArray();
+            return l;
         }
     }
 }

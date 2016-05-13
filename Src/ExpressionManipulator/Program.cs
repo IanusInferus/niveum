@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.ExpressionManipulator <Visual C#>
 //  Description: 表达式结构处理工具
-//  Version:     2015.02.12.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -123,7 +123,7 @@ namespace Yuki.ExpressionManipulator
                     var args = opt.Arguments;
                     if (args.Length >= 2)
                     {
-                        ExpressionSchemaToBinary(args.Take(args.Length - 1).ToArray(), args.Last());
+                        ExpressionSchemaToBinary(args.Take(args.Length - 1).ToList(), args.Last());
                     }
                     else
                     {
@@ -209,7 +209,7 @@ namespace Yuki.ExpressionManipulator
             es = null;
         }
 
-        public static void ExpressionSchemaToBinary(String[] DataDirs, String BinaryPath)
+        public static void ExpressionSchemaToBinary(List<String> DataDirs, String BinaryPath)
         {
             var ExpressionSchema = GetExpressionSchema();
             var eal = new ExpressionAssemblyLoader(ExpressionSchema);

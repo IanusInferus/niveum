@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2015.11.25.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -1051,7 +1051,7 @@ namespace Yuki.SchemaManipulator
             var DiffGenerator = new ObjectSchemaDiffGenerator();
             var OldNewDiff = DiffGenerator.Generate(NewCommandSchema, OldCommandSchema);
             var ChangedCommands = new HashSet<String>(OldNewDiff.Patch.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == "").Select(t => t.VersionedName()), StringComparer.OrdinalIgnoreCase);
-            var Patch = DiffGenerator.Generate(HeadObjectSchema, OldCommandSchema.GetSubSchema(OldCommandSchema.Types.Where(t => ChangedCommands.Contains(t.VersionedName())).ToArray(), new TypeSpec[] { })).Patch;
+            var Patch = DiffGenerator.Generate(HeadObjectSchema, OldCommandSchema.GetSubSchema(OldCommandSchema.Types.Where(t => ChangedCommands.Contains(t.VersionedName())).ToList(), new List<TypeSpec> { })).Patch;
             var Result = Patch.GetTypesVersioned(OldVersion);
 
             var osw = new ObjectSchemaWriter();

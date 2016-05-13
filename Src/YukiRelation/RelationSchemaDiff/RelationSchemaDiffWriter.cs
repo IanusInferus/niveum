@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffWriter.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异写入器
-//  Version:     2015.06.17.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -30,12 +30,12 @@ namespace Yuki.RelationSchemaDiff
         public static void Write(StreamWriter sw, EntityMappingDiff d)
         {
             var Lines = new List<Syntax.TextLine>();
-            Action<String[]> AddLine = Tokens =>
+            Action<List<String>> AddLine = Tokens =>
             {
                 var Text = String.Join(" ", Tokens.Select(t => t == null ? "$Empty" : TreeFormatLiteralWriter.GetLiteral(t, true, false).SingleLine));
                 Lines.Add(new Syntax.TextLine { Text = Text, Range = new Syntax.TextRange { Start = new Syntax.TextPosition { Row = 1, Column = 1, CharIndex = 0 }, End = new Syntax.TextPosition { Row = 1, Column = 1 + Text.Length, CharIndex = Text.Length } } });
             };
-            Action<String[]> AddCommentLine = Tokens =>
+            Action<List<String>> AddCommentLine = Tokens =>
             {
                 var Text = "//" + String.Join(" ", Tokens.Select(t => t == null ? "$Empty" : TreeFormatLiteralWriter.GetLiteral(t, true, false).SingleLine));
                 Lines.Add(new Syntax.TextLine { Text = Text, Range = new Syntax.TextRange { Start = new Syntax.TextPosition { Row = 1, Column = 1, CharIndex = 0 }, End = new Syntax.TextPosition { Row = 1, Column = 1 + Text.Length, CharIndex = Text.Length } } });
@@ -45,11 +45,11 @@ namespace Yuki.RelationSchemaDiff
             {
                 if (m.Method.OnNew)
                 {
-                    AddLine(new String[] { "Entity", m.EntityName, "New" });
+                    AddLine(new List<String> { "Entity", m.EntityName, "New" });
                 }
                 else if (m.Method.OnCopy)
                 {
-                    AddLine(new String[] { "Entity", m.EntityName, "From", m.Method.Copy });
+                    AddLine(new List<String> { "Entity", m.EntityName, "From", m.Method.Copy });
                 }
                 else if (m.Method.OnField)
                 {
@@ -72,11 +72,11 @@ namespace Yuki.RelationSchemaDiff
                     var f = m.Method.Field;
                     if (f.Method.OnNew)
                     {
-                        AddLine(new String[] { "Entity", m.EntityName, "Field", f.FieldName, "New", GetPrimitiveValString(f.Method.New) });
+                        AddLine(new List<String> { "Entity", m.EntityName, "Field", f.FieldName, "New", GetPrimitiveValString(f.Method.New) });
                     }
                     else if (f.Method.OnCopy)
                     {
-                        AddLine(new String[] { "Entity", m.EntityName, "Field", f.FieldName, "From", f.Method.Copy });
+                        AddLine(new List<String> { "Entity", m.EntityName, "Field", f.FieldName, "From", f.Method.Copy });
                     }
                 }
                 else
@@ -86,13 +86,13 @@ namespace Yuki.RelationSchemaDiff
             }
             foreach (var de in d.DeletedEntities)
             {
-                AddCommentLine(new String[] { "Entity", de, "Delete" });
+                AddCommentLine(new List<String> { "Entity", de, "Delete" });
             }
             foreach (var de in d.DeletedFields)
             {
                 foreach (var df in de.Value)
                 {
-                    AddCommentLine(new String[] { "Entity", de.Key, "Field", df, "Delete" });
+                    AddCommentLine(new List<String> { "Entity", de.Key, "Field", df, "Delete" });
                 }
             }
 

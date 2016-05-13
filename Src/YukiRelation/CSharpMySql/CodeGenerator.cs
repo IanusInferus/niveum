@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# MySQL代码生成器
-//  Version:     2015.02.24.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,7 +22,7 @@ namespace Yuki.RelationSchema.CSharpMySql
     {
         public static String CompileToCSharpMySql(this Schema Schema, String EntityNamespaceName, String ContextNamespaceName)
         {
-            Writer w = new Writer(Schema, EntityNamespaceName, ContextNamespaceName);
+            var w = new Writer(Schema, EntityNamespaceName, ContextNamespaceName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -68,7 +68,7 @@ namespace Yuki.RelationSchema.CSharpMySql
                 InnerWriter = new CSharpPlain.CodeGenerator.Writer(Schema, NamespaceName);
             }
 
-            public String[] GetSchema()
+            public List<String> GetSchema()
             {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
@@ -76,19 +76,19 @@ namespace Yuki.RelationSchema.CSharpMySql
 
                 if (NamespaceName != "")
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports.ToArray()).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
                 else
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports.ToArray()).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
             }
 
-            public String[] GetHeader()
+            public List<String> GetHeader()
             {
                 if (EntityNamespaceName == NamespaceName || EntityNamespaceName == "")
                 {
-                    return GetTemplate("Header").Substitute("EntityNamespaceName", new String[] { });
+                    return GetTemplate("Header").Substitute("EntityNamespaceName", new List<String> { });
                 }
                 else
                 {
@@ -96,7 +96,7 @@ namespace Yuki.RelationSchema.CSharpMySql
                 }
             }
 
-            public String[] GetPrimitives()
+            public List<String> GetPrimitives()
             {
                 return InnerWriter.GetPrimitives();
             }
@@ -106,7 +106,7 @@ namespace Yuki.RelationSchema.CSharpMySql
                 return InnerWriter.GetTypeString(Type);
             }
 
-            public String[] GetEnum(EnumDef e)
+            public List<String> GetEnum(EnumDef e)
             {
                 return GetTemplate("DataAccessEnum").Substitute("EnumName", e.Name);
             }
@@ -174,15 +174,15 @@ namespace Yuki.RelationSchema.CSharpMySql
                         }
                         l.Add("INTO `{0}`".Formats(e.CollectionName));
 
-                        var NonIdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && !f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
-                        var IdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
+                        var NonIdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && !f.Attribute.Column.IsIdentity).Select(f => f.Name).ToList();
+                        var IdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToList();
                         l.Add("({0}) VALUES ({1})".Formats(String.Join(", ", NonIdentityColumns.Select(c => "`{0}`".Formats(c)).ToArray()), String.Join(", ", NonIdentityColumns.Select(c => "@{0}".Formats(c)).ToArray())));
                         if (q.Verb.OnUpsert)
                         {
-                            var NonPrimaryKeyColumns = e.Fields.Where(f => f.Attribute.OnColumn).Select(f => f.Name).Except(e.PrimaryKey.Columns.Select(c => c.Name), StringComparer.OrdinalIgnoreCase).ToArray();
+                            var NonPrimaryKeyColumns = e.Fields.Where(f => f.Attribute.OnColumn).Select(f => f.Name).Except(e.PrimaryKey.Columns.Select(c => c.Name), StringComparer.OrdinalIgnoreCase).ToList();
                             l.Add("ON DUPLICATE KEY UPDATE {0}".Formats(String.Join(", ", NonIdentityColumns.Select(c => "`{0}` = @{0}".Formats(c)).ToArray())));
                         }
-                        if (IdentityColumns.Length != 0)
+                        if (IdentityColumns.Count != 0)
                         {
                             return "{0}; SELECT LAST_INSERT_ID() AS `{1}`".Formats(String.Join(" ", l.ToArray()), IdentityColumns.Single());
                         }
@@ -191,8 +191,8 @@ namespace Yuki.RelationSchema.CSharpMySql
                     {
                         l.Add("UPDATE `{0}`".Formats(e.CollectionName));
 
-                        var NonPrimaryKeyColumns = e.Fields.Where(f => f.Attribute.OnColumn).Select(f => f.Name).Except(e.PrimaryKey.Columns.Select(c => c.Name), StringComparer.OrdinalIgnoreCase).ToArray();
-                        var PrimaryKeyColumns = e.PrimaryKey.Columns.Select(c => c.Name).ToArray();
+                        var NonPrimaryKeyColumns = e.Fields.Where(f => f.Attribute.OnColumn).Select(f => f.Name).Except(e.PrimaryKey.Columns.Select(c => c.Name), StringComparer.OrdinalIgnoreCase).ToList();
+                        var PrimaryKeyColumns = e.PrimaryKey.Columns.Select(c => c.Name).ToList();
                         l.Add("SET {0}".Formats(String.Join(", ", NonPrimaryKeyColumns.Select(c => "`{0}` = @{0}".Formats(c)).ToArray())));
                         l.Add("WHERE {0}".Formats(String.Join(" AND ", PrimaryKeyColumns.Select(c => "`{0}` = @{0}".Formats(c)).ToArray())));
                     }
@@ -213,15 +213,15 @@ namespace Yuki.RelationSchema.CSharpMySql
                 return String.Join(" ", l.ToArray());
             }
 
-            public String[] GetQuery(QueryDef q)
+            public List<String> GetQuery(QueryDef q)
             {
                 var e = TypeDict[q.EntityName].Entity;
 
                 var Signature = InnerWriter.GetQuerySignature(q);
-                String[] Content;
+                List<String> Content;
                 if (q.Verb.OnSelect || q.Verb.OnLock)
                 {
-                    String[] Template;
+                    List<String> Template;
                     if (q.Numeral.OnOptional)
                     {
                         Template = GetTemplate("SelectLock_Optional");
@@ -242,7 +242,7 @@ namespace Yuki.RelationSchema.CSharpMySql
                     {
                         throw new InvalidOperationException();
                     }
-                    var LockingStatement = new String[] { };
+                    var LockingStatement = new List<String> { };
                     if (q.Verb.OnLock)
                     {
                         var EntityNameAndParameterAndValues = new List<String>();
@@ -266,11 +266,11 @@ namespace Yuki.RelationSchema.CSharpMySql
                         ParameterAdds.AddRange(GetTemplate("SelectLockDelete_ParameterAdd").Substitute("ParameterName", "_Skip_"));
                         ParameterAdds.AddRange(GetTemplate("SelectLockDelete_ParameterAdd").Substitute("ParameterName", "_Take_"));
                     }
-                    var Columns = e.Fields.Where(f => f.Attribute.OnColumn).ToArray();
+                    var Columns = e.Fields.Where(f => f.Attribute.OnColumn).ToList();
                     int k = 0;
                     foreach (var c in Columns)
                     {
-                        if (k == Columns.Length - 1)
+                        if (k == Columns.Count - 1)
                         {
                             ResultSets.AddRange(GetTemplate("SelectLock_ResultSet_Last").Substitute("ParameterName", c.Name).Substitute("TypeGet", GetTypeGetName(c.Type)));
                         }
@@ -280,13 +280,13 @@ namespace Yuki.RelationSchema.CSharpMySql
                         }
                         k += 1;
                     }
-                    Content = Template.Substitute("EntityName", q.EntityName).Substitute("LockingStatement", LockingStatement).Substitute("SQL", SQL).Substitute("ParameterAdds", ParameterAdds.ToArray()).Substitute("ResultSets", ResultSets.ToArray());
+                    Content = Template.Substitute("EntityName", q.EntityName).Substitute("LockingStatement", LockingStatement).Substitute("SQL", SQL).Substitute("ParameterAdds", ParameterAdds).Substitute("ResultSets", ResultSets);
                 }
                 else if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert)
                 {
-                    String[] Template;
-                    var IdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).ToArray();
-                    if (q.Verb.OnInsert && (IdentityColumns.Length != 0))
+                    List<String> Template;
+                    var IdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).ToList();
+                    if (q.Verb.OnInsert && (IdentityColumns.Count != 0))
                     {
                         if (q.Numeral.OnOne)
                         {
@@ -355,23 +355,23 @@ namespace Yuki.RelationSchema.CSharpMySql
                     {
                         throw new InvalidOperationException();
                     }
-                    if (q.Verb.OnInsert && (IdentityColumns.Length != 0))
+                    if (q.Verb.OnInsert && (IdentityColumns.Count != 0))
                     {
                         var ResultSets = new List<String>();
                         foreach (var c in IdentityColumns)
                         {
                             ResultSets.AddRange(GetTemplate("Insert_ResultSet").Substitute("ParameterName", c.Name).Substitute("TypeGet", GetTypeGetName(c.Type)));
                         }
-                        Content = Template.Substitute("SQL", SQL).Substitute("ParameterAdds", ParameterAdds.ToArray()).Substitute("ResultSets", ResultSets.ToArray());
+                        Content = Template.Substitute("SQL", SQL).Substitute("ParameterAdds", ParameterAdds).Substitute("ResultSets", ResultSets);
                     }
                     else
                     {
-                        Content = Template.Substitute("SQL", SQL).Substitute("ParameterAdds", ParameterAdds.ToArray());
+                        Content = Template.Substitute("SQL", SQL).Substitute("ParameterAdds", ParameterAdds);
                     }
                 }
                 else if (q.Verb.OnDelete)
                 {
-                    String[] Template;
+                    List<String> Template;
                     if (q.Numeral.OnOptional)
                     {
                         Template = GetTemplate("Delete_Optional");
@@ -394,7 +394,7 @@ namespace Yuki.RelationSchema.CSharpMySql
                     {
                         ParameterAdds.AddRange(GetTemplate("SelectLockDelete_ParameterAdd").Substitute("ParameterName", c));
                     }
-                    Content = Template.Substitute("SQL", SQL).Substitute("ParameterAdds", ParameterAdds.ToArray());
+                    Content = Template.Substitute("SQL", SQL).Substitute("ParameterAdds", ParameterAdds);
                 }
                 else
                 {
@@ -403,7 +403,7 @@ namespace Yuki.RelationSchema.CSharpMySql
                 return GetTemplate("Query").Substitute("Signature", Signature).Substitute("Content", Content);
             }
 
-            public String[] GetComplexTypes()
+            public List<String> GetComplexTypes()
             {
                 var l = new List<String>();
 
@@ -411,9 +411,9 @@ namespace Yuki.RelationSchema.CSharpMySql
                 l.AddRange(GetTemplate("DataAccessBase"));
                 l.Add("");
 
-                var Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToArray();
+                var Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToList();
                 var el = new List<String>();
-                if (Enums.Length > 0)
+                if (Enums.Count > 0)
                 {
                     foreach (var e in Enums)
                     {
@@ -424,11 +424,11 @@ namespace Yuki.RelationSchema.CSharpMySql
                     {
                         el = el.Take(el.Count - 1).ToList();
                     }
-                    l.AddRange(GetTemplate("DataAccessEnums").Substitute("Enums", el.ToArray()));
+                    l.AddRange(GetTemplate("DataAccessEnums").Substitute("Enums", el));
                     l.Add("");
                 }
 
-                var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToArray();
+                var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToList();
                 var ql = new List<String>();
                 foreach (var q in Queries)
                 {
@@ -439,7 +439,7 @@ namespace Yuki.RelationSchema.CSharpMySql
                 {
                     ql = ql.Take(ql.Count - 1).ToList();
                 }
-                l.AddRange(GetTemplate("DataAccess").Substitute("Queries", ql.ToArray()));
+                l.AddRange(GetTemplate("DataAccess").Substitute("Queries", ql));
                 l.Add("");
                 l.AddRange(GetTemplate("DataAccessPool").Substitute("Hash", Hash));
                 l.Add("");
@@ -449,14 +449,14 @@ namespace Yuki.RelationSchema.CSharpMySql
                     l = l.Take(l.Count - 1).ToList();
                 }
 
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetTemplate(String Name)
+            public List<String> GetTemplate(String Name)
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static String[] GetLines(String Value)
+            public static List<String> GetLines(String Value)
             {
                 return OS.CSharp.Common.CodeGenerator.Writer.GetLines(Value);
             }
@@ -464,17 +464,17 @@ namespace Yuki.RelationSchema.CSharpMySql
             {
                 return OS.CSharp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
-            private String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
                 return OS.CSharp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
-        private static String[] Substitute(this String[] Lines, String Parameter, String Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
             return OS.CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
-        private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
             return OS.CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
