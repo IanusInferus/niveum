@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos-MySQL加载代码生成器
-//  Version:     2015.08.17.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,7 +22,7 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySqlLoader
     {
         public static String CompileToCSharpKrustallosMySqlLoader(this Schema Schema, String EntityNamespaceName, String KrustallosContextNamespaceName, String MySqlContextNamespaceName)
         {
-            Writer w = new Writer(Schema, EntityNamespaceName, KrustallosContextNamespaceName, MySqlContextNamespaceName);
+            var w = new Writer(Schema, EntityNamespaceName, KrustallosContextNamespaceName, MySqlContextNamespaceName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -70,7 +70,7 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySqlLoader
                 InnerWriter = new CSharpPlain.CodeGenerator.Writer(Schema, MySqlContextNamespaceName);
             }
 
-            public String[] GetSchema()
+            public List<String> GetSchema()
             {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
@@ -85,19 +85,19 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySqlLoader
 
                 if (MySqlContextNamespaceName != "")
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", MySqlContextNamespaceName).Substitute("Imports", Imports.ToArray()).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", MySqlContextNamespaceName).Substitute("Imports", Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
                 else
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Imports.ToArray()).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
             }
 
-            public String[] GetHeader()
+            public List<String> GetHeader()
             {
                 if (EntityNamespaceName == MySqlContextNamespaceName || EntityNamespaceName == "")
                 {
-                    return GetTemplate("Header").Substitute("EntityNamespaceName", new String[] { });
+                    return GetTemplate("Header").Substitute("EntityNamespaceName", new List<String> { });
                 }
                 else
                 {
@@ -105,17 +105,17 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySqlLoader
                 }
             }
 
-            public String[] GetPrimitives()
+            public List<String> GetPrimitives()
             {
                 return InnerWriter.GetPrimitives();
             }
 
-            public String[] GetComplexTypes()
+            public List<String> GetComplexTypes()
             {
                 var l = new List<String>();
 
                 var Loads = GetDataLoadLoads();
-                l.AddRange(GetTemplate("DataLoad").Substitute("Loads", Loads.ToArray()));
+                l.AddRange(GetTemplate("DataLoad").Substitute("Loads", Loads));
                 l.Add("");
 
                 if (l.Count > 0)
@@ -123,7 +123,7 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySqlLoader
                     l = l.Take(l.Count - 1).ToList();
                 }
 
-                return l.ToArray();
+                return l;
             }
 
             public String GetTypeGetName(TypeSpec t)
@@ -159,14 +159,14 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySqlLoader
                 return new Key { Columns = NonUniqueKey.Columns.Concat(PrimaryKey.Columns.Select(c => c.Name).Except(NonUniqueKey.Columns.Select(c => c.Name)).Select(Name => new KeyColumn { Name = Name, IsDescending = false })).ToList(), IsClustered = NonUniqueKey.IsClustered };
             }
 
-            public String[] GetDataLoadLoads()
+            public List<String> GetDataLoadLoads()
             {
                 var l = new List<String>();
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
                 {
                     var or = InnerTypeDict[e.Name].Record;
                     var d = or.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
-                    var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys.Select(k => ConvertNonUniqueKeyToUniqueKey(k, e.PrimaryKey))).Select(k => new Key { Columns = k.Columns, IsClustered = false }).Distinct(new KeyComparer()).ToArray();
+                    var Keys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys.Select(k => ConvertNonUniqueKeyToUniqueKey(k, e.PrimaryKey))).Select(k => new Key { Columns = k.Columns, IsClustered = false }).Distinct(new KeyComparer()).ToList();
                     var IndexNames = new List<String>();
                     var Partitions = new List<String>();
                     var Updates = new List<String>();
@@ -183,11 +183,11 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySqlLoader
                     }
                     var SQL = GetSelectAllQueryString(e);
                     var ResultSets = new List<String>();
-                    var Columns = e.Fields.Where(f => f.Attribute.OnColumn).ToArray();
+                    var Columns = e.Fields.Where(f => f.Attribute.OnColumn).ToList();
                     int j = 0;
                     foreach (var c in Columns)
                     {
-                        if (j == Columns.Length - 1)
+                        if (j == Columns.Count - 1)
                         {
                             ResultSets.AddRange(GetTemplate("SelectLock_ResultSet_Last").Substitute("ParameterName", c.Name).Substitute("TypeGet", GetTypeGetName(c.Type)));
                         }
@@ -197,16 +197,16 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySqlLoader
                         }
                         j += 1;
                     }
-                    l.AddRange(GetTemplate("DataLoad_Load").Substitute("IndexNames", IndexNames.ToArray()).Substitute("Partitions", Partitions.ToArray()).Substitute("Updates", Updates.ToArray()).Substitute("EntityName", e.Name).Substitute("SQL", SQL).Substitute("ResultSets", ResultSets.ToArray()));
+                    l.AddRange(GetTemplate("DataLoad_Load").Substitute("IndexNames", IndexNames).Substitute("Partitions", Partitions).Substitute("Updates", Updates).Substitute("EntityName", e.Name).Substitute("SQL", SQL).Substitute("ResultSets", ResultSets));
                 }
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetTemplate(String Name)
+            public List<String> GetTemplate(String Name)
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static String[] GetLines(String Value)
+            public static List<String> GetLines(String Value)
             {
                 return OS.CSharp.Common.CodeGenerator.Writer.GetLines(Value);
             }
@@ -214,17 +214,17 @@ namespace Yuki.RelationSchema.CSharpKrustallosMySqlLoader
             {
                 return OS.CSharp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
-            private String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
                 return OS.CSharp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
-        private static String[] Substitute(this String[] Lines, String Parameter, String Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
             return OS.CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
-        private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
             return OS.CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }

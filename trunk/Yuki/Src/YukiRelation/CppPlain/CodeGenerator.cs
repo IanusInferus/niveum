@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++简单类型代码生成器
-//  Version:     2015.08.22.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,7 +22,7 @@ namespace Yuki.RelationSchema.CppPlain
     {
         public static String CompileToCppPlain(this Schema Schema, String NamespaceName)
         {
-            Writer w = new Writer(Schema, NamespaceName);
+            var w = new Writer(Schema, NamespaceName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -57,23 +57,23 @@ namespace Yuki.RelationSchema.CppPlain
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Int").Any()) { throw new InvalidOperationException("PrimitiveMissing: Int"); }
             }
 
-            public String[] GetSchema()
+            public List<String> GetSchema()
             {
                 var Header = GetHeader();
-                var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
+                var Includes = Schema.Imports.Where(i => IsInclude(i)).ToList();
                 var Primitives = GetPrimitives();
                 var SimpleTypes = GetSimpleTypes();
                 var EnumFunctors = GetEnumFunctors();
                 var ComplexTypes = GetComplexTypes();
-                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, WrapContents(NamespaceName, SimpleTypes), WrapContents("std", EnumFunctors), WrapContents(NamespaceName, ComplexTypes))).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, WrapContents(NamespaceName, SimpleTypes), WrapContents("std", EnumFunctors), WrapContents(NamespaceName, ComplexTypes))).Select(Line => Line.TrimEnd(' ')).ToList();
             }
 
-            public String[] GetMain(String[] Header, String[] Includes, String[] Primitives, String[] SimpleTypes, String[] EnumFunctors, String[] ComplexTypes)
+            public List<String> GetMain(List<String> Header, List<String> Includes, List<String> Primitives, List<String> SimpleTypes, List<String> EnumFunctors, List<String> ComplexTypes)
             {
                 return InnerWriter.GetMain(Header, Includes, Primitives, SimpleTypes, EnumFunctors, ComplexTypes);
             }
 
-            public String[] WrapContents(String Namespace, String[] Contents)
+            public List<String> WrapContents(String Namespace, List<String> Contents)
             {
                 return InnerWriter.WrapContents(Namespace, Contents);
             }
@@ -83,12 +83,12 @@ namespace Yuki.RelationSchema.CppPlain
                 return InnerWriter.IsInclude(s);
             }
 
-            public String[] GetHeader()
+            public List<String> GetHeader()
             {
                 return InnerWriter.GetHeader();
             }
 
-            public String[] GetPrimitives()
+            public List<String> GetPrimitives()
             {
                 return InnerWriter.GetPrimitives();
             }
@@ -183,26 +183,26 @@ namespace Yuki.RelationSchema.CppPlain
                 return GetTemplate("QuerySignature").Substitute("Name", Name).Substitute("ParameterList", ParameterList).Substitute("Type", Type).Single();
             }
 
-            public String[] GetSimpleTypes()
+            public List<String> GetSimpleTypes()
             {
                 return InnerWriter.GetSimpleTypes();
             }
 
-            public String[] GetEnumFunctors()
+            public List<String> GetEnumFunctors()
             {
                 return InnerWriter.GetEnumFunctors();
             }
 
-            public String[] GetComplexTypes()
+            public List<String> GetComplexTypes()
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 l.AddRange(InnerWriter.GetComplexTypes());
                 l.Add("");
 
-                var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToArray();
-                if (Queries.Length > 0)
+                var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToList();
+                if (Queries.Count > 0)
                 {
-                    l.AddRange(GetTemplate("IDataAccess").Substitute("Queries", Queries.Select(q => GetQuerySignature(q)).ToArray()));
+                    l.AddRange(GetTemplate("IDataAccess").Substitute("Queries", Queries.Select(q => GetQuerySignature(q)).ToList()));
                     l.Add("");
                     l.AddRange(GetTemplate("IDataAccessPool"));
                     l.Add("");
@@ -213,14 +213,14 @@ namespace Yuki.RelationSchema.CppPlain
                     l = l.Take(l.Count - 1).ToList();
                 }
 
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetTemplate(String Name)
+            public List<String> GetTemplate(String Name)
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static String[] GetLines(String Value)
+            public static List<String> GetLines(String Value)
             {
                 return OS.Cpp.Common.CodeGenerator.Writer.GetLines(Value);
             }
@@ -228,17 +228,17 @@ namespace Yuki.RelationSchema.CppPlain
             {
                 return OS.Cpp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
-            private String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
                 return OS.Cpp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
-        private static String[] Substitute(this String[] Lines, String Parameter, String Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
             return OS.Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
-        private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
             return OS.Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }

@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 符号解析器
-//  Version:     2013.03.11.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,8 +20,8 @@ namespace Yuki.ExpressionSchema
 {
     public class TokenParserResult
     {
-        public Opt<SyntaxRule> Token;
-        public Opt<TextRange> RemainingChars;
+        public Optional<SyntaxRule> Token;
+        public Optional<TextRange> RemainingChars;
     }
 
     public class TokenParser
@@ -50,9 +50,9 @@ namespace Yuki.ExpressionSchema
             Action Proceed = () => Index += 1;
             Action<int> ProceedMultiple = n => Index += n;
 
-            Func<Opt<TextRange>> MakeRemainingChars = () => new TextRange { Start = Text.Calc(RangeInLine.Start, Index), End = RangeInLine.End };
-            var NullRemainingChars = Opt<TextRange>.Empty;
-            var NullToken = Opt<SyntaxRule>.Empty;
+            Func<Optional<TextRange>> MakeRemainingChars = () => new TextRange { Start = Text.Calc(RangeInLine.Start, Index), End = RangeInLine.End };
+            var NullRemainingChars = Optional<TextRange>.Empty;
+            var NullToken = Optional<SyntaxRule>.Empty;
             Func<int, int, TextRange> MakeTokenRange = (TokenStart, TokenEnd) => new TextRange { Start = Text.Calc(RangeInLine.Start, TokenStart), End = Text.Calc(RangeInLine.Start, TokenEnd) };
             Func<int, FileTextRange> MakeNextErrorTokenRange = n => new FileTextRange { Text = Text, Range = MakeTokenRange(Index, n) };
 
@@ -65,7 +65,7 @@ namespace Yuki.ExpressionSchema
             var Output = new List<Char>();
             Action<String> Write = cs => Output.AddRange(cs);
 
-            Func<Opt<SyntaxRule>> MakeSymbol = () =>
+            Func<Optional<SyntaxRule>> MakeSymbol = () =>
             {
                 var Range = MakeTokenRange(StartIndex, Index);
                 var Symbol = new String(Output.ToArray());
@@ -107,7 +107,7 @@ namespace Yuki.ExpressionSchema
                 }
             };
 
-            Func<Opt<SyntaxRule>> MakeBinaryOperator = () =>
+            Func<Optional<SyntaxRule>> MakeBinaryOperator = () =>
             {
                 var Range = MakeTokenRange(StartIndex, Index);
                 var t = new TokenBinaryOperator { Name = new String(Output.ToArray()) };
@@ -117,7 +117,7 @@ namespace Yuki.ExpressionSchema
                 return st;
             };
 
-            Func<Opt<SyntaxRule>> MakeUnaryOperator = () =>
+            Func<Optional<SyntaxRule>> MakeUnaryOperator = () =>
             {
                 var Range = MakeTokenRange(StartIndex, Index);
                 var t = new TokenUnaryOperator { Name = new String(Output.ToArray()) };
@@ -127,7 +127,7 @@ namespace Yuki.ExpressionSchema
                 return st;
             };
 
-            Func<Opt<SyntaxRule>> MakeLeftParen = () =>
+            Func<Optional<SyntaxRule>> MakeLeftParen = () =>
             {
                 var Range = MakeTokenRange(StartIndex, Index);
                 var t = new TokenLeftParen { };
@@ -137,7 +137,7 @@ namespace Yuki.ExpressionSchema
                 return st;
             };
 
-            Func<Opt<SyntaxRule>> MakeRightParen = () =>
+            Func<Optional<SyntaxRule>> MakeRightParen = () =>
             {
                 var Range = MakeTokenRange(StartIndex, Index);
                 var t = new TokenRightParen { };
@@ -147,7 +147,7 @@ namespace Yuki.ExpressionSchema
                 return st;
             };
 
-            Func<Opt<SyntaxRule>> MakeComma = () =>
+            Func<Optional<SyntaxRule>> MakeComma = () =>
             {
                 var Range = MakeTokenRange(StartIndex, Index);
                 var t = new TokenComma { };

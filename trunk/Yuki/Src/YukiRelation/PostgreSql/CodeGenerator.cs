@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构PostgreSQL数据库代码生成器
-//  Version:     2014.12.06.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,7 +22,7 @@ namespace Yuki.RelationSchema.PostgreSql
     {
         public static String CompileToPostgreSql(this Schema Schema, String DatabaseName, Boolean WithComment = false)
         {
-            Writer w = new Writer(Schema, DatabaseName, WithComment);
+            var w = new Writer(Schema, DatabaseName, WithComment);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -56,16 +56,16 @@ namespace Yuki.RelationSchema.PostgreSql
             private Dictionary<String, PrimitiveDef> Primitives;
             private Dictionary<String, EnumDef> Enums;
             private Dictionary<String, EntityDef> Records;
-            public String[] GetSchema()
+            public List<String> GetSchema()
             {
                 var Tables = GetTables(Schema);
                 var ForeignKeys = GetForeignKeys(Schema);
                 var Comments = GetComments(Schema, WithComment);
 
-                return GetTemplate("Main").Substitute("DatabaseName", DatabaseName).Substitute("Tables", Tables).Substitute("ForeignKeys", ForeignKeys).Substitute("Comments", Comments).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return GetTemplate("Main").Substitute("DatabaseName", DatabaseName).Substitute("Tables", Tables).Substitute("ForeignKeys", ForeignKeys).Substitute("Comments", Comments).Select(Line => Line.TrimEnd(' ')).ToList();
             }
 
-            public String[] GetTables(Schema s)
+            public List<String> GetTables(Schema s)
             {
                 var l = new List<String>();
                 foreach (var t in s.Types)
@@ -75,9 +75,9 @@ namespace Yuki.RelationSchema.PostgreSql
                         l.AddRange(GetTable(t.Entity));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetForeignKeys(Schema s)
+            public List<String> GetForeignKeys(Schema s)
             {
                 var h = new HashSet<ForeignKey>();
 
@@ -133,12 +133,12 @@ namespace Yuki.RelationSchema.PostgreSql
                         }
                     }
                 }
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetTable(EntityDef r)
+            public List<String> GetTable(EntityDef r)
             {
-                var FieldsAndKeys = new List<String[]>();
+                var FieldsAndKeys = new List<List<String>>();
                 foreach (var f in r.Fields)
                 {
                     if (f.Attribute.OnColumn)
@@ -163,10 +163,10 @@ namespace Yuki.RelationSchema.PostgreSql
                     NonUniqueKeys.AddRange(GetNonUniqueKey(k, Name, r.CollectionName));
                 }
 
-                return GetTemplate("Table").Substitute("Name", r.CollectionName).Substitute("FieldsAndKeys", JoinWithComma(FieldsAndKeys.ToArray())).Substitute("NonUniqueKeys", NonUniqueKeys.ToArray());
+                return GetTemplate("Table").Substitute("Name", r.CollectionName).Substitute("FieldsAndKeys", JoinWithComma(FieldsAndKeys.ToArray())).Substitute("NonUniqueKeys", NonUniqueKeys);
             }
 
-            public String[] GetColumnDef(VariableDef f)
+            public List<String> GetColumnDef(VariableDef f)
             {
                 String TypeName;
                 Boolean IsNullable;
@@ -265,53 +265,53 @@ namespace Yuki.RelationSchema.PostgreSql
                     l.Add("NOT NULL");
                 }
 
-                return new String[] { String.Join(" ", l.ToArray()) };
+                return new List<String> { String.Join(" ", l.ToArray()) };
             }
 
-            public String[] GetPrimaryKey(Key k, String Name)
+            public List<String> GetPrimaryKey(Key k, String Name)
             {
                 return GetTemplate("Key").Substitute("KeyKeyword", "PRIMARY KEY").Substitute("Name", Name).Substitute("ClusterKeyword", GetClusterKeyword(k.IsClustered)).Substitute("Columns", GetColumns(k.Columns));
             }
 
-            public String[] GetUniqueKey(Key k, String Name)
+            public List<String> GetUniqueKey(Key k, String Name)
             {
                 return GetTemplate("Key").Substitute("KeyKeyword", "UNIQUE").Substitute("Name", Name).Substitute("ClusterKeyword", GetClusterKeyword(k.IsClustered)).Substitute("Columns", GetColumns(k.Columns));
             }
 
-            public String[] GetNonUniqueKey(Key k, String Name, String TableName)
+            public List<String> GetNonUniqueKey(Key k, String Name, String TableName)
             {
                 return GetTemplate("NonUniqueKey").Substitute("Name", Name).Substitute("TableName", TableName).Substitute("ClusterKeyword", GetClusterKeyword(k.IsClustered)).Substitute("Columns", GetColumns(k.Columns));
             }
 
-            public String[] GetClusterKeyword(Boolean IsClustered)
+            public List<String> GetClusterKeyword(Boolean IsClustered)
             {
                 if (IsClustered)
                 {
-                    return new String[] { "CLUSTERED" };
+                    return new List<String> { "CLUSTERED" };
                 }
                 else
                 {
-                    return new String[] { "NONCLUSTERED" };
+                    return new List<String> { "NONCLUSTERED" };
                 }
             }
 
-            public String[] GetForeignKey(String Name, String ThisTableName, IEnumerable<String> ThisKeyColumns, String OtherTableName, IEnumerable<String> OtherKeyColumns)
+            public List<String> GetForeignKey(String Name, String ThisTableName, IEnumerable<String> ThisKeyColumns, String OtherTableName, IEnumerable<String> OtherKeyColumns)
             {
                 return GetTemplate("ForeignKey").Substitute("Name", Name).Substitute("ThisTableName", ThisTableName).Substitute("ThisKeyColumns", GetForeignColumns(ThisKeyColumns)).Substitute("OtherTableName", OtherTableName).Substitute("OtherKeyColumns", GetForeignColumns(OtherKeyColumns));
             }
 
-            public String[] GetForeignColumns(IEnumerable<String> Columns)
+            public List<String> GetForeignColumns(IEnumerable<String> Columns)
             {
-                return JoinWithComma(Columns.Select(c => new String[] { String.Format("\"{0}\"", c.ToLowerInvariant()) }).ToArray());
+                return JoinWithComma(Columns.Select(c => new List<String> { String.Format("\"{0}\"", c.ToLowerInvariant()) }).ToArray());
             }
-            public String[] GetColumns(IEnumerable<KeyColumn> Columns)
+            public List<String> GetColumns(IEnumerable<KeyColumn> Columns)
             {
-                return JoinWithComma(Columns.Select(c => new String[] { c.IsDescending ? String.Format("\"{0}\"", c.Name.ToLowerInvariant()) : String.Format("\"{0}\"", c.Name.ToLowerInvariant()) }).ToArray());
+                return JoinWithComma(Columns.Select(c => new List<String> { c.IsDescending ? String.Format("\"{0}\"", c.Name.ToLowerInvariant()) : String.Format("\"{0}\"", c.Name.ToLowerInvariant()) }).ToArray());
             }
 
-            public String[] GetComments(Schema s, Boolean WithComment)
+            public List<String> GetComments(Schema s, Boolean WithComment)
             {
-                if (!WithComment) { return new String[] { }; }
+                if (!WithComment) { return new List<String> { }; }
                 var l = new List<String>();
                 foreach (var t in s.Types.Where(Type => Type.OnEntity).Select(Type => Type.Entity))
                 {
@@ -321,7 +321,7 @@ namespace Yuki.RelationSchema.PostgreSql
                         l.AddRange(GetTemplate("ColumnComment").Substitute("TableName", t.CollectionName).Substitute("ColumnName", c.Name).Substitute("Description", GetSqlStringLiteral(c.Description)));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
 
             private Regex rControlChar = new Regex(@"[\u0000-\u001F]");
@@ -364,30 +364,30 @@ namespace Yuki.RelationSchema.PostgreSql
                 return String.Join(" + ", l.ToArray());
             }
 
-            public String[] GetTemplate(String Name)
+            public List<String> GetTemplate(String Name)
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static String[] GetLines(String Value)
+            public static List<String> GetLines(String Value)
             {
-                return Value.UnifyNewLineToLf().Split('\n');
+                return Value.UnifyNewLineToLf().Split('\n').ToList();
             }
-            public String[] JoinWithComma(params String[][] LinesList)
+            public List<String> JoinWithComma(params List<String>[] LinesList)
             {
-                if (LinesList.Length == 0) { return new String[] { }; }
+                if (LinesList.Length == 0) { return new List<String> { }; }
                 var l = new List<String>();
                 foreach (var Lines in LinesList.Take(LinesList.Length - 1))
                 {
-                    if (Lines.Length == 0) { continue; }
-                    l.AddRange(Lines.Take(Lines.Length - 1));
-                    l.Add(Lines[Lines.Length - 1] + ",");
+                    if (Lines.Count == 0) { continue; }
+                    l.AddRange(Lines.Take(Lines.Count - 1));
+                    l.Add(Lines[Lines.Count - 1] + ",");
                 }
                 l.AddRange(LinesList[LinesList.Length - 1]);
-                return l.ToArray();
+                return l;
             }
         }
 
-        private static String[] Substitute(this String[] Lines, String Parameter, String Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
             var ParameterString = "${" + Parameter + "}";
             var LowercaseParameterString = "${" + ToLowercase(Parameter) + "}";
@@ -410,13 +410,13 @@ namespace Yuki.RelationSchema.PostgreSql
 
                 l.Add(NewLine);
             }
-            return l.ToArray();
+            return l;
         }
         private static String ToLowercase(String PascalName)
         {
             return PascalName.ToLowerInvariant();
         }
-        private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
             var l = new List<String>();
             foreach (var Line in Lines)
@@ -434,7 +434,7 @@ namespace Yuki.RelationSchema.PostgreSql
                     l.Add(Line);
                 }
             }
-            return l.ToArray();
+            return l;
         }
     }
 }

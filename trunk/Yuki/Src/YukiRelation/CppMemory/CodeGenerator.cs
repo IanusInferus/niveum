@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2015.08.22.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,7 +22,7 @@ namespace Yuki.RelationSchema.CppMemory
     {
         public static String CompileToCppMemory(this Schema Schema, String EntityNamespaceName, String ContextNamespaceName)
         {
-            Writer w = new Writer(Schema, EntityNamespaceName, ContextNamespaceName);
+            var w = new Writer(Schema, EntityNamespaceName, ContextNamespaceName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -81,43 +81,43 @@ namespace Yuki.RelationSchema.CppMemory
                             new OS.GenericTypeSpec
                             {
                                 TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "List", Version = "" }),
-                                GenericParameterValues = new OS.GenericParameterValue[]
+                                GenericParameterValues = new List<OS.GenericParameterValue>
                                 {
                                     OS.GenericParameterValue.CreateTypeSpec(OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = e.Name , Version = ""}))
                                 }
                             }
                          )
                     }
-                ).ToArray();
-                Types.Add(OS.TypeDef.CreateRecord(new OS.RecordDef { Name = "MemoryDataTables", Version = "", GenericParameters = new OS.VariableDef[] { }, Fields = TableFields, Description = "" }));
-                InnerBinaryWriter = new OS.CppBinary.CodeGenerator.Writer(new OS.Schema { Types = Types.ToArray(), TypeRefs = InnerSchema.TypeRefs, Imports = InnerSchema.Imports, TypePaths = InnerSchema.TypePaths }, NamespaceName, new HashSet<String> { });
+                ).ToList();
+                Types.Add(OS.TypeDef.CreateRecord(new OS.RecordDef { Name = "MemoryDataTables", Version = "", GenericParameters = new List<OS.VariableDef> { }, Fields = TableFields, Description = "" }));
+                InnerBinaryWriter = new OS.CppBinary.CodeGenerator.Writer(new OS.Schema { Types = Types, TypeRefs = InnerSchema.TypeRefs, Imports = InnerSchema.Imports, TypePaths = InnerSchema.TypePaths }, NamespaceName, new HashSet<String> { });
             }
 
-            public String[] GetSchema()
+            public List<String> GetSchema()
             {
                 var Header = GetHeader();
-                var Includes = Schema.Imports.Where(i => IsInclude(i)).ToArray();
+                var Includes = Schema.Imports.Where(i => IsInclude(i)).ToList();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes();
                 var Contents = ComplexTypes;
                 if (EntityNamespaceName == NamespaceName || EntityNamespaceName == "")
                 {
-                    Contents = GetTemplate("NamespaceImplementation").Substitute("EntityNamespaceName", new String[] { }).Substitute("Contents", Contents);
+                    Contents = GetTemplate("NamespaceImplementation").Substitute("EntityNamespaceName", new List<String> { }).Substitute("Contents", Contents);
                 }
                 else
                 {
                     Contents = GetTemplate("NamespaceImplementation").Substitute("EntityNamespaceName", EntityNamespaceName).Substitute("Contents", Contents);
                 }
                 Contents = WrapContents(NamespaceName, Contents);
-                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, new String[] { }, new String[] { }, Contents)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, new List<String> { }, new List<String> { }, Contents)).Select(Line => Line.TrimEnd(' ')).ToList();
             }
 
-            public String[] GetMain(String[] Header, String[] Includes, String[] Primitives, String[] SimpleTypes, String[] EnumFunctors, String[] ComplexTypes)
+            public List<String> GetMain(List<String> Header, List<String> Includes, List<String> Primitives, List<String> SimpleTypes, List<String> EnumFunctors, List<String> ComplexTypes)
             {
                 return InnerWriter.GetMain(Header, Includes, Primitives, SimpleTypes, EnumFunctors, ComplexTypes);
             }
 
-            public String[] WrapContents(String Namespace, String[] Contents)
+            public List<String> WrapContents(String Namespace, List<String> Contents)
             {
                 return InnerWriter.WrapContents(Namespace, Contents);
             }
@@ -127,12 +127,12 @@ namespace Yuki.RelationSchema.CppMemory
                 return InnerWriter.IsInclude(s);
             }
 
-            public String[] GetHeader()
+            public List<String> GetHeader()
             {
                 return GetTemplate("Header");
             }
 
-            public String[] GetPrimitives()
+            public List<String> GetPrimitives()
             {
                 return InnerWriter.GetPrimitives();
             }
@@ -142,36 +142,36 @@ namespace Yuki.RelationSchema.CppMemory
                 return InnerWriter.GetTypeString(Type);
             }
 
-            public String[] GetTables()
+            public List<String> GetTables()
             {
                 var l = new List<String>();
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
                 {
                     l.AddRange(GetTemplate("DataAccessBase_Table").Substitute("EntityName", e.Name));
                 }
-                return l.ToArray();
+                return l;
             }
 
-            private class StringArrayComparer : IEqualityComparer<String[]>
+            private class StringArrayComparer : IEqualityComparer<List<String>>
             {
-                public Boolean Equals(String[] x, String[] y)
+                public Boolean Equals(List<String> x, List<String> y)
                 {
                     return x.SequenceEqual(y);
                 }
 
-                public int GetHashCode(String[] obj)
+                public int GetHashCode(List<String> obj)
                 {
                     return obj.Select(o => o.GetHashCode()).Aggregate((a, b) => a ^ b);
                 }
             }
 
-            public String GetIndexType(EntityDef e, String[] Key, Boolean AsValueType = false)
+            public String GetIndexType(EntityDef e, List<String> Key, Boolean AsValueType = false)
             {
                 var or = InnerTypeDict[e.Name].Record;
                 var d = or.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
                 var l = new LinkedList<String>();
                 l.AddLast("std::vector<Int>");
-                foreach (var c in Key.Reverse())
+                foreach (var c in Key.AsEnumerable().Reverse())
                 {
                     l.AddFirst("std::map<" + GetTypeString(d[c].Type) + ", std::shared_ptr<");
                     l.AddLast(">>");
@@ -184,12 +184,12 @@ namespace Yuki.RelationSchema.CppMemory
                 return String.Join("", l.ToArray());
             }
 
-            public String[] GetIndices()
+            public List<String> GetIndices()
             {
                 var l = new List<String>();
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
                 {
-                    var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(k => k.Columns.Select(c => c.Name).ToArray()).Distinct(new StringArrayComparer()).ToArray();
+                    var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(k => k.Columns.Select(c => c.Name).ToList()).Distinct(new StringArrayComparer()).ToList();
                     foreach (var k in NondirectionalKeys)
                     {
                         var IndexName = e.Name + "By" + String.Join("And", k);
@@ -197,10 +197,10 @@ namespace Yuki.RelationSchema.CppMemory
                         l.AddRange(GetTemplate("DataAccessBase_Index").Substitute("IndexName", IndexName).Substitute("IndexType", IndexType));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetGenerates()
+            public List<String> GetGenerates()
             {
                 var l = new List<String>();
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
@@ -208,29 +208,29 @@ namespace Yuki.RelationSchema.CppMemory
                     var or = InnerTypeDict[e.Name].Record;
                     var d = or.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
                     var rd = e.Fields.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
-                    var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(k => k.Columns.Select(c => c.Name).ToArray()).Distinct(new StringArrayComparer()).ToArray();
+                    var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(k => k.Columns.Select(c => c.Name).ToList()).Distinct(new StringArrayComparer()).ToList();
                     foreach (var k in NondirectionalKeys)
                     {
                         var IndexName = e.Name + "By" + String.Join("And", k);
                         var IndexType = GetIndexType(e, k, true);
                         var Fetches = new List<String>();
-                        for (var n = 0; n < k.Length; n += 1)
+                        for (var n = 0; n < k.Count; n += 1)
                         {
                             var ParentByIndex = "";
                             if (n > 0)
                             {
-                                ParentByIndex = "By" + String.Join("And", k.Take(n).ToArray());
+                                ParentByIndex = "By" + String.Join("And", k.Take(n));
                             }
-                            var RemainIndexType = GetIndexType(e, k.Skip(n + 1).ToArray(), true);
+                            var RemainIndexType = GetIndexType(e, k.Skip(n + 1).ToList(), true);
                             var Column = k[n];
-                            var ByIndex = "By" + String.Join("And", k.Take(n + 1).ToArray());
+                            var ByIndex = "By" + String.Join("And", k.Take(n + 1));
                             Fetches.AddRange(GetTemplate("DataAccessBase_Generate_Fetch").Substitute("ParentByIndex", ParentByIndex).Substitute("RemainIndexType", RemainIndexType).Substitute("Column", Column).Substitute("ByIndex", ByIndex));
                         }
                         var Add = GetTemplate("DataAccessBase_Generate_Add").Substitute("ByIndex", "By" + String.Join("And", k));
-                        l.AddRange(GetTemplate("DataAccessBase_Generate").Substitute("EntityName", e.Name).Substitute("IndexName", IndexName).Substitute("IndexType", IndexType).Substitute("Fetches", Fetches.ToArray()).Substitute("Add", Add));
+                        l.AddRange(GetTemplate("DataAccessBase_Generate").Substitute("EntityName", e.Name).Substitute("IndexName", IndexName).Substitute("IndexType", IndexType).Substitute("Fetches", Fetches).Substitute("Add", Add));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
 
             public static String GetOrderBy(QueryDef q, String EntityName)
@@ -266,7 +266,7 @@ namespace Yuki.RelationSchema.CppMemory
                 return String.Join("", l.ToArray());
             }
 
-            public String[] GetQuery(QueryDef q)
+            public List<String> GetQuery(QueryDef q)
             {
                 var e = TypeDict[q.EntityName].Entity;
 
@@ -275,10 +275,10 @@ namespace Yuki.RelationSchema.CppMemory
                 var AllName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateAll(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
                 var Parameters = String.Join(", ", q.By.Select(c => "[[{0}]]".Formats(c)).ToArray());
                 var OrderBys = GetOrderBy(q, e.Name);
-                String[] Content;
+                List<String> Content;
                 if (q.Verb.OnSelect || q.Verb.OnLock)
                 {
-                    String[] WhenEmpty;
+                    List<String> WhenEmpty;
                     if (q.Numeral.OnOptional)
                     {
                         Content = GetTemplate("SelectLock_Optional").Substitute("ManyName", ManyName).Substitute("Parameters", Parameters);
@@ -327,9 +327,9 @@ namespace Yuki.RelationSchema.CppMemory
                     }
                     else
                     {
-                        var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(kk => kk.Columns.Select(c => c.Name).ToArray()).Distinct(new StringArrayComparer()).ToArray();
-                        var Key = q.By.ToArray();
-                        String[] k = null;
+                        var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(kk => kk.Columns.Select(c => c.Name).ToList()).Distinct(new StringArrayComparer()).ToList();
+                        var Key = q.By.ToList();
+                        List<String> k = null;
                         if (NondirectionalKeys.Contains(Key))
                         {
                             k = Key;
@@ -338,7 +338,7 @@ namespace Yuki.RelationSchema.CppMemory
                         {
                             foreach (var kk in NondirectionalKeys)
                             {
-                                if (kk.Length >= Key.Length && kk.Take(Key.Length).SequenceEqual(Key))
+                                if (kk.Count >= Key.Count && kk.Take(Key.Count).SequenceEqual(Key))
                                 {
                                     k = kk;
                                     break;
@@ -348,23 +348,23 @@ namespace Yuki.RelationSchema.CppMemory
                         }
                         var IndexName = e.Name + "By" + String.Join("And", k);
                         var Fetches = new List<String>();
-                        for (var n = 0; n < Key.Length; n += 1)
+                        for (var n = 0; n < Key.Count; n += 1)
                         {
                             var ParentByIndex = "";
                             if (n > 0)
                             {
-                                ParentByIndex = "By" + String.Join("And", Key.Take(n).ToArray());
+                                ParentByIndex = "By" + String.Join("And", Key.Take(n));
                             }
                             var Column = GetEscapedIdentifier(k[n]);
-                            var ByIndex = "By" + String.Join("And", Key.Take(n + 1).ToArray());
+                            var ByIndex = "By" + String.Join("And", Key.Take(n + 1));
                             Fetches.AddRange(GetTemplate("SelectMany_Fetch").Substitute("EntityName", e.Name).Substitute("ParentByIndex", ParentByIndex).Substitute("Column", Column).Substitute("ByIndex", ByIndex).Substitute("WhenEmpty", WhenEmpty));
                         }
                         var Filters = new List<String>();
-                        for (var n = Key.Length; n < k.Length; n += 1)
+                        for (var n = Key.Count; n < k.Count; n += 1)
                         {
-                            Filters.Add(@">>select_many([](" + GetIndexType(e, k.Skip(n).ToArray(), true) + @"::value_type _d_) { return from(*std::get<1>(_d_)); })");
+                            Filters.Add(@">>select_many([](" + GetIndexType(e, k.Skip(n).ToList(), true) + @"::value_type _d_) { return from(*std::get<1>(_d_)); })");
                         }
-                        Content = Content.Substitute("EntityName", e.Name).Substitute("IndexName", IndexName).Substitute("Fetches", Fetches.ToArray()).Substitute("ByIndex", "By" + String.Join("And", Key.ToArray())).Substitute("Filters", String.Join("", Filters.ToArray()));
+                        Content = Content.Substitute("EntityName", e.Name).Substitute("IndexName", IndexName).Substitute("Fetches", Fetches).Substitute("ByIndex", "By" + String.Join("And", Key.ToArray())).Substitute("Filters", String.Join("", Filters.ToArray()));
                     }
                 }
                 else if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert || q.Verb.OnDelete)
@@ -378,7 +378,7 @@ namespace Yuki.RelationSchema.CppMemory
                 return GetTemplate("Query").Substitute("Signature", Signature).Substitute("Content", Content);
             }
 
-            public String[] GetQueries()
+            public List<String> GetQueries()
             {
                 var l = new List<String>();
                 foreach (var q in Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries))
@@ -390,10 +390,10 @@ namespace Yuki.RelationSchema.CppMemory
                 {
                     l = l.Take(l.Count - 1).ToList();
                 }
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetComplexTypes()
+            public List<String> GetComplexTypes()
             {
                 var l = new List<String>();
 
@@ -412,14 +412,14 @@ namespace Yuki.RelationSchema.CppMemory
                     l = l.Take(l.Count - 1).ToList();
                 }
 
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetTemplate(String Name)
+            public List<String> GetTemplate(String Name)
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static String[] GetLines(String Value)
+            public static List<String> GetLines(String Value)
             {
                 return OS.Cpp.Common.CodeGenerator.Writer.GetLines(Value);
             }
@@ -427,17 +427,17 @@ namespace Yuki.RelationSchema.CppMemory
             {
                 return OS.Cpp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
-            private String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
                 return OS.Cpp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
-        private static String[] Substitute(this String[] Lines, String Parameter, String Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
             return OS.Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
-        private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
             return OS.Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }

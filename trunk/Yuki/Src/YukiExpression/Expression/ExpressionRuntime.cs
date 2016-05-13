@@ -3,7 +3,7 @@
 //  File:        ExpressionRuntime.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式系统库
-//  Version:     2014.09.22.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -192,7 +192,7 @@ namespace Yuki.Expression
         private class FunctionResolver
         {
             public String Name;
-            public PrimitiveType[] ParameterTypes;
+            public List<PrimitiveType> ParameterTypes;
             public PrimitiveType ReturnType;
             public Delegate Create;
 
@@ -202,70 +202,70 @@ namespace Yuki.Expression
             public FunctionResolver(String Name, PrimitiveType rt, Func<Delegate> Create)
             {
                 this.Name = Name;
-                this.ParameterTypes = new PrimitiveType[] { };
+                this.ParameterTypes = new List<PrimitiveType> { };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
             public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<T, Boolean>, Delegate> Create)
             {
                 this.Name = Name;
-                this.ParameterTypes = new PrimitiveType[] { pt0 };
+                this.ParameterTypes = new List<PrimitiveType> { pt0 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
             public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<T, int>, Delegate> Create)
             {
                 this.Name = Name;
-                this.ParameterTypes = new PrimitiveType[] { pt0 };
+                this.ParameterTypes = new List<PrimitiveType> { pt0 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
             public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType rt, Func<Func<T, double>, Delegate> Create)
             {
                 this.Name = Name;
-                this.ParameterTypes = new PrimitiveType[] { pt0 };
+                this.ParameterTypes = new List<PrimitiveType> { pt0 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
             public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<T, Boolean>, Func<T, Boolean>, Delegate> Create)
             {
                 this.Name = Name;
-                this.ParameterTypes = new PrimitiveType[] { pt0, pt1 };
+                this.ParameterTypes = new List<PrimitiveType> { pt0, pt1 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
             public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<T, int>, Func<T, int>, Delegate> Create)
             {
                 this.Name = Name;
-                this.ParameterTypes = new PrimitiveType[] { pt0, pt1 };
+                this.ParameterTypes = new List<PrimitiveType> { pt0, pt1 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
             public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<T, double>, Func<T, double>, Delegate> Create)
             {
                 this.Name = Name;
-                this.ParameterTypes = new PrimitiveType[] { pt0, pt1 };
+                this.ParameterTypes = new List<PrimitiveType> { pt0, pt1 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
             public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType rt, Func<Func<T, double>, Func<T, int>, Delegate> Create)
             {
                 this.Name = Name;
-                this.ParameterTypes = new PrimitiveType[] { pt0, pt1 };
+                this.ParameterTypes = new List<PrimitiveType> { pt0, pt1 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
             public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType pt2, PrimitiveType rt, Func<Func<T, int>, Func<T, int>, Func<T, int>, Delegate> Create)
             {
                 this.Name = Name;
-                this.ParameterTypes = new PrimitiveType[] { pt0, pt1, pt2 };
+                this.ParameterTypes = new List<PrimitiveType> { pt0, pt1, pt2 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
             public FunctionResolver(String Name, PrimitiveType pt0, PrimitiveType pt1, PrimitiveType pt2, PrimitiveType rt, Func<Func<T, double>, Func<T, double>, Func<T, double>, Delegate> Create)
             {
                 this.Name = Name;
-                this.ParameterTypes = new PrimitiveType[] { pt0, pt1, pt2 };
+                this.ParameterTypes = new List<PrimitiveType> { pt0, pt1, pt2 };
                 this.ReturnType = rt;
                 this.Create = Create;
             }
@@ -355,30 +355,30 @@ namespace Yuki.Expression
             }
         }
 
-        public FunctionParameterAndReturnTypes[] GetOverloads(string Name)
+        public List<FunctionParameterAndReturnTypes> GetOverloads(string Name)
         {
-            if (FunctionSignatureMap.Map.ContainsKey(Name)) { return FunctionSignatureMap.Map[Name].Select(f => new FunctionParameterAndReturnTypes { ParameterTypes = f.ParameterTypes, ReturnType = f.ReturnType }).ToArray(); }
-            return new FunctionParameterAndReturnTypes[] { };
+            if (FunctionSignatureMap.Map.ContainsKey(Name)) { return FunctionSignatureMap.Map[Name].Select(f => new FunctionParameterAndReturnTypes { ParameterTypes = f.ParameterTypes, ReturnType = f.ReturnType }).ToList(); }
+            return new List<FunctionParameterAndReturnTypes> { };
         }
 
-        public PrimitiveType[] GetMatched(string Name, PrimitiveType[] ParameterTypes)
+        public List<PrimitiveType> GetMatched(string Name, List<PrimitiveType> ParameterTypes)
         {
             if (FunctionSignatureMap.Map.ContainsKey(Name))
             {
-                var Matched = FunctionSignatureMap.Map[Name].Where(f => f.ParameterTypes.SequenceEqual(ParameterTypes)).Select(f => f.ReturnType).ToArray();
+                var Matched = FunctionSignatureMap.Map[Name].Where(f => f.ParameterTypes.SequenceEqual(ParameterTypes)).Select(f => f.ReturnType).ToList();
                 return Matched;
             }
-            return new PrimitiveType[] { };
+            return new List<PrimitiveType> { };
         }
 
-        public Delegate[] GetValue(String Name, PrimitiveType[] ParameterTypes, Delegate[] ParameterFuncs)
+        public List<Delegate> GetValue(String Name, List<PrimitiveType> ParameterTypes, List<Delegate> ParameterFuncs)
         {
             if (FunctionSignatureMap.Map.ContainsKey(Name))
             {
-                var Matched = FunctionSignatureMap.Map[Name].Where(f => f.ParameterTypes.SequenceEqual(ParameterTypes)).Select(f => f.Create.StaticDynamicInvokeWithObjects<Delegate>(ParameterFuncs)).ToArray();
+                var Matched = FunctionSignatureMap.Map[Name].Where(f => f.ParameterTypes.SequenceEqual(ParameterTypes)).Select(f => f.Create.StaticDynamicInvokeWithObjects<Delegate>(ParameterFuncs.ToArray())).ToList();
                 return Matched;
             }
-            return new Delegate[] { };
+            return new List<Delegate> { };
         }
     }
 }

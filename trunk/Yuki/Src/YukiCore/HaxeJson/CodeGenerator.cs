@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Haxe JSON通讯代码生成器
-//  Version:     2013.12.08.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,7 +21,7 @@ namespace Yuki.ObjectSchema.HaxeJson
     {
         public static String CompileToHaxeJson(this Schema Schema, String PackageName)
         {
-            Writer w = new Writer(Schema, PackageName);
+            var w = new Writer(Schema, PackageName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -54,7 +54,7 @@ namespace Yuki.ObjectSchema.HaxeJson
                 this.Schema = Schema;
                 this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.PackageName = NamespaceName;
-                this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
+                this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).Hash();
 
                 InnerWriter = new Haxe.Common.CodeGenerator.Writer(Schema, PackageName);
 
@@ -67,17 +67,17 @@ namespace Yuki.ObjectSchema.HaxeJson
                 }
             }
 
-            public String[] GetSchema()
+            public List<String> GetSchema()
             {
                 var Types = GetTypes(Schema);
 
                 if (PackageName != "")
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", PackageName).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", PackageName).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
                 else
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", new String[] { }).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("PackageName", new List<String> { }).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
             }
 
@@ -85,23 +85,23 @@ namespace Yuki.ObjectSchema.HaxeJson
             {
                 return InnerWriter.GetTypeString(Type);
             }
-            public String[] GetXmlComment(String Description)
+            public List<String> GetXmlComment(String Description)
             {
                 return InnerWriter.GetXmlComment(Description);
             }
 
-            public String[] GetJsonSerializationClient(TypeDef[] Commands)
+            public List<String> GetJsonSerializationClient(List<TypeDef> Commands)
             {
                 return GetTemplate("JsonSerializationClient").Substitute("Hash", Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)).Substitute("ApplicationCommands", GetJsonSerializationClientApplicationCommands(Commands)).Substitute("ServerCommands", GetJsonSerializationClientServerCommands(Commands));
             }
-            public String[] GetJsonSerializationClientApplicationCommands(TypeDef[] Commands)
+            public List<String> GetJsonSerializationClientApplicationCommands(List<TypeDef> Commands)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var c in Commands)
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("JsonSerializationClient_ApplicationClientCommand").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                     else if (c.OnServerCommand)
@@ -109,30 +109,30 @@ namespace Yuki.ObjectSchema.HaxeJson
                         l.AddRange(GetTemplate("JsonSerializationClient_ApplicationServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonSerializationClientServerCommands(TypeDef[] Commands)
+            public List<String> GetJsonSerializationClientServerCommands(List<TypeDef> Commands)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var c in Commands)
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new TypeDef[] { c }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0));
                         l.AddRange(GetTemplate("JsonSerializationClient_ServerCommand").Substitute("CommandName", c.ServerCommand.Name).Substitute("Name", c.ServerCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetJsonTranslator(TypeDef[] Types)
+            public List<String> GetJsonTranslator(List<TypeDef> Types)
             {
                 return GetTemplate("JsonTranslator").Substitute("Serializers", GetJsonTranslatorSerializers(Types));
             }
 
-            public String[] GetJsonTranslatorSerializers(TypeDef[] Types)
+            public List<String> GetJsonTranslatorSerializers(List<TypeDef> Types)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
 
                 foreach (var c in Types)
                 {
@@ -231,7 +231,7 @@ namespace Yuki.ObjectSchema.HaxeJson
                 }
 
                 var scg = Schema.GetSchemaClosureGenerator();
-                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new List<TypeSpec> { });
                 var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
                 var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
 
@@ -243,22 +243,22 @@ namespace Yuki.ObjectSchema.HaxeJson
 
                 foreach (var gts in GenericTypeSpecs)
                 {
-                    if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.GenericParameterValues.Count == 1)
                     {
                         l.AddRange(GetJsonTranslatorOptional(gts));
                         l.Add("");
                     }
-                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gts.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gts.GenericTypeSpec.GenericParameterValues.Count == 1)
                     {
                         l.AddRange(GetJsonTranslatorList(gts));
                         l.Add("");
                     }
-                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gts.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gts.GenericTypeSpec.GenericParameterValues.Count == 1)
                     {
                         l.AddRange(GetJsonTranslatorSet(gts));
                         l.Add("");
                     }
-                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gts.GenericTypeSpec.GenericParameterValues.Length == 2)
+                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gts.GenericTypeSpec.GenericParameterValues.Count == 2)
                     {
                         l.AddRange(GetJsonTranslatorMap(gts));
                         l.Add("");
@@ -274,53 +274,53 @@ namespace Yuki.ObjectSchema.HaxeJson
                     l = l.Take(l.Count - 1).ToList();
                 }
 
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonTranslatorAlias(AliasDef a)
+            public List<String> GetJsonTranslatorAlias(AliasDef a)
             {
                 return GetTemplate("JsonTranslator_Alias").Substitute("Name", a.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", a.Type.TypeFriendlyName());
             }
-            public String[] GetJsonTranslatorRecord(RecordDef r)
+            public List<String> GetJsonTranslatorRecord(RecordDef r)
             {
                 return GetJsonTranslatorRecord(r.TypeFriendlyName(), r.Fields);
             }
-            public String[] GetJsonTranslatorRecord(String Name, VariableDef[] Fields)
+            public List<String> GetJsonTranslatorRecord(String Name, List<VariableDef> Fields)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 l.AddRange(GetTemplate("JsonTranslator_Record").Substitute("Name", Name).Substitute("FieldFroms", GetJsonTranslatorFieldFroms(Fields)).Substitute("FieldTos", GetJsonTranslatorFieldTos(Fields)));
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonTranslatorFieldFroms(VariableDef[] Fields)
+            public List<String> GetJsonTranslatorFieldFroms(List<VariableDef> Fields)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var a in Fields)
                 {
                     l.AddRange(GetTemplate("JsonTranslator_FieldFrom").Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonTranslatorFieldTos(VariableDef[] Fields)
+            public List<String> GetJsonTranslatorFieldTos(List<VariableDef> Fields)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var a in Fields)
                 {
                     l.AddRange(GetTemplate("JsonTranslator_FieldTo").Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonTranslatorTaggedUnion(TaggedUnionDef tu)
+            public List<String> GetJsonTranslatorTaggedUnion(TaggedUnionDef tu)
             {
                 return GetJsonTranslatorTaggedUnion(tu.TypeFriendlyName(), tu.Alternatives);
             }
-            public String[] GetJsonTranslatorTaggedUnion(String Name, VariableDef[] Alternatives)
+            public List<String> GetJsonTranslatorTaggedUnion(String Name, List<VariableDef> Alternatives)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 l.AddRange(GetTemplate("JsonTranslator_TaggedUnion").Substitute("Name", Name).Substitute("AlternativeFroms", GetJsonTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetJsonTranslatorAlternativeTos(Name, Alternatives)));
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonTranslatorAlternativeFroms(String TaggedUnionName, VariableDef[] Alternatives)
+            public List<String> GetJsonTranslatorAlternativeFroms(String TaggedUnionName, List<VariableDef> Alternatives)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var a in Alternatives)
                 {
                     if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name.Equals("Unit", StringComparison.OrdinalIgnoreCase)))
@@ -332,11 +332,11 @@ namespace Yuki.ObjectSchema.HaxeJson
                         l.AddRange(GetTemplate("JsonTranslator_AlternativeFrom").Substitute("TaggedUnionName", TaggedUnionName).Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonTranslatorAlternativeTos(String TaggedUnionName, VariableDef[] Alternatives)
+            public List<String> GetJsonTranslatorAlternativeTos(String TaggedUnionName, List<VariableDef> Alternatives)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var a in Alternatives)
                 {
                     if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name.Equals("Unit", StringComparison.OrdinalIgnoreCase)))
@@ -348,53 +348,53 @@ namespace Yuki.ObjectSchema.HaxeJson
                         l.AddRange(GetTemplate("JsonTranslator_AlternativeTo").Substitute("TaggedUnionName", TaggedUnionName).Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonTranslatorEnum(EnumDef e)
+            public List<String> GetJsonTranslatorEnum(EnumDef e)
             {
                 return GetTemplate("JsonTranslator_Enum").Substitute("Name", e.TypeFriendlyName()).Substitute("UnderlyingType", GetTypeString(e.UnderlyingType));
             }
-            public String[] GetJsonTranslatorClientCommand(ClientCommandDef c)
+            public List<String> GetJsonTranslatorClientCommand(ClientCommandDef c)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 l.AddRange(GetJsonTranslatorRecord(c.TypeFriendlyName() + "Request", c.OutParameters));
                 l.AddRange(GetJsonTranslatorTaggedUnion(c.TypeFriendlyName() + "Reply", c.InParameters));
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonTranslatorServerCommand(ServerCommandDef c)
+            public List<String> GetJsonTranslatorServerCommand(ServerCommandDef c)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 return GetJsonTranslatorRecord(c.TypeFriendlyName() + "Event", c.OutParameters);
             }
-            public String[] GetJsonTranslatorTuple(TypeSpec t)
+            public List<String> GetJsonTranslatorTuple(TypeSpec t)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 l.AddRange(GetTemplate("JsonTranslator_Tuple").Substitute("TypeFriendlyName", t.TypeFriendlyName()).Substitute("TupleElementFroms", GetJsonTranslatorTupleElementFroms(t.Tuple.Types)).Substitute("TupleElementTos", GetJsonTranslatorTupleElementTos(t.Tuple.Types)));
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonTranslatorTupleElementFroms(TypeSpec[] Types)
+            public List<String> GetJsonTranslatorTupleElementFroms(List<TypeSpec> Types)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 int k = 0;
                 foreach (var t in Types)
                 {
                     l.AddRange(GetTemplate("JsonTranslator_TupleElementFrom").Substitute("NameIndex", Convert.ToString(k)).Substitute("TypeFriendlyName", t.TypeFriendlyName()));
                     k += 1;
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonTranslatorTupleElementTos(TypeSpec[] Types)
+            public List<String> GetJsonTranslatorTupleElementTos(List<TypeSpec> Types)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 int k = 0;
                 foreach (var t in Types)
                 {
                     l.AddRange(GetTemplate("JsonTranslator_TupleElementTo").Substitute("NameIndex", Convert.ToString(k)).Substitute("TypeFriendlyName", t.TypeFriendlyName()));
                     k += 1;
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetJsonTranslatorOptional(TypeSpec o)
+            public List<String> GetJsonTranslatorOptional(TypeSpec o)
             {
                 var ElementType = o.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
 
@@ -404,27 +404,27 @@ namespace Yuki.ObjectSchema.HaxeJson
                 var ElementTypeString = GetTypeString(ElementType);
                 return GetTemplate("JsonTranslator_Optional").Substitute("TypeFriendlyName", TypeFriendlyName).Substitute("TypeString", TypeString).Substitute("ElementTypeFriendlyName", ElementTypeFriendlyName).Substitute("ElementTypeString", ElementTypeString);
             }
-            public String[] GetJsonTranslatorList(TypeSpec c)
+            public List<String> GetJsonTranslatorList(TypeSpec c)
             {
                 return GetTemplate("JsonTranslator_List").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
             }
-            public String[] GetJsonTranslatorSet(TypeSpec c)
+            public List<String> GetJsonTranslatorSet(TypeSpec c)
             {
                 return GetTemplate("JsonTranslator_Set").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
             }
-            public String[] GetJsonTranslatorMap(TypeSpec c)
+            public List<String> GetJsonTranslatorMap(TypeSpec c)
             {
                 var KeyTypeFriendlyName = c.GenericTypeSpec.GenericParameterValues[0].TypeSpec.TypeFriendlyName();
                 var ValueTypeFriendlyName = c.GenericTypeSpec.GenericParameterValues[1].TypeSpec.TypeFriendlyName();
                 return GetTemplate("JsonTranslator_Map").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("KeyTypeFriendlyName", KeyTypeFriendlyName).Substitute("ValueTypeFriendlyName", ValueTypeFriendlyName);
             }
 
-            public String[] GetTypes(Schema Schema)
+            public List<String> GetTypes(Schema Schema)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
 
-                var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Where(t => t.Version() == "").ToArray();
-                if (Commands.Length > 0)
+                var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Where(t => t.Version() == "").ToList();
+                if (Commands.Count > 0)
                 {
                     l.AddRange(GetTemplate("IJsonSender"));
                     l.Add("");
@@ -432,7 +432,7 @@ namespace Yuki.ObjectSchema.HaxeJson
                     l.Add("");
                 }
 
-                l.AddRange(GetJsonTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray()));
+                l.AddRange(GetJsonTranslator(Schema.TypeRefs.Concat(Schema.Types).ToList()));
                 l.Add("");
 
                 if (l.Count > 0)
@@ -440,14 +440,14 @@ namespace Yuki.ObjectSchema.HaxeJson
                     l = l.Take(l.Count - 1).ToList();
                 }
 
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetTemplate(String Name)
+            public List<String> GetTemplate(String Name)
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static String[] GetLines(String Value)
+            public static List<String> GetLines(String Value)
             {
                 return Haxe.Common.CodeGenerator.Writer.GetLines(Value);
             }
@@ -455,17 +455,17 @@ namespace Yuki.ObjectSchema.HaxeJson
             {
                 return Haxe.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
-            private String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
                 return Haxe.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
-        private static String[] Substitute(this String[] Lines, String Parameter, String Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
             return Haxe.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
-        private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
             return Haxe.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }

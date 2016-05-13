@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaDiffGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构差异生成器
-//  Version:     2013.12.08.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -40,7 +40,7 @@ namespace Yuki.ObjectSchema
             Func<Schema, Func<TypeDef, Schema>> GetGen = s =>
             {
                 var g = s.GetSchemaClosureGenerator();
-                return t => g.GetSubSchema(new TypeDef[] { t }, new TypeSpec[] { });
+                return t => g.GetSubSchema(new List<TypeDef> { t }, new List<TypeSpec> { });
             };
 
             var LeftGen = GetGen(Left);
@@ -86,17 +86,17 @@ namespace Yuki.ObjectSchema
 
             var Patch = new Schema
             {
-                Types = Right.Types.Where(t => !CommonTypes.Contains(t.Name())).ToArray(),
-                TypeRefs = Right.TypeRefs.Concat(Right.Types.Where(t => CommonTypes.Contains(t.Name()))).ToArray(),
-                Imports = Right.Imports.Except(Left.Imports, StringComparer.OrdinalIgnoreCase).ToArray(),
-                TypePaths = Right.TypePaths.Where(tp => !CommonTypes.Contains(tp.Name)).ToArray()
+                Types = Right.Types.Where(t => !CommonTypes.Contains(t.Name())).ToList(),
+                TypeRefs = Right.TypeRefs.Concat(Right.Types.Where(t => CommonTypes.Contains(t.Name()))).ToList(),
+                Imports = Right.Imports.Except(Left.Imports, StringComparer.OrdinalIgnoreCase).ToList(),
+                TypePaths = Right.TypePaths.Where(tp => !CommonTypes.Contains(tp.Name)).ToList()
             };
             var Revert = new Schema
             {
-                Types = Left.Types.Where(t => !CommonTypes.Contains(t.Name())).ToArray(),
-                TypeRefs = Left.TypeRefs.Concat(Left.Types.Where(t => CommonTypes.Contains(t.Name()))).ToArray(),
-                Imports = Left.Imports.Except(Right.Imports, StringComparer.OrdinalIgnoreCase).ToArray(),
-                TypePaths = Right.TypePaths.Where(tp => !CommonTypes.Contains(tp.Name)).ToArray()
+                Types = Left.Types.Where(t => !CommonTypes.Contains(t.Name())).ToList(),
+                TypeRefs = Left.TypeRefs.Concat(Left.Types.Where(t => CommonTypes.Contains(t.Name()))).ToList(),
+                Imports = Left.Imports.Except(Right.Imports, StringComparer.OrdinalIgnoreCase).ToList(),
+                TypePaths = Right.TypePaths.Where(tp => !CommonTypes.Contains(tp.Name)).ToList()
             };
 
             return new ObjectSchemaDiffResult
