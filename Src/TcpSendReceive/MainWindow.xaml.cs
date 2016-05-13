@@ -228,7 +228,7 @@ namespace TcpSendReceive
             {
                 var Sche = Schema();
                 var a = SchemaAssembly();
-                var Lines = Regex.Split(Str, @"\n|\r\n").Select(l => l.Trim(' ')).Where(l => l != "").ToArray();
+                var Lines = Regex.Split(Str, @"\n|\r\n").Select(l => l.Trim(' ')).Where(l => l != "").ToList();
                 using (var s = Streams.CreateMemoryStream())
                 {
                     foreach (var Line in Lines)
@@ -255,7 +255,7 @@ namespace TcpSendReceive
             }
             else if (m == Mode.Line)
             {
-                var Lines = Regex.Split(Str, @"\n|\r\n").Select(l => l.Trim(' ')).Where(l => l != "").ToArray();
+                var Lines = Regex.Split(Str, @"\n|\r\n").Select(l => l.Trim(' ')).Where(l => l != "").ToList();
                 Str = String.Join("\r\n", Lines) + "\r\n";
                 SendBuffer = Encoding.UTF8.GetBytes(Str);
             }

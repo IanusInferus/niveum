@@ -3,7 +3,7 @@
 //  File:        RelationSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构加载器
-//  Version:     2013.04.08.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,6 +21,7 @@ using Firefly.Texting.TreeFormat;
 using Syntax = Firefly.Texting.TreeFormat.Syntax;
 using Semantics = Firefly.Texting.TreeFormat.Semantics;
 using OS = Yuki.ObjectSchema;
+using TreeFormat = Firefly.Texting.TreeFormat;
 
 namespace Yuki.RelationSchema
 {
@@ -149,7 +150,7 @@ namespace Yuki.RelationSchema
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = Opt<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -221,7 +222,7 @@ namespace Yuki.RelationSchema
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = Opt<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -357,8 +358,8 @@ namespace Yuki.RelationSchema
                 var NumeralName = GetLeafNodeValue(l[3], nm, "InvalidNumeral");
                 if (!Numerals.Contains(NumeralName)) { throw new Syntax.InvalidTokenException("InvalidNumeral", nm.GetFileRange(l[3]), NumeralName); }
 
-                var ByIndex = new String[] { };
-                var OrderByIndex = new String[] { };
+                var ByIndex = new List<String> { };
+                var OrderByIndex = new List<String> { };
 
                 if (l.Count >= 6)
                 {
@@ -367,11 +368,11 @@ namespace Yuki.RelationSchema
                     {
                         if (l[5].OnLeaf)
                         {
-                            ByIndex = new String[] { l[5].Leaf };
+                            ByIndex = new List<String> { l[5].Leaf };
                         }
                         else if (l[5].OnStem)
                         {
-                            ByIndex = l[5].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
+                            ByIndex = l[5].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToList();
                         }
                         else
                         {
@@ -382,11 +383,11 @@ namespace Yuki.RelationSchema
                     {
                         if (l[5].OnLeaf)
                         {
-                            OrderByIndex = new String[] { l[5].Leaf };
+                            OrderByIndex = new List<String> { l[5].Leaf };
                         }
                         else if (l[5].OnStem)
                         {
-                            OrderByIndex = l[5].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
+                            OrderByIndex = l[5].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToList();
                         }
                         else
                         {
@@ -400,7 +401,7 @@ namespace Yuki.RelationSchema
                 }
                 if (l.Count >= 8)
                 {
-                    if (OrderByIndex.Length != 0)
+                    if (OrderByIndex.Count != 0)
                     {
                         throw new Syntax.InvalidSyntaxException("InvalidOrderBy", nm.GetFileRange(l[6]));
                     }
@@ -409,11 +410,11 @@ namespace Yuki.RelationSchema
                     {
                         if (l[7].OnLeaf)
                         {
-                            OrderByIndex = new String[] { l[7].Leaf };
+                            OrderByIndex = new List<String> { l[7].Leaf };
                         }
                         else if (l[7].OnStem)
                         {
-                            OrderByIndex = l[7].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToArray();
+                            OrderByIndex = l[7].Stem.Children.Select(c => GetLeafNodeValue(c, nm, "InvalidKeyColumn")).ToList();
                         }
                         else
                         {
@@ -426,7 +427,7 @@ namespace Yuki.RelationSchema
                     }
                 }
 
-                var OrderByIndexColumns = OrderByIndex.Select(c => c.EndsWith("-") ? MakeStemNode("KeyColumn", MakeStemNode("Name", MakeLeafNode(c.Substring(0, c.Length - 1))), MakeStemNode("IsDescending", MakeLeafNode("True"))) : MakeStemNode("KeyColumn", MakeStemNode("Name", MakeLeafNode(c)), MakeStemNode("IsDescending", MakeLeafNode("False")))).ToArray();
+                var OrderByIndexColumns = OrderByIndex.Select(c => c.EndsWith("-") ? MakeStemNode("KeyColumn", MakeStemNode("Name", MakeLeafNode(c.Substring(0, c.Length - 1))), MakeStemNode("IsDescending", MakeLeafNode("True"))) : MakeStemNode("KeyColumn", MakeStemNode("Name", MakeLeafNode(c)), MakeStemNode("IsDescending", MakeLeafNode("False")))).ToList();
 
                 return new Semantics.Node[]
                 {
@@ -435,7 +436,7 @@ namespace Yuki.RelationSchema
                         MakeStemNode("Verb", MakeStemNode(VerbName)),
                         MakeStemNode("Numeral", MakeStemNode(NumeralName)),
                         MakeStemNode("By", ByIndex.Select(c => MakeStemNode("StringLiteral", MakeLeafNode(c))).ToArray()),
-                        MakeStemNode("OrderBy", OrderByIndexColumns)
+                        MakeStemNode("OrderBy", OrderByIndexColumns.ToArray())
                     )
                 };
             };
@@ -448,11 +449,11 @@ namespace Yuki.RelationSchema
                     {
                         if (f.Name.Text == "Query")
                         {
-                            var Nodes = f.Content.Value.LineContent.Lines.SelectMany(Line => ParseQueryDefAsSemanticsNodes(f.Content.Value.LineContent.IndentLevel, Line, nm)).ToArray();
+                            var Nodes = f.Content.Value.LineContent.Lines.SelectMany(Line => ParseQueryDefAsSemanticsNodes(f.Content.Value.LineContent.IndentLevel, Line, nm)).ToList();
                             return new Semantics.Node[]
                             {
                                 MakeStemNode("QueryList",
-                                    MakeStemNode("Queries", Nodes)
+                                    MakeStemNode("Queries", Nodes.ToArray())
                                 )
                             };
                         }
@@ -693,8 +694,8 @@ namespace Yuki.RelationSchema
             foreach (var n in t.Value.Nodes)
             {
                 var Type = n.Stem.Name;
-                var Names = n.Stem.Children.Where(c => c.Stem.Name == "Name").ToArray();
-                if (Names.Length == 0) { continue; }
+                var Names = n.Stem.Children.Where(c => c.Stem.Name == "Name").ToList();
+                if (Names.Count == 0) { continue; }
                 var Name = Names.Single().Stem.Children.Single().Leaf;
                 var Version = "";
                 if (n.Stem.Children.Where(c => c.Stem.Name == "Version").Any())

@@ -3,7 +3,7 @@
 //  File:        VariableContext.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 默认变量上下文
-//  Version:     2014.09.22.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -33,10 +33,10 @@ namespace Yuki.Expression
         {
         }
 
-        private PrimitiveType[] GetParameterTypes(Variable d)
+        private List<PrimitiveType> GetParameterTypes(Variable d)
         {
             if (d.Parameters == null) { return null; }
-            var l = d.Parameters.Select(p => p.Type).ToArray();
+            var l = d.Parameters.Select(p => p.Type).ToList();
             return l;
         }
         private PrimitiveType GetReturnType(Variable d)
@@ -54,7 +54,7 @@ namespace Yuki.Expression
             return Left.SequenceEqual(Right);
         }
 
-        public FunctionParameterAndReturnTypes[] GetOverloads(String Name)
+        public List<FunctionParameterAndReturnTypes> GetOverloads(String Name)
         {
             var l = new List<FunctionParameterAndReturnTypes>();
             if (Dict.ContainsKey(Name))
@@ -64,10 +64,10 @@ namespace Yuki.Expression
                     l.Add(GetParameterAndReturnTypes(v));
                 }
             }
-            return l.ToArray();
+            return l;
         }
 
-        public PrimitiveType[] GetMatched(String Name, PrimitiveType[] ParameterTypes)
+        public List<PrimitiveType> GetMatched(String Name, List<PrimitiveType> ParameterTypes)
         {
             var l = new List<PrimitiveType>();
             if (Dict.ContainsKey(Name))
@@ -81,7 +81,7 @@ namespace Yuki.Expression
                     }
                 }
             }
-            return l.ToArray();
+            return l;
         }
 
         public void Replace(String Name, Object v)
@@ -168,7 +168,7 @@ namespace Yuki.Expression
             }
         }
 
-        public Delegate[] GetValue(String Name, PrimitiveType[] ParameterTypes, Delegate[] Parameters)
+        public List<Delegate> GetValue(String Name, List<PrimitiveType> ParameterTypes, List<Delegate> Parameters)
         {
             var l = new List<Delegate>();
             if (Dict.ContainsKey(Name))
@@ -196,7 +196,7 @@ namespace Yuki.Expression
                     }
                 }
             }
-            return l.ToArray();
+            return l;
         }
     }
 }

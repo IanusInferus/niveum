@@ -3,7 +3,7 @@
 //  File:        RelationValueTreeSerializer.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构数据Tree序列化器
-//  Version:     2014.12.06.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -110,13 +110,13 @@ namespace Yuki.RelationValue
         public RelationVal Read(Dictionary<String, List<Node>> TreeRelation)
         {
             var Tables = new List<TableVal>();
-            var Missings = EntityMetas.Keys.Except(TreeRelation.Keys, StringComparer.OrdinalIgnoreCase).ToArray();
-            if (Missings.Length > 0)
+            var Missings = EntityMetas.Keys.Except(TreeRelation.Keys, StringComparer.OrdinalIgnoreCase).ToList();
+            if (Missings.Count > 0)
             {
                 throw new InvalidOperationException("TableMissing: " + String.Join(" ", Missings));
             }
-            var NotExists = TreeRelation.Keys.Except(EntityMetas.Keys, StringComparer.OrdinalIgnoreCase).ToArray();
-            if (NotExists.Length > 0)
+            var NotExists = TreeRelation.Keys.Except(EntityMetas.Keys, StringComparer.OrdinalIgnoreCase).ToList();
+            if (NotExists.Count > 0)
             {
                 throw new InvalidOperationException("TableUnknown: " + String.Join(" ", NotExists));
             }
@@ -205,8 +205,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = TreeRow =>
                     {
-                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                        if (cvs.Length != 1)
+                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (cvs.Count != 1)
                         {
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
@@ -226,8 +226,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = TreeRow =>
                     {
-                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                        if (cvs.Length != 1)
+                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (cvs.Count != 1)
                         {
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
@@ -242,8 +242,8 @@ namespace Yuki.RelationValue
                     {
                         Reader = TreeRow =>
                         {
-                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                            if (cvs.Length != 1)
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                            if (cvs.Count != 1)
                             {
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
@@ -271,8 +271,8 @@ namespace Yuki.RelationValue
                     {
                         Reader = TreeRow =>
                         {
-                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                            if (cvs.Length != 1)
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                            if (cvs.Count != 1)
                             {
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
@@ -295,8 +295,8 @@ namespace Yuki.RelationValue
                     {
                         Reader = TreeRow =>
                         {
-                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                            if (cvs.Length != 1)
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                            if (cvs.Count != 1)
                             {
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
@@ -324,8 +324,8 @@ namespace Yuki.RelationValue
                     {
                         Reader = TreeRow =>
                         {
-                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                            if (cvs.Length != 1)
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                            if (cvs.Count != 1)
                             {
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
@@ -346,8 +346,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = TreeRow =>
                     {
-                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                        if (cvs.Length != 1)
+                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (cvs.Count != 1)
                         {
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
@@ -367,8 +367,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = TreeRow =>
                     {
-                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                        if (cvs.Length != 1)
+                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (cvs.Count != 1)
                         {
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
@@ -395,8 +395,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = TreeRow =>
                     {
-                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                        if (cvs.Length != 1)
+                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (cvs.Count != 1)
                         {
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
@@ -417,8 +417,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = TreeRow =>
                     {
-                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                        if (cvs.Length != 1)
+                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (cvs.Count != 1)
                         {
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
@@ -434,8 +434,8 @@ namespace Yuki.RelationValue
                     {
                         Reader = TreeRow =>
                         {
-                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                            if (cvs.Length != 1)
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                            if (cvs.Count != 1)
                             {
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
@@ -464,8 +464,8 @@ namespace Yuki.RelationValue
                     {
                         Reader = TreeRow =>
                         {
-                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                            if (cvs.Length != 1)
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                            if (cvs.Count != 1)
                             {
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
@@ -489,8 +489,8 @@ namespace Yuki.RelationValue
                     {
                         Reader = TreeRow =>
                         {
-                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                            if (cvs.Length != 1)
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                            if (cvs.Count != 1)
                             {
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
@@ -519,8 +519,8 @@ namespace Yuki.RelationValue
                     {
                         Reader = TreeRow =>
                         {
-                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                            if (cvs.Length != 1)
+                            var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                            if (cvs.Count != 1)
                             {
                                 throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                             }
@@ -542,8 +542,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = TreeRow =>
                     {
-                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                        if (cvs.Length != 1)
+                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (cvs.Count != 1)
                         {
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }
@@ -564,8 +564,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = TreeRow =>
                     {
-                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-                        if (cvs.Length != 1)
+                        var cvs = TreeRow.Stem.Children.Where(col => col.OnStem && col.Stem.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (cvs.Count != 1)
                         {
                             throw new InvalidOperationException(String.Format("InvalidData: {0}.{1}", e.Name, c.Name));
                         }

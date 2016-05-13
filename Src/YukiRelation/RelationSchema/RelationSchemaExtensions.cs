@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2015.08.17.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -110,8 +110,8 @@ namespace Yuki.RelationSchema
 
         public static UInt64 Hash(this Schema s)
         {
-            var Types = s.GetMap().OrderBy(t => t.Key, StringComparer.Ordinal).Select(t => t.Value).ToArray();
-            var TypesWithoutDescription = Types.Select(t => MapWithoutDescription(t)).ToArray();
+            var Types = s.GetMap().OrderBy(t => t.Key, StringComparer.Ordinal).Select(t => t.Value).ToList();
+            var TypesWithoutDescription = Types.Select(t => MapWithoutDescription(t)).ToList();
 
             var sha = new SHA1CryptoServiceProvider();
             Byte[] result;
@@ -342,7 +342,7 @@ namespace Yuki.RelationSchema
 
         public static void VerifyEntityForeignKeys(this Schema s)
         {
-            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
+            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
             var IndexDict = new Dictionary<String, HashSet<ByIndex>>(StringComparer.OrdinalIgnoreCase);
             foreach (var e in Entities)
             {
@@ -503,7 +503,7 @@ namespace Yuki.RelationSchema
         // By索引加上OrderBy索引中除去By索引的部分，必须和Entity已经声明的Key一致
         public static void VerifyQuerySemantics(this Schema s)
         {
-            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
+            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
             var EntityDict = Entities.ToDictionary(e => e.Name);
             var ColumnDict = Entities.ToDictionary(e => e.Name, e => e.Fields.Where(f => f.Attribute.OnColumn).ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase));
             foreach (var t in s.TypeRefs.Concat(s.Types))
@@ -654,7 +654,7 @@ namespace Yuki.RelationSchema
         }
         private static String GetOrderByKeyString(IEnumerable<KeyColumn> OrderByKey)
         {
-            var OrderByKeyColumnStrings = OrderByKey.Select(c => c.IsDescending ? c.Name + "-" : c.Name).ToArray();
+            var OrderByKeyColumnStrings = OrderByKey.Select(c => c.IsDescending ? c.Name + "-" : c.Name).ToList();
             if (OrderByKey.Count() == 1)
             {
                 return OrderByKeyColumnStrings.Single();

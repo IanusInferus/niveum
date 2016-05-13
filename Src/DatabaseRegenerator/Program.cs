@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2015.06.29.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -199,7 +199,7 @@ namespace Yuki.DatabaseRegenerator
                     var args = opt.Arguments;
                     if (args.Length >= 1)
                     {
-                        ExportCollection(ConnectionString, args[0], args.Skip(1).ToArray());
+                        ExportCollection(ConnectionString, args[0], args.Skip(1).ToList());
                     }
                     else
                     {
@@ -429,7 +429,7 @@ namespace Yuki.DatabaseRegenerator
 
         public static RelationVal LoadData(RelationSchema.Schema s, String[] DataDirOrMemoryDatabaseFiles, Firefly.Mapping.Binary.BinarySerializer bs)
         {
-            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
+            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
             var DuplicatedCollectionNames = Entities.GroupBy(e => e.CollectionName).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
             if (DuplicatedCollectionNames.Count > 0)
             {
@@ -496,7 +496,7 @@ namespace Yuki.DatabaseRegenerator
                 }
             }
 
-            var Missings = Entities.Select(e => e.Name).Except(Tables.Keys, StringComparer.OrdinalIgnoreCase).ToArray();
+            var Missings = Entities.Select(e => e.Name).Except(Tables.Keys, StringComparer.OrdinalIgnoreCase).ToList();
             foreach (var Name in Missings)
             {
                 Tables.Add(Name, new List<Node>());
@@ -530,7 +530,7 @@ namespace Yuki.DatabaseRegenerator
         }
         public static Dictionary<String, TableVal> LoadPartialData(RelationSchema.Schema s, String[] DataDirs, Firefly.Mapping.Binary.BinarySerializer bs)
         {
-            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray();
+            var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
             var DuplicatedCollectionNames = Entities.GroupBy(e => e.CollectionName).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
             if (DuplicatedCollectionNames.Count > 0)
             {
@@ -634,7 +634,7 @@ namespace Yuki.DatabaseRegenerator
             SaveData(s, ConnectionString, Value, bs);
         }
 
-        public static void ExportCollection(String ConnectionString, String DataDir, String[] ExportEntityNames)
+        public static void ExportCollection(String ConnectionString, String DataDir, List<String> ExportEntityNames)
         {
             var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
 
@@ -644,7 +644,7 @@ namespace Yuki.DatabaseRegenerator
             var Entities = s.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList();
 
             HashSet<String> ExportEntityNameSet = null;
-            if (ExportEntityNames.Length != 0)
+            if (ExportEntityNames.Count != 0)
             {
                 ExportEntityNameSet = new HashSet<String>(ExportEntityNames.Distinct(StringComparer.OrdinalIgnoreCase), StringComparer.OrdinalIgnoreCase);
             }
@@ -780,11 +780,11 @@ namespace Yuki.DatabaseRegenerator
             var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
 
             var GenSqls = s.CompileToPostgreSql(DatabaseName, true);
-            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
-            RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToArray();
+            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture).ToList();
+            RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToList();
             var CreateDatabases = new String[] { String.Format("DROP DATABASE IF EXISTS \"{0}\"", DatabaseName.ToLowerInvariant()), String.Format("CREATE DATABASE \"{0}\"", DatabaseName.ToLowerInvariant()) };
-            var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToArray();
-            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER") || q.StartsWith("COMMENT")).ToArray();
+            var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToList();
+            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER") || q.StartsWith("COMMENT")).ToList();
 
             var cf = GetConnectionFactory(DatabaseType.PostgreSQL);
             using (var c = cf(ConnectionString))
@@ -870,9 +870,9 @@ namespace Yuki.DatabaseRegenerator
             var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
 
             var GenSqls = s.CompileToMySql(DatabaseName, true);
-            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
-            var Creates = RegenSqls.TakeWhile(q => !q.StartsWith("ALTER")).ToArray();
-            var Alters = RegenSqls.SkipWhile(q => !q.StartsWith("ALTER")).ToArray();
+            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture).ToList();
+            var Creates = RegenSqls.TakeWhile(q => !q.StartsWith("ALTER")).ToList();
+            var Alters = RegenSqls.SkipWhile(q => !q.StartsWith("ALTER")).ToList();
 
             var cf = GetConnectionFactory(DatabaseType.MySQL);
             using (var c = cf(ConnectionString))
@@ -944,11 +944,11 @@ namespace Yuki.DatabaseRegenerator
             var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
 
             var GenSqls = s.CompileToFoundationDbSql(DatabaseName);
-            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture);
-            RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToArray();
+            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture).ToList();
+            RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToList();
             var CreateDatabases = new String[] { String.Format("DROP SCHEMA IF EXISTS \"{0}\" CASCADE", DatabaseName.ToLowerInvariant()), String.Format("CREATE SCHEMA \"{0}\"", DatabaseName.ToLowerInvariant()) };
-            var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToArray();
-            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER")).ToArray();
+            var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToList();
+            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER")).ToList();
 
             var cf = GetConnectionFactory(DatabaseType.FoundationDBSQL);
             using (var c = cf(ConnectionString))

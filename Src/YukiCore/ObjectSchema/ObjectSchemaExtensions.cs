@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2013.12.07.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -52,8 +52,8 @@ namespace Yuki.ObjectSchema
 
         public static Byte[] GetUnifiedBinaryRepresentation(this Schema s)
         {
-            var Types = s.GetMap().OrderBy(t => t.Key, StringComparer.Ordinal).Select(t => t.Value).ToArray();
-            var TypesWithoutDescription = Types.Select(t => MapWithoutDescription(t)).ToArray();
+            var Types = s.GetMap().OrderBy(t => t.Key, StringComparer.Ordinal).Select(t => t.Value).ToList();
+            var TypesWithoutDescription = Types.Select(t => MapWithoutDescription(t)).ToList();
 
             using (var ms = Streams.CreateMemoryStream())
             {
@@ -101,37 +101,37 @@ namespace Yuki.ObjectSchema
             if (t.OnPrimitive)
             {
                 var p = t.Primitive;
-                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Description = p.Description });
+                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Description = p.Description });
             }
             else if (t.OnAlias)
             {
                 var a = t.Alias;
-                return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Type = MapType(a.Type, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), Description = a.Description });
+                return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Type = MapType(a.Type, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), Description = a.Description });
             }
             else if (t.OnRecord)
             {
                 var r = t.Record;
-                return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Fields = r.Fields.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Description = r.Description });
+                return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Fields = r.Fields.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Description = r.Description });
             }
             else if (t.OnTaggedUnion)
             {
                 var tu = t.TaggedUnion;
-                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Alternatives = tu.Alternatives.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Description = tu.Description });
+                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Alternatives = tu.Alternatives.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Description = tu.Description });
             }
             else if (t.OnEnum)
             {
                 var e = t.Enum;
-                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = MapType(e.UnderlyingType, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), Literals = e.Literals.Select(l => MapLiteralDefKernel(l)).ToArray(), Description = e.Description });
+                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = MapType(e.UnderlyingType, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), Literals = e.Literals.Select(l => MapLiteralDefKernel(l)).ToList(), Description = e.Description });
             }
             else if (t.OnClientCommand)
             {
                 var cc = t.ClientCommand;
-                return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), InParameters = cc.InParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Description = cc.Description });
+                return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), InParameters = cc.InParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Description = cc.Description });
             }
             else if (t.OnServerCommand)
             {
                 var sc = t.ServerCommand;
-                return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray(), Description = sc.Description });
+                return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Description = sc.Description });
             }
             else
             {
@@ -151,12 +151,12 @@ namespace Yuki.ObjectSchema
             }
             else if (t.OnTuple)
             {
-                return TypeSpec.CreateTuple(new TupleDef { Types = t.Tuple.Types.Select(tt => MapType(tt, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray() });
+                return TypeSpec.CreateTuple(new TupleDef { Types = t.Tuple.Types.Select(tt => MapType(tt, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList() });
             }
             else if (t.OnGenericTypeSpec)
             {
                 var gts = t.GenericTypeSpec;
-                return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = MapType(gts.TypeSpec, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), GenericParameterValues = gts.GenericParameterValues.Select(gpv => MapType(gpv, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToArray() });
+                return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = MapType(gts.TypeSpec, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), GenericParameterValues = gts.GenericParameterValues.Select(gpv => MapType(gpv, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList() });
             }
             else
             {
@@ -244,21 +244,21 @@ namespace Yuki.ObjectSchema
 
         public static Schema GetNonversioned(this Schema s)
         {
-            var Types = s.Types.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => "") }).ToArray();
-            var TypeRefs = s.TypeRefs.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => "") }).ToArray();
+            var Types = s.Types.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => "") }).ToList();
+            var TypeRefs = s.TypeRefs.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => "") }).ToList();
             var Dict = Types.Concat(TypeRefs).ToDictionary(t => t.Original.VersionedName(), t => t.Current.VersionedName(), StringComparer.OrdinalIgnoreCase);
-            var TypePaths = s.TypePaths.Select(tp => new TypePath { Name = Dict[tp.Name], Path = tp.Path }).ToArray();
-            return new Schema { Types = Types.Select(t => t.Current).ToArray(), TypeRefs = TypeRefs.Select(t => t.Current).ToArray(), Imports = s.Imports.ToArray(), TypePaths = TypePaths };
+            var TypePaths = s.TypePaths.Select(tp => new TypePath { Name = Dict[tp.Name], Path = tp.Path }).ToList();
+            return new Schema { Types = Types.Select(t => t.Current).ToList(), TypeRefs = TypeRefs.Select(t => t.Current).ToList(), Imports = s.Imports.ToList(), TypePaths = TypePaths };
         }
 
         public static Schema GetTypesVersioned(this Schema s, String NewVersion)
         {
             var TypeRefNames = new HashSet<String>(s.TypeRefs.Select(t => t.VersionedName()), StringComparer.OrdinalIgnoreCase);
-            var Types = s.Types.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => TypeRefNames.Contains((new TypeRef { Name = Name, Version = Version }).VersionedName()) ? Version : NewVersion) }).ToArray();
-            var TypeRefs = s.TypeRefs.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => Version) }).ToArray();
+            var Types = s.Types.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => TypeRefNames.Contains((new TypeRef { Name = Name, Version = Version }).VersionedName()) ? Version : NewVersion) }).ToList();
+            var TypeRefs = s.TypeRefs.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => Version) }).ToList();
             var Dict = Types.Concat(TypeRefs).ToDictionary(t => t.Original.VersionedName(), t => t.Current.VersionedName(), StringComparer.OrdinalIgnoreCase);
-            var TypePaths = s.TypePaths.Select(tp => new TypePath { Name = Dict[tp.Name], Path = tp.Path }).ToArray();
-            return new Schema { Types = Types.Select(t => t.Current).ToArray(), TypeRefs = TypeRefs.Select(t => t.Current).ToArray(), Imports = s.Imports.ToArray(), TypePaths = TypePaths };
+            var TypePaths = s.TypePaths.Select(tp => new TypePath { Name = Dict[tp.Name], Path = tp.Path }).ToList();
+            return new Schema { Types = Types.Select(t => t.Current).ToList(), TypeRefs = TypeRefs.Select(t => t.Current).ToList(), Imports = s.Imports.ToList(), TypePaths = TypePaths };
         }
         private static TypeDef MapWithVersion(TypeDef d, Func<String, String, String> GetVersionFromNameAndVersion)
         {
@@ -332,7 +332,7 @@ namespace Yuki.ObjectSchema
             return MapType(d, MapTypeDefKernel, MapTypeSpecKernel, v => v, l => l);
         }
 
-        public static TypeDef MakeGenericType(this TypeDef d, String Name, GenericParameterValue[] GenericParameterValues)
+        public static TypeDef MakeGenericType(this TypeDef d, String Name, List<GenericParameterValue> GenericParameterValues)
         {
             var gpvMap = d.GenericParameters().Zip(GenericParameterValues, (gp, gpv) => new { gp = gp, gpv = gpv }).Where(z => z.gpv.OnTypeSpec).ToDictionary(z => z.gp.Name, z => z.gpv.TypeSpec);
             Func<TypeSpec, TypeSpec> MapTypeSpecKernel = s =>
@@ -352,22 +352,22 @@ namespace Yuki.ObjectSchema
             if (t.OnPrimitive)
             {
                 var p = t.Primitive;
-                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = Name, GenericParameters = new VariableDef[] { }, Description = p.Description });
+                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = Name, GenericParameters = new List<VariableDef> { }, Description = p.Description });
             }
             else if (t.OnAlias)
             {
                 var a = t.Alias;
-                return TypeDef.CreateAlias(new AliasDef { Name = Name, Version = a.Version, GenericParameters = new VariableDef[] { }, Type = a.Type, Description = a.Description });
+                return TypeDef.CreateAlias(new AliasDef { Name = Name, Version = a.Version, GenericParameters = new List<VariableDef> { }, Type = a.Type, Description = a.Description });
             }
             else if (t.OnRecord)
             {
                 var r = t.Record;
-                return TypeDef.CreateRecord(new RecordDef { Name = Name, Version = r.Version, GenericParameters = new VariableDef[] { }, Fields = r.Fields, Description = r.Description });
+                return TypeDef.CreateRecord(new RecordDef { Name = Name, Version = r.Version, GenericParameters = new List<VariableDef> { }, Fields = r.Fields, Description = r.Description });
             }
             else if (t.OnTaggedUnion)
             {
                 var tu = t.TaggedUnion;
-                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = Name, Version = tu.Version, GenericParameters = new VariableDef[] { }, Alternatives = tu.Alternatives, Description = tu.Description });
+                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = Name, Version = tu.Version, GenericParameters = new List<VariableDef> { }, Alternatives = tu.Alternatives, Description = tu.Description });
             }
             else if (t.OnEnum)
             {
@@ -491,10 +491,10 @@ namespace Yuki.ObjectSchema
                             TypeString = t.GenericParameterRef.Value;
                             break;
                         case TypeSpecTag.Tuple:
-                            TypeString = "Tuple<" + String.Join(", ", t.Tuple.Types.Select(tt => MarkAndGetTypeString(tt)).ToArray()) + ">";
+                            TypeString = "Tuple<" + String.Join(", ", t.Tuple.Types.Select(tt => MarkAndGetTypeString(tt))) + ">";
                             break;
                         case TypeSpecTag.GenericTypeSpec:
-                            TypeString = MarkAndGetTypeString(t.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", t.GenericTypeSpec.GenericParameterValues.Select(p => MarkAndGetTypeString(p)).ToArray()) + ">";
+                            TypeString = MarkAndGetTypeString(t.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", t.GenericTypeSpec.GenericParameterValues.Select(p => MarkAndGetTypeString(p))) + ">";
                             break;
                         default:
                             throw new InvalidOperationException();
@@ -554,7 +554,7 @@ namespace Yuki.ObjectSchema
                 var m = CreateMarker(TypeDefs, TypeSpecs);
                 var TypeDefSet = m.TypeDefSet;
                 var MarkedNames = new HashSet<String>(m.TypeDefs.Select(t => t.VersionedName()));
-                return new Schema { Types = s.Types.Where(t => TypeDefSet.Contains(t)).ToArray(), TypeRefs = s.TypeRefs.Where(t => TypeDefSet.Contains(t)).ToArray(), Imports = s.Imports, TypePaths = s.TypePaths.Where(tp => MarkedNames.Contains(tp.Name)).ToArray() };
+                return new Schema { Types = s.Types.Where(t => TypeDefSet.Contains(t)).ToList(), TypeRefs = s.TypeRefs.Where(t => TypeDefSet.Contains(t)).ToList(), Imports = s.Imports, TypePaths = s.TypePaths.Where(tp => MarkedNames.Contains(tp.Name)).ToList() };
             }
         }
         public static ISchemaClosureGenerator GetSchemaClosureGenerator(this Schema s)
@@ -568,7 +568,7 @@ namespace Yuki.ObjectSchema
 
         public static Schema Reduce(this Schema s)
         {
-            return GetSubSchema(s, s.TypeRefs.Concat(s.Types).Where(t => t.OnClientCommand || t.OnServerCommand), new TypeSpec[] { });
+            return GetSubSchema(s, s.TypeRefs.Concat(s.Types).Where(t => t.OnClientCommand || t.OnServerCommand), new List<TypeSpec> { });
         }
 
         public static void Verify(this Schema s)
@@ -629,7 +629,7 @@ namespace Yuki.ObjectSchema
             var Types = s.GetMap().ToDictionary(t => t.Key, t => t.Value, StringComparer.OrdinalIgnoreCase);
 
             var Gen = new SchemaClosureGenerator(s);
-            Gen.Mark(s.Types, new TypeSpec[] { });
+            Gen.Mark(s.Types, new List<TypeSpec> { });
         }
 
         private static void CheckDuplicatedNames<T>(IEnumerable<T> Values, Func<T, String> NameSelector, Func<T, String> ErrorMessageSelector)
@@ -782,7 +782,7 @@ namespace Yuki.ObjectSchema
             }
         }
 
-        public static VariableDef[] GenericParameters(this TypeDef t)
+        public static List<VariableDef> GenericParameters(this TypeDef t)
         {
             switch (t._Tag)
             {
@@ -795,11 +795,11 @@ namespace Yuki.ObjectSchema
                 case TypeDefTag.TaggedUnion:
                     return t.TaggedUnion.GenericParameters;
                 case TypeDefTag.Enum:
-                    return new VariableDef[] { };
+                    return new List<VariableDef> { };
                 case TypeDefTag.ClientCommand:
-                    return new VariableDef[] { };
+                    return new List<VariableDef> { };
                 case TypeDefTag.ServerCommand:
-                    return new VariableDef[] { };
+                    return new List<VariableDef> { };
                 default:
                     throw new InvalidOperationException();
             }
@@ -885,9 +885,9 @@ namespace Yuki.ObjectSchema
                 case TypeSpecTag.GenericParameterRef:
                     return EvaluateGenericParameterRef(Type.GenericParameterRef);
                 case TypeSpecTag.Tuple:
-                    return "TupleOf" + String.Join("And", Type.Tuple.Types.Select(t => Kernel(t, EvaluateGenericParameterRef)).ToArray());
+                    return "TupleOf" + String.Join("And", Type.Tuple.Types.Select(t => Kernel(t, EvaluateGenericParameterRef)));
                 case TypeSpecTag.GenericTypeSpec:
-                    return Kernel(Type.GenericTypeSpec.TypeSpec, EvaluateGenericParameterRef) + "Of" + String.Join("And", Type.GenericTypeSpec.GenericParameterValues.Select(t => TypeFriendlyName(t, EvaluateGenericParameterRef, Kernel)).ToArray());
+                    return Kernel(Type.GenericTypeSpec.TypeSpec, EvaluateGenericParameterRef) + "Of" + String.Join("And", Type.GenericTypeSpec.GenericParameterValues.Select(t => TypeFriendlyName(t, EvaluateGenericParameterRef, Kernel)));
                 default:
                     throw new InvalidOperationException();
             }

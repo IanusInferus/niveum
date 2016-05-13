@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2015.02.04.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -110,7 +110,7 @@ namespace Yuki.RelationSchema
                 {
                     if (t.OnGenericTypeSpec)
                     {
-                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.GenericParameterValues.Length == 1)
+                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.GenericParameterValues.Count == 1)
                         {
                             var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
                             if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Name == "Byte")
@@ -135,7 +135,7 @@ namespace Yuki.RelationSchema
                 {
                     if (t.OnGenericTypeSpec)
                     {
-                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.GenericParameterValues.Length == 1)
+                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.GenericParameterValues.Count == 1)
                         {
                             var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
                             if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Name == "Byte")
@@ -158,7 +158,7 @@ namespace Yuki.RelationSchema
                 {
                     if (t.OnPrimitive)
                     {
-                        if (t.Primitive.GenericParameters.Length == 0 || t.Primitive.Name.Equals("List", StringComparison.OrdinalIgnoreCase) || t.Primitive.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase))
+                        if (t.Primitive.GenericParameters.Count == 0 || t.Primitive.Name.Equals("List", StringComparison.OrdinalIgnoreCase) || t.Primitive.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase))
                         {
                             TypeRefs.Add(RS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)));
                         }
@@ -173,7 +173,7 @@ namespace Yuki.RelationSchema
                 {
                     if (t.OnPrimitive)
                     {
-                        if (t.Primitive.GenericParameters.Length == 0 || t.Primitive.Name.Equals("List", StringComparison.OrdinalIgnoreCase) || t.Primitive.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase))
+                        if (t.Primitive.GenericParameters.Count == 0 || t.Primitive.Name.Equals("List", StringComparison.OrdinalIgnoreCase) || t.Primitive.Name.Equals("Optional", StringComparison.OrdinalIgnoreCase))
                         {
                             Types.Add(RS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)));
                         }
@@ -222,7 +222,7 @@ namespace Yuki.RelationSchema
                 {
                     return RS.TypeSpec.CreateTypeRef(new RS.TypeRef { Value = t.TypeRef.Name });
                 }
-                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && t.GenericTypeSpec.GenericParameterValues.Length == 1)
+                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && t.GenericTypeSpec.GenericParameterValues.Count == 1)
                 {
                     var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
                     if (Parameter.OnTypeSpec)
@@ -234,7 +234,7 @@ namespace Yuki.RelationSchema
                         }
                     }
                 }
-                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.GenericParameterValues.Length == 1)
+                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.GenericParameterValues.Count == 1)
                 {
                     var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
                     if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Name == "Byte")
@@ -426,12 +426,12 @@ namespace Yuki.RelationSchema
                 //如果没有声明PK，则自动寻找名称为Id或者<EntityName>Id(不区分大小写)的列为[PK]，但不会将该字段记为[I]
                 if (PrimaryKey == null)
                 {
-                    var Ids = Fields.Where(f => f.Name.Equals("Id", StringComparison.Ordinal) || f.Name.Equals(r.Name + "Id", StringComparison.Ordinal)).ToArray();
-                    if (Ids.Length > 1)
+                    var Ids = Fields.Where(f => f.Name.Equals("Id", StringComparison.Ordinal) || f.Name.Equals(r.Name + "Id", StringComparison.Ordinal)).ToList();
+                    if (Ids.Count > 1)
                     {
                         throw new InvalidOperationException(String.Format("没有标注主键，且找到多个默认主键字段: {0}", r.Name));
                     }
-                    if (Ids.Length <= 0)
+                    if (Ids.Count <= 0)
                     {
                         throw new InvalidOperationException(String.Format("没有标注主键，且找不到默认主键字段: {0}", r.Name));
                     }
@@ -486,8 +486,8 @@ namespace Yuki.RelationSchema
 
                         if (f.Attribute.Navigation == null)
                         {
-                            var FieldNameIds = r.Fields.Where(rf => rf.Attribute.OnColumn && rf.Name.Equals(f.Name + "Id", StringComparison.OrdinalIgnoreCase)).ToArray();
-                            if (FieldNameIds.Length == 1)
+                            var FieldNameIds = r.Fields.Where(rf => rf.Attribute.OnColumn && rf.Name.Equals(f.Name + "Id", StringComparison.OrdinalIgnoreCase)).ToList();
+                            if (FieldNameIds.Count == 1)
                             {
                                 var FieldNameId = FieldNameIds.Single();
                                 if (TypeRecord.PrimaryKey.Columns.Count == 1)
@@ -497,8 +497,8 @@ namespace Yuki.RelationSchema
                                 }
                             }
 
-                            var TableNameIds = TypeRecord.Fields.Where(rf => rf.Attribute.OnColumn && rf.Name.Equals(r.Name + "Id", StringComparison.OrdinalIgnoreCase)).ToArray();
-                            if (TableNameIds.Length == 1)
+                            var TableNameIds = TypeRecord.Fields.Where(rf => rf.Attribute.OnColumn && rf.Name.Equals(r.Name + "Id", StringComparison.OrdinalIgnoreCase)).ToList();
+                            if (TableNameIds.Count == 1)
                             {
                                 var TableNameId = TableNameIds.Single();
                                 if (r.PrimaryKey.Columns.Count == 1)

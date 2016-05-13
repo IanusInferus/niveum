@@ -3,7 +3,7 @@
 //  File:        RelationValueSyntaxTreeBuilder.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构数据语法Tree构建器
-//  Version:     2015.06.29.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -18,6 +18,7 @@ using Firefly.Texting.TreeFormat;
 using Firefly.Texting.TreeFormat.Syntax;
 using Semantics = Firefly.Texting.TreeFormat.Semantics;
 using Yuki.RelationSchema;
+using TreeFormat = Firefly.Texting.TreeFormat;
 
 namespace Yuki.RelationValue
 {
@@ -25,21 +26,21 @@ namespace Yuki.RelationValue
     {
         public static MultiNodes BuildTable(EntityDef e, List<Semantics.Node> l)
         {
-            var Lines = l.Select(n => new TableLine { Nodes = n.Stem.Children.Select(c => TableLineNode.CreateSingleLineLiteral(new SingleLineLiteral { Text = c.Stem.Children.Single().Leaf })).ToArray(), SingleLineComment = Opt<SingleLineComment>.Empty }).ToArray();
+            var Lines = l.Select(n => new TableLine { Nodes = n.Stem.Children.Select(c => TableLineNode.CreateSingleLineLiteral(new SingleLineLiteral { Text = c.Stem.Children.Single().Leaf })).ToArray(), SingleLineComment = TreeFormat.Optional<SingleLineComment>.Empty }).ToList();
             var TableNodes = new TableNodes
             {
                 ChildHead = new SingleLineLiteral { Text = e.Name },
                 ChildFields = e.Fields.Where(f => f.Attribute.OnColumn).Select(c => new SingleLineLiteral { Text = c.Name }).ToArray(),
-                SingleLineComment = Opt<SingleLineComment>.Empty,
+                SingleLineComment = TreeFormat.Optional<SingleLineComment>.Empty,
                 Children = Lines.ToArray(),
-                EndDirective = Opt<EndDirective>.Empty
+                EndDirective = TreeFormat.Optional<EndDirective>.Empty
             };
             var Table = new MultiLineNode
             {
                 Head = new SingleLineLiteral { Text = e.CollectionName },
-                SingleLineComment = Opt<SingleLineComment>.Empty,
+                SingleLineComment = TreeFormat.Optional<SingleLineComment>.Empty,
                 Children = new MultiNodes[] { MultiNodes.CreateTableNodes(TableNodes) },
-                EndDirective = Opt<EndDirective>.Empty
+                EndDirective = TreeFormat.Optional<EndDirective>.Empty
             };
             return MultiNodes.CreateNode(Node.CreateMultiLineNode(Table));
         }

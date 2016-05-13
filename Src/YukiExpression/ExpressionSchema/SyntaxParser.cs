@@ -3,7 +3,7 @@
 //  File:        SyntaxParser.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 语法解析器
-//  Version:     2013.03.11.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -44,12 +44,12 @@ namespace Yuki.ExpressionSchema
             while (true)
             {
                 var t = tp.ReadToken(r);
-                if (t.Token.HasValue)
+                if (t.Token.OnHasValue)
                 {
-                    TokenQueue.AddLast(t.Token.Value);
+                    TokenQueue.AddLast(t.Token.HasValue);
                 }
-                if (!t.RemainingChars.HasValue) { break; }
-                r = t.RemainingChars.Value;
+                if (!t.RemainingChars.OnHasValue) { break; }
+                r = t.RemainingChars.HasValue;
             }
 
             var StateStack = new Stack<int>();
@@ -58,7 +58,7 @@ namespace Yuki.ExpressionSchema
 
             var State = 0; //初始状态为0
             StateStack.Push(State);
-            Opt<SyntaxRule> Token = Opt<SyntaxRule>.Empty;
+            Optional<SyntaxRule> Token = Optional<SyntaxRule>.Empty;
 
             Action<SyntaxRule, TextRange> Mark = (st, Range) =>
             {
@@ -94,7 +94,7 @@ namespace Yuki.ExpressionSchema
                 }
                 else
                 {
-                    var NextTokenRange = Positions[Token.Value];
+                    var NextTokenRange = Positions[Token.HasValue];
                     Range = new TextRange { Start = NextTokenRange.Start, End = NextTokenRange.Start };
                 }
                 Mark(st, Range);
@@ -157,7 +157,7 @@ namespace Yuki.ExpressionSchema
             };
             Action<SyntaxRule> Replace = f =>
             {
-                Mark(f, Positions[Token.Value]);
+                Mark(f, Positions[Token.HasValue]);
                 Token = f;
                 TokenQueue.First.Value = f;
             };
@@ -169,7 +169,7 @@ namespace Yuki.ExpressionSchema
             };
             Func<InvalidSyntaxException> MakeInvalidSyntaxRule = () =>
             {
-                var tr = Positions[Token.Value];
+                var tr = Positions[Token.HasValue];
                 var Range = new FileTextRange { Text = Text, Range = tr };
                 var t = Text.GetTextInLine(tr);
                 return new InvalidSyntaxException(String.Format("'{0}' : InvalidSyntaxRuleAtToken", t), Range);
@@ -178,11 +178,11 @@ namespace Yuki.ExpressionSchema
             while (true)
             {
                 State = StateStack.Peek();
-                Token = EndOfFile() ? Opt<SyntaxRule>.Empty : TokenQueue.First.Value;
+                Token = EndOfFile() ? Optional<SyntaxRule>.Empty : TokenQueue.First.Value;
                 if (State == 0)
                 {
-                    if (!Token.HasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.Value;
+                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.HasValue;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -241,7 +241,7 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 2)
                 {
-                    if (Token.HasValue && Token.Value.OnLeftParen)
+                    if (Token.OnHasValue && Token.HasValue.OnLeftParen)
                     {
                         Shift(6);
                     }
@@ -252,8 +252,8 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 3)
                 {
-                    if (!Token.HasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.Value;
+                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.HasValue;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -308,8 +308,8 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 4)
                 {
-                    if (!Token.HasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.Value;
+                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.HasValue;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -364,8 +364,8 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 5)
                 {
-                    if (!Token.HasValue) { return new SyntaxParserResult { Syntax = RuleStack.Single().Expr }; }
-                    var t = Token.Value;
+                    if (!Token.OnHasValue) { return new SyntaxParserResult { Syntax = RuleStack.Single().Expr }; }
+                    var t = Token.HasValue;
                     if (t.OnBinaryOperator)
                     {
                         BinaryOperatorStack.Push(t.BinaryOperator);
@@ -378,8 +378,8 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 6)
                 {
-                    if (!Token.HasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.Value;
+                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.HasValue;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -434,7 +434,7 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 7)
                 {
-                    if (Token.HasValue && Token.Value.OnLeftParen)
+                    if (Token.OnHasValue && Token.HasValue.OnLeftParen)
                     {
                         Shift(6);
                     }
@@ -445,8 +445,8 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 8)
                 {
-                    if (!Token.HasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.Value;
+                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.HasValue;
                     if (t.OnBinaryOperator)
                     {
                         BinaryOperatorStack.Push(t.BinaryOperator);
@@ -463,8 +463,8 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 9)
                 {
-                    if (!Token.HasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.Value;
+                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.HasValue;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -519,9 +519,9 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 10)
                 {
-                    if (Token.HasValue && Token.Value.OnBinaryOperator)
+                    if (Token.OnHasValue && Token.HasValue.OnBinaryOperator)
                     {
-                        BinaryOperatorStack.Push(Token.Value.BinaryOperator);
+                        BinaryOperatorStack.Push(Token.HasValue.BinaryOperator);
                         Shift(9);
                     }
                     else
@@ -531,8 +531,8 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 11)
                 {
-                    if (!Token.HasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.Value;
+                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.HasValue;
                     if (t.OnRightParen)
                     {
                         Shift(15);
@@ -544,7 +544,7 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 12)
                 {
-                    if (Token.HasValue && Token.Value.OnComma)
+                    if (Token.OnHasValue && Token.HasValue.OnComma)
                     {
                         Shift(16);
                     }
@@ -559,10 +559,10 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 14)
                 {
-                    if (Token.HasValue && Token.Value.OnBinaryOperator)
+                    if (Token.OnHasValue && Token.HasValue.OnBinaryOperator)
                     {
                         var sbo = BinaryOperatorStack.Peek();
-                        var bo = Token.Value.BinaryOperator;
+                        var bo = Token.HasValue.BinaryOperator;
                         var sp = GetPriority(sbo);
                         var p = GetPriority(bo);
                         if (p == 3 && p == sp && bo.Name != sbo.Name)
@@ -576,7 +576,7 @@ namespace Yuki.ExpressionSchema
                         }
                         else
                         {
-                            BinaryOperatorStack.Push(Token.Value.BinaryOperator);
+                            BinaryOperatorStack.Push(Token.HasValue.BinaryOperator);
                             Shift(9);
                         }
                     }
@@ -592,8 +592,8 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 16)
                 {
-                    if (!Token.HasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.Value;
+                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.HasValue;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -648,9 +648,9 @@ namespace Yuki.ExpressionSchema
                 }
                 else if (State == 17)
                 {
-                    if (Token.HasValue && Token.Value.OnBinaryOperator)
+                    if (Token.OnHasValue && Token.HasValue.OnBinaryOperator)
                     {
-                        BinaryOperatorStack.Push(Token.Value.BinaryOperator);
+                        BinaryOperatorStack.Push(Token.HasValue.BinaryOperator);
                         Shift(9);
                     }
                     else

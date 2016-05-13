@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#重试循环代码生成器
-//  Version:     2015.02.10.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,7 +21,7 @@ namespace Yuki.ObjectSchema.CSharpRetry
     {
         public static String CompileToCSharpRetry(this Schema Schema, String NamespaceName, HashSet<String> AsyncCommands)
         {
-            Writer w = new Writer(Schema, NamespaceName, AsyncCommands);
+            var w = new Writer(Schema, NamespaceName, AsyncCommands);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -56,7 +56,7 @@ namespace Yuki.ObjectSchema.CSharpRetry
                 this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.NamespaceName = NamespaceName;
                 this.AsyncCommands = AsyncCommands;
-                this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { }).Hash();
+                this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).Hash();
 
                 InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, AsyncCommands, false);
 
@@ -69,7 +69,7 @@ namespace Yuki.ObjectSchema.CSharpRetry
                 }
             }
 
-            public String[] GetSchema()
+            public List<String> GetSchema()
             {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
@@ -77,20 +77,20 @@ namespace Yuki.ObjectSchema.CSharpRetry
 
                 if (NamespaceName != "")
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
                 else
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
             }
 
-            public String[] GetHeader()
+            public List<String> GetHeader()
             {
                 return GetTemplate("Header");
             }
 
-            public String[] GetPrimitives()
+            public List<String> GetPrimitives()
             {
                 return InnerWriter.GetPrimitives();
             }
@@ -99,27 +99,27 @@ namespace Yuki.ObjectSchema.CSharpRetry
             {
                 return InnerWriter.GetTypeString(Type);
             }
-            public String[] GetXmlComment(String Description)
+            public List<String> GetXmlComment(String Description)
             {
                 return InnerWriter.GetXmlComment(Description);
             }
 
-            public String[] GetRetryWrapper(TypeDef[] Commands)
+            public List<String> GetRetryWrapper(List<TypeDef> Commands)
             {
-                return GetTemplate("RetryWrapper").Substitute("ServerCommandHooks", GetRetryWrapperServerCommandHooks(Commands.Where(c => c.OnServerCommand).ToArray())).Substitute("Commands", GetRetryWrapperCommands(Commands));
+                return GetTemplate("RetryWrapper").Substitute("ServerCommandHooks", GetRetryWrapperServerCommandHooks(Commands.Where(c => c.OnServerCommand).ToList())).Substitute("Commands", GetRetryWrapperCommands(Commands));
             }
-            public String[] GetRetryWrapperServerCommandHooks(TypeDef[] ServerCommands)
+            public List<String> GetRetryWrapperServerCommandHooks(List<TypeDef> ServerCommands)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var c in ServerCommands)
                 {
                     l.AddRange(GetTemplate("RetryWrapper_ServerCommandHook").Substitute("Name", c.TypeFriendlyName()));
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetRetryWrapperCommands(TypeDef[] Commands)
+            public List<String> GetRetryWrapperCommands(List<TypeDef> Commands)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var c in Commands)
                 {
                     if (c.OnClientCommand)
@@ -138,12 +138,12 @@ namespace Yuki.ObjectSchema.CSharpRetry
                         l.AddRange(GetTemplate("RetryWrapper_ServerCommand").Substitute("Name", c.ServerCommand.TypeFriendlyName()));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetComplexTypes()
+            public List<String> GetComplexTypes()
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
 
                 List<TypeDef> cl = new List<TypeDef>();
 
@@ -159,10 +159,10 @@ namespace Yuki.ObjectSchema.CSharpRetry
                     }
                 }
 
-                var oca = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToArray();
-                if (oca.Length > 0)
+                var ocl = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+                if (ocl.Count > 0)
                 {
-                    l.AddRange(GetRetryWrapper(oca));
+                    l.AddRange(GetRetryWrapper(ocl));
                     l.Add("");
                 }
 
@@ -171,14 +171,14 @@ namespace Yuki.ObjectSchema.CSharpRetry
                     l = l.Take(l.Count - 1).ToList();
                 }
 
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetTemplate(String Name)
+            public List<String> GetTemplate(String Name)
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static String[] GetLines(String Value)
+            public static List<String> GetLines(String Value)
             {
                 return CSharp.Common.CodeGenerator.Writer.GetLines(Value);
             }
@@ -186,17 +186,17 @@ namespace Yuki.ObjectSchema.CSharpRetry
             {
                 return CSharp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
-            private String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
                 return CSharp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
-        private static String[] Substitute(this String[] Lines, String Parameter, String Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
             return CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
-        private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
             return CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }

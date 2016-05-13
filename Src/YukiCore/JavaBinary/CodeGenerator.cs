@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java二进制代码生成器
-//  Version:     2013.12.08.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,7 +20,7 @@ namespace Yuki.ObjectSchema.JavaBinary
     {
         public static String CompileToJavaBinary(this Schema Schema, String ClassName, String PackageName)
         {
-            Writer w = new Writer(Schema, ClassName, PackageName);
+            var w = new Writer(Schema, ClassName, PackageName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -64,26 +64,26 @@ namespace Yuki.ObjectSchema.JavaBinary
                 }
             }
 
-            public String[] GetSchema()
+            public List<String> GetSchema()
             {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes();
 
-                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("ClassName", ClassName).Substitute("PackageName", PackageName == "" ? new String[] { } : new String[] { PackageName }).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("Header", Header).Substitute("ClassName", ClassName).Substitute("PackageName", PackageName == "" ? new List<String> { } : new List<String> { PackageName }).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
             }
 
-            public String[] GetHeader()
+            public List<String> GetHeader()
             {
                 return GetTemplate("Header");
             }
 
-            public String[] GetPredefinedTypes()
+            public List<String> GetPredefinedTypes()
             {
                 return InnerWriter.GetPredefinedTypes();
             }
 
-            public String[] GetPrimitives()
+            public List<String> GetPrimitives()
             {
                 return InnerWriter.GetPrimitives();
             }
@@ -92,50 +92,50 @@ namespace Yuki.ObjectSchema.JavaBinary
             {
                 return InnerWriter.GetTypeString(Type);
             }
-            public String[] GetAlias(AliasDef a)
+            public List<String> GetAlias(AliasDef a)
             {
                 return InnerWriter.GetAlias(a);
             }
-            public String[] GetTuple(String Name, TupleDef t)
+            public List<String> GetTuple(String Name, TupleDef t)
             {
                 return InnerWriter.GetTuple(Name, t);
             }
-            public String[] GetRecord(RecordDef r)
+            public List<String> GetRecord(RecordDef r)
             {
                 return InnerWriter.GetRecord(r);
             }
-            public String[] GetTaggedUnion(TaggedUnionDef tu)
+            public List<String> GetTaggedUnion(TaggedUnionDef tu)
             {
                 return InnerWriter.GetTaggedUnion(tu);
             }
-            public String[] GetEnum(EnumDef e)
+            public List<String> GetEnum(EnumDef e)
             {
                 return InnerWriter.GetEnum(e);
             }
-            public String[] GetClientCommand(ClientCommandDef c)
+            public List<String> GetClientCommand(ClientCommandDef c)
             {
                 var l = new List<String>();
-                l.AddRange(GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description }));
-                l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new VariableDef[] { }, Alternatives = c.InParameters, Description = c.Description }));
-                return l.ToArray();
+                l.AddRange(GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Description = c.Description }));
+                l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Description = c.Description }));
+                return l;
             }
-            public String[] GetServerCommand(ServerCommandDef c)
+            public List<String> GetServerCommand(ServerCommandDef c)
             {
-                return GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new VariableDef[] { }, Fields = c.OutParameters, Description = c.Description });
+                return GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Description = c.Description });
             }
-            public String[] GetXmlComment(String Description)
+            public List<String> GetXmlComment(String Description)
             {
                 return InnerWriter.GetXmlComment(Description);
             }
 
-            public String[] GetBinaryTranslator(TypeDef[] Types)
+            public List<String> GetBinaryTranslator(List<TypeDef> Types)
             {
                 return GetTemplate("BinaryTranslator").Substitute("Serializers", GetBinaryTranslatorSerializers(Types));
             }
 
-            public String[] GetBinaryTranslatorSerializers(TypeDef[] Types)
+            public List<String> GetBinaryTranslatorSerializers(List<TypeDef> Types)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
 
                 var Dict = Types.ToDictionary(t => t.VersionedName());
                 if (!Dict.ContainsKey("Unit"))
@@ -247,7 +247,7 @@ namespace Yuki.ObjectSchema.JavaBinary
                 }
 
                 var scg = Schema.GetSchemaClosureGenerator();
-                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new List<TypeSpec> { });
                 var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
                 var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
 
@@ -257,32 +257,32 @@ namespace Yuki.ObjectSchema.JavaBinary
                     l.Add("");
                 }
 
-                var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToArray();
+                var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToList();
                 TaggedUnionDef GenericOptionalType = null;
-                if (GenericOptionalTypes.Length > 0)
+                if (GenericOptionalTypes.Count > 0)
                 {
-                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new VariableDef[] { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new VariableDef[] { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
+                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
                     l.AddRange(GetTemplate("BinaryTranslator_Enum").Substitute("Name", "OptionalTag").Substitute("UnderlyingTypeFriendlyName", "Int").Substitute("UnderlyingType", "int"));
                     l.Add("");
                 }
                 foreach (var gps in GenericTypeSpecs)
                 {
-                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gps.GenericTypeSpec.GenericParameterValues.Count == 1)
                     {
                         l.AddRange(GetBinaryTranslatorOptional(gps, GenericOptionalType));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gps.GenericTypeSpec.GenericParameterValues.Count == 1)
                     {
                         l.AddRange(GetBinaryTranslatorList(gps));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gps.GenericTypeSpec.GenericParameterValues.Length == 1)
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gps.GenericTypeSpec.GenericParameterValues.Count == 1)
                     {
                         l.AddRange(GetBinaryTranslatorSet(gps));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gps.GenericTypeSpec.GenericParameterValues.Length == 2)
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gps.GenericTypeSpec.GenericParameterValues.Count == 2)
                     {
                         l.AddRange(GetBinaryTranslatorMap(gps));
                         l.Add("");
@@ -298,137 +298,137 @@ namespace Yuki.ObjectSchema.JavaBinary
                     l = l.Take(l.Count - 1).ToList();
                 }
 
-                return l.ToArray();
+                return l;
             }
-            public String[] GetBinaryTranslatorAlias(AliasDef a)
+            public List<String> GetBinaryTranslatorAlias(AliasDef a)
             {
                 return GetTemplate("BinaryTranslator_Alias").Substitute("Name", a.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", a.Type.TypeFriendlyName());
             }
-            public String[] GetBinaryTranslatorRecord(RecordDef r)
+            public List<String> GetBinaryTranslatorRecord(RecordDef r)
             {
                 return GetBinaryTranslatorRecord(r.TypeFriendlyName(), r.Fields);
             }
-            public String[] GetBinaryTranslatorRecord(String Name, VariableDef[] Fields)
+            public List<String> GetBinaryTranslatorRecord(String Name, List<VariableDef> Fields)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 l.AddRange(GetTemplate("BinaryTranslator_Record").Substitute("Name", Name).Substitute("FieldFroms", GetBinaryTranslatorFieldFroms(Fields)).Substitute("FieldTos", GetBinaryTranslatorFieldTos(Fields)));
-                return l.ToArray();
+                return l;
             }
-            public String[] GetBinaryTranslatorFieldFroms(VariableDef[] Fields)
+            public List<String> GetBinaryTranslatorFieldFroms(List<VariableDef> Fields)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var a in Fields)
                 {
                     l.AddRange(GetTemplate("BinaryTranslator_FieldFrom").Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetBinaryTranslatorFieldTos(VariableDef[] Fields)
+            public List<String> GetBinaryTranslatorFieldTos(List<VariableDef> Fields)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var a in Fields)
                 {
                     l.AddRange(GetTemplate("BinaryTranslator_FieldTo").Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetBinaryTranslatorTaggedUnion(TaggedUnionDef tu)
+            public List<String> GetBinaryTranslatorTaggedUnion(TaggedUnionDef tu)
             {
                 return GetBinaryTranslatorTaggedUnion(tu.TypeFriendlyName(), tu.Alternatives);
             }
-            public String[] GetBinaryTranslatorTaggedUnion(String Name, VariableDef[] Alternatives)
+            public List<String> GetBinaryTranslatorTaggedUnion(String Name, List<VariableDef> Alternatives)
             {
                 var TagName = Name + "Tag";
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 l.AddRange(GetTemplate("BinaryTranslator_Enum").Substitute("Name", TagName).Substitute("UnderlyingTypeFriendlyName", "Int").Substitute("UnderlyingType", "int"));
                 l.AddRange(GetTemplate("BinaryTranslator_TaggedUnion").Substitute("Name", Name).Substitute("AlternativeFroms", GetBinaryTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetBinaryTranslatorAlternativeTos(Name, Alternatives)));
-                return l.ToArray();
+                return l;
             }
-            public String[] GetBinaryTranslatorAlternativeFroms(String TaggedUnionName, VariableDef[] Alternatives)
+            public List<String> GetBinaryTranslatorAlternativeFroms(String TaggedUnionName, List<VariableDef> Alternatives)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var a in Alternatives)
                 {
                     l.AddRange(GetTemplate("BinaryTranslator_AlternativeFrom").Substitute("TaggedUnionName", TaggedUnionName).Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetBinaryTranslatorAlternativeTos(String TaggedUnionName, VariableDef[] Alternatives)
+            public List<String> GetBinaryTranslatorAlternativeTos(String TaggedUnionName, List<VariableDef> Alternatives)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 foreach (var a in Alternatives)
                 {
                     l.AddRange(GetTemplate("BinaryTranslator_AlternativeTo").Substitute("TaggedUnionName", TaggedUnionName).Substitute("Name", a.Name).Substitute("TypeFriendlyName", a.Type.TypeFriendlyName()));
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetBinaryTranslatorEnum(EnumDef e)
+            public List<String> GetBinaryTranslatorEnum(EnumDef e)
             {
                 return GetTemplate("BinaryTranslator_Enum").Substitute("Name", e.TypeFriendlyName()).Substitute("UnderlyingTypeFriendlyName", e.UnderlyingType.TypeFriendlyName()).Substitute("UnderlyingType", GetTypeString(e.UnderlyingType));
             }
-            public String[] GetBinaryTranslatorClientCommand(ClientCommandDef c)
+            public List<String> GetBinaryTranslatorClientCommand(ClientCommandDef c)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 l.AddRange(GetBinaryTranslatorRecord(c.TypeFriendlyName() + "Request", c.OutParameters));
                 l.AddRange(GetBinaryTranslatorTaggedUnion(c.TypeFriendlyName() + "Reply", c.InParameters));
-                return l.ToArray();
+                return l;
             }
-            public String[] GetBinaryTranslatorServerCommand(ServerCommandDef c)
+            public List<String> GetBinaryTranslatorServerCommand(ServerCommandDef c)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 return GetBinaryTranslatorRecord(c.TypeFriendlyName() + "Event", c.OutParameters);
             }
-            public String[] GetBinaryTranslatorTuple(TypeSpec t)
+            public List<String> GetBinaryTranslatorTuple(TypeSpec t)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 l.AddRange(GetTemplate("BinaryTranslator_Tuple").Substitute("TypeFriendlyName", t.TypeFriendlyName()).Substitute("TupleElementFroms", GetBinaryTranslatorTupleElementFroms(t.Tuple.Types)).Substitute("TupleElementTos", GetBinaryTranslatorTupleElementTos(t.Tuple.Types)));
-                return l.ToArray();
+                return l;
             }
-            public String[] GetBinaryTranslatorTupleElementFroms(TypeSpec[] Types)
+            public List<String> GetBinaryTranslatorTupleElementFroms(List<TypeSpec> Types)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 int k = 0;
                 foreach (var t in Types)
                 {
                     l.AddRange(GetTemplate("BinaryTranslator_TupleElementFrom").Substitute("NameIndex", Convert.ToString(k)).Substitute("TypeFriendlyName", t.TypeFriendlyName()));
                     k += 1;
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetBinaryTranslatorTupleElementTos(TypeSpec[] Types)
+            public List<String> GetBinaryTranslatorTupleElementTos(List<TypeSpec> Types)
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
                 int k = 0;
                 foreach (var t in Types)
                 {
                     l.AddRange(GetTemplate("BinaryTranslator_TupleElementTo").Substitute("NameIndex", Convert.ToString(k)).Substitute("TypeFriendlyName", t.TypeFriendlyName()));
                     k += 1;
                 }
-                return l.ToArray();
+                return l;
             }
-            public String[] GetBinaryTranslatorOptional(TypeSpec o, TaggedUnionDef GenericOptionalType)
+            public List<String> GetBinaryTranslatorOptional(TypeSpec o, TaggedUnionDef GenericOptionalType)
             {
                 var ElementType = o.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
-                var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToArray();
+                var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToList();
 
                 var TypeFriendlyName = o.TypeFriendlyName();
                 var TypeString = GetTypeString(o);
                 var Name = TypeString;
                 return GetTemplate("BinaryTranslator_Optional").Substitute("TypeFriendlyName", TypeFriendlyName).Substitute("TypeString", TypeString).Substitute("AlternativeFroms", GetBinaryTranslatorAlternativeFroms(Name, Alternatives)).Substitute("AlternativeTos", GetBinaryTranslatorAlternativeTos(Name, Alternatives));
             }
-            public String[] GetBinaryTranslatorList(TypeSpec l)
+            public List<String> GetBinaryTranslatorList(TypeSpec l)
             {
                 return GetTemplate("BinaryTranslator_List").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
             }
-            public String[] GetBinaryTranslatorSet(TypeSpec l)
+            public List<String> GetBinaryTranslatorSet(TypeSpec l)
             {
                 var et = l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
                 return GetTemplate("BinaryTranslator_Set").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("ElementTypeFriendlyName", et.TypeFriendlyName()).Substitute("ElementTypeString", GetTypeString(et));
             }
-            public String[] GetBinaryTranslatorMap(TypeSpec l)
+            public List<String> GetBinaryTranslatorMap(TypeSpec l)
             {
-                var gp = l.GenericTypeSpec.GenericParameterValues.ToArray();
-                if (gp.Length != 2)
+                var gp = l.GenericTypeSpec.GenericParameterValues;
+                if (gp.Count != 2)
                 {
                     throw new ArgumentException();
                 }
@@ -436,11 +436,11 @@ namespace Yuki.ObjectSchema.JavaBinary
                 return GetTemplate("BinaryTranslator_Map").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("KeyTypeFriendlyName", kt.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", gp[1].TypeSpec.TypeFriendlyName()).Substitute("KeyTypeString", GetTypeString(kt));
             }
 
-            public String[] GetComplexTypes()
+            public List<String> GetComplexTypes()
             {
-                List<String> l = new List<String>();
+                var l = new List<String>();
 
-                if (Schema.TypeRefs.Length == 0)
+                if (Schema.TypeRefs.Count == 0)
                 {
                     l.AddRange(GetPredefinedTypes());
                 }
@@ -487,7 +487,7 @@ namespace Yuki.ObjectSchema.JavaBinary
                 }
 
                 var scg = Schema.GetSchemaClosureGenerator();
-                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new TypeSpec[] { });
+                var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new List<TypeSpec> { });
                 var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
                 var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
                 foreach (var t in Tuples)
@@ -496,18 +496,18 @@ namespace Yuki.ObjectSchema.JavaBinary
                     l.Add("");
                 }
 
-                var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToArray();
-                if (GenericOptionalTypes.Length > 0)
+                var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToList();
+                if (GenericOptionalTypes.Count > 0)
                 {
-                    var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new VariableDef[] { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new VariableDef[] { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
+                    var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
                     foreach (var gts in GenericTypeSpecs)
                     {
-                        if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.GenericParameterValues.Length == 1)
+                        if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.GenericParameterValues.Count == 1)
                         {
                             var ElementType = gts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
                             var Name = "Opt" + ElementType.TypeFriendlyName();
-                            var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToArray();
-                            l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = Name, Version = "", GenericParameters = new VariableDef[] { }, Alternatives = Alternatives, Description = GenericOptionalType.Description }));
+                            var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToList();
+                            l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = Name, Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = Alternatives, Description = GenericOptionalType.Description }));
                             l.Add("");
                         }
                     }
@@ -516,7 +516,7 @@ namespace Yuki.ObjectSchema.JavaBinary
                 l.AddRange(GetTemplate("Streams"));
                 l.Add("");
 
-                l.AddRange(GetBinaryTranslator(Schema.TypeRefs.Concat(Schema.Types).ToArray()));
+                l.AddRange(GetBinaryTranslator(Schema.TypeRefs.Concat(Schema.Types).ToList()));
                 l.Add("");
 
                 if (l.Count > 0)
@@ -524,14 +524,14 @@ namespace Yuki.ObjectSchema.JavaBinary
                     l = l.Take(l.Count - 1).ToList();
                 }
 
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetTemplate(String Name)
+            public List<String> GetTemplate(String Name)
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static String[] GetLines(String Value)
+            public static List<String> GetLines(String Value)
             {
                 return Java.Common.CodeGenerator.Writer.GetLines(Value);
             }
@@ -539,17 +539,17 @@ namespace Yuki.ObjectSchema.JavaBinary
             {
                 return Java.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
-            private String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
                 return Java.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
-        private static String[] Substitute(this String[] Lines, String Parameter, String Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
             return Java.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
-        private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
             return Java.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }

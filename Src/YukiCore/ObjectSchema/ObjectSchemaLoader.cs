@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2013.03.28.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,6 +20,7 @@ using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Syntax = Firefly.Texting.TreeFormat.Syntax;
 using Semantics = Firefly.Texting.TreeFormat.Semantics;
+using TreeFormat = Firefly.Texting.TreeFormat;
 
 namespace Yuki.ObjectSchema
 {
@@ -156,7 +157,7 @@ namespace Yuki.ObjectSchema
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = Opt<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -239,7 +240,7 @@ namespace Yuki.ObjectSchema
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = Opt<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -834,7 +835,7 @@ namespace Yuki.ObjectSchema
             var TypeName = tsl.TypeName;
             var Parameters = tsl.Parameters;
 
-            if (Parameters.Length == 0)
+            if (Parameters.Count == 0)
             {
                 if (TypeName.StartsWith("'"))
                 {
@@ -850,7 +851,7 @@ namespace Yuki.ObjectSchema
 
             if (String.Equals(TypeName, "Tuple", StringComparison.OrdinalIgnoreCase))
             {
-                return TypeSpec.CreateTuple(new TupleDef { Types = Parameters.Select(p => ParseTypeSpec(p, TypeDefName, TypeMap, TypePaths)).ToArray() });
+                return TypeSpec.CreateTuple(new TupleDef { Types = Parameters.Select(p => ParseTypeSpec(p, TypeDefName, TypeMap, TypePaths)).ToList() });
             }
 
             if (!TypeMap.ContainsKey(TypeName))
@@ -866,7 +867,7 @@ namespace Yuki.ObjectSchema
 
             var t = TypeMap[TypeName];
 
-            VariableDef[] GenericParameters = null;
+            List<VariableDef> GenericParameters = null;
 
             switch (t._Tag)
             {
@@ -886,7 +887,7 @@ namespace Yuki.ObjectSchema
                     throw new Syntax.InvalidEvaluationException(String.Format("InvalidGenericParameters: {0} at {1}", TypeDefName, TypePaths[TypeDefName].Path));
             }
 
-            return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = ts, GenericParameterValues = Parameters.ZipStrict(GenericParameters, (v, p) => ParseGenericParameterValue(v, p, TypeDefName, TypeMap, TypePaths)).ToArray() });
+            return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = ts, GenericParameterValues = Parameters.ZipStrict(GenericParameters, (v, p) => ParseGenericParameterValue(v, p, TypeDefName, TypeMap, TypePaths)).ToList() });
         }
         public static GenericParameterValue ParseGenericParameterValue(String GenericParameterValueString, VariableDef GenericParameter, String TypeDefName, Dictionary<String, TypeDef> TypeMap, Dictionary<String, TypePath> TypePaths)
         {
@@ -908,7 +909,7 @@ namespace Yuki.ObjectSchema
         private class TypeSpecLiteral
         {
             public String TypeName;
-            public String[] Parameters;
+            public List<String> Parameters;
         }
         private static TypeSpecLiteral ParseTypeSpecLiteral(String TypeString, Func<String, Exception> InvalidCharExceptionGenerator)
         {
@@ -1018,7 +1019,7 @@ namespace Yuki.ObjectSchema
 
             var TypeName = new String(TypeNameChars.ToArray());
 
-            return new TypeSpecLiteral { TypeName = TypeName.Trim(' '), Parameters = ParameterStrings.Select(p => p.Trim(' ')).ToArray() };
+            return new TypeSpecLiteral { TypeName = TypeName.Trim(' '), Parameters = ParameterStrings.Select(p => p.Trim(' ')).ToList() };
         }
     }
 }

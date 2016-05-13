@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos代码生成器
-//  Version:     2015.08.18.
+//  Version:     2016.05.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,7 +22,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
     {
         public static String CompileToCSharpKrustallos(this Schema Schema, String EntityNamespaceName, String ContextNamespaceName)
         {
-            Writer w = new Writer(Schema, EntityNamespaceName, ContextNamespaceName);
+            var w = new Writer(Schema, EntityNamespaceName, ContextNamespaceName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
@@ -67,7 +67,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     KeysDict.Add(e.Name, Keys);
                 }
 
-                var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToArray();
+                var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToList();
                 QueryToSearchKey = new Dictionary<QueryDef, Key>();
                 foreach (var q in Queries)
                 {
@@ -147,7 +147,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 InnerWriter = new CSharpPlain.CodeGenerator.Writer(Schema, NamespaceName);
             }
 
-            public String[] GetSchema()
+            public List<String> GetSchema()
             {
                 var Header = GetHeader();
                 var Primitives = GetPrimitives();
@@ -155,19 +155,19 @@ namespace Yuki.RelationSchema.CSharpKrustallos
 
                 if (NamespaceName != "")
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports.ToArray()).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
                 else
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports.ToArray()).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToArray();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
             }
 
-            public String[] GetHeader()
+            public List<String> GetHeader()
             {
                 if (EntityNamespaceName == NamespaceName || EntityNamespaceName == "")
                 {
-                    return GetTemplate("Header").Substitute("EntityNamespaceName", new String[] { });
+                    return GetTemplate("Header").Substitute("EntityNamespaceName", new List<String> { });
                 }
                 else
                 {
@@ -175,7 +175,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 }
             }
 
-            public String[] GetPrimitives()
+            public List<String> GetPrimitives()
             {
                 return InnerWriter.GetPrimitives();
             }
@@ -190,7 +190,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 return new Key { Columns = NonUniqueKey.Columns.Concat(PrimaryKey.Columns.Select(c => c.Name).Except(NonUniqueKey.Columns.Select(c => c.Name)).Select(Name => new KeyColumn { Name = Name, IsDescending = false })).ToList(), IsClustered = NonUniqueKey.IsClustered };
             }
 
-            public String[] GetIndexAndSequenceDefinitions()
+            public List<String> GetIndexAndSequenceDefinitions()
             {
                 var l = new List<String>();
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
@@ -211,10 +211,10 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         l.AddRange(GetTemplate("Data_SequenceDefinition").Substitute("SequenceName", SequenceName).Substitute("SequenceType", SequenceType));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetIndexAndSequenceInitializations(QueryDef[] Queries)
+            public List<String> GetIndexAndSequenceInitializations(List<QueryDef> Queries)
             {
                 var l = new List<String>();
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
@@ -224,7 +224,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Keys = KeysDict[e.Name];
                     foreach (var k in Keys)
                     {
-                        var Index = String.Join(", ", (new String[] { e.Name }).Concat(k.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
+                        var Index = String.Join(", ", (new List<String> { e.Name }).Concat(k.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
                         var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var IndexType = "ImmutableSortedDictionary<Key, " + e.Name + ">";
                         var KeyComparer = "new KeyComparer({0})".Formats(String.Join(", ", k.Columns.Select(c => "ConcurrentComparer.AsObjectComparer(ConcurrentComparer.CreateDefault<{0}>({1}))".Formats(GetTypeString(d[c.Name].Type), c.IsDescending ? "true" : "false"))));
@@ -239,10 +239,10 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         l.AddRange(GetTemplate("Data_SequenceInitialization").Substitute("SequenceName", SequenceName).Substitute("SequenceType", SequenceType));
                     }
                 }
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetClones()
+            public List<String> GetClones()
             {
                 var l = new List<String>();
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
@@ -263,9 +263,9 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                             FieldClones.AddRange(GetTemplate("DataAccessClone_Field").Substitute("FieldName", f.Name));
                         }
                     }
-                    l.AddRange(GetTemplate("DataAccessClone").Substitute("EntityName", e.Name).Substitute("FieldClones", FieldClones.ToArray()));
+                    l.AddRange(GetTemplate("DataAccessClone").Substitute("EntityName", e.Name).Substitute("FieldClones", FieldClones));
                 }
-                return l.ToArray();
+                return l;
             }
 
             public static String GetFilters(QueryDef q, int OuterByCount, bool IsV = false)
@@ -306,7 +306,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 return String.Join("", l.ToArray());
             }
 
-            public String[] GetQuery(QueryDef q)
+            public List<String> GetQuery(QueryDef q)
             {
                 var e = TypeDict[q.EntityName].Entity;
 
@@ -322,11 +322,11 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 var ActualOrderBy = q.OrderBy.Where(c => !ByColumns.Contains(c.Name)).ToList();
                 var SearchKey = QueryToSearchKey[q];
                 var Parameters = String.Join(", ", By.Select(c => (IsV ? "v.[[{0}]]" : "[[{0}]]").Formats(c)).ToArray());
-                String[] Content;
+                List<String> Content;
                 if (q.Verb.OnSelect || q.Verb.OnLock)
                 {
                     var CanBePartitioned = KeyCanBePartitioned[SearchKey];
-                    String[] Template;
+                    List<String> Template;
                     if (q.Numeral.OnOptional)
                     {
                         Template = GetTemplate("SelectLock_Optional");
@@ -365,7 +365,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     {
                         throw new InvalidOperationException();
                     }
-                    var LockingStatement = new String[] { };
+                    var LockingStatement = new List<String> { };
                     if (q.Verb.OnLock)
                     {
                         var EntityNameAndParameterAndValues = new List<String>();
@@ -391,7 +391,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 }
                 else if (q.Verb.OnInsert)
                 {
-                    String[] Template;
+                    List<String> Template;
                     if (q.Numeral.OnOptional || q.Numeral.OnOne)
                     {
                         Template = GetTemplate("Insert_OptionalOne");
@@ -404,7 +404,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     {
                         throw new InvalidOperationException();
                     }
-                    var IdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToArray();
+                    var IdentityColumns = e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToList();
                     var IdentityStatements = new List<String>();
                     foreach (var FieldName in IdentityColumns)
                     {
@@ -429,11 +429,11 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
                         UpdateStatements.AddRange(GetTemplate("Insert_UpdateStatement").Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("PartitionIndex", PartitionIndex).Substitute("Key", Key));
                     }
-                    Content = Template.Substitute("IdentityStatements", IdentityStatements.ToArray()).Substitute("UpdateStatements", UpdateStatements.ToArray());
+                    Content = Template.Substitute("IdentityStatements", IdentityStatements).Substitute("UpdateStatements", UpdateStatements);
                 }
                 else if (q.Verb.OnUpdate || q.Verb.OnUpsert)
                 {
-                    String[] Template;
+                    List<String> Template;
                     if (q.Verb.OnUpdate)
                     {
                         if (q.Numeral.OnOptional)
@@ -487,13 +487,13 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         var IndexName = e.Name + "By" + String.Join("And", SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var PartitionIndex = KeyCanBePartitioned[SearchKey] ? "v.[[" + By.First() + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
                         var Filters = GetFilters(new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = q.Numeral, By = By, OrderBy = q.OrderBy }, SearchKey.Columns.Count, true);
-                        Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("PartitionIndex", PartitionIndex).Substitute("Filters", Filters).Substitute("DeleteStatements", DeleteStatements.ToArray()).Substitute("UpdateStatements", UpdateStatements.ToArray());
+                        Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("PartitionIndex", PartitionIndex).Substitute("Filters", Filters).Substitute("DeleteStatements", DeleteStatements).Substitute("UpdateStatements", UpdateStatements);
                     }
                 }
                 else if (q.Verb.OnDelete)
                 {
                     var CanBePartitioned = KeyCanBePartitioned[SearchKey];
-                    String[] Template;
+                    List<String> Template;
                     String Function;
                     if (q.Numeral.OnOptional)
                     {
@@ -565,12 +565,12 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         var Filters = GetFilters(q, SearchKey.Columns.Count);
                         if (CanBePartitioned && (By.Count == 0))
                         {
-                            Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements.ToArray());
+                            Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements);
                         }
                         else
                         {
                             var PartitionIndex = CanBePartitioned ? "[[" + By.First() + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
-                            Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("PartitionIndex", PartitionIndex).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements.ToArray());
+                            Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("PartitionIndex", PartitionIndex).Substitute("Filters", Filters).Substitute("UpdateStatements", UpdateStatements);
                         }
                     }
                 }
@@ -581,7 +581,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 return GetTemplate("Query").Substitute("Signature", Signature).Substitute("Content", Content);
             }
 
-            public String[] GetLoads()
+            public List<String> GetLoads()
             {
                 var l = new List<String>();
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
@@ -608,12 +608,12 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         var SequenceName = "SequenceOf" + e.Name + "Dot" + f.Name;
                         Updates.AddRange(GetTemplate("LoadSave_UpdateSequence").Substitute("SequenceName", SequenceName).Substitute("FieldName", f.Name));
                     }
-                    l.AddRange(GetTemplate("LoadSave_Load").Substitute("IndexNames", IndexNames.ToArray()).Substitute("Partitions", Partitions.ToArray()).Substitute("Updates", Updates.ToArray()).Substitute("EntityName", e.Name));
+                    l.AddRange(GetTemplate("LoadSave_Load").Substitute("IndexNames", IndexNames).Substitute("Partitions", Partitions).Substitute("Updates", Updates).Substitute("EntityName", e.Name));
                 }
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetSaves()
+            public List<String> GetSaves()
             {
                 var l = new List<String>();
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
@@ -621,14 +621,14 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var IndexName = e.Name + "By" + String.Join("And", e.PrimaryKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                     l.AddRange(GetTemplate("LoadSave_Save").Substitute("IndexName", IndexName));
                 }
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetComplexTypes()
+            public List<String> GetComplexTypes()
             {
                 var l = new List<String>();
 
-                var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToArray();
+                var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToList();
 
                 var IndexAndSequenceDefinitions = GetIndexAndSequenceDefinitions();
                 var IndexAndSequenceInitializations = GetIndexAndSequenceInitializations(Queries);
@@ -651,7 +651,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 {
                     ql = ql.Take(ql.Count - 1).ToList();
                 }
-                l.AddRange(GetTemplate("DataAccess").Substitute("Queries", ql.ToArray()));
+                l.AddRange(GetTemplate("DataAccess").Substitute("Queries", ql));
                 l.Add("");
 
                 var Loads = GetLoads();
@@ -669,14 +669,14 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     l = l.Take(l.Count - 1).ToList();
                 }
 
-                return l.ToArray();
+                return l;
             }
 
-            public String[] GetTemplate(String Name)
+            public List<String> GetTemplate(String Name)
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static String[] GetLines(String Value)
+            public static List<String> GetLines(String Value)
             {
                 return OS.CSharp.Common.CodeGenerator.Writer.GetLines(Value);
             }
@@ -684,17 +684,17 @@ namespace Yuki.RelationSchema.CSharpKrustallos
             {
                 return OS.CSharp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
             }
-            private String[] EvaluateEscapedIdentifiers(String[] Lines)
+            private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
                 return OS.CSharp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
-        private static String[] Substitute(this String[] Lines, String Parameter, String Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
             return OS.CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
-        private static String[] Substitute(this String[] Lines, String Parameter, String[] Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
             return OS.CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
