@@ -287,21 +287,21 @@ namespace Yuki.RelationSchema
 
                     var v = tpr.Token.Value;
                     if (v.OnSingleLineComment) { break; }
-                    if (v.OnLeftParentheses)
+                    if (v.OnLeftParenthesis)
                     {
                         if (cl != null)
                         {
-                            throw new Syntax.InvalidTokenException("DoubleLeftParentheses", new Syntax.FileTextRange { Text = Text, Range = Range }, "(");
+                            throw new Syntax.InvalidTokenException("DoubleLeftParenthesis", new Syntax.FileTextRange { Text = Text, Range = Range }, "(");
                         }
                         cl = new List<Semantics.Node>();
                         clStart = Range.Start;
                         clEnd = Range.End;
                     }
-                    else if (v.OnRightParentheses)
+                    else if (v.OnRightParenthesis)
                     {
                         if (cl == null)
                         {
-                            throw new Syntax.InvalidTokenException("DismatchedRightParentheses", new Syntax.FileTextRange { Text = Text, Range = Range }, ")");
+                            throw new Syntax.InvalidTokenException("DismatchedRightParenthesis", new Syntax.FileTextRange { Text = Text, Range = Range }, ")");
                         }
                         if (cl.Count == 0)
                         {
