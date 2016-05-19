@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchemaManipulator", "SchemaManipulator\SchemaManipulator.csproj", "{D9D1181E-2141-4CE7-80F5-73F3B8620247}"
 EndProject
@@ -24,6 +24,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YukiExpression", "YukiExpre
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpressionManipulator", "ExpressionManipulator\ExpressionManipulator.csproj", "{31045E21-7CE2-46D4-9855-1575E290190B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nivea", "Nivea\Nivea.csproj", "{E089D347-36D7-4012-9EE5-E57F2EC33870}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D9D1181E-2141-4CE7-80F5-73F3B8620247} = {D9D1181E-2141-4CE7-80F5-73F3B8620247}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +68,10 @@ Global
 		{31045E21-7CE2-46D4-9855-1575E290190B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31045E21-7CE2-46D4-9855-1575E290190B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31045E21-7CE2-46D4-9855-1575E290190B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E089D347-36D7-4012-9EE5-E57F2EC33870}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E089D347-36D7-4012-9EE5-E57F2EC33870}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E089D347-36D7-4012-9EE5-E57F2EC33870}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E089D347-36D7-4012-9EE5-E57F2EC33870}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
