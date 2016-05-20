@@ -1,4 +1,14 @@
-﻿using System;
+﻿//==========================================================================
+//
+//  File:        TokenParser.cs
+//  Location:    Nivea <Visual C#>
+//  Description: 词法解析器
+//  Version:     2016.05.20.
+//  Copyright(C) F.R.C.
+//
+//==========================================================================
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
