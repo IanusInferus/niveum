@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异加载器
-//  Version:     2016.05.19.
+//  Version:     2016.05.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -174,7 +174,6 @@ namespace Yuki.RelationSchemaDiff
             }
             var pr = TreeFile.ReadRaw(Reader, TreePath, ps);
             var Text = pr.Text;
-            var TokenParser = new TreeFormatTokenParser(Text, pr.Positions);
 
             Func<int, Syntax.TextLine, ISemanticsNodeMaker, Semantics.Node[]> ParseEntityMappingsAsSemanticsNodes = (IndentLevel, Line, nm) =>
             {
@@ -190,7 +189,7 @@ namespace Yuki.RelationSchemaDiff
                 var Range = LineRange;
                 while (true)
                 {
-                    var tpr = TokenParser.ReadToken(Range);
+                    var tpr = TreeFormatTokenParser.ReadToken(Text, pr.Positions, Range);
                     if (!tpr.Token.HasValue)
                     {
                         break;

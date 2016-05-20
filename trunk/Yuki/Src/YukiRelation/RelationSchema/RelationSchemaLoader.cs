@@ -3,7 +3,7 @@
 //  File:        RelationSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构加载器
-//  Version:     2016.05.13.
+//  Version:     2016.05.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -261,7 +261,6 @@ namespace Yuki.RelationSchema
             }
             var pr = TreeFile.ReadRaw(Reader, TreePath, ps);
             var Text = pr.Text;
-            var TokenParser = new TreeFormatTokenParser(Text, pr.Positions);
 
             var Verbs = new HashSet<String> { "Select", "Lock", "Insert", "Update", "Upsert", "Delete" };
             var Numerals = new HashSet<String> { "Optional", "One", "Many", "All", "Range", "Count" };
@@ -279,7 +278,7 @@ namespace Yuki.RelationSchema
                 var Range = LineRange;
                 while (true)
                 {
-                    var tpr = TokenParser.ReadToken(Range);
+                    var tpr = TreeFormatTokenParser.ReadToken(Text, pr.Positions, Range);
                     if (!tpr.Token.HasValue)
                     {
                         break;

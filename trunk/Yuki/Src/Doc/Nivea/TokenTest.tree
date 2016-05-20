@@ -1,0 +1,34 @@
+﻿$Empty       
+""           
+"$Empty"     
+"123, 123"   
+""""         
+<{} [12] {}> 
+""\"""       
+""\ ""
+123
+0xFFFFFFFF
+0b11110000
+12.5
+中文
+123/456
+123//456
+123 //456
+123 ///456
+//456
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+1,2, 3
+A(1, 2)
+"A"(1, 2)
+A (1, 2)
+"A" (1, 2)
+List<KeyValuePair<String, String>>
+1 << 2
+1 >> 2
+1 |> 2
+a => b
+Int -> Int
+$
+#
+$$
+##
