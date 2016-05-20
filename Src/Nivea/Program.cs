@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 模板语言运行时
-//  Version:     2016.05.19.
+//  Version:     2016.05.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -18,7 +18,7 @@ using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 
-namespace Yuki.SchemaManipulator
+namespace Nivea.CUI
 {
     public static class Program
     {
