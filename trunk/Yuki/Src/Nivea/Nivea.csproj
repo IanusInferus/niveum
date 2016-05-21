@@ -66,6 +66,7 @@
     <None Include="Template\Semantics\Expr.tree" />
     <None Include="Template\Semantics\Nivea.tree" />
     <None Include="Template\Semantics\Type.tree" />
+    <None Include="Template\Syntax\Syntax.tree" />
     <None Include="Template\Syntax\Token.tree" />
   </ItemGroup>
   <ItemGroup />
