@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -151,12 +151,12 @@ namespace Yuki.ObjectSchema
             }
             else if (t.OnTuple)
             {
-                return TypeSpec.CreateTuple(new TupleDef { Types = t.Tuple.Types.Select(tt => MapType(tt, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList() });
+                return TypeSpec.CreateTuple(t.Tuple.Select(tt => MapType(tt, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList());
             }
             else if (t.OnGenericTypeSpec)
             {
                 var gts = t.GenericTypeSpec;
-                return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = MapType(gts.TypeSpec, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), GenericParameterValues = gts.GenericParameterValues.Select(gpv => MapType(gpv, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList() });
+                return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = MapType(gts.TypeSpec, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), ParameterValues = gts.ParameterValues.Select(gpv => MapType(gpv, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList() });
             }
             else
             {
@@ -167,21 +167,6 @@ namespace Yuki.ObjectSchema
         {
             var vv = MapVariableKernel(v);
             return new VariableDef { Name = vv.Name, Type = MapType(vv.Type, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), Description = vv.Description };
-        }
-        private static GenericParameterValue MapType(GenericParameterValue gpv, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel, Func<VariableDef, VariableDef> MapVariableKernel, Func<LiteralDef, LiteralDef> MapLiteralDefKernel)
-        {
-            if (gpv.OnLiteral)
-            {
-                return gpv;
-            }
-            else if (gpv.OnTypeSpec)
-            {
-                return GenericParameterValue.CreateTypeSpec(MapType(gpv.TypeSpec, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel));
-            }
-            else
-            {
-                throw new InvalidOperationException();
-            }
         }
 
         private static TypeDef MapWithoutDescription(TypeDef d)
@@ -332,14 +317,14 @@ namespace Yuki.ObjectSchema
             return MapType(d, MapTypeDefKernel, MapTypeSpecKernel, v => v, l => l);
         }
 
-        public static TypeDef MakeGenericType(this TypeDef d, String Name, List<GenericParameterValue> GenericParameterValues)
+        public static TypeDef MakeGenericType(this TypeDef d, String Name, List<TypeSpec> ParameterValues)
         {
-            var gpvMap = d.GenericParameters().Zip(GenericParameterValues, (gp, gpv) => new { gp = gp, gpv = gpv }).Where(z => z.gpv.OnTypeSpec).ToDictionary(z => z.gp.Name, z => z.gpv.TypeSpec);
+            var gpvMap = d.GenericParameters().Zip(ParameterValues, (gp, gpv) => new { gp = gp, gpv = gpv }).ToDictionary(z => z.gp.Name, z => z.gpv);
             Func<TypeSpec, TypeSpec> MapTypeSpecKernel = s =>
             {
                 if (s.OnGenericParameterRef)
                 {
-                    var ParameterName = s.GenericParameterRef.Value;
+                    var ParameterName = s.GenericParameterRef;
                     if (gpvMap.ContainsKey(ParameterName))
                     {
                         return gpvMap[ParameterName];
@@ -488,13 +473,13 @@ namespace Yuki.ObjectSchema
                             TypeString = VersionedName;
                             break;
                         case TypeSpecTag.GenericParameterRef:
-                            TypeString = t.GenericParameterRef.Value;
+                            TypeString = t.GenericParameterRef;
                             break;
                         case TypeSpecTag.Tuple:
-                            TypeString = "Tuple<" + String.Join(", ", t.Tuple.Types.Select(tt => MarkAndGetTypeString(tt))) + ">";
+                            TypeString = "Tuple<" + String.Join(", ", t.Tuple.Select(tt => MarkAndGetTypeString(tt))) + ">";
                             break;
                         case TypeSpecTag.GenericTypeSpec:
-                            TypeString = MarkAndGetTypeString(t.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", t.GenericTypeSpec.GenericParameterValues.Select(p => MarkAndGetTypeString(p))) + ">";
+                            TypeString = MarkAndGetTypeString(t.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", t.GenericTypeSpec.ParameterValues.Select(p => MarkAndGetTypeString(p))) + ">";
                             break;
                         default:
                             throw new InvalidOperationException();
@@ -505,21 +490,6 @@ namespace Yuki.ObjectSchema
                         TypeSpecSet.Add(TypeString);
                     }
                     return TypeString;
-                }
-                public String MarkAndGetTypeString(GenericParameterValue Value)
-                {
-                    if (Value.OnLiteral)
-                    {
-                        return Value.Literal.Replace(@"\", @"\\").Replace("<", @"\<").Replace(">", @"\>").Replace(",", @"\,");
-                    }
-                    else if (Value.OnTypeSpec)
-                    {
-                        return MarkAndGetTypeString(Value.TypeSpec);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException();
-                    }
                 }
             }
 
@@ -870,13 +840,13 @@ namespace Yuki.ObjectSchema
         }
         public static String TypeFriendlyName(this TypeSpec t)
         {
-            return TypeFriendlyName(t, gpr => gpr.Value);
+            return TypeFriendlyName(t, gpr => gpr);
         }
-        public static String TypeFriendlyName(this TypeSpec t, Func<GenericParameterRef, String> EvaluateGenericParameterRef)
+        public static String TypeFriendlyName(this TypeSpec t, Func<String, String> EvaluateGenericParameterRef)
         {
             return TypeFriendlyName(t, EvaluateGenericParameterRef, TypeFriendlyName);
         }
-        public static String TypeFriendlyName(this TypeSpec Type, Func<GenericParameterRef, String> EvaluateGenericParameterRef, Func<TypeSpec, Func<GenericParameterRef, String>, String> Kernel)
+        public static String TypeFriendlyName(this TypeSpec Type, Func<String, String> EvaluateGenericParameterRef, Func<TypeSpec, Func<String, String>, String> Kernel)
         {
             switch (Type._Tag)
             {
@@ -885,23 +855,9 @@ namespace Yuki.ObjectSchema
                 case TypeSpecTag.GenericParameterRef:
                     return EvaluateGenericParameterRef(Type.GenericParameterRef);
                 case TypeSpecTag.Tuple:
-                    return "TupleOf" + String.Join("And", Type.Tuple.Types.Select(t => Kernel(t, EvaluateGenericParameterRef)));
+                    return "TupleOf" + String.Join("And", Type.Tuple.Select(t => Kernel(t, EvaluateGenericParameterRef)));
                 case TypeSpecTag.GenericTypeSpec:
-                    return Kernel(Type.GenericTypeSpec.TypeSpec, EvaluateGenericParameterRef) + "Of" + String.Join("And", Type.GenericTypeSpec.GenericParameterValues.Select(t => TypeFriendlyName(t, EvaluateGenericParameterRef, Kernel)));
-                default:
-                    throw new InvalidOperationException();
-            }
-        }
-        private static Regex rNonRegularChars = new Regex(@"[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F]");
-        public static String TypeFriendlyName(this GenericParameterValue Value, Func<GenericParameterRef, String> EvaluateGenericParameterRef, Func<TypeSpec, Func<GenericParameterRef, String>, String> Kernel)
-        {
-            switch (Value._Tag)
-            {
-                case GenericParameterValueTag.Literal:
-                    var l = Value.Literal;
-                    return rNonRegularChars.Replace(l, "_");
-                case GenericParameterValueTag.TypeSpec:
-                    return Kernel(Value.TypeSpec, EvaluateGenericParameterRef);
+                    return Kernel(Type.GenericTypeSpec.TypeSpec, EvaluateGenericParameterRef) + "Of" + String.Join("And", Type.GenericTypeSpec.ParameterValues.Select(t => TypeFriendlyName(t, EvaluateGenericParameterRef, Kernel)));
                 default:
                     throw new InvalidOperationException();
             }

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -196,7 +196,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
                         }
                         return "std::shared_ptr<class " + Type.TypeRef.TypeFriendlyName() + ">";
                     case TypeSpecTag.GenericParameterRef:
-                        return Type.GenericParameterRef.Value;
+                        return Type.GenericParameterRef;
                     case TypeSpecTag.Tuple:
                         {
                             if (ForceAsValue)
@@ -207,14 +207,14 @@ namespace Yuki.ObjectSchema.Cpp.Common
                         }
                     case TypeSpecTag.GenericTypeSpec:
                         {
-                            if (Type.GenericTypeSpec.GenericParameterValues.Count() > 0 && Type.GenericTypeSpec.GenericParameterValues.All(gpv => gpv.OnTypeSpec))
+                            if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
                             {
-                                var TypeString = GetTypeString(Type.GenericTypeSpec.TypeSpec, true) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p.TypeSpec))) + ">";
+                                var TypeString = GetTypeString(Type.GenericTypeSpec.TypeSpec, true) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
                                 if (ForceAsValue)
                                 {
                                     return TypeString;
                                 }
-                                if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && Type.GenericTypeSpec.GenericParameterValues.Count == 1)
+                                if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && Type.GenericTypeSpec.ParameterValues.Count == 1)
                                 {
                                     return TypeString;
                                 }
@@ -222,11 +222,6 @@ namespace Yuki.ObjectSchema.Cpp.Common
                             }
                             else
                             {
-                                foreach (var t in Type.GenericTypeSpec.GenericParameterValues.Where(gpv => gpv.OnTypeSpec))
-                                {
-                                    GetTypeString(t.TypeSpec);
-                                }
-
                                 if (ForceAsValue)
                                 {
                                     return Type.TypeFriendlyName();
@@ -308,9 +303,9 @@ namespace Yuki.ObjectSchema.Cpp.Common
                 }
                 return l;
             }
-            public List<String> GetTuple(String Name, TupleDef t)
+            public List<String> GetTuple(String Name, List<TypeSpec> Types)
             {
-                var TupleElements = GetTupleElements(t.Types);
+                var TupleElements = GetTupleElements(Types);
                 return GetTemplate("Tuple").Substitute("Name", Name).Substitute("TupleElements", TupleElements);
             }
             public List<String> GetField(VariableDef f)

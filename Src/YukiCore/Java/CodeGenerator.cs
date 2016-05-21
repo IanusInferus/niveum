@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -154,28 +154,23 @@ namespace Yuki.ObjectSchema.Java.Common
                         }
                         return Type.TypeRef.TypeFriendlyName();
                     case TypeSpecTag.GenericParameterRef:
-                        return Type.GenericParameterRef.Value;
+                        return Type.GenericParameterRef;
                     case TypeSpecTag.Tuple:
                         {
                             return Type.TypeFriendlyName();
                         }
                     case TypeSpecTag.GenericTypeSpec:
                         {
-                            if (Type.GenericTypeSpec.GenericParameterValues.Count() == 1 && Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
+                            if (Type.GenericTypeSpec.ParameterValues.Count() == 1 && Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
                             {
-                                return "Opt" + Type.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName();
+                                return "Opt" + Type.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
                             }
-                            if (Type.GenericTypeSpec.GenericParameterValues.Count() > 0 && Type.GenericTypeSpec.GenericParameterValues.All(gpv => gpv.OnTypeSpec))
+                            if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
                             {
-                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => MapToReferenceType(GetTypeString(p.TypeSpec)))) + ">";
+                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => MapToReferenceType(GetTypeString(p)))) + ">";
                             }
                             else
                             {
-                                foreach (var t in Type.GenericTypeSpec.GenericParameterValues.Where(gpv => gpv.OnTypeSpec))
-                                {
-                                    GetTypeString(t.TypeSpec);
-                                }
-
                                 return Type.TypeFriendlyName();
                             }
                         }
@@ -236,9 +231,9 @@ namespace Yuki.ObjectSchema.Java.Common
                 }
                 return l;
             }
-            public List<String> GetTuple(String Name, TupleDef t)
+            public List<String> GetTuple(String Name, List<TypeSpec> Types)
             {
-                var TupleElements = GetTupleElements(t.Types);
+                var TupleElements = GetTupleElements(Types);
                 return GetTemplate("Tuple").Substitute("Name", Name).Substitute("TupleElements", TupleElements);
             }
             public List<String> GetField(VariableDef f)
@@ -449,12 +444,12 @@ namespace Yuki.ObjectSchema.Java.Common
                 var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToList();
                 if (GenericOptionalTypes.Count > 0)
                 {
-                    var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
+                    var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Description = "" } }, Description = "" };
                     foreach (var gts in GenericTypeSpecs)
                     {
-                        if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.GenericParameterValues.Count == 1)
+                        if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                         {
-                            var ElementType = gts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                            var ElementType = gts.GenericTypeSpec.ParameterValues.Single();
                             var Name = "Opt" + ElementType.TypeFriendlyName();
                             var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToList();
                             l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = Name, Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = Alternatives, Description = GenericOptionalType.Description }));

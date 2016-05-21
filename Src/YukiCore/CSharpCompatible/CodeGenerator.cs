@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -281,19 +281,19 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     else if (ts.OnGenericTypeSpec)
                     {
                         var gts = ts.GenericTypeSpec;
-                        if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Optional" && gts.GenericParameterValues.Count == 1 && gts.GenericParameterValues.Single().OnTypeSpec)
+                        if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Optional" && gts.ParameterValues.Count == 1)
                         {
                             FillTranslatorOptionalFrom(ts, l);
                         }
-                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "List" && gts.GenericParameterValues.Count == 1 && gts.GenericParameterValues.Single().OnTypeSpec)
+                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "List" && gts.ParameterValues.Count == 1)
                         {
                             FillTranslatorListFrom(ts, l);
                         }
-                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Set" && gts.GenericParameterValues.Count == 1 && gts.GenericParameterValues.Single().OnTypeSpec)
+                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Set" && gts.ParameterValues.Count == 1)
                         {
                             FillTranslatorSetFrom(ts, l);
                         }
-                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Map" && gts.GenericParameterValues.Count == 2 && gts.GenericParameterValues.All(gpv => gpv.OnTypeSpec))
+                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Map" && gts.ParameterValues.Count == 2)
                         {
                             FillTranslatorMapFrom(ts, l);
                         }
@@ -315,19 +315,19 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     else if (ts.OnGenericTypeSpec)
                     {
                         var gts = ts.GenericTypeSpec;
-                        if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Optional" && gts.GenericParameterValues.Count == 1 && gts.GenericParameterValues.Single().OnTypeSpec)
+                        if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Optional" && gts.ParameterValues.Count == 1)
                         {
                             FillTranslatorOptionalTo(ts, l);
                         }
-                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "List" && gts.GenericParameterValues.Count == 1 && gts.GenericParameterValues.Single().OnTypeSpec)
+                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "List" && gts.ParameterValues.Count == 1)
                         {
                             FillTranslatorListTo(ts, l);
                         }
-                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Set" && gts.GenericParameterValues.Count == 1 && gts.GenericParameterValues.Single().OnTypeSpec)
+                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Set" && gts.ParameterValues.Count == 1)
                         {
                             FillTranslatorSetTo(ts, l);
                         }
-                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Map" && gts.GenericParameterValues.Count == 2 && gts.GenericParameterValues.All(gpv => gpv.OnTypeSpec))
+                        else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Map" && gts.ParameterValues.Count == 2)
                         {
                             FillTranslatorMapTo(ts, l);
                         }
@@ -405,15 +405,15 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 }
                 else if (Left.OnGenericParameterRef && Right.OnGenericParameterRef)
                 {
-                    if (Left.GenericParameterRef.Value.Equals(Right.GenericParameterRef.Value, StringComparison.OrdinalIgnoreCase))
+                    if (Left.GenericParameterRef.Equals(Right.GenericParameterRef, StringComparison.OrdinalIgnoreCase))
                     {
                         return true;
                     }
                 }
                 else if (Left.OnTuple && Right.OnTuple)
                 {
-                    var LeftTypes = Left.Tuple.Types;
-                    var RightTypes = Right.Tuple.Types;
+                    var LeftTypes = Left.Tuple;
+                    var RightTypes = Right.Tuple;
                     if (LeftTypes.Count != RightTypes.Count)
                     {
                         return false;
@@ -428,11 +428,11 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     {
                         return false;
                     }
-                    if (LeftSpec.GenericParameterValues.Count != RightSpec.GenericParameterValues.Count)
+                    if (LeftSpec.ParameterValues.Count != RightSpec.ParameterValues.Count)
                     {
                         return false;
                     }
-                    return LeftSpec.GenericParameterValues.Zip(RightSpec.GenericParameterValues, (l, r) => (l.OnLiteral && r.OnLiteral && l.Literal.Equals(r.Literal, StringComparison.OrdinalIgnoreCase)) || (l.OnTypeSpec && r.OnTypeSpec && IsSameType(l.TypeSpec, r.TypeSpec, IgnoreVersion)) || false).All(b => b);
+                    return LeftSpec.ParameterValues.Zip(RightSpec.ParameterValues, (l, r) => IsSameType(l, r, IgnoreVersion)).All(b => b);
                 }
                 return false;
             }
@@ -449,12 +449,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 }
                 else if (ts.OnTuple)
                 {
-                    return ts.Tuple.Types.All(t => IsExistentType(t));
+                    return ts.Tuple.All(t => IsExistentType(t));
                 }
                 else if (ts.OnGenericTypeSpec)
                 {
                     var gts = ts.GenericTypeSpec;
-                    return IsExistentType(gts.TypeSpec) && gts.GenericParameterValues.All(gpv => !gpv.OnTypeSpec || IsExistentType(gpv.TypeSpec));
+                    return IsExistentType(gts.TypeSpec) && gts.ParameterValues.All(gpv => IsExistentType(gpv));
                 }
                 else
                 {
@@ -861,8 +861,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             {
                 var nts = ts.Nonversioned();
                 var Name = nts.TypeFriendlyName();
-                var Fields = ts.Tuple.Types.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
-                var HeadFields = nts.Tuple.Types.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
+                var Fields = ts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
+                var HeadFields = nts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
                 var VersionedName = ts.TypeFriendlyName();
                 FillTranslatorRecordFrom(Name, VersionedName, Fields, HeadFields, l, false);
             }
@@ -870,8 +870,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             {
                 var nts = ts.Nonversioned();
                 var Name = nts.TypeFriendlyName();
-                var Fields = ts.Tuple.Types.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
-                var HeadFields = nts.Tuple.Types.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
+                var Fields = ts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
+                var HeadFields = nts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
                 var VersionedName = ts.TypeFriendlyName();
                 FillTranslatorRecordTo(Name, VersionedName, Fields, HeadFields, l, false);
             }
@@ -881,8 +881,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedName = ts.TypeFriendlyName();
                 var TypeString = GetTypeString(nts);
                 var VersionedTypeString = GetTypeString(ts);
-                var ElementTypeSpec = ts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
-                var HeadElementTypeSpec = nts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
+                var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
                 var Alternatives = new List<VariableDef>
                 {
                     new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" },
@@ -908,8 +908,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedName = ts.TypeFriendlyName();
                 var TypeString = GetTypeString(nts);
                 var VersionedTypeString = GetTypeString(ts);
-                var ElementTypeSpec = ts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
-                var HeadElementTypeSpec = nts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
+                var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
                 var Alternatives = new List<VariableDef>
                 {
                     new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" },
@@ -935,8 +935,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedTypeFriendlyName = ts.TypeFriendlyName();
                 var TypeString = GetTypeString(nts);
                 var VersionedTypeString = GetTypeString(ts);
-                var ElementTypeSpec = ts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
-                var HeadElementTypeSpec = nts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
+                var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
                 var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
                 var Result = GetTemplate("Translator_ListFrom").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName);
                 if (!IsExistentType(HeadElementTypeSpec))
@@ -951,8 +951,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedTypeFriendlyName = ts.TypeFriendlyName();
                 var TypeString = GetTypeString(nts);
                 var VersionedTypeString = GetTypeString(ts);
-                var ElementTypeSpec = ts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
-                var HeadElementTypeSpec = nts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
+                var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
                 var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
                 var Result = GetTemplate("Translator_ListTo").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName);
                 if (!IsExistentType(HeadElementTypeSpec))
@@ -967,8 +967,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedTypeFriendlyName = ts.TypeFriendlyName();
                 var TypeString = GetTypeString(nts);
                 var VersionedTypeString = GetTypeString(ts);
-                var ElementTypeSpec = ts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
-                var HeadElementTypeSpec = nts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
+                var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
                 var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
                 var Result = GetTemplate("Translator_SetFrom").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName);
                 if (!IsExistentType(HeadElementTypeSpec))
@@ -983,8 +983,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedTypeFriendlyName = ts.TypeFriendlyName();
                 var TypeString = GetTypeString(nts);
                 var VersionedTypeString = GetTypeString(ts);
-                var ElementTypeSpec = ts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
-                var HeadElementTypeSpec = nts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
+                var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
                 var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
                 var Result = GetTemplate("Translator_SetTo").Substitute("VersionedTypeFriendlyName", VersionedTypeFriendlyName).Substitute("TypeString", TypeString).Substitute("VersionedTypeString", VersionedTypeString).Substitute("VersionedElementTypeFriendlyName", VersionedElementTypeFriendlyName);
                 if (!IsExistentType(HeadElementTypeSpec))
@@ -999,10 +999,10 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedTypeFriendlyName = ts.TypeFriendlyName();
                 var TypeString = GetTypeString(nts);
                 var VersionedTypeString = GetTypeString(ts);
-                var KeyTypeSpec = ts.GenericTypeSpec.GenericParameterValues[0].TypeSpec;
-                var ValueTypeSpec = ts.GenericTypeSpec.GenericParameterValues[1].TypeSpec;
-                var HeadKeyTypeSpec = nts.GenericTypeSpec.GenericParameterValues[0].TypeSpec;
-                var HeadValueTypeSpec = nts.GenericTypeSpec.GenericParameterValues[1].TypeSpec;
+                var KeyTypeSpec = ts.GenericTypeSpec.ParameterValues[0];
+                var ValueTypeSpec = ts.GenericTypeSpec.ParameterValues[1];
+                var HeadKeyTypeSpec = nts.GenericTypeSpec.ParameterValues[0];
+                var HeadValueTypeSpec = nts.GenericTypeSpec.ParameterValues[1];
                 List<String> KeyFrom;
                 List<String> ValueFrom;
                 if (IsSameType(KeyTypeSpec, HeadKeyTypeSpec, false))
@@ -1034,10 +1034,10 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedTypeFriendlyName = ts.TypeFriendlyName();
                 var TypeString = GetTypeString(nts);
                 var VersionedTypeString = GetTypeString(ts);
-                var KeyTypeSpec = ts.GenericTypeSpec.GenericParameterValues[0].TypeSpec;
-                var ValueTypeSpec = ts.GenericTypeSpec.GenericParameterValues[1].TypeSpec;
-                var HeadKeyTypeSpec = nts.GenericTypeSpec.GenericParameterValues[0].TypeSpec;
-                var HeadValueTypeSpec = nts.GenericTypeSpec.GenericParameterValues[1].TypeSpec;
+                var KeyTypeSpec = ts.GenericTypeSpec.ParameterValues[0];
+                var ValueTypeSpec = ts.GenericTypeSpec.ParameterValues[1];
+                var HeadKeyTypeSpec = nts.GenericTypeSpec.ParameterValues[0];
+                var HeadValueTypeSpec = nts.GenericTypeSpec.ParameterValues[1];
                 List<String> KeyTo;
                 List<String> ValueTo;
                 if (IsSameType(KeyTypeSpec, HeadKeyTypeSpec, false))
@@ -1096,27 +1096,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 case TypeSpecTag.GenericParameterRef:
                     return t;
                 case TypeSpecTag.Tuple:
-                    return TypeSpec.CreateTuple(new TupleDef { Types = t.Tuple.Types.Select(tt => Nonversioned(tt)).ToList() });
+                    return TypeSpec.CreateTuple(t.Tuple.Select(tt => Nonversioned(tt)).ToList());
                 case TypeSpecTag.GenericTypeSpec:
                     var gts = t.GenericTypeSpec;
-                    return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = Nonversioned(gts.TypeSpec), GenericParameterValues = gts.GenericParameterValues.Select(gpv => Nonversioned(gpv)).ToList() });
+                    return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = Nonversioned(gts.TypeSpec), ParameterValues = gts.ParameterValues.Select(gpv => Nonversioned(gpv)).ToList() });
                 default:
                     throw new InvalidOperationException();
-            }
-        }
-        private static GenericParameterValue Nonversioned(GenericParameterValue gpv)
-        {
-            if (gpv.OnLiteral)
-            {
-                return gpv;
-            }
-            else if (gpv.OnTypeSpec)
-            {
-                return GenericParameterValue.CreateTypeSpec(Nonversioned(gpv.TypeSpec));
-            }
-            else
-            {
-                throw new InvalidOperationException();
             }
         }
 

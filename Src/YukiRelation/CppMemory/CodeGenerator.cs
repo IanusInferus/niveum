@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -81,9 +81,9 @@ namespace Yuki.RelationSchema.CppMemory
                             new OS.GenericTypeSpec
                             {
                                 TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "List", Version = "" }),
-                                GenericParameterValues = new List<OS.GenericParameterValue>
+                                ParameterValues = new List<OS.TypeSpec>
                                 {
-                                    OS.GenericParameterValue.CreateTypeSpec(OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = e.Name , Version = ""}))
+                                    OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = e.Name , Version = ""})
                                 }
                             }
                          )

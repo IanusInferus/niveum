@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Memory代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -226,13 +226,13 @@ namespace Yuki.RelationSchema.CSharpMemory
                             }
                             var RemainIndexType = GetIndexType(e, k.Skip(n + 1).ToList());
                             var NextColumnConstructorParameters = "";
-                            if (n + 1 < k.Count) { NextColumnConstructorParameters = rd[k[n + 1]].Type.OnOptional ? "new OptionalComparer<" + GetEscapedIdentifier(GetTypeString(d[k[n + 1]].Type.GenericTypeSpec.GenericParameterValues.Single().TypeSpec)) + ">()" : ""; }
+                            if (n + 1 < k.Count) { NextColumnConstructorParameters = rd[k[n + 1]].Type.OnOptional ? "new OptionalComparer<" + GetEscapedIdentifier(GetTypeString(d[k[n + 1]].Type.GenericTypeSpec.ParameterValues.Single())) + ">()" : ""; }
                             var Column = k[n];
                             var ByIndex = "By" + String.Join("And", k.Take(n + 1).ToArray());
                             Fetches.AddRange(GetTemplate("DataAccessBase_Generate_Fetch").Substitute("ParentByIndex", ParentByIndex).Substitute("RemainIndexType", RemainIndexType).Substitute("NextColumnConstructorParameters", NextColumnConstructorParameters).Substitute("Column", Column).Substitute("ByIndex", ByIndex));
                         }
                         var Add = GetTemplate("DataAccessBase_Generate_Add").Substitute("ByIndex", "By" + String.Join("And", k));
-                        var FirstColumnConstructorParameters = rd[k[0]].Type.OnOptional ? "new OptionalComparer<" + GetEscapedIdentifier(GetTypeString(d[k[0]].Type.GenericTypeSpec.GenericParameterValues.Single().TypeSpec)) + ">()" : "";
+                        var FirstColumnConstructorParameters = rd[k[0]].Type.OnOptional ? "new OptionalComparer<" + GetEscapedIdentifier(GetTypeString(d[k[0]].Type.GenericTypeSpec.ParameterValues.Single())) + ">()" : "";
                         l.AddRange(GetTemplate("DataAccessBase_Generate").Substitute("EntityName", e.Name).Substitute("IndexName", IndexName).Substitute("IndexType", IndexType).Substitute("FirstColumnConstructorParameters", FirstColumnConstructorParameters).Substitute("Fetches", Fetches).Substitute("Add", Add));
                     }
                 }
