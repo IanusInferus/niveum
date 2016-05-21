@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 词法解析器
-//  Version:     2016.05.20.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -60,7 +60,7 @@ namespace Nivea.Template.Syntax
             return l.ToArray();
         }
 
-        public static TokenParserResult ReadToken(Text Text, Dictionary<Object, TextRange> Positions, TextRange RangeInLine)
+        public static TokenParserResult ReadToken(Text Text, Dictionary<Object, TextRange> Positions, TextRange RangeInLine, Boolean IsLeadingToken)
         {
             var s = Text.GetTextInLine(RangeInLine);
             var Index = 0;
@@ -78,6 +78,7 @@ namespace Nivea.Template.Syntax
 
             var State = 0;
             var Stack = new Stack<ParenthesisType>();
+            var IsAfterSpace = false;
 
             var StartIndex = 0;
             Func<String, InvalidTokenException> MakeCurrentErrorTokenException = Message => new InvalidTokenException(Message, new FileTextRange { Text = Text, Range = MakeTokenRange(StartIndex, Index) }, Text.GetTextInLine(MakeTokenRange(StartIndex, Index)));
@@ -88,7 +89,7 @@ namespace Nivea.Template.Syntax
             Func<TokenType, TokenParserResult> MakeResult = tt =>
             {
                 var Range = MakeTokenRange(StartIndex, Index);
-                var t = new Token { OriginalText = Text.GetTextInLine(Range), Type = tt };
+                var t = new Token { OriginalText = Text.GetTextInLine(Range), Type = tt, IsLeadingToken = IsLeadingToken, IsAfterSpace = IsAfterSpace };
                 Positions.Add(t, Range);
                 var RemainingChars = EndOfLine() ? Optional<TextRange>.Empty : MakeRemainingChars();
                 return new TokenParserResult { Token = t, RemainingChars = RemainingChars };
@@ -110,7 +111,7 @@ namespace Nivea.Template.Syntax
                 {
                     tt = TokenType.CreateDirect(OriginalText);
                 }
-                var t = new Token { OriginalText = OriginalText, Type = tt };
+                var t = new Token { OriginalText = OriginalText, Type = tt, IsLeadingToken = IsLeadingToken, IsAfterSpace = IsAfterSpace };
                 Positions.Add(t, Range);
                 var RemainingChars = EndOfLine() ? Optional<TextRange>.Empty : MakeRemainingChars();
                 return new TokenParserResult { Token = t, RemainingChars = RemainingChars };
@@ -130,6 +131,7 @@ namespace Nivea.Template.Syntax
                     var c = Peek1();
                     if (c == ' ')
                     {
+                        IsAfterSpace = true;
                         Proceed();
                     }
                     else if ("\f\t\v;`".Contains(c))
