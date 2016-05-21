@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -110,10 +110,10 @@ namespace Yuki.RelationSchema
                 {
                     if (t.OnGenericTypeSpec)
                     {
-                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.GenericParameterValues.Count == 1)
+                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.ParameterValues.Count == 1)
                         {
-                            var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
-                            if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Name == "Byte")
+                            var Parameter = t.GenericTypeSpec.ParameterValues.Single();
+                            if (Parameter.OnTypeRef && Parameter.TypeRef.Name == "Byte")
                             {
                                 if (!OPrimitives.Contains("Binary"))
                                 {
@@ -135,10 +135,10 @@ namespace Yuki.RelationSchema
                 {
                     if (t.OnGenericTypeSpec)
                     {
-                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.GenericParameterValues.Count == 1)
+                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.ParameterValues.Count == 1)
                         {
-                            var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
-                            if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Name == "Byte")
+                            var Parameter = t.GenericTypeSpec.ParameterValues.Single();
+                            if (Parameter.OnTypeRef && Parameter.TypeRef.Name == "Byte")
                             {
                                 if (!OPrimitives.Contains("Binary"))
                                 {
@@ -222,28 +222,25 @@ namespace Yuki.RelationSchema
                 {
                     return RS.TypeSpec.CreateTypeRef(new RS.TypeRef { Value = t.TypeRef.Name });
                 }
-                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && t.GenericTypeSpec.GenericParameterValues.Count == 1)
+                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && t.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
-                    if (Parameter.OnTypeSpec)
+                    var Parameter = t.GenericTypeSpec.ParameterValues.Single();
+                    var InnerType = TranslateTypeSpec(Parameter);
+                    if (InnerType.OnTypeRef)
                     {
-                        var InnerType = TranslateTypeSpec(Parameter.TypeSpec);
-                        if (InnerType.OnTypeRef)
-                        {
-                            return RS.TypeSpec.CreateOptional(InnerType.TypeRef);
-                        }
+                        return RS.TypeSpec.CreateOptional(InnerType.TypeRef);
                     }
                 }
-                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.GenericParameterValues.Count == 1)
+                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    var Parameter = t.GenericTypeSpec.GenericParameterValues.Single();
-                    if (Parameter.OnTypeSpec && Parameter.TypeSpec.OnTypeRef && Parameter.TypeSpec.TypeRef.Name == "Byte")
+                    var Parameter = t.GenericTypeSpec.ParameterValues.Single();
+                    if (Parameter.OnTypeRef && Parameter.TypeRef.Name == "Byte")
                     {
                         return RS.TypeSpec.CreateTypeRef(new RS.TypeRef { Value = "Binary" });
                     }
                     else
                     {
-                        return RS.TypeSpec.CreateList(TranslateTypeSpec(t.GenericTypeSpec.GenericParameterValues.Single().TypeSpec).TypeRef);
+                        return RS.TypeSpec.CreateList(TranslateTypeSpec(t.GenericTypeSpec.ParameterValues.Single()).TypeRef);
                     }
                 }
                 throw new InvalidOperationException("有TypeRef、Optional<'T>、List<'T>以外的类型规格。");

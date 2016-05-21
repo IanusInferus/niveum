@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -154,24 +154,19 @@ namespace Yuki.ObjectSchema.CSharp.Common
                         }
                         return Type.TypeRef.TypeFriendlyName();
                     case TypeSpecTag.GenericParameterRef:
-                        return Type.GenericParameterRef.Value;
+                        return Type.GenericParameterRef;
                     case TypeSpecTag.Tuple:
                         {
                             return Type.TypeFriendlyName();
                         }
                     case TypeSpecTag.GenericTypeSpec:
                         {
-                            if (Type.GenericTypeSpec.GenericParameterValues.Count() > 0 && Type.GenericTypeSpec.GenericParameterValues.All(gpv => gpv.OnTypeSpec))
+                            if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
                             {
-                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p.TypeSpec))) + ">";
+                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
                             }
                             else
                             {
-                                foreach (var t in Type.GenericTypeSpec.GenericParameterValues.Where(gpv => gpv.OnTypeSpec))
-                                {
-                                    GetTypeString(t.TypeSpec);
-                                }
-
                                 return Type.TypeFriendlyName();
                             }
                         }
@@ -210,9 +205,9 @@ namespace Yuki.ObjectSchema.CSharp.Common
                 }
                 return l;
             }
-            public List<String> GetTuple(String Name, TupleDef t)
+            public List<String> GetTuple(String Name, List<TypeSpec> Types)
             {
-                var TupleElements = GetTupleElements(t.Types);
+                var TupleElements = GetTupleElements(Types);
                 return GetTemplate("Tuple").Substitute("Name", Name).Substitute("TupleElements", TupleElements);
             }
             public List<String> GetField(VariableDef f)
@@ -452,18 +447,8 @@ namespace Yuki.ObjectSchema.CSharp.Common
                 var scg = Schema.GetSchemaClosureGenerator();
                 var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new List<TypeSpec> { });
                 var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
-                var GenericTypeSpecWithLiterals = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec && t.GenericTypeSpec.GenericParameterValues.Any(gpv => gpv.OnLiteral)).ToList();
-                var Map = Schema.GetMap().ToDictionary(t => t.Key, t => t.Value);
-                var GenericTypeSpecWithLiteralsSpecifications = new List<TypeDef>();
-                foreach (var gtsl in GenericTypeSpecWithLiterals)
-                {
-                    if (!gtsl.GenericTypeSpec.TypeSpec.OnTypeRef) { throw new InvalidOperationException(String.Format("GenericTypeSpecTypeSpecNotTypeRef: {0}", GetTypeString(gtsl))); }
-                    var g = Map[gtsl.GenericTypeSpec.TypeSpec.TypeRef.VersionedName()];
-                    var gt = g.MakeGenericType(GetTypeString(gtsl), gtsl.GenericTypeSpec.GenericParameterValues);
-                    GenericTypeSpecWithLiteralsSpecifications.Add(gt);
-                }
 
-                foreach (var c in Schema.Types.Concat(GenericTypeSpecWithLiteralsSpecifications))
+                foreach (var c in Schema.Types)
                 {
                     if (!c.GenericParameters().All(gp => gp.Type.OnTypeRef && gp.Type.TypeRef.Name == "Type"))
                     {

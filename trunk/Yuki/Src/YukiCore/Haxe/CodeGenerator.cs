@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Haxe代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -105,24 +105,19 @@ namespace Yuki.ObjectSchema.Haxe.Common
                         }
                         return Type.TypeRef.TypeFriendlyName();
                     case TypeSpecTag.GenericParameterRef:
-                        return Type.GenericParameterRef.Value;
+                        return Type.GenericParameterRef;
                     case TypeSpecTag.Tuple:
                         {
                             return Type.TypeFriendlyName();
                         }
                     case TypeSpecTag.GenericTypeSpec:
                         {
-                            if (Type.GenericTypeSpec.GenericParameterValues.Count() > 0 && Type.GenericTypeSpec.GenericParameterValues.All(gpv => gpv.OnTypeSpec))
+                            if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
                             {
-                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p.TypeSpec)).ToList()) + ">";
+                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p)).ToList()) + ">";
                             }
                             else
                             {
-                                foreach (var t in Type.GenericTypeSpec.GenericParameterValues.Where(gpv => gpv.OnTypeSpec))
-                                {
-                                    GetTypeString(t.TypeSpec);
-                                }
-
                                 return Type.TypeFriendlyName();
                             }
                         }
@@ -161,9 +156,9 @@ namespace Yuki.ObjectSchema.Haxe.Common
                 }
                 return l;
             }
-            public List<String> GetTuple(String Name, TupleDef t)
+            public List<String> GetTuple(String Name, List<TypeSpec> Types)
             {
-                var TupleElements = GetTupleElements(t.Types);
+                var TupleElements = GetTupleElements(Types);
                 return GetTemplate("Tuple").Substitute("Name", Name).Substitute("TupleElements", TupleElements);
             }
             public List<String> GetField(VariableDef f)

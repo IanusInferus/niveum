@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaWriter.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构写入器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -206,23 +206,11 @@ namespace Yuki.ObjectSchema
                 case TypeSpecTag.TypeRef:
                     return Type.TypeRef.VersionedName();
                 case TypeSpecTag.GenericParameterRef:
-                    return "'" + Type.GenericParameterRef.Value;
+                    return "'" + Type.GenericParameterRef;
                 case TypeSpecTag.Tuple:
-                    return "Tuple<" + String.Join(", ", Type.Tuple.Types.Select(t => GetTypeString(t))) + ">";
+                    return "Tuple<" + String.Join(", ", Type.Tuple.Select(t => GetTypeString(t))) + ">";
                 case TypeSpecTag.GenericTypeSpec:
-                    return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p))) + ">";
-                default:
-                    throw new InvalidOperationException();
-            }
-        }
-        private String GetTypeString(GenericParameterValue gpv)
-        {
-            switch (gpv._Tag)
-            {
-                case GenericParameterValueTag.Literal:
-                    return gpv.Literal;
-                case GenericParameterValueTag.TypeSpec:
-                    return GetTypeString(gpv.TypeSpec);
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
                 default:
                     throw new InvalidOperationException();
             }

@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -851,7 +851,7 @@ namespace Yuki.ObjectSchema
 
             if (String.Equals(TypeName, "Tuple", StringComparison.OrdinalIgnoreCase))
             {
-                return TypeSpec.CreateTuple(new TupleDef { Types = Parameters.Select(p => ParseTypeSpec(p, TypeDefName, TypeMap, TypePaths)).ToList() });
+                return TypeSpec.CreateTuple(Parameters.Select(p => ParseTypeSpec(p, TypeDefName, TypeMap, TypePaths)).ToList());
             }
 
             if (!TypeMap.ContainsKey(TypeName))
@@ -887,22 +887,22 @@ namespace Yuki.ObjectSchema
                     throw new Syntax.InvalidEvaluationException(String.Format("InvalidGenericParameters: {0} at {1}", TypeDefName, TypePaths[TypeDefName].Path));
             }
 
-            return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = ts, GenericParameterValues = Parameters.ZipStrict(GenericParameters, (v, p) => ParseGenericParameterValue(v, p, TypeDefName, TypeMap, TypePaths)).ToList() });
+            return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = ts, ParameterValues = Parameters.ZipStrict(GenericParameters, (v, p) => ParseGenericParameterValue(v, p, TypeDefName, TypeMap, TypePaths)).ToList() });
         }
-        public static GenericParameterValue ParseGenericParameterValue(String GenericParameterValueString, VariableDef GenericParameter, String TypeDefName, Dictionary<String, TypeDef> TypeMap, Dictionary<String, TypePath> TypePaths)
+        public static TypeSpec ParseGenericParameterValue(String GenericParameterValueString, VariableDef GenericParameter, String TypeDefName, Dictionary<String, TypeDef> TypeMap, Dictionary<String, TypePath> TypePaths)
         {
             if (!GenericParameter.Type.OnTypeRef)
             {
-                return GenericParameterValue.CreateLiteral(GenericParameterValueString);
+                throw new Syntax.InvalidEvaluationException(String.Format("InvalidGenericParameters: {0}.{1} at {2}", TypeDefName, GenericParameter.Name, TypePaths[TypeDefName].Path));
             }
 
             if (!String.Equals(GenericParameter.Type.TypeRef.Name, "Type", StringComparison.OrdinalIgnoreCase))
             {
-                return GenericParameterValue.CreateLiteral(GenericParameterValueString);
+                throw new Syntax.InvalidEvaluationException(String.Format("InvalidGenericParameters: {0}.{1} at {2}", TypeDefName, GenericParameter.Name, TypePaths[TypeDefName].Path));
             }
 
             var TypeSpec = ParseTypeSpec(GenericParameterValueString, TypeDefName, TypeMap, TypePaths);
-            return GenericParameterValue.CreateTypeSpec(TypeSpec);
+            return TypeSpec;
         }
 
         private static Regex rErrorChars = new Regex(@"^(\s|\>)$", RegexOptions.ExplicitCapture);
@@ -914,8 +914,6 @@ namespace Yuki.ObjectSchema
         private static TypeSpecLiteral ParseTypeSpecLiteral(String TypeString, Func<String, Exception> InvalidCharExceptionGenerator)
         {
             var TypeLine = TypeString.Trim(' ');
-
-            //TODO:词法分析并不支持更加复杂的类型表达式，如A<"12>3">
 
             //State 0       开始
             //State 1+n     内部

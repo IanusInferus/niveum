@@ -3,7 +3,7 @@
 //  File:        PlainObjectSchemaGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 简单对象类型结构生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -140,7 +140,7 @@ namespace Yuki.RelationSchema
                         TypeUsed = true;
                         var tBinary = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "List", Version = "" });
                         var tByte = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Byte", Version = "" });
-                        return OS.TypeSpec.CreateGenericTypeSpec(new OS.GenericTypeSpec { TypeSpec = tBinary, GenericParameterValues = new List<OS.GenericParameterValue> { OS.GenericParameterValue.CreateTypeSpec(tByte) } });
+                        return OS.TypeSpec.CreateGenericTypeSpec(new OS.GenericTypeSpec { TypeSpec = tBinary, ParameterValues = new List<OS.TypeSpec> { tByte } });
                     }
                     else
                     {
@@ -153,7 +153,7 @@ namespace Yuki.RelationSchema
                     TypeUsed = true;
                     OptionalUsed = true;
                     var Underlying = TranslateTypeSpec(RS.TypeSpec.CreateTypeRef(t.Optional));
-                    return OS.TypeSpec.CreateGenericTypeSpec(new OS.GenericTypeSpec { TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Optional", Version = "" }), GenericParameterValues = new List<OS.GenericParameterValue> { OS.GenericParameterValue.CreateTypeSpec(Underlying) } });
+                    return OS.TypeSpec.CreateGenericTypeSpec(new OS.GenericTypeSpec { TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "Optional", Version = "" }), ParameterValues = new List<OS.TypeSpec> { Underlying } });
                 }
                 else
                 {
