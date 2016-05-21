@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -138,13 +138,13 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                 var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToList();
                 if (GenericOptionalTypes.Count > 0)
                 {
-                    var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
-                    var GenericKeyValuePairType = new RecordDef { Name = "KeyValuePair", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "TKey", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" }, new VariableDef { Name = "TValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Fields = new List<VariableDef> { new VariableDef { Name = "Key", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "TKey" }), Description = "" }, new VariableDef { Name = "Value", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "TValue" }), Description = "" } }, Description = "" };
+                    var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Description = "" } }, Description = "" };
+                    var GenericKeyValuePairType = new RecordDef { Name = "KeyValuePair", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "TKey", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" }, new VariableDef { Name = "TValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Fields = new List<VariableDef> { new VariableDef { Name = "Key", Type = TypeSpec.CreateGenericParameterRef("TKey"), Description = "" }, new VariableDef { Name = "Value", Type = TypeSpec.CreateGenericParameterRef("TValue"), Description = "" } }, Description = "" };
                     foreach (var gts in GenericTypeSpecs)
                     {
-                        if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.GenericParameterValues.Count == 1)
+                        if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                         {
-                            var ElementType = gts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                            var ElementType = gts.GenericTypeSpec.ParameterValues.Single();
                             var Name = "Opt" + ElementType.TypeFriendlyName();
                             var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToList();
                             var tut = new EnumDef { Name = Name + "Tag", Version = "", UnderlyingType = TypeSpec.CreateTypeRef(new TypeRef { Name = "Int", Version = "" }), Literals = Alternatives.Select((a, i) => new LiteralDef { Name = a.Name, Value = i, Description = a.Description }).ToList(), Description = GenericOptionalType.Description };
@@ -152,12 +152,12 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                             l.Add(GetFile(tut.TypeFriendlyName(), GetEnum(tut)));
                             l.Add(GetFile(tu.TypeFriendlyName(), GetTaggedUnion(tu)));
                         }
-                        else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gts.GenericTypeSpec.GenericParameterValues.Count == 2)
+                        else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gts.GenericTypeSpec.ParameterValues.Count == 2)
                         {
-                            var KeyType = gts.GenericTypeSpec.GenericParameterValues[0].TypeSpec;
-                            var ValueType = gts.GenericTypeSpec.GenericParameterValues[1].TypeSpec;
+                            var KeyType = gts.GenericTypeSpec.ParameterValues[0];
+                            var ValueType = gts.GenericTypeSpec.ParameterValues[1];
                             var Name = "KeyValuePairOf" + KeyType.TypeFriendlyName() + "And" + ValueType.TypeFriendlyName();
-                            var Fields = GenericKeyValuePairType.Fields.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef && a.Type.GenericParameterRef.Value == "TKey" ? KeyType : a.Type.OnGenericParameterRef && a.Type.GenericParameterRef.Value == "TValue" ? ValueType : a.Type, Description = a.Description }).ToList();
+                            var Fields = GenericKeyValuePairType.Fields.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef && a.Type.GenericParameterRef == "TKey" ? KeyType : a.Type.OnGenericParameterRef && a.Type.GenericParameterRef == "TValue" ? ValueType : a.Type, Description = a.Description }).ToList();
                             var r = new RecordDef { Name = Name, Version = "", GenericParameters = new List<VariableDef> { }, Fields = Fields, Description = GenericOptionalType.Description };
                             l.Add(GetFile(r.TypeFriendlyName(), GetRecord(r)));
                         }
@@ -205,29 +205,24 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                         }
                     case TypeSpecTag.Tuple:
                         {
-                            return "TupleOf" + String.Join("And", Type.Tuple.Types.Select(t => t.TypeFriendlyName()));
+                            return "TupleOf" + String.Join("And", Type.Tuple.Select(t => t.TypeFriendlyName()));
                         }
                     case TypeSpecTag.GenericTypeSpec:
                         {
-                            if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && Type.GenericTypeSpec.GenericParameterValues.Count == 1)
+                            if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && Type.GenericTypeSpec.ParameterValues.Count == 1)
                             {
-                                return "Opt" + Type.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName();
+                                return "Opt" + Type.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
                             }
-                            else if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && Type.GenericTypeSpec.GenericParameterValues.Count == 2)
+                            else if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && Type.GenericTypeSpec.ParameterValues.Count == 2)
                             {
-                                return "Vector.<KeyValuePairOf" + Type.GenericTypeSpec.GenericParameterValues[0].TypeSpec.TypeFriendlyName() + "And" + Type.GenericTypeSpec.GenericParameterValues[1].TypeSpec.TypeFriendlyName() + ">";
+                                return "Vector.<KeyValuePairOf" + Type.GenericTypeSpec.ParameterValues[0].TypeFriendlyName() + "And" + Type.GenericTypeSpec.ParameterValues[1].TypeFriendlyName() + ">";
                             }
-                            if (Type.GenericTypeSpec.GenericParameterValues.Count() > 0 && Type.GenericTypeSpec.GenericParameterValues.All(gpv => gpv.OnTypeSpec))
+                            if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
                             {
-                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + ".<" + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(p => GetTypeString(p.TypeSpec))) + ">";
+                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + ".<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
                             }
                             else
                             {
-                                foreach (var t in Type.GenericTypeSpec.GenericParameterValues.Where(gpv => gpv.OnTypeSpec))
-                                {
-                                    GetTypeString(t.TypeSpec);
-                                }
-
                                 return Type.TypeFriendlyName();
                             }
                         }
@@ -255,10 +250,10 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                 }
                 return l;
             }
-            public List<String> GetTuple(String Name, TupleDef t)
+            public List<String> GetTuple(String Name, List<TypeSpec> Types)
             {
-                var TupleElements = GetTupleElements(t.Types);
-                var Fields = t.Types.Select((tp, i) => new VariableDef { Name = String.Format("Item{0}", i), Type = tp, Description = "" }).ToList();
+                var TupleElements = GetTupleElements(Types);
+                var Fields = Types.Select((tp, i) => new VariableDef { Name = String.Format("Item{0}", i), Type = tp, Description = "" }).ToList();
                 return GetTemplate("Tuple").Substitute("Name", Name).Substitute("TupleElements", TupleElements);
             }
             public List<String> GetField(VariableDef f)
@@ -448,11 +443,11 @@ namespace Yuki.ObjectSchema.ActionScript.Common
 
         public static String TypeFriendlyName(this TypeSpec Type)
         {
-            if (Type.OnGenericTypeSpec && Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && Type.GenericTypeSpec.GenericParameterValues.Count == 1)
+            if (Type.OnGenericTypeSpec && Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && Type.GenericTypeSpec.ParameterValues.Count == 1)
             {
-                return "Opt" + TypeFriendlyName(Type.GenericTypeSpec.GenericParameterValues.Single().TypeSpec);
+                return "Opt" + TypeFriendlyName(Type.GenericTypeSpec.ParameterValues.Single());
             }
-            return ObjectSchema.ObjectSchemaExtensions.TypeFriendlyName(Type, gpr => gpr.Value, (t, e) => TypeFriendlyName(t));
+            return ObjectSchema.ObjectSchemaExtensions.TypeFriendlyName(Type, gpr => gpr, (t, e) => TypeFriendlyName(t));
         }
         public static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {

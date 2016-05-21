@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Haxe JSON通讯代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -243,22 +243,22 @@ namespace Yuki.ObjectSchema.HaxeJson
 
                 foreach (var gts in GenericTypeSpecs)
                 {
-                    if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.GenericParameterValues.Count == 1)
+                    if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                     {
                         l.AddRange(GetJsonTranslatorOptional(gts));
                         l.Add("");
                     }
-                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gts.GenericTypeSpec.GenericParameterValues.Count == 1)
+                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                     {
                         l.AddRange(GetJsonTranslatorList(gts));
                         l.Add("");
                     }
-                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gts.GenericTypeSpec.GenericParameterValues.Count == 1)
+                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                     {
                         l.AddRange(GetJsonTranslatorSet(gts));
                         l.Add("");
                     }
-                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gts.GenericTypeSpec.GenericParameterValues.Count == 2)
+                    else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gts.GenericTypeSpec.ParameterValues.Count == 2)
                     {
                         l.AddRange(GetJsonTranslatorMap(gts));
                         l.Add("");
@@ -369,7 +369,7 @@ namespace Yuki.ObjectSchema.HaxeJson
             public List<String> GetJsonTranslatorTuple(TypeSpec t)
             {
                 var l = new List<String>();
-                l.AddRange(GetTemplate("JsonTranslator_Tuple").Substitute("TypeFriendlyName", t.TypeFriendlyName()).Substitute("TupleElementFroms", GetJsonTranslatorTupleElementFroms(t.Tuple.Types)).Substitute("TupleElementTos", GetJsonTranslatorTupleElementTos(t.Tuple.Types)));
+                l.AddRange(GetTemplate("JsonTranslator_Tuple").Substitute("TypeFriendlyName", t.TypeFriendlyName()).Substitute("TupleElementFroms", GetJsonTranslatorTupleElementFroms(t.Tuple)).Substitute("TupleElementTos", GetJsonTranslatorTupleElementTos(t.Tuple)));
                 return l;
             }
             public List<String> GetJsonTranslatorTupleElementFroms(List<TypeSpec> Types)
@@ -396,7 +396,7 @@ namespace Yuki.ObjectSchema.HaxeJson
             }
             public List<String> GetJsonTranslatorOptional(TypeSpec o)
             {
-                var ElementType = o.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                var ElementType = o.GenericTypeSpec.ParameterValues.Single();
 
                 var TypeFriendlyName = o.TypeFriendlyName();
                 var TypeString = GetTypeString(o);
@@ -406,16 +406,16 @@ namespace Yuki.ObjectSchema.HaxeJson
             }
             public List<String> GetJsonTranslatorList(TypeSpec c)
             {
-                return GetTemplate("JsonTranslator_List").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+                return GetTemplate("JsonTranslator_List").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName());
             }
             public List<String> GetJsonTranslatorSet(TypeSpec c)
             {
-                return GetTemplate("JsonTranslator_Set").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+                return GetTemplate("JsonTranslator_Set").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("ElementTypeFriendlyName", c.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName());
             }
             public List<String> GetJsonTranslatorMap(TypeSpec c)
             {
-                var KeyTypeFriendlyName = c.GenericTypeSpec.GenericParameterValues[0].TypeSpec.TypeFriendlyName();
-                var ValueTypeFriendlyName = c.GenericTypeSpec.GenericParameterValues[1].TypeSpec.TypeFriendlyName();
+                var KeyTypeFriendlyName = c.GenericTypeSpec.ParameterValues[0].TypeFriendlyName();
+                var ValueTypeFriendlyName = c.GenericTypeSpec.ParameterValues[1].TypeFriendlyName();
                 return GetTemplate("JsonTranslator_Map").Substitute("TypeFriendlyName", c.TypeFriendlyName()).Substitute("TypeString", GetTypeString(c)).Substitute("KeyTypeFriendlyName", KeyTypeFriendlyName).Substitute("ValueTypeFriendlyName", ValueTypeFriendlyName);
             }
 

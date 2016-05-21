@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -334,33 +334,18 @@ namespace Yuki.ObjectSchema.Xhtml.Common
                         }
                     case TypeSpecTag.GenericParameterRef:
                         {
-                            return GetEscaped("'" + Type.GenericParameterRef.Value);
+                            return GetEscaped("'" + Type.GenericParameterRef);
                         }
                     case TypeSpecTag.Tuple:
                         {
-                            return GetEscaped("Tuple<") + String.Join(GetEscaped(", "), Type.Tuple.Types.Select(t => GetTypeString(t, WithDescription, IsInBar))) + GetEscaped(">");
+                            return GetEscaped("Tuple<") + String.Join(GetEscaped(", "), Type.Tuple.Select(t => GetTypeString(t, WithDescription, IsInBar))) + GetEscaped(">");
                         }
                     case TypeSpecTag.GenericTypeSpec:
                         {
-                            return GetTypeString(Type.GenericTypeSpec.TypeSpec, WithDescription, IsInBar) + GetEscaped("<") + String.Join(", ", Type.GenericTypeSpec.GenericParameterValues.Select(gpv => GetTypeString(gpv, WithDescription, IsInBar))) + GetEscaped(">");
+                            return GetTypeString(Type.GenericTypeSpec.TypeSpec, WithDescription, IsInBar) + GetEscaped("<") + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(gpv => GetTypeString(gpv, WithDescription, IsInBar))) + GetEscaped(">");
                         }
                     default:
                         throw new InvalidOperationException();
-                }
-            }
-            public String GetTypeString(GenericParameterValue gpv, Boolean WithDescription, Boolean IsInBar)
-            {
-                if (gpv.OnLiteral)
-                {
-                    return GetEscaped(gpv.Literal);
-                }
-                else if (gpv.OnTypeSpec)
-                {
-                    return GetTypeString(gpv.TypeSpec, WithDescription, IsInBar);
-                }
-                else
-                {
-                    throw new InvalidOperationException();
                 }
             }
 

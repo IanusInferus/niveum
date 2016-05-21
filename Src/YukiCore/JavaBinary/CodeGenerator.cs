@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java二进制代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.05.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -96,9 +96,9 @@ namespace Yuki.ObjectSchema.JavaBinary
             {
                 return InnerWriter.GetAlias(a);
             }
-            public List<String> GetTuple(String Name, TupleDef t)
+            public List<String> GetTuple(String Name, List<TypeSpec> Types)
             {
-                return InnerWriter.GetTuple(Name, t);
+                return InnerWriter.GetTuple(Name, Types);
             }
             public List<String> GetRecord(RecordDef r)
             {
@@ -261,28 +261,28 @@ namespace Yuki.ObjectSchema.JavaBinary
                 TaggedUnionDef GenericOptionalType = null;
                 if (GenericOptionalTypes.Count > 0)
                 {
-                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
+                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Description = "" } }, Description = "" };
                     l.AddRange(GetTemplate("BinaryTranslator_Enum").Substitute("Name", "OptionalTag").Substitute("UnderlyingTypeFriendlyName", "Int").Substitute("UnderlyingType", "int"));
                     l.Add("");
                 }
                 foreach (var gps in GenericTypeSpecs)
                 {
-                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gps.GenericTypeSpec.GenericParameterValues.Count == 1)
+                    if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gps.GenericTypeSpec.ParameterValues.Count == 1)
                     {
                         l.AddRange(GetBinaryTranslatorOptional(gps, GenericOptionalType));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gps.GenericTypeSpec.GenericParameterValues.Count == 1)
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gps.GenericTypeSpec.ParameterValues.Count == 1)
                     {
                         l.AddRange(GetBinaryTranslatorList(gps));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gps.GenericTypeSpec.GenericParameterValues.Count == 1)
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gps.GenericTypeSpec.ParameterValues.Count == 1)
                     {
                         l.AddRange(GetBinaryTranslatorSet(gps));
                         l.Add("");
                     }
-                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gps.GenericTypeSpec.GenericParameterValues.Count == 2)
+                    else if (gps.GenericTypeSpec.TypeSpec.OnTypeRef && gps.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gps.GenericTypeSpec.ParameterValues.Count == 2)
                     {
                         l.AddRange(GetBinaryTranslatorMap(gps));
                         l.Add("");
@@ -381,7 +381,7 @@ namespace Yuki.ObjectSchema.JavaBinary
             public List<String> GetBinaryTranslatorTuple(TypeSpec t)
             {
                 var l = new List<String>();
-                l.AddRange(GetTemplate("BinaryTranslator_Tuple").Substitute("TypeFriendlyName", t.TypeFriendlyName()).Substitute("TupleElementFroms", GetBinaryTranslatorTupleElementFroms(t.Tuple.Types)).Substitute("TupleElementTos", GetBinaryTranslatorTupleElementTos(t.Tuple.Types)));
+                l.AddRange(GetTemplate("BinaryTranslator_Tuple").Substitute("TypeFriendlyName", t.TypeFriendlyName()).Substitute("TupleElementFroms", GetBinaryTranslatorTupleElementFroms(t.Tuple)).Substitute("TupleElementTos", GetBinaryTranslatorTupleElementTos(t.Tuple)));
                 return l;
             }
             public List<String> GetBinaryTranslatorTupleElementFroms(List<TypeSpec> Types)
@@ -408,7 +408,7 @@ namespace Yuki.ObjectSchema.JavaBinary
             }
             public List<String> GetBinaryTranslatorOptional(TypeSpec o, TaggedUnionDef GenericOptionalType)
             {
-                var ElementType = o.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                var ElementType = o.GenericTypeSpec.ParameterValues.Single();
                 var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToList();
 
                 var TypeFriendlyName = o.TypeFriendlyName();
@@ -418,22 +418,22 @@ namespace Yuki.ObjectSchema.JavaBinary
             }
             public List<String> GetBinaryTranslatorList(TypeSpec l)
             {
-                return GetTemplate("BinaryTranslator_List").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec.TypeFriendlyName());
+                return GetTemplate("BinaryTranslator_List").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("ElementTypeFriendlyName", l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName());
             }
             public List<String> GetBinaryTranslatorSet(TypeSpec l)
             {
-                var et = l.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                var et = l.GenericTypeSpec.ParameterValues.Single();
                 return GetTemplate("BinaryTranslator_Set").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("ElementTypeFriendlyName", et.TypeFriendlyName()).Substitute("ElementTypeString", GetTypeString(et));
             }
             public List<String> GetBinaryTranslatorMap(TypeSpec l)
             {
-                var gp = l.GenericTypeSpec.GenericParameterValues;
+                var gp = l.GenericTypeSpec.ParameterValues;
                 if (gp.Count != 2)
                 {
                     throw new ArgumentException();
                 }
-                var kt = gp[0].TypeSpec;
-                return GetTemplate("BinaryTranslator_Map").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("KeyTypeFriendlyName", kt.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", gp[1].TypeSpec.TypeFriendlyName()).Substitute("KeyTypeString", GetTypeString(kt));
+                var kt = gp[0];
+                return GetTemplate("BinaryTranslator_Map").Substitute("TypeFriendlyName", l.TypeFriendlyName()).Substitute("TypeString", GetTypeString(l)).Substitute("KeyTypeFriendlyName", kt.TypeFriendlyName()).Substitute("ValueTypeFriendlyName", gp[1].TypeFriendlyName()).Substitute("KeyTypeString", GetTypeString(kt));
             }
 
             public List<String> GetComplexTypes()
@@ -499,12 +499,12 @@ namespace Yuki.ObjectSchema.JavaBinary
                 var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToList();
                 if (GenericOptionalTypes.Count > 0)
                 {
-                    var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef(new GenericParameterRef { Value = "T" }), Description = "" } }, Description = "" };
+                    var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Description = "" } }, Description = "" };
                     foreach (var gts in GenericTypeSpecs)
                     {
-                        if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.GenericParameterValues.Count == 1)
+                        if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                         {
-                            var ElementType = gts.GenericTypeSpec.GenericParameterValues.Single().TypeSpec;
+                            var ElementType = gts.GenericTypeSpec.ParameterValues.Single();
                             var Name = "Opt" + ElementType.TypeFriendlyName();
                             var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToList();
                             l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = Name, Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = Alternatives, Description = GenericOptionalType.Description }));
