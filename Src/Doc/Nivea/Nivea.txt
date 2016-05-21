@@ -346,3 +346,31 @@ Let
 4)YieldTemplate，内嵌模板生成，包含若干模板结点
 5)Stem，茎，包含可选的头部和若干子结点
 6)Undetermined，待定序列，包含若干结点，用于在语义分析中进一步确定关系
+
+
+语义分析
+
+类型
+
+Unit, Boolean, String, Int, Real, Type, Optional, List, Set, Map
+其中Int表示Int64，Real表示Float64
+
+
+运算符
+
+运算符有
+一元 + - !
+乘除 * / \ % //乘法 除法 整除 取模
+加减 + -
+关系 < > <= >=
+相等 == !=
+条件 || &&
+转换 Cast
+目前暂不考虑优先级的问题，均需要加括号
+
+
+跳转表达式
+
+Yield表达式可以透明经过Sequence、If、Match、For、While而不被接收
+Continue表达式可以透明经过Sequence、If、Match而不被接收，最后只能被For、While接收
+Break表达式可以透明经过Sequence、If、Match而不被接收，并根据数字经过For、While，最后只能被For、While接收

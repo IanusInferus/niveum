@@ -1,0 +1,216 @@
+﻿#Namespace Yuki.ObjectSchema.CSharp
+
+#Global
+    Let a = 1
+
+#Assembly
+    System
+    System.Core
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+    System.Linq.Enumerable
+
+#Template Test a:Int
+    //====
+    ${a}
+    //====
+    $$
+        Yield a.ToString()
+
+#Primitive Int
+#Primitive String
+
+#Alias Vector
+    Tuple<Int, Int>
+
+#Record Record1
+    Field1      Int
+    Field2      Int
+
+#TaggedUnion TaggedUnion1
+    Alternative1    Int
+    Alternative2    String
+    Alternative3    Unit
+
+#Enum Enum1
+    Literal1
+    Literal2
+
+#Template TestSyntax
+    $$
+        (1, 2)
+        (
+            1
+            2
+        )
+        Let a =
+            1
+            2
+
+        Yield "123"
+
+        YieldMany ("123", "234")
+
+        #
+            //${"123"}//
+
+        ##
+            //${"123"}//
+
+        Throw
+        Throw "Invalid"
+
+        Let a1 = 1
+
+        Let (a2, _) = (1, 2)
+        Let (
+            a3
+            _
+        ) = (
+            1
+            2
+        )
+        Let (a4, _) =
+            1
+            2
+
+        Let a5 = Tuple(1, 2)
+        Let a6 = Tuple
+            1
+            2
+
+        Let a7 = Record1(Field1 = 1, Field2 = 2)
+        Let a8 = Record1
+            Field1 = 1
+            Field2 = 2
+
+        Let a9 = TaggedUnion1.Alternative1(1)
+        Let a10 = TaggedUnion1.Alternative1
+            1
+        Let a11:TaggedUnion1 = Alternative1(1)
+
+        Let a12 = Enum1.Literal1
+        Let a13:Enum1 = Literal1
+
+        Let a14 = List<Int>(1, 2, 3)
+        Let a15:List<Int> = (1, 2, 3)
+        Let a16 = List<Int>
+            1
+            2
+            3
+
+        Let a17 = Map<Int, String>((1, "2"), (2, "3"), (3, "4"))
+        Let a18 = Map<Int, String>
+            (1, "2")
+            (2, "3")
+            (3, "4")
+
+        Let a19 = List<String>
+            $List String
+                1
+                a
+                2
+                b
+
+        Let a20 = Map<Int, String>
+            $Table KeyValuePair<Int, String> (Key Int) (Value String)
+                1   2
+                2   3
+                3   4
+
+        Let a21 = Map<Int, Record1>
+            $Table KeyValuePair<Int, Record1> (Key Int) Value
+                1   (Record1(Field1 = 1, Field2 = 2))
+                2   (Record1(Field1 = 2, Field2 = 3))
+                3   (Record1(Field1 = 3, Field2 = 4))
+
+        Let a22 = (i:Int, j:Int) => i + j
+        Let a23 =
+            (i:Int, j:Int) =>
+                i + j
+
+        Var a24 = 1
+        a24 += 2
+
+        Let a25 =
+            Return 1
+
+        If
+            a24 == 0
+                1
+            a24 == 1
+                2
+            True
+                3
+
+        Match a9
+            Alternative1(Let v1)
+                v1
+            Alternative2(_)
+                0
+            Alternative3
+                0
+            _
+                Throw
+
+        Match (
+            a9
+        )
+            Alternative1(Let v1) v1
+            Alternative2(_) 0
+            Alternative3 0
+
+        Match a9 (Alternative1(Let v1) v1, Alternative2(_) 0, Alternative3 0)
+
+        Match a1
+            0
+                1
+            1
+                2
+            2
+                0
+
+        For b In a14
+            Yield b
+            Yield b
+
+        For (
+            b
+        ) In (
+            a14
+        )
+            Yield b
+            Yield b
+
+        For b In a14 (Yield b, Yield b)
+
+
+        Var c = 0
+        While c < 5
+            Yield c.ToString()
+            c += 1
+
+        While True
+            Break
+
+        While True
+            While True
+                Break 2
+
+        c = 0
+        c += 1
+        c -= 1
+
+        Let d1 = (a:Int, b:Int) => a + b
+        Let d2 = a:Int => a * 2
+
+        Let e = a21(1).Field1.ToString()
+
+        Let f = !False
+
+        Let g = (1 + a) * 3
+
+        Let h = Cast(1, String)
