@@ -24,31 +24,6 @@ namespace Nivea.CUI
     {
         public static int Main()
         {
-            var Path = @"D:\Experiment\YUKI\Src\Doc\Nivea\TokenTest.tree";
-            var Text = Nivea.Template.Syntax.TokenParser.BuildText(Txt.ReadFile(Path), Path);
-            var Tokens = new List<List<Nivea.Template.Syntax.Token>>();
-            var d = new Dictionary<Object, Firefly.Texting.TreeFormat.Syntax.TextRange>();
-            foreach (var Line in Text.Lines)
-            {
-                var l = new List<Nivea.Template.Syntax.Token>();
-                var Range = Line.Range;
-                var IsLeadingToken = true;
-                while (true)
-                {
-                    var Result = Nivea.Template.Syntax.TokenParser.ReadToken(Text, d, Range, IsLeadingToken);
-                    if (Result.Token.OnHasValue)
-                    {
-                        l.Add(Result.Token.Value);
-                    }
-                    if (Result.RemainingChars.OnNotHasValue) { break; }
-                    Range = Result.RemainingChars.Value;
-                    IsLeadingToken = false;
-                }
-                Tokens.Add(l);
-            }
-
-
-
             if (System.Diagnostics.Debugger.IsAttached)
             {
                 return MainInner();
