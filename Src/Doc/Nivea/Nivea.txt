@@ -29,6 +29,7 @@
 7) PreprocessDirective，预处理指令，和1)类似，区别在于以$或#开头
 8) Operator，运算符，和1)类似，但完全由!%&*+-/<=>?@\^|~组合构成，且不符合9)
 9) SingleLineComment，单行注释，在行的开始处或空格后以//开头直到行的结束
+每个词有是否为一行的起始IsLeadingToken和是否在非缩进空格后IsAfterSpace两个属性
 
 状态机
 
@@ -45,14 +46,18 @@ State 3    转义双双引号Token
 State 31   转义双双引号Token转义符
 State 4    运算符
 Stack<ParenthesisType> 括号栈
+IsLeadingToken 是否为一行的起始
+IsAfterSpace 是否在非缩进空格
 
 初值
 State <- 0
 Stack<ParenthesisType> <- 空
+IsLeadingToken 外部传入
+IsAfterSpace <- False
 
 State 0
     EndOfLine -> 返回空
-    Space -> 前进
+    Space -> IsAfterSpace <- True，前进
     [\f\t\v] -> 失败
     [;`] -> 失败
     " -> 标记符号开始，State 2，前进
