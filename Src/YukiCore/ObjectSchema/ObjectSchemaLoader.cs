@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2016.05.21.
+//  Version:     2016.05.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -296,7 +296,7 @@ namespace Yuki.ObjectSchema
                     }
 
                     var ContentLines = new Syntax.FunctionCallTableLine[] { };
-                    if (Functions.Contains(f.Name.Text) && f.Content.HasValue)
+                    if (Functions.Contains(f.Name.Text) && f.Content.OnHasValue)
                     {
                         var ContentValue = f.Content.Value;
                         if (ContentValue._Tag != Syntax.FunctionCallContentTag.TableContent) { throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }

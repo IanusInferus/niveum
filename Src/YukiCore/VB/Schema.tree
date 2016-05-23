@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构VB.Net模板数据
-      Version:     2013.03.31.
+      Version:     2016.05.23.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -326,10 +326,10 @@ ObjectSchemaTemplate
                     End Enum
                     <TaggedUnion>
                     Public Structure [Optional](Of T)
-                        <Tag> Public Property _Tag As OptionalTag
+                        <Tag> Public _Tag As OptionalTag
 
-                        Public Property NotHasValue As Unit
-                        Public Property HasValue As T
+                        Public NotHasValue As Unit
+                        Public HasValue As T
 
                         Public Shared Function CreateNotHasValue() As [Optional](Of T)
                             Return New [Optional](Of T) With {._Tag = OptionalTag.NotHasValue, .NotHasValue = New Unit()}
@@ -396,11 +396,28 @@ ObjectSchemaTemplate
                             Return Equals(Left.Value, Right.Value)
                         End Function
 
+                        Public ReadOnly Property Value() As T
+                            Get
+                                If OnHasValue Then
+                                    Return HasValue
+                                Else
+                                    Throw New InvalidOperationException()
+                                End If
+                            End Get
+                        End Property
                         Public Function ValueOrDefault(ByVal [Default] As T) As T
                             If OnHasValue Then
                                 Return HasValue
                             Else
                                 Return [Default]
+                            End If
+                        End Function
+
+                        Public Overrides Function ToString() As String
+                            If OnHasValue Then
+                                Return HasValue.ToString()
+                            Else
+                                Return "-"
                             End If
                         End Function
                     End Structure
@@ -448,7 +465,7 @@ ObjectSchemaTemplate
             //Parameters: ${NameIndex}, ${Type}
             Value
                 $String
-                    Public Property [[Item${NameIndex}]] As [[${Type}]]
+                    Public [[Item${NameIndex}]] As [[${Type}]]
         Template
             Name Tuple
             //Parameters: ${Name}, ${TupleElements}
@@ -464,7 +481,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    Public Property [[${Name}]] As [[${Type}]]
+                    Public [[${Name}]] As [[${Type}]]
         Template
             Name Record
             //Parameters: ${Name}, ${Fields}, ${XmlComment}
@@ -481,7 +498,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    Public Property [[${Name}]] As [[${Type}]]
+                    Public [[${Name}]] As [[${Type}]]
         Template
             Name AlternativeCreate
             //Parameters: ${TaggedUnionName}, ${TaggedUnionTagName}, ${Name}, ${Type}, ${XmlComment}
@@ -522,7 +539,7 @@ ObjectSchemaTemplate
                     ${XmlComment}
                     <TaggedUnion()>
                     Public NotInheritable Class [[${Name}]]
-                        <Tag()> Public Property _Tag As [[${TagName}]]
+                        <Tag()> Public _Tag As [[${TagName}]]
 
                         ${Alternatives}
 
