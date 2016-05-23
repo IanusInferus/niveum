@@ -190,12 +190,12 @@ namespace Yuki.RelationSchemaDiff
                 while (true)
                 {
                     var tpr = TreeFormatTokenParser.ReadToken(Text, pr.Positions, Range);
-                    if (!tpr.Token.OnHasValue)
+                    if (!tpr.OnHasValue)
                     {
                         break;
                     }
 
-                    var v = tpr.Token.Value;
+                    var v = tpr.Value.Token;
                     if (v.OnSingleLineComment) { break; }
                     if (v.OnLeftParenthesis)
                     {
@@ -217,9 +217,9 @@ namespace Yuki.RelationSchemaDiff
                         {
                             throw new Syntax.InvalidTokenException("EmptyIndex", new Syntax.FileTextRange { Text = Text, Range = Range }, ")");
                         }
-                        if (tpr.RemainingChars.OnHasValue)
+                        if (tpr.Value.RemainingChars.OnHasValue)
                         {
-                            clEnd = tpr.RemainingChars.Value.End;
+                            clEnd = tpr.Value.RemainingChars.Value.End;
                         }
                         l.Add(nm.MakeStemNode("", cl.ToArray(), new Syntax.TextRange { Start = clStart, End = clEnd }));
                         cl = null;
@@ -253,12 +253,12 @@ namespace Yuki.RelationSchemaDiff
                         throw new Syntax.InvalidTokenException("UnknownToken", new Syntax.FileTextRange { Text = Text, Range = Range }, Text.GetTextInLine(Range));
                     }
 
-                    if (!tpr.RemainingChars.OnHasValue)
+                    if (!tpr.Value.RemainingChars.OnHasValue)
                     {
                         break;
                     }
 
-                    Range = tpr.RemainingChars.Value;
+                    Range = tpr.Value.RemainingChars.Value;
                 }
                 if (cl != null)
                 {

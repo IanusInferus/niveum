@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 词法解析器
-//  Version:     2016.05.21.
+//  Version:     2016.05.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,7 +20,7 @@ namespace Nivea.Template.Syntax
 {
     public class TokenParserResult
     {
-        public Optional<Token> Token;
+        public Token Token;
         public Optional<TextRange> RemainingChars;
     }
 
@@ -60,7 +60,7 @@ namespace Nivea.Template.Syntax
             return l.ToArray();
         }
 
-        public static TokenParserResult ReadToken(Text Text, Dictionary<Object, TextRange> Positions, TextRange RangeInLine, Boolean IsLeadingToken)
+        public static Optional<TokenParserResult> ReadToken(Text Text, Dictionary<Object, TextRange> Positions, TextRange RangeInLine, Boolean IsLeadingToken)
         {
             var s = Text.GetTextInLine(RangeInLine);
             var Index = 0;
@@ -85,7 +85,7 @@ namespace Nivea.Template.Syntax
             Func<String, InvalidTokenException> MakeNextCharErrorTokenException = Message => new InvalidTokenException(Message, MakeNextErrorTokenRange(1), Peek(1));
             Action MarkStart = () => StartIndex = Index;
             var Output = new List<Char>();
-            Func<TokenParserResult> MakeNullResult = () => new TokenParserResult { Token = Optional<Token>.Empty, RemainingChars = Optional<TextRange>.Empty };
+            Func<Optional<TokenParserResult>> MakeNullResult = () => Optional<TokenParserResult>.Empty;
             Func<TokenType, TokenParserResult> MakeResult = tt =>
             {
                 var Range = MakeTokenRange(StartIndex, Index);
@@ -316,7 +316,7 @@ namespace Nivea.Template.Syntax
                 {
                     if (EndOfLine()) { return MakeResult(TokenType.CreateQuoted(new String(Output.ToArray()))); }
                     var c = Peek1();
-                    if (c == ' ')
+                    if ((c == ' ') || (c == '(') || (c == ')'))
                     {
                         return MakeResult(TokenType.CreateQuoted(new String(Output.ToArray())));
                     }
