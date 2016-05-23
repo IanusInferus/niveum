@@ -18,6 +18,7 @@
 123 ///456
 //456
 <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+Type TypeRef (Name Int) (Version "")
 1,2, 3
 A(1, 2)
 "A"(1, 2)

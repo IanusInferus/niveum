@@ -59,6 +59,7 @@
     <Compile Include="Template\Generated\Common.cs" />
     <Compile Include="Template\Generated\Semantics.cs" />
     <Compile Include="Template\Generated\Syntax.cs" />
+    <Compile Include="Template\FileParser.cs" />
     <Compile Include="Template\Syntax\TokenParser.cs" />
   </ItemGroup>
   <ItemGroup>
