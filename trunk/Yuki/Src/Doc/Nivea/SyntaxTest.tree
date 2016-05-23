@@ -214,3 +214,30 @@
         Let g = (1 + a) * 3
 
         Let h = Cast(1, String)
+
+File
+    Sections
+        SectionDef
+            Type
+                Primitive
+                    Name Int
+                    GenericParameters
+                    $End
+                    Description ""
+        SectionDef
+            Type
+                Record
+                    Name TestRecord
+                    Version ""
+                    GenericParameters
+                    $End
+                    Fields
+                        VariableDef
+                            Name A
+                            Type TypeRef (Name Int) (Version "")
+                            Description ""
+                        VariableDef
+                            Name B
+                            Type TypeRef (Name Int) (Version "")
+                            Description ""
+                    Description ""

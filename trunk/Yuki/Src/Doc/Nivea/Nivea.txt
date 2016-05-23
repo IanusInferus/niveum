@@ -105,6 +105,8 @@ State 21
 
 State 22
     EndOfLine -> 失败
+    ( -> 返回SingleLineLiteral
+    ) -> 返回SingleLineLiteral
     " -> State 23，前进
     Any -> 加入Output，前进
 
