@@ -33,7 +33,7 @@ namespace Yuki.RelationValue
     public sealed class RelationVal
     {
         /// <summary>行数据</summary>
-        public List<TableVal> Tables { get; set; }
+        public List<TableVal> Tables;
     }
 
     /// <summary>表数据</summary>
@@ -41,7 +41,7 @@ namespace Yuki.RelationValue
     public sealed class TableVal
     {
         /// <summary>行数据</summary>
-        public List<RowVal> Rows { get; set; }
+        public List<RowVal> Rows;
     }
 
     /// <summary>行数据</summary>
@@ -49,7 +49,7 @@ namespace Yuki.RelationValue
     public sealed class RowVal
     {
         /// <summary>列数据</summary>
-        public List<ColumnVal> Columns { get; set; }
+        public List<ColumnVal> Columns;
     }
 
     public enum ColumnValTag
@@ -63,12 +63,12 @@ namespace Yuki.RelationValue
     [TaggedUnion]
     public sealed class ColumnVal
     {
-        [Tag] public ColumnValTag _Tag { get; set; }
+        [Tag] public ColumnValTag _Tag;
 
         /// <summary>基元数据</summary>
-        public PrimitiveVal Primitive { get; set; }
+        public PrimitiveVal Primitive;
         /// <summary>可选数据</summary>
-        public Optional<PrimitiveVal> Optional { get; set; }
+        public Optional<PrimitiveVal> Optional;
 
         /// <summary>基元数据</summary>
         public static ColumnVal CreatePrimitive(PrimitiveVal Value) { return new ColumnVal { _Tag = ColumnValTag.Primitive, Primitive = Value }; }
@@ -100,20 +100,20 @@ namespace Yuki.RelationValue
     [TaggedUnion]
     public sealed class PrimitiveVal
     {
-        [Tag] public PrimitiveValTag _Tag { get; set; }
+        [Tag] public PrimitiveValTag _Tag;
 
         /// <summary>布尔</summary>
-        public Boolean BooleanValue { get; set; }
+        public Boolean BooleanValue;
         /// <summary>字符串</summary>
-        public String StringValue { get; set; }
+        public String StringValue;
         /// <summary>整数</summary>
-        public Int IntValue { get; set; }
+        public Int IntValue;
         /// <summary>实数</summary>
-        public Real RealValue { get; set; }
+        public Real RealValue;
         /// <summary>二进制</summary>
-        public List<Byte> BinaryValue { get; set; }
+        public List<Byte> BinaryValue;
         /// <summary>64位有符号整数</summary>
-        public Int64 Int64Value { get; set; }
+        public Int64 Int64Value;
 
         /// <summary>布尔</summary>
         public static PrimitiveVal CreateBooleanValue(Boolean Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BooleanValue, BooleanValue = Value }; }

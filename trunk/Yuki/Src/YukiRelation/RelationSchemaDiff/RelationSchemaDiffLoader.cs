@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异加载器
-//  Version:     2016.05.20.
+//  Version:     2016.05.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -190,7 +190,7 @@ namespace Yuki.RelationSchemaDiff
                 while (true)
                 {
                     var tpr = TreeFormatTokenParser.ReadToken(Text, pr.Positions, Range);
-                    if (!tpr.Token.HasValue)
+                    if (!tpr.Token.OnHasValue)
                     {
                         break;
                     }
@@ -217,7 +217,7 @@ namespace Yuki.RelationSchemaDiff
                         {
                             throw new Syntax.InvalidTokenException("EmptyIndex", new Syntax.FileTextRange { Text = Text, Range = Range }, ")");
                         }
-                        if (tpr.RemainingChars.HasValue)
+                        if (tpr.RemainingChars.OnHasValue)
                         {
                             clEnd = tpr.RemainingChars.Value.End;
                         }
@@ -253,7 +253,7 @@ namespace Yuki.RelationSchemaDiff
                         throw new Syntax.InvalidTokenException("UnknownToken", new Syntax.FileTextRange { Text = Text, Range = Range }, Text.GetTextInLine(Range));
                     }
 
-                    if (!tpr.RemainingChars.HasValue)
+                    if (!tpr.RemainingChars.OnHasValue)
                     {
                         break;
                     }

@@ -3,7 +3,7 @@
 //  File:        ExpressionAssemblyLoader.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式函数集加载器
-//  Version:     2016.05.13.
+//  Version:     2016.05.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -99,7 +99,7 @@ namespace Yuki.ExpressionSchema
                     }
 
                     var ContentLines = new Syntax.TextLine[] { };
-                    if (f.Content.HasValue)
+                    if (f.Content.OnHasValue)
                     {
                         var ContentValue = f.Content.Value;
                         if (!ContentValue.OnLineContent) { throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
