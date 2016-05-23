@@ -3,7 +3,7 @@
 //  File:        ExpressionSchemaLoader.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式Schema加载器
-//  Version:     2016.05.13.
+//  Version:     2016.05.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -89,7 +89,7 @@ namespace Yuki.ExpressionSchema
                     if (f.Parameters.Length == 2) { Description = GetLeafNodeValue(f.Parameters[1], nm, "InvalidDescription"); }
 
                     var ContentLines = new Syntax.TextLine[] { };
-                    if (f.Content.HasValue)
+                    if (f.Content.OnHasValue)
                     {
                         var ContentValue = f.Content.Value;
                         if (!ContentValue.OnLineContent) { throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }

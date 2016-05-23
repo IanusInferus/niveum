@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#模板数据
-      Version:     2014.01.09.
+      Version:     2016.05.23.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -262,10 +262,10 @@ ObjectSchemaTemplate
                     [TaggedUnion]
                     public struct Optional<T>
                     {
-                        [Tag] public OptionalTag _Tag { get; set; }
+                        [Tag] public OptionalTag _Tag;
 
-                        public Unit NotHasValue { get; set; }
-                        public T HasValue { get; set; }
+                        public Unit NotHasValue;
+                        public T HasValue;
 
                         public static Optional<T> CreateNotHasValue() { return new Optional<T> { _Tag = OptionalTag.NotHasValue, NotHasValue = new Unit() }; }
                         public static Optional<T> CreateHasValue(T Value) { return new Optional<T> { _Tag = OptionalTag.HasValue, HasValue = Value }; }
@@ -416,7 +416,7 @@ ObjectSchemaTemplate
                     [Alias]
                     public sealed class [[${Name}]]
                     {
-                        public [[${Type}]] Value { get; set; }
+                        public [[${Type}]] Value;
 
                         public static implicit operator [[${Name}]]([[${Type}]] o)
                         {
@@ -432,7 +432,7 @@ ObjectSchemaTemplate
             //Parameters: ${NameIndex}, ${Type}
             Value
                 $String
-                    public [[${Type}]] [[Item${NameIndex}]] { get; set; }
+                    public [[${Type}]] [[Item${NameIndex}]];
         Template
             Name Tuple
             //Parameters: ${Name}, ${TupleElements}
@@ -449,7 +449,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    public [[${Type}]] [[${Name}]] { get; set; }
+                    public [[${Type}]] [[${Name}]];
         Template
             Name Record
             //Parameters: ${Name}, ${Fields}, ${XmlComment}
@@ -467,7 +467,7 @@ ObjectSchemaTemplate
             Value
                 $String
                     ${XmlComment}
-                    public [[${Type}]] [[${Name}]] { get; set; }
+                    public [[${Type}]] [[${Name}]];
         Template
             Name AlternativeCreate
             //Parameters: ${TaggedUnionName}, ${TaggedUnionTagName}, ${Name}, ${Type}, ${XmlComment}
@@ -502,7 +502,7 @@ ObjectSchemaTemplate
                     [TaggedUnion]
                     public sealed class [[${Name}]]
                     {
-                        [Tag] public [[${TagName}]] _Tag { get; set; }
+                        [Tag] public [[${TagName}]] _Tag;
 
                         ${Alternatives}
 
