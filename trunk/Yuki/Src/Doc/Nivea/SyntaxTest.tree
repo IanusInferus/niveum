@@ -20,6 +20,10 @@
     $$
         Yield a.ToString()
 
+    $End
+    $$
+        Yield a.ToString()
+
 #Primitive Int
 #Primitive String
 
