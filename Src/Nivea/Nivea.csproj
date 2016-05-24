@@ -59,13 +59,15 @@
     <Compile Include="Template\Generated\Common.cs" />
     <Compile Include="Template\Generated\Semantics.cs" />
     <Compile Include="Template\Generated\Syntax.cs" />
-    <Compile Include="Template\FileParser.cs" />
+    <Compile Include="Template\Syntax\ExprParser.cs" />
+    <Compile Include="Template\Syntax\FileParser.cs" />
     <Compile Include="Template\Syntax\TokenParser.cs" />
+    <Compile Include="Template\Syntax\TypeParser.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Template\Common\Primitive.tree" />
     <None Include="Template\Semantics\Expr.tree" />
-    <None Include="Template\Semantics\Nivea.tree" />
+    <None Include="Template\Semantics\File.tree" />
     <None Include="Template\Semantics\Type.tree" />
     <None Include="Template\Syntax\Syntax.tree" />
     <None Include="Template\Syntax\Token.tree" />
