@@ -1,4 +1,7 @@
-﻿#Namespace Yuki.ObjectSchema.CSharp
+﻿#Option
+    InlineExpressionRegex "\${(?<Expr>.*?)}"
+
+#Namespace Yuki.ObjectSchema.CSharp
 
 #Global
     Let a = 1
@@ -16,11 +19,11 @@
 #Template Test a:Int
     //====
     ${a}
-    //====
-    $$
-        Yield a.ToString()
+    abcd${"123"}efgh
+        $$
+            Yield a.ToString()
 
-    $End
+        $End
     $$
         Yield a.ToString()
 
@@ -45,6 +48,32 @@
 
 #Template TestSyntax
     $$
+        $Comment
+            Test
+
+        $Comment
+            Test
+
+        $End
+
+        Test (1, 2)
+        Test(1, 2)
+        Test (1, 2) (1, 2)
+        Test(1, 2)(1, 2)
+
+        A (B (
+            C
+            D
+        ),
+        E
+        (
+            F
+        ), G)
+        H (
+            I
+                J
+        )
+
         (1, 2)
         (
             1
@@ -213,7 +242,7 @@
 
         Let e = a21(1).Field1.ToString()
 
-        Let f = !False
+        Let f = ! False
 
         Let g = (1 + a) * 3
 

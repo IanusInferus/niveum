@@ -62,6 +62,7 @@
     <Compile Include="Template\Syntax\ExprParser.cs" />
     <Compile Include="Template\Syntax\FileParser.cs" />
     <Compile Include="Template\Syntax\TokenParser.cs" />
+    <Compile Include="Template\Syntax\SequenceBuilder.cs" />
     <Compile Include="Template\Syntax\TypeParser.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -75,12 +76,12 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild">
-    <Exec Command="&quot;..\Bin\SchemaManipulator.exe&quot; /loadtype:&quot;Nivea\Template\Common&quot; /t2cs:&quot;Nivea\Template\Generated\Common.cs&quot;,Nivea,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
-    <Exec Command="&quot;..\Bin\SchemaManipulator.exe&quot; /loadtyperef:&quot;Nivea\Template\Common&quot; /loadtype:&quot;Nivea\Template\Syntax&quot; /t2cs:&quot;Nivea\Template\Generated\Syntax.cs&quot;,Nivea.Template.Syntax,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
-    <Exec Command="&quot;..\Bin\SchemaManipulator.exe&quot; /loadtyperef:&quot;Nivea\Template\Common&quot; /loadtype:&quot;Nivea\Template\Semantics&quot; /t2cs:&quot;Nivea\Template\Generated\Semantics.cs&quot;,Nivea.Template.Semantics,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
-    <Exec Command="mono &quot;../Bin/SchemaManipulator.exe&quot; /loadtype:&quot;Nivea/Template/Common&quot; /t2cs:&quot;Nivea/Template/Generated/Common.cs&quot;,Nivea,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
-    <Exec Command="mono &quot;../Bin/SchemaManipulator.exe&quot; /loadtyperef:&quot;Nivea/Template/Common&quot; /loadtype:&quot;Nivea/Template/Syntax&quot; /t2cs:&quot;Nivea/Template/Generated/Syntax.cs&quot;,Nivea.Template.Syntax,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
-    <Exec Command="mono &quot;../Bin/SchemaManipulator.exe&quot; /loadtyperef:&quot;Nivea/Template/Common&quot; /loadtype:&quot;Nivea/Template/Semantics&quot; /t2cs:&quot;Nivea/Template/Generated/Semantics.cs&quot;,Nivea.Template.Semantics,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
+    <Exec Command="..\Bin\SchemaManipulator.exe /loadtype:Nivea\Template\Common /t2cs:Nivea\Template\Generated\Common.cs,Nivea,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
+    <Exec Command="..\Bin\SchemaManipulator.exe /loadtyperef:Nivea\Template\Common /loadtype:Nivea\Template\Semantics /t2cs:Nivea\Template\Generated\Semantics.cs,Nivea.Template.Semantics,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
+    <Exec Command="..\Bin\SchemaManipulator.exe /loadtyperef:Nivea\Template\Common /loadtyperef:Nivea\Template\Semantics /import:Nivea.Template.Semantics /loadtype:Nivea\Template\Syntax /t2cs:Nivea\Template\Generated\Syntax.cs,Nivea.Template.Syntax,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
+    <Exec Command="mono ../Bin/SchemaManipulator.exe /loadtype:Nivea/Template/Common /t2cs:Nivea/Template/Generated/Common.cs,Nivea,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
+    <Exec Command="mono ../Bin/SchemaManipulator.exe /loadtyperef:Nivea/Template/Common /loadtype:Nivea/Template/Semantics /t2cs:Nivea/Template/Generated/Semantics.cs,Nivea.Template.Semantics,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
+    <Exec Command="mono ../Bin/SchemaManipulator.exe /loadtyperef:Nivea/Template/Common /loadtyperef:Nivea/Template/Semantics /import:Nivea.Template.Semantics /loadtype:Nivea/Template/Syntax/t2cs:Nivea/Template/Generated/Syntax.cs,Nivea.Template.Syntax,true" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
