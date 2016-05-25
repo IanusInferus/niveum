@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2016.05.24.
+//  Version:     2016.05.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -32,13 +32,15 @@ namespace Nivea.Template.Syntax
         public static FileParserResult ParseFile(Text Text)
         {
             var TypeFunctions = new HashSet<String>() { "Primitive", "Alias", "Record", "TaggedUnion", "Enum" };
-            var Functions = new HashSet<String>(TypeFunctions.Concat(new List<String>() { "Namespace", "Assembly", "Import", "Template", "Global" }));
+            var Functions = new HashSet<String>(TypeFunctions.Concat(new List<String>() { "Option", "Namespace", "Assembly", "Import", "Template", "Global" }));
+            var TreeContentFunctions = new HashSet<String> { "Option" };
             var FreeContentFunctions = new HashSet<String> { "Template", "Global" };
 
             var ps = new TreeFormatParseSetting()
             {
                 IsTableParameterFunction = Name => Functions.Contains(Name),
-                IsTableContentFunction = Name => Functions.Contains(Name) && !FreeContentFunctions.Contains(Name)
+                IsTableContentFunction = Name => Functions.Contains(Name) && !TreeContentFunctions.Contains(Name) && !FreeContentFunctions.Contains(Name),
+                IsTreeContentFunction = Name => TreeContentFunctions.Contains(Name)
             };
 
             var sp = new TreeFormatSyntaxParser(ps, Text);
@@ -47,6 +49,8 @@ namespace Nivea.Template.Syntax
 
             var Sections = new List<Semantics.SectionDef>();
             var Positions = new Dictionary<Object, TextRange>();
+            var InlineExpressionRegex = new Regex(@"\${(?<Expr>.*?)}", RegexOptions.ExplicitCapture);
+
             foreach (var TopNode in ParserResult.Value.MultiNodesList)
             {
                 if (TopNode.OnFunctionNodes)
@@ -393,6 +397,45 @@ namespace Nivea.Template.Syntax
                                         }
                                 }
                             }
+                            else if (f.Name.Text == "Option")
+                            {
+                                if (f.Parameters.Length != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+
+                                var ContentNodes = new TFSemantics.Node[] { };
+                                if (f.Content.OnHasValue)
+                                {
+                                    var ContentValue = f.Content.Value;
+                                    if (ContentValue._Tag != FunctionCallContentTag.TreeContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                                    ContentNodes = ContentValue.TreeContent;
+                                }
+
+                                foreach (var Node in ContentNodes)
+                                {
+                                    if (Node.OnEmpty) { continue; }
+                                    if (Node.OnLeaf) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(Node), Node); }
+                                    var Name = Node.Stem.Name;
+                                    if (Name == "InlineExpressionRegex")
+                                    {
+                                        if (Node.Stem.Children.Length != 1) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(Node), Node); }
+                                        var ValueNode = Node.Stem.Children.Single();
+                                        var InlineExpressionRegexValue = GetLeafNodeValue(ValueNode, nm, "InvalidOption");
+                                        try
+                                        {
+                                            InlineExpressionRegex = new Regex(InlineExpressionRegexValue, RegexOptions.ExplicitCapture);
+                                        }
+                                        catch (ArgumentException ex)
+                                        {
+                                            throw new InvalidEvaluationException("InvalidInlineExpressionRegex", nm.GetFileRange(ValueNode), ValueNode, ex);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        throw new InvalidEvaluationException("UnknownOption", nm.GetFileRange(Node), Node);
+                                    }
+                                }
+
+                                return new TFSemantics.Node[] { };
+                            }
                             else if (f.Name.Text == "Namespace")
                             {
                                 if (f.Parameters.Length != 1) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
@@ -408,7 +451,7 @@ namespace Nivea.Template.Syntax
                                 if (f.Parameters.Length != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
                                 var ContentLines = new FunctionCallTableLine[] { };
-                                if (Functions.Contains(f.Name.Text) && f.Content.OnHasValue)
+                                if (f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (ContentValue._Tag != FunctionCallContentTag.TableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -448,7 +491,7 @@ namespace Nivea.Template.Syntax
                                 if (f.Parameters.Length != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
                                 var ContentLines = new FunctionCallTableLine[] { };
-                                if (Functions.Contains(f.Name.Text) && f.Content.OnHasValue)
+                                if (f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (ContentValue._Tag != FunctionCallContentTag.TableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -508,7 +551,7 @@ namespace Nivea.Template.Syntax
                                 }
 
                                 FunctionContent Content;
-                                if (Functions.Contains(f.Name.Text) && f.Content.OnHasValue)
+                                if (f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (ContentValue._Tag != FunctionCallContentTag.LineContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -526,89 +569,9 @@ namespace Nivea.Template.Syntax
                                 {
                                     Positions.Add(Signature, new TextRange { Start = FirstRange.Value.Start, End = FirstRange.Value.End });
                                 }
-                                var Body = new List<TemplateExpr>();
 
-                                var InExecutable = false;
-                                var IndentSpace = 0;
-                                var HeadRange = Optional<TextRange>.Empty;
-                                var ExecutableLines = new List<TextLine>();
-
-                                Action<TextLine, String> AddLiteral = (Line, LineText) =>
-                                {
-                                    var te = TemplateExpr.CreateLiteral(LineText);
-                                    Positions.Add(te, Line.Range);
-                                    Body.Add(te);
-                                };
-
-                                Action AddExecutable = () =>
-                                {
-                                    //TODO
-                                    var ee = new ExecutableExpr { IndentSpace = IndentSpace, Expr = Expr.CreateNull() };
-
-                                    var Range = new TextRange { Start = HeadRange.Value.Start, End = HeadRange.Value.End };
-                                    if (ExecutableLines.Count > 0)
-                                    {
-                                        Range.End = ExecutableLines.Last().Range.End;
-                                    }
-                                    Positions.Add(ee, Range);
-                                    var te = TemplateExpr.CreateExecutable(ee);
-                                    Positions.Add(te, Range);
-                                    Body.Add(te);
-                                };
-
-                                foreach (var Line in Content.Lines)
-                                {
-                                    var LineText = Line.Text.Substring(Math.Min(Content.IndentLevel * 4, Line.Text.Length));
-                                    if (!InExecutable)
-                                    {
-                                        var Trimmed = LineText.Trim(' ');
-                                        if (Trimmed == "$$")
-                                        {
-                                            InExecutable = true;
-                                            IndentSpace = LineText.TakeWhile(c => c == ' ').Count();
-                                            HeadRange = Line.Range;
-                                            ExecutableLines = new List<TextLine>();
-                                        }
-                                        else
-                                        {
-                                            AddLiteral(Line, LineText);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        var SpaceCount = LineText.TakeWhile(c => c == ' ').Count();
-                                        if (LineText.Trim(' ') == "")
-                                        {
-                                            ExecutableLines.Add(Line);
-                                        }
-                                        else if (SpaceCount < IndentSpace)
-                                        {
-                                            AddExecutable();
-                                            InExecutable = false;
-                                            AddLiteral(Line, LineText);
-                                        }
-                                        else if ((SpaceCount == IndentSpace) && (LineText.Substring(SpaceCount) == "$End"))
-                                        {
-                                            AddExecutable();
-                                            InExecutable = false;
-                                        }
-                                        else if (SpaceCount >= IndentSpace + 4)
-                                        {
-                                            ExecutableLines.Add(Line);
-                                        }
-                                        else
-                                        {
-                                            throw new InvalidEvaluationException("InvalidIndent", nm.GetFileRange(Line), Line);
-                                        }
-                                    }
-                                }
-
-                                if (InExecutable)
-                                {
-                                    AddExecutable();
-                                    InExecutable = false;
-                                }
-
+                                var Body = ExprParser.ParseTemplateBody(Content.Lines, Content.IndentLevel * 4, InlineExpressionRegex, nm, Positions);
+                                Mark(Body, Content);
                                 var t = new TemplateDef { Signature = Signature, Body = Body };
                                 Mark(t, f);
                                 var s = SectionDef.CreateTemplate(t);
@@ -618,7 +581,25 @@ namespace Nivea.Template.Syntax
                             }
                             else if (f.Name.Text == "Global")
                             {
-                                //TODO
+                                if (f.Parameters.Length != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+
+                                FunctionContent Content;
+                                if (f.Content.OnHasValue)
+                                {
+                                    var ContentValue = f.Content.Value;
+                                    if (ContentValue._Tag != FunctionCallContentTag.LineContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                                    Content = ContentValue.LineContent;
+                                }
+                                else
+                                {
+                                    throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(f), f);
+                                }
+
+                                var Expr = ExprParser.ParseExprLines(Content.Lines.ToList(), Content.IndentLevel * 4, InlineExpressionRegex, nm, Positions);
+                                Mark(Expr, Content);
+                                var s = SectionDef.CreateGlobal(Expr);
+                                Mark(s, f);
+                                Sections.Add(s);
                                 return new TFSemantics.Node[] { };
                             }
                             else
