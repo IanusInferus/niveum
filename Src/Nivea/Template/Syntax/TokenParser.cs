@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 词法解析器
-//  Version:     2016.05.23.
+//  Version:     2016.05.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -29,6 +29,34 @@ namespace Nivea.Template.Syntax
         public static Text BuildText(String s, String Path)
         {
             return new Text { Path = Path, Lines = GetLines(s, Path) };
+        }
+
+        public static Boolean IsBlankLine(String t)
+        {
+            return t.All(c => c == ' ');
+        }
+        public static Boolean IsExactFitIndentCount(String t, int IndentCount)
+        {
+            if (t.Length < IndentCount) { return false; }
+            if (!t.Take(IndentCount).All(c => c == ' ')) { return false; }
+            if (t.Length == IndentCount) { return true; }
+            if (t[IndentCount] == ' ') { return false; }
+            return true;
+        }
+        public static Boolean IsFitIndentCount(String t, int IndentCount)
+        {
+            if (t.Length < IndentCount) { return false; }
+            if (!t.Take(IndentCount).All(c => c == ' ')) { return false; }
+            return true;
+        }
+
+        public static Boolean IsExactFitIndentLevel(String t, int IndentLevel)
+        {
+            return IsExactFitIndentCount(t, IndentLevel * 4);
+        }
+        public static Boolean IsFitIndentLevel(String t, int IndentLevel)
+        {
+            return IsFitIndentCount(t, IndentLevel * 4);
         }
 
         private static Regex rLineSeparator = new Regex(@"\r\n|\n", RegexOptions.ExplicitCapture);
@@ -60,7 +88,7 @@ namespace Nivea.Template.Syntax
             return l.ToArray();
         }
 
-        public static Optional<TokenParserResult> ReadToken(Text Text, Dictionary<Object, TextRange> Positions, TextRange RangeInLine, Boolean IsLeadingToken)
+        public static Optional<TokenParserResult> ReadToken(TextRange RangeInLine, Boolean IsLeadingToken, Text Text, Dictionary<Object, TextRange> Positions)
         {
             var s = Text.GetTextInLine(RangeInLine);
             var Index = 0;
@@ -500,6 +528,24 @@ namespace Nivea.Template.Syntax
                     throw new InvalidOperationException();
                 }
             }
+        }
+
+        public static List<Token> ReadTokensInLine(Text Text, Dictionary<Object, TextRange> Positions, TextRange RangeInLine)
+        {
+            var l = new List<Token>();
+            var Range = RangeInLine;
+            var IsLeadingToken = true;
+            while (true)
+            {
+                var oResult = ReadToken(Range, IsLeadingToken, Text, Positions);
+                if (oResult.OnNotHasValue) { break; }
+                var Result = oResult.Value;
+                l.Add(Result.Token);
+                if (Result.RemainingChars.OnNotHasValue) { break; }
+                Range = Result.RemainingChars.Value;
+                IsLeadingToken = false;
+            }
+            return l;
         }
     }
 }
