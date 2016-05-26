@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2016.05.25.
+//  Version:     2016.05.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -57,7 +57,7 @@ namespace Nivea.Template.Syntax
                 {
                     var pr = new TreeFormatParseResult
                     {
-                        Value = new Forest { MultiNodesList = new MultiNodes[] { TopNode } },
+                        Value = new Forest { MultiNodesList = new List<MultiNodes> { TopNode } },
                         Text = Text,
                         Positions = ParserResult.Positions,
                         RawFunctionCalls = ParserResult.RawFunctionCalls
@@ -77,7 +77,7 @@ namespace Nivea.Template.Syntax
 
                             if (TypeFunctions.Contains(f.Name.Text))
                             {
-                                if (f.Parameters.Length < 1 || f.Parameters.Length > 2) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+                                if (f.Parameters.Count < 1 || f.Parameters.Count > 2) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
                                 var VersionedName = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
                                 var TypeRef = ParseTypeRef(VersionedName);
@@ -85,14 +85,14 @@ namespace Nivea.Template.Syntax
                                 var Version = TypeRef.Version;
 
                                 String Description = "";
-                                if (f.Parameters.Length >= 2)
+                                if (f.Parameters.Count >= 2)
                                 {
                                     var DescriptionParameter = f.Parameters[1];
                                     if (!DescriptionParameter.OnLeaf) { throw new InvalidEvaluationException("InvalidDescription", nm.GetFileRange(DescriptionParameter), DescriptionParameter); }
                                     Description = DescriptionParameter.Leaf;
                                 }
 
-                                var ContentLines = new FunctionCallTableLine[] { };
+                                var ContentLines = new List<FunctionCallTableLine> { };
                                 if (Functions.Contains(f.Name.Text) && f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
@@ -114,19 +114,19 @@ namespace Nivea.Template.Syntax
                                                 TypeSpec cType = null;
                                                 String cDescription = null;
 
-                                                if (Line.Nodes.Length == 2)
+                                                if (Line.Nodes.Count == 2)
                                                 {
                                                     cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                                     cType = ParseTypeSpec(Line.Nodes[1], nm, Positions);
                                                     cDescription = "";
                                                 }
-                                                else if (Line.Nodes.Length == 3)
+                                                else if (Line.Nodes.Count == 3)
                                                 {
                                                     cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                                     cType = ParseTypeSpec(Line.Nodes[1], nm, Positions);
                                                     cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                                 }
-                                                else if (Line.Nodes.Length == 0)
+                                                else if (Line.Nodes.Count == 0)
                                                 {
                                                     continue;
                                                 }
@@ -155,7 +155,7 @@ namespace Nivea.Template.Syntax
                                             var s = SectionDef.CreateType(t);
                                             Mark(s, f);
                                             Sections.Add(s);
-                                            return new TFSemantics.Node[] { };
+                                            return new List<TFSemantics.Node> { };
                                         }
                                     case "Alias":
                                         {
@@ -168,7 +168,7 @@ namespace Nivea.Template.Syntax
                                                 TypeSpec cType = null;
                                                 String cDescription = null;
 
-                                                if (Line.Nodes.Length == 1)
+                                                if (Line.Nodes.Count == 1)
                                                 {
                                                     if (Type != null)
                                                     {
@@ -177,19 +177,19 @@ namespace Nivea.Template.Syntax
                                                     Type = ParseTypeSpec(Line.Nodes[0], nm, Positions);
                                                     continue;
                                                 }
-                                                else if (Line.Nodes.Length == 2)
+                                                else if (Line.Nodes.Count == 2)
                                                 {
                                                     cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                                     cType = ParseTypeSpec(Line.Nodes[1], nm, Positions);
                                                     cDescription = "";
                                                 }
-                                                else if (Line.Nodes.Length == 3)
+                                                else if (Line.Nodes.Count == 3)
                                                 {
                                                     cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                                     cType = ParseTypeSpec(Line.Nodes[1], nm, Positions);
                                                     cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                                 }
-                                                else if (Line.Nodes.Length == 0)
+                                                else if (Line.Nodes.Count == 0)
                                                 {
                                                     continue;
                                                 }
@@ -223,7 +223,7 @@ namespace Nivea.Template.Syntax
                                             var s = SectionDef.CreateType(t);
                                             Mark(s, f);
                                             Sections.Add(s);
-                                            return new TFSemantics.Node[] { };
+                                            return new List<TFSemantics.Node> { };
                                         }
                                     case "Record":
                                         {
@@ -236,19 +236,19 @@ namespace Nivea.Template.Syntax
                                                 TypeSpec cType = null;
                                                 String cDescription = null;
 
-                                                if (Line.Nodes.Length == 2)
+                                                if (Line.Nodes.Count == 2)
                                                 {
                                                     cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                                     cType = ParseTypeSpec(Line.Nodes[1], nm, Positions);
                                                     cDescription = "";
                                                 }
-                                                else if (Line.Nodes.Length == 3)
+                                                else if (Line.Nodes.Count == 3)
                                                 {
                                                     cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                                     cType = ParseTypeSpec(Line.Nodes[1], nm, Positions);
                                                     cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                                 }
-                                                else if (Line.Nodes.Length == 0)
+                                                else if (Line.Nodes.Count == 0)
                                                 {
                                                     continue;
                                                 }
@@ -279,7 +279,7 @@ namespace Nivea.Template.Syntax
                                             var s = SectionDef.CreateType(t);
                                             Mark(s, f);
                                             Sections.Add(s);
-                                            return new TFSemantics.Node[] { };
+                                            return new List<TFSemantics.Node> { };
                                         }
                                     case "TaggedUnion":
                                         {
@@ -292,19 +292,19 @@ namespace Nivea.Template.Syntax
                                                 TypeSpec cType = null;
                                                 String cDescription = null;
 
-                                                if (Line.Nodes.Length == 2)
+                                                if (Line.Nodes.Count == 2)
                                                 {
                                                     cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidAlternativeName");
                                                     cType = ParseTypeSpec(Line.Nodes[1], nm, Positions);
                                                     cDescription = "";
                                                 }
-                                                else if (Line.Nodes.Length == 3)
+                                                else if (Line.Nodes.Count == 3)
                                                 {
                                                     cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidAlternativeName");
                                                     cType = ParseTypeSpec(Line.Nodes[1], nm, Positions);
                                                     cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                                 }
-                                                else if (Line.Nodes.Length == 0)
+                                                else if (Line.Nodes.Count == 0)
                                                 {
                                                     continue;
                                                 }
@@ -335,7 +335,7 @@ namespace Nivea.Template.Syntax
                                             var s = SectionDef.CreateType(t);
                                             Mark(s, f);
                                             Sections.Add(s);
-                                            return new TFSemantics.Node[] { };
+                                            return new List<TFSemantics.Node> { };
                                         }
                                     case "Enum":
                                         {
@@ -348,25 +348,25 @@ namespace Nivea.Template.Syntax
                                                 Int64 cValue = NextValue;
                                                 String cDescription = null;
 
-                                                if (Line.Nodes.Length == 1)
+                                                if (Line.Nodes.Count == 1)
                                                 {
                                                     cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
                                                     cValue = NextValue;
                                                     cDescription = "";
                                                 }
-                                                else if (Line.Nodes.Length == 2)
+                                                else if (Line.Nodes.Count == 2)
                                                 {
                                                     cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
                                                     cValue = NumericStrings.InvariantParseInt64(GetLeafNodeValue(Line.Nodes[1], nm, "InvalidLiteralValue"));
                                                     cDescription = "";
                                                 }
-                                                else if (Line.Nodes.Length == 3)
+                                                else if (Line.Nodes.Count == 3)
                                                 {
                                                     cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
                                                     cValue = NumericStrings.InvariantParseInt64(GetLeafNodeValue(Line.Nodes[1], nm, "InvalidLiteralValue"));
                                                     cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                                 }
-                                                else if (Line.Nodes.Length == 0)
+                                                else if (Line.Nodes.Count == 0)
                                                 {
                                                     continue;
                                                 }
@@ -389,7 +389,7 @@ namespace Nivea.Template.Syntax
                                             var s = SectionDef.CreateType(t);
                                             Mark(s, f);
                                             Sections.Add(s);
-                                            return new TFSemantics.Node[] { };
+                                            return new List<TFSemantics.Node> { };
                                         }
                                     default:
                                         {
@@ -399,9 +399,9 @@ namespace Nivea.Template.Syntax
                             }
                             else if (f.Name.Text == "Option")
                             {
-                                if (f.Parameters.Length != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+                                if (f.Parameters.Count != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
-                                var ContentNodes = new TFSemantics.Node[] { };
+                                var ContentNodes = new List<TFSemantics.Node> { };
                                 if (f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
@@ -416,7 +416,7 @@ namespace Nivea.Template.Syntax
                                     var Name = Node.Stem.Name;
                                     if (Name == "InlineExpressionRegex")
                                     {
-                                        if (Node.Stem.Children.Length != 1) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(Node), Node); }
+                                        if (Node.Stem.Children.Count != 1) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(Node), Node); }
                                         var ValueNode = Node.Stem.Children.Single();
                                         var InlineExpressionRegexValue = GetLeafNodeValue(ValueNode, nm, "InvalidOption");
                                         try
@@ -434,23 +434,23 @@ namespace Nivea.Template.Syntax
                                     }
                                 }
 
-                                return new TFSemantics.Node[] { };
+                                return new List<TFSemantics.Node> { };
                             }
                             else if (f.Name.Text == "Namespace")
                             {
-                                if (f.Parameters.Length != 1) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+                                if (f.Parameters.Count != 1) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
                                 var Namespace = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
 
                                 var s = SectionDef.CreateNamepsace(Namespace);
                                 Mark(s, f);
                                 Sections.Add(s);
-                                return new TFSemantics.Node[] { };
+                                return new List<TFSemantics.Node> { };
                             }
                             else if (f.Name.Text == "Assembly")
                             {
-                                if (f.Parameters.Length != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+                                if (f.Parameters.Count != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
-                                var ContentLines = new FunctionCallTableLine[] { };
+                                var ContentLines = new List<FunctionCallTableLine> { };
                                 if (f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
@@ -464,11 +464,11 @@ namespace Nivea.Template.Syntax
                                 {
                                     String cName = null;
 
-                                    if (Line.Nodes.Length == 1)
+                                    if (Line.Nodes.Count == 1)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidAssemblyName");
                                     }
-                                    else if (Line.Nodes.Length == 0)
+                                    else if (Line.Nodes.Count == 0)
                                     {
                                         continue;
                                     }
@@ -484,13 +484,13 @@ namespace Nivea.Template.Syntax
                                 var s = SectionDef.CreateAssembly(Assemblies);
                                 Mark(s, f);
                                 Sections.Add(s);
-                                return new TFSemantics.Node[] { };
+                                return new List<TFSemantics.Node> { };
                             }
                             else if (f.Name.Text == "Import")
                             {
-                                if (f.Parameters.Length != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+                                if (f.Parameters.Count != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
-                                var ContentLines = new FunctionCallTableLine[] { };
+                                var ContentLines = new List<FunctionCallTableLine> { };
                                 if (f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
@@ -504,11 +504,11 @@ namespace Nivea.Template.Syntax
                                 {
                                     String cName = null;
 
-                                    if (Line.Nodes.Length == 1)
+                                    if (Line.Nodes.Count == 1)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidImport");
                                     }
-                                    else if (Line.Nodes.Length == 0)
+                                    else if (Line.Nodes.Count == 0)
                                     {
                                         continue;
                                     }
@@ -524,11 +524,11 @@ namespace Nivea.Template.Syntax
                                 var s = SectionDef.CreateImport(Imports);
                                 Mark(s, f);
                                 Sections.Add(s);
-                                return new TFSemantics.Node[] { };
+                                return new List<TFSemantics.Node> { };
                             }
                             else if (f.Name.Text == "Template")
                             {
-                                if (f.Parameters.Length < 1) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+                                if (f.Parameters.Count < 1) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
                                 var Name = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
 
@@ -577,11 +577,11 @@ namespace Nivea.Template.Syntax
                                 var s = SectionDef.CreateTemplate(t);
                                 Mark(s, f);
                                 Sections.Add(s);
-                                return new TFSemantics.Node[] { };
+                                return new List<TFSemantics.Node> { };
                             }
                             else if (f.Name.Text == "Global")
                             {
-                                if (f.Parameters.Length != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+                                if (f.Parameters.Count != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
                                 FunctionContent Content;
                                 if (f.Content.OnHasValue)
@@ -595,12 +595,12 @@ namespace Nivea.Template.Syntax
                                     throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(f), f);
                                 }
 
-                                var Expr = ExprParser.ParseExprLines(Content.Lines.ToList(), Content.IndentLevel * 4, InlineExpressionRegex, nm, Positions);
-                                Mark(Expr, Content);
+                                var Range = nm.GetRange(Content);
+                                var Expr = ExprParser.ParseExprLines(Content.Lines, Range.OnHasValue ? Range.Value : Optional<TextRange>.Empty, Content.IndentLevel * 4, InlineExpressionRegex, nm, Positions);
                                 var s = SectionDef.CreateGlobal(Expr);
                                 Mark(s, f);
                                 Sections.Add(s);
-                                return new TFSemantics.Node[] { };
+                                return new List<TFSemantics.Node> { };
                             }
                             else
                             {
@@ -615,7 +615,7 @@ namespace Nivea.Template.Syntax
                 {
                     var pr = new TreeFormatParseResult
                     {
-                        Value = new Forest { MultiNodesList = new MultiNodes[] { TopNode } },
+                        Value = new Forest { MultiNodesList = new List<MultiNodes> { TopNode } },
                         Text = Text,
                         Positions = ParserResult.Positions,
                         RawFunctionCalls = ParserResult.RawFunctionCalls

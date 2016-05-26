@@ -355,6 +355,12 @@ Let
 
 语义分析
 
+保留字
+
+Yield, YieldMany, Throw, Let, Var, If, Match, For, While, Continue, Break, Return, Null, Default, Tuple, Cast
+保留字在恰当的位置，会按照预先定义的规则进行解释，可以使用""或{}等进行避免。
+
+
 类型
 
 Unit, Boolean, String, Int, Real, Type, Optional, List, Set, Map
@@ -377,5 +383,4 @@ Unit, Boolean, String, Int, Real, Type, Optional, List, Set, Map
 跳转表达式
 
 Yield表达式可以透明经过Sequence、If、Match、For、While而不被接收
-Continue表达式可以透明经过Sequence、If、Match而不被接收，最后只能被For、While接收
-Break表达式可以透明经过Sequence、If、Match而不被接收，并根据数字经过For、While，最后只能被For、While接收
+Continue、Break表达式可以透明经过Sequence、If、Match而不被接收，最后只能被For、While接收

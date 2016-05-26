@@ -51,7 +51,7 @@ namespace Yuki.ExpressionSchema
         {
             var LinesSignature = new List<TextLine>();
             LinesSignature.Add(new TextLine { Text = Signature, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Signature.Length, Row = 1, Column = Signature.Length + 1 } } });
-            var tSignature = new Text { Path = "Signature", Lines = LinesSignature.ToArray() };
+            var tSignature = new Text { Path = "Signature", Lines = LinesSignature };
             var p = new Parser(tSignature, null);
             return p.ParseDeclaration(LinesSignature.Single().Range);
         }
@@ -59,7 +59,7 @@ namespace Yuki.ExpressionSchema
         {
             var LinesBody = new List<TextLine>();
             LinesBody.Add(new TextLine { Text = Body, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Body.Length, Row = 1, Column = Body.Length + 1 } } });
-            var tBody = new Text { Path = "Body", Lines = LinesBody.ToArray() };
+            var tBody = new Text { Path = "Body", Lines = LinesBody };
             var p = new Parser(null, tBody);
             return p.ParseBody(VariableTypeProvider, Declaration, LinesBody.Single().Range);
         }
@@ -67,7 +67,7 @@ namespace Yuki.ExpressionSchema
         {
             var LinesBody = new List<TextLine>();
             LinesBody.Add(new TextLine { Text = Body, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Body.Length, Row = 1, Column = Body.Length + 1 } } });
-            var tBody = new Text { Path = "Body", Lines = LinesBody.ToArray() };
+            var tBody = new Text { Path = "Body", Lines = LinesBody };
             var p = new Parser(null, tBody);
             return p.ParseExpr(VariableTypeProvider, LinesBody.Single().Range);
         }
@@ -77,8 +77,8 @@ namespace Yuki.ExpressionSchema
             LinesSignature.Add(new TextLine { Text = Signature, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Signature.Length, Row = 1, Column = Signature.Length + 1 } } });
             var LinesBody = new List<TextLine>();
             LinesBody.Add(new TextLine { Text = Body, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Body.Length, Row = 1, Column = Body.Length + 1 } } });
-            var tSignature = new Text { Path = "Signature", Lines = LinesSignature.ToArray() };
-            var tBody = new Text { Path = "Body", Lines = LinesBody.ToArray() };
+            var tSignature = new Text { Path = "Signature", Lines = LinesSignature };
+            var tBody = new Text { Path = "Body", Lines = LinesBody };
             var p = new Parser(tSignature, tBody);
             return p.ParseFunction(VariableTypeProvider, LinesSignature.Single().Range, LinesBody.Single().Range);
         }

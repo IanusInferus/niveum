@@ -49,7 +49,7 @@ namespace Yuki.RelationSchemaDiff
 
         public List<EntityMapping> GetResult()
         {
-            var tfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { MakeStemNode("ListOfEntityMapping", EntityMappings.ToArray()) } }, Positions = Positions };
+            var tfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new List<Semantics.Node> { MakeStemNode("ListOfEntityMapping", EntityMappings.ToArray()) } }, Positions = Positions };
 
             var x = XmlInterop.TreeToXml(tfr);
             var l = xs.Read<List<EntityMapping>>(x);
@@ -68,7 +68,7 @@ namespace Yuki.RelationSchemaDiff
         }
         private Semantics.Node MakeStemNode(String Name, params Semantics.Node[] Children)
         {
-            var s = new Semantics.Stem { Name = Name, Children = Children };
+            var s = new Semantics.Stem { Name = Name, Children = Children.ToList() };
             var n = Semantics.Node.CreateStem(s);
             return n;
         }
@@ -89,7 +89,7 @@ namespace Yuki.RelationSchemaDiff
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new List<Syntax.TextLine> { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -135,7 +135,7 @@ namespace Yuki.RelationSchemaDiff
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new List<Syntax.TextLine> { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -221,7 +221,7 @@ namespace Yuki.RelationSchemaDiff
                         {
                             clEnd = tpr.Value.RemainingChars.Value.End;
                         }
-                        l.Add(nm.MakeStemNode("", cl.ToArray(), new Syntax.TextRange { Start = clStart, End = clEnd }));
+                        l.Add(nm.MakeStemNode("", cl, new Syntax.TextRange { Start = clStart, End = clEnd }));
                         cl = null;
                         clStart = default(Syntax.TextPosition);
                         clEnd = default(Syntax.TextPosition);
@@ -421,12 +421,12 @@ namespace Yuki.RelationSchemaDiff
             {
                 FunctionCallEvaluator = (f, nm) =>
                 {
-                    if (f.Parameters.Length == 0)
+                    if (f.Parameters.Count == 0)
                     {
                         if (f.Name.Text == "Map")
                         {
                             var Nodes = f.Content.Value.LineContent.Lines.SelectMany(Line => ParseEntityMappingsAsSemanticsNodes(f.Content.Value.LineContent.IndentLevel, Line, nm)).ToArray();
-                            return new Semantics.Node[]
+                            return new List<Semantics.Node>
                             {
                                 MakeStemNode("ListOfEntityMapping", Nodes)
                             };

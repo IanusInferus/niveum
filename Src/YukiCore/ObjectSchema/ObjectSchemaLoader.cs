@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2016.05.23.
+//  Version:     2016.05.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -65,7 +65,7 @@ namespace Yuki.ObjectSchema
             var ImportsNode = MakeStemNode("Imports", Imports.ToArray());
             var TypePathsNode = MakeStemNode("TypePaths", TypePaths.ToArray());
             var Schema = MakeStemNode("Schema", TypesNode, TypeRefsNode, ImportsNode, TypePathsNode);
-            var tfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { Schema } }, Positions = Positions };
+            var tfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new List<Semantics.Node> { Schema } }, Positions = Positions };
 
             var x = XmlInterop.TreeToXml(tfr);
             var s = xs.Read<Schema>(x);
@@ -136,7 +136,7 @@ namespace Yuki.ObjectSchema
         }
         private Semantics.Node MakeStemNode(String Name, params Semantics.Node[] Children)
         {
-            var s = new Semantics.Stem { Name = Name, Children = Children };
+            var s = new Semantics.Stem { Name = Name, Children = Children.ToList() };
             var n = Semantics.Node.CreateStem(s);
             return n;
         }
@@ -157,7 +157,7 @@ namespace Yuki.ObjectSchema
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new List<Syntax.TextLine> { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -240,7 +240,7 @@ namespace Yuki.ObjectSchema
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new List<Syntax.TextLine> { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -281,21 +281,21 @@ namespace Yuki.ObjectSchema
             {
                 FunctionCallEvaluator = (f, nm) =>
                 {
-                    if (f.Parameters.Length < 1 || f.Parameters.Length > 2) { throw new Syntax.InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+                    if (f.Parameters.Count < 1 || f.Parameters.Count > 2) { throw new Syntax.InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
                     var VersionedName = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
                     var Name = VersionedName;
                     var Version = GetVersion(ref Name);
 
                     String Description = "";
-                    if (f.Parameters.Length >= 2)
+                    if (f.Parameters.Count >= 2)
                     {
                         var DescriptionParameter = f.Parameters[1];
                         if (!DescriptionParameter.OnLeaf) { throw new Syntax.InvalidEvaluationException("InvalidDescription", nm.GetFileRange(DescriptionParameter), DescriptionParameter); }
                         Description = DescriptionParameter.Leaf;
                     }
 
-                    var ContentLines = new Syntax.FunctionCallTableLine[] { };
+                    var ContentLines = new List<Syntax.FunctionCallTableLine> { };
                     if (Functions.Contains(f.Name.Text) && f.Content.OnHasValue)
                     {
                         var ContentValue = f.Content.Value;
@@ -317,19 +317,19 @@ namespace Yuki.ObjectSchema
                                     Semantics.Node cType = null;
                                     String cDescription = null;
 
-                                    if (Line.Nodes.Length == 2)
+                                    if (Line.Nodes.Count == 2)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = "";
                                     }
-                                    else if (Line.Nodes.Length == 3)
+                                    else if (Line.Nodes.Count == 3)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                     }
-                                    else if (Line.Nodes.Length == 0)
+                                    else if (Line.Nodes.Count == 0)
                                     {
                                         continue;
                                     }
@@ -353,7 +353,7 @@ namespace Yuki.ObjectSchema
                                     }
                                 }
 
-                                return new Semantics.Node[]
+                                return new List<Semantics.Node>
                                 {
                                     MakeStemNode("Primitive",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
@@ -373,7 +373,7 @@ namespace Yuki.ObjectSchema
                                     Semantics.Node cType = null;
                                     String cDescription = null;
 
-                                    if (Line.Nodes.Length == 1)
+                                    if (Line.Nodes.Count == 1)
                                     {
                                         if (Type != null)
                                         {
@@ -382,19 +382,19 @@ namespace Yuki.ObjectSchema
                                         Type = MakeStemNode("Type", VirtualParseTypeSpec(Line.Nodes[0], nm));
                                         continue;
                                     }
-                                    else if (Line.Nodes.Length == 2)
+                                    else if (Line.Nodes.Count == 2)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = "";
                                     }
-                                    else if (Line.Nodes.Length == 3)
+                                    else if (Line.Nodes.Count == 3)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                     }
-                                    else if (Line.Nodes.Length == 0)
+                                    else if (Line.Nodes.Count == 0)
                                     {
                                         continue;
                                     }
@@ -423,7 +423,7 @@ namespace Yuki.ObjectSchema
                                     throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentLines), ContentLines);
                                 }
 
-                                return new Semantics.Node[]
+                                return new List<Semantics.Node>
                                 {
                                     MakeStemNode("Alias",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
@@ -445,19 +445,19 @@ namespace Yuki.ObjectSchema
                                     Semantics.Node cType = null;
                                     String cDescription = null;
 
-                                    if (Line.Nodes.Length == 2)
+                                    if (Line.Nodes.Count == 2)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = "";
                                     }
-                                    else if (Line.Nodes.Length == 3)
+                                    else if (Line.Nodes.Count == 3)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                     }
-                                    else if (Line.Nodes.Length == 0)
+                                    else if (Line.Nodes.Count == 0)
                                     {
                                         continue;
                                     }
@@ -485,7 +485,7 @@ namespace Yuki.ObjectSchema
                                     }
                                 }
 
-                                return new Semantics.Node[]
+                                return new List<Semantics.Node>
                                 {
                                     MakeStemNode("Record",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
@@ -507,19 +507,19 @@ namespace Yuki.ObjectSchema
                                     Semantics.Node cType = null;
                                     String cDescription = null;
 
-                                    if (Line.Nodes.Length == 2)
+                                    if (Line.Nodes.Count == 2)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidAlternativeName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = "";
                                     }
-                                    else if (Line.Nodes.Length == 3)
+                                    else if (Line.Nodes.Count == 3)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidAlternativeName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                     }
-                                    else if (Line.Nodes.Length == 0)
+                                    else if (Line.Nodes.Count == 0)
                                     {
                                         continue;
                                     }
@@ -547,7 +547,7 @@ namespace Yuki.ObjectSchema
                                     }
                                 }
 
-                                return new Semantics.Node[]
+                                return new List<Semantics.Node>
                                 {
                                     MakeStemNode("TaggedUnion",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
@@ -569,25 +569,25 @@ namespace Yuki.ObjectSchema
                                     Int64 cValue = NextValue;
                                     String cDescription = null;
 
-                                    if (Line.Nodes.Length == 1)
+                                    if (Line.Nodes.Count == 1)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
                                         cValue = NextValue;
                                         cDescription = "";
                                     }
-                                    else if (Line.Nodes.Length == 2)
+                                    else if (Line.Nodes.Count == 2)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
                                         cValue = NumericStrings.InvariantParseInt64(GetLeafNodeValue(Line.Nodes[1], nm, "InvalidLiteralValue"));
                                         cDescription = "";
                                     }
-                                    else if (Line.Nodes.Length == 3)
+                                    else if (Line.Nodes.Count == 3)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
                                         cValue = NumericStrings.InvariantParseInt64(GetLeafNodeValue(Line.Nodes[1], nm, "InvalidLiteralValue"));
                                         cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                     }
-                                    else if (Line.Nodes.Length == 0)
+                                    else if (Line.Nodes.Count == 0)
                                     {
                                         continue;
                                     }
@@ -604,7 +604,7 @@ namespace Yuki.ObjectSchema
                                     ));
                                 }
 
-                                return new Semantics.Node[]
+                                return new List<Semantics.Node>
                                 {
                                     MakeStemNode("Enum",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
@@ -627,7 +627,7 @@ namespace Yuki.ObjectSchema
                                     Semantics.Node cType = null;
                                     String cDescription = null;
 
-                                    if (Line.Nodes.Length == 1)
+                                    if (Line.Nodes.Count == 1)
                                     {
                                         if (GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName") == ">")
                                         {
@@ -639,19 +639,19 @@ namespace Yuki.ObjectSchema
                                             throw new Syntax.InvalidEvaluationException("InvalidLine", nm.GetFileRange(Line), Line);
                                         }
                                     }
-                                    else if (Line.Nodes.Length == 2)
+                                    else if (Line.Nodes.Count == 2)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = "";
                                     }
-                                    else if (Line.Nodes.Length == 3)
+                                    else if (Line.Nodes.Count == 3)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                     }
-                                    else if (Line.Nodes.Length == 0)
+                                    else if (Line.Nodes.Count == 0)
                                     {
                                         continue;
                                     }
@@ -680,7 +680,7 @@ namespace Yuki.ObjectSchema
                                     }
                                 }
 
-                                return new Semantics.Node[]
+                                return new List<Semantics.Node>
                                 {
                                     MakeStemNode("ClientCommand",
                                         MakeStemNode("Name", MakeLeafNode(Name)),
@@ -701,19 +701,19 @@ namespace Yuki.ObjectSchema
                                     Semantics.Node cType = null;
                                     String cDescription = null;
 
-                                    if (Line.Nodes.Length == 2)
+                                    if (Line.Nodes.Count == 2)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = "";
                                     }
-                                    else if (Line.Nodes.Length == 3)
+                                    else if (Line.Nodes.Count == 3)
                                     {
                                         cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                         cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                         cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                     }
-                                    else if (Line.Nodes.Length == 0)
+                                    else if (Line.Nodes.Count == 0)
                                     {
                                         continue;
                                     }
@@ -729,7 +729,7 @@ namespace Yuki.ObjectSchema
                                     ));
                                 }
 
-                                return new Semantics.Node[]
+                                return new List<Semantics.Node>
                                 {
                                     MakeStemNode("ServerCommand",
                                         MakeStemNode("Name", MakeLeafNode(Name)),

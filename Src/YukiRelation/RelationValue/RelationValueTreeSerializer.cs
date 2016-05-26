@@ -633,7 +633,7 @@ namespace Yuki.RelationValue
                     k += 1;
                 }
                 if (k != r.Columns.Count) { throw new InvalidOperationException(); }
-                return Node.CreateStem(new Stem { Name = e.Name, Children = Nodes.ToArray() });
+                return Node.CreateStem(new Stem { Name = e.Name, Children = Nodes });
             };
             return Writer;
         }
@@ -683,7 +683,7 @@ namespace Yuki.RelationValue
                         if (!v.OnPrimitive) { throw new InvalidOperationException(); }
                         var vv = v.Primitive;
                         if (!vv.OnBooleanValue) { throw new InvalidOperationException(); }
-                        return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.BooleanValue.ToInvariantString()) } });
+                        return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.BooleanValue.ToInvariantString()) } });
                     };
                 }
                 else if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
@@ -693,7 +693,7 @@ namespace Yuki.RelationValue
                         if (!v.OnPrimitive) { throw new InvalidOperationException(); }
                         var vv = v.Primitive;
                         if (!vv.OnStringValue) { throw new InvalidOperationException(); }
-                        return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.StringValue) } });
+                        return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.StringValue) } });
                     };
                 }
                 else if (TypeName.Equals("Int", StringComparison.OrdinalIgnoreCase))
@@ -707,11 +707,11 @@ namespace Yuki.RelationValue
                             if (!vv.OnIntValue) { throw new InvalidOperationException(); }
                             if (EnumWriter.ContainsKey(vv.IntValue))
                             {
-                                return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(EnumWriter[vv.IntValue]) } });
+                                return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(EnumWriter[vv.IntValue]) } });
                             }
                             else
                             {
-                                return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.IntValue.ToInvariantString()) } });
+                                return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.IntValue.ToInvariantString()) } });
                             }
                         };
                     }
@@ -722,7 +722,7 @@ namespace Yuki.RelationValue
                             if (!v.OnPrimitive) { throw new InvalidOperationException(); }
                             var vv = v.Primitive;
                             if (!vv.OnIntValue) { throw new InvalidOperationException(); }
-                            return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.IntValue.ToInvariantString()) } });
+                            return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.IntValue.ToInvariantString()) } });
                         };
                     }
                 }
@@ -737,11 +737,11 @@ namespace Yuki.RelationValue
                             if (!vv.OnInt64Value) { throw new InvalidOperationException(); }
                             if (EnumWriter.ContainsKey(vv.Int64Value))
                             {
-                                return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(EnumWriter[vv.Int64Value]) } });
+                                return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(EnumWriter[vv.Int64Value]) } });
                             }
                             else
                             {
-                                return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.Int64Value.ToInvariantString()) } });
+                                return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.Int64Value.ToInvariantString()) } });
                             }
                         };
                     }
@@ -752,7 +752,7 @@ namespace Yuki.RelationValue
                             if (!v.OnPrimitive) { throw new InvalidOperationException(); }
                             var vv = v.Primitive;
                             if (!vv.OnInt64Value) { throw new InvalidOperationException(); }
-                            return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.Int64Value.ToInvariantString()) } });
+                            return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.Int64Value.ToInvariantString()) } });
                         };
                     }
                 }
@@ -763,7 +763,7 @@ namespace Yuki.RelationValue
                         if (!v.OnPrimitive) { throw new InvalidOperationException(); }
                         var vv = v.Primitive;
                         if (!vv.OnRealValue) { throw new InvalidOperationException(); }
-                        return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.RealValue.ToInvariantString()) } });
+                        return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.RealValue.ToInvariantString()) } });
                     };
                 }
                 else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase))
@@ -774,7 +774,7 @@ namespace Yuki.RelationValue
                         var vv = v.Primitive;
                         if (!vv.OnBinaryValue) { throw new InvalidOperationException(); }
                         var ByteString = String.Join(" ", vv.BinaryValue.Select(b => b.ToString("X2", System.Globalization.CultureInfo.InvariantCulture)).ToArray());
-                        return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(ByteString) } });
+                        return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(ByteString) } });
                     };
                 }
                 else
@@ -791,11 +791,11 @@ namespace Yuki.RelationValue
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
                         if (v.Optional.OnNotHasValue)
                         {
-                            return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateEmpty() } });
+                            return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
                         var vv = v.Optional.HasValue;
                         if (!vv.OnBooleanValue) { throw new InvalidOperationException(); }
-                        return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.BooleanValue.ToInvariantString()) } });
+                        return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.BooleanValue.ToInvariantString()) } });
                     };
                 }
                 else if (TypeName.Equals("String", StringComparison.OrdinalIgnoreCase))
@@ -805,11 +805,11 @@ namespace Yuki.RelationValue
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
                         if (v.Optional.OnNotHasValue)
                         {
-                            return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateEmpty() } });
+                            return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
                         var vv = v.Optional.HasValue;
                         if (!vv.OnStringValue) { throw new InvalidOperationException(); }
-                        return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.StringValue) } });
+                        return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.StringValue) } });
                     };
                 }
                 else if (TypeName.Equals("Int", StringComparison.OrdinalIgnoreCase))
@@ -819,11 +819,11 @@ namespace Yuki.RelationValue
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
                         if (v.Optional.OnNotHasValue)
                         {
-                            return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateEmpty() } });
+                            return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
                         var vv = v.Optional.HasValue;
                         if (!vv.OnIntValue) { throw new InvalidOperationException(); }
-                        return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.IntValue.ToInvariantString()) } });
+                        return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.IntValue.ToInvariantString()) } });
                     };
                 }
                 else if (TypeName.Equals("Int64", StringComparison.OrdinalIgnoreCase))
@@ -833,11 +833,11 @@ namespace Yuki.RelationValue
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
                         if (v.Optional.OnNotHasValue)
                         {
-                            return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateEmpty() } });
+                            return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
                         var vv = v.Optional.HasValue;
                         if (!vv.OnInt64Value) { throw new InvalidOperationException(); }
-                        return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.Int64Value.ToInvariantString()) } });
+                        return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.Int64Value.ToInvariantString()) } });
                     };
                 }
                 else if (TypeName.Equals("Real", StringComparison.OrdinalIgnoreCase))
@@ -847,11 +847,11 @@ namespace Yuki.RelationValue
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
                         if (v.Optional.OnNotHasValue)
                         {
-                            return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateEmpty() } });
+                            return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
                         var vv = v.Optional.HasValue;
                         if (!vv.OnRealValue) { throw new InvalidOperationException(); }
-                        return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(vv.RealValue.ToInvariantString()) } });
+                        return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.RealValue.ToInvariantString()) } });
                     };
                 }
                 else if (TypeName.Equals("Binary", StringComparison.OrdinalIgnoreCase))
@@ -861,12 +861,12 @@ namespace Yuki.RelationValue
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
                         if (v.Optional.OnNotHasValue)
                         {
-                            return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateEmpty() } });
+                            return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
                         var vv = v.Optional.HasValue;
                         if (!vv.OnBinaryValue) { throw new InvalidOperationException(); }
                         var ByteString = String.Join(" ", vv.BinaryValue.Select(b => b.ToString("X2", System.Globalization.CultureInfo.InvariantCulture)).ToArray());
-                        return Node.CreateStem(new Stem { Name = c.Name, Children = new Node[] { Node.CreateLeaf(ByteString) } });
+                        return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(ByteString) } });
                     };
                 }
                 else

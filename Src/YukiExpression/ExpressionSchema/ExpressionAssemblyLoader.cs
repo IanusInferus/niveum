@@ -68,7 +68,7 @@ namespace Yuki.ExpressionSchema
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new List<Syntax.TextLine> { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -86,19 +86,19 @@ namespace Yuki.ExpressionSchema
             {
                 FunctionCallEvaluator = (f, nm) =>
                 {
-                    if (f.Parameters.Length < 1 || f.Parameters.Length > 2) { throw new Syntax.InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+                    if (f.Parameters.Count < 1 || f.Parameters.Count > 2) { throw new Syntax.InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
                     var Name = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
 
                     String Description = "";
-                    if (f.Parameters.Length >= 2)
+                    if (f.Parameters.Count >= 2)
                     {
                         var DescriptionParameter = f.Parameters[1];
                         if (!DescriptionParameter.OnLeaf) { throw new Syntax.InvalidEvaluationException("InvalidDescription", nm.GetFileRange(DescriptionParameter), DescriptionParameter); }
                         Description = DescriptionParameter.Leaf;
                     }
 
-                    var ContentLines = new Syntax.TextLine[] { };
+                    var ContentLines = new List<Syntax.TextLine> { };
                     if (f.Content.OnHasValue)
                     {
                         var ContentValue = f.Content.Value;
@@ -148,7 +148,7 @@ namespace Yuki.ExpressionSchema
                         throw new Syntax.InvalidEvaluationException("UnknownFunction", nm.GetFileRange(f), f);
                     }
 
-                    return new Node[] { };
+                    return new List<Node> { };
                 }
             };
             var pr = TreeFile.ReadRaw(Reader, TreePath, ps);
