@@ -68,7 +68,7 @@ namespace Yuki.RelationSchema
             var TypesQueryListsNode = MakeStemNode("Types", RTypes.Concat(Types.Where(n => n.OnStem && n.Stem.Name == "QueryList")).Select(n => MakeStemNode("TypeDef", n)).ToArray());
             var TypeRefsQueryListsNode = MakeStemNode("TypeRefs", RTypeRefs.Concat(Types.Where(n => n.OnStem && n.Stem.Name == "QueryList")).Select(n => MakeStemNode("TypeDef", n)).ToArray());
             var RelationSchema = MakeStemNode("Schema", TypesQueryListsNode, TypeRefsQueryListsNode, MakeStemNode("Imports"), MakeStemNode("TypePaths"));
-            var rtfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { RelationSchema } }, Positions = Positions };
+            var rtfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new List<Semantics.Node> { RelationSchema } }, Positions = Positions };
             var rx = XmlInterop.TreeToXml(rtfr);
             var rs = xs.Read<Schema>(rx);
 
@@ -77,7 +77,7 @@ namespace Yuki.RelationSchema
             var ImportsNode = MakeStemNode("Imports", Imports.ToArray());
             var TypePathsNode = MakeStemNode("TypePaths", TypePaths.ToArray());
             var ObjectSchema = MakeStemNode("Schema", TypesNode, TypeRefsNode, ImportsNode, TypePathsNode);
-            var tfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new Semantics.Node[] { ObjectSchema } }, Positions = Positions };
+            var tfr = new TreeFormatResult { Value = new Semantics.Forest { Nodes = new List<Semantics.Node> { ObjectSchema } }, Positions = Positions };
 
             var x = XmlInterop.TreeToXml(tfr);
             var os = xs.Read<OS.Schema>(x);
@@ -129,7 +129,7 @@ namespace Yuki.RelationSchema
         }
         private Semantics.Node MakeStemNode(String Name, params Semantics.Node[] Children)
         {
-            var s = new Semantics.Stem { Name = Name, Children = Children };
+            var s = new Semantics.Stem { Name = Name, Children = Children.ToList() };
             var n = Semantics.Node.CreateStem(s);
             return n;
         }
@@ -150,7 +150,7 @@ namespace Yuki.RelationSchema
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new List<Syntax.TextLine> { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -222,7 +222,7 @@ namespace Yuki.RelationSchema
                     }
                     catch (InvalidOperationException ex)
                     {
-                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new Syntax.TextLine[] { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
+                        throw new Syntax.InvalidSyntaxException("", new Syntax.FileTextRange { Text = new Syntax.Text { Path = TreePath, Lines = new List<Syntax.TextLine> { } }, Range = TreeFormat.Optional<Syntax.TextRange>.Empty }, ex);
                     }
                 }
             }
@@ -310,7 +310,7 @@ namespace Yuki.RelationSchema
                         {
                             clEnd = tpr.Value.RemainingChars.Value.End;
                         }
-                        l.Add(nm.MakeStemNode("", cl.ToArray(), new Syntax.TextRange { Start = clStart, End = clEnd }));
+                        l.Add(nm.MakeStemNode("", cl, new Syntax.TextRange { Start = clStart, End = clEnd }));
                         cl = null;
                         clStart = default(Syntax.TextPosition);
                         clEnd = default(Syntax.TextPosition);
@@ -444,12 +444,12 @@ namespace Yuki.RelationSchema
             {
                 FunctionCallEvaluator = (f, nm) =>
                 {
-                    if (f.Parameters.Length == 0)
+                    if (f.Parameters.Count == 0)
                     {
                         if (f.Name.Text == "Query")
                         {
                             var Nodes = f.Content.Value.LineContent.Lines.SelectMany(Line => ParseQueryDefAsSemanticsNodes(f.Content.Value.LineContent.IndentLevel, Line, nm)).ToList();
-                            return new Semantics.Node[]
+                            return new List<Semantics.Node>
                             {
                                 MakeStemNode("QueryList",
                                     MakeStemNode("Queries", Nodes.ToArray())
@@ -465,21 +465,21 @@ namespace Yuki.RelationSchema
                             throw new Syntax.InvalidEvaluationException("UnknownFunction", nm.GetFileRange(f), f);
                         }
                     }
-                    else if (f.Parameters.Length == 1 || f.Parameters.Length == 2)
+                    else if (f.Parameters.Count == 1 || f.Parameters.Count == 2)
                     {
                         var VersionedName = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
                         var Name = VersionedName;
                         var Version = GetVersion(ref Name);
 
                         String Description = "";
-                        if (f.Parameters.Length >= 2)
+                        if (f.Parameters.Count >= 2)
                         {
                             var DescriptionParameter = f.Parameters[1];
                             if (!DescriptionParameter.OnLeaf) { throw new Syntax.InvalidEvaluationException("InvalidDescription", nm.GetFileRange(DescriptionParameter), DescriptionParameter); }
                             Description = DescriptionParameter.Leaf;
                         }
 
-                        var ContentLines = new Syntax.FunctionCallTableLine[] { };
+                        var ContentLines = new List<Syntax.FunctionCallTableLine> { };
                         if (Functions.Contains(f.Name.Text) && f.Content.OnHasValue)
                         {
                             var ContentValue = f.Content.Value;
@@ -501,19 +501,19 @@ namespace Yuki.RelationSchema
                                         Semantics.Node cType = null;
                                         String cDescription = null;
 
-                                        if (Line.Nodes.Length == 2)
+                                        if (Line.Nodes.Count == 2)
                                         {
                                             cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                             cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                             cDescription = "";
                                         }
-                                        else if (Line.Nodes.Length == 3)
+                                        else if (Line.Nodes.Count == 3)
                                         {
                                             cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                             cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                             cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                         }
-                                        else if (Line.Nodes.Length == 0)
+                                        else if (Line.Nodes.Count == 0)
                                         {
                                             continue;
                                         }
@@ -537,7 +537,7 @@ namespace Yuki.RelationSchema
                                         }
                                     }
 
-                                    return new Semantics.Node[]
+                                    return new List<Semantics.Node>
                                     {
                                         MakeStemNode("Primitive",
                                             MakeStemNode("Name", MakeLeafNode(Name)),
@@ -557,19 +557,19 @@ namespace Yuki.RelationSchema
                                         Semantics.Node cType = null;
                                         String cDescription = null;
 
-                                        if (Line.Nodes.Length == 2)
+                                        if (Line.Nodes.Count == 2)
                                         {
                                             cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                             cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                             cDescription = "";
                                         }
-                                        else if (Line.Nodes.Length == 3)
+                                        else if (Line.Nodes.Count == 3)
                                         {
                                             cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidFieldName");
                                             cType = VirtualParseTypeSpec(Line.Nodes[1], nm);
                                             cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                         }
-                                        else if (Line.Nodes.Length == 0)
+                                        else if (Line.Nodes.Count == 0)
                                         {
                                             continue;
                                         }
@@ -597,7 +597,7 @@ namespace Yuki.RelationSchema
                                         }
                                     }
 
-                                    return new Semantics.Node[]
+                                    return new List<Semantics.Node>
                                     {
                                         MakeStemNode("Record",
                                             MakeStemNode("Name", MakeLeafNode(Name)),
@@ -619,25 +619,25 @@ namespace Yuki.RelationSchema
                                         Int64 cValue = NextValue;
                                         String cDescription = null;
 
-                                        if (Line.Nodes.Length == 1)
+                                        if (Line.Nodes.Count == 1)
                                         {
                                             cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
                                             cValue = NextValue;
                                             cDescription = "";
                                         }
-                                        else if (Line.Nodes.Length == 2)
+                                        else if (Line.Nodes.Count == 2)
                                         {
                                             cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
                                             cValue = NumericStrings.InvariantParseInt64(GetLeafNodeValue(Line.Nodes[1], nm, "InvalidLiteralValue"));
                                             cDescription = "";
                                         }
-                                        else if (Line.Nodes.Length == 3)
+                                        else if (Line.Nodes.Count == 3)
                                         {
                                             cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidLiteralName");
                                             cValue = NumericStrings.InvariantParseInt64(GetLeafNodeValue(Line.Nodes[1], nm, "InvalidLiteralValue"));
                                             cDescription = GetLeafNodeValue(Line.Nodes[2], nm, "InvalidDescription");
                                         }
-                                        else if (Line.Nodes.Length == 0)
+                                        else if (Line.Nodes.Count == 0)
                                         {
                                             continue;
                                         }
@@ -654,7 +654,7 @@ namespace Yuki.RelationSchema
                                         ));
                                     }
 
-                                    return new Semantics.Node[]
+                                    return new List<Semantics.Node>
                                     {
                                         MakeStemNode("Enum",
                                             MakeStemNode("Name", MakeLeafNode(Name)),

@@ -56,6 +56,10 @@
 
         $End
 
+        $String
+            abc
+            123
+
         Test (1, 2)
         Test(1, 2)
         Test (1, 2) (1, 2)
@@ -73,6 +77,10 @@
             I
                 J
         )
+
+        A((B))
+        A ((B))
+        A (())
 
         (1, 2)
         (
@@ -171,6 +179,9 @@
         Let a25 =
             Return 1
 
+        If a24 == 0
+            Return
+
         If
             a24 == 0
                 1
@@ -225,6 +236,13 @@
         While c < 5
             Yield c.ToString()
             c += 1
+
+        While True
+            Continue
+
+        While True
+            While True
+                Continue 2
 
         While True
             Break

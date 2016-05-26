@@ -143,13 +143,13 @@ namespace Yuki.ObjectSchema
                     var LineText = String.Join("", Line.ToArray());
                     Lines.Add(new Syntax.TextLine { Text = LineText, Range = new Syntax.TextRange { Start = new Syntax.TextPosition { Row = 1, Column = 1, CharIndex = 0 }, End = new Syntax.TextPosition { Row = 1, Column = 1 + LineText.Length, CharIndex = LineText.Length } } });
                 }
-                var fn = WriteToFunctionNodes(t._Tag.ToString(), t.VersionedName(), t.Description(), Lines.ToArray());
+                var fn = WriteToFunctionNodes(t._Tag.ToString(), t.VersionedName(), t.Description(), Lines);
                 MultiNodesList.Add(Syntax.MultiNodes.CreateFunctionNodes(fn));
             }
-            return new Syntax.Forest { MultiNodesList = MultiNodesList.ToArray() };
+            return new Syntax.Forest { MultiNodesList = MultiNodesList };
         }
 
-        private Syntax.FunctionNodes WriteToFunctionNodes(String Directive, String Name, String Description, Syntax.TextLine[] Lines)
+        private Syntax.FunctionNodes WriteToFunctionNodes(String Directive, String Name, String Description, List<Syntax.TextLine> Lines)
         {
             var Parameters = new List<Syntax.Token>();
             Parameters.Add(Syntax.Token.CreateSingleLineLiteral(Name));
@@ -160,7 +160,7 @@ namespace Yuki.ObjectSchema
             var fn = new Syntax.FunctionNodes
             {
                 FunctionDirective = new Syntax.FunctionDirective { Text = Directive },
-                Parameters = Parameters.ToArray(),
+                Parameters = Parameters,
                 SingleLineComment = TreeFormat.Optional<Syntax.SingleLineComment>.Empty,
                 Content = new Syntax.FunctionContent { IndentLevel = 0, Lines = Lines },
                 EndDirective = TreeFormat.Optional<Syntax.EndDirective>.Empty

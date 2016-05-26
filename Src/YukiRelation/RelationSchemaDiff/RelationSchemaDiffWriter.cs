@@ -96,9 +96,9 @@ namespace Yuki.RelationSchemaDiff
                 }
             }
 
-            var AlterNode = Syntax.MultiNodes.CreateFunctionNodes(new Syntax.FunctionNodes { FunctionDirective = new Syntax.FunctionDirective { Text = "Map" }, Parameters = new Syntax.Token[] { }, Content = new Syntax.FunctionContent { IndentLevel = 0, Lines = Lines.ToArray() } });
+            var AlterNode = Syntax.MultiNodes.CreateFunctionNodes(new Syntax.FunctionNodes { FunctionDirective = new Syntax.FunctionDirective { Text = "Map" }, Parameters = new List<Syntax.Token> { }, Content = new Syntax.FunctionContent { IndentLevel = 0, Lines = Lines } });
 
-            TreeFile.WriteRaw(sw, new Syntax.Forest { MultiNodesList = new Syntax.MultiNodes[] { AlterNode } });
+            TreeFile.WriteRaw(sw, new Syntax.Forest { MultiNodesList = new List<Syntax.MultiNodes> { AlterNode } });
         }
 
         private static String GetPrimitiveValString(Optional<PrimitiveVal> v)

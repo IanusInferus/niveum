@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 词法解析器
-//  Version:     2016.05.25.
+//  Version:     2016.05.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -61,7 +61,7 @@ namespace Nivea.Template.Syntax
 
         private static Regex rLineSeparator = new Regex(@"\r\n|\n", RegexOptions.ExplicitCapture);
         private static Regex rLineSeparators = new Regex(@"\r|\n", RegexOptions.ExplicitCapture);
-        private static TextLine[] GetLines(String s, String Path)
+        private static List<TextLine> GetLines(String s, String Path)
         {
             var l = new List<TextLine>();
 
@@ -79,13 +79,13 @@ namespace Nivea.Template.Syntax
                 {
                     var SeparatorStart = new TextPosition { CharIndex = CurrentIndex + mm.Index, Row = CurrentRow, Column = mm.Index + 1 };
                     var SeparatorEnd = new TextPosition { CharIndex = CurrentIndex + mm.Index + mm.Length, Row = CurrentRow + 1, Column = 1 };
-                    throw new InvalidSyntaxException("IllegalLineSeparator", new FileTextRange { Text = new Text { Path = Path, Lines = l.ToArray() }, Range = new TextRange { Start = SeparatorStart, End = SeparatorEnd } });
+                    throw new InvalidSyntaxException("IllegalLineSeparator", new FileTextRange { Text = new Text { Path = Path, Lines = l }, Range = new TextRange { Start = SeparatorStart, End = SeparatorEnd } });
                 }
                 CurrentIndex = m.Index + m.Length;
                 CurrentRow += 1;
             }
 
-            return l.ToArray();
+            return l;
         }
 
         public static Optional<TokenParserResult> ReadToken(TextRange RangeInLine, Boolean IsLeadingToken, Text Text, Dictionary<Object, TextRange> Positions)
