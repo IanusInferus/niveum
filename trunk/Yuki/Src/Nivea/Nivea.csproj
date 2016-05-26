@@ -60,6 +60,7 @@
     <Compile Include="Template\Generated\Semantics.cs" />
     <Compile Include="Template\Generated\Syntax.cs" />
     <Compile Include="Template\Syntax\ExprParser.cs" />
+    <Compile Include="Template\Syntax\ExprTransformer.cs" />
     <Compile Include="Template\Syntax\FileParser.cs" />
     <Compile Include="Template\Syntax\TokenParser.cs" />
     <Compile Include="Template\Syntax\SequenceBuilder.cs" />

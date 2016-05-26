@@ -3,7 +3,7 @@
 //  File:        ExprParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2016.05.25.
+//  Version:     2016.05.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.Texting.TreeFormat;
+using Firefly.Texting.TreeFormat.Semantics;
 using Firefly.Texting.TreeFormat.Syntax;
 using Nivea.Template.Semantics;
 
@@ -21,7 +22,7 @@ namespace Nivea.Template.Syntax
 {
     public static class ExprParser
     {
-        public static List<TemplateExpr> ParseTemplateBody(IEnumerable<TextLine> Lines, int LinesIndentSpace, Regex InlineExpressionRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
+        public static List<TemplateExpr> ParseTemplateBody(List<TextLine> Lines, int LinesIndentSpace, Regex InlineExpressionRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
         {
             var Body = new List<TemplateExpr>();
 
@@ -47,7 +48,6 @@ namespace Nivea.Template.Syntax
                 {
                     var Range = new TextRange { Start = nm.Text.Calc(Line.Range.Start, LinesIndentSpace + StartIndex), End = nm.Text.Calc(Line.Range.Start, LinesIndentSpace + StartIndex + Length) };
                     var Expr = ParseExprInLine(Range, nm, Positions);
-                    Positions.Add(Expr, Range);
                     var ts = TemplateSpan.CreateExpr(Expr);
                     Positions.Add(ts, Range);
                     Spans.Add(ts);
@@ -79,15 +79,15 @@ namespace Nivea.Template.Syntax
 
             Action AddIndentedExpr = () =>
             {
-                var e = ParseExprLines(IndentedExprLines, LinesIndentSpace + IndentSpace + 4, InlineExpressionRegex, nm, Positions);
-                var ee = new IndentedExpr { IndentSpace = IndentSpace, Expr = e };
-
                 var Range = new TextRange { Start = HeadRange.Value.Start, End = HeadRange.Value.End };
                 if (IndentedExprLines.Count > 0)
                 {
                     Range.End = IndentedExprLines.Last().Range.End;
                 }
-                Positions.Add(e, Range);
+
+                var e = ParseExprLines(IndentedExprLines, Range, LinesIndentSpace + IndentSpace + 4, InlineExpressionRegex, nm, Positions);
+                var ee = new IndentedExpr { IndentSpace = IndentSpace, Expr = e };
+
                 Positions.Add(ee, Range);
                 var te = TemplateExpr.CreateIndentedExpr(ee);
                 Positions.Add(te, Range);
@@ -152,27 +152,57 @@ namespace Nivea.Template.Syntax
 
         public static Expr ParseExprInLine(TextRange Range, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
         {
-            var l = ParseExprInLineToNodes(Range, nm, Positions);
-            //TODO
-            return Expr.CreateNull();
+            var NodePositions = new Dictionary<Object, TextRange>();
+            var l = ParseExprInLineToNodes(Range, nm, NodePositions, Positions);
+            ExprNode OuterNode;
+            if (l.Count == 1)
+            {
+                OuterNode = l.Single();
+            }
+            else
+            {
+                var OuterUndetermined = new ExprNodeUndetermined { Nodes = l };
+                OuterNode = ExprNode.CreateUndetermined(OuterUndetermined);
+                NodePositions.Add(OuterUndetermined, Range);
+                NodePositions.Add(OuterNode, Range);
+            }
+            var e = ExprTransformer.Transform(OuterNode, nm.Text, NodePositions, Positions);
+            return e;
         }
 
-        public static Expr ParseExprLines(List<TextLine> Lines, int LinesIndentSpace, Regex InlineExpressionRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
+        public static Expr ParseExprLines(List<TextLine> Lines, Optional<TextRange> Range, int LinesIndentSpace, Regex InlineExpressionRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
         {
-            var l = ParseExprLinesToNodes(Lines, LinesIndentSpace, InlineExpressionRegex, nm, Positions);
-            //TODO
-            return Expr.CreateNull();
+            var NodePositions = new Dictionary<Object, TextRange>();
+            var l = ParseExprLinesToNodes(Lines, LinesIndentSpace, InlineExpressionRegex, nm, NodePositions, Positions);
+            ExprNode OuterNode;
+            if (l.Count == 1)
+            {
+                OuterNode = l.Single();
+            }
+            else
+            {
+                var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = l };
+                OuterNode = ExprNode.CreateStem(OuterStem);
+                if (Range.OnHasValue)
+                {
+                    Positions.Add(OuterStem, Range.Value);
+                    Positions.Add(OuterNode, Range.Value);
+                }
+            }
+            var e = ExprTransformer.Transform(OuterNode, nm.Text, NodePositions, Positions);
+            return e;
         }
 
-        public static List<ExprNode> ParseExprInLineToNodes(TextRange Range, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
+        public static List<ExprNode> ParseExprInLineToNodes(TextRange Range, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
         {
             var l = new List<ExprNode>();
 
+            var TokenPositions = new Dictionary<Object, TextRange>();
             var sb = new SequenceBuilder();
-            var Tokens = TokenParser.ReadTokensInLine(nm.Text, Positions, Range);
+            var Tokens = TokenParser.ReadTokensInLine(nm.Text, TokenPositions, Range);
             foreach (var t in Tokens)
             {
-                sb.PushToken(t, nm, Positions);
+                sb.PushToken(t, nm.Text, TokenPositions, NodePositions);
             }
 
             if (sb.IsInParenthesis)
@@ -180,12 +210,25 @@ namespace Nivea.Template.Syntax
                 throw new InvalidSyntaxException("InvalidParenthesis", new FileTextRange { Text = nm.Text, Range = Range });
             }
 
-            return sb.GetResult(nm, Positions);
+            return sb.GetResult(nm.Text, TokenPositions, NodePositions);
         }
 
-        public static List<ExprNode> ParseExprLinesToNodes(List<TextLine> Lines, int LinesIndentSpace, Regex InlineExpressionRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
+        public static List<ExprNode> ParseExprLinesToNodes(List<TextLine> Lines, int LinesIndentSpace, Regex InlineExpressionRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
         {
             var l = new List<ExprNode>();
+
+            var TokenPositions = new Dictionary<Object, TextRange>();
+            Func<Object, Firefly.Texting.TreeFormat.Optional<FileTextRange>> GetFileRange = Obj =>
+            {
+                if (TokenPositions.ContainsKey(Obj))
+                {
+                    return new FileTextRange { Text = nm.Text, Range = TokenPositions[Obj] };
+                }
+                else
+                {
+                    return Firefly.Texting.TreeFormat.Optional<FileTextRange>.Empty;
+                }
+            };
 
             var sb = new SequenceBuilder();
             var RangeStart = Firefly.Texting.TreeFormat.Optional<TextRange>.Empty;
@@ -210,58 +253,229 @@ namespace Nivea.Template.Syntax
                     throw new InvalidSyntaxException("InvalidIndent", new FileTextRange { Text = nm.Text, Range = Line.Range });
                 }
                 var LineText = Line.Text.Substring(Math.Min(LinesIndentSpace, Line.Text.Length));
-                var Tokens = TokenParser.ReadTokensInLine(nm.Text, Positions, Line.Range);
+                var Tokens = TokenParser.ReadTokensInLine(nm.Text, TokenPositions, Line.Range);
                 foreach (var t in Tokens)
                 {
-                    sb.PushToken(t, nm, Positions);
+                    sb.PushToken(t, nm.Text, TokenPositions, NodePositions);
                 }
 
                 var ChildLines = new List<TextLine>();
+                var HasEnd = false;
                 while (LineQueue.Count > 0)
                 {
                     var NextLine = LineQueue.Peek();
-                    if (!TokenParser.IsFitIndentCount(NextLine.Text, LinesIndentSpace + 4))
+                    if (!TokenParser.IsBlankLine(NextLine.Text) && !TokenParser.IsFitIndentCount(NextLine.Text, LinesIndentSpace + 4))
                     {
                         if (TokenParser.IsExactFitIndentCount(NextLine.Text, LinesIndentSpace) && (NextLine.Text.Trim(' ') == "$End"))
                         {
                             LineQueue.Dequeue();
+                            HasEnd = true;
                         }
                         break;
                     }
                     ChildLines.Add(NextLine);
                     LineQueue.Dequeue();
                 }
+                if (!HasEnd)
+                {
+                    ChildLines = ChildLines.AsEnumerable().Reverse().SkipWhile(ChildLine => TokenParser.IsBlankLine(ChildLine.Text)).Reverse().ToList();
+                }
+                var ChildRangeStart = new TextRange { Start = Line.Range.End, End = Line.Range.End };
+                if (ChildLines.Count > 0)
+                {
+                    ChildRangeStart = ChildLines.First().Range;
+                    RangeEnd = ChildLines.Last().Range;
+                }
+                var ChildRange = ChildRangeStart;
+                if (RangeEnd.OnHasValue)
+                {
+                    ChildRange = new TextRange { Start = ChildRangeStart.Start, End = RangeEnd.Value.End };
+                }
+                var Range = Optional<TextRange>.Empty;
+                if (RangeStart.OnHasValue && RangeEnd.OnHasValue)
+                {
+                    Range = new TextRange { Start = RangeStart.Value.Start, End = RangeEnd.Value.End };
+                }
 
                 var PreprocessDirectiveReduced = sb.TryReducePreprocessDirective((PreprocessDirectiveToken, Parameters) =>
                 {
-                    //TODO
-                    return new List<ExprNode> { ExprNode.CreateLiteral(PreprocessDirectiveToken.ToString()) };
-                }, nm, Positions);
+                    if (!PreprocessDirectiveToken.Type.OnPreprocessDirective) { throw new InvalidOperationException(); }
+                    var PreprocessDirectiveName = PreprocessDirectiveToken.Type.PreprocessDirective;
+                    if (PreprocessDirectiveName == "$Comment")
+                    {
+                        if (Parameters.Count != 0) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
+                        return new List<ExprNode> { };
+                    }
+                    else if (PreprocessDirectiveName == "$String")
+                    {
+                        if (Parameters.Count != 0) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
+                        var s = String.Join("\r\n", ChildLines.Select(ChildLine => ChildLine.Text.Substring(Math.Min(LinesIndentSpace + 4, ChildLine.Text.Length))));
+                        var n = ExprNode.CreateLiteral(s);
+                        if (Range.OnHasValue)
+                        {
+                            NodePositions.Add(n, Range.Value);
+                        }
+                        return new List<ExprNode> { n };
+                    }
+                    else if (PreprocessDirectiveName == "$List")
+                    {
+                        if (Parameters.Count != 1) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
+                        var Head = Parameters.Single();
+                        var Children = ParseExprLinesToNodes(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, NodePositions, Positions);
+                        var ln = new List<ExprNode>();
+                        foreach (var c in Children)
+                        {
+                            var Nodes = new List<ExprNode> { c };
+                            var Stem = new ExprNodeStem { Head = Head, Nodes = Nodes };
+                            var n = ExprNode.CreateStem(Stem);
+                            if (NodePositions.ContainsKey(c))
+                            {
+                                var cRange = NodePositions[c];
+                                NodePositions.Add(Nodes, cRange);
+                                NodePositions.Add(Stem, cRange);
+                                NodePositions.Add(n, cRange);
+                            }
+                            ln.Add(n);
+                        }
+                        var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = ln };
+                        var OuterNode = ExprNode.CreateStem(OuterStem);
+                        if (Range.OnHasValue)
+                        {
+                            NodePositions.Add(OuterStem, Range.Value);
+                            NodePositions.Add(OuterNode, Range.Value);
+                        }
+                        return new List<ExprNode> { OuterNode };
+                    }
+                    else if (PreprocessDirectiveName == "$Table")
+                    {
+                        if (Parameters.Count < 2) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
+                        var Head = Parameters.First();
+                        var Fields = Parameters.Skip(1).ToList();
+                        var Children = ParseExprLinesToNodes(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, NodePositions, Positions);
+                        var ln = new List<ExprNode>();
+                        foreach (var c in Children)
+                        {
+                            var FieldNodes = new List<ExprNode> { };
+                            if (c.OnUndetermined)
+                            {
+                                FieldNodes = c.Undetermined.Nodes;
+                            }
+                            else
+                            {
+                                FieldNodes.Add(c);
+                            }
+
+                            if (FieldNodes.Count != Fields.Count)
+                            {
+                                throw new InvalidSyntaxException("InvalidFieldCount", GetFileRange(c));
+                            }
+
+                            var Nodes = new List<ExprNode> { };
+                            foreach (var p in Fields.Zip(FieldNodes, (Field, FieldNode) => new { Field = Field, FieldNode = FieldNode }))
+                            {
+                                var Field = p.Field;
+                                var FieldNode = p.FieldNode;
+                                var fNodes = new List<ExprNode> { FieldNode };
+                                var fStem = new ExprNodeStem { Head = Field, Nodes = fNodes };
+                                var fn = ExprNode.CreateStem(fStem);
+                                if (NodePositions.ContainsKey(FieldNode))
+                                {
+                                    var fRange = NodePositions[FieldNode];
+                                    NodePositions.Add(fNodes, fRange);
+                                    NodePositions.Add(fStem, fRange);
+                                    NodePositions.Add(fn, fRange);
+                                }
+                                Nodes.Add(fn);
+                            }
+                            var Stem = new ExprNodeStem { Head = Head, Nodes = Nodes };
+                            var n = ExprNode.CreateStem(Stem);
+                            if (NodePositions.ContainsKey(c))
+                            {
+                                var cRange = NodePositions[c];
+                                NodePositions.Add(Nodes, cRange);
+                                NodePositions.Add(Stem, cRange);
+                                NodePositions.Add(n, cRange);
+                            }
+                            ln.Add(n);
+                        }
+                        var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = ln };
+                        var OuterNode = ExprNode.CreateStem(OuterStem);
+                        if (Range.OnHasValue)
+                        {
+                            NodePositions.Add(OuterStem, Range.Value);
+                            NodePositions.Add(OuterNode, Range.Value);
+                        }
+                        return new List<ExprNode> { OuterNode };
+                    }
+                    else if (PreprocessDirectiveName == "#")
+                    {
+                        if (Parameters.Count != 0) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
+                        var Children = ParseTemplateBody(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, Positions);
+                        var OuterNode = ExprNode.CreateTemplate(Children);
+                        if (Range.OnHasValue)
+                        {
+                            Positions.Add(Children, Range.Value);
+                            Positions.Add(OuterNode, Range.Value);
+                        }
+                        return new List<ExprNode> { OuterNode };
+                    }
+                    else if (PreprocessDirectiveName == "##")
+                    {
+                        if (Parameters.Count != 0) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
+                        var Children = ParseTemplateBody(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, Positions);
+                        var OuterNode = ExprNode.CreateYieldTemplate(Children);
+                        if (Range.OnHasValue)
+                        {
+                            Positions.Add(Children, Range.Value);
+                            Positions.Add(OuterNode, Range.Value);
+                        }
+                        return new List<ExprNode> { OuterNode };
+                    }
+                    else
+                    {
+                        throw new InvalidSyntaxException("UnknownPreprocessDirective", GetFileRange(PreprocessDirectiveToken));
+                    }
+                }, nm.Text, TokenPositions, NodePositions);
 
                 if (!PreprocessDirectiveReduced)
                 {
-                    var Children = ParseExprLinesToNodes(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, Positions);
-                    foreach (var c in Children)
+                    if ((ChildLines.Count > 0) || sb.IsCurrentLeftParenthesis)
                     {
-                        sb.PushNode(c);
+                        var Children = ParseExprLinesToNodes(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, NodePositions, Positions);
+                        if (Children.Count == 1)
+                        {
+                            sb.PushNode(Children.Single());
+                        }
+                        else
+                        {
+                            var Stem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = Children };
+                            NodePositions.Add(Stem, ChildRange);
+                            var e = ExprNode.CreateStem(Stem);
+                            NodePositions.Add(e, ChildRange);
+                            sb.PushNode(e);
+                        }
                     }
                 }
 
                 if (!sb.IsInParenthesis)
                 {
-                    if (ChildLines.Count > 0)
+                    var Nodes = sb.GetResult(nm.Text, TokenPositions, NodePositions);
+                    if (Nodes.Count == 1)
                     {
-                        RangeEnd = ChildLines.Last().Range;
+                        l.Add(Nodes.Single());
                     }
-                    var Undetermined = new ExprNodeUndetermined { Nodes = sb.GetResult(nm, Positions) };
-                    var n = ExprNode.CreateUndetermined(Undetermined);
-                    if (RangeStart.OnHasValue && RangeEnd.OnHasValue)
+                    else
                     {
-                        var Range = new TextRange { Start = RangeStart.Value.Start, End = RangeEnd.Value.End };
-                        Positions.Add(Undetermined, Range);
-                        Positions.Add(n, Range);
+                        var Undetermined = new ExprNodeUndetermined { Nodes = Nodes };
+                        var n = ExprNode.CreateUndetermined(Undetermined);
+                        if (Range.OnHasValue)
+                        {
+                            NodePositions.Add(Nodes, Range.Value);
+                            NodePositions.Add(Undetermined, Range.Value);
+                            NodePositions.Add(n, Range.Value);
+                        }
+                        l.Add(n);
                     }
-                    l.Add(n);
 
                     sb = new SequenceBuilder();
                 }

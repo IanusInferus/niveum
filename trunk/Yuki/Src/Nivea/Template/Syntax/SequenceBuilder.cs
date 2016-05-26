@@ -3,7 +3,7 @@
 //  File:        SequenceBuilder.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 序列构建器
-//  Version:     2016.05.25.
+//  Version:     2016.05.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,30 +19,33 @@ namespace Nivea.Template.Syntax
     public class SequenceBuilder
     {
         private List<StackNode> Nodes = new List<StackNode>();
-        private Firefly.Texting.TreeFormat.Optional<TextRange> LineRangeStart = Firefly.Texting.TreeFormat.Optional<TextRange>.Empty;
-    
-        public void PushToken(Token t, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
+        private Optional<TextRange> LineRangeStart = Optional<TextRange>.Empty;
+
+        public void PushToken(Token t, Text Text, Dictionary<Object, TextRange> TokenPositions, Dictionary<Object, TextRange> Positions)
         {
             if (Nodes.Count == 0)
             {
-                LineRangeStart = nm.GetRange(t);
+                if (TokenPositions.ContainsKey(t))
+                {
+                    LineRangeStart = TokenPositions[t];
+                }
             }
-     
+
             Action<Object, Object> Mark = (SemanticsObj, SyntaxObj) =>
             {
-                var Range = nm.GetRange(SyntaxObj);
-                if (Range.OnHasValue)
+                if (TokenPositions.ContainsKey(SyntaxObj))
                 {
-                    Positions.Add(SemanticsObj, Range.Value);
+                    var Range = TokenPositions[SyntaxObj];
+                    Positions.Add(SemanticsObj, Range);
                 }
             };
             Action<Object, Object, Object> Mark2 = (SemanticsObj, SyntaxObjStart, SyntaxObjEnd) =>
             {
-                var RangeStart = nm.GetRange(SyntaxObjStart);
-                var RangeEnd = nm.GetRange(SyntaxObjEnd);
-                if (RangeStart.OnHasValue && RangeEnd.OnHasValue)
+                if (TokenPositions.ContainsKey(SyntaxObjStart) && TokenPositions.ContainsKey(SyntaxObjEnd))
                 {
-                    Positions.Add(SemanticsObj, new TextRange { Start = RangeStart.Value.Start, End = RangeEnd.Value.End });
+                    var RangeStart = TokenPositions[SyntaxObjStart];
+                    var RangeEnd = TokenPositions[SyntaxObjEnd];
+                    Positions.Add(SemanticsObj, new TextRange { Start = RangeStart.Start, End = RangeEnd.End });
                 }
             };
 
@@ -70,11 +73,11 @@ namespace Nivea.Template.Syntax
             }
             else if (t.Type.OnRightParenthesis)
             {
-                Reduce(t, nm, Positions);
+                Reduce(t, Text, TokenPositions, Positions);
                 var InnerNodes = Nodes.AsEnumerable().Reverse().TakeWhile(n => !(n.OnToken && n.Token.Type.OnLeftParenthesis)).Reverse().ToList();
                 if (Nodes.Count - InnerNodes.Count - 1 < 0)
                 {
-                    throw new InvalidSyntaxException("InvalidParenthesis", nm.GetFileRange(t));
+                    throw new InvalidSyntaxException("InvalidParenthesis", new FileTextRange { Text = Text, Range = TokenPositions.ContainsKey(t) ? TokenPositions[t] : Firefly.Texting.TreeFormat.Optional<TextRange>.Empty });
                 }
                 var LeftParenthesis = Nodes[Nodes.Count - InnerNodes.Count - 1].Token;
                 var Children = new List<ExprNode>();
@@ -82,11 +85,19 @@ namespace Nivea.Template.Syntax
                 {
                     Children = Split(InnerNodes, n => n.OnToken && n.Token.Type.OnComma).Select(Part => Part.Single().Node).ToList();
                 }
-                if (LeftParenthesis.IsAfterSpace && !LeftParenthesis.IsLeadingToken)
+                if (!LeftParenthesis.IsAfterSpace && !LeftParenthesis.IsLeadingToken)
                 {
                     var ParentNode = Nodes[Nodes.Count - InnerNodes.Count - 2];
                     if (ParentNode.OnNode)
                     {
+                        if (Children.Count == 1 )
+                        {
+                            var One = Children.Single();
+                            if (One.OnStem && !One.Stem.Head.OnHasValue)
+                            {
+                                Children = One.Stem.Nodes;
+                            }
+                        }
                         var Stem = new ExprNodeStem { Head = ParentNode.Node, Nodes = Children };
                         Mark2(Stem, ParentNode, t);
                         var Node = ExprNode.CreateStem(Stem);
@@ -113,7 +124,7 @@ namespace Nivea.Template.Syntax
             }
             else if (t.Type.OnComma)
             {
-                Reduce(t, nm, Positions);
+                Reduce(t, Text, TokenPositions, Positions);
                 Nodes.Add(StackNode.CreateToken(t));
             }
             else if (t.Type.OnPreprocessDirective)
@@ -140,7 +151,7 @@ namespace Nivea.Template.Syntax
             Nodes.Add(StackNode.CreateNode(n));
         }
 
-        private void Reduce(Token t, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
+        private void Reduce(Token t, Text Text, Dictionary<Object, TextRange> TokenPositions, Dictionary<Object, TextRange> Positions)
         {
             var InnerNodes = Nodes.AsEnumerable().Reverse().TakeWhile(n => !(n.OnToken && (n.Token.Type.OnLeftParenthesis || n.Token.Type.OnComma))).Reverse().ToList();
             var RangeStart = LineRangeStart;
@@ -149,21 +160,28 @@ namespace Nivea.Template.Syntax
                 var LeftParenthesisOrComma = Nodes[Nodes.Count - InnerNodes.Count - 1].Token;
                 if (LeftParenthesisOrComma.Type.OnComma && (InnerNodes.Count == 0))
                 {
-                    throw new InvalidSyntaxException("InvalidParenthesis", nm.GetFileRange(t));
+                    throw new InvalidSyntaxException("InvalidParenthesis", new FileTextRange { Text = Text, Range = TokenPositions.ContainsKey(t) ? TokenPositions[t] : Firefly.Texting.TreeFormat.Optional<TextRange>.Empty });
                 }
-                RangeStart = nm.GetRange(LeftParenthesisOrComma);
+                if (TokenPositions.ContainsKey(LeftParenthesisOrComma))
+                {
+                    RangeStart = TokenPositions[LeftParenthesisOrComma];
+                }
             }
 
             foreach (var n in InnerNodes)
             {
                 if (!n.OnNode)
                 {
-                    throw new InvalidSyntaxException("InvalidSyntaxRule", nm.GetFileRange(n.Token));
+                    throw new InvalidSyntaxException("InvalidSyntaxRule", new FileTextRange { Text = Text, Range = TokenPositions.ContainsKey(n.Token) ? TokenPositions[n.Token] : Firefly.Texting.TreeFormat.Optional<TextRange>.Empty });
                 }
             }
             if (InnerNodes.Count > 1)
             {
-                var RangeEnd = nm.GetRange(t);
+                var RangeEnd = Optional<TextRange>.Empty;
+                if (TokenPositions.ContainsKey(t))
+                {
+                    RangeEnd = TokenPositions[t];
+                }
 
                 var Children = InnerNodes.Select(Part => Part.Node).ToList();
                 var Undetermined = new ExprNodeUndetermined { Nodes = Children };
@@ -186,7 +204,18 @@ namespace Nivea.Template.Syntax
             }
         }
 
-        public Boolean TryReducePreprocessDirective(Func<Token, List<ExprNode>, List<ExprNode>> Transform, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
+        public Boolean IsCurrentLeftParenthesis
+        {
+            get
+            {
+                if (Nodes.Count == 0) { return false; }
+                var Last = Nodes.Last();
+                if (!Last.OnToken) { return false; }
+                return Last.Token.Type.OnLeftParenthesis;
+            }
+        }
+
+        public Boolean TryReducePreprocessDirective(Func<Token, List<ExprNode>, List<ExprNode>> Transform, Text Text, Dictionary<Object, TextRange> TokenPositions, Dictionary<Object, TextRange> Positions)
         {
             var InnerNodes = Nodes.AsEnumerable().Reverse().TakeWhile(n => !(n.OnToken && (n.Token.Type.OnLeftParenthesis || n.Token.Type.OnComma))).Reverse().ToList();
             if (InnerNodes.Count == 0) { return false; }
@@ -197,7 +226,7 @@ namespace Nivea.Template.Syntax
             {
                 if (!n.OnNode)
                 {
-                    throw new InvalidSyntaxException("InvalidSyntaxRule", nm.GetFileRange(n.Token));
+                    throw new InvalidSyntaxException("InvalidSyntaxRule", new FileTextRange { Text = Text, Range = TokenPositions.ContainsKey(n.Token) ? TokenPositions[n.Token] : Firefly.Texting.TreeFormat.Optional<TextRange>.Empty });
                 }
             }
             var Transformed = Transform(FirstNode.Token, InnerNodes.Skip(1).Select(n => n.Node).ToList());
@@ -209,13 +238,13 @@ namespace Nivea.Template.Syntax
             return true;
         }
 
-        public List<ExprNode> GetResult(ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
+        public List<ExprNode> GetResult(Text Text, Dictionary<Object, TextRange> TokenPositions, Dictionary<Object, TextRange> Positions)
         {
             foreach (var n in Nodes)
             {
                 if (!n.OnNode)
                 {
-                    throw new InvalidSyntaxException("InvalidSyntaxRule", nm.GetFileRange(n.Token));
+                    throw new InvalidSyntaxException("InvalidSyntaxRule", new FileTextRange { Text = Text, Range = TokenPositions.ContainsKey(n.Token) ? TokenPositions[n.Token] : Firefly.Texting.TreeFormat.Optional<TextRange>.Empty });
                 }
             }
             return Nodes.Select(n => n.Node).ToList();

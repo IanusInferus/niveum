@@ -26,20 +26,20 @@ namespace Yuki.RelationValue
     {
         public static MultiNodes BuildTable(EntityDef e, List<Semantics.Node> l)
         {
-            var Lines = l.Select(n => new TableLine { Nodes = n.Stem.Children.Select(c => TableLineNode.CreateSingleLineLiteral(new SingleLineLiteral { Text = c.Stem.Children.Single().Leaf })).ToArray(), SingleLineComment = TreeFormat.Optional<SingleLineComment>.Empty }).ToList();
+            var Lines = l.Select(n => new TableLine { Nodes = n.Stem.Children.Select(c => TableLineNode.CreateSingleLineLiteral(new SingleLineLiteral { Text = c.Stem.Children.Single().Leaf })).ToList(), SingleLineComment = TreeFormat.Optional<SingleLineComment>.Empty }).ToList();
             var TableNodes = new TableNodes
             {
                 ChildHead = new SingleLineLiteral { Text = e.Name },
-                ChildFields = e.Fields.Where(f => f.Attribute.OnColumn).Select(c => new SingleLineLiteral { Text = c.Name }).ToArray(),
+                ChildFields = e.Fields.Where(f => f.Attribute.OnColumn).Select(c => new SingleLineLiteral { Text = c.Name }).ToList(),
                 SingleLineComment = TreeFormat.Optional<SingleLineComment>.Empty,
-                Children = Lines.ToArray(),
+                Children = Lines,
                 EndDirective = TreeFormat.Optional<EndDirective>.Empty
             };
             var Table = new MultiLineNode
             {
                 Head = new SingleLineLiteral { Text = e.CollectionName },
                 SingleLineComment = TreeFormat.Optional<SingleLineComment>.Empty,
-                Children = new MultiNodes[] { MultiNodes.CreateTableNodes(TableNodes) },
+                Children = new List<MultiNodes> { MultiNodes.CreateTableNodes(TableNodes) },
                 EndDirective = TreeFormat.Optional<EndDirective>.Empty
             };
             return MultiNodes.CreateNode(Node.CreateMultiLineNode(Table));

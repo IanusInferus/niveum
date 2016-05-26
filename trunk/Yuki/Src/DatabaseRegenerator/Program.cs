@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2016.05.13.
+//  Version:     2016.05.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -663,7 +663,7 @@ namespace Yuki.DatabaseRegenerator
                     var t = RelationValueSyntaxTreeBuilder.BuildTable(e, l);
 
                     var TreeFilePath = FileNameHandling.GetPath(DataDir, e.Name + ".tree");
-                    TreeFile.WriteRaw(TreeFilePath, new Syntax.Forest { MultiNodesList = new Syntax.MultiNodes[] { t } });
+                    TreeFile.WriteRaw(TreeFilePath, new Syntax.Forest { MultiNodesList = new List<Syntax.MultiNodes> { t } });
                 }
             }
         }
