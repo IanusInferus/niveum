@@ -65,6 +65,12 @@
         Test (1, 2) (1, 2)
         Test(1, 2)(1, 2)
 
+        namespace.namespace.Test().Test()()
+        namespace.namespace.Test(1).Test.Test(1)(1)
+        namespace.namespace.Test(1, 2).Test.Test.Test(1, 2)(1, 2)
+
+        ParentClass<A, B>.Test.ChildClass<A, B>
+
         A (B (
             C
             D
@@ -175,9 +181,6 @@
 
         Var a24 = 1
         a24 += 2
-
-        Let a25 =
-            Return 1
 
         If a24 == 0
             Return
