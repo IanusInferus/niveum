@@ -3,7 +3,7 @@
 //  File:        SequenceBuilder.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 序列构建器
-//  Version:     2016.05.26.
+//  Version:     2016.05.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -51,6 +51,32 @@ namespace Nivea.Template.Syntax
 
             if (t.Type.OnDirect)
             {
+                if (Nodes.Count >= 2)
+                {
+                    var PrevNode = Nodes.Last();
+                    if (PrevNode.OnNode && PrevNode.Node.OnOperator && (PrevNode.Node.Operator == "."))
+                    {
+                        var PrevPrevNode = Nodes[Nodes.Count - 2];
+                        if (PrevPrevNode.OnNode)
+                        {
+                            var Head = PrevPrevNode.Node;
+                            var Child = ExprNode.CreateDirect(t.Type.Direct);
+                            Mark(Child, t);
+                            var l = new List<ExprNode> { Child };
+                            Mark(l, t);
+                            var Stem = new ExprNodeStem { Head = Head, Nodes = l };
+                            var nn = ExprNode.CreateStem(Stem);
+                            if (Positions.ContainsKey(Head))
+                            {
+                                Mark2(Stem, Positions[Head], t);
+                                Mark2(nn, Positions[Head], t);
+                            }
+                            Nodes.RemoveRange(Nodes.Count - 2, 2);
+                            Nodes.Add(StackNode.CreateNode(nn));
+                            return;
+                        }
+                    }
+                }
                 var n = ExprNode.CreateDirect(t.Type.Direct);
                 Mark(n, t);
                 Nodes.Add(StackNode.CreateNode(n));
@@ -90,7 +116,7 @@ namespace Nivea.Template.Syntax
                     var ParentNode = Nodes[Nodes.Count - InnerNodes.Count - 2];
                     if (ParentNode.OnNode)
                     {
-                        if (Children.Count == 1 )
+                        if (Children.Count == 1)
                         {
                             var One = Children.Single();
                             if (One.OnStem && !One.Stem.Head.OnHasValue)

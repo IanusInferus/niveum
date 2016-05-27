@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 词法解析器
-//  Version:     2016.05.26.
+//  Version:     2016.05.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -189,6 +189,12 @@ namespace Nivea.Template.Syntax
                         MarkStart();
                         Proceed();
                         return MakeResult(TokenType.CreateComma());
+                    }
+                    else if (c == '.')
+                    {
+                        MarkStart();
+                        Proceed();
+                        return MakeResult(TokenType.CreateOperator("."));
                     }
                     else if ((c == '/') && (Peek(2) == "//"))
                     {

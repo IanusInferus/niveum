@@ -12,7 +12,7 @@ Nivea模板语言，是内嵌于Tree文件的模板语言。
 
 词法分析中，每个词都是单行的，不包含\r\n，多行字面量均通过预处理指令在文法分析的时候处理
 有如下几种形式
-1) Direct，直接，不包含(),\f\t\v，不在<>{}[]外包含空格，不包含不配对的<>{}[]，不以;`开头，整体和开头的一部分都不能解释为8)、9)
+1) Direct，直接，不包含(),\f\t\v，不在<>{}[]外包含空格，不包含不配对的<>{}[]，不以;`.开头，整体和开头的一部分都不能解释为8)、9)
 2) Quoted，双引号引用，以""括住的字符串，其中双引号双写表示单个双引号，其他字符表示自身
 3) Escaped，双双引号引用，以""""括住的字符串，可以使用反斜杠转义，转义表如下
   \0 与null \u0000 匹配
@@ -69,6 +69,7 @@ State 0
     ( -> 标记符号开始，前进，返回LeftParenthesis
     ) -> 标记符号开始，前进，返回RightParenthesis
     , -> 标记符号开始，前进，返回Comma
+    . -> 标记符号开始，前进，返回Operator
     // -> 标记符号开始，加入Output和前进到底，返回SingleLineComment
     < -> 标记符号开始，压栈，State 1，前进
     [ -> 标记符号开始，压栈，State 1，前进
@@ -173,7 +174,7 @@ Null为空字面量，用于兼容.Net代码
 Default为默认值字面量
 True、False为Boolean字面量
 可看作Integer、Float的字面量，默认为对应的类型
-其他为String字面量
+其他为非法
 
 如果符号名称不能直接书写或与保留字重复，可以使用{}括住不能直接书写的部分，{}内部分使用字面量转义规则进行转义，例如
 String
@@ -357,7 +358,7 @@ Let
 
 保留字
 
-Yield, YieldMany, Throw, Let, Var, If, Match, For, While, Continue, Break, Return, Null, Default, Tuple, Cast
+Yield, YieldMany, Throw, Let, Var, If, Match, For, While, Continue, Break, Return, Null, Default, This, Tuple, Cast
 保留字在恰当的位置，会按照预先定义的规则进行解释，可以使用""或{}等进行避免。
 
 
@@ -384,3 +385,8 @@ Unit, Boolean, String, Int, Real, Type, Optional, List, Set, Map
 
 Yield表达式可以透明经过Sequence、If、Match、For、While而不被接收
 Continue、Break表达式可以透明经过Sequence、If、Match而不被接收，最后只能被For、While接收
+
+
+返回值
+
+每段代码中，可以使用Yield、YieldMany、YieldTemplate生成返回值，或者使用Return返回返回值，如果没有上述元素，则以最后一个表达式作为返回值
