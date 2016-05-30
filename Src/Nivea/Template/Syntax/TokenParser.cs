@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 词法解析器
-//  Version:     2016.05.27.
+//  Version:     2016.05.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -449,34 +449,50 @@ namespace Nivea.Template.Syntax
                     if (c == '0')
                     {
                         Output.Add('\0');
+                        State = 3;
+                        Proceed();
                     }
                     else if (c == 'a')
                     {
                         Output.Add('\a');
+                        State = 3;
+                        Proceed();
                     }
                     else if (c == 'b')
                     {
                         Output.Add('\b');
+                        State = 3;
+                        Proceed();
                     }
                     else if (c == 'f')
                     {
                         Output.Add('\f');
+                        State = 3;
+                        Proceed();
                     }
                     else if (c == 'n')
                     {
                         Output.Add('\n');
+                        State = 3;
+                        Proceed();
                     }
                     else if (c == 'r')
                     {
                         Output.Add('\r');
+                        State = 3;
+                        Proceed();
                     }
                     else if (c == 't')
                     {
                         Output.Add('\t');
+                        State = 3;
+                        Proceed();
                     }
                     else if (c == 'v')
                     {
                         Output.Add('\v');
+                        State = 3;
+                        Proceed();
                     }
                     else if (c == 'x')
                     {
@@ -552,6 +568,376 @@ namespace Nivea.Template.Syntax
                 IsLeadingToken = false;
             }
             return l;
+        }
+
+        public class Symbol
+        {
+            public String Name;
+            public int SymbolStartIndex;
+            public int SymbolEndIndex;
+            public int NameStartIndex;
+            public int NameEndIndex;
+            public List<KeyValuePair<String, int>> Parameters;
+        }
+
+        public static Optional<List<Symbol>> TrySplitSymbolMemberChain(String s, out int InvalidCharIndex)
+        {
+            var SymbolStartIndex = 0;
+            var SymbolChars = new List<Char>();
+            var ParamStartIndex = 0;
+            var ParamChars = new List<Char>();
+            var ParameterStrings = new List<KeyValuePair<String, int>>();
+            var Output = new List<Symbol>();
+
+            var Index = 0;
+            Func<Boolean> EndOfString = () => Index >= s.Length;
+            Func<Char> Peek1 = () => s[Index];
+            Action Proceed = () => Index += 1;
+
+            var State = 0;
+            var Level = 0;
+
+            while (true)
+            {
+                if (State == 0)
+                {
+                    if (EndOfString())
+                    {
+                        InvalidCharIndex = Index;
+                        return Optional<List<Symbol>>.Empty;
+                    }
+                    var c = Peek1();
+                    if (c == ' ')
+                    {
+                        Proceed();
+                    }
+                    else
+                    {
+                        SymbolStartIndex = Index;
+                        State = 1;
+                    }
+                }
+                else if (State == 1)
+                {
+                    if (EndOfString())
+                    {
+                        if (SymbolChars.Count == 0)
+                        {
+                            InvalidCharIndex = Index;
+                            return Optional<List<Symbol>>.Empty;
+                        }
+                        else
+                        {
+                            State = 3;
+                        }
+                        continue;
+                    }
+                    var c = Peek1();
+                    if (c == '<')
+                    {
+                        if (SymbolChars.Count == 0)
+                        {
+                            InvalidCharIndex = Index;
+                            return Optional<List<Symbol>>.Empty;
+                        }
+                        else
+                        {
+                            State = 2;
+                        }
+                    }
+                    else if (c == '>')
+                    {
+                        InvalidCharIndex = Index;
+                        return Optional<List<Symbol>>.Empty;
+                    }
+                    else if (c == '.')
+                    {
+                        if (SymbolChars.Count == 0)
+                        {
+                            InvalidCharIndex = Index;
+                            return Optional<List<Symbol>>.Empty;
+                        }
+                        else
+                        {
+                            State = 3;
+                        }
+                    }
+                    else
+                    {
+                        SymbolChars.Add(c);
+                        Proceed();
+                    }
+                }
+                else if (State == 2)
+                {
+                    if (EndOfString())
+                    {
+                        InvalidCharIndex = Index;
+                        return Optional<List<Symbol>>.Empty;
+                    }
+                    var c = Peek1();
+                    if (c == '<')
+                    {
+                        if (Level > 0)
+                        {
+                            ParamChars.Add(c);
+                        }
+                        else
+                        {
+                            ParamStartIndex = Index + 1;
+                        }
+                        Level += 1;
+                        Proceed();
+                    }
+                    else if (c == '>')
+                    {
+                        Level -= 1;
+                        if (Level > 0)
+                        {
+                            ParamChars.Add(c);
+                        }
+                        else
+                        {
+                            State = 3;
+                        }
+                        Proceed();
+                    }
+                    else if (c == ',')
+                    {
+                        if (Level == 1)
+                        {
+                            var Param = new String(ParamChars.ToArray());
+                            ParameterStrings.Add(new KeyValuePair<String, int>(Param.Trim(' '), ParamStartIndex + Param.TakeWhile(cc => cc == ' ').Count()));
+                            ParamChars.Clear();
+                            ParamStartIndex = Index + 1;
+                        }
+                        else
+                        {
+                            ParamChars.Add(c);
+                        }
+                        Proceed();
+                    }
+                    else
+                    {
+                        ParamChars.Add(c);
+                        Proceed();
+                    }
+                }
+                else if (State == 3)
+                {
+                    Output.Add(new Symbol { Name = new String(SymbolChars.ToArray()), SymbolStartIndex = SymbolStartIndex, SymbolEndIndex = Index, NameStartIndex = SymbolStartIndex, NameEndIndex = SymbolStartIndex + SymbolChars.Count, Parameters = ParameterStrings });
+                    SymbolChars = new List<Char>();
+                    ParameterStrings = new List<KeyValuePair<String, int>>();
+                    if (EndOfString()) { break; }
+                    var c = Peek1();
+                    if (c == ' ')
+                    {
+                        State = 4;
+                        Proceed();
+                    }
+                    else if (c == '.')
+                    {
+                        SymbolStartIndex = Index + 1;
+                        State = 1;
+                        Proceed();
+                    }
+                    else
+                    {
+                        InvalidCharIndex = Index;
+                        return Optional<List<Symbol>>.Empty;
+                    }
+                }
+                else if (State == 4)
+                {
+                    if (EndOfString()) { break; }
+                    var c = Peek1();
+                    if (c == ' ')
+                    {
+                        Proceed();
+                    }
+                    else
+                    {
+                        InvalidCharIndex = Index;
+                        return Optional<List<Symbol>>.Empty;
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+
+            InvalidCharIndex = 0;
+            return Output;
+        }
+
+        public static Optional<String> TryUnescapeSymbolName(String TypeString, out int InvalidCharIndex)
+        {
+            var Output = new List<Char>();
+
+            var Index = 0;
+            Func<Boolean> EndOfString = () => Index >= TypeString.Length;
+            Func<Char> Peek1 = () => TypeString[Index];
+            Func<int, String> Peek = n => TypeString.Substring(Index, Math.Min(n, TypeString.Length - Index));
+            Action Proceed = () => Index += 1;
+            Action<int> ProceedMultiple = n => Index += n;
+            Func<String, int, Boolean> IsHex = (h, n) => (h.Length == n) && h.All(c => "0123456789ABCDEFabcdef".Contains(c));
+
+            var State = 0;
+
+            while (true)
+            {
+                if (State == 0)
+                {
+                    if (EndOfString()) { break; }
+                    var c = Peek1();
+                    if (c == '{')
+                    {
+                        State = 1;
+                        Proceed();
+                    }
+                    else if (c == '}')
+                    {
+                        InvalidCharIndex = Index;
+                        return Optional<String>.Empty;
+                    }
+                    else
+                    {
+                        Output.Add(c);
+                        Proceed();
+                    }
+                }
+                else if (State == 1)
+                {
+                    if (EndOfString()) { break; }
+                    var c = Peek1();
+                    if (c == '{')
+                    {
+                        InvalidCharIndex = Index;
+                        return Optional<String>.Empty;
+                    }
+                    else if (c == '}')
+                    {
+                        State = 0;
+                        Proceed();
+                    }
+                    else if (c == '\\')
+                    {
+                        State = 2;
+                        Proceed();
+                    }
+                    else
+                    {
+                        Output.Add(c);
+                        Proceed();
+                    }
+                }
+                else if (State == 2)
+                {
+                    if (EndOfString()) { break; }
+                    var c = Peek1();
+                    if (c == '0')
+                    {
+                        Output.Add('\0');
+                        State = 1;
+                        Proceed();
+                    }
+                    else if (c == 'a')
+                    {
+                        Output.Add('\a');
+                        State = 1;
+                        Proceed();
+                    }
+                    else if (c == 'b')
+                    {
+                        Output.Add('\b');
+                        State = 1;
+                        Proceed();
+                    }
+                    else if (c == 'f')
+                    {
+                        Output.Add('\f');
+                        State = 1;
+                        Proceed();
+                    }
+                    else if (c == 'n')
+                    {
+                        Output.Add('\n');
+                        State = 1;
+                        Proceed();
+                    }
+                    else if (c == 'r')
+                    {
+                        Output.Add('\r');
+                        State = 1;
+                        Proceed();
+                    }
+                    else if (c == 't')
+                    {
+                        Output.Add('\t');
+                        State = 1;
+                        Proceed();
+                    }
+                    else if (c == 'v')
+                    {
+                        Output.Add('\v');
+                        State = 1;
+                        Proceed();
+                    }
+                    else if (c == 'x')
+                    {
+                        Proceed();
+                        var Hex = Peek(2);
+                        if (!IsHex(Hex, 2))
+                        {
+                            InvalidCharIndex = Index;
+                            return Optional<String>.Empty;
+                        }
+                        ProceedMultiple(Hex.Length);
+                        Output.Add(ChrW(int.Parse(Hex, System.Globalization.NumberStyles.HexNumber)));
+                        State = 1;
+                    }
+                    else if (c == 'u')
+                    {
+                        Proceed();
+                        var Hex = Peek(4);
+                        if (!IsHex(Hex, 4))
+                        {
+                            InvalidCharIndex = Index;
+                            return Optional<String>.Empty;
+                        }
+                        ProceedMultiple(Hex.Length);
+                        Output.Add(ChrW(int.Parse(Hex, System.Globalization.NumberStyles.HexNumber)));
+                        State = 1;
+                    }
+                    else if (c == 'U')
+                    {
+                        Proceed();
+                        var Hex = Peek(5);
+                        if (!IsHex(Hex, 5))
+                        {
+                            InvalidCharIndex = Index;
+                            return Optional<String>.Empty;
+                        }
+                        ProceedMultiple(Hex.Length);
+                        Output.AddRange(ChrQ(int.Parse(Hex, System.Globalization.NumberStyles.HexNumber)).ToString());
+                        State = 1;
+                    }
+                    else
+                    {
+                        Output.Add(c);
+                        State = 1;
+                        Proceed();
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+
+            InvalidCharIndex = 0;
+            return new String(Output.ToArray());
         }
     }
 }
