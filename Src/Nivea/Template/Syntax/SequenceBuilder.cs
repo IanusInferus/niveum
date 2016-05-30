@@ -3,7 +3,7 @@
 //  File:        SequenceBuilder.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 序列构建器
-//  Version:     2016.05.27.
+//  Version:     2016.05.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================

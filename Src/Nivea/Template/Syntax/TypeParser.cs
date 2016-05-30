@@ -3,7 +3,7 @@
 //  File:        TypeParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 类型词法解析器
-//  Version:     2016.05.30.
+//  Version:     2016.05.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
