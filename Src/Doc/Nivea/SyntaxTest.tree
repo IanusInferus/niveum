@@ -16,7 +16,7 @@
     System.Linq
     System.Linq.Enumerable
 
-#Template Test a:Int
+#Template Test a:Int b:List<Mat{ \n\x7B\u007B\U0007B}ch>
     //====
     ${a}
     abcd${"123"}efgh

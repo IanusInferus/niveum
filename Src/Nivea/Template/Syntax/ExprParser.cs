@@ -185,6 +185,7 @@ namespace Nivea.Template.Syntax
                 OuterNode = ExprNode.CreateStem(OuterStem);
                 if (Range.OnHasValue)
                 {
+                    Positions.Add(l, Range.Value);
                     Positions.Add(OuterStem, Range.Value);
                     Positions.Add(OuterNode, Range.Value);
                 }
@@ -341,6 +342,7 @@ namespace Nivea.Template.Syntax
                         var OuterNode = ExprNode.CreateStem(OuterStem);
                         if (Range.OnHasValue)
                         {
+                            NodePositions.Add(ln, Range.Value);
                             NodePositions.Add(OuterStem, Range.Value);
                             NodePositions.Add(OuterNode, Range.Value);
                         }
@@ -402,6 +404,7 @@ namespace Nivea.Template.Syntax
                         var OuterNode = ExprNode.CreateStem(OuterStem);
                         if (Range.OnHasValue)
                         {
+                            NodePositions.Add(ln, Range.Value);
                             NodePositions.Add(OuterStem, Range.Value);
                             NodePositions.Add(OuterNode, Range.Value);
                         }
@@ -449,8 +452,9 @@ namespace Nivea.Template.Syntax
                         else
                         {
                             var Stem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = Children };
-                            NodePositions.Add(Stem, ChildRange);
                             var e = ExprNode.CreateStem(Stem);
+                            NodePositions.Add(Children, ChildRange);
+                            NodePositions.Add(Stem, ChildRange);
                             NodePositions.Add(e, ChildRange);
                             sb.PushNode(e);
                         }
