@@ -3,7 +3,7 @@
 //  File:        ExprParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2016.05.26.
+//  Version:     2016.05.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
