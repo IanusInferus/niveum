@@ -11,7 +11,7 @@ Nivea模板语言，是内嵌于Tree文件的模板语言。
 词法分析
 
 词法分析中，每个词都是单行的，不包含\r\n，多行字面量均通过预处理指令在文法分析的时候处理
-有如下几种形式
+词有如下几种形式
 1) Direct，直接，不包含(),\f\t\v，不在<>{}[]外包含空格，不包含不配对的<>{}[]，不以;`.开头，整体和开头的一部分都不能解释为8)、9)
 2) Quoted，双引号引用，以""括住的字符串，其中双引号双写表示单个双引号，其他字符表示自身
 3) Escaped，双双引号引用，以""""括住的字符串，可以使用反斜杠转义，转义表如下
@@ -150,6 +150,91 @@ State 4
     [!%&*+-/<=>?@\\^|~] -> 前进
     Any -> 失败
 
+Direct词，可以作为符号名称，如果不能直接书写或与保留字重复，可以使用{}括住不能直接书写的部分，{}内部分使用字面量转义规则进行转义，例如
+String
+List<String>
+{Match}
+List<Mat{ \n\x7B\u007B\U0007B}ch>
+
+状态机
+
+State 0       开始
+State 1       内部
+State 2       转义中
+
+State 0
+    EndOfString -> 结束
+    { -> State 1，前进
+    } -> 失败
+    Any -> 加入到Output，前进
+
+State 1
+    EndOfString -> 失败
+    { -> 失败
+    } -> State 0，前进
+    \ -> State 2，前进
+    Any -> 加入到Output，前进
+
+State 2
+    EndOfLine -> 失败
+    0 -> 加入U+0000到Output，State 1，前进
+    a -> 加入U+0007到Output，State 1，前进
+    b -> 加入U+0008到Output，State 1，前进
+    f -> 加入U+000C到Output，State 1，前进
+    n -> 加入U+000A到Output，State 1，前进
+    r -> 加入U+000D到Output，State 1，前进
+    t -> 加入U+0009到Output，State 1，前进
+    v -> 加入U+000B到Output，State 1，前进
+    x[0-9A-Fa-f]{2} -> 加入U+00..到Output，State 1，前进3
+    u[0-9A-Fa-f]{4} -> 加入U+....到Output，State 1，前进5
+    U[0-9A-Fa-f]{5} -> 加入U+.....到Output，State 1，前进6
+    x -> 失败
+    u -> 失败
+    U -> 失败
+    Any -> 加入Output，State 1，前进
+
+词可以作为对类型的引用（类型规范），如List<Int>, Map<Int, String>，A<Int>.B<String>.C
+或者作为变量引用，如a, a.b.c, a<Int>.b<String>.c
+
+状态机
+
+State 0       前导空格
+State 1       外层名称中
+State 2+n     尖括号内部
+State 3       最外层尖括号后
+State 4       结尾空格
+Level
+
+State 0
+    EndOfString -> 失败
+    Space -> 前进
+    Any -> SymbolStartIndex = Index，State 1
+
+State 1
+    EndOfString -> 如果SymbolChars为空，则失败，否则State 3
+    < -> 如果SymbolChars为空，则失败，否则State 2
+    > -> 失败
+    . -> 如果SymbolChars为空，则失败，否则State 3
+    Any -> 加入到SymbolChars，前进
+
+State 2
+    EndOfString -> 失败
+    < -> （如果Level > 0，则加入到ParamChars，否则ParamStartIndex = Index + 1），Level += 1, 前进
+    > -> Level -= 1, 如果Level > 0，则加入到ParamChars，前进，否则State 3，前进
+    , -> 如果Level = 1, 则提交参数到Parameters，清空ParamChars，ParamStartIndex = Index + 1，前进
+    Any -> 加入到ParamChars，前进
+
+State 3
+    EndOfString -> SymbolChars和Parameters加入到Output，清空，结束
+    Space -> SymbolChars和Parameters加入到Output，清空，State 4，前进
+    . -> SymbolChars和Parameters加入到Output，清空，SymbolStartIndex = Index + 1，State 1，前进
+    Any -> 失败
+
+State 4
+    EndOfString -> 结束
+    Space -> 前进
+    Any -> 失败
+
 
 文法分析
 
@@ -173,14 +258,8 @@ Direct词，默认为符号名称，但在$Comment、$String、$List、$Table、
 Null为空字面量，用于兼容.Net代码
 Default为默认值字面量
 True、False为Boolean字面量
-可看作Integer、Float的字面量，默认为对应的类型
+可看作Int、Float的字面量，默认为对应的类型
 其他为非法
-
-如果符号名称不能直接书写或与保留字重复，可以使用{}括住不能直接书写的部分，{}内部分使用字面量转义规则进行转义，例如
-String
-List<String>
-{Match}
-List<Mat{ \n\x7B\u007B\U0007B}ch>
 
 
 预处理指令

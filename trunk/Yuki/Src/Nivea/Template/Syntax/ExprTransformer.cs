@@ -26,52 +26,57 @@ namespace Nivea.Template.Syntax
             if (Node.OnDirect)
             {
                 var s = Node.Direct;
-                var Ambiguous = new List<Expr> { };
 
                 if (s == "Throw")
                 {
-                    Ambiguous.Add(Mark(Expr.CreateThrow(Optional<Expr>.Empty), Node, NodePositions, Positions));
+                    return Mark(Expr.CreateThrow(Optional<Expr>.Empty), Node, NodePositions, Positions);
                 }
                 else if (s == "Continue")
                 {
-                    Ambiguous.Add(Mark(Expr.CreateContinue(Optional<int>.Empty), Node, NodePositions, Positions));
+                    return Mark(Expr.CreateContinue(Optional<int>.Empty), Node, NodePositions, Positions);
                 }
                 else if (s == "Break")
                 {
-                    Ambiguous.Add(Mark(Expr.CreateBreak(Optional<int>.Empty), Node, NodePositions, Positions));
+                    return Mark(Expr.CreateBreak(Optional<int>.Empty), Node, NodePositions, Positions);
                 }
                 else if (s == "Return")
                 {
-                    Ambiguous.Add(Mark(Expr.CreateReturn(Optional<Expr>.Empty), Node, NodePositions, Positions));
+                    return Mark(Expr.CreateReturn(Optional<Expr>.Empty), Node, NodePositions, Positions);
                 }
                 else if (s == "Null")
                 {
-                    Ambiguous.Add(Mark(Expr.CreateNull(), Node, NodePositions, Positions));
+                    return Mark(Expr.CreateNull(), Node, NodePositions, Positions);
                 }
                 else if (s == "Default")
                 {
-                    Ambiguous.Add(Mark(Expr.CreateDefault(), Node, NodePositions, Positions));
+                    return Mark(Expr.CreateDefault(), Node, NodePositions, Positions);
                 }
                 else if (s == "This")
                 {
                     var e = Mark(VariableRef.CreateThis(), Node, NodePositions, Positions);
-                    Ambiguous.Add(Mark(Expr.CreateVariableRef(e), Node, NodePositions, Positions));
+                    return Mark(Expr.CreateVariableRef(e), Node, NodePositions, Positions);
                 }
 
-                int InvalidCharIndex;
-                var ot = TypeParser.TryParseTypeSpec(s, (o, Start, End) =>
+                //TODO 数字等
+
+                var Ambiguous = new List<Expr> { };
+
+                var otvmc = TryTransformTypeVariableMemberChain(s, Node, Text, NodePositions, Positions);
+                if (otvmc.OnHasValue)
                 {
-                    if (NodePositions.ContainsKey(Node))
-                    {
-                        var Range = NodePositions[Node];
-                        var TypeRange = new TextRange { Start = Text.Calc(Range.Start, Start), End = Text.Calc(Range.Start, End) };
-                        Positions.Add(o, TypeRange);
-                    }
-                }, out InvalidCharIndex);
-                if (ot.OnHasValue)
-                {
-                    var t = ot.Value;
+                    var tvmc = otvmc.Value;
+                    var t = tvmc.Type;
+
                     Ambiguous.Add(Mark(Expr.CreateTypeLiteral(t), Node, NodePositions, Positions));
+
+                    if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
+                    {
+                        var tule = Mark(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = Optional<Expr>.Empty }, Node, NodePositions, Positions);
+                        Ambiguous.Add(Mark(Expr.CreateTaggedUnionLiteral(tule), Node, NodePositions, Positions));
+
+                        var ele = Mark(new EnumLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Name = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name }, Node, NodePositions, Positions);
+                        Ambiguous.Add(Mark(Expr.CreateEnumLiteral(ele), Node, NodePositions, Positions));
+                    }
                 }
 
                 //TODO
@@ -82,6 +87,7 @@ namespace Nivea.Template.Syntax
                 }
                 else if (Ambiguous.Count > 1)
                 {
+                    Mark(Ambiguous, Node, NodePositions, Positions);
                     return Mark(Expr.CreateAmbiguous(Ambiguous), Node, NodePositions, Positions);
                 }
             }
@@ -107,11 +113,23 @@ namespace Nivea.Template.Syntax
                 var Stem = Node.Stem;
                 if (Stem.Head.OnHasValue)
                 {
-                    //TODO
+                    var Undetermined = new ExprNodeUndetermined { Nodes = Stem.Nodes };
+                    var e = ExprNode.CreateUndetermined(Undetermined);
+                    if (NodePositions.ContainsKey(Stem.Nodes))
+                    {
+                        var Range = NodePositions[Stem.Nodes];
+                        NodePositions.Add(Undetermined, Range);
+                        NodePositions.Add(e, Range);
+                    }
+
+                    var l = new List<ExprNode> { Stem.Head.Value, e };
+                    var Transformed = TransformNodes(l, Node, Text, NodePositions, Positions);
+                    return Transformed;
                 }
                 else
                 {
                     var Transformed = Stem.Nodes.Select(n => Transform(n, Text, NodePositions, Positions)).ToList();
+                    Mark(Transformed, Node, NodePositions, Positions);
                     return Mark(Expr.CreateSequence(Transformed), Node, NodePositions, Positions);
                 }
             }
@@ -177,22 +195,18 @@ namespace Nivea.Template.Syntax
                     {
                         return Mark(Expr.CreateReturn(Transform(Second, Text, NodePositions, Positions)), Nodes, Node, NodePositions, Positions);
                     }
+                    else if (s == "Cast")
+                    {
+                        //TODO
+                    }
 
                     var Ambiguous = new List<Expr> { };
 
-                    int InvalidCharIndex;
-                    var ot = TypeParser.TryParseTypeSpec(s, (o, Start, End) =>
+                    var otvmc = TryTransformTypeVariableMemberChain(s, First, Text, NodePositions, Positions);
+                    if (otvmc.OnHasValue)
                     {
-                        if (NodePositions.ContainsKey(Node))
-                        {
-                            var Range = NodePositions[Node];
-                            var TypeRange = new TextRange { Start = Text.Calc(Range.Start, Start), End = Text.Calc(Range.Start, End) };
-                            Positions.Add(o, TypeRange);
-                        }
-                    }, out InvalidCharIndex);
-                    if (ot.OnHasValue)
-                    {
-                        var t = ot.Value;
+                        var tvmc = otvmc.Value;
+                        var t = tvmc.Type;
 
                         if (Second.OnDirect || Second.OnLiteral || Second.OnOperator)
                         {
@@ -201,14 +215,13 @@ namespace Nivea.Template.Syntax
                         }
                         if (Second.OnDirect || Second.OnLiteral || Second.OnStem || Second.OnUndetermined)
                         {
-                            var Last = Nodes.Last();
-                            var LastExpr = Transform(Last, Text, NodePositions, Positions);
+                            var SecondExpr = Transform(Second, Text, NodePositions, Positions);
 
                             var FieldAssigns = new List<FieldAssign>();
                             var FieldAssignRanges = new Dictionary<FieldAssign, TextRange>();
-                            if (LastExpr.OnAssign)
+                            if (SecondExpr.OnAssign)
                             {
-                                var a = LastExpr.Assign;
+                                var a = SecondExpr.Assign;
                                 if (a.Left.Count == 1)
                                 {
                                     var al = a.Left.Single();
@@ -223,9 +236,9 @@ namespace Nivea.Template.Syntax
                                     }
                                 }
                             }
-                            else if (LastExpr.OnSequence)
+                            else if (SecondExpr.OnSequence)
                             {
-                                foreach (var e in LastExpr.Sequence)
+                                foreach (var e in SecondExpr.Sequence)
                                 {
                                     if (e.OnAssign)
                                     {
@@ -271,42 +284,50 @@ namespace Nivea.Template.Syntax
                                         Positions.Add(fa, FieldAssignRanges[fa]);
                                     }
                                 }
-                                var rle = Mark(new RecordLiteralExpr { Type = t, FieldAssigns = Mark(FieldAssigns, Last, NodePositions, Positions) }, Last, NodePositions, Positions);
+                                var rle = Mark(new RecordLiteralExpr { Type = t, FieldAssigns = Mark(FieldAssigns, Second, NodePositions, Positions) }, Nodes, Node, NodePositions, Positions);
                                 Ambiguous.Add(Mark(Expr.CreateRecordLiteral(rle), Nodes, Node, NodePositions, Positions));
                             }
-                            else if (LastExpr.OnSequence)
+                            else if (SecondExpr.OnSequence)
                             {
-                                if (LastExpr.Sequence.Count == 0)
+                                if (SecondExpr.Sequence.Count == 0)
                                 {
-                                    var rle = Mark(new RecordLiteralExpr { Type = t, FieldAssigns = Mark(FieldAssigns, Last, NodePositions, Positions) }, Last, NodePositions, Positions);
+                                    var rle = Mark(new RecordLiteralExpr { Type = t, FieldAssigns = Mark(FieldAssigns, Second, NodePositions, Positions) }, Nodes, Node, NodePositions, Positions);
                                     Ambiguous.Add(Mark(Expr.CreateRecordLiteral(rle), Nodes, Node, NodePositions, Positions));
                                 }
-                                if (LastExpr.Sequence.Count >= 2)
+                                if (SecondExpr.Sequence.Count >= 2)
                                 {
                                     if (t.OnTuple)
                                     {
-                                        var tle = Mark(new TupleLiteralExpr { Type = t, Parameters = LastExpr.Sequence }, Last, NodePositions, Positions);
+                                        var tle = Mark(new TupleLiteralExpr { Type = t, Parameters = SecondExpr.Sequence }, Nodes, Node, NodePositions, Positions);
                                         return Mark(Expr.CreateTupleLiteral(tle), Nodes, Node, NodePositions, Positions);
                                     }
                                     else if (t.OnTypeRef && (t.TypeRef.Name == "Tuple") && (t.TypeRef.Version == ""))
                                     {
-                                        var tle = Mark(new TupleLiteralExpr { Type = Optional<TypeSpec>.Empty, Parameters = LastExpr.Sequence }, Last, NodePositions, Positions);
+                                        var tle = Mark(new TupleLiteralExpr { Type = Optional<TypeSpec>.Empty, Parameters = SecondExpr.Sequence }, Nodes, Node, NodePositions, Positions);
                                         Ambiguous.Add(Mark(Expr.CreateTupleLiteral(tle), Nodes, Node, NodePositions, Positions));
                                     }
                                 }
-                                var lle = Mark(new ListLiteralExpr { Type = t, Parameters = LastExpr.Sequence }, Last, NodePositions, Positions);
+                                var lle = Mark(new ListLiteralExpr { Type = t, Parameters = SecondExpr.Sequence }, Nodes, Node, NodePositions, Positions);
                                 Ambiguous.Add(Mark(Expr.CreateListLiteral(lle), Nodes, Node, NodePositions, Positions));
+                                var fce = Mark(new FunctionCallExpr { Func = tvmc.Variable, Parameters = SecondExpr.Sequence }, Nodes, Node, NodePositions, Positions);
+                                Ambiguous.Add(Mark(Expr.CreateFunctionCall(fce), Nodes, Node, NodePositions, Positions));
                             }
                             else
                             {
-                                var Parameters = Mark(new List<Expr> { LastExpr }, Last, NodePositions, Positions);
-                                var lle = Mark(new ListLiteralExpr { Type = t, Parameters = Parameters }, Last, NodePositions, Positions);
+                                var Parameters = Mark(new List<Expr> { SecondExpr }, Second, NodePositions, Positions);
+                                var lle = Mark(new ListLiteralExpr { Type = t, Parameters = Parameters }, Nodes, Node, NodePositions, Positions);
                                 Ambiguous.Add(Mark(Expr.CreateListLiteral(lle), Nodes, Node, NodePositions, Positions));
+                                var fce = Mark(new FunctionCallExpr { Func = tvmc.Variable, Parameters = Parameters }, Nodes, Node, NodePositions, Positions);
+                                Ambiguous.Add(Mark(Expr.CreateFunctionCall(fce), Nodes, Node, NodePositions, Positions));
+                            }
+
+                            if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
+                            {
+                                var tule = Mark(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = SecondExpr }, Nodes, Node, NodePositions, Positions);
+                                Ambiguous.Add(Mark(Expr.CreateTaggedUnionLiteral(tule), Nodes, Node, NodePositions, Positions));
                             }
                         }
                     }
-
-                    //TODO
 
                     if (Ambiguous.Count == 1)
                     {
@@ -314,6 +335,7 @@ namespace Nivea.Template.Syntax
                     }
                     else if (Ambiguous.Count > 1)
                     {
+                        Mark(Ambiguous, Nodes, Node, NodePositions, Positions);
                         return Mark(Expr.CreateAmbiguous(Ambiguous), Nodes, Node, NodePositions, Positions);
                     }
                 }
@@ -499,6 +521,150 @@ namespace Nivea.Template.Syntax
         {
             //TODO
             return new List<LeftValueRef> { };
+        }
+
+        private class TypeVariableMemberChain
+        {
+            public TypeSpec Type;
+            public Expr TypeLiteral;
+            public Expr Variable;
+        }
+        private static Optional<TypeVariableMemberChain> TryTransformTypeVariableMemberChain(String NodeString, ExprNode Node, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
+        {
+            Action<Object, int, int> Mark = (o, Start, End) =>
+            {
+                if (NodePositions.ContainsKey(Node))
+                {
+                    var Range = NodePositions[Node];
+                    var TypeRange = new TextRange { Start = Text.Calc(Range.Start, Start), End = Text.Calc(Range.Start, End) };
+                    Positions.Add(o, TypeRange);
+                }
+            };
+
+            int InvalidCharIndex;
+            var osml = TokenParser.TrySplitSymbolMemberChain(NodeString, out InvalidCharIndex);
+            if (osml.OnNotHasValue)
+            {
+                return Optional<TypeVariableMemberChain>.Empty;
+            }
+            var sml = osml.Value;
+
+            var tTotal = Optional<TypeSpec>.Empty;
+            var tlTotal = Optional<Expr>.Empty;
+            var vTotal = Optional<Expr>.Empty;
+            Expr Ambiguous = null;
+            var FirstStart = 0;
+            foreach (var s in sml)
+            {
+                var LocalInvalidCharIndex = 0;
+                var oName = TokenParser.TryUnescapeSymbolName(s.Name, out LocalInvalidCharIndex);
+                if (oName.OnNotHasValue)
+                {
+                    InvalidCharIndex = s.NameStartIndex + LocalInvalidCharIndex;
+                    return Optional<TypeVariableMemberChain>.Empty;
+                }
+                var Name = oName.Value;
+
+                var l = new List<TypeSpec>();
+                foreach (var p in s.Parameters)
+                {
+                    var LocalLocalInvalidCharIndex = 0;
+                    var ov = TypeParser.TryParseTypeSpec(p.Key, (o, Start, End) => Mark(o, p.Value + Start, p.Value + End), out LocalLocalInvalidCharIndex);
+                    if (ov.OnNotHasValue)
+                    {
+                        InvalidCharIndex = p.Value + LocalLocalInvalidCharIndex;
+                        return Optional<TypeVariableMemberChain>.Empty;
+                    }
+                    l.Add(ov.Value);
+                }
+                Mark(l, s.NameEndIndex, s.SymbolEndIndex);
+
+                TypeSpec t;
+                if (Name.StartsWith("'"))
+                {
+                    Name = new String(Name.Skip(1).ToArray());
+                    t = TypeSpec.CreateGenericParameterRef(Name);
+                }
+                else
+                {
+                    var Ref = TypeParser.ParseTypeRef(Name);
+                    t = TypeSpec.CreateTypeRef(Ref);
+                }
+                Mark(t, s.NameStartIndex, s.NameEndIndex);
+
+                var v = VariableRef.CreateName(Name);
+                Mark(v, s.NameStartIndex, s.NameEndIndex);
+
+                if (s.Parameters.Count > 0)
+                {
+                    if (tTotal.OnNotHasValue && String.Equals(Name, "Tuple", StringComparison.OrdinalIgnoreCase))
+                    {
+                        t = TypeSpec.CreateTuple(l);
+                    }
+                    else
+                    {
+                        if (!t.OnTypeRef)
+                        {
+                            InvalidCharIndex = s.NameStartIndex;
+                            return Optional<TypeVariableMemberChain>.Empty;
+                        }
+                        var gts = new GenericTypeSpec { TypeSpec = t, ParameterValues = l };
+                        Mark(gts, s.SymbolStartIndex, s.SymbolEndIndex);
+                        t = TypeSpec.CreateGenericTypeSpec(gts);
+                    }
+                    Mark(t, s.SymbolStartIndex, s.SymbolEndIndex);
+
+                    var gfs = new GenericFunctionSpec { Func = v, Parameters = l };
+                    Mark(gfs, s.SymbolStartIndex, s.SymbolEndIndex);
+                    v = VariableRef.CreateGenericFunctionSpec(gfs);
+                    Mark(v, s.SymbolStartIndex, s.SymbolEndIndex);
+                }
+
+                if (tTotal.OnNotHasValue)
+                {
+                    tTotal = t;
+                    var tl = Expr.CreateTypeLiteral(t);
+                    tlTotal = tl;
+                    Mark(tl, s.SymbolStartIndex, s.SymbolEndIndex);
+
+                    var vv = Expr.CreateVariableRef(v);
+                    vTotal = vv;
+                    Mark(vv, s.SymbolStartIndex, s.SymbolEndIndex);
+
+                    var al = new List<Expr> { tl, vv };
+                    Ambiguous = Expr.CreateAmbiguous(al);
+                    Mark(al, s.SymbolStartIndex, s.SymbolEndIndex);
+                    Mark(Ambiguous, s.SymbolStartIndex, s.SymbolEndIndex);
+
+                    FirstStart = s.SymbolStartIndex;
+                }
+                else
+                {
+                    var tms = new TypeMemberSpec { Parent = tTotal.Value, Child = t };
+                    var tt = TypeSpec.CreateMember(tms);
+                    tTotal = tt;
+                    Mark(tms, FirstStart, s.SymbolEndIndex);
+                    Mark(tt, FirstStart, s.SymbolEndIndex);
+                    var tl = Expr.CreateTypeLiteral(t);
+                    tlTotal = tl;
+                    Mark(tl, s.SymbolStartIndex, s.SymbolEndIndex);
+
+                    var ma = new MemberAccess { Parent = Ambiguous, Child = v };
+                    var vma = VariableRef.CreateMemberAccess(ma);
+                    var vv = Expr.CreateVariableRef(vma);
+                    vTotal = vv;
+                    Mark(ma, s.SymbolStartIndex, s.SymbolEndIndex);
+                    Mark(vma, s.SymbolStartIndex, s.SymbolEndIndex);
+                    Mark(vv, s.SymbolStartIndex, s.SymbolEndIndex);
+
+                    var al = new List<Expr> { tl, vv };
+                    Ambiguous = Expr.CreateAmbiguous(al);
+                    Mark(al, s.SymbolStartIndex, s.SymbolEndIndex);
+                    Mark(Ambiguous, s.SymbolStartIndex, s.SymbolEndIndex);
+                }
+            }
+
+            return new TypeVariableMemberChain { Type = tTotal.Value, TypeLiteral = tlTotal.Value, Variable = vTotal.Value };
         }
 
         private static T Mark<T>(T SemanticsObj, Object SyntaxObj, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
