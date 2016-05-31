@@ -3,7 +3,7 @@
 //  File:        SequenceBuilder.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 序列构建器
-//  Version:     2016.05.30.
+//  Version:     2016.06.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -49,7 +49,7 @@ namespace Nivea.Template.Syntax
                 }
             };
 
-            if (t.Type.OnDirect)
+            if (t.Type.OnDirect || (t.Type.OnOperator && (t.Type.Operator != ".")))
             {
                 if (Nodes.Count >= 2)
                 {
@@ -59,17 +59,15 @@ namespace Nivea.Template.Syntax
                         var PrevPrevNode = Nodes[Nodes.Count - 2];
                         if (PrevPrevNode.OnNode)
                         {
-                            var Head = PrevPrevNode.Node;
-                            var Child = ExprNode.CreateDirect(t.Type.Direct);
+                            var Parent = PrevPrevNode.Node;
+                            var Child = t.Type.OnDirect ? ExprNode.CreateDirect(t.Type.Direct) : ExprNode.CreateOperator(t.Type.Operator);
                             Mark(Child, t);
-                            var l = new List<ExprNode> { Child };
-                            Mark(l, t);
-                            var Stem = new ExprNodeStem { Head = Head, Nodes = l };
-                            var nn = ExprNode.CreateStem(Stem);
-                            if (Positions.ContainsKey(Head))
+                            var Member = new ExprNodeMember { Parent = Parent, Child = Child };
+                            var nn = ExprNode.CreateMember(Member);
+                            if (Positions.ContainsKey(Parent))
                             {
-                                Mark2(Stem, Positions[Head], t);
-                                Mark2(nn, Positions[Head], t);
+                                Mark2(Member, Positions[Parent], t);
+                                Mark2(nn, Positions[Parent], t);
                             }
                             Nodes.RemoveRange(Nodes.Count - 2, 2);
                             Nodes.Add(StackNode.CreateNode(nn));
@@ -77,6 +75,10 @@ namespace Nivea.Template.Syntax
                         }
                     }
                 }
+            }
+
+            if (t.Type.OnDirect)
+            {
                 var n = ExprNode.CreateDirect(t.Type.Direct);
                 Mark(n, t);
                 Nodes.Add(StackNode.CreateNode(n));
@@ -119,15 +121,23 @@ namespace Nivea.Template.Syntax
                         if (Children.Count == 1)
                         {
                             var One = Children.Single();
-                            if (One.OnStem && !One.Stem.Head.OnHasValue)
+                            if (One.OnStem && !One.Stem.Head.OnHasValue && One.Stem.CanMerge)
                             {
                                 Children = One.Stem.Nodes;
                             }
+                            else
+                            {
+                                Mark2(Children, LeftParenthesis, t);
+                            }
                         }
-                        var Stem = new ExprNodeStem { Head = ParentNode.Node, Nodes = Children };
-                        Mark2(Stem, ParentNode, t);
+                        else
+                        {
+                            Mark2(Children, LeftParenthesis, t);
+                        }
+                        var Stem = new ExprNodeStem { Head = ParentNode.Node, Nodes = Children, CanMerge = false };
+                        Mark2(Stem, ParentNode.Node, t);
                         var Node = ExprNode.CreateStem(Stem);
-                        Mark2(Node, ParentNode, t);
+                        Mark2(Node, ParentNode.Node, t);
                         Nodes.RemoveRange(Nodes.Count - InnerNodes.Count - 2, InnerNodes.Count + 2);
                         Nodes.Add(StackNode.CreateNode(Node));
                         return;
@@ -135,12 +145,27 @@ namespace Nivea.Template.Syntax
                 }
                 if (Children.Count == 1)
                 {
-                    Nodes.RemoveRange(Nodes.Count - InnerNodes.Count - 1, InnerNodes.Count + 1);
-                    Nodes.Add(StackNode.CreateNode(Children.Single()));
+                    var One = Children.Single();
+                    if (One.OnStem && One.Stem.CanMerge)
+                    {
+                        var Stem = new ExprNodeStem { Head = One.Stem.Head, Nodes = One.Stem.Nodes, CanMerge = false };
+                        Mark2(Stem, LeftParenthesis, t);
+                        var Node = ExprNode.CreateStem(Stem);
+                        Mark2(Node, LeftParenthesis, t);
+                        Nodes.RemoveRange(Nodes.Count - InnerNodes.Count - 1, InnerNodes.Count + 1);
+                        Nodes.Add(StackNode.CreateNode(Node));
+                        return;
+                    }
+                    else if (One.OnUndetermined)
+                    {
+                        Nodes.RemoveRange(Nodes.Count - InnerNodes.Count - 1, InnerNodes.Count + 1);
+                        Nodes.Add(StackNode.CreateNode(One));
+                        return;
+                    }
                 }
-                else
                 {
-                    var Stem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = Children };
+                    Mark2(Children, LeftParenthesis, t);
+                    var Stem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = Children, CanMerge = false };
                     Mark2(Stem, LeftParenthesis, t);
                     var Node = ExprNode.CreateStem(Stem);
                     Mark2(Node, LeftParenthesis, t);

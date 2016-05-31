@@ -71,15 +71,16 @@
 
         ParentClass<A, B>.Test.ChildClass<A, B>
 
-        A (B (
+        1 . 2
+
+        A(B(
             C
             D
         ),
-        E
-        (
+        E(
             F
         ), G)
-        H (
+        H(
             I
                 J
         )
@@ -93,13 +94,18 @@
             1
             2
         )
-        Let a =
+        Let Test1 =
             1
             2
+        Let Test2:List<Int> =
+        $End
+        Let Test3:List<Int> = ()
 
         Yield "123"
 
         YieldMany ("123", "234")
+        YieldMany
+            ("123", "234")
 
         #
             //${"123"}//
@@ -265,7 +271,16 @@
 
         Let f = ! False
 
-        Let g = (1 + a) * 3
+        Let g1 = (1 + a) * 3
+        Let g2 = *
+            + 1 a
+            3
+        Let g3 =
+            *
+                +
+                    1
+                    a
+                3
 
         Let h = Cast(1, String)
 

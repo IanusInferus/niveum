@@ -3,7 +3,7 @@
 //  File:        ExprTransformer.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式转换器
-//  Version:     2016.05.31.
+//  Version:     2016.06.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -56,8 +56,30 @@ namespace Nivea.Template.Syntax
                     var e = Mark(VariableRef.CreateThis(), Node, NodePositions, Positions);
                     return Mark(Expr.CreateVariableRef(e), Node, NodePositions, Positions);
                 }
-
-                //TODO 数字等
+                else if (s == "True")
+                {
+                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = "Boolean", Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
+                    var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = "True" }, Node, NodePositions, Positions);
+                    return Mark(Expr.CreatePrimitiveLiteral(ple), Node, NodePositions, Positions);
+                }
+                else if (s == "False")
+                {
+                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = "Boolean", Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
+                    var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = "False" }, Node, NodePositions, Positions);
+                    return Mark(Expr.CreatePrimitiveLiteral(ple), Node, NodePositions, Positions);
+                }
+                else if (TokenParser.IsIntLiteral(s))
+                {
+                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = "Int", Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
+                    var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = s }, Node, NodePositions, Positions);
+                    return Mark(Expr.CreatePrimitiveLiteral(ple), Node, NodePositions, Positions);
+                }
+                else if (TokenParser.IsFloatLiteral(s))
+                {
+                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = "Real", Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
+                    var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = s }, Node, NodePositions, Positions);
+                    return Mark(Expr.CreatePrimitiveLiteral(ple), Node, NodePositions, Positions);
+                }
 
                 var Ambiguous = new List<Expr> { };
 
@@ -68,6 +90,7 @@ namespace Nivea.Template.Syntax
                     var t = tvmc.Type;
 
                     Ambiguous.Add(Mark(Expr.CreateTypeLiteral(t), Node, NodePositions, Positions));
+                    Ambiguous.Add(tvmc.Variable);
 
                     if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
                     {
@@ -78,8 +101,6 @@ namespace Nivea.Template.Syntax
                         Ambiguous.Add(Mark(Expr.CreateEnumLiteral(ele), Node, NodePositions, Positions));
                     }
                 }
-
-                //TODO
 
                 if (Ambiguous.Count == 1)
                 {
@@ -98,7 +119,8 @@ namespace Nivea.Template.Syntax
             }
             else if (Node.OnOperator)
             {
-                //TODO
+                var e = Mark(VariableRef.CreateName(Node.Operator), Node, NodePositions, Positions);
+                return Mark(Expr.CreateVariableRef(e), Node, NodePositions, Positions);
             }
             else if (Node.OnTemplate)
             {
@@ -113,17 +135,7 @@ namespace Nivea.Template.Syntax
                 var Stem = Node.Stem;
                 if (Stem.Head.OnHasValue)
                 {
-                    var Undetermined = new ExprNodeUndetermined { Nodes = Stem.Nodes };
-                    var e = ExprNode.CreateUndetermined(Undetermined);
-                    if (NodePositions.ContainsKey(Stem.Nodes))
-                    {
-                        var Range = NodePositions[Stem.Nodes];
-                        NodePositions.Add(Undetermined, Range);
-                        NodePositions.Add(e, Range);
-                    }
-
-                    var l = new List<ExprNode> { Stem.Head.Value, e };
-                    var Transformed = TransformNodes(l, Node, Text, NodePositions, Positions);
+                    var Transformed = TransformStem(Stem.Head.Value, Stem.Nodes, NodePositions.ContainsKey(Node) ? NodePositions[Node] : Optional<TextRange>.Empty, NodePositions.ContainsKey(Stem.Nodes) ? NodePositions[Stem.Nodes] : Optional<TextRange>.Empty, Text, NodePositions, Positions);
                     return Transformed;
                 }
                 else
@@ -136,209 +148,55 @@ namespace Nivea.Template.Syntax
             else if (Node.OnUndetermined)
             {
                 var Nodes = Node.Undetermined.Nodes;
-                var Transformed = TransformNodes(Nodes, Node, Text, NodePositions, Positions);
+                var Transformed = TransformNodes(Nodes, NodePositions.ContainsKey(Nodes) ? NodePositions[Nodes] : Optional<TextRange>.Empty, Text, NodePositions, Positions);
                 return Transformed;
             }
+            else if (Node.OnMember)
+            {
+                var ParentExpr = Transform(Node.Member.Parent, Text, NodePositions, Positions);
+                var Child = Node.Member.Child;
+                if (Child.OnDirect)
+                {
+                    var oe = TryTransformVariableMemberChain(Child.Direct, Child, ParentExpr, Text, NodePositions, Positions);
+                    if (oe.OnHasValue)
+                    {
+                        return oe.Value;
+                    }
+                }
+                else if (Child.OnOperator)
+                {
+                    var ChildExpr = VariableRef.CreateName(Child.Operator);
+                    var ma = new MemberAccess { Parent = ParentExpr, Child = ChildExpr };
+                    var vma = VariableRef.CreateMemberAccess(ma);
+                    var vv = Expr.CreateVariableRef(vma);
+                    Mark(ChildExpr, Node, NodePositions, Positions);
+                    Mark(ma, Node, NodePositions, Positions);
+                    Mark(vma, Node, NodePositions, Positions);
+                    Mark(vv, Node, NodePositions, Positions);
+                    return vv;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
 
-            //TODO
-            return Expr.CreateNull();
+            return Mark(Expr.CreateError(), Node, NodePositions, Positions);
         }
 
-        private static Expr TransformNodes(List<ExprNode> Nodes, ExprNode Node, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
+        private static Expr TransformNodes(List<ExprNode> Nodes, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
+        {
+            return TransformNodes(Nodes, GetRange(Nodes, NodePositions), Text, NodePositions, Positions);
+        }
+        private static Expr TransformNodes(List<ExprNode> Nodes, Optional<TextRange> Range, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
         {
             if (Nodes.Count == 0)
             {
-                return Mark(Expr.CreateSequence(Mark(new List<Expr> { }, Nodes, Node, NodePositions, Positions)), Nodes, Node, NodePositions, Positions);
-            }
-            if (Nodes.Count == 2)
-            {
-                var First = Nodes.First();
-                var Second = Nodes[1];
-                if (First.OnDirect)
-                {
-                    var s = First.Direct;
-                    if (s == "Yield")
-                    {
-                        return Mark(Expr.CreateYield(Transform(Second, Text, NodePositions, Positions)), Nodes, Node, NodePositions, Positions);
-                    }
-                    else if (s == "YieldMany")
-                    {
-                        return Mark(Expr.CreateYieldMany(Transform(Second, Text, NodePositions, Positions)), Nodes, Node, NodePositions, Positions);
-                    }
-                    else if (s == "Throw")
-                    {
-                        return Mark(Expr.CreateThrow(Transform(Second, Text, NodePositions, Positions)), Nodes, Node, NodePositions, Positions);
-                    }
-                    else if (s == "Continue")
-                    {
-                        if (Second.OnDirect)
-                        {
-                            var i = 0;
-                            if (int.TryParse(Second.Direct, out i))
-                            {
-                                return Mark(Expr.CreateContinue(i), Nodes, Node, NodePositions, Positions);
-                            }
-                        }
-                    }
-                    else if (s == "Break")
-                    {
-                        if (Second.OnDirect)
-                        {
-                            var i = 0;
-                            if (int.TryParse(Second.Direct, out i))
-                            {
-                                return Mark(Expr.CreateBreak(i), Nodes, Node, NodePositions, Positions);
-                            }
-                        }
-                    }
-                    else if (s == "Return")
-                    {
-                        return Mark(Expr.CreateReturn(Transform(Second, Text, NodePositions, Positions)), Nodes, Node, NodePositions, Positions);
-                    }
-                    else if (s == "Cast")
-                    {
-                        //TODO
-                    }
-
-                    var Ambiguous = new List<Expr> { };
-
-                    var otvmc = TryTransformTypeVariableMemberChain(s, First, Text, NodePositions, Positions);
-                    if (otvmc.OnHasValue)
-                    {
-                        var tvmc = otvmc.Value;
-                        var t = tvmc.Type;
-
-                        if (Second.OnDirect || Second.OnLiteral || Second.OnOperator)
-                        {
-                            var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = Second.OnDirect ? Second.Direct : Second.OnLiteral ? Second.Literal : Second.OnOperator ? Second.Operator : "" }, Nodes, Node, NodePositions, Positions);
-                            Ambiguous.Add(Mark(Expr.CreatePrimitiveLiteral(ple), Nodes, Node, NodePositions, Positions));
-                        }
-                        if (Second.OnDirect || Second.OnLiteral || Second.OnStem || Second.OnUndetermined)
-                        {
-                            var SecondExpr = Transform(Second, Text, NodePositions, Positions);
-
-                            var FieldAssigns = new List<FieldAssign>();
-                            var FieldAssignRanges = new Dictionary<FieldAssign, TextRange>();
-                            if (SecondExpr.OnAssign)
-                            {
-                                var a = SecondExpr.Assign;
-                                if (a.Left.Count == 1)
-                                {
-                                    var al = a.Left.Single();
-                                    if (al.OnVariable && al.Variable.OnName)
-                                    {
-                                        var fa = new FieldAssign { Name = al.Variable.Name, Expr = a.Right };
-                                        FieldAssigns.Add(fa);
-                                        if (Positions.ContainsKey(a))
-                                        {
-                                            FieldAssignRanges.Add(fa, Positions[a]);
-                                        }
-                                    }
-                                }
-                            }
-                            else if (SecondExpr.OnSequence)
-                            {
-                                foreach (var e in SecondExpr.Sequence)
-                                {
-                                    if (e.OnAssign)
-                                    {
-                                        var a = e.Assign;
-                                        if (a.Left.Count == 1)
-                                        {
-                                            var al = a.Left.Single();
-                                            if (al.OnVariable && al.Variable.OnName)
-                                            {
-                                                var fa = new FieldAssign { Name = al.Variable.Name, Expr = a.Right };
-                                                FieldAssigns.Add(fa);
-                                                if (Positions.ContainsKey(a))
-                                                {
-                                                    FieldAssignRanges.Add(fa, Positions[a]);
-                                                }
-                                            }
-                                            else
-                                            {
-                                                FieldAssigns.Clear();
-                                                break;
-                                            }
-                                        }
-                                        else
-                                        {
-                                            FieldAssigns.Clear();
-                                            break;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        FieldAssigns.Clear();
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (FieldAssigns.Count > 0)
-                            {
-                                foreach (var fa in FieldAssigns)
-                                {
-                                    if (FieldAssignRanges.ContainsKey(fa))
-                                    {
-                                        Positions.Add(fa, FieldAssignRanges[fa]);
-                                    }
-                                }
-                                var rle = Mark(new RecordLiteralExpr { Type = t, FieldAssigns = Mark(FieldAssigns, Second, NodePositions, Positions) }, Nodes, Node, NodePositions, Positions);
-                                Ambiguous.Add(Mark(Expr.CreateRecordLiteral(rle), Nodes, Node, NodePositions, Positions));
-                            }
-                            else if (SecondExpr.OnSequence)
-                            {
-                                if (SecondExpr.Sequence.Count == 0)
-                                {
-                                    var rle = Mark(new RecordLiteralExpr { Type = t, FieldAssigns = Mark(FieldAssigns, Second, NodePositions, Positions) }, Nodes, Node, NodePositions, Positions);
-                                    Ambiguous.Add(Mark(Expr.CreateRecordLiteral(rle), Nodes, Node, NodePositions, Positions));
-                                }
-                                if (SecondExpr.Sequence.Count >= 2)
-                                {
-                                    if (t.OnTuple)
-                                    {
-                                        var tle = Mark(new TupleLiteralExpr { Type = t, Parameters = SecondExpr.Sequence }, Nodes, Node, NodePositions, Positions);
-                                        return Mark(Expr.CreateTupleLiteral(tle), Nodes, Node, NodePositions, Positions);
-                                    }
-                                    else if (t.OnTypeRef && (t.TypeRef.Name == "Tuple") && (t.TypeRef.Version == ""))
-                                    {
-                                        var tle = Mark(new TupleLiteralExpr { Type = Optional<TypeSpec>.Empty, Parameters = SecondExpr.Sequence }, Nodes, Node, NodePositions, Positions);
-                                        Ambiguous.Add(Mark(Expr.CreateTupleLiteral(tle), Nodes, Node, NodePositions, Positions));
-                                    }
-                                }
-                                var lle = Mark(new ListLiteralExpr { Type = t, Parameters = SecondExpr.Sequence }, Nodes, Node, NodePositions, Positions);
-                                Ambiguous.Add(Mark(Expr.CreateListLiteral(lle), Nodes, Node, NodePositions, Positions));
-                                var fce = Mark(new FunctionCallExpr { Func = tvmc.Variable, Parameters = SecondExpr.Sequence }, Nodes, Node, NodePositions, Positions);
-                                Ambiguous.Add(Mark(Expr.CreateFunctionCall(fce), Nodes, Node, NodePositions, Positions));
-                            }
-                            else
-                            {
-                                var Parameters = Mark(new List<Expr> { SecondExpr }, Second, NodePositions, Positions);
-                                var lle = Mark(new ListLiteralExpr { Type = t, Parameters = Parameters }, Nodes, Node, NodePositions, Positions);
-                                Ambiguous.Add(Mark(Expr.CreateListLiteral(lle), Nodes, Node, NodePositions, Positions));
-                                var fce = Mark(new FunctionCallExpr { Func = tvmc.Variable, Parameters = Parameters }, Nodes, Node, NodePositions, Positions);
-                                Ambiguous.Add(Mark(Expr.CreateFunctionCall(fce), Nodes, Node, NodePositions, Positions));
-                            }
-
-                            if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
-                            {
-                                var tule = Mark(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = SecondExpr }, Nodes, Node, NodePositions, Positions);
-                                Ambiguous.Add(Mark(Expr.CreateTaggedUnionLiteral(tule), Nodes, Node, NodePositions, Positions));
-                            }
-                        }
-                    }
-
-                    if (Ambiguous.Count == 1)
-                    {
-                        return Ambiguous.Single();
-                    }
-                    else if (Ambiguous.Count > 1)
-                    {
-                        Mark(Ambiguous, Nodes, Node, NodePositions, Positions);
-                        return Mark(Expr.CreateAmbiguous(Ambiguous), Nodes, Node, NodePositions, Positions);
-                    }
-                }
+                return MarkRange(Expr.CreateSequence(MarkRange(new List<Expr> { }, Range, Positions)), Range, Positions);
             }
             if (Nodes.Count >= 1)
             {
@@ -354,9 +212,9 @@ namespace Nivea.Template.Syntax
                             if (Third.OnOperator && Third.Operator == "=")
                             {
                                 var SecondExpr = TransformLeftValueDefList(Nodes[1], Text, NodePositions, Positions);
-                                var FourthExpr = Nodes.Count == 4 ? Transform(Nodes[3], Text, NodePositions, Positions) : TransformNodes(Nodes.Skip(3).ToList(), Node, Text, NodePositions, Positions);
-                                var e = Mark(new LetExpr { Left = SecondExpr, Right = FourthExpr }, Nodes, Node, NodePositions, Positions);
-                                return Mark(Expr.CreateLet(e), Nodes, Node, NodePositions, Positions);
+                                var FourthExpr = Nodes.Count == 4 ? Transform(Nodes[3], Text, NodePositions, Positions) : TransformNodes(Nodes.Skip(3).ToList(), GetRange(Nodes.Skip(3), NodePositions), Text, NodePositions, Positions);
+                                var e = MarkRange(new LetExpr { Left = SecondExpr, Right = FourthExpr }, Range, Positions);
+                                return MarkRange(Expr.CreateLet(e), Range, Positions);
                             }
                         }
                     }
@@ -368,9 +226,9 @@ namespace Nivea.Template.Syntax
                             if (Third.OnOperator && Third.Operator == "=")
                             {
                                 var SecondExpr = TransformLeftValueDefList(Nodes[1], Text, NodePositions, Positions);
-                                var FourthExpr = Nodes.Count == 4 ? Transform(Nodes[3], Text, NodePositions, Positions) : TransformNodes(Nodes.Skip(3).ToList(), Node, Text, NodePositions, Positions);
-                                var e = Mark(new VarExpr { Left = SecondExpr, Right = FourthExpr }, Nodes, Node, NodePositions, Positions);
-                                return Mark(Expr.CreateVar(e), Nodes, Node, NodePositions, Positions);
+                                var FourthExpr = Nodes.Count == 4 ? Transform(Nodes[3], Text, NodePositions, Positions) : TransformNodes(Nodes.Skip(3).ToList(), GetRange(Nodes.Skip(3), NodePositions), Text, NodePositions, Positions);
+                                var e = MarkRange(new VarExpr { Left = SecondExpr, Right = FourthExpr }, Range, Positions);
+                                return MarkRange(Expr.CreateVar(e), Range, Positions);
                             }
                         }
                     }
@@ -379,25 +237,25 @@ namespace Nivea.Template.Syntax
                         if (Nodes.Count == 2)
                         {
                             var Branches = TransformIfBranchList(Nodes.Last(), Text, NodePositions, Positions);
-                            var e = Mark(new IfExpr { Branches = Branches }, Nodes, Node, NodePositions, Positions);
-                            return Mark(Expr.CreateIf(e), Nodes, Node, NodePositions, Positions);
+                            var e = MarkRange(new IfExpr { Branches = Branches }, Range, Positions);
+                            return MarkRange(Expr.CreateIf(e), Range, Positions);
                         }
                         else if (Nodes.Count >= 3)
                         {
-                            var Branch = TransformIfBranch(Nodes.Skip(1).ToList(), Node, Text, NodePositions, Positions);
-                            var Branches = Mark(new List<IfBranch> { Branch }, Nodes, Node, NodePositions, Positions);
-                            var e = Mark(new IfExpr { Branches = Branches }, Nodes, Node, NodePositions, Positions);
-                            return Mark(Expr.CreateIf(e), Nodes, Node, NodePositions, Positions);
+                            var Branch = TransformIfBranch(Nodes.Skip(1).ToList(), GetRange(Nodes.Skip(1), NodePositions), Text, NodePositions, Positions);
+                            var Branches = MarkRange(new List<IfBranch> { Branch }, Range, Positions);
+                            var e = MarkRange(new IfExpr { Branches = Branches }, Range, Positions);
+                            return MarkRange(Expr.CreateIf(e), Range, Positions);
                         }
                     }
                     else if (s == "Match")
                     {
                         if (Nodes.Count >= 3)
                         {
-                            var MiddleExpr = TransformNodes(Nodes.Skip(1).Take(Nodes.Count - 2).ToList(), Node, Text, NodePositions, Positions);
+                            var MiddleExpr = TransformNodes(Nodes.Skip(1).Take(Nodes.Count - 2).ToList(), Text, NodePositions, Positions);
                             var LastExpr = TransformMatchAlternativeList(Nodes.Last(), Text, NodePositions, Positions);
-                            var e = Mark(new MatchExpr { Target = MiddleExpr, Alternatives = LastExpr }, Nodes, Node, NodePositions, Positions);
-                            return Mark(Expr.CreateMatch(e), Nodes, Node, NodePositions, Positions);
+                            var e = MarkRange(new MatchExpr { Target = MiddleExpr, Alternatives = LastExpr }, Range, Positions);
+                            return MarkRange(Expr.CreateMatch(e), Range, Positions);
                         }
                     }
                     else if (s == "For")
@@ -405,20 +263,20 @@ namespace Nivea.Template.Syntax
                         if (Nodes.Count >= 5)
                         {
                             var SecondExpr = TransformLeftValueDefList(Nodes[1], Text, NodePositions, Positions);
-                            var MiddleExpr = TransformNodes(Nodes.Skip(3).Take(Nodes.Count - 4).ToList(), Node, Text, NodePositions, Positions);
+                            var MiddleExpr = TransformNodes(Nodes.Skip(3).Take(Nodes.Count - 4).ToList(), Text, NodePositions, Positions);
                             var LastExpr = Transform(Nodes.Last(), Text, NodePositions, Positions);
-                            var e = Mark(new ForExpr { EnumeratedValue = SecondExpr, Enumerable = MiddleExpr, Body = LastExpr }, Nodes, Node, NodePositions, Positions);
-                            return Mark(Expr.CreateFor(e), Nodes, Node, NodePositions, Positions);
+                            var e = MarkRange(new ForExpr { EnumeratedValue = SecondExpr, Enumerable = MiddleExpr, Body = LastExpr }, Range, Positions);
+                            return MarkRange(Expr.CreateFor(e), Range, Positions);
                         }
                     }
                     else if (s == "While")
                     {
                         if (Nodes.Count >= 3)
                         {
-                            var MiddleExpr = TransformNodes(Nodes.Skip(1).Take(Nodes.Count - 2).ToList(), Node, Text, NodePositions, Positions);
+                            var MiddleExpr = TransformNodes(Nodes.Skip(1).Take(Nodes.Count - 2).ToList(), Text, NodePositions, Positions);
                             var LastExpr = Transform(Nodes.Last(), Text, NodePositions, Positions);
-                            var e = Mark(new WhileExpr { Condition = MiddleExpr, Body = LastExpr }, Nodes, Node, NodePositions, Positions);
-                            return Mark(Expr.CreateWhile(e), Nodes, Node, NodePositions, Positions);
+                            var e = MarkRange(new WhileExpr { Condition = MiddleExpr, Body = LastExpr }, Range, Positions);
+                            return MarkRange(Expr.CreateWhile(e), Range, Positions);
                         }
                     }
                 }
@@ -433,33 +291,33 @@ namespace Nivea.Template.Syntax
                         var s = n.Operator;
                         if (s == "=")
                         {
-                            var LeftExpr = TransformLeftValueRefList(Nodes.Take(i).ToList(), Node, Text, NodePositions, Positions);
-                            var RightExpr = TransformNodes(Nodes.Skip(i + 1).ToList(), Node, Text, NodePositions, Positions);
-                            var e = Mark(new AssignExpr { Left = LeftExpr, Right = RightExpr }, Nodes, Node, NodePositions, Positions);
-                            return Mark(Expr.CreateAssign(e), Nodes, Node, NodePositions, Positions);
+                            var LeftExpr = TransformLeftValueRefList(Nodes.Take(i).ToList(), GetRange(Nodes.Take(i), NodePositions), Text, NodePositions, Positions);
+                            var RightExpr = TransformNodes(Nodes.Skip(i + 1).ToList(), Text, NodePositions, Positions);
+                            var e = MarkRange(new AssignExpr { Left = LeftExpr, Right = RightExpr }, Range, Positions);
+                            return MarkRange(Expr.CreateAssign(e), Range, Positions);
                         }
                         else if (s == "+=")
                         {
-                            var LeftExpr = TransformLeftValueRefList(Nodes.Take(i).ToList(), Node, Text, NodePositions, Positions);
-                            var RightExpr = TransformNodes(Nodes.Skip(i + 1).ToList(), Node, Text, NodePositions, Positions);
-                            var e = Mark(new IncreaseExpr { Left = LeftExpr, Right = RightExpr }, Nodes, Node, NodePositions, Positions);
-                            return Mark(Expr.CreateIncrease(e), Nodes, Node, NodePositions, Positions);
+                            var LeftExpr = TransformLeftValueRefList(Nodes.Take(i).ToList(), GetRange(Nodes.Take(i), NodePositions), Text, NodePositions, Positions);
+                            var RightExpr = TransformNodes(Nodes.Skip(i + 1).ToList(), Text, NodePositions, Positions);
+                            var e = MarkRange(new IncreaseExpr { Left = LeftExpr, Right = RightExpr }, Range, Positions);
+                            return MarkRange(Expr.CreateIncrease(e), Range, Positions);
                         }
                         else if (s == "-=")
                         {
-                            var LeftExpr = TransformLeftValueRefList(Nodes.Take(i).ToList(), Node, Text, NodePositions, Positions);
-                            var RightExpr = TransformNodes(Nodes.Skip(i + 1).ToList(), Node, Text, NodePositions, Positions);
-                            var e = Mark(new DecreaseExpr { Left = LeftExpr, Right = RightExpr }, Nodes, Node, NodePositions, Positions);
-                            return Mark(Expr.CreateDecrease(e), Nodes, Node, NodePositions, Positions);
+                            var LeftExpr = TransformLeftValueRefList(Nodes.Take(i).ToList(), GetRange(Nodes.Take(i), NodePositions), Text, NodePositions, Positions);
+                            var RightExpr = TransformNodes(Nodes.Skip(i + 1).ToList(), Text, NodePositions, Positions);
+                            var e = MarkRange(new DecreaseExpr { Left = LeftExpr, Right = RightExpr }, Range, Positions);
+                            return MarkRange(Expr.CreateDecrease(e), Range, Positions);
                         }
                         else if (s == "=>")
                         {
                             if (i == 1)
                             {
                                 var LeftExpr = TransformLeftValueDefList(Nodes[0], Text, NodePositions, Positions);
-                                var RightExpr = TransformNodes(Nodes.Skip(i + 1).ToList(), Node, Text, NodePositions, Positions);
-                                var e = Mark(new LambdaExpr { Parameters = LeftExpr, Body = RightExpr }, Nodes, Node, NodePositions, Positions);
-                                return Mark(Expr.CreateLambda(e), Nodes, Node, NodePositions, Positions);
+                                var RightExpr = TransformNodes(Nodes.Skip(i + 1).ToList(), Text, NodePositions, Positions);
+                                var e = MarkRange(new LambdaExpr { Parameters = LeftExpr, Body = RightExpr }, Range, Positions);
+                                return MarkRange(Expr.CreateLambda(e), Range, Positions);
                             }
                         }
                     }
@@ -471,27 +329,291 @@ namespace Nivea.Template.Syntax
                 if (Second.OnOperator)
                 {
                     var s = Second.Operator;
+                    var Operator = Mark(Expr.CreateVariableRef(Mark(VariableRef.CreateName(s), Second, NodePositions, Positions)), Second, NodePositions, Positions);
                     var LeftExpr = Transform(Nodes[0], Text, NodePositions, Positions);
                     var RightExpr = Transform(Nodes[2], Text, NodePositions, Positions);
-                    var e = Mark(new BinaryOperatorExpr { Operator = s, Left = LeftExpr, Right = RightExpr }, Nodes, Node, NodePositions, Positions);
-                    return Mark(Expr.CreateBinaryOperator(e), Nodes, Node, NodePositions, Positions);
+                    var l = MarkRange(new List<Expr> { LeftExpr, RightExpr }, GetRange(Nodes, NodePositions), Positions);
+                    var e = MarkRange(new FunctionCallExpr { Func = Operator, Parameters = l }, Range, Positions);
+                    return MarkRange(Expr.CreateFunctionCall(e), Range, Positions);
                 }
             }
             if (Nodes.Count >= 2)
             {
                 var First = Nodes.First();
+                var Rest = Nodes.Skip(1).ToList();
+                var RestRange = GetRange(Rest, NodePositions);
+                if (Rest.Count == 1)
+                {
+                    var One = Rest.Single();
+                    if (One.OnStem && One.Stem.Head.OnNotHasValue && One.Stem.CanMerge)
+                    {
+                        Rest = One.Stem.Nodes;
+                        if (NodePositions.ContainsKey(Rest))
+                        {
+                            RestRange = NodePositions[Rest];
+                        }
+                    }
+                }
+
                 if (First.OnOperator)
                 {
                     var s = First.Operator;
-                    var OperandExpr = TransformNodes(Nodes.Skip(1).ToList(), Node, Text, NodePositions, Positions);
-                    var e = Mark(new UnaryOperatorExpr { Operator = s, Operand = OperandExpr }, Nodes, Node, NodePositions, Positions);
-                    return Mark(Expr.CreateUnaryOperator(e), Nodes, Node, NodePositions, Positions);
+                    var Operator = Mark(Expr.CreateVariableRef(Mark(VariableRef.CreateName(s), First, NodePositions, Positions)), First, NodePositions, Positions);
+                    var OperandExpr = Rest.Select(n => Transform(n, Text, NodePositions, Positions)).ToList();
+                    MarkRange(OperandExpr, RestRange, Positions);
+                    var fce = MarkRange(new FunctionCallExpr { Func = Operator, Parameters = OperandExpr }, Range, Positions);
+                    return MarkRange(Expr.CreateFunctionCall(fce), Range, Positions);
+                }
+
+                return TransformStem(First, Rest, Range, RestRange, Text, NodePositions, Positions);
+            }
+            else if (Nodes.Count == 1)
+            {
+                return Transform(Nodes.Single(), Text, NodePositions, Positions);
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        private static Expr TransformStem(ExprNode Head, List<ExprNode> Nodes, Optional<TextRange> Range, Optional<TextRange> NodesRange, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
+        {
+            var Transformed = Nodes.Select(n => Transform(n, Text, NodePositions, Positions)).ToList();
+            MarkRange(Transformed, NodesRange, Positions);
+
+            if (Head.OnDirect)
+            {
+                var s = Head.Direct;
+                if (s == "Yield")
+                {
+                    if (Transformed.Count == 1)
+                    {
+                        return MarkRange(Expr.CreateYield(Transformed.Single()), Range, Positions);
+                    }
+                }
+                else if (s == "YieldMany")
+                {
+                    if (Transformed.Count == 1)
+                    {
+                        return MarkRange(Expr.CreateYieldMany(Transformed.Single()), Range, Positions);
+                    }
+                }
+                else if (s == "Throw")
+                {
+                    if (Transformed.Count == 1)
+                    {
+                        return MarkRange(Expr.CreateThrow(Transformed.Single()), Range, Positions);
+                    }
+                }
+                else if (s == "Continue")
+                {
+                    if (Nodes.Count == 1)
+                    {
+                        var One = Nodes.Single();
+                        if (One.OnDirect)
+                        {
+                            var i = 0;
+                            if (int.TryParse(One.Direct, out i))
+                            {
+                                return MarkRange(Expr.CreateContinue(i), Range, Positions);
+                            }
+                        }
+                    }
+                }
+                else if (s == "Break")
+                {
+                    if (Nodes.Count == 1)
+                    {
+                        var One = Nodes.Single();
+                        if (One.OnDirect)
+                        {
+                            var i = 0;
+                            if (int.TryParse(One.Direct, out i))
+                            {
+                                return MarkRange(Expr.CreateBreak(i), Range, Positions);
+                            }
+                        }
+                    }
+                }
+                else if (s == "Return")
+                {
+                    if (Transformed.Count == 1)
+                    {
+                        return MarkRange(Expr.CreateReturn(Transformed.Single()), Range, Positions);
+                    }
+                }
+                else if (s == "Cast")
+                {
+                    if (Transformed.Count == 2)
+                    {
+                        var First = Transformed[0];
+                        var Second = Transformed[1];
+                        if (Second.OnTypeLiteral)
+                        {
+                            var ce = MarkRange(new CastExpr { Operand = First, Type = Second.TypeLiteral }, NodesRange, Positions);
+                            return MarkRange(Expr.CreateCast(ce), Range, Positions);
+                        }
+                        else if (Second.OnAmbiguous)
+                        {
+                            var TypeLiterals = Second.Ambiguous.Where(a => a.OnTypeLiteral).ToList();
+                            if (TypeLiterals.Count == 1)
+                            {
+                                var ce = MarkRange(new CastExpr { Operand = First, Type = TypeLiterals.Single().TypeLiteral }, NodesRange, Positions);
+                                return MarkRange(Expr.CreateCast(ce), Range, Positions);
+                            }
+                        }
+                    }
+                }
+
+                var Ambiguous = new List<Expr> { };
+
+                var otvmc = TryTransformTypeVariableMemberChain(s, Head, Text, NodePositions, Positions);
+                if (otvmc.OnHasValue)
+                {
+                    var tvmc = otvmc.Value;
+                    var t = tvmc.Type;
+
+                    if (Nodes.Count == 0)
+                    {
+                        var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = Optional<String>.Empty }, NodesRange, NodePositions, Positions);
+                        Ambiguous.Add(MarkRange(Expr.CreatePrimitiveLiteral(ple), Range, Positions));
+                    }
+                    else if (Nodes.Count == 1)
+                    {
+                        var One = Nodes.Single();
+                        if (One.OnDirect || One.OnLiteral || One.OnOperator)
+                        {
+                            var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = One.OnDirect ? One.Direct : One.OnLiteral ? One.Literal : One.OnOperator ? One.Operator : "" }, NodesRange, NodePositions, Positions);
+                            Ambiguous.Add(MarkRange(Expr.CreatePrimitiveLiteral(ple), Range, Positions));
+                        }
+                    }
+                    {
+                        var FieldAssigns = new List<FieldAssign>();
+                        var FieldAssignRanges = new Dictionary<FieldAssign, TextRange>();
+                        foreach (var e in Transformed)
+                        {
+                            if (e.OnAssign)
+                            {
+                                var a = e.Assign;
+                                if (a.Left.Count == 1)
+                                {
+                                    var al = a.Left.Single();
+                                    if (al.OnVariable && al.Variable.OnName)
+                                    {
+                                        var fa = new FieldAssign { Name = al.Variable.Name, Expr = a.Right };
+                                        FieldAssigns.Add(fa);
+                                        if (Positions.ContainsKey(a))
+                                        {
+                                            FieldAssignRanges.Add(fa, Positions[a]);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        FieldAssigns.Clear();
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    FieldAssigns.Clear();
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                FieldAssigns.Clear();
+                                break;
+                            }
+                        }
+
+                        if (FieldAssigns.Count > 0)
+                        {
+                            foreach (var fa in FieldAssigns)
+                            {
+                                if (FieldAssignRanges.ContainsKey(fa))
+                                {
+                                    Positions.Add(fa, FieldAssignRanges[fa]);
+                                }
+                            }
+                            var rle = MarkRange(new RecordLiteralExpr { Type = t, FieldAssigns = MarkRange(FieldAssigns, NodesRange, Positions) }, Range, Positions);
+                            Ambiguous.Add(MarkRange(Expr.CreateRecordLiteral(rle), Range, Positions));
+                        }
+                        else
+                        {
+                            if (Transformed.Count == 0)
+                            {
+                                var rle = MarkRange(new RecordLiteralExpr { Type = t, FieldAssigns = MarkRange(FieldAssigns, NodesRange, Positions) }, Range, Positions);
+                                Ambiguous.Add(MarkRange(Expr.CreateRecordLiteral(rle), Range, Positions));
+                            }
+                            if (Transformed.Count >= 2)
+                            {
+                                if (t.OnTuple)
+                                {
+                                    var tle = MarkRange(new TupleLiteralExpr { Type = t, Parameters = Transformed }, Range, Positions);
+                                    return MarkRange(Expr.CreateTupleLiteral(tle), Range, Positions);
+                                }
+                                else if (t.OnTypeRef && (t.TypeRef.Name == "Tuple") && (t.TypeRef.Version == ""))
+                                {
+                                    var tle = MarkRange(new TupleLiteralExpr { Type = Optional<TypeSpec>.Empty, Parameters = Transformed }, Range, Positions);
+                                    Ambiguous.Add(MarkRange(Expr.CreateTupleLiteral(tle), Range, Positions));
+                                }
+                            }
+                            var lle = MarkRange(new ListLiteralExpr { Type = t, Parameters = Transformed }, Range, Positions);
+                            Ambiguous.Add(MarkRange(Expr.CreateListLiteral(lle), Range, Positions));
+                            var fce = MarkRange(new FunctionCallExpr { Func = tvmc.Variable, Parameters = Transformed }, Range, Positions);
+                            Ambiguous.Add(MarkRange(Expr.CreateFunctionCall(fce), Range, Positions));
+                            var ia = MarkRange(new IndexerAccess { Expr = tvmc.Variable, Index = Transformed }, Range, Positions);
+                            var vr = MarkRange(VariableRef.CreateIndexerAccess(ia), Range, Positions);
+                            Ambiguous.Add(MarkRange(Expr.CreateVariableRef(vr), Range, Positions));
+                        }
+
+                        if (Transformed.Count == 1)
+                        {
+                            var One = Transformed.Single();
+                            if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
+                            {
+                                var tule = MarkRange(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = One }, Range, Positions);
+                                Ambiguous.Add(MarkRange(Expr.CreateTaggedUnionLiteral(tule), Range, Positions));
+                            }
+                        }
+                    }
+                }
+
+                if (Ambiguous.Count == 1)
+                {
+                    return Ambiguous.Single();
+                }
+                else if (Ambiguous.Count > 1)
+                {
+                    MarkRange(Ambiguous, Range, Positions);
+                    return MarkRange(Expr.CreateAmbiguous(Ambiguous), Range, Positions);
+                }
+            }
+            else
+            {
+                var HeadExpr = Transform(Head, Text, NodePositions, Positions);
+
+                var Ambiguous = new List<Expr> { };
+
+                var fce = MarkRange(new FunctionCallExpr { Func = HeadExpr, Parameters = Transformed }, Range, Positions);
+                Ambiguous.Add(MarkRange(Expr.CreateFunctionCall(fce), Range, Positions));
+                var ia = MarkRange(new IndexerAccess { Expr = HeadExpr, Index = Transformed }, Range, Positions);
+                var vr = MarkRange(VariableRef.CreateIndexerAccess(ia), Range, Positions);
+                Ambiguous.Add(MarkRange(Expr.CreateVariableRef(vr), Range, Positions));
+                
+                if (Ambiguous.Count == 1)
+                {
+                    return Ambiguous.Single();
+                }
+                else if (Ambiguous.Count > 1)
+                {
+                    MarkRange(Ambiguous, Range, Positions);
+                    return MarkRange(Expr.CreateAmbiguous(Ambiguous), Range, Positions);
                 }
             }
 
-
-            //TODO
-            return Expr.CreateNull();
+            return MarkRange(Expr.CreateError(), Range, Positions);
         }
 
         private static List<LeftValueDef> TransformLeftValueDefList(ExprNode Node, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
@@ -505,7 +627,7 @@ namespace Nivea.Template.Syntax
             //TODO
             return new List<IfBranch> { };
         }
-        private static IfBranch TransformIfBranch(List<ExprNode> Nodes, ExprNode Node, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
+        private static IfBranch TransformIfBranch(List<ExprNode> Nodes, Optional<TextRange> Range, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
         {
             //TODO
             return new IfBranch { Condition = Expr.CreateNull(), Expr = Expr.CreateNull() };
@@ -517,7 +639,7 @@ namespace Nivea.Template.Syntax
             return new List<MatchAlternative> { };
         }
 
-        private static List<LeftValueRef> TransformLeftValueRefList(List<ExprNode> Nodes, ExprNode Node, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
+        private static List<LeftValueRef> TransformLeftValueRefList(List<ExprNode> Nodes, Optional<TextRange> Range, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
         {
             //TODO
             return new List<LeftValueRef> { };
@@ -647,24 +769,103 @@ namespace Nivea.Template.Syntax
                     Mark(tt, FirstStart, s.SymbolEndIndex);
                     var tl = Expr.CreateTypeLiteral(t);
                     tlTotal = tl;
-                    Mark(tl, s.SymbolStartIndex, s.SymbolEndIndex);
+                    Mark(tl, FirstStart, s.SymbolEndIndex);
 
                     var ma = new MemberAccess { Parent = Ambiguous, Child = v };
                     var vma = VariableRef.CreateMemberAccess(ma);
                     var vv = Expr.CreateVariableRef(vma);
                     vTotal = vv;
-                    Mark(ma, s.SymbolStartIndex, s.SymbolEndIndex);
-                    Mark(vma, s.SymbolStartIndex, s.SymbolEndIndex);
-                    Mark(vv, s.SymbolStartIndex, s.SymbolEndIndex);
+                    Mark(ma, FirstStart, s.SymbolEndIndex);
+                    Mark(vma, FirstStart, s.SymbolEndIndex);
+                    Mark(vv, FirstStart, s.SymbolEndIndex);
 
                     var al = new List<Expr> { tl, vv };
                     Ambiguous = Expr.CreateAmbiguous(al);
-                    Mark(al, s.SymbolStartIndex, s.SymbolEndIndex);
-                    Mark(Ambiguous, s.SymbolStartIndex, s.SymbolEndIndex);
+                    Mark(al, FirstStart, s.SymbolEndIndex);
+                    Mark(Ambiguous, FirstStart, s.SymbolEndIndex);
                 }
             }
 
             return new TypeVariableMemberChain { Type = tTotal.Value, TypeLiteral = tlTotal.Value, Variable = vTotal.Value };
+        }
+
+        private static Optional<Expr> TryTransformVariableMemberChain(String NodeString, ExprNode Node, Expr Parent, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
+        {
+            Action<Object, int, int> Mark = (o, Start, End) =>
+            {
+                if (NodePositions.ContainsKey(Node))
+                {
+                    var Range = NodePositions[Node];
+                    var TypeRange = new TextRange { Start = Text.Calc(Range.Start, Start), End = Text.Calc(Range.Start, End) };
+                    Positions.Add(o, TypeRange);
+                }
+            };
+
+            Action<Object, int> MarkEnd = (o, End) =>
+            {
+                if (Positions.ContainsKey(Parent) && NodePositions.ContainsKey(Node))
+                {
+                    var Range = NodePositions[Node];
+                    var TypeRange = new TextRange { Start = Positions[Parent].Start, End = Text.Calc(Range.Start, End) };
+                    Positions.Add(o, TypeRange);
+                }
+            };
+
+            int InvalidCharIndex;
+            var osml = TokenParser.TrySplitSymbolMemberChain(NodeString, out InvalidCharIndex);
+            if (osml.OnNotHasValue)
+            {
+                return Optional<Expr>.Empty;
+            }
+            var sml = osml.Value;
+
+            var vTotal = Parent;
+            foreach (var s in sml)
+            {
+                var LocalInvalidCharIndex = 0;
+                var oName = TokenParser.TryUnescapeSymbolName(s.Name, out LocalInvalidCharIndex);
+                if (oName.OnNotHasValue)
+                {
+                    InvalidCharIndex = s.NameStartIndex + LocalInvalidCharIndex;
+                    return Optional<Expr>.Empty;
+                }
+                var Name = oName.Value;
+
+                var l = new List<TypeSpec>();
+                foreach (var p in s.Parameters)
+                {
+                    var LocalLocalInvalidCharIndex = 0;
+                    var ov = TypeParser.TryParseTypeSpec(p.Key, (o, Start, End) => Mark(o, p.Value + Start, p.Value + End), out LocalLocalInvalidCharIndex);
+                    if (ov.OnNotHasValue)
+                    {
+                        InvalidCharIndex = p.Value + LocalLocalInvalidCharIndex;
+                        return Optional<Expr>.Empty;
+                    }
+                    l.Add(ov.Value);
+                }
+                Mark(l, s.NameEndIndex, s.SymbolEndIndex);
+
+                var v = VariableRef.CreateName(Name);
+                Mark(v, s.NameStartIndex, s.NameEndIndex);
+
+                if (s.Parameters.Count > 0)
+                {
+                    var gfs = new GenericFunctionSpec { Func = v, Parameters = l };
+                    Mark(gfs, s.SymbolStartIndex, s.SymbolEndIndex);
+                    v = VariableRef.CreateGenericFunctionSpec(gfs);
+                    Mark(v, s.SymbolStartIndex, s.SymbolEndIndex);
+                }
+
+                var ma = new MemberAccess { Parent = vTotal, Child = v };
+                var vma = VariableRef.CreateMemberAccess(ma);
+                var vv = Expr.CreateVariableRef(vma);
+                vTotal = vv;
+                MarkEnd(ma, s.SymbolEndIndex);
+                MarkEnd(vma, s.SymbolEndIndex);
+                MarkEnd(vv, s.SymbolEndIndex);
+            }
+
+            return vTotal;
         }
 
         private static T Mark<T>(T SemanticsObj, Object SyntaxObj, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
@@ -674,25 +875,24 @@ namespace Nivea.Template.Syntax
             Positions.Add(SemanticsObj, Range);
             return SemanticsObj;
         }
-        private static T Mark<T>(T SemanticsObj, IEnumerable<Object> SyntaxObjs, Object SyntaxObj, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
+        private static T MarkRange<T>(T SemanticsObj, Optional<TextRange> Range, Dictionary<Object, TextRange> Positions)
         {
-            var FirstObj = SyntaxObjs.FirstOrDefault();
-            var LastObj = SyntaxObjs.LastOrDefault();
-            if (FirstObj == null)
+            if (Range.OnHasValue)
             {
-                if (!NodePositions.ContainsKey(SyntaxObj)) { return SemanticsObj; }
-                var Range = NodePositions[SyntaxObj];
-                Positions.Add(SemanticsObj, Range);
-                return SemanticsObj;
+                Positions.Add(SemanticsObj, Range.Value);
             }
-            else
+            return SemanticsObj;
+        }
+        private static Optional<TextRange> GetRange<T>(IEnumerable<T> SyntaxObjs, Dictionary<Object, TextRange> NodePositions)
+        {
+            if (!SyntaxObjs.Any()) { return Optional<TextRange>.Empty; }
+            var First = SyntaxObjs.First();
+            var Last = SyntaxObjs.Last();
+            if (NodePositions.ContainsKey(First) && NodePositions.ContainsKey(Last))
             {
-                if (!NodePositions.ContainsKey(FirstObj) || !NodePositions.ContainsKey(LastObj)) { return SemanticsObj; }
-                var FirstRange = NodePositions[FirstObj];
-                var LastRange = NodePositions[LastObj];
-                Positions.Add(SemanticsObj, new TextRange { Start = FirstRange.Start, End = LastRange.End });
-                return SemanticsObj;
+                return new TextRange { Start = NodePositions[First].Start, End = NodePositions[Last].End };
             }
+            return Optional<TextRange>.Empty;
         }
     }
 }
