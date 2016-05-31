@@ -698,6 +698,9 @@ namespace Nivea.Template.Syntax
                         }
                         else
                         {
+                            var Param = new String(ParamChars.ToArray());
+                            ParameterStrings.Add(new KeyValuePair<String, int>(Param.Trim(' '), ParamStartIndex + Param.TakeWhile(cc => cc == ' ').Count()));
+                            ParamChars.Clear();
                             State = 3;
                         }
                         Proceed();
@@ -938,6 +941,182 @@ namespace Nivea.Template.Syntax
 
             InvalidCharIndex = 0;
             return new String(Output.ToArray());
+        }
+
+        private static Regex rIntLiteralDec = new Regex(@"^(?<Sign>[+-])?(?<Digits>[0-9]+)$", RegexOptions.ExplicitCapture);
+        private static Regex rIntLiteralHex = new Regex(@"^(?<Sign>[+-])?0x(?<Digits>[0-9A-Fa-f]+)$", RegexOptions.ExplicitCapture);
+        private static Regex rIntLiteralBin = new Regex(@"^(?<Sign>[+-])?0b(?<Digits>[01]+)$", RegexOptions.ExplicitCapture);
+        private static Regex rFloatLiteral = new Regex(@"^[+-]?([0-9]+|\.[0-9]+|[0-9]+\.[0-9]+)([eE][+-][0-9]+)?$", RegexOptions.ExplicitCapture);
+        public static Boolean IsIntLiteral(String s)
+        {
+            return rIntLiteralDec.IsMatch(s) || rIntLiteralHex.IsMatch(s) || rIntLiteralBin.IsMatch(s);
+        }
+        public static Boolean IsFloatLiteral(String s)
+        {
+            return rFloatLiteral.IsMatch(s);
+        }
+        public static Optional<Int64> ParseInt64Literal(String s)
+        {
+            checked
+            {
+                var mDec = rIntLiteralDec.Match(s);
+                if (mDec.Success)
+                {
+                    Int64 Result;
+                    if (Int64.TryParse(s, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out Result))
+                    {
+                        return Result;
+                    }
+                    else
+                    {
+                        return Optional<Int64>.Empty;
+                    }
+                }
+                var mHex = rIntLiteralHex.Match(s);
+                if (mHex.Success)
+                {
+                    Func<Char, int> GetHexDigitValue = c =>
+                    {
+                        if ((c >= '0') && (c <= '9')) { return c - '0'; }
+                        if ((c >= 'A') && (c <= 'F')) { return c - 'A' + 10; }
+                        if ((c >= 'a') && (c <= 'f')) { return c - 'a' + 10; }
+                        throw new InvalidOperationException();
+                    };
+
+                    Int64 Sign = mHex.Result("${Sign}") == "-" ? -1 : 1;
+                    Int64 v = 0;
+                    var Digits = mHex.Result("${Digits}").Select(d => GetHexDigitValue(d)).ToList();
+                    if (Digits.Count > 16) { return Optional<Int64>.Empty; }
+                    if (Digits.Count == 16)
+                    {
+                        var LeadingDigit = Digits.First();
+                        if (Sign == -1)
+                        {
+                            if (LeadingDigit > 8) { return Optional<Int64>.Empty; }
+                            if (LeadingDigit == 8)
+                            {
+                                if (Digits.Skip(1).Any(d => d != 0)) { return Optional<Int64>.Empty; }
+                            }
+                        }
+                        else
+                        {
+                            if (LeadingDigit >= 8) { return Optional<Int64>.Empty; }
+                        }
+                    }
+                    foreach (var d in Digits)
+                    {
+                        v = v * 16 + Sign * d;
+                    }
+                    return v;
+                }
+                var mBin = rIntLiteralBin.Match(s);
+                if (mBin.Success)
+                {
+                    Func<Char, int> GetBinDigitValue = c =>
+                    {
+                        if ((c >= '0') && (c <= '1')) { return c - '0'; }
+                        throw new InvalidOperationException();
+                    };
+
+                    Int64 Sign = mBin.Result("${Sign}") == "-" ? -1 : 1;
+                    Int64 v = 0;
+                    var Digits = mBin.Result("${Digits}").Select(d => GetBinDigitValue(d)).ToList();
+                    if (Digits.Count > 64) { return Optional<Int64>.Empty; }
+                    if (Digits.Count == 64)
+                    {
+                        var LeadingDigit = Digits.First();
+                        if (Sign == -1)
+                        {
+                            if (LeadingDigit == 1)
+                            {
+                                if (Digits.Skip(1).Any(d => d != 0)) { return Optional<Int64>.Empty; }
+                            }
+                        }
+                        else
+                        {
+                            if (LeadingDigit == 1) { return Optional<Int64>.Empty; }
+                        }
+                    }
+                    foreach (var d in Digits)
+                    {
+                        v = v * 2 + Sign * d;
+                    }
+                    return v;
+                }
+                return Optional<Int64>.Empty;
+            }
+        }
+        public static Optional<UInt64> ParseUInt64Literal(String s)
+        {
+            checked
+            {
+                var mDec = rIntLiteralDec.Match(s);
+                if (mDec.Success)
+                {
+                    UInt64 Result;
+                    if (UInt64.TryParse(s, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out Result))
+                    {
+                        return Result;
+                    }
+                    else
+                    {
+                        return Optional<UInt64>.Empty;
+                    }
+                }
+                var mHex = rIntLiteralHex.Match(s);
+                if (mHex.Success)
+                {
+                    Func<Char, int> GetHexDigitValue = c =>
+                    {
+                        if ((c >= '0') && (c <= '9')) { return c - '0'; }
+                        if ((c >= 'A') && (c <= 'F')) { return c - 'A' + 10; }
+                        if ((c >= 'a') && (c <= 'f')) { return c - 'a' + 10; }
+                        throw new InvalidOperationException();
+                    };
+
+                    if (mHex.Result("${Sign}") == "-") { return Optional<UInt64>.Empty; }
+                    UInt64 v = 0;
+                    var Digits = mHex.Result("${Digits}").Select(d => (UInt64)(GetHexDigitValue(d))).ToList();
+                    if (Digits.Count > 16) { return Optional<UInt64>.Empty; }
+                    foreach (var d in Digits)
+                    {
+                        v = (v << 4) | d;
+                    }
+                    return v;
+                }
+                var mBin = rIntLiteralBin.Match(s);
+                if (mBin.Success)
+                {
+                    Func<Char, int> GetBinDigitValue = c =>
+                    {
+                        if ((c >= '0') && (c <= '1')) { return c - '0'; }
+                        throw new InvalidOperationException();
+                    };
+
+                    if (mBin.Result("${Sign}") == "-") { return Optional<UInt64>.Empty; }
+                    UInt64 v = 0;
+                    var Digits = mBin.Result("${Digits}").Select(d => (UInt64)(GetBinDigitValue(d))).ToList();
+                    if (Digits.Count > 64) { return Optional<UInt64>.Empty; }
+                    foreach (var d in Digits)
+                    {
+                        v = (v << 1) | d;
+                    }
+                    return v;
+                }
+                return Optional<UInt64>.Empty;
+            }
+        }
+        public static Optional<double> TryParseFloat64Literal(String s)
+        {
+            var Result = 0.0;
+            if (double.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out Result))
+            {
+                return Result;
+            }
+            else
+            {
+                return Optional<double>.Empty;
+            }
         }
     }
 }

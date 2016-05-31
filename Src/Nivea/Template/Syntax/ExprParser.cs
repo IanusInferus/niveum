@@ -181,7 +181,7 @@ namespace Nivea.Template.Syntax
             }
             else
             {
-                var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = l };
+                var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = l, CanMerge = false };
                 OuterNode = ExprNode.CreateStem(OuterStem);
                 if (Range.OnHasValue)
                 {
@@ -327,7 +327,7 @@ namespace Nivea.Template.Syntax
                         foreach (var c in Children)
                         {
                             var Nodes = new List<ExprNode> { c };
-                            var Stem = new ExprNodeStem { Head = Head, Nodes = Nodes };
+                            var Stem = new ExprNodeStem { Head = Head, Nodes = Nodes, CanMerge = false };
                             var n = ExprNode.CreateStem(Stem);
                             if (NodePositions.ContainsKey(c))
                             {
@@ -338,7 +338,7 @@ namespace Nivea.Template.Syntax
                             }
                             ln.Add(n);
                         }
-                        var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = ln };
+                        var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = ln, CanMerge = true };
                         var OuterNode = ExprNode.CreateStem(OuterStem);
                         if (Range.OnHasValue)
                         {
@@ -378,7 +378,7 @@ namespace Nivea.Template.Syntax
                                 var Field = p.Field;
                                 var FieldNode = p.FieldNode;
                                 var fNodes = new List<ExprNode> { FieldNode };
-                                var fStem = new ExprNodeStem { Head = Field, Nodes = fNodes };
+                                var fStem = new ExprNodeStem { Head = Field, Nodes = fNodes, CanMerge = false };
                                 var fn = ExprNode.CreateStem(fStem);
                                 if (NodePositions.ContainsKey(FieldNode))
                                 {
@@ -389,7 +389,7 @@ namespace Nivea.Template.Syntax
                                 }
                                 Nodes.Add(fn);
                             }
-                            var Stem = new ExprNodeStem { Head = Head, Nodes = Nodes };
+                            var Stem = new ExprNodeStem { Head = Head, Nodes = Nodes, CanMerge = false };
                             var n = ExprNode.CreateStem(Stem);
                             if (NodePositions.ContainsKey(c))
                             {
@@ -400,7 +400,7 @@ namespace Nivea.Template.Syntax
                             }
                             ln.Add(n);
                         }
-                        var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = ln };
+                        var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = ln, CanMerge = true };
                         var OuterNode = ExprNode.CreateStem(OuterStem);
                         if (Range.OnHasValue)
                         {
@@ -442,7 +442,7 @@ namespace Nivea.Template.Syntax
 
                 if (!PreprocessDirectiveReduced)
                 {
-                    if ((ChildLines.Count > 0) || sb.IsCurrentLeftParenthesis)
+                    if ((ChildLines.Count > 0) || HasEnd || sb.IsCurrentLeftParenthesis)
                     {
                         var Children = ParseExprLinesToNodes(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, NodePositions, Positions);
                         if (Children.Count == 1)
@@ -451,7 +451,7 @@ namespace Nivea.Template.Syntax
                         }
                         else
                         {
-                            var Stem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = Children };
+                            var Stem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = Children, CanMerge = true };
                             var e = ExprNode.CreateStem(Stem);
                             NodePositions.Add(Children, ChildRange);
                             NodePositions.Add(Stem, ChildRange);
