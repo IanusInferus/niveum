@@ -220,7 +220,7 @@ State 1
 State 2
     EndOfString -> 失败
     < -> （如果Level > 0，则加入到ParamChars，否则ParamStartIndex = Index + 1），Level += 1, 前进
-    > -> Level -= 1, 如果Level > 0，则加入到ParamChars，前进，否则State 3，前进
+    > -> Level -= 1, 如果Level > 0，则加入到ParamChars，前进，否则提交参数到Parameters，清空ParamChars，State 3，前进
     , -> 如果Level = 1, 则提交参数到Parameters，清空ParamChars，ParamStartIndex = Index + 1，前进
     Any -> 加入到ParamChars，前进
 
@@ -257,9 +257,20 @@ Direct词，默认为符号名称，但在$Comment、$String、$List、$Table、
 符号名称中
 Null为空字面量，用于兼容.Net代码
 Default为默认值字面量
+This为当前对象引用
+Tuple为元组标记
+Cast为类型转换标记
 True、False为Boolean字面量
 可看作Int、Float的字面量，默认为对应的类型
 其他为非法
+
+可以看作Int的字面量，正则表达式为
+[+-]?[0-9]+
+[+-]?0x[0-9A-Fa-f]+
+[+-]?0b[01]+
+
+可以看作Float的字面量，正则表达式为
+[+-]?([0-9]+|\.[0-9]+|[0-9]+\.[0-9]+)([eE][+-][0-9]+)?
 
 
 预处理指令
@@ -351,15 +362,15 @@ H
 
 ()可用于在单行内表达多个结点，逗号(,)可以用来分隔多个结点，例如上面的例子可以写为
 A
-    B   (C, D)
-    E   (F)
+    B(C, D)
+    E(F)
     G
 H
-    I   (J)
+    I(J)
 
 还可以写为
-A (B (C, D), E (F), G)
-H (I (J))
+A(B(C, D), E(F), G)
+H(I(J))
 
 如果一行以空格隔开了多个结点，则默认情况下他们为第一个为父结点，其余为子结点，如上面的例子可以写为
 A (B C D) (E F) G
@@ -374,15 +385,14 @@ H(I J)
 
 
 ()可以跨多行；只要当前行括号不匹配，则下一个和当前行缩进相同的行之前的行均看作一个子结点，之后的行接着当前行，如
-A (B (
+A(B(
     C
     D
 ),
-E
-(
+E(
     F
 ), G)
-H (
+H(
     I
         J
 )
@@ -437,14 +447,15 @@ Let
 
 保留字
 
-Yield, YieldMany, Throw, Let, Var, If, Match, For, While, Continue, Break, Return, Null, Default, This, Tuple, Cast
+Yield, YieldMany, Throw, Let, Var, If, Match, For, While, Continue, Break, Return, Null, Default, This, Tuple, Cast, True, False
 保留字在恰当的位置，会按照预先定义的规则进行解释，可以使用""或{}等进行避免。
 
 
 类型
 
 Unit, Boolean, String, Int, Real, Type, Optional, List, Set, Map
-其中Int表示Int64，Real表示Float64
+其中Int表示Int32，Real表示Float64
+UInt8, UInt16, UInt32, UInt64, Int8, Int16, Int32, Int64, Float32, Float64
 
 
 运算符
