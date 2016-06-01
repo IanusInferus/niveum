@@ -36,11 +36,13 @@
 #Record Record1
     Field1      Int
     Field2      Int
+    Field3      List<Int>
 
 #TaggedUnion TaggedUnion1
-    Alternative1    Int
+    Alternative1    Record1
     Alternative2    String
-    Alternative3    Unit
+    Alternative3    Int
+    Alternative4    Unit
 
 #Enum Enum1
     Literal1
@@ -120,8 +122,8 @@
 
         Let (a2, _) = (1, 2)
         Let (
-            a3
-            _
+            a3:Int
+            _:Int
         ) = (
             1
             2
@@ -130,20 +132,21 @@
             1
             2
 
-        Let a5 = Tuple(1, 2)
-        Let a6 = Tuple
+        Let a5 = (1, 2)
+        Let a6 = Tuple<Int, Int>
             1
             2
 
-        Let a7 = Record1(Field1 = 1, Field2 = 2)
+        Let a7 = Record1(Field1 = 1, Field2 = 2, Field3 = (1, 2, 3))
         Let a8 = Record1
             Field1 = 1
             Field2 = 2
+            Field3 = (1, 2, 3)
 
-        Let a9 = TaggedUnion1.Alternative1(1)
-        Let a10 = TaggedUnion1.Alternative1
-            1
-        Let a11:TaggedUnion1 = Alternative1(1)
+        Let a9 = TaggedUnion1.Alternative2("1")
+        Let a10 = TaggedUnion1.Alternative2
+            "1"
+        Let a11:TaggedUnion1 = Alternative2("1")
 
         Let a12 = Enum1.Literal1
         Let a13:Enum1 = Literal1
@@ -158,7 +161,7 @@
         Let a17 = Map<Int, String>((1, "2"), (2, "3"), (3, "4"))
         Let a18 = Map<Int, String>
             (1, "2")
-            (2, "3")
+            (Int(2), String(3))
             (3, "4")
 
         Let a19 = List<String>
@@ -176,9 +179,9 @@
 
         Let a21 = Map<Int, Record1>
             $Table KeyValuePair<Int, Record1> (Key Int) Value
-                1   (Record1(Field1 = 1, Field2 = 2))
-                2   (Record1(Field1 = 2, Field2 = 3))
-                3   (Record1(Field1 = 3, Field2 = 4))
+                1   (Record1(Field1 = 1, Field2 = 2, Field3 = (1, 2, 3)))
+                2   (Record1(Field1 = 2, Field2 = 3, Field3 = (1, 2, 3)))
+                3   (Record1(Field1 = 3, Field2 = 4, Field3 = (1, 2, 3)))
 
         Let a22 = (i:Int, j:Int) => i + j
         Let a23 =
@@ -199,12 +202,17 @@
             True
                 3
 
+        If ((a24 == 0) 1, (a24 == 1) 2, True 3)
+        If (a24 == 0 1, a24 == 1 2, True 3)
+
         Match a9
-            Alternative1(Let v1)
-                v1
-            Alternative2(_)
+            Alternative1(Record1(Field1 = Let v1, Field3 = (1, Let v2, 3))) Where v1 > 3
+                v1 + v2
+            Alternative2(Let v)
+                v
+            Alternative3(_)
                 0
-            Alternative3
+            Alternative4
                 0
             _
                 Throw
@@ -212,11 +220,12 @@
         Match (
             a9
         )
-            Alternative1(Let v1) v1
-            Alternative2(_) 0
-            Alternative3 0
+            Alternative1(Record1(Field1 = Let v1, Field3 = (1, Let v2, 3))) Where v1 > 3 (v1 + v2)
+            Alternative2(Let v) v
+            Alternative3(_) 0
+            Alternative4 0
 
-        Match a9 (Alternative1(Let v1) v1, Alternative2(_) 0, Alternative3 0)
+        Match a9 (Alternative1(Record1(Field1 = Let v1, Field3 = (1, Let v2, 3))) Where v1 > 3 (v1 + v2), Alternative2(Let v2) v2, Alternative3(_) 0, Alternative4 0)
 
         Match a1
             0
@@ -225,6 +234,12 @@
                 2
             2
                 0
+
+        Match a16
+            (1, 2, Let v) v
+            (1, Let v, _) v
+            (Let v, _, _) v
+            _ 0
 
         For b In a14
             Yield b
@@ -263,6 +278,7 @@
         c = 0
         c += 1
         c -= 1
+        (a1, a2) = (a2, a1)
 
         Let d1 = (a:Int, b:Int) => a + b
         Let d2 = a:Int => a * 2
