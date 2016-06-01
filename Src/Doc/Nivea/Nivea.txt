@@ -258,6 +258,7 @@ Direct词，默认为符号名称，但在$Comment、$String、$List、$Table、
 Null为空字面量，用于兼容.Net代码
 Default为默认值字面量
 This为当前对象引用
+_为忽略变量标记
 Tuple为元组标记
 Cast为类型转换标记
 True、False为Boolean字面量
@@ -383,7 +384,6 @@ Let a = 1
 A B(C, D) E(F) G
 H(I J)
 
-
 ()可以跨多行；只要当前行括号不匹配，则下一个和当前行缩进相同的行之前的行均看作一个子结点，之后的行接着当前行，如
 A(B(
     C
@@ -398,20 +398,20 @@ H(
 )
 
 部分文法构造具有强制最右方结点为下方子结点的父结点的功能，如
-Let a = Tuple(1, 2)
+Let a = Tuple<Int, Int>(1, 2)
 和
-Let a = Tuple
+Let a = Tuple<Int, Int>
     1
     2
 和
 Let a =
-    Tuple
+    Tuple<Int, Int>
         1
         2
 和
 Let
     a
-    Tuple
+    Tuple<Int, Int>
         1
         2
 含义相同
@@ -447,7 +447,7 @@ Let
 
 保留字
 
-Yield, YieldMany, Throw, Let, Var, If, Match, For, While, Continue, Break, Return, Null, Default, This, Tuple, Cast, True, False
+Yield, YieldMany, Throw, Let, Var, If, Match, For, While, Continue, Break, Return, Null, Default, This, _, Tuple, Cast, True, False
 保留字在恰当的位置，会按照预先定义的规则进行解释，可以使用""或{}等进行避免。
 
 
