@@ -24,6 +24,7 @@
     <Optimize>false</Optimize>
     <OutputPath>..\..\Bin\</OutputPath>
     <DocumentationFile>..\..\Bin\Yuki.Expression.xml</DocumentationFile>
+    <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <NoWarn>1591</NoWarn>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -35,6 +36,7 @@
     <Optimize>true</Optimize>
     <OutputPath>..\..\Bin\</OutputPath>
     <DocumentationFile>..\..\Bin\Yuki.Expression.xml</DocumentationFile>
+    <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <NoWarn>1591</NoWarn>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
