@@ -3,7 +3,7 @@
 //  File:        TypeParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 类型词法解析器
-//  Version:     2016.05.31.
+//  Version:     2016.06.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -92,6 +92,7 @@ namespace Nivea.Template.Syntax
                 else
                 {
                     var Ref = ParseTypeRef(Name);
+                    Mark(Ref, s.NameStartIndex, s.NameEndIndex);
                     t = TypeSpec.CreateTypeRef(Ref);
                 }
                 Mark(t, s.NameStartIndex, s.NameEndIndex);

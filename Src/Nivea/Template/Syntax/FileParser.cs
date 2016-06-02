@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2016.05.26.
+//  Version:     2016.06.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -50,6 +50,7 @@ namespace Nivea.Template.Syntax
             var Sections = new List<Semantics.SectionDef>();
             var Positions = new Dictionary<Object, TextRange>();
             var InlineExpressionRegex = new Regex(@"\${(?<Expr>.*?)}", RegexOptions.ExplicitCapture);
+            var InlineIdentifierRegex = new Regex(@"\[\[(?<Identifier>.*?)\]\]", RegexOptions.ExplicitCapture);
 
             foreach (var TopNode in ParserResult.Value.MultiNodesList)
             {
@@ -81,6 +82,7 @@ namespace Nivea.Template.Syntax
 
                                 var VersionedName = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
                                 var TypeRef = ParseTypeRef(VersionedName);
+                                Mark(TypeRef, f.Parameters[0]);
                                 var Name = TypeRef.Name;
                                 var Version = TypeRef.Version;
 
@@ -381,7 +383,10 @@ namespace Nivea.Template.Syntax
                                                 Literals.Add(ltl);
                                             }
 
-                                            var UnderlyingType = TypeSpec.CreateTypeRef(new TypeRef { Name = "Int", Version = "" });
+                                            var r = new TypeRef { Name = "Int", Version = "" };
+                                            Mark(r, f);
+                                            var UnderlyingType = TypeSpec.CreateTypeRef(r);
+                                            Mark(UnderlyingType, f);
                                             var ed = new EnumDef { Name = Name, Version = Version, UnderlyingType = UnderlyingType, Literals = Literals, Description = Description };
                                             Mark(ed, f);
                                             var t = TypeDef.CreateEnum(ed);
@@ -426,6 +431,20 @@ namespace Nivea.Template.Syntax
                                         catch (ArgumentException ex)
                                         {
                                             throw new InvalidEvaluationException("InvalidInlineExpressionRegex", nm.GetFileRange(ValueNode), ValueNode, ex);
+                                        }
+                                    }
+                                    else if (Name == "InlineIdentifierRegex")
+                                    {
+                                        if (Node.Stem.Children.Count != 1) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(Node), Node); }
+                                        var ValueNode = Node.Stem.Children.Single();
+                                        var InlineIdentifierRegexValue = GetLeafNodeValue(ValueNode, nm, "InvalidOption");
+                                        try
+                                        {
+                                            InlineIdentifierRegex = new Regex(InlineIdentifierRegexValue, RegexOptions.ExplicitCapture);
+                                        }
+                                        catch (ArgumentException ex)
+                                        {
+                                            throw new InvalidEvaluationException("InvalidInlineIdentifierRegex", nm.GetFileRange(ValueNode), ValueNode, ex);
                                         }
                                     }
                                     else
@@ -547,8 +566,11 @@ namespace Nivea.Template.Syntax
                                         oRange = new TextRange { Start = Start, End = Range.End };
                                     }
                                     var Type = ParseTypeSpec(ParameterParts[1], oRange, nm, Positions);
-                                    Parameters.Add(new VariableDef { Name = ParameterName, Type = Type, Description = "" });
+                                    var v = new VariableDef { Name = ParameterName, Type = Type, Description = "" };
+                                    Mark(v, p);
+                                    Parameters.Add(v);
                                 }
+                                Mark(Parameters, f.Parameters);
 
                                 FunctionContent Content;
                                 if (f.Content.OnHasValue)
@@ -570,7 +592,7 @@ namespace Nivea.Template.Syntax
                                     Positions.Add(Signature, new TextRange { Start = FirstRange.Value.Start, End = FirstRange.Value.End });
                                 }
 
-                                var Body = ExprParser.ParseTemplateBody(Content.Lines, Content.IndentLevel * 4, InlineExpressionRegex, nm, Positions);
+                                var Body = ExprParser.ParseTemplateBody(Content.Lines, Content.IndentLevel * 4, InlineExpressionRegex, InlineIdentifierRegex, nm, Positions);
                                 Mark(Body, Content);
                                 var t = new TemplateDef { Signature = Signature, Body = Body };
                                 Mark(t, f);
@@ -596,7 +618,7 @@ namespace Nivea.Template.Syntax
                                 }
 
                                 var Range = nm.GetRange(Content);
-                                var Expr = ExprParser.ParseExprLines(Content.Lines, Range.OnHasValue ? Range.Value : Optional<TextRange>.Empty, Content.IndentLevel * 4, InlineExpressionRegex, nm, Positions);
+                                var Expr = ExprParser.ParseExprLines(Content.Lines, Range.OnHasValue ? Range.Value : Optional<TextRange>.Empty, Content.IndentLevel * 4, InlineExpressionRegex, InlineIdentifierRegex, nm, Positions);
                                 var s = SectionDef.CreateGlobal(Expr);
                                 Mark(s, f);
                                 Sections.Add(s);
@@ -623,13 +645,16 @@ namespace Nivea.Template.Syntax
                     var es = new TreeFormatEvaluateSetting { };
                     var e = new TreeFormatEvaluator(es, pr);
                     var er = e.Evaluate();
-                    var ReadResult = ts.Read<Semantics.File>(CollectionOperations.CreatePair(er.Value, er.Positions));
-                    Sections.AddRange(ReadResult.Key.Sections);
-                    foreach (var p in ReadResult.Value)
+                    if (er.Value.Nodes.Count > 0)
                     {
-                        if (p.Value.Range.OnHasValue)
+                        var ReadResult = ts.Read<Semantics.File>(CollectionOperations.CreatePair(er.Value, er.Positions));
+                        Sections.AddRange(ReadResult.Key.Sections);
+                        foreach (var p in ReadResult.Value)
                         {
-                            Positions.Add(p.Key, p.Value.Range.Value);
+                            if (p.Value.Range.OnHasValue)
+                            {
+                                Positions.Add(p.Key, p.Value.Range.Value);
+                            }
                         }
                     }
                 }
