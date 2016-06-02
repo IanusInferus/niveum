@@ -1,5 +1,6 @@
 ﻿#Option
     InlineExpressionRegex "\${(?<Expr>.*?)}"
+    InlineIdentifierRegex "\[\[(?<Identifier>.*?)\]\]"
 
 #Namespace Yuki.ObjectSchema.CSharp
 
@@ -19,7 +20,7 @@
 #Template Test a:Int b:List<Mat{ \n\x7B\u007B\U0007B}ch>
     //====
     ${a}
-    abcd${"123"}efgh
+    [[abcd${"123"}]]efgh
         $$
             Yield a.ToString()
 

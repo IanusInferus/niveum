@@ -3,7 +3,7 @@
 //  File:        SequenceBuilder.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 序列构建器
-//  Version:     2016.06.01.
+//  Version:     2016.06.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -41,9 +41,9 @@ namespace Nivea.Template.Syntax
             };
             Action<Object, Object, Object> Mark2 = (SemanticsObj, SyntaxObjStart, SyntaxObjEnd) =>
             {
-                if (TokenPositions.ContainsKey(SyntaxObjStart) && TokenPositions.ContainsKey(SyntaxObjEnd))
+                if ((TokenPositions.ContainsKey(SyntaxObjStart) || Positions.ContainsKey(SyntaxObjStart)) && TokenPositions.ContainsKey(SyntaxObjEnd))
                 {
-                    var RangeStart = TokenPositions[SyntaxObjStart];
+                    var RangeStart = TokenPositions.ContainsKey(SyntaxObjStart) ? TokenPositions[SyntaxObjStart] : Positions[SyntaxObjStart];
                     var RangeEnd = TokenPositions[SyntaxObjEnd];
                     Positions.Add(SemanticsObj, new TextRange { Start = RangeStart.Start, End = RangeEnd.End });
                 }
