@@ -62,6 +62,7 @@
     <Compile Include="Template\Syntax\ExprParser.cs" />
     <Compile Include="Template\Syntax\ExprTransformer.cs" />
     <Compile Include="Template\Syntax\FileParser.cs" />
+    <Compile Include="Template\Syntax\FileDumper.cs" />
     <Compile Include="Template\Syntax\TokenParser.cs" />
     <Compile Include="Template\Syntax\SequenceBuilder.cs" />
     <Compile Include="Template\Syntax\TypeParser.cs" />

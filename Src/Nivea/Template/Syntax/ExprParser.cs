@@ -3,7 +3,7 @@
 //  File:        ExprParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2016.05.31.
+//  Version:     2016.06.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,132 +22,161 @@ namespace Nivea.Template.Syntax
 {
     public static class ExprParser
     {
-        public static List<TemplateExpr> ParseTemplateBody(List<TextLine> Lines, int LinesIndentSpace, Regex InlineExpressionRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
+        public static List<TemplateExpr> ParseTemplateBody(List<TextLine> Lines, int LinesIndentSpace, Regex InlineExpressionRegex, Regex InlineIdentifierRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
         {
             var Body = new List<TemplateExpr>();
-
-            var InIndent = false;
-            var IndentSpace = 0;
-            var HeadRange = Optional<TextRange>.Empty;
-            var IndentedExprLines = new List<TextLine>();
-
-            Action<TextLine, String> AddLine = (Line, LineText) =>
+            var LineQueue = new Queue<TextLine>(Lines);
+            while (LineQueue.Count > 0)
             {
-                var Matches = InlineExpressionRegex.Matches(LineText).Cast<Match>().ToList();
-                var PreviousEndIndex = 0;
-                var Spans = new List<TemplateSpan>();
-                Action<int, int> AddLiteral = (StartIndex, Length) =>
-                {
-                    var Literal = LineText.Substring(StartIndex, Length);
-                    var ts = TemplateSpan.CreateLiteral(Literal);
-                    var Range = new TextRange { Start = nm.Text.Calc(Line.Range.Start, LinesIndentSpace + StartIndex), End = nm.Text.Calc(Line.Range.Start, LinesIndentSpace + StartIndex + Length) };
-                    Positions.Add(ts, Range);
-                    Spans.Add(ts);
-                };
-                Action<int, int> AddExpr = (StartIndex, Length) =>
-                {
-                    var Range = new TextRange { Start = nm.Text.Calc(Line.Range.Start, LinesIndentSpace + StartIndex), End = nm.Text.Calc(Line.Range.Start, LinesIndentSpace + StartIndex + Length) };
-                    var Expr = ParseExprInLine(Range, nm, Positions);
-                    var ts = TemplateSpan.CreateExpr(Expr);
-                    Positions.Add(ts, Range);
-                    Spans.Add(ts);
-                };
-                foreach (var m in Matches)
-                {
-                    if (m.Index > PreviousEndIndex)
-                    {
-                        AddLiteral(PreviousEndIndex, m.Index - PreviousEndIndex);
-                    }
-                    var g = m.Groups["Expr"];
-                    if (!g.Success)
-                    {
-                        var Range = new TextRange { Start = nm.Text.Calc(Line.Range.Start, LinesIndentSpace + m.Index), End = nm.Text.Calc(Line.Range.Start, LinesIndentSpace + m.Index + m.Length) };
-                        throw new InvalidSyntaxException("InvalidInlineExpressionRegexLackExpr", new FileTextRange { Text = nm.Text, Range = Range });
-                    }
-                    AddExpr(g.Index, g.Length);
-                    PreviousEndIndex = m.Index + m.Length;
-                }
-                if (LineText.Length > PreviousEndIndex)
-                {
-                    AddLiteral(PreviousEndIndex, LineText.Length - PreviousEndIndex);
-                }
-
-                var te = TemplateExpr.CreateLine(Spans);
-                Positions.Add(te, Line.Range);
-                Body.Add(te);
-            };
-
-            Action AddIndentedExpr = () =>
-            {
-                var Range = new TextRange { Start = HeadRange.Value.Start, End = HeadRange.Value.End };
-                if (IndentedExprLines.Count > 0)
-                {
-                    Range.End = IndentedExprLines.Last().Range.End;
-                }
-
-                var e = ParseExprLines(IndentedExprLines, Range, LinesIndentSpace + IndentSpace + 4, InlineExpressionRegex, nm, Positions);
-                var ee = new IndentedExpr { IndentSpace = IndentSpace, Expr = e };
-
-                Positions.Add(ee, Range);
-                var te = TemplateExpr.CreateIndentedExpr(ee);
-                Positions.Add(te, Range);
-                Body.Add(te);
-            };
-
-            foreach (var Line in Lines)
-            {
+                var Line = LineQueue.Dequeue();
                 var LineText = Line.Text.Substring(Math.Min(LinesIndentSpace, Line.Text.Length));
-                if (!InIndent)
+                var Trimmed = LineText.Trim(' ');
+                if (Trimmed == "$$")
                 {
-                    var Trimmed = LineText.Trim(' ');
-                    if (Trimmed == "$$")
+                    var IndentSpace = LineText.TakeWhile(c => c == ' ').Count();
+                    var HeadRange = Line.Range;
+                    var IndentedExprLines = new List<TextLine>();
+                    while (LineQueue.Count > 0)
                     {
-                        InIndent = true;
-                        IndentSpace = LineText.TakeWhile(c => c == ' ').Count();
-                        HeadRange = Line.Range;
-                        IndentedExprLines = new List<TextLine>();
+                        var ChildLine = LineQueue.Peek();
+                        var ChildLineText = ChildLine.Text.Substring(Math.Min(LinesIndentSpace, ChildLine.Text.Length));
+                        var SpaceCount = ChildLineText.TakeWhile(c => c == ' ').Count();
+                        if (TokenParser.IsBlankLine(ChildLineText))
+                        {
+                            LineQueue.Dequeue();
+                        }
+                        else if ((SpaceCount == IndentSpace) && (ChildLineText.Substring(SpaceCount) == "$End"))
+                        {
+                            LineQueue.Dequeue();
+                            break;
+                        }
+                        else if (SpaceCount <= IndentSpace)
+                        {
+                            break;
+                        }
+                        else if (SpaceCount >= IndentSpace + 4)
+                        {
+                            IndentedExprLines.Add(ChildLine);
+                            LineQueue.Dequeue();
+                        }
+                        else
+                        {
+                            throw new InvalidSyntaxException("InvalidIndent", new FileTextRange { Text = nm.Text, Range = ChildLine.Range });
+                        }
                     }
-                    else
+                    var Range = new TextRange { Start = HeadRange.Start, End = HeadRange.End };
+                    if (IndentedExprLines.Count > 0)
                     {
-                        AddLine(Line, LineText);
+                        Range.End = IndentedExprLines.Last().Range.End;
                     }
+
+                    var e = ParseExprLines(IndentedExprLines, Range, LinesIndentSpace + IndentSpace + 4, InlineExpressionRegex, InlineIdentifierRegex, nm, Positions);
+                    var ee = new IndentedExpr { IndentSpace = IndentSpace, Expr = e };
+
+                    Positions.Add(ee, Range);
+                    var te = TemplateExpr.CreateIndentedExpr(ee);
+                    Positions.Add(te, Range);
+                    Body.Add(te);
                 }
                 else
                 {
-                    var SpaceCount = LineText.TakeWhile(c => c == ' ').Count();
-                    if (TokenParser.IsBlankLine(LineText))
-                    {
-                        IndentedExprLines.Add(Line);
-                    }
-                    else if (SpaceCount < IndentSpace)
-                    {
-                        AddIndentedExpr();
-                        InIndent = false;
-                        AddLine(Line, LineText);
-                    }
-                    else if ((SpaceCount == IndentSpace) && (LineText.Substring(SpaceCount) == "$End"))
-                    {
-                        AddIndentedExpr();
-                        InIndent = false;
-                    }
-                    else if (SpaceCount >= IndentSpace + 4)
-                    {
-                        IndentedExprLines.Add(Line);
-                    }
-                    else
-                    {
-                        throw new InvalidSyntaxException("InvalidIndent", new FileTextRange { Text = nm.Text, Range = Line.Range });
-                    }
+                    var te = ParseTemplateLine(LineText, new TextRange { Start = nm.Text.Calc(Line.Range.Start, LinesIndentSpace), End = nm.Text.Calc(Line.Range.Start, LinesIndentSpace + LineText.Length) }, InlineExpressionRegex, InlineIdentifierRegex, nm, Positions);
+                    Body.Add(te);
                 }
             }
+            
+            return Body;
+        }
 
-            if (InIndent)
+        private static TemplateExpr ParseTemplateLine(String s, TextRange sRange, Regex InlineExpressionRegex, Regex InlineIdentifierRegex, ISemanticsNodeMaker nm, Dictionary<object, TextRange> Positions)
+        {
+            var Matches = InlineIdentifierRegex.Matches(s).Cast<Match>().ToList();
+            var PreviousEndIndex = 0;
+            var Spans = new List<TemplateSpan>();
+            Action<int, int> AddNonIdentifier = (StartIndex, Length) =>
             {
-                AddIndentedExpr();
-                InIndent = false;
+                var sNonIdentifier = s.Substring(StartIndex, Length);
+                var Range = new TextRange { Start = nm.Text.Calc(sRange.Start, StartIndex), End = nm.Text.Calc(sRange.Start, StartIndex + Length) };
+                var IdentifierSpans = ParseTemplateSpans(sNonIdentifier, Range, InlineExpressionRegex, nm, Positions);
+                Spans.AddRange(IdentifierSpans);
+            };
+            Action<int, int> AddIdentifier = (StartIndex, Length) =>
+            {
+                var sIdentifier = s.Substring(StartIndex, Length);
+                var Range = new TextRange { Start = nm.Text.Calc(sRange.Start, StartIndex), End = nm.Text.Calc(sRange.Start, StartIndex + Length) };
+                var IdentifierSpans = ParseTemplateSpans(sIdentifier, Range, InlineExpressionRegex, nm, Positions);
+                var ts = TemplateSpan.CreateIdentifier(IdentifierSpans);
+                Positions.Add(ts, Range);
+                Spans.Add(ts);
+            };
+            foreach (var m in Matches)
+            {
+                if (m.Index > PreviousEndIndex)
+                {
+                    AddNonIdentifier(PreviousEndIndex, m.Index - PreviousEndIndex);
+                }
+                var g = m.Groups["Identifier"];
+                if (!g.Success)
+                {
+                    var Range = new TextRange { Start = nm.Text.Calc(sRange.Start, m.Index), End = nm.Text.Calc(sRange.Start, m.Index + m.Length) };
+                    throw new InvalidSyntaxException("InvalidInlineIdentifierRegexLackIdentifier", new FileTextRange { Text = nm.Text, Range = Range });
+                }
+                AddIdentifier(g.Index, g.Length);
+                PreviousEndIndex = m.Index + m.Length;
+            }
+            if (s.Length > PreviousEndIndex)
+            {
+                AddNonIdentifier(PreviousEndIndex, s.Length - PreviousEndIndex);
             }
 
-            return Body;
+            Positions.Add(Spans, sRange);
+            var te = TemplateExpr.CreateLine(Spans);
+            Positions.Add(te, sRange);
+            return te;
+        }
+        private static List<TemplateSpan> ParseTemplateSpans(String s, TextRange sRange, Regex InlineExpressionRegex, ISemanticsNodeMaker nm, Dictionary<object, TextRange> Positions)
+        {
+            var Matches = InlineExpressionRegex.Matches(s).Cast<Match>().ToList();
+            var PreviousEndIndex = 0;
+            var Spans = new List<TemplateSpan>();
+            Action<int, int> AddLiteral = (StartIndex, Length) =>
+            {
+                var Literal = s.Substring(StartIndex, Length);
+                var ts = TemplateSpan.CreateLiteral(Literal);
+                var Range = new TextRange { Start = nm.Text.Calc(sRange.Start, StartIndex), End = nm.Text.Calc(sRange.Start, StartIndex + Length) };
+                Positions.Add(ts, Range);
+                Spans.Add(ts);
+            };
+            Action<int, int> AddExpr = (StartIndex, Length) =>
+            {
+                var Range = new TextRange { Start = nm.Text.Calc(sRange.Start, StartIndex), End = nm.Text.Calc(sRange.Start, StartIndex + Length) };
+                var Expr = ParseExprInLine(Range, nm, Positions);
+                var ts = TemplateSpan.CreateExpr(Expr);
+                Positions.Add(ts, Range);
+                Spans.Add(ts);
+            };
+            foreach (var m in Matches)
+            {
+                if (m.Index > PreviousEndIndex)
+                {
+                    AddLiteral(PreviousEndIndex, m.Index - PreviousEndIndex);
+                }
+                var g = m.Groups["Expr"];
+                if (!g.Success)
+                {
+                    var Range = new TextRange { Start = nm.Text.Calc(sRange.Start, m.Index), End = nm.Text.Calc(sRange.Start, m.Index + m.Length) };
+                    throw new InvalidSyntaxException("InvalidInlineExpressionRegexLackExpr", new FileTextRange { Text = nm.Text, Range = Range });
+                }
+                AddExpr(g.Index, g.Length);
+                PreviousEndIndex = m.Index + m.Length;
+            }
+            if (s.Length > PreviousEndIndex)
+            {
+                AddLiteral(PreviousEndIndex, s.Length - PreviousEndIndex);
+            }
+
+            Positions.Add(Spans, sRange);
+            return Spans;
         }
 
         public static Expr ParseExprInLine(TextRange Range, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
@@ -170,10 +199,10 @@ namespace Nivea.Template.Syntax
             return e;
         }
 
-        public static Expr ParseExprLines(List<TextLine> Lines, Optional<TextRange> Range, int LinesIndentSpace, Regex InlineExpressionRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
+        public static Expr ParseExprLines(List<TextLine> Lines, Optional<TextRange> Range, int LinesIndentSpace, Regex InlineExpressionRegex, Regex InlineIdentifierRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
         {
             var NodePositions = new Dictionary<Object, TextRange>();
-            var l = ParseExprLinesToNodes(Lines, LinesIndentSpace, InlineExpressionRegex, nm, NodePositions, Positions);
+            var l = ParseExprLinesToNodes(Lines, LinesIndentSpace, InlineExpressionRegex, InlineIdentifierRegex, nm, NodePositions, Positions);
             ExprNode OuterNode;
             if (l.Count == 1)
             {
@@ -214,7 +243,7 @@ namespace Nivea.Template.Syntax
             return sb.GetResult(nm.Text, TokenPositions, NodePositions);
         }
 
-        public static List<ExprNode> ParseExprLinesToNodes(List<TextLine> Lines, int LinesIndentSpace, Regex InlineExpressionRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
+        public static List<ExprNode> ParseExprLinesToNodes(List<TextLine> Lines, int LinesIndentSpace, Regex InlineExpressionRegex, Regex InlineIdentifierRegex, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
         {
             var l = new List<ExprNode>();
 
@@ -322,7 +351,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (Parameters.Count != 1) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
                         var Head = Parameters.Single();
-                        var Children = ParseExprLinesToNodes(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, NodePositions, Positions);
+                        var Children = ParseExprLinesToNodes(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, InlineIdentifierRegex, nm, NodePositions, Positions);
                         var ln = new List<ExprNode>();
                         foreach (var c in Children)
                         {
@@ -353,7 +382,7 @@ namespace Nivea.Template.Syntax
                         if (Parameters.Count < 2) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
                         var Head = Parameters.First();
                         var Fields = Parameters.Skip(1).ToList();
-                        var Children = ParseExprLinesToNodes(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, NodePositions, Positions);
+                        var Children = ParseExprLinesToNodes(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, InlineIdentifierRegex, nm, NodePositions, Positions);
                         var ln = new List<ExprNode>();
                         foreach (var c in Children)
                         {
@@ -413,7 +442,7 @@ namespace Nivea.Template.Syntax
                     else if (PreprocessDirectiveName == "#")
                     {
                         if (Parameters.Count != 0) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
-                        var Children = ParseTemplateBody(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, Positions);
+                        var Children = ParseTemplateBody(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, InlineIdentifierRegex, nm, Positions);
                         var OuterNode = ExprNode.CreateTemplate(Children);
                         if (Range.OnHasValue)
                         {
@@ -425,7 +454,7 @@ namespace Nivea.Template.Syntax
                     else if (PreprocessDirectiveName == "##")
                     {
                         if (Parameters.Count != 0) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
-                        var Children = ParseTemplateBody(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, Positions);
+                        var Children = ParseTemplateBody(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, InlineIdentifierRegex, nm, Positions);
                         var OuterNode = ExprNode.CreateYieldTemplate(Children);
                         if (Range.OnHasValue)
                         {
@@ -444,7 +473,7 @@ namespace Nivea.Template.Syntax
                 {
                     if ((ChildLines.Count > 0) || HasEnd || sb.IsCurrentLeftParenthesis)
                     {
-                        var Children = ParseExprLinesToNodes(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, nm, NodePositions, Positions);
+                        var Children = ParseExprLinesToNodes(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, InlineIdentifierRegex, nm, NodePositions, Positions);
                         if (Children.Count == 1)
                         {
                             sb.PushNode(Children.Single());

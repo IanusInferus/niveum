@@ -3,7 +3,7 @@
 //  File:        ExprTransformer.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式转换器
-//  Version:     2016.06.01.
+//  Version:     2016.06.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -572,8 +572,11 @@ namespace Nivea.Template.Syntax
                         Ambiguous.Add(MarkRange(Expr.CreatePrimitiveLiteral(ple), Range, Positions));
                         var rle = MarkRange(new RecordLiteralExpr { Type = t, FieldAssigns = MarkRange(new List<FieldAssign> { }, NodesRange, Positions) }, Range, Positions);
                         Ambiguous.Add(MarkRange(Expr.CreateRecordLiteral(rle), Range, Positions));
-                        var tule = MarkRange(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = Optional<Expr>.Empty }, Range, Positions);
-                        Ambiguous.Add(MarkRange(Expr.CreateTaggedUnionLiteral(tule), Range, Positions));
+                        if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
+                        {
+                            var tule = MarkRange(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = Optional<Expr>.Empty }, Range, Positions);
+                            Ambiguous.Add(MarkRange(Expr.CreateTaggedUnionLiteral(tule), Range, Positions));
+                        }
                     }
                     else if (Nodes.Count == 1)
                     {
@@ -673,7 +676,7 @@ namespace Nivea.Template.Syntax
                 }
                 l.Add(olvd.Value);
             }
-            return l;
+            return Mark(l, Node, NodePositions, Positions);
         }
 
         private static Optional<LeftValueDef> TryTransformLeftValueDef(ExprNode Node, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
@@ -744,7 +747,7 @@ namespace Nivea.Template.Syntax
                 }
                 l.Add(olvd.Value);
             }
-            return l;
+            return Mark(l, Node, NodePositions, Positions);
         }
         private static Optional<LeftValueRef> TryTransformLeftValueRef(ExprNode Node, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
         {
@@ -1166,6 +1169,7 @@ namespace Nivea.Template.Syntax
                 else
                 {
                     var Ref = TypeParser.ParseTypeRef(Name);
+                    Mark(Ref, s.NameStartIndex, s.NameEndIndex);
                     t = TypeSpec.CreateTypeRef(Ref);
                 }
                 Mark(t, s.NameStartIndex, s.NameEndIndex);
