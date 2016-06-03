@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2016.06.02.
+//  Version:     2016.06.03.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -24,6 +24,7 @@ namespace Nivea.Template.Syntax
     public class FileParserResult
     {
         public Semantics.File File;
+        public Text Text;
         public Dictionary<Object, TextRange> Positions;
     }
 
@@ -74,6 +75,54 @@ namespace Nivea.Template.Syntax
                                 {
                                     Positions.Add(SemanticsObj, Range.Value);
                                 }
+                            };
+
+                            Func<TFSemantics.Node, List<String>> ExtractNamespaceParts = Node =>
+                            {
+                                var Namespace = GetLeafNodeValue(Node, nm, "InvalidName");
+
+                                var NamespaceParts = new List<String>();
+                                int InvalidCharIndex;
+                                var osml = TokenParser.TrySplitSymbolMemberChain(Namespace, out InvalidCharIndex);
+                                if (osml.OnNotHasValue)
+                                {
+                                    var Range = nm.GetRange(Node);
+                                    var InvalidChar = Namespace.Substring(InvalidCharIndex, 1);
+                                    if (Range.OnHasValue)
+                                    {
+                                        Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, InvalidCharIndex), End = nm.Text.Calc(Range.Value.Start, InvalidCharIndex + 1) };
+                                    }
+                                    throw new InvalidTokenException("InvalidChar", new FileTextRange { Text = nm.Text, Range = Range }, InvalidChar);
+                                }
+                                foreach (var p in osml.Value)
+                                {
+                                    if (p.Parameters.Count > 0)
+                                    {
+                                        var Range = nm.GetRange(Node);
+                                        var Part = Namespace.Substring(p.SymbolStartIndex, p.SymbolEndIndex);
+                                        if (Range.OnHasValue)
+                                        {
+                                            Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, p.SymbolStartIndex), End = nm.Text.Calc(Range.Value.Start, p.SymbolEndIndex) };
+                                        }
+                                        throw new InvalidTokenException("InvalidNamespacePart", new FileTextRange { Text = nm.Text, Range = Range }, Part);
+                                    }
+                                    int LocalInvalidCharIndex;
+                                    var oName = TokenParser.TryUnescapeSymbolName(p.Name, out LocalInvalidCharIndex);
+                                    if (oName.OnNotHasValue)
+                                    {
+                                        InvalidCharIndex = p.NameStartIndex + LocalInvalidCharIndex;
+                                        var Range = nm.GetRange(Node);
+                                        var InvalidChar = Namespace.Substring(InvalidCharIndex, 1);
+                                        if (Range.OnHasValue)
+                                        {
+                                            Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, InvalidCharIndex), End = nm.Text.Calc(Range.Value.Start, InvalidCharIndex + 1) };
+                                        }
+                                        throw new InvalidTokenException("InvalidChar", new FileTextRange { Text = nm.Text, Range = Range }, InvalidChar);
+                                    }
+                                    NamespaceParts.Add(p.Name);
+                                }
+
+                                return NamespaceParts;
                             };
 
                             if (TypeFunctions.Contains(f.Name.Text))
@@ -458,9 +507,9 @@ namespace Nivea.Template.Syntax
                             else if (f.Name.Text == "Namespace")
                             {
                                 if (f.Parameters.Count != 1) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
-                                var Namespace = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
+                                var NamespaceParts = ExtractNamespaceParts(f.Parameters[0]);
 
-                                var s = SectionDef.CreateNamepsace(Namespace);
+                                var s = SectionDef.CreateNamepsace(NamespaceParts);
                                 Mark(s, f);
                                 Sections.Add(s);
                                 return new List<TFSemantics.Node> { };
@@ -517,15 +566,15 @@ namespace Nivea.Template.Syntax
                                     ContentLines = ContentValue.TableContent;
                                 }
 
-                                var Imports = new List<String>();
+                                var Imports = new List<List<String>>();
 
                                 foreach (var Line in ContentLines)
                                 {
-                                    String cName = null;
-
                                     if (Line.Nodes.Count == 1)
                                     {
-                                        cName = GetLeafNodeValue(Line.Nodes[0], nm, "InvalidImport");
+                                        var NamespaceParts = ExtractNamespaceParts(Line.Nodes[0]);
+                                        Mark(NamespaceParts, Line.Nodes[0]);
+                                        Imports.Add(NamespaceParts);
                                     }
                                     else if (Line.Nodes.Count == 0)
                                     {
@@ -535,8 +584,6 @@ namespace Nivea.Template.Syntax
                                     {
                                         throw new InvalidEvaluationException("InvalidLineNodeCount", nm.GetFileRange(Line), Line);
                                     }
-
-                                    Imports.Add(cName);
                                 }
 
                                 Mark(Imports, f);
@@ -661,7 +708,7 @@ namespace Nivea.Template.Syntax
             }
 
             var File = new Semantics.File { Sections = Sections };
-            return new FileParserResult { File = File, Positions = Positions };
+            return new FileParserResult { File = File, Text = Text, Positions = Positions };
         }
 
         private static String GetLeafNodeValue(TFSemantics.Node n, ISemanticsNodeMaker nm, String ErrorCause)
