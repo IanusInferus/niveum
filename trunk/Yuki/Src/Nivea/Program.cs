@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 模板语言运行时
-//  Version:     2016.06.02.
+//  Version:     2016.06.03.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,6 +17,7 @@ using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Nivea.Template.Syntax;
+using Nivea.Template.Semantics;
 
 namespace Nivea.CUI
 {
@@ -105,14 +106,33 @@ namespace Nivea.CUI
 
         public static void DumpSyntaxResult(String InputDirectory, String OutputDirectory)
         {
+            var Files = new Dictionary<String, FileParserResult>();
             foreach (var FilePath in Directory.EnumerateFiles(InputDirectory, "*.tree", SearchOption.AllDirectories))
             {
-                var RelativePath = FileNameHandling.GetRelativePath(FilePath, InputDirectory);
                 var AbsolutePath = FileNameHandling.GetAbsolutePath(FilePath, InputDirectory);
-                var FileName = FileNameHandling.GetFileName(FilePath);
                 var FileContent = Txt.ReadFile(FilePath);
                 var Text = TokenParser.BuildText(FileContent, AbsolutePath);
                 var Result = FileParser.ParseFile(Text);
+                Files.Add(AbsolutePath, Result);
+            }
+
+            var arr = AmbiguousRemover.Reduce(Files, new List<String> { }, new TypeProvider());
+            if (arr.UnresolvableAmbiguousOrErrors.Count > 0)
+            {
+                foreach (var p in arr.UnresolvableAmbiguousOrErrors)
+                {
+                    var ErrorMessage = p.Key;
+                    var ErrorRange = p.Value;
+                    Console.WriteLine(p.Key + ": " + ErrorRange.Text.Path + (ErrorRange.Range.OnHasValue ? ": " + ErrorRange.Range.Value.ToString() : ""));
+                }
+                return;
+            }
+            Files = arr.Files;
+
+            foreach (var p in Files)
+            {
+                var RelativePath = FileNameHandling.GetRelativePath(p.Key, InputDirectory);
+                var FileName = FileNameHandling.GetFileName(p.Key);
                 var fd = new FileDumper();
                 var Comment
                     = "==========================================================================" + "\r\n"
@@ -120,7 +140,7 @@ namespace Nivea.CUI
                     + "  SourceFile:  " + FileName + "\r\n"
                     + "\r\n"
                     + "==========================================================================";
-                var f = fd.Dump(Result, Comment);
+                var f = fd.Dump(p.Value, Comment);
                 var OutputPath = FileNameHandling.GetPath(FileNameHandling.GetPath(OutputDirectory, FileNameHandling.GetFileDirectory(RelativePath)), FileNameHandling.GetMainFileName(FileName) + ".syn.tree");
                 var OutputDir = FileNameHandling.GetFileDirectory(OutputPath);
                 if (!Directory.Exists(OutputDir)) { Directory.CreateDirectory(OutputDir); }
