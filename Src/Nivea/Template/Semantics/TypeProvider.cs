@@ -3,7 +3,7 @@
 //  File:        TypeProvider.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 类型提供器
-//  Version:     2016.06.03.
+//  Version:     2016.06.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,6 +17,8 @@ namespace Nivea.Template.Semantics
 {
     public class TypeProvider
     {
+        private Dictionary<String, String> PrimitiveMapping = new Dictionary<String, String> { { "Unit", "Yuki.Unit" }, { "Boolean", "System.Boolean" }, { "String", "System.String" }, { "Int", "System.Int32" }, { "Real", "System.Double" }, { "Byte", "System.Byte" }, { "UInt8", "System.Byte" }, { "UInt16", "System.UInt16" }, { "UInt32", "System.UInt32" }, { "UInt64", "System.UInt64" }, { "Int8", "System.SByte" }, { "Int16", "System.Int16" }, { "Int32", "System.Int32" }, { "Int64", "System.Int64" }, { "Float32", "System.Single" }, { "Float64", "System.Double" }, { "Type", "System.Type" }, { "Optional", "Yuki.Optional" }, { "List", "System.Collections.Generic.List`1" }, { "Set", "System.Collections.Generic.HashSet`1" }, { "Map", "System.Collections.Generic.Dictionary`2" } };
+        private HashSet<String> EnabledPrimitives = new HashSet<String>();
         private Dictionary<String, List<TypeDef>> TypeDefDict = new Dictionary<String, List<TypeDef>>();
         private Dictionary<String, List<TypeDefinition>> TypeDefinitionDict = new Dictionary<String, List<TypeDefinition>>();
         private Dictionary<String, AssemblyDefinition> Assemblies = new Dictionary<String, AssemblyDefinition>();
@@ -25,9 +27,9 @@ namespace Nivea.Template.Semantics
         {
         }
 
-        public List<TypeDef> GetTypeDefs(List<String> NamespaceParts, TypeRef Ref, int GenericParameterCount)
+        public List<TypeDef> GetTypeDefs(List<String> NamespaceParts, String Name, String Version, int GenericParameterCount)
         {
-            var FullName = ((NamespaceParts.Count == 0) ? "" : String.Join(".", NamespaceParts.Select(Part => GetCSharpFriendlyName(Part))) + ".") + GetCSharpFriendlyName(Ref, GenericParameterCount);
+            var FullName = ((NamespaceParts.Count == 0) ? "" : String.Join(".", NamespaceParts.Select(Part => GetCSharpFriendlyName(Part))) + ".") + GetCSharpFriendlyName(Name, Version, GenericParameterCount);
             if (TypeDefDict.ContainsKey(FullName))
             {
                 return TypeDefDict[FullName];
@@ -42,9 +44,25 @@ namespace Nivea.Template.Semantics
             }
         }
 
-        public List<TypeDefinition> GetTypeDefinitions(List<String> NamespaceParts, TypeRef Ref, int GenericParameterCount)
+        public List<TypeDefinition> GetTypeDefinitions(List<String> NamespaceParts, String Name, String Version, int GenericParameterCount)
         {
-            var FullName = ((NamespaceParts.Count == 0) ? "" : String.Join(".", NamespaceParts.Select(Part => GetCSharpFriendlyName(Part))) + ".") + GetCSharpFriendlyName(Ref, GenericParameterCount);
+            if ((NamespaceParts.Count == 0) && (Version == ""))
+            {
+                if (EnabledPrimitives.Contains(Name))
+                {
+                    if (PrimitiveMapping.ContainsKey(Name))
+                    {
+                        var v = PrimitiveMapping[Name];
+                        if (TypeDefinitionDict.ContainsKey(v))
+                        {
+                            return TypeDefinitionDict[v];
+                        }
+                    }
+                    return new List<TypeDefinition> { };
+                }
+            }
+
+            var FullName = ((NamespaceParts.Count == 0) ? "" : String.Join(".", NamespaceParts.Select(Part => GetCSharpFriendlyName(Part))) + ".") + GetCSharpFriendlyName(Name, Version, GenericParameterCount);
             if (TypeDefinitionDict.ContainsKey(FullName))
             {
                 return TypeDefinitionDict[FullName];
@@ -55,9 +73,26 @@ namespace Nivea.Template.Semantics
             }
         }
 
+        public Optional<TypeDefinition> GetNestTypeDefinition(TypeDefinition t, String Name, String Version, int GenericParameterCount)
+        {
+            var FullName = GetCSharpFriendlyName(Name, Version, GenericParameterCount);
+            var l = t.NestedTypes.Where(nt => nt.Name == FullName).ToList();
+            if (l.Count == 1) { return l.Single(); }
+            return Optional<TypeDefinition>.Empty;
+        }
+
         public void AddTypeDef(List<String> NamespaceParts, TypeDef Def)
         {
-            var FullName = ((NamespaceParts.Count == 0) || Def.OnPrimitive ? "" : String.Join(".", NamespaceParts.Select(Part => GetCSharpFriendlyName(Part))) + ".") + GetCSharpFriendlyName(Def);
+            if (Def.OnPrimitive)
+            {
+                if (!EnabledPrimitives.Contains(Def.Primitive.Name))
+                {
+                    EnabledPrimitives.Add(Def.Primitive.Name);
+                }
+                return;
+            }
+
+            var FullName = ((NamespaceParts.Count == 0) ? "" : String.Join(".", NamespaceParts.Select(Part => GetCSharpFriendlyName(Part))) + ".") + GetCSharpFriendlyName(Def);
             if (TypeDefDict.ContainsKey(FullName))
             {
                 TypeDefDict[FullName].Add(Def);
