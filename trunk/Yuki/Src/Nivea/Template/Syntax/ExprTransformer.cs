@@ -3,7 +3,7 @@
 //  File:        ExprTransformer.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式转换器
-//  Version:     2016.06.02.
+//  Version:     2016.06.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -144,9 +144,54 @@ namespace Nivea.Template.Syntax
                 }
                 else
                 {
+                    var Ambiguous = new List<Expr> { };
+
                     var Transformed = Stem.Nodes.Select(n => Transform(n, Text, NodePositions, Positions)).ToList();
                     Mark(Transformed, Node, NodePositions, Positions);
-                    return Mark(Expr.CreateSequence(Transformed), Node, NodePositions, Positions);
+                    Ambiguous.Add(Mark(Expr.CreateSequence(Transformed), Node, NodePositions, Positions));
+
+                    var Nodes = Stem.Nodes;
+                    var Range = GetRange(Node, NodePositions);
+                    var NodesRange = GetRange(Stem.Nodes, NodePositions);
+                    if ((Nodes.Count > 0) && Nodes.All(Child => Child.OnUndetermined && (Child.Undetermined.Nodes.Count >= 3) && (Child.Undetermined.Nodes[1].OnOperator && Child.Undetermined.Nodes[1].Operator == "=")))
+                    {
+                        var FieldAssigns = new List<FieldAssign>();
+                        foreach (var Child in Nodes)
+                        {
+                            var ChildNodes = Child.Undetermined.Nodes;
+                            var oLeftExpr = TryTransformLeftValueDef(ChildNodes[0], Text, NodePositions, Positions);
+                            var RightExpr = TransformNodes(ChildNodes.Skip(2).ToList(), Text, NodePositions, Positions);
+                            if (oLeftExpr.OnHasValue)
+                            {
+                                var LeftExpr = oLeftExpr.Value;
+                                if (LeftExpr.OnVariable && LeftExpr.Variable.Type.OnNotHasValue)
+                                {
+                                    var fa = Mark(new FieldAssign { Name = LeftExpr.Variable.Name, Expr = RightExpr }, Child, NodePositions, Positions);
+                                    FieldAssigns.Add(fa);
+                                }
+                                else
+                                {
+                                    FieldAssigns.Clear();
+                                    break;
+                                }
+                            }
+                        }
+                        if (FieldAssigns.Count > 0)
+                        {
+                            var rle = MarkRange(new RecordLiteralExpr { Type = Optional<TypeSpec>.Empty, FieldAssigns = MarkRange(FieldAssigns, NodesRange, Positions) }, Range, Positions);
+                            Ambiguous.Add(MarkRange(Expr.CreateRecordLiteral(rle), Range, Positions));
+                        }
+                    }
+
+                    if (Ambiguous.Count == 1)
+                    {
+                        return Ambiguous.Single();
+                    }
+                    else if (Ambiguous.Count > 1)
+                    {
+                        Mark(Ambiguous, Node, NodePositions, Positions);
+                        return Mark(Expr.CreateAmbiguous(Ambiguous), Node, NodePositions, Positions);
+                    }
                 }
             }
             else if (Node.OnUndetermined)
@@ -934,9 +979,54 @@ namespace Nivea.Template.Syntax
                 }
                 else
                 {
+                    var Ambiguous = new List<MatchPattern> { };
+
                     var Transformed = Stem.Nodes.Select(n => TransformPattern(n, Text, NodePositions, Positions)).ToList();
                     Mark(Transformed, Node, NodePositions, Positions);
-                    return Mark(MatchPattern.CreateSequence(Transformed), Node, NodePositions, Positions);
+                    Ambiguous.Add(Mark(MatchPattern.CreateSequence(Transformed), Node, NodePositions, Positions));
+
+                    var Nodes = Stem.Nodes;
+                    var Range = GetRange(Node, NodePositions);
+                    var NodesRange = GetRange(Stem.Nodes, NodePositions);
+                    if ((Nodes.Count > 0) && Nodes.All(Child => Child.OnUndetermined && (Child.Undetermined.Nodes.Count >= 3) && (Child.Undetermined.Nodes[1].OnOperator && Child.Undetermined.Nodes[1].Operator == "=")))
+                    {
+                        var FieldAssigns = new List<FieldAssignPattern>();
+                        foreach (var Child in Nodes)
+                        {
+                            var ChildNodes = Child.Undetermined.Nodes;
+                            var oLeftExpr = TryTransformLeftValueDef(ChildNodes[0], Text, NodePositions, Positions);
+                            var RightExpr = TransformNodesPattern(ChildNodes.Skip(2).ToList(), Text, NodePositions, Positions);
+                            if (oLeftExpr.OnHasValue)
+                            {
+                                var LeftExpr = oLeftExpr.Value;
+                                if (LeftExpr.OnVariable && LeftExpr.Variable.Type.OnNotHasValue)
+                                {
+                                    var fa = Mark(new FieldAssignPattern { Name = LeftExpr.Variable.Name, Expr = RightExpr }, Child, NodePositions, Positions);
+                                    FieldAssigns.Add(fa);
+                                }
+                                else
+                                {
+                                    FieldAssigns.Clear();
+                                    break;
+                                }
+                            }
+                        }
+                        if (FieldAssigns.Count > 0)
+                        {
+                            var rle = MarkRange(new RecordLiteralPattern { Type = Optional<TypeSpec>.Empty, FieldAssigns = MarkRange(FieldAssigns, NodesRange, Positions) }, Range, Positions);
+                            Ambiguous.Add(MarkRange(MatchPattern.CreateRecordLiteral(rle), Range, Positions));
+                        }
+                    }
+
+                    if (Ambiguous.Count == 1)
+                    {
+                        return Ambiguous.Single();
+                    }
+                    else if (Ambiguous.Count > 1)
+                    {
+                        Mark(Ambiguous, Node, NodePositions, Positions);
+                        return Mark(MatchPattern.CreateAmbiguous(Ambiguous), Node, NodePositions, Positions);
+                    }
                 }
             }
             else if (Node.OnUndetermined)
