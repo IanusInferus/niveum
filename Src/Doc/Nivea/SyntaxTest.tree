@@ -143,6 +143,10 @@
             Field1 = 1
             Field2 = 2
             Field3 = (1, 2, 3)
+        Let a82:Record1 =
+            Field1 = 1
+            Field2 = 2
+            Field3 = (1, 2, 3)
 
         Let a9 = TaggedUnion1.Alternative2("1")
         Let a10 = TaggedUnion1.Alternative2
@@ -221,7 +225,7 @@
         Match (
             a9
         )
-            Alternative1(Record1(Field1 = Let v1, Field3 = (1, Let v2, 3))) Where v1 > 3 (v1 + v2)
+            Alternative1((Field1 = Let v1, Field3 = (1, Let v2, 3))) Where v1 > 3 (v1 + v2)
             Alternative2(Let v) v
             Alternative3(_) 0
             Alternative4 0

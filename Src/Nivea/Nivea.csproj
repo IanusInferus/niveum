@@ -65,6 +65,7 @@
     <Compile Include="Template\Generated\Semantics.cs" />
     <Compile Include="Template\Generated\Syntax.cs" />
     <Compile Include="Template\Semantics\AmbiguousRemover.cs" />
+    <Compile Include="Template\Semantics\TypeBinder.cs" />
     <Compile Include="Template\Semantics\TypeProvider.cs" />
     <Compile Include="Template\Syntax\ExprParser.cs" />
     <Compile Include="Template\Syntax\ExprTransformer.cs" />

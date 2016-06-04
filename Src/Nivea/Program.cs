@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 模板语言运行时
-//  Version:     2016.06.03.
+//  Version:     2016.06.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -119,12 +119,17 @@ namespace Nivea.CUI
             var arr = AmbiguousRemover.Reduce(Files, new List<String> { }, new TypeProvider());
             if (arr.UnresolvableAmbiguousOrErrors.Count > 0)
             {
+                var l = new List<String> { };
                 foreach (var p in arr.UnresolvableAmbiguousOrErrors)
                 {
                     var ErrorMessage = p.Key;
                     var ErrorRange = p.Value;
-                    Console.WriteLine(p.Key + ": " + ErrorRange.Text.Path + (ErrorRange.Range.OnHasValue ? ": " + ErrorRange.Range.Value.ToString() : ""));
+                    l.Add(p.Key + ": " + ErrorRange.Text.Path + (ErrorRange.Range.OnHasValue ? ": " + ErrorRange.Range.Value.ToString() : ""));
                 }
+                var OutputPath = FileNameHandling.GetPath(OutputDirectory, "Error.txt");
+                var OutputDir = FileNameHandling.GetFileDirectory(OutputPath);
+                if (!Directory.Exists(OutputDir)) { Directory.CreateDirectory(OutputDir); }
+                Txt.WriteFile(OutputPath, String.Join("\r\n", l) + "\r\n");
                 return;
             }
             Files = arr.Files;
