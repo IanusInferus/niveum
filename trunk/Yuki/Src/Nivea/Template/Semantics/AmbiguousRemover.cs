@@ -3,7 +3,7 @@
 //  File:        AmbiguousRemover.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 歧义去除器
-//  Version:     2016.06.04.
+//  Version:     2016.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -54,6 +54,14 @@ namespace Nivea.Template.Semantics
                     {
                         tp.AddTypeDef(Namespace, s.Type);
                     }
+                    else if (s.OnTemplate)
+                    {
+                        //TODO 注册模板
+                    }
+                    else if (s.OnGlobal)
+                    {
+                        //TODO 注册全局变量、全局函数
+                    }
                 }
             }
 
@@ -95,9 +103,31 @@ namespace Nivea.Template.Semantics
             public LinkedList<HashSet<String>> GenericParametersStack = new LinkedList<HashSet<String>> { };
             public Dictionary<TypeSpec, BindedTypeSpec> TypeBinding = new Dictionary<TypeSpec, BindedTypeSpec> { };
 
+            public LinkedList<Dictionary<String, TypeSpec>> VariableStack = new LinkedList<Dictionary<String, TypeSpec>> { };
+            public Dictionary<Expr, BindedTypeSpec> ExprTypes = new Dictionary<Expr, BindedTypeSpec> { };
+            public Dictionary<MatchPattern, BindedTypeSpec> PatternTypes = new Dictionary<MatchPattern, BindedTypeSpec> { };
+
             public T Mark<T>(T NewObj, Object OldObj)
             {
                 _Mark(NewObj, OldObj);
+                return NewObj;
+            }
+            public Expr MarkType(Expr NewObj, Expr OldObj, Optional<BindedTypeSpec> t)
+            {
+                Mark(NewObj, OldObj);
+                if (t.OnHasValue)
+                {
+                    ExprTypes.Add(NewObj, t.Value);
+                }
+                return NewObj;
+            }
+            public MatchPattern MarkType(MatchPattern NewObj, MatchPattern OldObj, Optional<BindedTypeSpec> t)
+            {
+                Mark(NewObj, OldObj);
+                if (t.OnHasValue)
+                {
+                    PatternTypes.Add(NewObj, t.Value);
+                }
                 return NewObj;
             }
             public Context GetErrorSuppressed()
@@ -115,13 +145,14 @@ namespace Nivea.Template.Semantics
                     UnresolvableAmbiguousOrErrors = UnresolvableAmbiguousOrErrors,
                     Namespace = Namespace,
                     GenericParametersStack = GenericParametersStack,
-                    TypeBinding = TypeBinding
+                    TypeBinding = TypeBinding,
+                    VariableStack = new LinkedList<Dictionary<String, TypeSpec>>(VariableStack.Take(VariableStack.Count > 0 ? VariableStack.Count - 1 : 0).Concat(VariableStack.Skip(VariableStack.Count > 0 ? VariableStack.Count - 1 : 0).Select(d => d.ToDictionary(p => p.Key, p => p.Value))))
                 };
             }
 
-            public void BindType(TypeSpec t)
+            public Optional<BindedTypeSpec> BindType(TypeSpec t)
             {
-                if (TypeBinding.ContainsKey(t)) { return; }
+                if (TypeBinding.ContainsKey(t)) { return Optional<BindedTypeSpec>.Empty; }
                 var l = TypeBinder.BindType(t, Namespace, Imports, tp);
                 if (l.Count == 0)
                 {
@@ -135,11 +166,52 @@ namespace Nivea.Template.Semantics
                     {
                         BindType(p);
                     }
+                    return Binded;
                 }
                 else
                 {
                     UnresolvableAmbiguousOrErrors("AmbiguousType", t);
                 }
+                return Optional<BindedTypeSpec>.Empty;
+            }
+
+            public void PushVariableStack()
+            {
+                VariableStack.AddLast(new Dictionary<String, TypeSpec> { });
+            }
+            public void PopVariableStack()
+            {
+                VariableStack.RemoveLast();
+            }
+
+            public void RegisterVariableDef(String Name, TypeSpec Type, Object SemObj)
+            {
+                var d = VariableStack.Last.Value;
+                if (d.ContainsKey(Name))
+                {
+                    UnresolvableAmbiguousOrErrors("DuplicatedVariableDefinition", SemObj);
+                }
+                else
+                {
+                    d.Add(Name, Type);
+                    BindType(Type);
+                }
+            }
+            public Optional<BindedTypeSpec> GetVariableType(String Name)
+            {
+                foreach (var d in VariableStack.Reverse())
+                {
+                    if (d.ContainsKey(Name))
+                    {
+                        var t = d[Name];
+                        if (TypeBinding.ContainsKey(t))
+                        {
+                            return TypeBinding[t];
+                        }
+                    }
+                }
+                //TODO 查找全局变量
+                return Optional<BindedTypeSpec>.Empty;
             }
         }
 
@@ -172,7 +244,9 @@ namespace Nivea.Template.Semantics
             }
             else if (i.OnTemplate)
             {
+                c.PushVariableStack();
                 var t = ReduceTemplateDef(i.Template, c);
+                c.PopVariableStack();
                 return c.Mark(SectionDef.CreateTemplate(t), i);
             }
             else if (i.OnGlobal)
@@ -443,12 +517,14 @@ namespace Nivea.Template.Semantics
                 var Candidates = i.Ambiguous.Select(a =>
                 {
                     var Errors = new List<KeyValuePair<String, Object>> { };
+                    var cCloned = c.GetUnresolvableAmbiguousOrErrorsReplaced((Message, Obj) =>
+                    {
+                        Errors.Add(new KeyValuePair<String, Object>(Message, Obj));
+                    });
                     return new
                     {
-                        Expr = ReduceExpr(a, c.GetUnresolvableAmbiguousOrErrorsReplaced((Message, Obj) =>
-                        {
-                            Errors.Add(new KeyValuePair<String, Object>(Message, Obj));
-                        })),
+                        cCloned = cCloned,
+                        Expr = ReduceExpr(a, cCloned),
                         Errors = Errors
                     };
                 }).OrderBy(a => a.Errors.Count).ToList();
@@ -456,7 +532,9 @@ namespace Nivea.Template.Semantics
                 var NoErrorCandidates = Candidates.TakeWhile(Candidate => Candidate.Errors.Count == 0).ToList();
                 if (NoErrorCandidates.Count == 1)
                 {
-                    return NoErrorCandidates.Single().Expr;
+                    var One = NoErrorCandidates.Single();
+                    c.VariableStack = One.cCloned.VariableStack;
+                    return One.Expr;
                 }
                 else if (NoErrorCandidates.Count > 1)
                 {
@@ -466,6 +544,7 @@ namespace Nivea.Template.Semantics
                 else
                 {
                     var First = Candidates.First();
+                    c.VariableStack = First.cCloned.VariableStack;
                     foreach (var Error in First.Errors)
                     {
                         c.UnresolvableAmbiguousOrErrors(Error.Key, Error.Value);
@@ -475,50 +554,54 @@ namespace Nivea.Template.Semantics
             }
             else if (i.OnSequence)
             {
+                c.PushVariableStack();
                 var l = c.Mark(i.Sequence.Select(e => ReduceExpr(e, c)).ToList(), i.Sequence);
+                c.PopVariableStack();
                 return c.Mark(Expr.CreateSequence(l), i);
             }
             else if (i.OnYield)
             {
+                //TODO 检测Yield是否在##中
                 var e = ReduceExpr(i.Yield, c);
-                return c.Mark(Expr.CreateYield(e), i);
+                return c.MarkType(Expr.CreateYield(e), i, BindedTypeSpec.Void);
             }
             else if (i.OnYieldMany)
             {
                 var e = ReduceExpr(i.YieldMany, c);
-                return c.Mark(Expr.CreateYieldMany(e), i);
+                return c.MarkType(Expr.CreateYieldMany(e), i, BindedTypeSpec.Void);
             }
             else if (i.OnTemplate)
             {
                 var l = c.Mark(i.Template.Select(e => ReduceTemplateExpr(e, c)).ToList(), i.Template);
-                return c.Mark(Expr.CreateTemplate(l), i);
+                return c.MarkType(Expr.CreateTemplate(l), i, c.BindType(TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = TypeSpec.CreateTypeRef(new TypeRef { Name = "List", Version = "" }), ParameterValues = new List<TypeSpec> { TypeSpec.CreateTypeRef(new TypeRef { Name = "String", Version = "" }) } })));
             }
             else if (i.OnYieldTemplate)
             {
                 var l = c.Mark(i.YieldTemplate.Select(e => ReduceTemplateExpr(e, c)).ToList(), i.YieldTemplate);
-                return c.Mark(Expr.CreateYieldTemplate(l), i);
+                return c.MarkType(Expr.CreateYieldTemplate(l), i, BindedTypeSpec.Void);
             }
             else if (i.OnThrow)
             {
                 var oe = i.Throw.OnHasValue ? ReduceExpr(i.Throw.Value, c) : Optional<Expr>.Empty;
-                return c.Mark(Expr.CreateThrow(oe), i);
+                return c.MarkType(Expr.CreateThrow(oe), i, BindedTypeSpec.Any);
             }
             else if (i.OnLet)
             {
-                var Left = c.Mark(i.Let.Left.Select(d => ReduceLeftValueDef(d, c)).ToList(), i.Let.Left);
                 var Right = ReduceExpr(i.Let.Right, c);
+                var Left = c.Mark(i.Let.Left.Select(d => ReduceLeftValueDef(d, c)).ToList(), i.Let.Left);
                 var e = c.Mark(new LetExpr { Left = Left, Right = Right }, i.Let);
-                return c.Mark(Expr.CreateLet(e), i);
+                return c.MarkType(Expr.CreateLet(e), i, BindedTypeSpec.Void);
             }
             else if (i.OnVar)
             {
-                var Left = c.Mark(i.Var.Left.Select(d => ReduceLeftValueDef(d, c)).ToList(), i.Var.Left);
                 var Right = i.Var.Right.OnHasValue ? ReduceExpr(i.Var.Right.Value, c) : Optional<Expr>.Empty;
+                var Left = c.Mark(i.Var.Left.Select(d => ReduceLeftValueDef(d, c)).ToList(), i.Var.Left);
                 var e = c.Mark(new VarExpr { Left = Left, Right = Right }, i.Var);
-                return c.Mark(Expr.CreateVar(e), i);
+                return c.MarkType(Expr.CreateVar(e), i, BindedTypeSpec.Void);
             }
             else if (i.OnIf)
             {
+                //TODO 标记表达式类型，检查表达式类型兼容，推断表达式类型
                 var Branches = c.Mark(i.If.Branches.Select(b => ReduceIfBranch(b, c)).ToList(), i.If);
                 var e = c.Mark(new IfExpr { Branches = Branches }, i.If);
                 return c.Mark(Expr.CreateIf(e), i);
@@ -533,15 +616,19 @@ namespace Nivea.Template.Semantics
             else if (i.OnFor)
             {
                 var Enumerable = ReduceExpr(i.For.Enumerable, c);
+                c.PushVariableStack();
                 var EnumeratedValue = c.Mark(i.For.EnumeratedValue.Select(d => ReduceLeftValueDef(d, c)).ToList(), i.For.EnumeratedValue);
                 var Body = ReduceExpr(i.For.Body, c);
+                c.PopVariableStack();
                 var e = c.Mark(new ForExpr { Enumerable = Enumerable, EnumeratedValue = EnumeratedValue, Body = Body }, i.For);
                 return c.Mark(Expr.CreateFor(e), i);
             }
             else if (i.OnWhile)
             {
                 var Condition = ReduceExpr(i.While.Condition, c);
+                c.PushVariableStack();
                 var Body = ReduceExpr(i.While.Body, c);
+                c.PopVariableStack();
                 var e = c.Mark(new WhileExpr { Condition = Condition, Body = Body }, i.While);
                 return c.Mark(Expr.CreateWhile(e), i);
             }
@@ -664,8 +751,14 @@ namespace Nivea.Template.Semantics
 
         private static VariableRef ReduceVariableRef(VariableRef i, Context c)
         {
+            //TODO 解析变量
             if (i.OnName)
             {
+                var ot = c.GetVariableType(i.Name);
+                if (ot.OnNotHasValue)
+                {
+                    c.UnresolvableAmbiguousOrErrors("VariableNotExist", i);
+                }
                 return c.Mark(VariableRef.CreateName(i.Name), i);
             }
             else if (i.OnThis)
@@ -704,6 +797,14 @@ namespace Nivea.Template.Semantics
             if (i.OnVariable)
             {
                 var Type = i.Variable.Type.OnHasValue ? ReduceTypeSpec(i.Variable.Type.Value, c) : Optional<TypeSpec>.Empty;
+                if (Type.OnHasValue)
+                {
+                    c.RegisterVariableDef(i.Variable.Name, Type.Value, i);
+                }
+                else
+                {
+                    //TODO
+                }
                 var d = c.Mark(new LocalVariableDef { Name = i.Variable.Name, Type = Type }, i.Variable);
                 return c.Mark(LeftValueDef.CreateVariable(d), i);
             }
@@ -721,15 +822,19 @@ namespace Nivea.Template.Semantics
         private static IfBranch ReduceIfBranch(IfBranch i, Context c)
         {
             var Condition = ReduceExpr(i.Condition, c);
+            c.PushVariableStack();
             var Expr = ReduceExpr(i.Expr, c);
+            c.PopVariableStack();
             return c.Mark(new IfBranch { Condition = Condition, Expr = Expr }, i);
         }
 
         private static MatchAlternative ReduceMatchAlternative(MatchAlternative i, Context c)
         {
+            c.PushVariableStack();
             var Pattern = ReduceMatchPattern(i.Pattern, c);
             var Condition = i.Condition.OnHasValue ? ReduceExpr(i.Condition.Value, c) : Optional<Expr>.Empty;
             var Expr = ReduceExpr(i.Expr, c);
+            c.PopVariableStack();
             return c.Mark(new MatchAlternative { Pattern = Pattern, Condition = Condition, Expr = Expr }, i);
         }
 
@@ -767,12 +872,14 @@ namespace Nivea.Template.Semantics
                 var Candidates = i.Ambiguous.Select(a =>
                 {
                     var Errors = new List<KeyValuePair<String, Object>> { };
+                    var cCloned = c.GetUnresolvableAmbiguousOrErrorsReplaced((Message, Obj) =>
+                    {
+                        Errors.Add(new KeyValuePair<String, Object>(Message, Obj));
+                    });
                     return new
                     {
-                        Expr = ReduceMatchPattern(a, c.GetUnresolvableAmbiguousOrErrorsReplaced((Message, Obj) =>
-                        {
-                            Errors.Add(new KeyValuePair<String, Object>(Message, Obj));
-                        })),
+                        cCloned = cCloned,
+                        Expr = ReduceMatchPattern(a, cCloned),
                         Errors = Errors
                     };
                 }).OrderBy(a => a.Errors.Count).ToList();
@@ -780,7 +887,9 @@ namespace Nivea.Template.Semantics
                 var NoErrorCandidates = Candidates.TakeWhile(Candidate => Candidate.Errors.Count == 0).ToList();
                 if (NoErrorCandidates.Count == 1)
                 {
-                    return NoErrorCandidates.Single().Expr;
+                    var One = NoErrorCandidates.Single();
+                    c.VariableStack = One.cCloned.VariableStack;
+                    return One.Expr;
                 }
                 else if (NoErrorCandidates.Count > 1)
                 {
@@ -790,6 +899,7 @@ namespace Nivea.Template.Semantics
                 else
                 {
                     var First = Candidates.First();
+                    c.VariableStack = First.cCloned.VariableStack;
                     foreach (var Error in First.Errors)
                     {
                         c.UnresolvableAmbiguousOrErrors(Error.Key, Error.Value);
