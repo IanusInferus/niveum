@@ -3,7 +3,7 @@
 //  File:        TypeBinder.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 类型绑定器
-//  Version:     2016.06.04.
+//  Version:     2016.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,6 +23,9 @@ namespace Nivea.Template.Semantics
         public Optional<BindedTypeSpec> Parent;
         public Optional<TypeDef> TypeDef;
         public Optional<Mono.Cecil.TypeDefinition> TypeDefinition;
+
+        public static readonly BindedTypeSpec Void = new BindedTypeSpec { };
+        public static readonly BindedTypeSpec Any = new BindedTypeSpec { };
     }
 
     public static class TypeBinder

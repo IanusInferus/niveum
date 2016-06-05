@@ -257,7 +257,7 @@ Direct词，默认为符号名称，但在$Comment、$String、$List、$Table、
 符号名称中
 Null为空字面量，用于兼容.Net代码
 Default为默认值字面量
-This为当前对象引用
+This为当前对象引用（保留不用）
 _为忽略变量标记
 Tuple为元组标记
 Cast为类型转换标记
@@ -471,12 +471,25 @@ UInt8, UInt16, UInt32, UInt64, Int8, Int16, Int32, Int64, Float32, Float64
 目前暂不考虑优先级的问题，均需要加括号
 
 
-跳转表达式
+变量定义
 
-Yield表达式可以透明经过Sequence、If、Match、For、While而不被接收
-Continue、Break表达式可以透明经过Sequence、If、Match而不被接收，最后只能被For、While接收
+#Global中定义的变量可以在所有模板中使用
+$$中定义的变量延续到当前模板的结束
+Sequence、If、Match、For、While均创建了一个变量的范围，变量延续到该范围的结束
+变量只需要与当前范围内的其他变量不重名，引用时，先在当前范围内寻找，再到更高的范围依次寻找
 
 
-返回值
+跳转和返回
 
-每段代码中，可以使用Yield、YieldMany、YieldTemplate生成返回值，或者使用Return返回返回值，如果没有上述元素，则以最后一个表达式作为返回值
+Continue、Break表达式可以出现在Sequence、If、Match、For、While中，并被For、While接收
+
+Yield、YieldMany、##表达式用于将表达式生成为模板内容，可以出现在Sequence、If、Match、For、While、$$中，并被$$接收
+Return表达式可以出现在Sequence、If、Match、For、While、$$、Lambda中，并被$$、Lambda接收，但在$$中不能返回值，只能用来退出$$
+
+Lambda的内部，如果出现了一个Return，则最后应出现Return（最后为静态分析可得的死循环的情况除外），返回值的类型由所有的Return一致决定
+如果没有出现Return，则返回值为最后一个表达式的值，如果最后一个表达式没有值，则Lambda没有返回值
+如果最后一个表达式为函数调用，而需要没有返回值，可以使用赋值语句赋值给_
+
+$$、For、While、Lambda的内部、If、Match的分支中，最外层表达式如果是Sequence，则看作是顺序执行的表达式
+If、Match的分支中，如果所有分支最后一个表达式均有值，则If、Match也具有值，如果所有分支最后一个表达式均无值，则If、Match也无值，不允许混合情况
+如果最后一个表达式为函数调用，而需要没有返回值，可以使用赋值语句赋值给_
