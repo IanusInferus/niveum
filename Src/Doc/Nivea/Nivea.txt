@@ -408,12 +408,6 @@ Let a =
     Tuple<Int, Int>
         1
         2
-和
-Let
-    a
-    Tuple<Int, Int>
-        1
-        2
 含义相同
 
 部分文法构造具有并列结点转换为树的功能，如

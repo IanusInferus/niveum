@@ -3,7 +3,7 @@
 //  File:        AmbiguousRemover.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 歧义去除器
-//  Version:     2016.06.06.
+//  Version:     2016.06.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -91,6 +91,9 @@ namespace Nivea.Template.Semantics
             return new Nivea.Template.Syntax.FileParserResult { File = ReduceFile(i.File, c), Text = i.Text, Positions = Positions };
         }
 
+        private static TypeSpec Any = TypeSpec.CreateTypeRef(new TypeRef { Name = "__Any", Version = "" });
+        private static TypeSpec Void = TypeSpec.CreateTypeRef(new TypeRef { Name = "__Void", Version = "" });
+        private static TypeSpec TypeLiteral = TypeSpec.CreateTypeRef(new TypeRef { Name = "__TypeLiteral", Version = "" });
         private class Context
         {
             public List<String> DefaultNamespace;
@@ -104,15 +107,15 @@ namespace Nivea.Template.Semantics
             public Dictionary<TypeSpec, BindedTypeSpec> TypeBinding = new Dictionary<TypeSpec, BindedTypeSpec> { };
 
             public LinkedList<Dictionary<String, TypeSpec>> VariableStack = new LinkedList<Dictionary<String, TypeSpec>> { };
-            public Dictionary<Expr, BindedTypeSpec> ExprTypes = new Dictionary<Expr, BindedTypeSpec> { };
-            public Dictionary<MatchPattern, BindedTypeSpec> PatternTypes = new Dictionary<MatchPattern, BindedTypeSpec> { };
+            public Dictionary<Expr, TypeSpec> ExprTypes = new Dictionary<Expr, TypeSpec> { };
+            public Dictionary<MatchPattern, TypeSpec> PatternTypes = new Dictionary<MatchPattern, TypeSpec> { };
 
             public T Mark<T>(T NewObj, Object OldObj)
             {
                 _Mark(NewObj, OldObj);
                 return NewObj;
             }
-            public Expr MarkType(Expr NewObj, Expr OldObj, Optional<BindedTypeSpec> t)
+            public Expr MarkType(Expr NewObj, Expr OldObj, Optional<TypeSpec> t)
             {
                 Mark(NewObj, OldObj);
                 if (t.OnHasValue)
@@ -121,7 +124,7 @@ namespace Nivea.Template.Semantics
                 }
                 return NewObj;
             }
-            public MatchPattern MarkType(MatchPattern NewObj, MatchPattern OldObj, Optional<BindedTypeSpec> t)
+            public MatchPattern MarkType(MatchPattern NewObj, MatchPattern OldObj, Optional<TypeSpec> t)
             {
                 Mark(NewObj, OldObj);
                 if (t.OnHasValue)
@@ -129,6 +132,68 @@ namespace Nivea.Template.Semantics
                     PatternTypes.Add(NewObj, t.Value);
                 }
                 return NewObj;
+            }
+            public Optional<TypeSpec> TryGetType(Expr Obj)
+            {
+                if (ExprTypes.ContainsKey(Obj))
+                {
+                    return ExprTypes[Obj];
+                }
+                return Optional<TypeSpec>.Empty;
+            }
+            public Optional<TypeSpec> TryGetType(LeftValueDef Obj)
+            {
+                //TODO
+                return Optional<TypeSpec>.Empty;
+            }
+            public Optional<TypeSpec> TryGetType(VariableRef Obj)
+            {
+                //TODO
+                return Optional<TypeSpec>.Empty;
+            }
+            public Optional<TypeSpec> TryGetType(MatchPattern Obj)
+            {
+                if (PatternTypes.ContainsKey(Obj))
+                {
+                    return PatternTypes[Obj];
+                }
+                return Optional<TypeSpec>.Empty;
+            }
+            public Boolean IsCompatibleType(TypeSpec t, TypeSpec Requirement)
+            {
+                //TODO
+                return true;
+            }
+            public Optional<TypeSpec> GetCommonSuperType(TypeSpec t1, TypeSpec t2)
+            {
+                if (t1 == Any) { return t2; }
+                if (t2 == Any) { return t1; }
+                //TODO
+                return Void;
+            }
+            public Optional<TypeSpec> TryResolveCompatibleTypes(IEnumerable<Expr> Objs)
+            {
+                var t = Optional<TypeSpec>.Empty;
+                foreach (var Obj in Objs)
+                {
+                    if (!ExprTypes.ContainsKey(Obj))
+                    {
+                        return Optional<TypeSpec>.Empty;
+                    }
+                    if (t.OnNotHasValue)
+                    {
+                        t = ExprTypes[Obj];
+                    }
+                    else
+                    {
+                        t = GetCommonSuperType(t.Value, ExprTypes[Obj]);
+                        if (t.OnNotHasValue)
+                        {
+                            return Optional<TypeSpec>.Empty;
+                        }
+                    }
+                }
+                return t;
             }
             public Context GetErrorSuppressed()
             {
@@ -173,6 +238,18 @@ namespace Nivea.Template.Semantics
                     UnresolvableAmbiguousOrErrors("AmbiguousType", t);
                 }
                 return Optional<BindedTypeSpec>.Empty;
+            }
+            public TypeSpec ComposeFuncType(List<TypeSpec> ParameterTypes, TypeSpec ReturnType)
+            {
+                var FuncGeneric = TypeSpec.CreateMember(new TypeMemberSpec { Parent = TypeSpec.CreateTypeRef(new TypeRef { Name = "System", Version = "" }), Child = TypeSpec.CreateTypeRef(new TypeRef { Name = (ReturnType == Void) ? "Action" : "Func", Version = "" }) });
+                var Func = TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = FuncGeneric, ParameterValues = ParameterTypes });
+                return Func;
+            }
+            public Optional<TypeSpec> TryGetFuncTypeReturnType(Optional<TypeSpec> t)
+            {
+                if (t.OnNotHasValue) { return Optional<TypeSpec>.Empty; }
+                //TODO
+                return Optional<TypeSpec>.Empty;
             }
 
             public void PushVariableStack()
@@ -251,7 +328,7 @@ namespace Nivea.Template.Semantics
             }
             else if (i.OnGlobal)
             {
-                var t = ReduceExpr(i.Global, c);
+                var t = ReduceExpr(i.Global, c, SequenceAsTuple: false);
                 return c.Mark(SectionDef.CreateGlobal(t), i);
             }
             else
@@ -489,7 +566,7 @@ namespace Nivea.Template.Semantics
             }
             else if (i.OnExpr)
             {
-                var e = ReduceExpr(i.Expr, c);
+                var e = ReduceExpr(i.Expr, c, SequenceAsTuple: false);
                 return c.Mark(TemplateSpan.CreateExpr(e), i);
             }
             else
@@ -500,15 +577,16 @@ namespace Nivea.Template.Semantics
 
         private static IndentedExpr ReduceIndentedExpr(IndentedExpr i, Context c)
         {
-            var e = ReduceExpr(i.Expr, c);
+            var e = ReduceExpr(i.Expr, c, SequenceAsTuple: false);
             return c.Mark(new IndentedExpr { IndentSpace = i.IndentSpace, Expr = e }, i);
         }
 
-        private static Expr ReduceExpr(Expr i, Context c)
+        private static Expr ReduceExpr(Expr i, Context c, Optional<TypeSpec> TypeRequirement = default(Optional<TypeSpec>), Boolean SequenceAsTuple = true)
         {
+            Expr o;
             if (i.OnError)
             {
-                return c.Mark(Expr.CreateError(), i);
+                o = c.Mark(Expr.CreateError(), i);
             }
             else if (i.OnAmbiguous)
             {
@@ -524,7 +602,7 @@ namespace Nivea.Template.Semantics
                     return new
                     {
                         cCloned = cCloned,
-                        Expr = ReduceExpr(a, cCloned),
+                        Expr = ReduceExpr(a, cCloned, TypeRequirement, SequenceAsTuple),
                         Errors = Errors
                     };
                 }).OrderBy(a => a.Errors.Count).ToList();
@@ -534,12 +612,12 @@ namespace Nivea.Template.Semantics
                 {
                     var One = NoErrorCandidates.Single();
                     c.VariableStack = One.cCloned.VariableStack;
-                    return One.Expr;
+                    o = One.Expr;
                 }
                 else if (NoErrorCandidates.Count > 1)
                 {
                     c.UnresolvableAmbiguousOrErrors("UnresolvableAmbiguous", i);
-                    return c.Mark(Expr.CreateError(), i);
+                    o = c.Mark(Expr.CreateError(), i);
                 }
                 else
                 {
@@ -549,7 +627,7 @@ namespace Nivea.Template.Semantics
                     {
                         c.UnresolvableAmbiguousOrErrors(Error.Key, Error.Value);
                     }
-                    return First.Expr;
+                    o = First.Expr;
                 }
             }
             else if (i.OnSequence)
@@ -557,196 +635,304 @@ namespace Nivea.Template.Semantics
                 c.PushVariableStack();
                 var l = c.Mark(i.Sequence.Select(e => ReduceExpr(e, c)).ToList(), i.Sequence);
                 c.PopVariableStack();
-                return c.Mark(Expr.CreateSequence(l), i);
+
+                var Types = l.Select(e => c.TryGetType(e)).ToList();
+                var Type = Optional<TypeSpec>.Empty;
+                if (SequenceAsTuple)
+                {
+                    if (Types.All(lt => lt.OnHasValue))
+                    {
+                        Type = TypeSpec.CreateTuple(Types.Select(lt => lt.Value).ToList());
+                    }
+                }
+                else
+                {
+                    if (Types.Count > 0)
+                    {
+                        Type = Types.Last();
+                    }
+                    else
+                    {
+                        Type = Void;
+                    }
+                }
+
+                o = c.MarkType(Expr.CreateSequence(l), i, Type);
             }
             else if (i.OnYield)
             {
                 //TODO 检测Yield是否在##中
                 var e = ReduceExpr(i.Yield, c);
-                return c.MarkType(Expr.CreateYield(e), i, BindedTypeSpec.Void);
+                o = c.MarkType(Expr.CreateYield(e), i, Void);
             }
             else if (i.OnYieldMany)
             {
                 var e = ReduceExpr(i.YieldMany, c);
-                return c.MarkType(Expr.CreateYieldMany(e), i, BindedTypeSpec.Void);
+                o = c.MarkType(Expr.CreateYieldMany(e), i, Void);
             }
             else if (i.OnTemplate)
             {
                 var l = c.Mark(i.Template.Select(e => ReduceTemplateExpr(e, c)).ToList(), i.Template);
-                return c.MarkType(Expr.CreateTemplate(l), i, c.BindType(TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = TypeSpec.CreateTypeRef(new TypeRef { Name = "List", Version = "" }), ParameterValues = new List<TypeSpec> { TypeSpec.CreateTypeRef(new TypeRef { Name = "String", Version = "" }) } })));
+                o = c.MarkType(Expr.CreateTemplate(l), i, TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = TypeSpec.CreateTypeRef(new TypeRef { Name = "List", Version = "" }), ParameterValues = new List<TypeSpec> { TypeSpec.CreateTypeRef(new TypeRef { Name = "String", Version = "" }) } }));
             }
             else if (i.OnYieldTemplate)
             {
                 var l = c.Mark(i.YieldTemplate.Select(e => ReduceTemplateExpr(e, c)).ToList(), i.YieldTemplate);
-                return c.MarkType(Expr.CreateYieldTemplate(l), i, BindedTypeSpec.Void);
+                o = c.MarkType(Expr.CreateYieldTemplate(l), i, Void);
             }
             else if (i.OnThrow)
             {
                 var oe = i.Throw.OnHasValue ? ReduceExpr(i.Throw.Value, c) : Optional<Expr>.Empty;
-                return c.MarkType(Expr.CreateThrow(oe), i, BindedTypeSpec.Any);
+                o = c.MarkType(Expr.CreateThrow(oe), i, Any);
             }
             else if (i.OnLet)
             {
-                var Right = ReduceExpr(i.Let.Right, c);
+                var LeftTypes = i.Let.Left.Select(d =>
+                {
+                    var oType = d.OnVariable ? d.Variable.Type : d.Ignore;
+                    if (oType.OnHasValue)
+                    {
+                        return ReduceTypeSpec(oType.Value, c);
+                    }
+                    else
+                    {
+                        return Optional<TypeSpec>.Empty;
+                    }
+                }).ToList();
+
+                var Type = Optional<TypeSpec>.Empty;
+                if (LeftTypes.Count == 1)
+                {
+                    Type = LeftTypes.Single();
+                }
+                else if (LeftTypes.All(lt => lt.OnHasValue))
+                {
+                    Type = TypeSpec.CreateTuple(LeftTypes.Select(lt => lt.Value).ToList());
+                }
+
+                var Right = ReduceExpr(i.Let.Right, c, Type);
                 var Left = c.Mark(i.Let.Left.Select(d => ReduceLeftValueDef(d, c)).ToList(), i.Let.Left);
                 var e = c.Mark(new LetExpr { Left = Left, Right = Right }, i.Let);
-                return c.MarkType(Expr.CreateLet(e), i, BindedTypeSpec.Void);
+                o = c.MarkType(Expr.CreateLet(e), i, Void);
             }
             else if (i.OnVar)
             {
-                var Right = i.Var.Right.OnHasValue ? ReduceExpr(i.Var.Right.Value, c) : Optional<Expr>.Empty;
+                var LeftTypes = i.Let.Left.Select(d =>
+                {
+                    var oType = d.OnVariable ? d.Variable.Type : d.Ignore;
+                    if (oType.OnHasValue)
+                    {
+                        return ReduceTypeSpec(oType.Value, c);
+                    }
+                    else
+                    {
+                        return Optional<TypeSpec>.Empty;
+                    }
+                }).ToList();
+
+                var Type = Optional<TypeSpec>.Empty;
+                if (LeftTypes.Count == 1)
+                {
+                    Type = LeftTypes.Single();
+                }
+                else if (LeftTypes.All(lt => lt.OnHasValue))
+                {
+                    Type = TypeSpec.CreateTuple(LeftTypes.Select(lt => lt.Value).ToList());
+                }
+
+                var Right = i.Var.Right.OnHasValue ? ReduceExpr(i.Var.Right.Value, c, Type) : Optional<Expr>.Empty;
                 var Left = c.Mark(i.Var.Left.Select(d => ReduceLeftValueDef(d, c)).ToList(), i.Var.Left);
                 var e = c.Mark(new VarExpr { Left = Left, Right = Right }, i.Var);
-                return c.MarkType(Expr.CreateVar(e), i, BindedTypeSpec.Void);
+                o = c.MarkType(Expr.CreateVar(e), i, Void);
             }
             else if (i.OnIf)
             {
-                //TODO 标记表达式类型，检查表达式类型兼容，推断表达式类型
                 var Branches = c.Mark(i.If.Branches.Select(b => ReduceIfBranch(b, c)).ToList(), i.If);
                 var e = c.Mark(new IfExpr { Branches = Branches }, i.If);
-                return c.Mark(Expr.CreateIf(e), i);
+                var CommonType = c.TryResolveCompatibleTypes(Branches.Select(b => b.Expr));
+                if (CommonType.OnNotHasValue)
+                {
+                    c.UnresolvableAmbiguousOrErrors("IncompatibleTypeOnBranches", i);
+                }
+                o = c.MarkType(Expr.CreateIf(e), i, CommonType);
             }
             else if (i.OnMatch)
             {
+                //TODO 检查表达式类型兼容，推断表达式类型
                 var Target = ReduceExpr(i.Match.Target, c);
                 var Alternatives = c.Mark(i.Match.Alternatives.Select(a => ReduceMatchAlternative(a, c)).ToList(), i.Match.Alternatives);
                 var e = c.Mark(new MatchExpr { Target = Target, Alternatives = Alternatives }, i.Match);
-                return c.Mark(Expr.CreateMatch(e), i);
+                var CommonType = c.TryResolveCompatibleTypes(Alternatives.Select(a => a.Expr));
+                if (CommonType.OnNotHasValue)
+                {
+                    c.UnresolvableAmbiguousOrErrors("IncompatibleTypeOnBranches", i);
+                }
+                o = c.MarkType(Expr.CreateMatch(e), i, CommonType);
             }
             else if (i.OnFor)
             {
                 var Enumerable = ReduceExpr(i.For.Enumerable, c);
                 c.PushVariableStack();
                 var EnumeratedValue = c.Mark(i.For.EnumeratedValue.Select(d => ReduceLeftValueDef(d, c)).ToList(), i.For.EnumeratedValue);
-                var Body = ReduceExpr(i.For.Body, c);
+                var Body = ReduceExpr(i.For.Body, c, SequenceAsTuple: false);
                 c.PopVariableStack();
                 var e = c.Mark(new ForExpr { Enumerable = Enumerable, EnumeratedValue = EnumeratedValue, Body = Body }, i.For);
-                return c.Mark(Expr.CreateFor(e), i);
+                o = c.MarkType(Expr.CreateFor(e), i, Void);
             }
             else if (i.OnWhile)
             {
                 var Condition = ReduceExpr(i.While.Condition, c);
                 c.PushVariableStack();
-                var Body = ReduceExpr(i.While.Body, c);
+                var Body = ReduceExpr(i.While.Body, c, SequenceAsTuple: false);
                 c.PopVariableStack();
                 var e = c.Mark(new WhileExpr { Condition = Condition, Body = Body }, i.While);
-                return c.Mark(Expr.CreateWhile(e), i);
+                o = c.MarkType(Expr.CreateWhile(e), i, Void);
             }
             else if (i.OnContinue)
             {
-                return c.Mark(Expr.CreateContinue(i.Continue), i);
+                o = c.MarkType(Expr.CreateContinue(i.Continue), i, Void);
             }
             else if (i.OnBreak)
             {
-                return c.Mark(Expr.CreateBreak(i.Break), i);
+                o = c.MarkType(Expr.CreateBreak(i.Break), i, Void);
             }
             else if (i.OnReturn)
             {
                 var oe = i.Return.OnHasValue ? ReduceExpr(i.Return.Value, c) : Optional<Expr>.Empty;
-                return c.Mark(Expr.CreateReturn(oe), i);
+                o = c.MarkType(Expr.CreateReturn(oe), i, Void);
             }
             else if (i.OnAssign)
             {
                 var Left = c.Mark(i.Assign.Left.Select(r => ReduceLeftValueRef(r, c)).ToList(), i.Assign.Left);
                 var Right = ReduceExpr(i.Assign.Right, c);
                 var e = c.Mark(new AssignExpr { Left = Left, Right = Right }, i.Assign);
-                return c.Mark(Expr.CreateAssign(e), i);
+                o = c.MarkType(Expr.CreateAssign(e), i, Void);
             }
             else if (i.OnIncrease)
             {
                 var Left = c.Mark(i.Increase.Left.Select(r => ReduceLeftValueRef(r, c)).ToList(), i.Increase.Left);
                 var Right = ReduceExpr(i.Increase.Right, c);
                 var e = c.Mark(new IncreaseExpr { Left = Left, Right = Right }, i.Increase);
-                return c.Mark(Expr.CreateIncrease(e), i);
+                o = c.MarkType(Expr.CreateIncrease(e), i, Void);
             }
             else if (i.OnDecrease)
             {
                 var Left = c.Mark(i.Decrease.Left.Select(r => ReduceLeftValueRef(r, c)).ToList(), i.Decrease.Left);
                 var Right = ReduceExpr(i.Decrease.Right, c);
                 var e = c.Mark(new DecreaseExpr { Left = Left, Right = Right }, i.Decrease);
-                return c.Mark(Expr.CreateDecrease(e), i);
+                o = c.MarkType(Expr.CreateDecrease(e), i, Void);
             }
             else if (i.OnLambda)
             {
                 var Parameters = c.Mark(i.Lambda.Parameters.Select(d => ReduceLeftValueDef(d, c)).ToList(), i.Lambda.Parameters);
-                var Body = ReduceExpr(i.Lambda.Body, c);
+                var Body = ReduceExpr(i.Lambda.Body, c, SequenceAsTuple: false);
                 var e = c.Mark(new LambdaExpr { Parameters = Parameters, Body = Body }, i.Lambda);
-                return c.Mark(Expr.CreateLambda(e), i);
+                var ParameterTypes = Parameters.Select(p => c.TryGetType(p)).ToList();
+                var oBodyType = c.TryGetType(Body);
+                var oFuncType = Optional<TypeSpec>.Empty;
+                if (ParameterTypes.All(p => p.OnHasValue) && oBodyType.OnHasValue)
+                {
+                    var BodyType = oBodyType.Value;
+                    oFuncType = c.ComposeFuncType(ParameterTypes.Select(p => p.Value).ToList(), BodyType);
+                }
+                o = c.MarkType(Expr.CreateLambda(e), i, oFuncType);
             }
             else if (i.OnNull)
             {
-                return c.Mark(Expr.CreateNull(), i);
+                o = c.MarkType(Expr.CreateNull(), i, Any);
             }
             else if (i.OnDefault)
             {
-                return c.Mark(Expr.CreateDefault(), i);
+                o = c.MarkType(Expr.CreateDefault(), i, Any);
             }
             else if (i.OnPrimitiveLiteral)
             {
                 var Type = ReduceTypeSpec(i.PrimitiveLiteral.Type, c);
                 var e = c.Mark(new PrimitiveLiteralExpr { Type = Type, Value = i.PrimitiveLiteral.Value }, i.PrimitiveLiteral);
-                return c.Mark(Expr.CreatePrimitiveLiteral(e), i);
+                o = c.MarkType(Expr.CreatePrimitiveLiteral(e), i, Type);
             }
             else if (i.OnRecordLiteral)
             {
                 var Type = i.RecordLiteral.Type.OnHasValue ? ReduceTypeSpec(i.RecordLiteral.Type.Value, c) : Optional<TypeSpec>.Empty;
                 var FieldAssigns = c.Mark(i.RecordLiteral.FieldAssigns.Select(a => ReduceFieldAssign(a, c)).ToList(), i.RecordLiteral.FieldAssigns);
                 var e = c.Mark(new RecordLiteralExpr { Type = Type, FieldAssigns = FieldAssigns }, i.RecordLiteral);
-                return c.Mark(Expr.CreateRecordLiteral(e), i);
+                o = c.MarkType(Expr.CreateRecordLiteral(e), i, Type.OnHasValue ? Type.Value : TypeRequirement);
             }
             else if (i.OnTaggedUnionLiteral)
             {
                 var Type = i.TaggedUnionLiteral.Type.OnHasValue ? ReduceTypeSpec(i.TaggedUnionLiteral.Type.Value, c) : Optional<TypeSpec>.Empty;
                 var Content = i.TaggedUnionLiteral.Expr.OnHasValue ? ReduceExpr(i.TaggedUnionLiteral.Expr.Value, c) : Optional<Expr>.Empty;
                 var e = c.Mark(new TaggedUnionLiteralExpr { Type = Type, Alternative = i.TaggedUnionLiteral.Alternative, Expr = Content }, i.TaggedUnionLiteral);
-                return c.Mark(Expr.CreateTaggedUnionLiteral(e), i);
+                o = c.MarkType(Expr.CreateTaggedUnionLiteral(e), i, Type.OnHasValue ? Type.Value : TypeRequirement);
             }
             else if (i.OnEnumLiteral)
             {
                 var Type = i.EnumLiteral.Type.OnHasValue ? ReduceTypeSpec(i.EnumLiteral.Type.Value, c) : Optional<TypeSpec>.Empty;
                 var e = c.Mark(new EnumLiteralExpr { Type = Type, Name = i.EnumLiteral.Name }, i.EnumLiteral);
-                return c.Mark(Expr.CreateEnumLiteral(e), i);
+                o = c.MarkType(Expr.CreateEnumLiteral(e), i, Type.OnHasValue ? Type.Value : TypeRequirement);
             }
             else if (i.OnTupleLiteral)
             {
                 var Type = i.TupleLiteral.Type.OnHasValue ? ReduceTypeSpec(i.TupleLiteral.Type.Value, c) : Optional<TypeSpec>.Empty;
                 var Parameters = c.Mark(i.TupleLiteral.Parameters.Select(p => ReduceExpr(p, c)).ToList(), c);
                 var e = c.Mark(new TupleLiteralExpr { Type = Type, Parameters = Parameters }, i.TupleLiteral);
-                return c.Mark(Expr.CreateTupleLiteral(e), i);
+                o = c.MarkType(Expr.CreateTupleLiteral(e), i, Type.OnHasValue ? Type.Value : TypeRequirement);
             }
             else if (i.OnListLiteral)
             {
                 var Type = i.ListLiteral.Type.OnHasValue ? ReduceTypeSpec(i.ListLiteral.Type.Value, c) : Optional<TypeSpec>.Empty;
                 var Parameters = c.Mark(i.ListLiteral.Parameters.Select(p => ReduceExpr(p, c)).ToList(), c);
                 var e = c.Mark(new ListLiteralExpr { Type = Type, Parameters = Parameters }, i.ListLiteral);
-                return c.Mark(Expr.CreateListLiteral(e), i);
+                o = c.MarkType(Expr.CreateListLiteral(e), i, Type.OnHasValue ? Type.Value : TypeRequirement);
             }
             else if (i.OnTypeLiteral)
             {
-                return c.Mark(Expr.CreateTypeLiteral(ReduceTypeSpec(i.TypeLiteral, c)), i);
+                o = c.MarkType(Expr.CreateTypeLiteral(ReduceTypeSpec(i.TypeLiteral, c)), i, TypeLiteral);
             }
             else if (i.OnVariableRef)
             {
-                return c.Mark(Expr.CreateVariableRef(ReduceVariableRef(i.VariableRef, c)), i);
+                var r = ReduceVariableRef(i.VariableRef, c);
+                o = c.MarkType(Expr.CreateVariableRef(r), i, c.TryGetType(r));
             }
             else if (i.OnFunctionCall)
             {
                 var Func = ReduceExpr(i.FunctionCall.Func, c);
                 var Parameters = c.Mark(i.FunctionCall.Parameters.Select(p => ReduceExpr(p, c)).ToList(), i.FunctionCall.Parameters);
                 var e = c.Mark(new FunctionCallExpr { Func = Func, Parameters = Parameters }, i.FunctionCall);
-                return c.Mark(Expr.CreateFunctionCall(e), i.FunctionCall);
+                var oReturnType = c.TryGetFuncTypeReturnType(c.TryGetType(Func));
+                o = c.MarkType(Expr.CreateFunctionCall(e), i, oReturnType);
             }
             else if (i.OnCast)
             {
                 var Operand = ReduceExpr(i.Cast.Operand, c);
                 var Type = ReduceTypeSpec(i.Cast.Type, c);
                 var e = c.Mark(new CastExpr { Operand = Operand, Type = Type }, i.Cast);
-                return c.Mark(Expr.CreateCast(e), i.Cast);
+                o = c.MarkType(Expr.CreateCast(e), i, Type);
             }
             else
             {
                 throw new InvalidOperationException();
             }
+            var t = c.TryGetType(o);
+            if (t.OnNotHasValue)
+            {
+                c.UnresolvableAmbiguousOrErrors("TypeNotResolved", i);
+            }
+            else
+            {
+                if (TypeRequirement.OnHasValue)
+                {
+                    if (c.IsCompatibleType(t.Value, TypeRequirement.Value))
+                    {
+                        //TODO 插入转换代码
+                    }
+                    else
+                    {
+                        c.UnresolvableAmbiguousOrErrors("IncompatibleType", i);
+                    }
+                }
+            }
+            return o;
         }
 
         private static VariableRef ReduceVariableRef(VariableRef i, Context c)
@@ -823,7 +1009,7 @@ namespace Nivea.Template.Semantics
         {
             var Condition = ReduceExpr(i.Condition, c);
             c.PushVariableStack();
-            var Expr = ReduceExpr(i.Expr, c);
+            var Expr = ReduceExpr(i.Expr, c, SequenceAsTuple: false);
             c.PopVariableStack();
             return c.Mark(new IfBranch { Condition = Condition, Expr = Expr }, i);
         }
@@ -833,7 +1019,7 @@ namespace Nivea.Template.Semantics
             c.PushVariableStack();
             var Pattern = ReduceMatchPattern(i.Pattern, c);
             var Condition = i.Condition.OnHasValue ? ReduceExpr(i.Condition.Value, c) : Optional<Expr>.Empty;
-            var Expr = ReduceExpr(i.Expr, c);
+            var Expr = ReduceExpr(i.Expr, c, SequenceAsTuple: false);
             c.PopVariableStack();
             return c.Mark(new MatchAlternative { Pattern = Pattern, Condition = Condition, Expr = Expr }, i);
         }
