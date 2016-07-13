@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2016.06.03.
+//  Version:     2016.07.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -33,9 +33,9 @@ namespace Nivea.Template.Syntax
         public static FileParserResult ParseFile(Text Text)
         {
             var TypeFunctions = new HashSet<String>() { "Primitive", "Alias", "Record", "TaggedUnion", "Enum" };
-            var Functions = new HashSet<String>(TypeFunctions.Concat(new List<String>() { "Option", "Namespace", "Assembly", "Import", "Template", "Global" }));
-            var TreeContentFunctions = new HashSet<String> { "Option" };
-            var FreeContentFunctions = new HashSet<String> { "Template", "Global" };
+            var Functions = new HashSet<String>(TypeFunctions.Concat(new List<String>() { "Option", "Namespace", "Assembly", "Import", "Constant", "Template" }));
+            var TreeContentFunctions = new HashSet<String> { "Option", "Constant" };
+            var FreeContentFunctions = new HashSet<String> { "Template" };
 
             var ps = new TreeFormatParseSetting()
             {
@@ -52,6 +52,7 @@ namespace Nivea.Template.Syntax
             var Positions = new Dictionary<Object, TextRange>();
             var InlineExpressionRegex = new Regex(@"\${(?<Expr>.*?)}", RegexOptions.ExplicitCapture);
             var InlineIdentifierRegex = new Regex(@"\[\[(?<Identifier>.*?)\]\]", RegexOptions.ExplicitCapture);
+            var EnableEmbeddedExpr = false;
 
             foreach (var TopNode in ParserResult.Value.MultiNodesList)
             {
@@ -147,7 +148,7 @@ namespace Nivea.Template.Syntax
                                 if (Functions.Contains(f.Name.Text) && f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
-                                    if (ContentValue._Tag != FunctionCallContentTag.TableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                                    if (!ContentValue.OnTableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
                                     ContentLines = ContentValue.TableContent;
                                 }
 
@@ -459,7 +460,7 @@ namespace Nivea.Template.Syntax
                                 if (f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
-                                    if (ContentValue._Tag != FunctionCallContentTag.TreeContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                                    if (!ContentValue.OnTreeContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
                                     ContentNodes = ContentValue.TreeContent;
                                 }
 
@@ -496,6 +497,24 @@ namespace Nivea.Template.Syntax
                                             throw new InvalidEvaluationException("InvalidInlineIdentifierRegex", nm.GetFileRange(ValueNode), ValueNode, ex);
                                         }
                                     }
+                                    else if (Name == "EnableEmbeddedExpr")
+                                    {
+                                        if (Node.Stem.Children.Count != 1) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(Node), Node); }
+                                        var ValueNode = Node.Stem.Children.Single();
+                                        var EnableEmbeddedExprValue = GetLeafNodeValue(ValueNode, nm, "InvalidOption");
+                                        if (EnableEmbeddedExprValue == "False")
+                                        {
+                                            EnableEmbeddedExpr = false;
+                                        }
+                                        else if (EnableEmbeddedExprValue == "True")
+                                        {
+                                            EnableEmbeddedExpr = true;
+                                        }
+                                        else
+                                        {
+                                            throw new InvalidEvaluationException("InvalidEnableEmbeddedExpr", nm.GetFileRange(ValueNode), ValueNode);
+                                        }
+                                    }
                                     else
                                     {
                                         throw new InvalidEvaluationException("UnknownOption", nm.GetFileRange(Node), Node);
@@ -522,7 +541,7 @@ namespace Nivea.Template.Syntax
                                 if (f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
-                                    if (ContentValue._Tag != FunctionCallContentTag.TableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                                    if (!ContentValue.OnTableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
                                     ContentLines = ContentValue.TableContent;
                                 }
 
@@ -562,7 +581,7 @@ namespace Nivea.Template.Syntax
                                 if (f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
-                                    if (ContentValue._Tag != FunctionCallContentTag.TableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                                    if (!ContentValue.OnTableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
                                     ContentLines = ContentValue.TableContent;
                                 }
 
@@ -588,6 +607,65 @@ namespace Nivea.Template.Syntax
 
                                 Mark(Imports, f);
                                 var s = SectionDef.CreateImport(Imports);
+                                Mark(s, f);
+                                Sections.Add(s);
+                                return new List<TFSemantics.Node> { };
+                            }
+                            else if (f.Name.Text == "Constant")
+                            {
+                                if (f.Parameters.Count != 1) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+
+                                var p = f.Parameters.Single();
+                                var ParameterString = GetLeafNodeValue(p, nm, "InvalidParameter");
+                                var ParameterParts = ParameterString.Split(new Char[] { ':' }, 2);
+                                if (ParameterParts.Length != 2) { throw new InvalidEvaluationException("InvalidParameter", nm.GetFileRange(p), p); }
+                                var Name = ParameterParts[0];
+                                var oRange = nm.GetRange(p);
+                                if (oRange.OnHasValue)
+                                {
+                                    var Range = oRange.Value;
+                                    var Start = nm.Text.Calc(Range.Start, Name.Length + 1);
+                                    oRange = new TextRange { Start = Start, End = Range.End };
+                                }
+                                var Type = ParseTypeSpec(ParameterParts[1], oRange, nm, Positions);
+
+                                List<TFSemantics.Node> Content;
+                                if (f.Content.OnHasValue)
+                                {
+                                    var ContentValue = f.Content.Value;
+                                    if (!ContentValue.OnTreeContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                                    Content = ContentValue.TreeContent;
+                                }
+                                else
+                                {
+                                    throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(f), f);
+                                }
+
+                                Action<TFSemantics.Node> MarkAll = null;
+                                MarkAll = n =>
+                                {
+                                    Mark(n, n);
+                                    if (n.OnStem)
+                                    {
+                                        foreach (var Child in n.Stem.Children)
+                                        {
+                                            MarkAll(Child);
+                                        }
+                                    }
+                                };
+
+                                foreach (var v in Content)
+                                {
+                                    MarkAll(v);
+                                }
+
+                                var Value = nm.MakeStemNode("", Content, Content);
+                                Mark(Value.Stem, Content);
+                                Mark(Value, Content);
+                                var cv = new ConstantValue { Name = Name, Type = Type, Value = Value };
+                                Mark(cv, f);
+
+                                var s = SectionDef.CreateConstant(cv);
                                 Mark(s, f);
                                 Sections.Add(s);
                                 return new List<TFSemantics.Node> { };
@@ -623,7 +701,7 @@ namespace Nivea.Template.Syntax
                                 if (f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
-                                    if (ContentValue._Tag != FunctionCallContentTag.LineContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                                    if (!ContentValue.OnLineContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
                                     Content = ContentValue.LineContent;
                                 }
                                 else
@@ -639,34 +717,11 @@ namespace Nivea.Template.Syntax
                                     Positions.Add(Signature, new TextRange { Start = FirstRange.Value.Start, End = FirstRange.Value.End });
                                 }
 
-                                var Body = ExprParser.ParseTemplateBody(Content.Lines, Content.IndentLevel * 4, InlineExpressionRegex, InlineIdentifierRegex, nm, Positions);
+                                var Body = ExprParser.ParseTemplateBody(Content.Lines, Content.IndentLevel * 4, InlineExpressionRegex, InlineIdentifierRegex, EnableEmbeddedExpr, nm, Positions);
                                 Mark(Body, Content);
                                 var t = new TemplateDef { Signature = Signature, Body = Body };
                                 Mark(t, f);
                                 var s = SectionDef.CreateTemplate(t);
-                                Mark(s, f);
-                                Sections.Add(s);
-                                return new List<TFSemantics.Node> { };
-                            }
-                            else if (f.Name.Text == "Global")
-                            {
-                                if (f.Parameters.Count != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
-
-                                FunctionContent Content;
-                                if (f.Content.OnHasValue)
-                                {
-                                    var ContentValue = f.Content.Value;
-                                    if (ContentValue._Tag != FunctionCallContentTag.LineContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
-                                    Content = ContentValue.LineContent;
-                                }
-                                else
-                                {
-                                    throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(f), f);
-                                }
-
-                                var Range = nm.GetRange(Content);
-                                var Expr = ExprParser.ParseExprLines(Content.Lines, Range.OnHasValue ? Range.Value : Optional<TextRange>.Empty, Content.IndentLevel * 4, InlineExpressionRegex, InlineIdentifierRegex, nm, Positions);
-                                var s = SectionDef.CreateGlobal(Expr);
                                 Mark(s, f);
                                 Sections.Add(s);
                                 return new List<TFSemantics.Node> { };

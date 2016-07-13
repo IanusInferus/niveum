@@ -1,11 +1,12 @@
 ﻿#Option
     InlineExpressionRegex "\${(?<Expr>.*?)}"
     InlineIdentifierRegex "\[\[(?<Identifier>.*?)\]\]"
+    EnableEmbeddedExpr False
 
 #Namespace Yuki.ObjectSchema.CSharp
 
-#Global
-    Let a = 1
+#Constant a:Int
+    1
 
 #Assembly
     System
@@ -138,15 +139,18 @@
             1
             2
 
-        Let a7 = Record1(Field1 = 1, Field2 = 2, Field3 = (1, 2, 3))
+        Let a7 = Record1(Field1 1, Field2(2), Field3 (1, 2, 3))
         Let a8 = Record1
-            Field1 = 1
-            Field2 = 2
-            Field3 = (1, 2, 3)
+            Field1 1
+            Field2(2)
+            Field3 (1, 2, 3)
         Let a82:Record1 =
-            Field1 = 1
-            Field2 = 2
-            Field3 = (1, 2, 3)
+            Field1
+                1
+            Field2
+                2
+            Field3
+                (1, 2, 3)
 
         Let a9 = TaggedUnion1.Alternative2("1")
         Let a10 = TaggedUnion1.Alternative2
@@ -177,16 +181,16 @@
                 b
 
         Let a20 = Map<Int, String>
-            $Table KeyValuePair<Int, String> (Key Int) (Value String)
+            $Table Tuple<Int, String> Int String
                 1   2
                 2   3
                 3   4
 
         Let a21 = Map<Int, Record1>
-            $Table KeyValuePair<Int, Record1> (Key Int) Value
-                1   (Record1(Field1 = 1, Field2 = 2, Field3 = (1, 2, 3)))
-                2   (Record1(Field1 = 2, Field2 = 3, Field3 = (1, 2, 3)))
-                3   (Record1(Field1 = 3, Field2 = 4, Field3 = (1, 2, 3)))
+            $Table Tuple<Int, Record1> Int Record1
+                1   (Field1 1, Field2 2, Field3 (1, 2, 3))
+                2   (Field1 2, Field2 3, Field3 (1, 2, 3))
+                3   (Field1 3, Field2 4, Field3 (1, 2, 3))
 
         Let a22 = (i:Int, j:Int) => i + j
         Let a23 =
@@ -211,7 +215,7 @@
         If (a24 == 0 1, a24 == 1 2, True 3)
 
         Match a9
-            Alternative1(Record1(Field1 = Let v1, Field3 = (1, Let v2, 3))) Where v1 > 3
+            Alternative1(Record1(Field1 (Let v1), Field3 (1, Let v2, 3))) Where v1 > 3
                 v1 + v2
             Alternative2(Let v)
                 v
@@ -225,20 +229,20 @@
         Match (
             a9
         )
-            Alternative1((Field1 = Let v1, Field3 = (1, Let v2, 3))) Where v1 > 3 (v1 + v2)
+            Alternative1((Field1 (Let v1), Field3 (1, Let v2, 3))) Where v1 > 3 (v1 + v2)
             Alternative2(Let v) v
             Alternative3(_) 0
             Alternative4 0
 
-        Match a9 (Alternative1(Record1(Field1 = Let v1, Field3 = (1, Let v2, 3))) Where v1 > 3 (v1 + v2), Alternative2(Let v2) v2, Alternative3(_) 0, Alternative4 0)
+        Match a9 (Alternative1((Field1 (Let v1), Field3 (1, Let v2, 3))) Where v1 > 3 (v1 + v2), Alternative2(Let v2) v2, Alternative3(_) 0, Alternative4 0)
 
         Match a1
             0
                 1
             1
                 2
-            2
-                0
+            (Let aa)
+                aa
 
         Match a16
             (1, 2, Let v) v
