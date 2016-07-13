@@ -3,7 +3,7 @@
 //  File:        ExprTransformer.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式转换器
-//  Version:     2016.06.04.
+//  Version:     2016.06.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -149,18 +149,25 @@ namespace Nivea.Template.Syntax
                     var Transformed = Stem.Nodes.Select(n => Transform(n, Text, NodePositions, Positions)).ToList();
                     Mark(Transformed, Node, NodePositions, Positions);
                     Ambiguous.Add(Mark(Expr.CreateSequence(Transformed), Node, NodePositions, Positions));
-
+                    var lle = Mark(new ListLiteralExpr { Type = Optional<TypeSpec>.Empty, Parameters = Transformed }, Node, NodePositions, Positions);
+                    Ambiguous.Add(Mark(Expr.CreateListLiteral(lle), Node, NodePositions, Positions));
+                    if (Transformed.Count >= 1)
+                    {
+                        var tle = Mark(new TupleLiteralExpr { Type = Optional<TypeSpec>.Empty, Parameters = Transformed }, Node, NodePositions, Positions);
+                        Ambiguous.Add(Mark(Expr.CreateTupleLiteral(tle), Node, NodePositions, Positions));
+                    }
                     var Nodes = Stem.Nodes;
                     var Range = GetRange(Node, NodePositions);
                     var NodesRange = GetRange(Stem.Nodes, NodePositions);
-                    if ((Nodes.Count > 0) && Nodes.All(Child => Child.OnUndetermined && (Child.Undetermined.Nodes.Count >= 3) && (Child.Undetermined.Nodes[1].OnOperator && Child.Undetermined.Nodes[1].Operator == "=")))
+                    if (Nodes.All(Child => (Child.OnUndetermined && (Child.Undetermined.Nodes.Count == 2) && Child.Undetermined.Nodes[0].OnDirect) || (Child.OnStem && Child.Stem.Head.OnHasValue && (Child.Stem.Nodes.Count == 1))))
                     {
                         var FieldAssigns = new List<FieldAssign>();
                         foreach (var Child in Nodes)
                         {
-                            var ChildNodes = Child.Undetermined.Nodes;
-                            var oLeftExpr = TryTransformLeftValueDef(ChildNodes[0], Text, NodePositions, Positions);
-                            var RightExpr = TransformNodes(ChildNodes.Skip(2).ToList(), Text, NodePositions, Positions);
+                            var ChildHead = Child.OnUndetermined ? Child.Undetermined.Nodes[0] : Child.Stem.Head.Value;
+                            var ChildNode = Child.OnUndetermined ? Child.Undetermined.Nodes[1] : Child.Stem.Nodes.Single();
+                            var oLeftExpr = TryTransformLeftValueDef(ChildHead, Text, NodePositions, Positions);
+                            var RightExpr = Transform(ChildNode, Text, NodePositions, Positions);
                             if (oLeftExpr.OnHasValue)
                             {
                                 var LeftExpr = oLeftExpr.Value;
@@ -176,7 +183,7 @@ namespace Nivea.Template.Syntax
                                 }
                             }
                         }
-                        if (FieldAssigns.Count > 0)
+                        if ((Nodes.Count == 0) || (FieldAssigns.Count > 0))
                         {
                             var rle = MarkRange(new RecordLiteralExpr { Type = Optional<TypeSpec>.Empty, FieldAssigns = MarkRange(FieldAssigns, NodesRange, Positions) }, Range, Positions);
                             Ambiguous.Add(MarkRange(Expr.CreateRecordLiteral(rle), Range, Positions));
@@ -585,14 +592,15 @@ namespace Nivea.Template.Syntax
                     var tvmc = otvmc.Value;
                     var t = tvmc.Type;
 
-                    if ((Nodes.Count > 0) && Nodes.All(Child => Child.OnUndetermined && (Child.Undetermined.Nodes.Count >= 3) && (Child.Undetermined.Nodes[1].OnOperator && Child.Undetermined.Nodes[1].Operator == "=")))
+                    if (Nodes.All(Child => (Child.OnUndetermined && (Child.Undetermined.Nodes.Count == 2) && Child.Undetermined.Nodes[0].OnDirect) || (Child.OnStem && Child.Stem.Head.OnHasValue && (Child.Stem.Nodes.Count == 1))))
                     {
                         var FieldAssigns = new List<FieldAssign>();
                         foreach (var Child in Nodes)
                         {
-                            var ChildNodes = Child.Undetermined.Nodes;
-                            var oLeftExpr = TryTransformLeftValueDef(ChildNodes[0], Text, NodePositions, Positions);
-                            var RightExpr = TransformNodes(ChildNodes.Skip(2).ToList(), Text, NodePositions, Positions);
+                            var ChildHead = Child.OnUndetermined ? Child.Undetermined.Nodes[0] : Child.Stem.Head.Value;
+                            var ChildNode = Child.OnUndetermined ? Child.Undetermined.Nodes[1] : Child.Stem.Nodes.Single();
+                            var oLeftExpr = TryTransformLeftValueDef(ChildHead, Text, NodePositions, Positions);
+                            var RightExpr = Transform(ChildNode, Text, NodePositions, Positions);
                             if (oLeftExpr.OnHasValue)
                             {
                                 var LeftExpr = oLeftExpr.Value;
@@ -615,8 +623,6 @@ namespace Nivea.Template.Syntax
                     {
                         var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = Optional<String>.Empty }, NodesRange, NodePositions, Positions);
                         Ambiguous.Add(MarkRange(Expr.CreatePrimitiveLiteral(ple), Range, Positions));
-                        var rle = MarkRange(new RecordLiteralExpr { Type = t, FieldAssigns = MarkRange(new List<FieldAssign> { }, NodesRange, Positions) }, Range, Positions);
-                        Ambiguous.Add(MarkRange(Expr.CreateRecordLiteral(rle), Range, Positions));
                         if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
                         {
                             var tule = MarkRange(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = Optional<Expr>.Empty }, Range, Positions);
@@ -887,11 +893,11 @@ namespace Nivea.Template.Syntax
 
                 if (s == "Null")
                 {
-                    return Mark(MatchPattern.CreateNull(), Node, NodePositions, Positions);
+                    return Mark(MatchPattern.CreateError(), Node, NodePositions, Positions);
                 }
                 else if (s == "Default")
                 {
-                    return Mark(MatchPattern.CreateDefault(), Node, NodePositions, Positions);
+                    return Mark(MatchPattern.CreateError(), Node, NodePositions, Positions);
                 }
                 else if (s == "This")
                 {
@@ -983,19 +989,25 @@ namespace Nivea.Template.Syntax
 
                     var Transformed = Stem.Nodes.Select(n => TransformPattern(n, Text, NodePositions, Positions)).ToList();
                     Mark(Transformed, Node, NodePositions, Positions);
-                    Ambiguous.Add(Mark(MatchPattern.CreateSequence(Transformed), Node, NodePositions, Positions));
-
+                    var lle = Mark(new ListLiteralPattern { Type = Optional<TypeSpec>.Empty, Parameters = Transformed }, Node, NodePositions, Positions);
+                    Ambiguous.Add(Mark(MatchPattern.CreateListLiteral(lle), Node, NodePositions, Positions));
+                    if (Transformed.Count >= 1)
+                    {
+                        var tle = Mark(new TupleLiteralPattern { Type = Optional<TypeSpec>.Empty, Parameters = Transformed }, Node, NodePositions, Positions);
+                        Ambiguous.Add(Mark(MatchPattern.CreateTupleLiteral(tle), Node, NodePositions, Positions));
+                    }
                     var Nodes = Stem.Nodes;
                     var Range = GetRange(Node, NodePositions);
                     var NodesRange = GetRange(Stem.Nodes, NodePositions);
-                    if ((Nodes.Count > 0) && Nodes.All(Child => Child.OnUndetermined && (Child.Undetermined.Nodes.Count >= 3) && (Child.Undetermined.Nodes[1].OnOperator && Child.Undetermined.Nodes[1].Operator == "=")))
+                    if (Nodes.All(Child => (Child.OnUndetermined && (Child.Undetermined.Nodes.Count == 2) && Child.Undetermined.Nodes[0].OnDirect) || (Child.OnStem && Child.Stem.Head.OnHasValue && (Child.Stem.Nodes.Count == 1))))
                     {
                         var FieldAssigns = new List<FieldAssignPattern>();
                         foreach (var Child in Nodes)
                         {
-                            var ChildNodes = Child.Undetermined.Nodes;
-                            var oLeftExpr = TryTransformLeftValueDef(ChildNodes[0], Text, NodePositions, Positions);
-                            var RightExpr = TransformNodesPattern(ChildNodes.Skip(2).ToList(), Text, NodePositions, Positions);
+                            var ChildHead = Child.OnUndetermined ? Child.Undetermined.Nodes[0] : Child.Stem.Head.Value;
+                            var ChildNode = Child.OnUndetermined ? Child.Undetermined.Nodes[1] : Child.Stem.Nodes.Single();
+                            var oLeftExpr = TryTransformLeftValueDef(ChildHead, Text, NodePositions, Positions);
+                            var RightExpr = TransformPattern(ChildNode, Text, NodePositions, Positions);
                             if (oLeftExpr.OnHasValue)
                             {
                                 var LeftExpr = oLeftExpr.Value;
@@ -1011,7 +1023,7 @@ namespace Nivea.Template.Syntax
                                 }
                             }
                         }
-                        if (FieldAssigns.Count > 0)
+                        if ((Nodes.Count == 0) || (FieldAssigns.Count > 0))
                         {
                             var rle = MarkRange(new RecordLiteralPattern { Type = Optional<TypeSpec>.Empty, FieldAssigns = MarkRange(FieldAssigns, NodesRange, Positions) }, Range, Positions);
                             Ambiguous.Add(MarkRange(MatchPattern.CreateRecordLiteral(rle), Range, Positions));
@@ -1049,10 +1061,6 @@ namespace Nivea.Template.Syntax
         }
         private static MatchPattern TransformNodesPattern(List<ExprNode> Nodes, Optional<TextRange> Range, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
         {
-            if (Nodes.Count == 0)
-            {
-                return MarkRange(MatchPattern.CreateSequence(MarkRange(new List<MatchPattern> { }, Range, Positions)), Range, Positions);
-            }
             if (Nodes.Count == 2)
             {
                 var First = Nodes.First();
@@ -1099,14 +1107,15 @@ namespace Nivea.Template.Syntax
                     var tvmc = otvmc.Value;
                     var t = tvmc.Type;
 
-                    if ((Nodes.Count > 0) && Nodes.All(Child => Child.OnUndetermined && (Child.Undetermined.Nodes.Count >= 3) && (Child.Undetermined.Nodes[1].OnOperator && Child.Undetermined.Nodes[1].Operator == "=")))
+                    if (Nodes.All(Child => (Child.OnUndetermined && (Child.Undetermined.Nodes.Count == 2) && Child.Undetermined.Nodes[0].OnDirect) || (Child.OnStem && Child.Stem.Head.OnHasValue && (Child.Stem.Nodes.Count == 1))))
                     {
                         var FieldAssigns = new List<FieldAssignPattern>();
                         foreach (var Child in Nodes)
                         {
-                            var ChildNodes = Child.Undetermined.Nodes;
-                            var oLeftExpr = TryTransformLeftValueDef(ChildNodes[0], Text, NodePositions, Positions);
-                            var RightExpr = TransformNodesPattern(ChildNodes.Skip(2).ToList(), Text, NodePositions, Positions);
+                            var ChildHead = Child.OnUndetermined ? Child.Undetermined.Nodes[0] : Child.Stem.Head.Value;
+                            var ChildNode = Child.OnUndetermined ? Child.Undetermined.Nodes[1] : Child.Stem.Nodes.Single();
+                            var oLeftExpr = TryTransformLeftValueDef(ChildHead, Text, NodePositions, Positions);
+                            var RightExpr = TransformPattern(ChildNode, Text, NodePositions, Positions);
                             if (oLeftExpr.OnHasValue)
                             {
                                 var LeftExpr = oLeftExpr.Value;
@@ -1129,8 +1138,6 @@ namespace Nivea.Template.Syntax
                     {
                         var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = Optional<String>.Empty }, NodesRange, NodePositions, Positions);
                         Ambiguous.Add(MarkRange(MatchPattern.CreatePrimitiveLiteral(ple), Range, Positions));
-                        var rle = MarkRange(new RecordLiteralPattern { Type = t, FieldAssigns = MarkRange(new List<FieldAssignPattern> { }, NodesRange, Positions) }, Range, Positions);
-                        Ambiguous.Add(MarkRange(MatchPattern.CreateRecordLiteral(rle), Range, Positions));
                         var tule = MarkRange(new TaggedUnionLiteralPattern { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = Optional<MatchPattern>.Empty }, Range, Positions);
                         Ambiguous.Add(MarkRange(MatchPattern.CreateTaggedUnionLiteral(tule), Range, Positions));
                     }
@@ -1272,6 +1279,10 @@ namespace Nivea.Template.Syntax
                     if (tTotal.OnNotHasValue && String.Equals(Name, "Tuple", StringComparison.OrdinalIgnoreCase))
                     {
                         t = TypeSpec.CreateTuple(l);
+                    }
+                    else if (tTotal.OnNotHasValue && String.Equals(Name, "Array", StringComparison.OrdinalIgnoreCase) && (l.Count == 1))
+                    {
+                        t = TypeSpec.CreateArray(l.Single());
                     }
                     else
                     {
