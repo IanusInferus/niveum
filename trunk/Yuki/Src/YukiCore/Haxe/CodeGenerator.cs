@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Haxe代码生成器
-//  Version:     2016.05.21.
+//  Version:     2016.07.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -299,10 +299,6 @@ namespace Yuki.ObjectSchema.Haxe.Common
                             {
                                 continue;
                             }
-                        }
-                        else
-                        {
-                            throw new NotSupportedException(p.Name);
                         }
                     }
                     else if (c.OnAlias)

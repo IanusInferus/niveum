@@ -260,6 +260,7 @@ Default为默认值字面量
 This为当前对象引用（保留不用）
 _为忽略变量标记
 Tuple为元组标记
+Array为数组标记，用于兼容.Net代码
 Cast为类型转换标记
 True、False为Boolean字面量
 可看作Int、Float的字面量，默认为对应的类型
@@ -445,11 +446,12 @@ Yield, YieldMany, Throw, Let, Var, If, Match, For, While, Continue, Break, Retur
 保留字在恰当的位置，会按照预先定义的规则进行解释，可以使用""或{}等进行避免。
 
 
-类型
+内置类型
 
 Unit, Boolean, String, Int, Real, Type, Optional, List, Set, Map
 其中Int表示Int32，Real表示Float64
 UInt8, UInt16, UInt32, UInt64, Int8, Int16, Int32, Int64, Float32, Float64
+此外还有Tuple, Array, Func, Action泛型类型系列
 
 
 运算符
@@ -467,7 +469,7 @@ UInt8, UInt16, UInt32, UInt64, Int8, Int16, Int32, Int64, Float32, Float64
 
 变量定义
 
-#Global中定义的变量可以在所有模板中使用
+#Constant中定义的常量可以在所有模板中使用
 $$中定义的变量延续到当前模板的结束
 Sequence、If、Match、For、While均创建了一个变量的范围，变量延续到该范围的结束
 变量只需要与当前范围内的其他变量不重名，引用时，先在当前范围内寻找，再到更高的范围依次寻找

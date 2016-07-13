@@ -3,7 +3,7 @@
 //  File:        TypeParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 类型词法解析器
-//  Version:     2016.06.02.
+//  Version:     2016.06.24.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -102,6 +102,10 @@ namespace Nivea.Template.Syntax
                     if (tTotal.OnNotHasValue && String.Equals(Name, "Tuple", StringComparison.OrdinalIgnoreCase))
                     {
                         t = TypeSpec.CreateTuple(l);
+                    }
+                    else if (tTotal.OnNotHasValue && String.Equals(Name, "Array", StringComparison.OrdinalIgnoreCase) && (l.Count == 1))
+                    {
+                        t = TypeSpec.CreateArray(l.Single());
                     }
                     else
                     {
