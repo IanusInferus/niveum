@@ -167,66 +167,69 @@ namespace Yuki.ObjectSchema.Cpp.Common
             private HashSet<String> EnumSet = new HashSet<String>();
             public String GetTypeString(TypeSpec Type, Boolean ForceAsValue = false)
             {
-                switch (Type._Tag)
+                if (Type.OnTypeRef)
                 {
-                    case TypeSpecTag.TypeRef:
-                        if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
+                    if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
+                    {
+                        var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Name].PlatformName;
+                        if (Type.TypeRef.Name == "List" || Type.TypeRef.Name == "Set" || Type.TypeRef.Name == "Map")
                         {
-                            var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Name].PlatformName;
-                            if (Type.TypeRef.Name == "List" || Type.TypeRef.Name == "Set" || Type.TypeRef.Name == "Map")
-                            {
-                                return PlatformName;
-                            }
-                            else
-                            {
-                                return Type.TypeRef.TypeFriendlyName();
-                            }
+                            return PlatformName;
                         }
-                        else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
-                        {
-                            return "enum " + Type.TypeRef.TypeFriendlyName();
-                        }
-                        if (ForceAsValue)
+                        else
                         {
                             return Type.TypeRef.TypeFriendlyName();
                         }
-                        return "std::shared_ptr<class " + Type.TypeRef.TypeFriendlyName() + ">";
-                    case TypeSpecTag.GenericParameterRef:
-                        return Type.GenericParameterRef;
-                    case TypeSpecTag.Tuple:
+                    }
+                    else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
+                    {
+                        return "enum " + Type.TypeRef.TypeFriendlyName();
+                    }
+                    if (ForceAsValue)
+                    {
+                        return Type.TypeRef.TypeFriendlyName();
+                    }
+                    return "std::shared_ptr<class " + Type.TypeRef.TypeFriendlyName() + ">";
+                }
+                else if (Type.OnGenericParameterRef)
+                {
+                    return Type.GenericParameterRef;
+                }
+                else if (Type.OnTuple)
+                {
+                    if (ForceAsValue)
+                    {
+                        return Type.TypeFriendlyName();
+                    }
+                    return "std::shared_ptr<class " + Type.TypeFriendlyName() + ">";
+                }
+                else if (Type.OnGenericTypeSpec)
+                {
+                    if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
+                    {
+                        var TypeString = GetTypeString(Type.GenericTypeSpec.TypeSpec, true) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
+                        if (ForceAsValue)
                         {
-                            if (ForceAsValue)
-                            {
-                                return Type.TypeFriendlyName();
-                            }
-                            return "std::shared_ptr<class " + Type.TypeFriendlyName() + ">";
+                            return TypeString;
                         }
-                    case TypeSpecTag.GenericTypeSpec:
+                        if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && Type.GenericTypeSpec.ParameterValues.Count == 1)
                         {
-                            if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
-                            {
-                                var TypeString = GetTypeString(Type.GenericTypeSpec.TypeSpec, true) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
-                                if (ForceAsValue)
-                                {
-                                    return TypeString;
-                                }
-                                if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && Type.GenericTypeSpec.ParameterValues.Count == 1)
-                                {
-                                    return TypeString;
-                                }
-                                return "std::shared_ptr<class " + TypeString + ">";
-                            }
-                            else
-                            {
-                                if (ForceAsValue)
-                                {
-                                    return Type.TypeFriendlyName();
-                                }
-                                return "std::shared_ptr<class " + Type.TypeFriendlyName() + ">";
-                            }
+                            return TypeString;
                         }
-                    default:
-                        throw new InvalidOperationException();
+                        return "std::shared_ptr<class " + TypeString + ">";
+                    }
+                    else
+                    {
+                        if (ForceAsValue)
+                        {
+                            return Type.TypeFriendlyName();
+                        }
+                        return "std::shared_ptr<class " + Type.TypeFriendlyName() + ">";
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
             }
             public List<String> GetGenericParameterLine(List<VariableDef> GenericParameters)

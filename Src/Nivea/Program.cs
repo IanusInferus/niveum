@@ -18,6 +18,7 @@ using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Nivea.Template.Syntax;
 using Nivea.Template.Semantics;
+using Nivea.Generator;
 
 namespace Nivea.CUI
 {
@@ -82,6 +83,18 @@ namespace Nivea.CUI
                         return -1;
                     }
                 }
+                else if (optNameLower == "cs")
+                {
+                    if (opt.Arguments.Length == 2)
+                    {
+                        GenerateCSharp(opt.Arguments[0], opt.Arguments[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else
                 {
                     throw new ArgumentException(opt.Name);
@@ -101,7 +114,8 @@ namespace Nivea.CUI
             Console.WriteLine(@"用法:");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
-            Console.WriteLine(@"Nivea /schemakind:ObjectSchema /template:CSharp /loadtype:Schema /p:Namespace=Communication,Output=Src\Generated\Communication.cs");
+            //Console.WriteLine(@"Nivea /schemakind:ObjectSchema /template:CSharp /loadtype:Schema /p:Namespace=Communication,Output=Src\Generated\Communication.cs");
+            Console.WriteLine(@"Nivea /cs:Template,Generated");
         }
 
         public static void DumpSyntaxResult(String InputDirectory, String OutputDirectory)
@@ -109,7 +123,7 @@ namespace Nivea.CUI
             var Files = new Dictionary<String, FileParserResult>();
             foreach (var FilePath in Directory.EnumerateFiles(InputDirectory, "*.tree", SearchOption.AllDirectories))
             {
-                var AbsolutePath = FileNameHandling.GetAbsolutePath(FilePath, InputDirectory);
+                var AbsolutePath = FileNameHandling.GetAbsolutePath(FilePath, System.Environment.CurrentDirectory);
                 var FileContent = Txt.ReadFile(FilePath);
                 var Text = TokenParser.BuildText(FileContent, AbsolutePath);
                 var Result = FileParser.ParseFile(Text);
@@ -136,7 +150,7 @@ namespace Nivea.CUI
 
             foreach (var p in Files)
             {
-                var RelativePath = FileNameHandling.GetRelativePath(p.Key, InputDirectory);
+                var RelativePath = FileNameHandling.GetRelativePath(p.Key, FileNameHandling.GetAbsolutePath(InputDirectory, System.Environment.CurrentDirectory));
                 var FileName = FileNameHandling.GetFileName(p.Key);
                 var fd = new FileDumper();
                 var Comment
@@ -150,6 +164,31 @@ namespace Nivea.CUI
                 var OutputDir = FileNameHandling.GetFileDirectory(OutputPath);
                 if (!Directory.Exists(OutputDir)) { Directory.CreateDirectory(OutputDir); }
                 TreeFile.WriteRaw(OutputPath, f);
+            }
+        }
+
+        public static void GenerateCSharp(String InputDirectory, String OutputDirectory)
+        {
+            var Files = new Dictionary<String, FileParserResult>();
+            foreach (var FilePath in Directory.EnumerateFiles(InputDirectory, "*.tree", SearchOption.AllDirectories))
+            {
+                var AbsolutePath = FileNameHandling.GetAbsolutePath(FilePath, System.Environment.CurrentDirectory);
+                var FileContent = Txt.ReadFile(FilePath);
+                var Text = TokenParser.BuildText(FileContent, AbsolutePath);
+                var Result = FileParser.ParseFile(Text);
+                Files.Add(AbsolutePath, Result);
+            }
+
+            foreach (var p in Files)
+            {
+                var RelativePath = FileNameHandling.GetRelativePath(p.Key, FileNameHandling.GetAbsolutePath(InputDirectory, System.Environment.CurrentDirectory));
+                var FileName = FileNameHandling.GetFileName(p.Key);
+                var ecsg = new EmbeddedCSharpGenerator();
+                var Content = String.Join("\r\n", ecsg.Generate(p.Value.File));
+                var OutputPath = FileNameHandling.GetPath(FileNameHandling.GetPath(OutputDirectory, FileNameHandling.GetFileDirectory(RelativePath)), FileNameHandling.GetMainFileName(FileName) + ".cs");
+                var OutputDir = FileNameHandling.GetFileDirectory(OutputPath);
+                if (!Directory.Exists(OutputDir)) { Directory.CreateDirectory(OutputDir); }
+                Txt.WriteFile(OutputPath, Content);
             }
         }
     }

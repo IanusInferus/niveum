@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0代码生成器
-//  Version:     2016.05.21.
+//  Version:     2016.07.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -188,46 +188,47 @@ namespace Yuki.ObjectSchema.ActionScript.Common
             private HashSet<String> EnumSet = new HashSet<String>();
             public String GetTypeString(TypeSpec Type)
             {
-                switch (Type._Tag)
+                if (Type.OnTypeRef)
                 {
-                    case TypeSpecTag.TypeRef:
-                        if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
-                        {
-                            return TemplateInfo.PrimitiveMappings[Type.TypeRef.Name].PlatformName;
-                        }
-                        else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
-                        {
-                            return "int";
-                        }
-                        else
-                        {
-                            return Type.TypeRef.TypeFriendlyName();
-                        }
-                    case TypeSpecTag.Tuple:
-                        {
-                            return "TupleOf" + String.Join("And", Type.Tuple.Select(t => t.TypeFriendlyName()));
-                        }
-                    case TypeSpecTag.GenericTypeSpec:
-                        {
-                            if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && Type.GenericTypeSpec.ParameterValues.Count == 1)
-                            {
-                                return "Opt" + Type.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-                            }
-                            else if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && Type.GenericTypeSpec.ParameterValues.Count == 2)
-                            {
-                                return "Vector.<KeyValuePairOf" + Type.GenericTypeSpec.ParameterValues[0].TypeFriendlyName() + "And" + Type.GenericTypeSpec.ParameterValues[1].TypeFriendlyName() + ">";
-                            }
-                            if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
-                            {
-                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + ".<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
-                            }
-                            else
-                            {
-                                return Type.TypeFriendlyName();
-                            }
-                        }
-                    default:
-                        throw new InvalidOperationException();
+                    if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
+                    {
+                        return TemplateInfo.PrimitiveMappings[Type.TypeRef.Name].PlatformName;
+                    }
+                    else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
+                    {
+                        return "int";
+                    }
+                    else
+                    {
+                        return Type.TypeRef.TypeFriendlyName();
+                    }
+                }
+                else if (Type.OnTuple)
+                {
+                    return "TupleOf" + String.Join("And", Type.Tuple.Select(t => t.TypeFriendlyName()));
+                }
+                else if (Type.OnGenericTypeSpec)
+                {
+                    if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && Type.GenericTypeSpec.ParameterValues.Count == 1)
+                    {
+                        return "Opt" + Type.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
+                    }
+                    else if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && Type.GenericTypeSpec.ParameterValues.Count == 2)
+                    {
+                        return "Vector.<KeyValuePairOf" + Type.GenericTypeSpec.ParameterValues[0].TypeFriendlyName() + "And" + Type.GenericTypeSpec.ParameterValues[1].TypeFriendlyName() + ">";
+                    }
+                    if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
+                    {
+                        return GetTypeString(Type.GenericTypeSpec.TypeSpec) + ".<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
+                    }
+                    else
+                    {
+                        return Type.TypeFriendlyName();
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
             }
 

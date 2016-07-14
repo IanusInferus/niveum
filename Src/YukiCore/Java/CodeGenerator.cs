@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Java代码生成器
-//  Version:     2016.05.21.
+//  Version:     2016.07.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -136,42 +136,45 @@ namespace Yuki.ObjectSchema.Java.Common
             private Dictionary<String, EnumDef> EnumDict = new Dictionary<String, EnumDef>();
             public String GetTypeString(TypeSpec Type)
             {
-                switch (Type._Tag)
+                if (Type.OnTypeRef)
                 {
-                    case TypeSpecTag.TypeRef:
-                        if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
-                        {
-                            var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Name].PlatformName;
-                            return PlatformName;
-                        }
-                        else if (EnumDict.ContainsKey(Type.TypeRef.VersionedName()))
-                        {
-                            return GetTypeString(EnumDict[Type.TypeRef.VersionedName()].UnderlyingType);
-                        }
-                        return Type.TypeRef.TypeFriendlyName();
-                    case TypeSpecTag.GenericParameterRef:
-                        return Type.GenericParameterRef;
-                    case TypeSpecTag.Tuple:
-                        {
-                            return Type.TypeFriendlyName();
-                        }
-                    case TypeSpecTag.GenericTypeSpec:
-                        {
-                            if (Type.GenericTypeSpec.ParameterValues.Count() == 1 && Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
-                            {
-                                return "Opt" + Type.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-                            }
-                            if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
-                            {
-                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => MapToReferenceType(GetTypeString(p)))) + ">";
-                            }
-                            else
-                            {
-                                return Type.TypeFriendlyName();
-                            }
-                        }
-                    default:
-                        throw new InvalidOperationException();
+                    if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
+                    {
+                        var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Name].PlatformName;
+                        return PlatformName;
+                    }
+                    else if (EnumDict.ContainsKey(Type.TypeRef.VersionedName()))
+                    {
+                        return GetTypeString(EnumDict[Type.TypeRef.VersionedName()].UnderlyingType);
+                    }
+                    return Type.TypeRef.TypeFriendlyName();
+                }
+                else if (Type.OnGenericParameterRef)
+                {
+                    return Type.GenericParameterRef;
+                }
+                else if (Type.OnTuple)
+                {
+                    return Type.TypeFriendlyName();
+                }
+                else if (Type.OnGenericTypeSpec)
+                {
+                    if (Type.GenericTypeSpec.ParameterValues.Count() == 1 && Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
+                    {
+                        return "Opt" + Type.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
+                    }
+                    if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
+                    {
+                        return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => MapToReferenceType(GetTypeString(p)))) + ">";
+                    }
+                    else
+                    {
+                        return Type.TypeFriendlyName();
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
             }
             private static String MapToReferenceType(String TypeName)

@@ -23,7 +23,7 @@ namespace Nivea.Template.Syntax
 {
     public class FileParserResult
     {
-        public Semantics.File File;
+        public File File;
         public Text Text;
         public Dictionary<Object, TextRange> Positions;
     }
@@ -48,7 +48,7 @@ namespace Nivea.Template.Syntax
             var ParserResult = sp.Parse();
             var ts = new TreeSerializer();
 
-            var Sections = new List<Semantics.SectionDef>();
+            var Sections = new List<SectionDef>();
             var Positions = new Dictionary<Object, TextRange>();
             var InlineExpressionRegex = new Regex(@"\${(?<Expr>.*?)}", RegexOptions.ExplicitCapture);
             var InlineIdentifierRegex = new Regex(@"\[\[(?<Identifier>.*?)\]\]", RegexOptions.ExplicitCapture);
@@ -528,7 +528,7 @@ namespace Nivea.Template.Syntax
                                 if (f.Parameters.Count != 1) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
                                 var NamespaceParts = ExtractNamespaceParts(f.Parameters[0]);
 
-                                var s = SectionDef.CreateNamepsace(NamespaceParts);
+                                var s = SectionDef.CreateNamespace(NamespaceParts);
                                 Mark(s, f);
                                 Sections.Add(s);
                                 return new List<TFSemantics.Node> { };
@@ -749,7 +749,7 @@ namespace Nivea.Template.Syntax
                     var er = e.Evaluate();
                     if (er.Value.Nodes.Count > 0)
                     {
-                        var ReadResult = ts.Read<Semantics.File>(CollectionOperations.CreatePair(er.Value, er.Positions));
+                        var ReadResult = ts.Read<File>(CollectionOperations.CreatePair(er.Value, er.Positions));
                         Sections.AddRange(ReadResult.Key.Sections);
                         foreach (var p in ReadResult.Value)
                         {
@@ -762,7 +762,7 @@ namespace Nivea.Template.Syntax
                 }
             }
 
-            var File = new Semantics.File { Sections = Sections };
+            var File = new File { Sections = Sections };
             return new FileParserResult { File = File, Text = Text, Positions = Positions };
         }
 
