@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2016.05.13.
+//  Version:     2016.07.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -177,74 +177,73 @@ namespace Yuki.RelationSchema
             {
                 if (Marked.Contains(t)) { return; }
                 Marked.Add(t);
-                switch (t._Tag)
+                if (t.OnPrimitive)
                 {
-                    case TypeDefTag.Primitive:
-                        break;
-                    case TypeDefTag.Entity:
-                        foreach (var f in t.Entity.Fields)
-                        {
-                            Mark(f.Type);
-                        }
-                        break;
-                    case TypeDefTag.Enum:
-                        Mark(t.Enum.UnderlyingType);
-                        break;
-                    case TypeDefTag.QueryList:
-                        foreach (var q in t.QueryList.Queries)
-                        {
-                            Mark(TypeSpec.CreateTypeRef(new TypeRef { Value = q.EntityName }));
-                        }
-                        break;
-                    default:
-                        throw new InvalidOperationException();
+                }
+                else if (t.OnEntity)
+                {
+                    foreach (var f in t.Entity.Fields)
+                    {
+                        Mark(f.Type);
+                    }
+                }
+                else if (t.OnEnum)
+                {
+                    Mark(t.Enum.UnderlyingType);
+                }
+                else if (t.OnQueryList)
+                {
+                    foreach (var q in t.QueryList.Queries)
+                    {
+                        Mark(TypeSpec.CreateTypeRef(new TypeRef { Value = q.EntityName }));
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
             }
             public void Mark(TypeSpec t)
             {
-                switch (t._Tag)
+                if (t.OnTypeRef)
                 {
-                    case TypeSpecTag.TypeRef:
-                        {
-                            var Name = t.TypeRef.Value;
-                            if (Types.ContainsKey(Name))
-                            {
-                                Mark(Types[Name]);
-                            }
-                            else
-                            {
-                                throw new InvalidOperationException(String.Format("TypeNotExist: {0}", Name));
-                            }
-                        }
-                        break;
-                    case TypeSpecTag.List:
-                        {
-                            var Name = t.List.Value;
-                            if (Types.ContainsKey(Name))
-                            {
-                                Mark(Types[Name]);
-                            }
-                            else
-                            {
-                                throw new InvalidOperationException(String.Format("TypeNotExist: {0}", Name));
-                            }
-                        }
-                        break;
-                    case TypeSpecTag.Optional:
-                        {
-                            var Name = t.Optional.Value;
-                            if (Types.ContainsKey(Name))
-                            {
-                                Mark(Types[Name]);
-                            }
-                            else
-                            {
-                                throw new InvalidOperationException(String.Format("TypeNotExist: {0}", Name));
-                            }
-                        }
-                        break;
-                    default:
-                        throw new InvalidOperationException();
+                    var Name = t.TypeRef.Value;
+                    if (Types.ContainsKey(Name))
+                    {
+                        Mark(Types[Name]);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(String.Format("TypeNotExist: {0}", Name));
+                    }
+                }
+                else if (t.OnList)
+                {
+                    var Name = t.List.Value;
+                    if (Types.ContainsKey(Name))
+                    {
+                        Mark(Types[Name]);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(String.Format("TypeNotExist: {0}", Name));
+                    }
+                }
+                else if (t.OnOptional)
+                {
+                    var Name = t.Optional.Value;
+                    if (Types.ContainsKey(Name))
+                    {
+                        Mark(Types[Name]);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(String.Format("TypeNotExist: {0}", Name));
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
             }
         }
@@ -267,22 +266,18 @@ namespace Yuki.RelationSchema
 
             foreach (var t in s.TypeRefs.Concat(s.Types))
             {
-                switch (t._Tag)
+                if (t.OnEntity)
                 {
-                    case TypeDefTag.Entity:
-                        {
-                            var r = t.Entity;
-                            CheckDuplicatedNames(r.Fields, rf => rf.Name, rf => String.Format("DuplicatedField {0}: record {1}, at {2}", rf.Name, r.Name, PathDict[r.Name]));
-                        }
-                        break;
-                    case TypeDefTag.Enum:
-                        {
-                            var e = t.Enum;
-                            CheckDuplicatedNames(e.Literals, el => el.Name, el => String.Format("DuplicatedLiteral {0}: enum {1}, at {2}", el.Name, e.Name, PathDict[e.Name]));
-                        }
-                        break;
-                    default:
-                        break;
+                    var r = t.Entity;
+                    CheckDuplicatedNames(r.Fields, rf => rf.Name, rf => String.Format("DuplicatedField {0}: record {1}, at {2}", rf.Name, r.Name, PathDict[r.Name]));
+                }
+                else if (t.OnEnum)
+                {
+                    var e = t.Enum;
+                    CheckDuplicatedNames(e.Literals, el => el.Name, el => String.Format("DuplicatedLiteral {0}: enum {1}, at {2}", el.Name, e.Name, PathDict[e.Name]));
+                }
+                else
+                {
                 }
             }
         }
@@ -616,31 +611,41 @@ namespace Yuki.RelationSchema
 
         public static String Name(this TypeDef t)
         {
-            switch (t._Tag)
+            if (t.OnPrimitive)
             {
-                case TypeDefTag.Primitive:
-                    return t.Primitive.Name;
-                case TypeDefTag.Entity:
-                    return t.Entity.Name;
-                case TypeDefTag.Enum:
-                    return t.Enum.Name;
-                default:
-                    throw new InvalidOperationException();
+                return t.Primitive.Name;
+            }
+            else if (t.OnEntity)
+            {
+                return t.Entity.Name;
+            }
+            else if (t.OnEnum)
+            {
+                return t.Enum.Name;
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 
         public static String Description(this TypeDef t)
         {
-            switch (t._Tag)
+            if (t.OnPrimitive)
             {
-                case TypeDefTag.Primitive:
-                    return t.Primitive.Description;
-                case TypeDefTag.Entity:
-                    return t.Entity.Description;
-                case TypeDefTag.Enum:
-                    return t.Enum.Description;
-                default:
-                    throw new InvalidOperationException();
+                return t.Primitive.Description;
+            }
+            else if (t.OnEntity)
+            {
+                return t.Entity.Description;
+            }
+            else if (t.OnEnum)
+            {
+                return t.Enum.Description;
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 

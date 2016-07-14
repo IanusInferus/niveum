@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2016.05.26.
+//  Version:     2016.07.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -80,50 +80,56 @@ namespace Yuki.ObjectSchema
                 {
                     continue;
                 }
-                switch (t._Tag)
+                if (t.OnPrimitive)
                 {
-                    case TypeDefTag.Primitive:
-                        foreach (var v in t.Primitive.GenericParameters)
-                        {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Primitive.Name, Map, TypePathDict);
-                        }
-                        break;
-                    case TypeDefTag.Alias:
-                        foreach (var v in t.Alias.GenericParameters)
-                        {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Alias.Name, Map, TypePathDict);
-                        }
-                        t.Alias.Type = ParseTypeSpec(t.Alias.Type.TypeRef.Name, t.Alias.Name, Map, TypePathDict);
-                        break;
-                    case TypeDefTag.Record:
-                        foreach (var v in t.Record.GenericParameters.Concat(t.Record.Fields))
-                        {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Record.Name, Map, TypePathDict);
-                        }
-                        break;
-                    case TypeDefTag.TaggedUnion:
-                        foreach (var v in t.TaggedUnion.GenericParameters.Concat(t.TaggedUnion.Alternatives))
-                        {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.TaggedUnion.Name, Map, TypePathDict);
-                        }
-                        break;
-                    case TypeDefTag.Enum:
-                        t.Enum.UnderlyingType = ParseTypeSpec(t.Enum.UnderlyingType.TypeRef.Name, t.Enum.Name, Map, TypePathDict);
-                        break;
-                    case TypeDefTag.ClientCommand:
-                        foreach (var v in t.ClientCommand.OutParameters.Concat(t.ClientCommand.InParameters))
-                        {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.ClientCommand.Name, Map, TypePathDict);
-                        }
-                        break;
-                    case TypeDefTag.ServerCommand:
-                        foreach (var v in t.ServerCommand.OutParameters)
-                        {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.ServerCommand.Name, Map, TypePathDict);
-                        }
-                        break;
-                    default:
-                        throw new InvalidOperationException();
+                    foreach (var v in t.Primitive.GenericParameters)
+                    {
+                        v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Primitive.Name, Map, TypePathDict);
+                    }
+                }
+                else if (t.OnAlias)
+                {
+                    foreach (var v in t.Alias.GenericParameters)
+                    {
+                        v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Alias.Name, Map, TypePathDict);
+                    }
+                    t.Alias.Type = ParseTypeSpec(t.Alias.Type.TypeRef.Name, t.Alias.Name, Map, TypePathDict);
+                }
+                else if (t.OnRecord)
+                {
+                    foreach (var v in t.Record.GenericParameters.Concat(t.Record.Fields))
+                    {
+                        v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Record.Name, Map, TypePathDict);
+                    }
+                }
+                else if (t.OnTaggedUnion)
+                {
+                    foreach (var v in t.TaggedUnion.GenericParameters.Concat(t.TaggedUnion.Alternatives))
+                    {
+                        v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.TaggedUnion.Name, Map, TypePathDict);
+                    }
+                }
+                else if (t.OnEnum)
+                {
+                    t.Enum.UnderlyingType = ParseTypeSpec(t.Enum.UnderlyingType.TypeRef.Name, t.Enum.Name, Map, TypePathDict);
+                }
+                else if (t.OnClientCommand)
+                {
+                    foreach (var v in t.ClientCommand.OutParameters.Concat(t.ClientCommand.InParameters))
+                    {
+                        v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.ClientCommand.Name, Map, TypePathDict);
+                    }
+                }
+                else if (t.OnServerCommand)
+                {
+                    foreach (var v in t.ServerCommand.OutParameters)
+                    {
+                        v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.ServerCommand.Name, Map, TypePathDict);
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
             }
 
@@ -299,7 +305,7 @@ namespace Yuki.ObjectSchema
                     if (Functions.Contains(f.Name.Text) && f.Content.OnHasValue)
                     {
                         var ContentValue = f.Content.Value;
-                        if (ContentValue._Tag != Syntax.FunctionCallContentTag.TableContent) { throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                        if (!ContentValue.OnTableContent) { throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
                         ContentLines = ContentValue.TableContent;
                     }
 
@@ -869,22 +875,25 @@ namespace Yuki.ObjectSchema
 
             List<VariableDef> GenericParameters = null;
 
-            switch (t._Tag)
+            if (t.OnPrimitive)
             {
-                case TypeDefTag.Primitive:
-                    GenericParameters = t.Primitive.GenericParameters;
-                    break;
-                case TypeDefTag.Alias:
-                    GenericParameters = t.Alias.GenericParameters;
-                    break;
-                case TypeDefTag.Record:
-                    GenericParameters = t.Record.GenericParameters;
-                    break;
-                case TypeDefTag.TaggedUnion:
-                    GenericParameters = t.TaggedUnion.GenericParameters;
-                    break;
-                default:
-                    throw new Syntax.InvalidEvaluationException(String.Format("InvalidGenericParameters: {0} at {1}", TypeDefName, TypePaths[TypeDefName].Path));
+                GenericParameters = t.Primitive.GenericParameters;
+            }
+            else if (t.OnAlias)
+            {
+                GenericParameters = t.Alias.GenericParameters;
+            }
+            else if (t.OnRecord)
+            {
+                GenericParameters = t.Record.GenericParameters;
+            }
+            else if (t.OnTaggedUnion)
+            {
+                GenericParameters = t.TaggedUnion.GenericParameters;
+            }
+            else
+            {
+                throw new Syntax.InvalidEvaluationException(String.Format("InvalidGenericParameters: {0} at {1}", TypeDefName, TypePaths[TypeDefName].Path));
             }
 
             return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = ts, ParameterValues = Parameters.ZipStrict(GenericParameters, (v, p) => ParseGenericParameterValue(v, p, TypeDefName, TypeMap, TypePaths)).ToList() });

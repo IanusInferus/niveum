@@ -25,29 +25,31 @@ namespace Nivea.Template.Syntax
         public static List<TemplateExpr> ParseTemplateBody(List<TextLine> Lines, int LinesIndentSpace, Regex InlineExpressionRegex, Regex InlineIdentifierRegex, bool EnableEmbeddedExpr, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
         {
             var Body = new List<TemplateExpr>();
-            var LineQueue = new Queue<TextLine>(Lines);
+            var LineQueue = new LinkedList<TextLine>(Lines);
             while (LineQueue.Count > 0)
             {
-                var Line = LineQueue.Dequeue();
+                var Line = LineQueue.First.Value;
+                LineQueue.RemoveFirst();
                 var LineText = Line.Text.Substring(Math.Min(LinesIndentSpace, Line.Text.Length));
                 var Trimmed = LineText.Trim(' ');
                 if (Trimmed == "$$")
                 {
                     var IndentSpace = LineText.TakeWhile(c => c == ' ').Count();
                     var HeadRange = Line.Range;
-                    var IndentedExprLines = new List<TextLine>();
+                    var IndentedExprLines = new LinkedList<TextLine>();
                     while (LineQueue.Count > 0)
                     {
-                        var ChildLine = LineQueue.Peek();
+                        var ChildLine = LineQueue.First.Value;
                         var ChildLineText = ChildLine.Text.Substring(Math.Min(LinesIndentSpace, ChildLine.Text.Length));
                         var SpaceCount = ChildLineText.TakeWhile(c => c == ' ').Count();
                         if (TokenParser.IsBlankLine(ChildLineText))
                         {
-                            LineQueue.Dequeue();
+                            IndentedExprLines.AddLast(ChildLine);
+                            LineQueue.RemoveFirst();
                         }
                         else if ((SpaceCount == IndentSpace) && (ChildLineText.Substring(SpaceCount) == "$End"))
                         {
-                            LineQueue.Dequeue();
+                            LineQueue.RemoveFirst();
                             break;
                         }
                         else if (SpaceCount <= IndentSpace)
@@ -56,12 +58,27 @@ namespace Nivea.Template.Syntax
                         }
                         else if (SpaceCount >= IndentSpace + 4)
                         {
-                            IndentedExprLines.Add(ChildLine);
-                            LineQueue.Dequeue();
+                            IndentedExprLines.AddLast(ChildLine);
+                            LineQueue.RemoveFirst();
                         }
                         else
                         {
                             throw new InvalidSyntaxException("InvalidIndent", new FileTextRange { Text = nm.Text, Range = ChildLine.Range });
+                        }
+                    }
+                    while (IndentedExprLines.Count > 0)
+                    {
+                        var ChildLine = IndentedExprLines.Last.Value;
+                        var ChildLineText = ChildLine.Text.Substring(Math.Min(LinesIndentSpace, ChildLine.Text.Length));
+                        var SpaceCount = ChildLineText.TakeWhile(c => c == ' ').Count();
+                        if (TokenParser.IsBlankLine(ChildLineText))
+                        {
+                            LineQueue.AddFirst(ChildLine);
+                            IndentedExprLines.RemoveLast();
+                        }
+                        else
+                        {
+                            break;
                         }
                     }
                     var Range = new TextRange { Start = HeadRange.Start, End = HeadRange.End };
@@ -70,7 +87,7 @@ namespace Nivea.Template.Syntax
                         Range.End = IndentedExprLines.Last().Range.End;
                     }
 
-                    var e = ParseExprLines(IndentedExprLines, Range, LinesIndentSpace + IndentSpace + 4, InlineExpressionRegex, InlineIdentifierRegex, EnableEmbeddedExpr, nm, Positions);
+                    var e = ParseExprLines(IndentedExprLines.ToList(), Range, LinesIndentSpace + IndentSpace + 4, InlineExpressionRegex, InlineIdentifierRegex, EnableEmbeddedExpr, nm, Positions);
                     var ee = new IndentedExpr { IndentSpace = IndentSpace, Expr = e };
 
                     Positions.Add(ee, Range);
@@ -217,29 +234,31 @@ namespace Nivea.Template.Syntax
             if (EnableEmbeddedExpr)
             {
                 var Body = new List<EmbeddedExpr>();
-                var LineQueue = new Queue<TextLine>(Lines);
+                var LineQueue = new LinkedList<TextLine>(Lines);
                 while (LineQueue.Count > 0)
                 {
-                    var Line = LineQueue.Dequeue();
+                    var Line = LineQueue.First.Value;
+                    LineQueue.RemoveFirst();
                     var LineText = Line.Text.Substring(Math.Min(LinesIndentSpace, Line.Text.Length));
                     var Trimmed = LineText.Trim(' ');
                     if ((Trimmed == "#") || (Trimmed == "##"))
                     {
                         var IndentSpace = LineText.TakeWhile(c => c == ' ').Count();
                         var HeadRange = Line.Range;
-                        var IndentedExprLines = new List<TextLine>();
+                        var IndentedExprLines = new LinkedList<TextLine>();
                         while (LineQueue.Count > 0)
                         {
-                            var ChildLine = LineQueue.Peek();
+                            var ChildLine = LineQueue.First.Value;
                             var ChildLineText = ChildLine.Text.Substring(Math.Min(LinesIndentSpace, ChildLine.Text.Length));
                             var SpaceCount = ChildLineText.TakeWhile(c => c == ' ').Count();
                             if (TokenParser.IsBlankLine(ChildLineText))
                             {
-                                LineQueue.Dequeue();
+                                IndentedExprLines.AddLast(ChildLine);
+                                LineQueue.RemoveFirst();
                             }
                             else if ((SpaceCount == IndentSpace) && (ChildLineText.Substring(SpaceCount) == "$End"))
                             {
-                                LineQueue.Dequeue();
+                                LineQueue.RemoveFirst();
                                 break;
                             }
                             else if (SpaceCount <= IndentSpace)
@@ -248,16 +267,31 @@ namespace Nivea.Template.Syntax
                             }
                             else if (SpaceCount >= IndentSpace + 4)
                             {
-                                IndentedExprLines.Add(ChildLine);
-                                LineQueue.Dequeue();
+                                IndentedExprLines.AddLast(ChildLine);
+                                LineQueue.RemoveFirst();
                             }
                             else
                             {
                                 throw new InvalidSyntaxException("InvalidIndent", new FileTextRange { Text = nm.Text, Range = ChildLine.Range });
                             }
                         }
+                        while (IndentedExprLines.Count > 0)
+                        {
+                            var ChildLine = IndentedExprLines.Last.Value;
+                            var ChildLineText = ChildLine.Text.Substring(Math.Min(LinesIndentSpace, ChildLine.Text.Length));
+                            var SpaceCount = ChildLineText.TakeWhile(c => c == ' ').Count();
+                            if (TokenParser.IsBlankLine(ChildLineText))
+                            {
+                                LineQueue.AddFirst(ChildLine);
+                                IndentedExprLines.RemoveLast();
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
 
-                        var Children = ParseTemplateBody(IndentedExprLines, LinesIndentSpace + IndentSpace + 4, InlineExpressionRegex, InlineIdentifierRegex, EnableEmbeddedExpr, nm, Positions);
+                        var Children = ParseTemplateBody(IndentedExprLines.ToList(), LinesIndentSpace + IndentSpace + 4, InlineExpressionRegex, InlineIdentifierRegex, EnableEmbeddedExpr, nm, Positions);
                         Expr te;
                         if (Trimmed == "#")
                         {
@@ -369,10 +403,6 @@ namespace Nivea.Template.Syntax
                 RangeEnd = Line.Range;
                 if (TokenParser.IsBlankLine(Line.Text))
                 {
-                    if (sb.IsInParenthesis)
-                    {
-                        throw new InvalidSyntaxException("InvalidParenthesis", new FileTextRange { Text = nm.Text, Range = Line.Range });
-                    }
                     continue;
                 }
                 if (!TokenParser.IsExactFitIndentCount(Line.Text, LinesIndentSpace))

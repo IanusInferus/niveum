@@ -1,9 +1,9 @@
 ﻿//==========================================================================
 //
 //  File:        RelationSchemaLoader.cs
-//  Location:    Yuki.Core <Visual C#>
+//  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构加载器
-//  Version:     2016.05.23.
+//  Version:     2016.07.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -92,25 +92,27 @@ namespace Yuki.RelationSchema
                 {
                     continue;
                 }
-                switch (t._Tag)
+                if (t.OnPrimitive)
                 {
-                    case OS.TypeDefTag.Primitive:
-                        foreach (var v in t.Primitive.GenericParameters)
-                        {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Primitive.Name, Map, TypePathDict);
-                        }
-                        break;
-                    case OS.TypeDefTag.Record:
-                        foreach (var v in t.Record.GenericParameters.Concat(t.Record.Fields))
-                        {
-                            v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Record.Name, Map, TypePathDict);
-                        }
-                        break;
-                    case OS.TypeDefTag.Enum:
-                        t.Enum.UnderlyingType = ParseTypeSpec(t.Enum.UnderlyingType.TypeRef.Name, t.Enum.Name, Map, TypePathDict);
-                        break;
-                    default:
-                        throw new InvalidOperationException();
+                    foreach (var v in t.Primitive.GenericParameters)
+                    {
+                        v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Primitive.Name, Map, TypePathDict);
+                    }
+                }
+                else if (t.OnRecord)
+                {
+                    foreach (var v in t.Record.GenericParameters.Concat(t.Record.Fields))
+                    {
+                        v.Type = ParseTypeSpec(v.Type.TypeRef.Name, t.Record.Name, Map, TypePathDict);
+                    }
+                }
+                else if (t.OnEnum)
+                {
+                    t.Enum.UnderlyingType = ParseTypeSpec(t.Enum.UnderlyingType.TypeRef.Name, t.Enum.Name, Map, TypePathDict);
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
             }
 
@@ -483,7 +485,7 @@ namespace Yuki.RelationSchema
                         if (Functions.Contains(f.Name.Text) && f.Content.OnHasValue)
                         {
                             var ContentValue = f.Content.Value;
-                            if (ContentValue._Tag != Syntax.FunctionCallContentTag.TableContent) { throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                            if (!ContentValue.OnTableContent) { throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
                             ContentLines = ContentValue.TableContent;
                         }
 
