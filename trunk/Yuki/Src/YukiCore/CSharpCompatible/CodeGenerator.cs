@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2016.05.21.
+//  Version:     2016.07.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -1084,24 +1084,31 @@ namespace Yuki.ObjectSchema.CSharpCompatible
 
         private static TypeSpec Nonversioned(this TypeSpec t)
         {
-            switch (t._Tag)
+            if (t.OnTypeRef)
             {
-                case TypeSpecTag.TypeRef:
-                    var r = t.TypeRef;
-                    if (r.Version != "")
-                    {
-                        return TypeSpec.CreateTypeRef(new TypeRef { Name = r.Name, Version = "" });
-                    }
-                    return t;
-                case TypeSpecTag.GenericParameterRef:
-                    return t;
-                case TypeSpecTag.Tuple:
-                    return TypeSpec.CreateTuple(t.Tuple.Select(tt => Nonversioned(tt)).ToList());
-                case TypeSpecTag.GenericTypeSpec:
-                    var gts = t.GenericTypeSpec;
-                    return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = Nonversioned(gts.TypeSpec), ParameterValues = gts.ParameterValues.Select(gpv => Nonversioned(gpv)).ToList() });
-                default:
-                    throw new InvalidOperationException();
+                var r = t.TypeRef;
+                if (r.Version != "")
+                {
+                    return TypeSpec.CreateTypeRef(new TypeRef { Name = r.Name, Version = "" });
+                }
+                return t;
+            }
+            else if (t.OnGenericParameterRef)
+            {
+                return t;
+            }
+            else if (t.OnTuple)
+            {
+                return TypeSpec.CreateTuple(t.Tuple.Select(tt => Nonversioned(tt)).ToList());
+            }
+            else if (t.OnGenericTypeSpec)
+            {
+                var gts = t.GenericTypeSpec;
+                return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = Nonversioned(gts.TypeSpec), ParameterValues = gts.ParameterValues.Select(gpv => Nonversioned(gpv)).ToList() });
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 

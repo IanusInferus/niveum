@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaWriter.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构写入器
-//  Version:     2016.05.21.
+//  Version:     2016.07.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -201,18 +201,25 @@ namespace Yuki.ObjectSchema
 
         private String GetTypeString(TypeSpec Type)
         {
-            switch (Type._Tag)
+            if (Type.OnTypeRef)
             {
-                case TypeSpecTag.TypeRef:
-                    return Type.TypeRef.VersionedName();
-                case TypeSpecTag.GenericParameterRef:
-                    return "'" + Type.GenericParameterRef;
-                case TypeSpecTag.Tuple:
-                    return "Tuple<" + String.Join(", ", Type.Tuple.Select(t => GetTypeString(t))) + ">";
-                case TypeSpecTag.GenericTypeSpec:
-                    return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
-                default:
-                    throw new InvalidOperationException();
+                return Type.TypeRef.VersionedName();
+            }
+            else if (Type.OnGenericParameterRef)
+            {
+                return "'" + Type.GenericParameterRef;
+            }
+            else if (Type.OnTuple)
+            {
+                return "Tuple<" + String.Join(", ", Type.Tuple.Select(t => GetTypeString(t))) + ">";
+            }
+            else if (Type.OnGenericTypeSpec)
+            {
+                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 

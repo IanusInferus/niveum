@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2016.05.21.
+//  Version:     2016.07.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -295,57 +295,56 @@ namespace Yuki.ObjectSchema.Xhtml.Common
 
             public String GetTypeString(TypeSpec Type, Boolean WithDescription, Boolean IsInBar = false)
             {
-                switch (Type._Tag)
+                if (Type.OnTypeRef)
                 {
-                    case TypeSpecTag.TypeRef:
+                    var Name = Type.TypeRef.VersionedName();
+                    if (TypeInfoDict.ContainsKey(Name))
+                    {
+                        var tl = TypeInfoDict[Name];
+                        var Ref = tl.DocPath;
+                        if (IsInBar)
                         {
-                            var Name = Type.TypeRef.VersionedName();
-                            if (TypeInfoDict.ContainsKey(Name))
+                            if (WithDescription)
                             {
-                                var tl = TypeInfoDict[Name];
-                                var Ref = tl.DocPath;
-                                if (IsInBar)
-                                {
-                                    if (WithDescription)
-                                    {
-                                        return GetTemplate("BarRefWithDescription").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Substitute("Description", tl.Def.Description()).Single();
-                                    }
-                                    else
-                                    {
-                                        return GetTemplate("BarRef").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Single();
-                                    }
-                                }
-                                else
-                                {
-                                    if (WithDescription)
-                                    {
-                                        return GetTemplate("RefWithDescription").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Substitute("Description", tl.Def.Description()).Single();
-                                    }
-                                    else
-                                    {
-                                        return GetTemplate("Ref").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Single();
-                                    }
-                                }
+                                return GetTemplate("BarRefWithDescription").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Substitute("Description", tl.Def.Description()).Single();
                             }
                             else
                             {
-                                return GetEscaped(Name);
+                                return GetTemplate("BarRef").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Single();
                             }
                         }
-                    case TypeSpecTag.GenericParameterRef:
+                        else
                         {
-                            return GetEscaped("'" + Type.GenericParameterRef);
+                            if (WithDescription)
+                            {
+                                return GetTemplate("RefWithDescription").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Substitute("Description", tl.Def.Description()).Single();
+                            }
+                            else
+                            {
+                                return GetTemplate("Ref").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Single();
+                            }
                         }
-                    case TypeSpecTag.Tuple:
-                        {
-                            return GetEscaped("Tuple<") + String.Join(GetEscaped(", "), Type.Tuple.Select(t => GetTypeString(t, WithDescription, IsInBar))) + GetEscaped(">");
-                        }
-                    case TypeSpecTag.GenericTypeSpec:
-                        {
-                            return GetTypeString(Type.GenericTypeSpec.TypeSpec, WithDescription, IsInBar) + GetEscaped("<") + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(gpv => GetTypeString(gpv, WithDescription, IsInBar))) + GetEscaped(">");
-                        }
-                    default:
-                        throw new InvalidOperationException();
+                    }
+                    else
+                    {
+                        return GetEscaped(Name);
+                    }
+                }
+                else if (Type.OnGenericParameterRef)
+                {
+                    return GetEscaped("'" + Type.GenericParameterRef);
+                }
+                else if (Type.OnTuple)
+                {
+                    return GetEscaped("Tuple<") + String.Join(GetEscaped(", "), Type.Tuple.Select(t => GetTypeString(t, WithDescription, IsInBar))) + GetEscaped(">");
+                }
+                else if (Type.OnGenericTypeSpec)
+                {
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, WithDescription, IsInBar) + GetEscaped("<") + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(gpv => GetTypeString(gpv, WithDescription, IsInBar))) + GetEscaped(">");
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
             }
 

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构VB.Net代码生成器
-//  Version:     2016.07.13.
+//  Version:     2016.07.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -107,37 +107,40 @@ namespace Yuki.ObjectSchema.VB.Common
 
             public String GetTypeString(TypeSpec Type)
             {
-                switch (Type._Tag)
+                if (Type.OnTypeRef)
                 {
-                    case TypeSpecTag.TypeRef:
-                        if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
+                    if (TemplateInfo.PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
+                    {
+                        var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Name].PlatformName;
+                        if (PlatformName.StartsWith("System.Collections.Generic."))
                         {
-                            var PlatformName = TemplateInfo.PrimitiveMappings[Type.TypeRef.Name].PlatformName;
-                            if (PlatformName.StartsWith("System.Collections.Generic."))
-                            {
-                                return new String(PlatformName.Skip("System.Collections.Generic.".Length).ToArray());
-                            }
+                            return new String(PlatformName.Skip("System.Collections.Generic.".Length).ToArray());
                         }
-                        return Type.TypeRef.TypeFriendlyName();
-                    case TypeSpecTag.GenericParameterRef:
-                        return Type.GenericParameterRef;
-                    case TypeSpecTag.Tuple:
-                        {
-                            return Type.TypeFriendlyName();
-                        }
-                    case TypeSpecTag.GenericTypeSpec:
-                        {
-                            if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
-                            {
-                                return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
-                            }
-                            else
-                            {
-                                return Type.TypeFriendlyName();
-                            }
-                        }
-                    default:
-                        throw new InvalidOperationException();
+                    }
+                    return Type.TypeRef.TypeFriendlyName();
+                }
+                else if (Type.OnGenericParameterRef)
+                {
+                    return Type.GenericParameterRef;
+                }
+                else if (Type.OnTuple)
+                {
+                    return Type.TypeFriendlyName();
+                }
+                else if (Type.OnGenericTypeSpec)
+                {
+                    if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
+                    {
+                        return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
+                    }
+                    else
+                    {
+                        return Type.TypeFriendlyName();
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
             }
             public String GetGenericParameters(List<VariableDef> GenericParameters)

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构XHTML代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.07.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -260,53 +260,52 @@ namespace Yuki.RelationSchema.Xhtml
 
             public String GetTypeString(TypeSpec Type, Boolean WithDescription, Boolean IsInBar = false)
             {
-                switch (Type._Tag)
+                if (Type.OnTypeRef)
                 {
-                    case TypeSpecTag.TypeRef:
+                    var Name = Type.TypeRef.Value;
+                    if (TypeInfoDict.ContainsKey(Name))
+                    {
+                        var tl = TypeInfoDict[Name];
+                        var Ref = tl.DocPath;
+                        if (IsInBar)
                         {
-                            var Name = Type.TypeRef.Value;
-                            if (TypeInfoDict.ContainsKey(Name))
+                            if (WithDescription)
                             {
-                                var tl = TypeInfoDict[Name];
-                                var Ref = tl.DocPath;
-                                if (IsInBar)
-                                {
-                                    if (WithDescription)
-                                    {
-                                        return GetTemplate("BarRefWithDescription").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Substitute("Description", tl.Def.Description()).Single();
-                                    }
-                                    else
-                                    {
-                                        return GetTemplate("BarRef").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Single();
-                                    }
-                                }
-                                else
-                                {
-                                    if (WithDescription)
-                                    {
-                                        return GetTemplate("RefWithDescription").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Substitute("Description", tl.Def.Description()).Single();
-                                    }
-                                    else
-                                    {
-                                        return GetTemplate("Ref").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Single();
-                                    }
-                                }
+                                return GetTemplate("BarRefWithDescription").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Substitute("Description", tl.Def.Description()).Single();
                             }
                             else
                             {
-                                return GetEscaped(Name);
+                                return GetTemplate("BarRef").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Single();
                             }
                         }
-                    case TypeSpecTag.List:
+                        else
                         {
-                            return GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Value = "List" }), WithDescription, IsInBar) + GetEscaped("<") + GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Value = Type.List.Value }), WithDescription, IsInBar) + GetEscaped(">");
+                            if (WithDescription)
+                            {
+                                return GetTemplate("RefWithDescription").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Substitute("Description", tl.Def.Description()).Single();
+                            }
+                            else
+                            {
+                                return GetTemplate("Ref").Substitute("Name", GetEscaped(Name)).Substitute("Ref", GetEscaped(Ref)).Single();
+                            }
                         }
-                    case TypeSpecTag.Optional:
-                        {
-                            return GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Value = "Optional" }), WithDescription, IsInBar) + GetEscaped("<") + GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Value = Type.Optional.Value }), WithDescription, IsInBar) + GetEscaped(">");
-                        }
-                    default:
-                        throw new InvalidOperationException();
+                    }
+                    else
+                    {
+                        return GetEscaped(Name);
+                    }
+                }
+                else if (Type.OnList)
+                {
+                    return GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Value = "List" }), WithDescription, IsInBar) + GetEscaped("<") + GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Value = Type.List.Value }), WithDescription, IsInBar) + GetEscaped(">");
+                }
+                else if (Type.OnOptional)
+                {
+                    return GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Value = "Optional" }), WithDescription, IsInBar) + GetEscaped("<") + GetTypeString(TypeSpec.CreateTypeRef(new TypeRef { Value = Type.Optional.Value }), WithDescription, IsInBar) + GetEscaped(">");
+                }
+                else
+                {
+                    throw new InvalidOperationException();
                 }
             }
 
