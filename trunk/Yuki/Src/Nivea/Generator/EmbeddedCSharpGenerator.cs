@@ -3,7 +3,7 @@
 //  File:        EmbeddedCSharpGenerator.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 嵌入C#代码生成器
-//  Version:     2016.07.14.
+//  Version:     2016.07.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -99,9 +99,15 @@ namespace Nivea.Generator
                     yield return GetIndentSpace() + "public static IEnumerable<String> " + GetEscapedIdentifier(t.Signature.Name) + "(" + String.Join(", ", t.Signature.Parameters.Select(p => GetTypeString(p.Type) + " " + GetEscapedIdentifier(p.Name))) + ")";
                     yield return GetIndentSpace() + "{";
                     IndentSpaceCount += 4;
+                    bool AnyLineGenerated = false;
                     foreach (var Line in GetTemplateExprs(t.Body, 0, true))
                     {
                         yield return GetIndentSpace() + Line;
+                        AnyLineGenerated = true;
+                    }
+                    if (!AnyLineGenerated)
+                    {
+                        yield return GetIndentSpace() + "yield break;";
                     }
                     IndentSpaceCount -= 4;
                     yield return GetIndentSpace() + "}";
@@ -288,7 +294,7 @@ namespace Nivea.Generator
         }
         private String GetEscapedStringLiteral(String s)
         {
-            return "\"" + new String(s.SelectMany(c => c == '\"' ? "\\\"" : c == '\r' ? "\\r" : c == '\n' ? "\\n" : new String(c, 1)).ToArray()) + "\"";
+            return "\"" + new String(s.SelectMany(c => c == '\\' ? "\\\\" : c == '\"' ? "\\\"" : c == '\r' ? "\\r" : c == '\n' ? "\\n" : new String(c, 1)).ToArray()) + "\"";
         }
     }
 }
