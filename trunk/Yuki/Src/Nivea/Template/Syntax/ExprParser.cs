@@ -3,7 +3,7 @@
 //  File:        ExprParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2016.07.14.
+//  Version:     2016.07.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -37,6 +37,7 @@ namespace Nivea.Template.Syntax
                     var IndentSpace = LineText.TakeWhile(c => c == ' ').Count();
                     var HeadRange = Line.Range;
                     var IndentedExprLines = new LinkedList<TextLine>();
+                    var HasEnd = false;
                     while (LineQueue.Count > 0)
                     {
                         var ChildLine = LineQueue.First.Value;
@@ -50,6 +51,7 @@ namespace Nivea.Template.Syntax
                         else if ((SpaceCount == IndentSpace) && (ChildLineText.Substring(SpaceCount) == "$End"))
                         {
                             LineQueue.RemoveFirst();
+                            HasEnd = true;
                             break;
                         }
                         else if (SpaceCount <= IndentSpace)
@@ -66,19 +68,22 @@ namespace Nivea.Template.Syntax
                             throw new InvalidSyntaxException("InvalidIndent", new FileTextRange { Text = nm.Text, Range = ChildLine.Range });
                         }
                     }
-                    while (IndentedExprLines.Count > 0)
+                    if (!HasEnd)
                     {
-                        var ChildLine = IndentedExprLines.Last.Value;
-                        var ChildLineText = ChildLine.Text.Substring(Math.Min(LinesIndentSpace, ChildLine.Text.Length));
-                        var SpaceCount = ChildLineText.TakeWhile(c => c == ' ').Count();
-                        if (TokenParser.IsBlankLine(ChildLineText))
+                        while (IndentedExprLines.Count > 0)
                         {
-                            LineQueue.AddFirst(ChildLine);
-                            IndentedExprLines.RemoveLast();
-                        }
-                        else
-                        {
-                            break;
+                            var ChildLine = IndentedExprLines.Last.Value;
+                            var ChildLineText = ChildLine.Text.Substring(Math.Min(LinesIndentSpace, ChildLine.Text.Length));
+                            var SpaceCount = ChildLineText.TakeWhile(c => c == ' ').Count();
+                            if (TokenParser.IsBlankLine(ChildLineText))
+                            {
+                                LineQueue.AddFirst(ChildLine);
+                                IndentedExprLines.RemoveLast();
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
                     }
                     var Range = new TextRange { Start = HeadRange.Start, End = HeadRange.End };
@@ -241,6 +246,7 @@ namespace Nivea.Template.Syntax
                     LineQueue.RemoveFirst();
                     var LineText = Line.Text.Substring(Math.Min(LinesIndentSpace, Line.Text.Length));
                     var Trimmed = LineText.Trim(' ');
+                    var HasEnd = false;
                     if ((Trimmed == "#") || (Trimmed == "##"))
                     {
                         var IndentSpace = LineText.TakeWhile(c => c == ' ').Count();
@@ -259,6 +265,7 @@ namespace Nivea.Template.Syntax
                             else if ((SpaceCount == IndentSpace) && (ChildLineText.Substring(SpaceCount) == "$End"))
                             {
                                 LineQueue.RemoveFirst();
+                                HasEnd = true;
                                 break;
                             }
                             else if (SpaceCount <= IndentSpace)
@@ -275,19 +282,22 @@ namespace Nivea.Template.Syntax
                                 throw new InvalidSyntaxException("InvalidIndent", new FileTextRange { Text = nm.Text, Range = ChildLine.Range });
                             }
                         }
-                        while (IndentedExprLines.Count > 0)
+                        if (!HasEnd)
                         {
-                            var ChildLine = IndentedExprLines.Last.Value;
-                            var ChildLineText = ChildLine.Text.Substring(Math.Min(LinesIndentSpace, ChildLine.Text.Length));
-                            var SpaceCount = ChildLineText.TakeWhile(c => c == ' ').Count();
-                            if (TokenParser.IsBlankLine(ChildLineText))
+                            while (IndentedExprLines.Count > 0)
                             {
-                                LineQueue.AddFirst(ChildLine);
-                                IndentedExprLines.RemoveLast();
-                            }
-                            else
-                            {
-                                break;
+                                var ChildLine = IndentedExprLines.Last.Value;
+                                var ChildLineText = ChildLine.Text.Substring(Math.Min(LinesIndentSpace, ChildLine.Text.Length));
+                                var SpaceCount = ChildLineText.TakeWhile(c => c == ' ').Count();
+                                if (TokenParser.IsBlankLine(ChildLineText))
+                                {
+                                    LineQueue.AddFirst(ChildLine);
+                                    IndentedExprLines.RemoveLast();
+                                }
+                                else
+                                {
+                                    break;
+                                }
                             }
                         }
 
