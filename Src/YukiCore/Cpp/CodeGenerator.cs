@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2016.07.14.
+//  Version:     2016.07.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -658,7 +658,7 @@ namespace Yuki.ObjectSchema.Cpp.Common
             {
                 return Value.UnifyNewLineToLf().Split('\n').ToList();
             }
-            private static Regex rIdentifierPart = new Regex(@"typename |class |struct |union |enum |[^\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F]+");
+            private static Regex rIdentifierPart = new Regex(@"typename |class |struct |union |enum |[^\u0000-\u002F\u003A-\u0040\u005B-\u005E\u0060\u007B-\u007F]+");
             public static String GetEscapedIdentifier(String Identifier)
             {
                 return rIdentifierPart.Replace(Identifier, m =>
