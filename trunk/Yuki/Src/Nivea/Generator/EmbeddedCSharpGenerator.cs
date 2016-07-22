@@ -12,6 +12,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Firefly;
+using Firefly.Texting.TreeFormat.Semantics;
 using Nivea.Template.Semantics;
 
 namespace Nivea.Generator
@@ -96,7 +98,7 @@ namespace Nivea.Generator
                         IndentSpaceCount += 4;
                     }
                     var t = s.Template;
-                    yield return GetIndentSpace() + "public static IEnumerable<String> " + GetEscapedIdentifier(t.Signature.Name) + "(" + String.Join(", ", t.Signature.Parameters.Select(p => GetTypeString(p.Type) + " " + GetEscapedIdentifier(p.Name))) + ")";
+                    yield return GetIndentSpace() + "public IEnumerable<String> " + GetEscapedIdentifier(t.Signature.Name) + "(" + String.Join(", ", t.Signature.Parameters.Select(p => GetTypeString(p.Type) + " " + GetEscapedIdentifier(p.Name))) + ")";
                     yield return GetIndentSpace() + "{";
                     IndentSpaceCount += 4;
                     bool AnyLineGenerated = false;
@@ -111,6 +113,17 @@ namespace Nivea.Generator
                     }
                     IndentSpaceCount -= 4;
                     yield return GetIndentSpace() + "}";
+                }
+                else if (s.OnConstant)
+                {
+                    if (!IsInTemplatesClass)
+                    {
+                        yield return GetIndentSpace() + "public partial class Templates";
+                        yield return GetIndentSpace() + "{";
+                        IsInTemplatesClass = true;
+                        IndentSpaceCount += 4;
+                    }
+                    yield return GetIndentSpace() + "public readonly " + GetTypeString(s.Constant.Type) + " " + GetEscapedIdentifier(s.Constant.Name) + " = " + GetValueLiteral(s.Constant.Value, s.Constant.Type) + ";";
                 }
                 else
                 {
@@ -295,6 +308,204 @@ namespace Nivea.Generator
         private String GetEscapedStringLiteral(String s)
         {
             return "\"" + new String(s.SelectMany(c => c == '\\' ? "\\\\" : c == '\"' ? "\\\"" : c == '\r' ? "\\r" : c == '\n' ? "\\n" : new String(c, 1)).ToArray()) + "\"";
+        }
+        private String GetValueLiteral(Node Value, TypeSpec Type)
+        {
+            //TODO 支持复杂类型
+            if (Type.OnTypeRef)
+            {
+                if (Type.TypeRef.Version != "") { throw new NotSupportedException(GetTypeString(Type)); }
+                var Name = Type.TypeRef.Name;
+                if (Value.OnEmpty)
+                {
+                    if (Name == "Unit")
+                    {
+                        return "default(Unit)";
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(GetTypeString(Type));
+                    }
+                }
+                else if (Value.OnLeaf)
+                {
+                    if (Name == "Boolean")
+                    {
+                        return NumericStrings.InvariantParseBoolean(Value.Leaf) ? "true" : "false";
+                    }
+                    else if (Name == "String")
+                    {
+                        return GetEscapedStringLiteral(Value.Leaf);
+                    }
+                    else if (Name == "Int")
+                    {
+                        return NumericStrings.InvariantParseInt32(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "Real")
+                    {
+                        return NumericStrings.InvariantParseFloat64(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "Byte")
+                    {
+                        return NumericStrings.InvariantParseUInt8(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "UInt8")
+                    {
+                        return NumericStrings.InvariantParseUInt8(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "UInt16")
+                    {
+                        return NumericStrings.InvariantParseUInt16(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "UInt32")
+                    {
+                        return NumericStrings.InvariantParseUInt32(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "UInt64")
+                    {
+                        return NumericStrings.InvariantParseUInt64(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "Int8")
+                    {
+                        return NumericStrings.InvariantParseInt8(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "Int16")
+                    {
+                        return NumericStrings.InvariantParseInt16(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "Int32")
+                    {
+                        return NumericStrings.InvariantParseInt32(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "Int64")
+                    {
+                        return NumericStrings.InvariantParseInt64(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "Float32")
+                    {
+                        return NumericStrings.InvariantParseFloat32(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "Float64")
+                    {
+                        return NumericStrings.InvariantParseFloat64(Value.Leaf).ToInvariantString();
+                    }
+                    else if (Name == "Type")
+                    {
+                        int InvalidCharIndex;
+                        var ot = Nivea.Template.Syntax.TypeParser.TryParseTypeSpec(Value.Leaf, (o, Start, End) => { }, out InvalidCharIndex);
+                        if (ot.OnHasValue)
+                        {
+                            return "typeof(" + GetTypeString(ot.Value) + ")";
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("InvalidValue: " + GetTypeString(Type) + " " + GetNodeString(Value));
+                        }
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(GetTypeString(Type));
+                    }
+                }
+                else if (Value.OnStem && (Value.Stem.Name == "") && (Value.Stem.Children.Count == 1))
+                {
+                    return GetValueLiteral(Value.Stem.Children.Single(), Type);
+                }
+                else
+                {
+                    throw new NotSupportedException(GetTypeString(Type));
+                }
+            }
+            else if (Type.OnGenericTypeSpec)
+            {
+                if (!Type.GenericTypeSpec.TypeSpec.OnTypeRef) { throw new NotSupportedException(GetTypeString(Type)); }
+                if (Type.GenericTypeSpec.TypeSpec.TypeRef.Version != "") { throw new NotSupportedException(GetTypeString(Type)); }
+                var Name = Type.GenericTypeSpec.TypeSpec.TypeRef.Name;
+                if (!Value.OnStem) { throw new InvalidOperationException("InvalidValue: " + GetTypeString(Type) + " " + GetNodeString(Value)); }
+                if (Name == "Optional")
+                {
+                    if (Type.GenericTypeSpec.ParameterValues.Count != 1) { throw new InvalidOperationException("InvalidType: " + GetTypeString(Type)); }
+                    var ElementType = Type.GenericTypeSpec.ParameterValues.Single();
+                    if (Value.Stem.Children.Count != 1) { throw new InvalidOperationException("InvalidValue: " + GetTypeString(Type) + " " + GetNodeString(Value)); }
+                    var One = Value.Stem.Children.Single();
+                    if (Value.Stem.Name == "NotHasValue")
+                    {
+                        if (!One.OnEmpty) { throw new InvalidOperationException("InvalidValue: " + GetTypeString(Type) + " " + GetNodeString(Value)); }
+                        return GetTypeString(Type) + ".CreateNotHasValue()";
+                    }
+                    else if (Value.Stem.Name == "HasValue")
+                    {
+                        if (Value.Stem.Children.Count != 1) { throw new InvalidOperationException("InvalidValue: " + GetTypeString(Type) + " " + GetNodeString(Value)); }
+                        return GetTypeString(Type) + ".CreateHasValue(" + GetValueLiteral(One, ElementType) + ")";
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("InvalidValue: " + GetTypeString(Type) + " " + GetNodeString(Value));
+                    }
+                }
+                else if ((Name == "List") || (Name == "Set"))
+                {
+                    if (Type.GenericTypeSpec.ParameterValues.Count != 1) { throw new InvalidOperationException("InvalidType: " + GetTypeString(Type)); }
+                    var ElementType = Type.GenericTypeSpec.ParameterValues.Single();
+                    var l = new List<String> { };
+                    foreach (var v in Value.Stem.Children)
+                    {
+                        if (!v.OnStem) { throw new InvalidOperationException("InvalidValue: " + GetTypeString(ElementType) + " " + GetNodeString(v)); }
+                        if (v.Stem.Children.Count != 1) { throw new InvalidOperationException("InvalidValue: " + GetTypeString(ElementType) + " " + GetNodeString(v)); }
+                        l.Add(GetValueLiteral(v.Stem.Children.Single(), ElementType));
+                    }
+                    return "new " + GetTypeString(Type) + " {" + String.Join(", ", l) + "}";
+                }
+                else if (Name == "Map")
+                {
+                    if (Type.GenericTypeSpec.ParameterValues.Count != 2) { throw new InvalidOperationException("InvalidType: " + GetTypeString(Type)); }
+                    var KeyType = Type.GenericTypeSpec.ParameterValues[0];
+                    var ValueType = Type.GenericTypeSpec.ParameterValues[1];
+                    var l = new List<String> { };
+                    foreach (var v in Value.Stem.Children)
+                    {
+                        if (!v.OnStem) { throw new InvalidOperationException("InvalidValue: KeyValuePair<" + GetTypeString(KeyType) + ", " + GetTypeString(ValueType) + "> " + GetNodeString(v)); }
+                        if (v.Stem.Children.Count != 2) { throw new InvalidOperationException("InvalidValue: KeyValuePair<" + GetTypeString(KeyType) + ", " + GetTypeString(ValueType) + "> " + GetNodeString(v)); }
+                        var Keys = v.Stem.Children.Where(c => c.OnStem && c.Stem.Name == "Key").ToList();
+                        var Values = v.Stem.Children.Where(c => c.OnStem && c.Stem.Name == "Value").ToList();
+                        if ((Keys.Count != 1) || (Values.Count != 1)) { throw new InvalidOperationException("InvalidValue: KeyValuePair<" + GetTypeString(KeyType) + ", " + GetTypeString(ValueType) + "> " + GetNodeString(v)); }
+                        var KeyOne = Keys.Single();
+                        var ValueOne = Values.Single();
+                        if ((KeyOne.Stem.Children.Count != 1) || (ValueOne.Stem.Children.Count != 1)) { throw new InvalidOperationException("InvalidValue: KeyValuePair<" + GetTypeString(KeyType) + ", " + GetTypeString(ValueType) + "> " + GetNodeString(v)); }
+                        var KeyStr = GetValueLiteral(KeyOne.Stem.Children.Single(), KeyType);
+                        var ValueStr = GetValueLiteral(ValueOne.Stem.Children.Single(), ValueType);
+                        l.Add("{" + KeyStr + ", " + ValueStr + "}");
+                    }
+                    return "new " + GetTypeString(Type) + " {" + String.Join(", ", l) + "}";
+                }
+                else
+                {
+                    throw new NotSupportedException(GetTypeString(Type));
+                }
+            }
+            else
+            {
+                throw new NotSupportedException(GetTypeString(Type));
+            }
+        }
+        private String GetNodeString(Node v)
+        {
+            if (v.OnEmpty)
+            {
+                return "{}";
+            }
+            else if (v.OnLeaf)
+            {
+                return GetEscapedStringLiteral(v.Leaf);
+            }
+            else if (v.OnStem)
+            {
+                return v.Stem.Name + "{" + String.Join(", ", v.Stem.Children.Select(c => GetNodeString(c))) + "}";
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
         }
     }
 }
