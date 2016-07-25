@@ -41,8 +41,8 @@
     <StartupObject>TcpSendReceive.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Firefly.Core">
-      <HintPath>..\Lib\Firefly\Firefly.Core.dll</HintPath>
+    <Reference Include="Firefly.Lite">
+      <HintPath>..\Lib\Firefly\Firefly.Lite.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\Lib\JsonNet\Newtonsoft.Json.dll</HintPath>
