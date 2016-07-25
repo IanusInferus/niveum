@@ -3,7 +3,7 @@
 //  File:        ExpressionEvaluator.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式求值工具
-//  Version:     2016.05.13.
+//  Version:     2016.07.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -25,11 +25,11 @@ namespace Yuki.Expression
     /// </summary>
     public class VariableProviderCombiner<T> : IVariableProvider<T>
     {
-        private IVariableProvider<T>[] Providers;
+        private List<IVariableProvider<T>> Providers;
 
         public VariableProviderCombiner(params IVariableProvider<T>[] Providers)
         {
-            this.Providers = Providers;
+            this.Providers = Providers.ToList();
         }
 
         public List<FunctionParameterAndReturnTypes> GetOverloads(String Name)

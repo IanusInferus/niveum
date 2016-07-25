@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.07.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -410,7 +410,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 var KeyWhereExpressions = GetKeyWhereExpressions(r, k);
                 return GetTemplate("ByKeyT").Substitute("RecordName", r.Name).Substitute("KeyFriendlyName", KeyFriendlyName).Substitute("KeyParameters", KeyParameters).Substitute("KeyWhereExpressions", KeyWhereExpressions);
             }
-            public List<String> GetMethods(EntityDef[] Records)
+            public List<String> GetMethods(List<EntityDef> Records)
             {
                 var l = new List<String>();
                 foreach (var r in Records)
@@ -442,7 +442,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
             }
             public List<String> GetDbExtensions(Schema Schema)
             {
-                return GetTemplate("DbExtensions").Substitute("Methods", GetMethods(Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToArray()));
+                return GetTemplate("DbExtensions").Substitute("Methods", GetMethods(Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToList()));
             }
 
             public List<String> GetXmlComment(String Description)

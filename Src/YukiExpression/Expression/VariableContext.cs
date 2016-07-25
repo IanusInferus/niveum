@@ -23,7 +23,7 @@ namespace Yuki.Expression
     {
         private class Variable
         {
-            public Yuki.ExpressionSchema.VariableDef[] Parameters;
+            public List<Yuki.ExpressionSchema.VariableDef> Parameters;
             public PrimitiveType ReturnType;
             public Func<VariableContext<T>, Delegate> Create;
         }
@@ -110,9 +110,9 @@ namespace Yuki.Expression
         public void Replace(String Name, FunctionDef Definition)
         {
             Func<IVariableProvider<T>, Delegate> d = vc => ExpressionEvaluator<T>.Compile(new VariableProviderCombiner<T>(vc, new ExpressionRuntimeProvider<T>()), Definition.Body);
-            Replace(Name, Definition.Parameters.ToArray(), Definition.ReturnValue, d);
+            Replace(Name, Definition.Parameters, Definition.ReturnValue, d);
         }
-        public void Replace(String Name, Yuki.ExpressionSchema.VariableDef[] Parameters, PrimitiveType ReturnValue, Func<IVariableProvider<T>, Delegate> Create)
+        public void Replace(String Name, List<Yuki.ExpressionSchema.VariableDef> Parameters, PrimitiveType ReturnValue, Func<IVariableProvider<T>, Delegate> Create)
         {
             var nv = new Variable
             {
@@ -142,7 +142,7 @@ namespace Yuki.Expression
                 Dict.Add(Name, l);
             }
         }
-        public void TryRemove(String Name, PrimitiveType[] ParameterTypes)
+        public void TryRemove(String Name, List<PrimitiveType> ParameterTypes)
         {
             if (Dict.ContainsKey(Name))
             {
@@ -185,7 +185,7 @@ namespace Yuki.Expression
                         if (v.Parameters.Select(p => p.Type).SequenceEqual(ParameterTypes))
                         {
                             var vc = new VariableContext<T>();
-                            for (int k = 0; k < v.Parameters.Length; k += 1)
+                            for (int k = 0; k < v.Parameters.Count; k += 1)
                             {
                                 var p = v.Parameters[k];
                                 var pp = Parameters[k];

@@ -3,7 +3,7 @@
 //  File:        TypeBinder.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 类型绑定器
-//  Version:     2016.05.13.
+//  Version:     2016.07.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -31,11 +31,11 @@ namespace Yuki.ExpressionSchema
 
     public class VariableTypeProviderCombiner : IVariableTypeProvider
     {
-        private IVariableTypeProvider[] Providers;
+        private List<IVariableTypeProvider> Providers;
 
         public VariableTypeProviderCombiner(params IVariableTypeProvider[] Providers)
         {
-            this.Providers = Providers;
+            this.Providers = Providers.ToList();
         }
 
         public List<FunctionParameterAndReturnTypes> GetOverloads(String Name)

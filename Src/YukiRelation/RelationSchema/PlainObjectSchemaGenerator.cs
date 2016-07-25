@@ -3,7 +3,7 @@
 //  File:        PlainObjectSchemaGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 简单对象类型结构生成器
-//  Version:     2016.05.21.
+//  Version:     2016.07.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -70,23 +70,23 @@ namespace Yuki.RelationSchema
                 return new OS.Schema { Types = Types, TypeRefs = TypeRefs, Imports = Schema.Imports, TypePaths = new List<OS.TypePath> { } };
             }
 
-            private OS.TypeDef[] TranslateTypeDef(RS.TypeDef t)
+            private List<OS.TypeDef> TranslateTypeDef(RS.TypeDef t)
             {
                 if (t.OnPrimitive)
                 {
-                    return new OS.TypeDef[] { OS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)) };
+                    return new List<OS.TypeDef> { OS.TypeDef.CreatePrimitive(TranslatePrimitive(t.Primitive)) };
                 }
                 else if (t.OnEntity)
                 {
-                    return new OS.TypeDef[] { OS.TypeDef.CreateRecord(TranslateRecord(t.Entity)) };
+                    return new List<OS.TypeDef> { OS.TypeDef.CreateRecord(TranslateRecord(t.Entity)) };
                 }
                 else if (t.OnEnum)
                 {
-                    return new OS.TypeDef[] { OS.TypeDef.CreateEnum(TranslateEnum(t.Enum)) };
+                    return new List<OS.TypeDef> { OS.TypeDef.CreateEnum(TranslateEnum(t.Enum)) };
                 }
                 else if (t.OnQueryList)
                 {
-                    return new OS.TypeDef[] { };
+                    return new List<OS.TypeDef> { };
                 }
                 else
                 {
