@@ -3,7 +3,7 @@
 //  File:        RelationSchemaLoader.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构加载器
-//  Version:     2016.07.14.
+//  Version:     2016.07.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -266,7 +266,7 @@ namespace Yuki.RelationSchema
 
             var Verbs = new HashSet<String> { "Select", "Lock", "Insert", "Update", "Upsert", "Delete" };
             var Numerals = new HashSet<String> { "Optional", "One", "Many", "All", "Range", "Count" };
-            Func<int, Syntax.TextLine, ISemanticsNodeMaker, Semantics.Node[]> ParseQueryDefAsSemanticsNodes = (IndentLevel, Line, nm) =>
+            Func<int, Syntax.TextLine, ISemanticsNodeMaker, List<Semantics.Node>> ParseQueryDefAsSemanticsNodes = (IndentLevel, Line, nm) =>
             {
                 var l = new List<Semantics.Node>();
                 List<Semantics.Node> cl = null;
@@ -274,7 +274,7 @@ namespace Yuki.RelationSchema
                 Syntax.TextPosition clEnd = default(Syntax.TextPosition);
                 if (Line.Text.Length < IndentLevel * 4)
                 {
-                    return new Semantics.Node[] { };
+                    return new List<Semantics.Node> { };
                 }
                 var LineRange = new Syntax.TextRange { Start = Text.Calc(Line.Range.Start, IndentLevel * 4), End = Line.Range.End };
                 var Range = LineRange;
@@ -345,7 +345,7 @@ namespace Yuki.RelationSchema
                     throw new Syntax.InvalidTokenException("DismatchedRightParentheses", new Syntax.FileTextRange { Text = Text, Range = Range }, "");
                 }
 
-                if (l.Count == 0) { return new Semantics.Node[] { }; }
+                if (l.Count == 0) { return new List<Semantics.Node> { }; }
 
                 if (l.Count != 4 && l.Count != 6 && l.Count != 8)
                 {
@@ -430,7 +430,7 @@ namespace Yuki.RelationSchema
 
                 var OrderByIndexColumns = OrderByIndex.Select(c => c.EndsWith("-") ? MakeStemNode("KeyColumn", MakeStemNode("Name", MakeLeafNode(c.Substring(0, c.Length - 1))), MakeStemNode("IsDescending", MakeLeafNode("True"))) : MakeStemNode("KeyColumn", MakeStemNode("Name", MakeLeafNode(c)), MakeStemNode("IsDescending", MakeLeafNode("False")))).ToList();
 
-                return new Semantics.Node[]
+                return new List<Semantics.Node>
                 {
                     MakeStemNode("QueryDef",
                         MakeStemNode("EntityName", MakeLeafNode(EntityName)),

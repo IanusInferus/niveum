@@ -1,10 +1,16 @@
-﻿2016.07.22
+﻿2016.07.26
+*:
+将部分遗漏的数组改为List。
+
+2016.07.25
+*:
+将Firefly.Core换成Firefly.Lite。
+
+2016.07.22
 Yuki.Core, Nivea:
 修正变量名识别中没有包含下划线的问题。
 Nivea:
 支持简单Constant生成。
-*:
-将Firefly.Core换成Firefly.Lite。
 
 2016.07.19
 Nivea:
