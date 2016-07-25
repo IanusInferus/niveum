@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 表达式计算工具
-//  Version:     2015.04.04.
+//  Version:     2016.07.26.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -525,9 +525,9 @@ namespace ExprCalc
                 }
                 catch (InvalidSyntaxException ex)
                 {
-                    if (ex.Range != null)
+                    if (ex.Range.OnHasValue)
                     {
-                        var r = ex.Range.Range;
+                        var r = ex.Range.Value.Range;
                         if (r.OnHasValue)
                         {
                             var Start = r.Value.Start.CharIndex;

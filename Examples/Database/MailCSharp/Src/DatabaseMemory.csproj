@@ -37,8 +37,8 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Firefly.Core">
-      <HintPath>..\..\..\..\Bin\Firefly.Core.dll</HintPath>
+    <Reference Include="Firefly.Lite">
+      <HintPath>..\..\..\..\Bin\Firefly.Lite.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
