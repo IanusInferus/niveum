@@ -40,8 +40,8 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Firefly.Core">
-      <HintPath>..\..\..\..\Bin\Firefly.Core.dll</HintPath>
+    <Reference Include="Firefly.Lite">
+      <HintPath>..\..\..\..\Bin\Firefly.Lite.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework">
       <HintPath>..\..\..\..\Bin\EntityFramework.dll</HintPath>

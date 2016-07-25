@@ -35,8 +35,8 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Firefly.Core">
-      <HintPath>..\..\..\..\..\Bin\Firefly.Core.dll</HintPath>
+    <Reference Include="Firefly.Lite">
+      <HintPath>..\..\..\..\..\Bin\Firefly.Lite.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\..\..\..\Bin\Newtonsoft.Json.dll</HintPath>
