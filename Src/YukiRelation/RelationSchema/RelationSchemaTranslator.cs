@@ -3,7 +3,7 @@
 //  File:        RelationSchemaTranslator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构转换器
-//  Version:     2016.05.21.
+//  Version:     2016.07.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -104,7 +104,7 @@ namespace Yuki.RelationSchema
                 }
 
                 var scg = ObjectSchema.ObjectSchemaExtensions.GetSchemaClosureGenerator(Schema);
-                var scRef = scg.GetClosure(Schema.TypeRefs, new OS.TypeSpec[] { });
+                var scRef = scg.GetClosure(Schema.TypeRefs, new List<OS.TypeSpec> { });
                 var GenericTypeSpecRefs = scRef.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
                 foreach (var t in GenericTypeSpecRefs)
                 {
@@ -129,7 +129,7 @@ namespace Yuki.RelationSchema
                     }
                 }
 
-                var sc = scg.GetClosure(Schema.Types, new OS.TypeSpec[] { });
+                var sc = scg.GetClosure(Schema.Types, new List<OS.TypeSpec> { });
                 var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
                 foreach (var t in GenericTypeSpecs)
                 {
@@ -518,7 +518,7 @@ namespace Yuki.RelationSchema
             }
             private class DescriptionComposite
             {
-                public Attribute[] Attributes;
+                public List<Attribute> Attributes;
                 public String Description;
             }
             private Regex rAttribute = new Regex(@"\[(?<Name>CN|PK|PKC|UK|UKC|NK|NKC|P|FK|RFK|FNK|RFNK):\s*(?<Params>.*?)\s*\]|\[(?<Name>I|N)\]", RegexOptions.ExplicitCapture);
@@ -532,7 +532,7 @@ namespace Yuki.RelationSchema
                         return "";
                     }
                 );
-                return new DescriptionComposite { Attributes = l.ToArray(), Description = d };
+                return new DescriptionComposite { Attributes = l, Description = d };
             }
 
             private class KeyMap
