@@ -641,28 +641,10 @@ namespace Nivea.Template.Syntax
                                     throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(f), f);
                                 }
 
-                                Action<TFSemantics.Node> MarkAll = null;
-                                MarkAll = n =>
-                                {
-                                    Mark(n, n);
-                                    if (n.OnStem)
-                                    {
-                                        foreach (var Child in n.Stem.Children)
-                                        {
-                                            MarkAll(Child);
-                                        }
-                                    }
-                                };
-
-                                foreach (var v in Content)
-                                {
-                                    MarkAll(v);
-                                }
-
                                 var Value = nm.MakeStemNode("", Content, Content);
-                                Mark(Value.Stem, Content);
-                                Mark(Value, Content);
-                                var cv = new ConstantValue { Name = Name, Type = Type, Value = Value };
+                                var Body = ExprParser.ParseConstantBody(Value, Type, nm, Positions);
+
+                                var cv = new ConstantValue { Name = Name, Type = Type, Value = Body };
                                 Mark(cv, f);
 
                                 var s = SectionDef.CreateConstant(cv);

@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 词法解析器
-//  Version:     2016.05.31.
+//  Version:     2016.08.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -955,7 +955,7 @@ namespace Nivea.Template.Syntax
         {
             return rFloatLiteral.IsMatch(s);
         }
-        public static Optional<Int64> ParseInt64Literal(String s)
+        public static Optional<Int64> TryParseInt64Literal(String s)
         {
             checked
             {
@@ -1046,7 +1046,7 @@ namespace Nivea.Template.Syntax
                 return Optional<Int64>.Empty;
             }
         }
-        public static Optional<UInt64> ParseUInt64Literal(String s)
+        public static Optional<UInt64> TryParseUInt64Literal(String s)
         {
             checked
             {
