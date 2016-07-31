@@ -3,7 +3,7 @@
 //  File:        ExprTransformer.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式转换器
-//  Version:     2016.06.24.
+//  Version:     2016.08.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -149,11 +149,11 @@ namespace Nivea.Template.Syntax
                     var Transformed = Stem.Nodes.Select(n => Transform(n, Text, NodePositions, Positions)).ToList();
                     Mark(Transformed, Node, NodePositions, Positions);
                     Ambiguous.Add(Mark(Expr.CreateSequence(Transformed), Node, NodePositions, Positions));
-                    var lle = Mark(new ListLiteralExpr { Type = Optional<TypeSpec>.Empty, Parameters = Transformed }, Node, NodePositions, Positions);
+                    var lle = Mark(new ListLiteralExpr { Type = Optional<TypeSpec>.Empty, Elements = Transformed }, Node, NodePositions, Positions);
                     Ambiguous.Add(Mark(Expr.CreateListLiteral(lle), Node, NodePositions, Positions));
                     if (Transformed.Count >= 1)
                     {
-                        var tle = Mark(new TupleLiteralExpr { Type = Optional<TypeSpec>.Empty, Parameters = Transformed }, Node, NodePositions, Positions);
+                        var tle = Mark(new TupleLiteralExpr { Type = Optional<TypeSpec>.Empty, Elements = Transformed }, Node, NodePositions, Positions);
                         Ambiguous.Add(Mark(Expr.CreateTupleLiteral(tle), Node, NodePositions, Positions));
                     }
                     var Nodes = Stem.Nodes;
@@ -651,12 +651,12 @@ namespace Nivea.Template.Syntax
                     {
                         if (t.OnTuple)
                         {
-                            var tle = MarkRange(new TupleLiteralExpr { Type = t, Parameters = Transformed }, Range, Positions);
+                            var tle = MarkRange(new TupleLiteralExpr { Type = t, Elements = Transformed }, Range, Positions);
                             return MarkRange(Expr.CreateTupleLiteral(tle), Range, Positions);
                         }
                     }
                     {
-                        var lle = MarkRange(new ListLiteralExpr { Type = t, Parameters = Transformed }, Range, Positions);
+                        var lle = MarkRange(new ListLiteralExpr { Type = t, Elements = Transformed }, Range, Positions);
                         Ambiguous.Add(MarkRange(Expr.CreateListLiteral(lle), Range, Positions));
                         var v = MarkRange(Expr.CreateVariableRef(tvmc.Variable), Range, Positions);
                         var fce = MarkRange(new FunctionCallExpr { Func = v, Parameters = Transformed }, Range, Positions);
@@ -989,11 +989,11 @@ namespace Nivea.Template.Syntax
 
                     var Transformed = Stem.Nodes.Select(n => TransformPattern(n, Text, NodePositions, Positions)).ToList();
                     Mark(Transformed, Node, NodePositions, Positions);
-                    var lle = Mark(new ListLiteralPattern { Type = Optional<TypeSpec>.Empty, Parameters = Transformed }, Node, NodePositions, Positions);
+                    var lle = Mark(new ListLiteralPattern { Type = Optional<TypeSpec>.Empty, Elements = Transformed }, Node, NodePositions, Positions);
                     Ambiguous.Add(Mark(MatchPattern.CreateListLiteral(lle), Node, NodePositions, Positions));
                     if (Transformed.Count >= 1)
                     {
-                        var tle = Mark(new TupleLiteralPattern { Type = Optional<TypeSpec>.Empty, Parameters = Transformed }, Node, NodePositions, Positions);
+                        var tle = Mark(new TupleLiteralPattern { Type = Optional<TypeSpec>.Empty, Elements = Transformed }, Node, NodePositions, Positions);
                         Ambiguous.Add(Mark(MatchPattern.CreateTupleLiteral(tle), Node, NodePositions, Positions));
                     }
                     var Nodes = Stem.Nodes;
@@ -1163,12 +1163,12 @@ namespace Nivea.Template.Syntax
                     {
                         if (t.OnTuple)
                         {
-                            var tle = MarkRange(new TupleLiteralPattern { Type = t, Parameters = Transformed }, Range, Positions);
+                            var tle = MarkRange(new TupleLiteralPattern { Type = t, Elements = Transformed }, Range, Positions);
                             return MarkRange(MatchPattern.CreateTupleLiteral(tle), Range, Positions);
                         }
                     }
                     {
-                        var lle = MarkRange(new ListLiteralPattern { Type = t, Parameters = Transformed }, Range, Positions);
+                        var lle = MarkRange(new ListLiteralPattern { Type = t, Elements = Transformed }, Range, Positions);
                         Ambiguous.Add(MarkRange(MatchPattern.CreateListLiteral(lle), Range, Positions));
                         var v = MarkRange(Expr.CreateVariableRef(tvmc.Variable), Range, Positions);
                         var TransformedExpr = Nodes.Select(n => Transform(n, Text, NodePositions, Positions)).ToList();
