@@ -3,7 +3,7 @@
 //  File:        ExprParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2016.07.19.
+//  Version:     2016.08.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,14 +14,372 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.Texting.TreeFormat;
-using Firefly.Texting.TreeFormat.Semantics;
 using Firefly.Texting.TreeFormat.Syntax;
 using Nivea.Template.Semantics;
+using TFSemantics = Firefly.Texting.TreeFormat.Semantics;
 
 namespace Nivea.Template.Syntax
 {
     public static class ExprParser
     {
+        public static Expr ParseConstantBody(TFSemantics.Node Value, TypeSpec Type, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
+        {
+            Action<Object, Object> Mark = (SemanticsObj, SyntaxObj) =>
+            {
+                if (Positions.ContainsKey(SyntaxObj))
+                {
+                    Positions.Add(SemanticsObj, Positions[SyntaxObj]);
+                }
+                var Range = nm.GetRange(SyntaxObj);
+                if (Range.OnHasValue)
+                {
+                    Positions.Add(SemanticsObj, Range.Value);
+                }
+            };
+
+            //TODO 支持复杂类型
+            if (Type.OnTypeRef)
+            {
+                if (Type.TypeRef.Version != "") { throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type); }
+                var Name = Type.TypeRef.Name;
+                if (!(Value.OnStem && (Value.Stem.Children.Count == 1))) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                var One = Value.Stem.Children.Single();
+                if (One.OnEmpty)
+                {
+                    if (Name == "Unit")
+                    {
+                        var e = Expr.CreateDefault();
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else
+                    {
+                        throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type);
+                    }
+                }
+                else if (One.OnLeaf)
+                {
+                    if (Name == "Boolean")
+                    {
+                        if (One.Leaf == "False")
+                        {
+                            var pe = new PrimitiveLiteralExpr { Type = Type, Value = "False" };
+                            Mark(pe, Value);
+                            var e = Expr.CreatePrimitiveLiteral(pe);
+                            Mark(e, Value);
+                            return e;
+                        }
+                        else if (One.Leaf == "True")
+                        {
+                            var pe = new PrimitiveLiteralExpr { Type = Type, Value = "True" };
+                            Mark(pe, Value);
+                            var e = Expr.CreatePrimitiveLiteral(pe);
+                            Mark(e, Value);
+                            return e;
+                        }
+                        else
+                        {
+                            throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value);
+                        }
+                    }
+                    else if (Name == "String")
+                    {
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "Int")
+                    {
+                        if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "Real")
+                    {
+                        if (!TokenParser.IsFloatLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "Byte")
+                    {
+                        if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var i = TokenParser.TryParseUInt64Literal(One.Leaf);
+                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if ((i.Value < Byte.MinValue) || (i.Value > Byte.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "UInt8")
+                    {
+                        if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var i = TokenParser.TryParseUInt64Literal(One.Leaf);
+                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if ((i.Value < Byte.MinValue) || (i.Value > Byte.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "UInt16")
+                    {
+                        if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var i = TokenParser.TryParseUInt64Literal(One.Leaf);
+                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if ((i.Value < UInt16.MinValue) || (i.Value > UInt16.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "UInt32")
+                    {
+                        if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var i = TokenParser.TryParseUInt64Literal(One.Leaf);
+                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if ((i.Value < UInt32.MinValue) || (i.Value > UInt32.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "UInt64")
+                    {
+                        if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var i = TokenParser.TryParseUInt64Literal(One.Leaf);
+                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "Int8")
+                    {
+                        if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var i = TokenParser.TryParseInt64Literal(One.Leaf);
+                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if ((i.Value < SByte.MinValue) || (i.Value > SByte.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "Int16")
+                    {
+                        if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var i = TokenParser.TryParseInt64Literal(One.Leaf);
+                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if ((i.Value < Int16.MinValue) || (i.Value > Int16.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "Int32")
+                    {
+                        if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var i = TokenParser.TryParseInt64Literal(One.Leaf);
+                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if ((i.Value < Int32.MinValue) || (i.Value > Int32.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "Int64")
+                    {
+                        if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var i = TokenParser.TryParseInt64Literal(One.Leaf);
+                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "Float32")
+                    {
+                        if (!TokenParser.IsFloatLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var i = TokenParser.TryParseFloat64Literal(One.Leaf);
+                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if ((i.Value < Single.MinValue) || (i.Value > Single.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "Float64")
+                    {
+                        if (!TokenParser.IsFloatLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                        var i = TokenParser.TryParseFloat64Literal(One.Leaf);
+                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
+                        Mark(pe, Value);
+                        var e = Expr.CreatePrimitiveLiteral(pe);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (Name == "Type")
+                    {
+                        int InvalidCharIndex;
+                        var ot = TypeParser.TryParseTypeSpec(One.Leaf, (o, Start, End) =>
+                        {
+                            var Range = nm.GetRange(One);
+                            if (Range.OnHasValue)
+                            {
+                                if ((Range.Value.Start.Row == Range.Value.End.Row) && (nm.Text.GetTextInLine(Range.Value) == One.Leaf))
+                                {
+                                    Positions.Add(o, new TextRange { Start = nm.Text.Calc(Range.Value.Start, Start), End = nm.Text.Calc(Range.Value.Start, End) });
+                                }
+                                else
+                                {
+                                    Positions.Add(o, Range.Value);
+                                }
+                            }
+                        }, out InvalidCharIndex);
+                        if (ot.OnHasValue)
+                        {
+                            var e = Expr.CreateTypeLiteral(ot.Value);
+                            Mark(e, Value);
+                            return e;
+                        }
+                        else
+                        {
+                            var FileRange = nm.GetFileRange(One);
+                            if (FileRange.OnHasValue && FileRange.Value.Range.OnHasValue)
+                            {
+                                var Range = FileRange.Value.Range.Value;
+                                if ((Range.Start.Row == Range.End.Row) && (nm.Text.GetTextInLine(Range) == One.Leaf))
+                                {
+                                    FileRange = new FileTextRange { Text = nm.Text, Range = new TextRange { Start = nm.Text.Calc(Range.Start, InvalidCharIndex), End = nm.Text.Calc(Range.Start, InvalidCharIndex + 1) } };
+                                }
+                            }
+                            throw new InvalidTokenException("InvalidChar", FileRange, One.Leaf.Substring(InvalidCharIndex, 1));
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type);
+                    }
+                }
+                else
+                {
+                    throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type);
+                }
+            }
+            else if (Type.OnGenericTypeSpec)
+            {
+                if (!Type.GenericTypeSpec.TypeSpec.OnTypeRef) { throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type); }
+                if (Type.GenericTypeSpec.TypeSpec.TypeRef.Version != "") { throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type); }
+                var Name = Type.GenericTypeSpec.TypeSpec.TypeRef.Name;
+                if (!Value.OnStem) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                if (Name == "Optional")
+                {
+                    if (Type.GenericTypeSpec.ParameterValues.Count != 1) { throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type); }
+                    var ElementType = Type.GenericTypeSpec.ParameterValues.Single();
+                    if (Value.Stem.Children.Count != 1) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
+                    var One = Value.Stem.Children.Single();
+                    if (One.Stem.Name == "NotHasValue")
+                    {
+                        if (!One.OnStem || One.Stem.Children.Count != 1 || !One.Stem.Children.Single().OnEmpty) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(One), One); }
+                        var tule = new TaggedUnionLiteralExpr { Type = Type, Alternative = "NotHasValue", Expr = Optional<Expr>.Empty };
+                        Mark(tule, Value);
+                        var e = Expr.CreateTaggedUnionLiteral(tule);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else if (One.Stem.Name == "HasValue")
+                    {
+                        var ve = ParseConstantBody(One, ElementType, nm, Positions);
+                        var tule = new TaggedUnionLiteralExpr { Type = Type, Alternative = "HasValue", Expr = ve };
+                        Mark(tule, Value);
+                        var e = Expr.CreateTaggedUnionLiteral(tule);
+                        Mark(e, Value);
+                        return e;
+                    }
+                    else
+                    {
+                        throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value);
+                    }
+                }
+                else if ((Name == "List") || (Name == "Set"))
+                {
+                    if (Type.GenericTypeSpec.ParameterValues.Count != 1) { throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type); }
+                    var ElementType = Type.GenericTypeSpec.ParameterValues.Single();
+                    var l = new List<Expr> { };
+                    foreach (var v in Value.Stem.Children)
+                    {
+                        if (!v.OnStem) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(v), v); }
+                        l.Add(ParseConstantBody(v, ElementType, nm, Positions));
+                    }
+                    Mark(l, Value);
+                    var lle = new ListLiteralExpr { Type = Type, Elements = l };
+                    Mark(lle, Value);
+                    var e = Expr.CreateListLiteral(lle);
+                    Mark(e, Value);
+                    return e;
+                }
+                else if (Name == "Map")
+                {
+                    if (Type.GenericTypeSpec.ParameterValues.Count != 2) { throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type); }
+                    var KeyType = Type.GenericTypeSpec.ParameterValues[0];
+                    var ValueType = Type.GenericTypeSpec.ParameterValues[1];
+                    var l = new List<Expr> { };
+                    foreach (var v in Value.Stem.Children)
+                    {
+                        if (!v.OnStem) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(v), v); }
+                        if (v.Stem.Children.Count != 2) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(v), v); }
+                        var Keys = v.Stem.Children.Where(c => c.OnStem && c.Stem.Name == "Key").ToList();
+                        var Values = v.Stem.Children.Where(c => c.OnStem && c.Stem.Name == "Value").ToList();
+                        if ((Keys.Count != 1) || (Values.Count != 1)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(v), v); }
+                        var KeyExpr = ParseConstantBody(Keys.Single(), KeyType, nm, Positions);
+                        var ValueExpr = ParseConstantBody(Values.Single(), ValueType, nm, Positions);
+                        var tt = TypeSpec.CreateTuple(Type.GenericTypeSpec.ParameterValues);
+                        Mark(tt, Type);
+                        var Elements = new List<Expr> { KeyExpr, ValueExpr };
+                        Mark(Elements, v);
+                        var tle = new TupleLiteralExpr { Type = tt, Elements = Elements };
+                        Mark(tle, v);
+                        var ve = Expr.CreateTupleLiteral(tle);
+                        Mark(ve, v);
+                        l.Add(ve);
+                    }
+                    Mark(l, Value);
+                    var lle = new ListLiteralExpr { Type = Type, Elements = l };
+                    Mark(lle, Value);
+                    var e = Expr.CreateListLiteral(lle);
+                    Mark(e, Value);
+                    return e;
+                }
+                else
+                {
+                    throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value);
+                }
+            }
+            else
+            {
+                throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type);
+            }
+        }
+
         public static List<TemplateExpr> ParseTemplateBody(List<TextLine> Lines, int LinesIndentSpace, Regex InlineExpressionRegex, Regex InlineIdentifierRegex, bool EnableEmbeddedExpr, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
         {
             var Body = new List<TemplateExpr>();
