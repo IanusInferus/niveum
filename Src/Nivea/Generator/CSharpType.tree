@@ -1,0 +1,290 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        CSharpType.tree
+      Location:    Nivea <Tree>
+      Description: C#类型代码生成
+      Version:     2016.08.02.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Nivea.Generator.CSharpType
+
+#Import
+    System
+    System.Collections.Generic
+    Nivea.Template.Semantics
+
+#Template SingleLineXmlComment Description:String
+    /// <summary>${Description}</summary>
+
+#Template MultiLineXmlComment Description:List<String>
+    /// <summary>
+    /// ${Description}
+    /// </summary>
+
+#Template Primitive Name:String PlatformName:String
+    using [[${Name}]] = ${PlatformName};
+
+#Template Primitive_Unit
+    [Record]
+    public struct Unit {}
+    public class RecordAttribute : Attribute {}
+    public class AliasAttribute : Attribute {}
+    public class TaggedUnionAttribute : Attribute {}
+    public class TagAttribute : Attribute {}
+    public class TupleAttribute : Attribute {}
+
+#Template Primitive_Optional
+    public enum OptionalTag
+    {
+        NotHasValue = 0,
+        HasValue = 1
+    }
+    [TaggedUnion]
+    public struct Optional<T>
+    {
+        [Tag] public OptionalTag _Tag;
+
+        public Unit NotHasValue;
+        public T HasValue;
+
+        public static Optional<T> CreateNotHasValue() { return new Optional<T> { _Tag = OptionalTag.NotHasValue, NotHasValue = new Unit() }; }
+        public static Optional<T> CreateHasValue(T Value) { return new Optional<T> { _Tag = OptionalTag.HasValue, HasValue = Value }; }
+
+        public Boolean OnNotHasValue { get { return _Tag == OptionalTag.NotHasValue; } }
+        public Boolean OnHasValue { get { return _Tag == OptionalTag.HasValue; } }
+
+        public static Optional<T> Empty { get { return CreateNotHasValue(); } }
+        public static implicit operator Optional<T>(T v)
+        {
+            if (v == null)
+            {
+                return CreateNotHasValue();
+            }
+            else
+            {
+                return CreateHasValue(v);
+            }
+        }
+        public static explicit operator T(Optional<T> v)
+        {
+            if (v.OnNotHasValue)
+            {
+                throw new InvalidOperationException();
+            }
+            return v.HasValue;
+        }
+        public static Boolean operator ==(Optional<T> Left, Optional<T> Right)
+        {
+            return Equals(Left, Right);
+        }
+        public static Boolean operator !=(Optional<T> Left, Optional<T> Right)
+        {
+            return !Equals(Left, Right);
+        }
+        public static Boolean operator ==(Optional<T>? Left, Optional<T>? Right)
+        {
+            return Equals(Left, Right);
+        }
+        public static Boolean operator !=(Optional<T>? Left, Optional<T>? Right)
+        {
+            return !Equals(Left, Right);
+        }
+        public override Boolean Equals(Object obj)
+        {
+            if (obj == null) { return Equals(this, null); }
+            if (obj.GetType() != typeof(Optional<T>)) { return false; }
+            var o = (Optional<T>)(obj);
+            return Equals(this, o);
+        }
+        public override Int32 GetHashCode()
+        {
+            if (OnNotHasValue) { return 0; }
+            return HasValue.GetHashCode();
+        }
+
+        private static Boolean Equals(Optional<T> Left, Optional<T> Right)
+        {
+            if (Left.OnNotHasValue && Right.OnNotHasValue)
+            {
+                return true;
+            }
+            if (Left.OnNotHasValue || Right.OnNotHasValue)
+            {
+                return false;
+            }
+            return Left.HasValue.Equals(Right.HasValue);
+        }
+        private static Boolean Equals(Optional<T>? Left, Optional<T>? Right)
+        {
+            if ((!Left.HasValue || Left.Value.OnNotHasValue) && (!Right.HasValue || Right.Value.OnNotHasValue))
+            {
+                return true;
+            }
+            if (!Left.HasValue || Left.Value.OnNotHasValue || !Right.HasValue || Right.Value.OnNotHasValue)
+            {
+                return false;
+            }
+            return Equals(Left.Value, Right.Value);
+        }
+
+        public T Value
+        {
+            get
+            {
+                if (OnHasValue)
+                {
+                    return HasValue;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        public T ValueOrDefault(T Default)
+        {
+            if (OnHasValue)
+            {
+                return HasValue;
+            }
+            else
+            {
+                return Default;
+            }
+        }
+
+        public override String ToString()
+        {
+            if (OnHasValue)
+            {
+                return HasValue.ToString();
+            }
+            else
+            {
+                return "-";
+            }
+        }
+    }
+
+#Template Alias Name:String Type:TypeSpec Description:String
+    ${GetXmlComment(Description)}
+    [Alias]
+    public sealed class [[${Name}]]
+    {
+        public [[${GetTypeString(Type)}]] Value;
+
+        public static implicit operator [[${Name}]]([[${GetTypeString(Type)}]] o)
+        {
+            return new [[${Name}]] {Value = o};
+        }
+        public static implicit operator [[${GetTypeString(Type)}]]([[${Name}]] c)
+        {
+            return c.Value;
+        }
+    }
+
+#Template Record Name:String Fields:List<VariableDef> Description:String
+    ${GetXmlComment(Description)}
+    [Record]
+    public sealed class [[${Name}]]
+    {
+        $$
+            foreach (var f in Fields)
+            {
+                ##
+                    ${GetXmlComment(f.Description)}
+                    public [[${GetTypeString(f.Type)}]] [[${f.Name}]];
+            }
+    }
+
+#Template TaggedUnion Name:String Alternatives:List<VariableDef> Description:String
+    public enum [[${Name}Tag]]
+    {
+        $$
+            var k = 0;
+            foreach (var a in Alternatives)
+            {
+                if (k == Alternatives.Count - 1)
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        [[${a.Name}]] = ${k}
+                }
+                else
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        [[${a.Name}]] = ${k},
+                }
+                k += 1;
+            }
+    }
+    ${GetXmlComment(Description)}
+    [TaggedUnion]
+    public sealed class [[${Name}]]
+    {
+        [Tag] public [[${Name}Tag]] _Tag;
+
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    ${GetXmlComment(a.Description)}
+                    public [[${GetTypeString(a.Type)}]] [[${a.Name}]];
+            }
+
+        $$
+            foreach (var a in Alternatives)
+            {
+                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        public static [[${Name}]] [[Create${a.Name}]]() { return new [[${Name}]] { _Tag = [[${Name}Tag.${a.Name}]], [[${a.Name}]] = default(Unit) }; }
+                }
+                else
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        public static [[${Name}]] [[Create${a.Name}]]([[${GetTypeString(a.Type)}]] Value) { return new [[${Name}]] { _Tag = [[${Name}Tag.${a.Name}]], [[${a.Name}]] = Value }; }
+                }
+            }
+
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    ${GetXmlComment(a.Description)}
+                    public Boolean [[On${a.Name}]] { get { return _Tag == [[${Name}Tag.${a.Name}]]; } }
+            }
+    }
+
+#Template Enum Name:String UnderlyingType:TypeSpec Literals:List<LiteralDef> Description:String
+    ${GetXmlComment(Description)}
+    public enum [[${Name}]] : ${GetEnumTypeString(UnderlyingType)}
+    {
+        $$
+            var k = 0;
+            foreach (var ltl in Literals)
+            {
+                if (k == Literals.Count - 1)
+                {
+                    ##
+                        ${GetXmlComment(ltl.Description)}
+                        [[${ltl.Name}]] = ${ltl.Value}
+                }
+                else
+                {
+                    ##
+                        ${GetXmlComment(ltl.Description)}
+                        [[${ltl.Name}]] = ${ltl.Value},
+                }
+                k += 1;
+            }
+    }

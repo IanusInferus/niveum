@@ -21,6 +21,8 @@ namespace Nivea.Generator
 {
     public class EmbeddedCSharpGenerator
     {
+        private CSharpType.Templates Templates = new CSharpType.Templates();
+
         public IEnumerable<String> Generate(File File)
         {
             yield return "//==========================================================================";
@@ -68,6 +70,7 @@ namespace Nivea.Generator
             var IsInNamespace = false;
             var IsInTemplatesClass = false;
 
+            var CurrentNamespace = "";
             var NamespaceGenerated = new HashSet<String> { };
 
             foreach (var s in File.Sections)
@@ -91,9 +94,13 @@ namespace Nivea.Generator
                     yield return GetIndentSpace() + "{";
                     IsInNamespace = true;
                     IndentSpaceCount += 4;
-                    if (!NamespaceGenerated.Contains(Namespace))
+                    CurrentNamespace = Namespace;
+                }
+                else if (s.OnTemplate)
+                {
+                    if (!NamespaceGenerated.Contains(CurrentNamespace))
                     {
-                        NamespaceGenerated.Add(Namespace);
+                        NamespaceGenerated.Add(CurrentNamespace);
                         yield return GetIndentSpace() + "partial class Templates";
                         yield return GetIndentSpace() + "{";
                         yield return GetIndentSpace() + "    private IEnumerable<String> Begin()";
@@ -154,9 +161,6 @@ namespace Nivea.Generator
                         yield return GetIndentSpace() + "    }";
                         yield return GetIndentSpace() + "}";
                     }
-                }
-                else if (s.OnTemplate)
-                {
                     if (!IsInTemplatesClass)
                     {
                         yield return GetIndentSpace() + "partial class Templates";
@@ -192,6 +196,69 @@ namespace Nivea.Generator
                     }
                     yield return GetIndentSpace() + "public readonly " + GetTypeString(s.Constant.Type) + " " + GetEscapedIdentifier(s.Constant.Name) + " = " + GetValueLiteral(s.Constant.Value, s.Constant.Type) + ";";
                 }
+                else if (s.OnType)
+                {
+                    if (IsInTemplatesClass)
+                    {
+                        IsInTemplatesClass = false;
+                        IndentSpaceCount -= 4;
+                        yield return GetIndentSpace() + "}";
+                    }
+                    var t = s.Type;
+                    if (t.OnPrimitive)
+                    {
+                        if (t.Primitive.Name == "Unit")
+                        {
+                            foreach (var Line in Templates.Primitive_Unit())
+                            {
+                                yield return GetIndentSpace() + Line;
+                            }
+                        }
+                        else if (t.Primitive.Name == "Optional")
+                        {
+                            foreach (var Line in Templates.Primitive_Optional())
+                            {
+                                yield return GetIndentSpace() + Line;
+                            }
+                        }
+                    }
+                    else if (t.OnAlias)
+                    {
+                        var a = t.Alias;
+                        foreach (var Line in Templates.Alias(a.Name, a.Type, a.Description))
+                        {
+                            yield return GetIndentSpace() + Line;
+                        }
+                    }
+                    else if (t.OnRecord)
+                    {
+                        var r = t.Record;
+                        foreach (var Line in Templates.Record(r.Name, r.Fields, r.Description))
+                        {
+                            yield return GetIndentSpace() + Line;
+                        }
+                    }
+                    else if (t.OnTaggedUnion)
+                    {
+                        var tu = t.TaggedUnion;
+                        foreach (var Line in Templates.TaggedUnion(tu.Name, tu.Alternatives, tu.Description))
+                        {
+                            yield return GetIndentSpace() + Line;
+                        }
+                    }
+                    else if (t.OnEnum)
+                    {
+                        var e = t.Enum;
+                        foreach (var Line in Templates.Enum(e.Name, e.UnderlyingType, e.Literals, e.Description))
+                        {
+                            yield return GetIndentSpace() + Line;
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
                 else
                 {
                     //TODO
@@ -208,6 +275,7 @@ namespace Nivea.Generator
                 IsInNamespace = false;
                 IndentSpaceCount -= 4;
                 yield return GetIndentSpace() + "}";
+                CurrentNamespace = "";
             }
             yield return "";
         }
@@ -329,69 +397,13 @@ namespace Nivea.Generator
             }
         }
 
-        private HashSet<String> Keywords = new HashSet<String> { "abstract", "event", "new", "struct", "as", "explicit", "null", "switch", "base", "extern", "object", "this", "bool", "false", "operator", "throw", "break", "finally", "out", "true", "byte", "fixed", "override", "try", "case", "float", "params", "typeof", "catch", "for", "private", "uint", "char", "foreach", "protected", "ulong", "checked", "goto", "public", "unchecked", "class", "if", "readonly", "unsafe", "const", "implicit", "ref", "ushort", "continue", "in", "return", "using", "decimal", "int", "sbyte", "virtual", "default", "interface", "sealed", "volatile", "delegate", "internal", "short", "void", "do", "is", "sizeof", "while", "double", "lock", "stackalloc", "else", "long", "static", "enum", "namespace", "string", "get", "partial", "set", "value", "where", "yield" };
-        private Dictionary<String, String> PrimitiveMappings = new Dictionary<String, String> { { "Unit", "Unit" }, { "Boolean", "System.Boolean" }, { "String", "System.String" }, { "Int", "System.Int32" }, { "Real", "System.Double" }, { "Byte", "System.Byte" }, { "UInt8", "System.Byte" }, { "UInt16", "System.UInt16" }, { "UInt32", "System.UInt32" }, { "UInt64", "System.UInt64" }, { "Int8", "System.SByte" }, { "Int16", "System.Int16" }, { "Int32", "System.Int32" }, { "Int64", "System.Int64" }, { "Float32", "System.Single" }, { "Float64", "System.Double" }, { "Type", "System.Type" }, { "Optional", "Optional" }, { "List", "System.Collections.Generic.List" }, { "Set", "System.Collections.Generic.HashSet" }, { "Map", "System.Collections.Generic.Dictionary" } };
-        private Regex rIdentifierPart = new Regex(@"[^\u0000-\u002F\u003A-\u0040\u005B-\u005E\u0060\u007B-\u007F]+");
         private String GetEscapedIdentifier(String Identifier)
         {
-            return rIdentifierPart.Replace(Identifier, m =>
-            {
-                var IdentifierPart = m.Value;
-                if (Keywords.Contains(IdentifierPart))
-                {
-                    return "@" + IdentifierPart;
-                }
-                else
-                {
-                    return IdentifierPart;
-                }
-            });
+            return Templates.GetEscapedIdentifier(Identifier);
         }
         private String GetTypeString(TypeSpec Type)
         {
-            if (Type.OnTypeRef)
-            {
-                if (PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
-                {
-                    var PlatformName = PrimitiveMappings[Type.TypeRef.Name];
-                    if (PlatformName.StartsWith("System.Collections.Generic."))
-                    {
-                        return new String(PlatformName.Skip("System.Collections.Generic.".Length).ToArray());
-                    }
-                }
-                return Type.TypeFriendlyName();
-            }
-            else if (Type.OnGenericParameterRef)
-            {
-                return Type.GenericParameterRef;
-            }
-            else if (Type.OnTuple)
-            {
-                return Type.TypeFriendlyName();
-            }
-            else if (Type.OnGenericTypeSpec)
-            {
-                if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
-                {
-                    return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
-                }
-                else
-                {
-                    return Type.TypeFriendlyName();
-                }
-            }
-            else if (Type.OnArray)
-            {
-                return GetTypeString(Type.Array) + "[]";
-            }
-            else if (Type.OnMember)
-            {
-                return GetTypeString(Type.Member.Parent) + "." + GetTypeString(Type.Member.Child);
-            }
-            else
-            {
-                throw new InvalidOperationException();
-            }
+            return Templates.GetTypeString(Type);
         }
         private String GetEscapedStringLiteral(String s)
         {
