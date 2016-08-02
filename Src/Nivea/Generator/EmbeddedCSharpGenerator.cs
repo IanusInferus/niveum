@@ -3,7 +3,7 @@
 //  File:        EmbeddedCSharpGenerator.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 嵌入C#代码生成器
-//  Version:     2016.08.01.
+//  Version:     2016.08.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -68,6 +68,8 @@ namespace Nivea.Generator
             var IsInNamespace = false;
             var IsInTemplatesClass = false;
 
+            var NamespaceGenerated = new HashSet<String> { };
+
             foreach (var s in File.Sections)
             {
                 if (s.OnNamespace)
@@ -84,16 +86,80 @@ namespace Nivea.Generator
                         IndentSpaceCount -= 4;
                         yield return GetIndentSpace() + "}";
                     }
-                    yield return GetIndentSpace() + "namespace " + String.Join(".", s.Namespace.Select(Part => GetEscapedIdentifier(Part)));
+                    var Namespace = String.Join(".", s.Namespace.Select(Part => GetEscapedIdentifier(Part)));
+                    yield return GetIndentSpace() + "namespace " + Namespace;
                     yield return GetIndentSpace() + "{";
                     IsInNamespace = true;
                     IndentSpaceCount += 4;
+                    if (!NamespaceGenerated.Contains(Namespace))
+                    {
+                        NamespaceGenerated.Add(Namespace);
+                        yield return GetIndentSpace() + "partial class Templates";
+                        yield return GetIndentSpace() + "{";
+                        yield return GetIndentSpace() + "    private IEnumerable<String> Begin()";
+                        yield return GetIndentSpace() + "    {";
+                        yield return GetIndentSpace() + "        yield return \"\";";
+                        yield return GetIndentSpace() + "    }";
+                        yield return GetIndentSpace() + "    private IEnumerable<String> Combine(IEnumerable<String> Left, String Right)";
+                        yield return GetIndentSpace() + "    {";
+                        yield return GetIndentSpace() + "        foreach (var vLeft in Left)";
+                        yield return GetIndentSpace() + "        {";
+                        yield return GetIndentSpace() + "            yield return vLeft + Right;";
+                        yield return GetIndentSpace() + "        }";
+                        yield return GetIndentSpace() + "    }";
+                        yield return GetIndentSpace() + "    private IEnumerable<String> Combine(IEnumerable<String> Left, Object Right)";
+                        yield return GetIndentSpace() + "    {";
+                        yield return GetIndentSpace() + "        foreach (var vLeft in Left)";
+                        yield return GetIndentSpace() + "        {";
+                        yield return GetIndentSpace() + "            yield return vLeft + Convert.ToString(Right, System.Globalization.CultureInfo.InvariantCulture);";
+                        yield return GetIndentSpace() + "        }";
+                        yield return GetIndentSpace() + "    }";
+                        yield return GetIndentSpace() + "    private IEnumerable<String> Combine(IEnumerable<String> Left, IEnumerable<String> Right)";
+                        yield return GetIndentSpace() + "    {";
+                        yield return GetIndentSpace() + "        foreach (var vLeft in Left)";
+                        yield return GetIndentSpace() + "        {";
+                        yield return GetIndentSpace() + "            foreach (var vRight in Right)";
+                        yield return GetIndentSpace() + "            {";
+                        yield return GetIndentSpace() + "                yield return vLeft + vRight;";
+                        yield return GetIndentSpace() + "            }";
+                        yield return GetIndentSpace() + "        }";
+                        yield return GetIndentSpace() + "    }";
+                        yield return GetIndentSpace() + "    private IEnumerable<String> Combine(IEnumerable<String> Left, IEnumerable<Object> Right)";
+                        yield return GetIndentSpace() + "    {";
+                        yield return GetIndentSpace() + "        foreach (var vLeft in Left)";
+                        yield return GetIndentSpace() + "        {";
+                        yield return GetIndentSpace() + "            foreach (var vRight in Right)";
+                        yield return GetIndentSpace() + "            {";
+                        yield return GetIndentSpace() + "                yield return vLeft + Convert.ToString(vRight, System.Globalization.CultureInfo.InvariantCulture);";
+                        yield return GetIndentSpace() + "            }";
+                        yield return GetIndentSpace() + "        }";
+                        yield return GetIndentSpace() + "    }";
+                        yield return GetIndentSpace() + "    private IEnumerable<String> GetEscapedIdentifier(Object Identifier)";
+                        yield return GetIndentSpace() + "    {";
+                        yield return GetIndentSpace() + "        yield return GetEscapedIdentifier(Convert.ToString(Identifier, System.Globalization.CultureInfo.InvariantCulture));";
+                        yield return GetIndentSpace() + "    }";
+                        yield return GetIndentSpace() + "    private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> Identifiers)";
+                        yield return GetIndentSpace() + "    {";
+                        yield return GetIndentSpace() + "        foreach (var v in Identifiers)";
+                        yield return GetIndentSpace() + "        {";
+                        yield return GetIndentSpace() + "            yield return GetEscapedIdentifier(v);";
+                        yield return GetIndentSpace() + "        }";
+                        yield return GetIndentSpace() + "    }";
+                        yield return GetIndentSpace() + "    private IEnumerable<String> GetEscapedIdentifier(IEnumerable<Object> Identifiers)";
+                        yield return GetIndentSpace() + "    {";
+                        yield return GetIndentSpace() + "        foreach (var v in Identifiers)";
+                        yield return GetIndentSpace() + "        {";
+                        yield return GetIndentSpace() + "            yield return GetEscapedIdentifier(Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture));";
+                        yield return GetIndentSpace() + "        }";
+                        yield return GetIndentSpace() + "    }";
+                        yield return GetIndentSpace() + "}";
+                    }
                 }
                 else if (s.OnTemplate)
                 {
                     if (!IsInTemplatesClass)
                     {
-                        yield return GetIndentSpace() + "public partial class Templates";
+                        yield return GetIndentSpace() + "partial class Templates";
                         yield return GetIndentSpace() + "{";
                         IsInTemplatesClass = true;
                         IndentSpaceCount += 4;
@@ -103,7 +169,7 @@ namespace Nivea.Generator
                     yield return GetIndentSpace() + "{";
                     IndentSpaceCount += 4;
                     bool AnyLineGenerated = false;
-                    foreach (var Line in GetTemplateExprs(t.Body, 0, true))
+                    foreach (var Line in GetTemplateExprs(t.Body, 0))
                     {
                         yield return GetIndentSpace() + Line;
                         AnyLineGenerated = true;
@@ -119,7 +185,7 @@ namespace Nivea.Generator
                 {
                     if (!IsInTemplatesClass)
                     {
-                        yield return GetIndentSpace() + "public partial class Templates";
+                        yield return GetIndentSpace() + "partial class Templates";
                         yield return GetIndentSpace() + "{";
                         IsInTemplatesClass = true;
                         IndentSpaceCount += 4;
@@ -146,14 +212,24 @@ namespace Nivea.Generator
             yield return "";
         }
 
-        private IEnumerable<String> GetTemplateExprs(List<TemplateExpr> Exprs, int IndentSpaceCount, bool Yield)
+        private IEnumerable<String> GetTemplateExprs(List<TemplateExpr> Exprs, int IndentSpaceCount)
         {
             foreach (var te in Exprs)
             {
                 if (te.OnLine)
                 {
                     var Line = te.Line;
-                    yield return (Yield ? "yield return " : "") + (IndentSpaceCount == 0 ? "" : "\"" + new String(' ', IndentSpaceCount) + "\" + ") + String.Join(" + ", GetTemplateSpans(Line)) + ";";
+                    if (Line.All(s => s.OnLiteral))
+                    {
+                        yield return "yield return " + (IndentSpaceCount == 0 ? "" : "\"" + new String(' ', IndentSpaceCount) + "\" + ") + String.Join(" + ", GetTemplateSpans(Line)) + ";";
+                    }
+                    else
+                    {
+                        yield return "foreach (var _Line in " + GetCombines(GetTemplateSpans(Line)) + ")";
+                        yield return "{";
+                        yield return "    yield return " + (IndentSpaceCount == 0 ? "" : "\"" + new String(' ', IndentSpaceCount) + "\" + ") + "_Line;";
+                        yield return "}";
+                    }
                 }
                 else if (te.OnIndentedExpr)
                 {
@@ -173,18 +249,10 @@ namespace Nivea.Generator
                             else if (Embedded.OnIndentedExpr)
                             {
                                 var ie = Embedded.IndentedExpr;
-                                if (ie.Expr.OnTemplate)
-                                {
-                                    var t = ie.Expr.Template;
-                                    foreach (var Line in GetTemplateExprs(t, IndentSpaceCount + e.IndentSpace, false))
-                                    {
-                                        yield return new String(' ', ie.IndentSpace) + Line;
-                                    }
-                                }
-                                else if (ie.Expr.OnYieldTemplate)
+                                if (ie.Expr.OnYieldTemplate)
                                 {
                                     var t = ie.Expr.YieldTemplate;
-                                    foreach (var Line in GetTemplateExprs(t, IndentSpaceCount + e.IndentSpace, true))
+                                    foreach (var Line in GetTemplateExprs(t, IndentSpaceCount + e.IndentSpace))
                                     {
                                         yield return new String(' ', ie.IndentSpace) + Line;
                                     }
@@ -199,7 +267,19 @@ namespace Nivea.Generator
                 }
             }
         }
-
+        private String GetCombines(IEnumerable<String> Parts)
+        {
+            var l = new LinkedList<String>();
+            l.AddLast("Begin()");
+            foreach (var Part in Parts)
+            {
+                l.AddFirst("Combine(");
+                l.AddLast(", ");
+                l.AddLast(Part);
+                l.AddLast(")");
+            }
+            return String.Join("", l);
+        }
         private IEnumerable<String> GetTemplateSpans(List<TemplateSpan> Spans)
         {
             if (Spans.Count == 0) { yield return "\"\""; }
@@ -211,7 +291,14 @@ namespace Nivea.Generator
                 }
                 else if (s.OnIdentifier)
                 {
-                    yield return "GetEscapedIdentifier(" + String.Join(" + ", GetTemplateSpans(s.Identifier)) + ")";
+                    if (s.Identifier.All(i => i.OnLiteral) || (s.Identifier.Count == 1))
+                    {
+                        yield return "GetEscapedIdentifier(" + String.Join(" + ", GetTemplateSpans(s.Identifier)) + ")";
+                    }
+                    else
+                    {
+                        yield return "GetEscapedIdentifier(" + GetCombines(GetTemplateSpans(s.Identifier)) + ")";
+                    }
                 }
                 else if (s.OnExpr)
                 {

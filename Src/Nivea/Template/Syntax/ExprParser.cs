@@ -605,7 +605,7 @@ namespace Nivea.Template.Syntax
                     var LineText = Line.Text.Substring(Math.Min(LinesIndentSpace, Line.Text.Length));
                     var Trimmed = LineText.Trim(' ');
                     var HasEnd = false;
-                    if ((Trimmed == "#") || (Trimmed == "##"))
+                    if (Trimmed == "##")
                     {
                         var IndentSpace = LineText.TakeWhile(c => c == ' ').Count();
                         var HeadRange = Line.Range;
@@ -660,15 +660,7 @@ namespace Nivea.Template.Syntax
                         }
 
                         var Children = ParseTemplateBody(IndentedExprLines.ToList(), LinesIndentSpace + IndentSpace + 4, InlineExpressionRegex, InlineIdentifierRegex, EnableEmbeddedExpr, nm, Positions);
-                        Expr te;
-                        if (Trimmed == "#")
-                        {
-                            te = Expr.CreateTemplate(Children);
-                        }
-                        else
-                        {
-                            te = Expr.CreateYieldTemplate(Children);
-                        }
+                        var te = Expr.CreateYieldTemplate(Children);
                         var ChildrenRange = new TextRange { Start = HeadRange.Start, End = HeadRange.End };
                         if (IndentedExprLines.Count > 0)
                         {

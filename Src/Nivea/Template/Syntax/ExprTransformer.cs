@@ -126,10 +126,6 @@ namespace Nivea.Template.Syntax
                 var e = Mark(VariableRef.CreateName(Node.Operator), Node, NodePositions, Positions);
                 return Mark(Expr.CreateVariableRef(e), Node, NodePositions, Positions);
             }
-            else if (Node.OnTemplate)
-            {
-                return Mark(Expr.CreateTemplate(Node.Template), Node, NodePositions, Positions);
-            }
             else if (Node.OnYieldTemplate)
             {
                 return Mark(Expr.CreateYieldTemplate(Node.YieldTemplate), Node, NodePositions, Positions);
