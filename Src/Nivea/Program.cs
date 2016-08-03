@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 模板语言运行时
-//  Version:     2016.07.14.
+//  Version:     2016.08.03.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,6 +19,7 @@ using Firefly.Texting.TreeFormat;
 using Nivea.Template.Syntax;
 using Nivea.Template.Semantics;
 using Nivea.Generator;
+using File = System.IO.File;
 
 namespace Nivea.CUI
 {
@@ -184,12 +185,22 @@ namespace Nivea.CUI
                 var RelativePath = FileNameHandling.GetRelativePath(p.Key, FileNameHandling.GetAbsolutePath(InputDirectory, System.Environment.CurrentDirectory));
                 var FileName = FileNameHandling.GetFileName(p.Key);
                 var ecsg = new EmbeddedCSharpGenerator();
-                var Content = String.Join("\r\n", ecsg.Generate(p.Value.File));
+                var Content = String.Join("\r\n", ecsg.Generate(p.Value.File).Select(Line => Line.TrimEnd(' ')));
                 var OutputPath = FileNameHandling.GetPath(FileNameHandling.GetPath(OutputDirectory, FileNameHandling.GetFileDirectory(RelativePath)), FileNameHandling.GetMainFileName(FileName) + ".cs");
                 var OutputDir = FileNameHandling.GetFileDirectory(OutputPath);
                 if (!Directory.Exists(OutputDir)) { Directory.CreateDirectory(OutputDir); }
-                Txt.WriteFile(OutputPath, Content);
+                WriteToFileIfChanged(OutputPath, Content);
             }
+        }
+
+        public static void WriteToFileIfChanged(String Path, String Content)
+        {
+            if (File.Exists(Path))
+            {
+                var OriginalContent = File.ReadAllText(Path);
+                if (OriginalContent == Content) { return; }
+            }
+            File.WriteAllText(Path, Content);
         }
     }
 }
