@@ -4,10 +4,12 @@
       File:        Semantics.tree
       Location:    Yuki.Expression <Tree>
       Description: 语义结构
-      Version:     2013.03.27.
+      Version:     2016.08.03.
       Copyright(C) F.R.C.
 
     ==========================================================================
+
+#Namespace Yuki.ExpressionSchema
 
 #Record Schema                                      表达式结构
     Modules             List<ModuleDecl>            模块声明
