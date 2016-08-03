@@ -4,10 +4,12 @@
       File:        Syntax.tree
       Location:    Yuki.Expression <Tree>
       Description: 语法结构
-      Version:     2013.03.11.
+      Version:     2016.08.03.
       Copyright(C) F.R.C.
 
     ==========================================================================
+
+#Namespace Yuki.ExpressionSchema
 
 #TaggedUnion TokenLiteral                           字面量
     BooleanValue        Boolean                     布尔类型

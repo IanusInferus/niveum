@@ -24,7 +24,7 @@ using Int64 = System.Int64;
 using Float32 = System.Single;
 using Float64 = System.Double;
 
-namespace Nivea.Template.Semantics
+namespace Yuki.ObjectSchema
 {
     public enum TypeDefTag
     {
@@ -37,7 +37,11 @@ namespace Nivea.Template.Semantics
         /// <summary>标签联合</summary>
         TaggedUnion = 3,
         /// <summary>枚举</summary>
-        Enum = 4
+        Enum = 4,
+        /// <summary>客户端命令</summary>
+        ClientCommand = 5,
+        /// <summary>服务端命令</summary>
+        ServerCommand = 6
     }
     /// <summary>类型定义</summary>
     [TaggedUnion]
@@ -55,6 +59,10 @@ namespace Nivea.Template.Semantics
         public TaggedUnionDef TaggedUnion;
         /// <summary>枚举</summary>
         public EnumDef Enum;
+        /// <summary>客户端命令</summary>
+        public ClientCommandDef ClientCommand;
+        /// <summary>服务端命令</summary>
+        public ServerCommandDef ServerCommand;
 
         /// <summary>基元</summary>
         public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, Primitive = Value }; }
@@ -66,6 +74,10 @@ namespace Nivea.Template.Semantics
         public static TypeDef CreateTaggedUnion(TaggedUnionDef Value) { return new TypeDef { _Tag = TypeDefTag.TaggedUnion, TaggedUnion = Value }; }
         /// <summary>枚举</summary>
         public static TypeDef CreateEnum(EnumDef Value) { return new TypeDef { _Tag = TypeDefTag.Enum, Enum = Value }; }
+        /// <summary>客户端命令</summary>
+        public static TypeDef CreateClientCommand(ClientCommandDef Value) { return new TypeDef { _Tag = TypeDefTag.ClientCommand, ClientCommand = Value }; }
+        /// <summary>服务端命令</summary>
+        public static TypeDef CreateServerCommand(ServerCommandDef Value) { return new TypeDef { _Tag = TypeDefTag.ServerCommand, ServerCommand = Value }; }
 
         /// <summary>基元</summary>
         public Boolean OnPrimitive { get { return _Tag == TypeDefTag.Primitive; } }
@@ -77,6 +89,10 @@ namespace Nivea.Template.Semantics
         public Boolean OnTaggedUnion { get { return _Tag == TypeDefTag.TaggedUnion; } }
         /// <summary>枚举</summary>
         public Boolean OnEnum { get { return _Tag == TypeDefTag.Enum; } }
+        /// <summary>客户端命令</summary>
+        public Boolean OnClientCommand { get { return _Tag == TypeDefTag.ClientCommand; } }
+        /// <summary>服务端命令</summary>
+        public Boolean OnServerCommand { get { return _Tag == TypeDefTag.ServerCommand; } }
     }
     /// <summary>类型引用</summary>
     [Record]
@@ -96,11 +112,7 @@ namespace Nivea.Template.Semantics
         /// <summary>元组规格</summary>
         Tuple = 2,
         /// <summary>泛型特化规格</summary>
-        GenericTypeSpec = 3,
-        /// <summary>数组规格</summary>
-        Array = 4,
-        /// <summary>成员类型规格</summary>
-        Member = 5
+        GenericTypeSpec = 3
     }
     /// <summary>类型规格</summary>
     [TaggedUnion]
@@ -116,10 +128,6 @@ namespace Nivea.Template.Semantics
         public List<TypeSpec> Tuple;
         /// <summary>泛型特化规格</summary>
         public GenericTypeSpec GenericTypeSpec;
-        /// <summary>数组规格</summary>
-        public TypeSpec Array;
-        /// <summary>成员类型规格</summary>
-        public TypeMemberSpec Member;
 
         /// <summary>类型引用</summary>
         public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, TypeRef = Value }; }
@@ -129,10 +137,6 @@ namespace Nivea.Template.Semantics
         public static TypeSpec CreateTuple(List<TypeSpec> Value) { return new TypeSpec { _Tag = TypeSpecTag.Tuple, Tuple = Value }; }
         /// <summary>泛型特化规格</summary>
         public static TypeSpec CreateGenericTypeSpec(GenericTypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericTypeSpec, GenericTypeSpec = Value }; }
-        /// <summary>数组规格</summary>
-        public static TypeSpec CreateArray(TypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.Array, Array = Value }; }
-        /// <summary>成员类型规格</summary>
-        public static TypeSpec CreateMember(TypeMemberSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.Member, Member = Value }; }
 
         /// <summary>类型引用</summary>
         public Boolean OnTypeRef { get { return _Tag == TypeSpecTag.TypeRef; } }
@@ -142,10 +146,6 @@ namespace Nivea.Template.Semantics
         public Boolean OnTuple { get { return _Tag == TypeSpecTag.Tuple; } }
         /// <summary>泛型特化规格</summary>
         public Boolean OnGenericTypeSpec { get { return _Tag == TypeSpecTag.GenericTypeSpec; } }
-        /// <summary>数组规格</summary>
-        public Boolean OnArray { get { return _Tag == TypeSpecTag.Array; } }
-        /// <summary>成员类型规格</summary>
-        public Boolean OnMember { get { return _Tag == TypeSpecTag.Member; } }
     }
     /// <summary>基元定义</summary>
     [Record]
@@ -218,6 +218,38 @@ namespace Nivea.Template.Semantics
         /// <summary>描述</summary>
         public String Description;
     }
+    /// <summary>客户端命令</summary>
+    [Record]
+    public sealed class ClientCommandDef
+    {
+        /// <summary>名称</summary>
+        public String Name;
+        /// <summary>版本</summary>
+        public String Version;
+        /// <summary>泛型参数</summary>
+        public List<VariableDef> GenericParameters;
+        /// <summary>传出参数（客户端到服务端）</summary>
+        public List<VariableDef> OutParameters;
+        /// <summary>传入参数（服务端到客户端）</summary>
+        public List<VariableDef> InParameters;
+        /// <summary>描述</summary>
+        public String Description;
+    }
+    /// <summary>服务端命令</summary>
+    [Record]
+    public sealed class ServerCommandDef
+    {
+        /// <summary>名称</summary>
+        public String Name;
+        /// <summary>版本</summary>
+        public String Version;
+        /// <summary>泛型参数</summary>
+        public List<VariableDef> GenericParameters;
+        /// <summary>传出参数（服务端到客户端）</summary>
+        public List<VariableDef> OutParameters;
+        /// <summary>描述</summary>
+        public String Description;
+    }
     /// <summary>泛型特化规格</summary>
     [Record]
     public sealed class GenericTypeSpec
@@ -226,15 +258,6 @@ namespace Nivea.Template.Semantics
         public TypeSpec TypeSpec;
         /// <summary>泛型参数</summary>
         public List<TypeSpec> ParameterValues;
-    }
-    /// <summary>成员类型规格</summary>
-    [Record]
-    public sealed class TypeMemberSpec
-    {
-        /// <summary>父结点</summary>
-        public TypeSpec Parent;
-        /// <summary>子结点</summary>
-        public TypeSpec Child;
     }
     /// <summary>变量定义</summary>
     [Record]
@@ -257,5 +280,27 @@ namespace Nivea.Template.Semantics
         public Int64 Value;
         /// <summary>描述</summary>
         public String Description;
+    }
+    /// <summary>类型路径</summary>
+    [Record]
+    public sealed class TypePath
+    {
+        /// <summary>类型名称</summary>
+        public String Name;
+        /// <summary>文件路径</summary>
+        public String Path;
+    }
+    /// <summary>类型定义集</summary>
+    [Record]
+    public sealed class Schema
+    {
+        /// <summary>类型</summary>
+        public List<TypeDef> Types;
+        /// <summary>类型引用</summary>
+        public List<TypeDef> TypeRefs;
+        /// <summary>命名空间导入</summary>
+        public List<String> Imports;
+        /// <summary>类型路径</summary>
+        public List<TypePath> TypePaths;
     }
 }

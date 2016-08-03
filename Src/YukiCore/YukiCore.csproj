@@ -56,7 +56,6 @@
     <Compile Include="ActionScriptBinary\CodeGenerator.cs" />
     <Compile Include="ActionScriptJson\CodeGenerator.cs" />
     <Compile Include="ActionScript\CodeGenerator.cs" />
-    <Compile Include="Common\Common.cs" />
     <Compile Include="CppBinary\CodeGenerator.cs" />
     <Compile Include="Cpp\CodeGenerator.cs" />
     <Compile Include="CSharpBinary\CodeGenerator.cs" />
@@ -64,6 +63,8 @@
     <Compile Include="CSharpJson\CodeGenerator.cs" />
     <Compile Include="CSharpRetry\CodeGenerator.cs" />
     <Compile Include="CSharp\CodeGenerator.cs" />
+    <Compile Include="Generated\Common\Primitive.cs" />
+    <Compile Include="Generated\ObjectSchema\ObjectSchema.cs" />
     <Compile Include="HaxeJson\CodeGenerator.cs" />
     <Compile Include="Haxe\CodeGenerator.cs" />
     <Compile Include="JavaBinary\CodeGenerator.cs" />
@@ -74,7 +75,6 @@
     <Compile Include="ObjectSchema\ObjectSchemaExtensions.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaLoader.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaTemplate.cs" />
-    <Compile Include="ObjectSchema\ObjectSchema.Designer.cs" />
     <Compile Include="Properties\Resources.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VB\CodeGenerator.cs" />
@@ -93,20 +93,18 @@
     <EmbeddedResource Include="Java\Schema.tree" />
     <EmbeddedResource Include="Haxe\Schema.tree" />
     <EmbeddedResource Include="HaxeJson\Schema.tree" />
-    <None Include="Common\Common.tree" />
     <EmbeddedResource Include="CSharpCompatible\Schema.tree" />
     <EmbeddedResource Include="CSharpRetry\Schema.tree" />
+    <None Include="Common\Primitive.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
     <EmbeddedResource Include="VB\Schema.tree" />
     <EmbeddedResource Include="Xhtml\Schema.tree" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="BeforeBuild">
-    <Exec Command="&quot;Lib\Firefly\MetaSchemaManipulator.exe&quot; /t2cs:&quot;YukiCore\ObjectSchema\ObjectSchema.tree&quot;,&quot;YukiCore\ObjectSchema\ObjectSchema.Designer.cs&quot;,Yuki.ObjectSchema" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' == 'Windows_NT' " />
-    <Exec Command="mono &quot;Lib/Firefly/MetaSchemaManipulator.exe&quot; /t2cs:&quot;YukiCore/ObjectSchema/ObjectSchema.tree&quot;,&quot;YukiCore/ObjectSchema/ObjectSchema.Designer.cs&quot;,Yuki.ObjectSchema" WorkingDirectory="$(SolutionDir)" Condition=" '$(OS)' != 'Windows_NT' " />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
   <Target Name="AfterBuild">
   </Target>
   -->
