@@ -4,7 +4,7 @@
       File:        CSharpType.tree
       Location:    Nivea <Tree>
       Description: C#类型代码生成
-      Version:     2016.08.02.
+      Version:     2016.08.03.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -31,13 +31,13 @@
     using [[${Name}]] = ${PlatformName};
 
 #Template Primitive_Unit
-    [Record]
-    public struct Unit {}
-    public class RecordAttribute : Attribute {}
     public class AliasAttribute : Attribute {}
+    public class RecordAttribute : Attribute {}
     public class TaggedUnionAttribute : Attribute {}
     public class TagAttribute : Attribute {}
     public class TupleAttribute : Attribute {}
+    [Record]
+    public struct Unit {}
 
 #Template Primitive_Optional
     public enum OptionalTag
