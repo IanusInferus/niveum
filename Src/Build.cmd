@@ -6,4 +6,4 @@ copy Doc\Readme.*.txt ..\Bin\
 copy Doc\UpdateLog.*.txt ..\Bin\
 copy Doc\License.*.txt ..\Bin\
 
-pause
+@pause
