@@ -3,7 +3,7 @@
 //  File:        EmbeddedCSharpGenerator.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 嵌入C#代码生成器
-//  Version:     2016.08.03.
+//  Version:     2016.08.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -222,7 +222,7 @@ namespace Nivea.Generator
                     else if (t.OnAlias)
                     {
                         var a = t.Alias;
-                        foreach (var Line in Templates.Alias(a.Name, a.Type, a.Description))
+                        foreach (var Line in Templates.Alias(a))
                         {
                             yield return GetIndentSpace() + Line;
                         }
@@ -230,7 +230,7 @@ namespace Nivea.Generator
                     else if (t.OnRecord)
                     {
                         var r = t.Record;
-                        foreach (var Line in Templates.Record(r.Name, r.Fields, r.Description))
+                        foreach (var Line in Templates.Record(r))
                         {
                             yield return GetIndentSpace() + Line;
                         }
@@ -238,7 +238,7 @@ namespace Nivea.Generator
                     else if (t.OnTaggedUnion)
                     {
                         var tu = t.TaggedUnion;
-                        foreach (var Line in Templates.TaggedUnion(tu.Name, tu.Alternatives, tu.Description))
+                        foreach (var Line in Templates.TaggedUnion(tu))
                         {
                             yield return GetIndentSpace() + Line;
                         }
@@ -246,7 +246,7 @@ namespace Nivea.Generator
                     else if (t.OnEnum)
                     {
                         var e = t.Enum;
-                        foreach (var Line in Templates.Enum(e.Name, e.UnderlyingType, e.Literals, e.Description))
+                        foreach (var Line in Templates.Enum(e))
                         {
                             yield return GetIndentSpace() + Line;
                         }
@@ -398,13 +398,13 @@ namespace Nivea.Generator
         {
             return Templates.GetEscapedIdentifier(Identifier);
         }
+        private String GetEscapedStringLiteral(String s)
+        {
+            return Templates.GetEscapedStringLiteral(s);
+        }
         private String GetTypeString(TypeSpec Type)
         {
             return Templates.GetTypeString(Type);
-        }
-        private String GetEscapedStringLiteral(String s)
-        {
-            return "\"" + new String(s.SelectMany(c => c == '\\' ? "\\\\" : c == '\"' ? "\\\"" : c == '\r' ? "\\r" : c == '\n' ? "\\n" : new String(c, 1)).ToArray()) + "\"";
         }
         private String GetValueLiteral(Expr Value, TypeSpec Type)
         {

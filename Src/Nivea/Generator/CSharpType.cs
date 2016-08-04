@@ -1,4 +1,14 @@
-﻿using System;
+﻿//==========================================================================
+//
+//  File:        CSharpType.cs
+//  Location:    Nivea <Visual C#>
+//  Description: C#类型代码生成
+//  Version:     2016.08.05.
+//  Copyright(C) F.R.C.
+//
+//==========================================================================
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -9,7 +19,8 @@ namespace Nivea.Generator.CSharpType
     internal partial class Templates
     {
         private HashSet<String> Keywords = new HashSet<String> { "abstract", "event", "new", "struct", "as", "explicit", "null", "switch", "base", "extern", "object", "this", "bool", "false", "operator", "throw", "break", "finally", "out", "true", "byte", "fixed", "override", "try", "case", "float", "params", "typeof", "catch", "for", "private", "uint", "char", "foreach", "protected", "ulong", "checked", "goto", "public", "unchecked", "class", "if", "readonly", "unsafe", "const", "implicit", "ref", "ushort", "continue", "in", "return", "using", "decimal", "int", "sbyte", "virtual", "default", "interface", "sealed", "volatile", "delegate", "internal", "short", "void", "do", "is", "sizeof", "while", "double", "lock", "stackalloc", "else", "long", "static", "enum", "namespace", "string", "get", "partial", "set", "value", "where", "yield" };
-        private Dictionary<String, String> PrimitiveMappings = new Dictionary<String, String> { { "Unit", "Nivea.Unit" }, { "Boolean", "System.Boolean" }, { "String", "System.String" }, { "Int", "System.Int32" }, { "Real", "System.Double" }, { "Byte", "System.Byte" }, { "UInt8", "System.Byte" }, { "UInt16", "System.UInt16" }, { "UInt32", "System.UInt32" }, { "UInt64", "System.UInt64" }, { "Int8", "System.SByte" }, { "Int16", "System.Int16" }, { "Int32", "System.Int32" }, { "Int64", "System.Int64" }, { "Float32", "System.Single" }, { "Float64", "System.Double" }, { "Type", "System.Type" }, { "Optional", "Nivea.Optional" }, { "List", "System.Collections.Generic.List" }, { "Set", "System.Collections.Generic.HashSet" }, { "Map", "System.Collections.Generic.Dictionary" } };
+        private Dictionary<String, String> PrimitiveMapping = new Dictionary<String, String> { { "Unit", "Nivea.Unit" }, { "Boolean", "System.Boolean" }, { "String", "System.String" }, { "Int", "System.Int32" }, { "Real", "System.Double" }, { "Byte", "System.Byte" }, { "UInt8", "System.Byte" }, { "UInt16", "System.UInt16" }, { "UInt32", "System.UInt32" }, { "UInt64", "System.UInt64" }, { "Int8", "System.SByte" }, { "Int16", "System.Int16" }, { "Int32", "System.Int32" }, { "Int64", "System.Int64" }, { "Float32", "System.Single" }, { "Float64", "System.Double" }, { "Type", "System.Type" }, { "Optional", "Nivea.Optional" }, { "List", "System.Collections.Generic.List" }, { "Set", "System.Collections.Generic.HashSet" }, { "Map", "System.Collections.Generic.Dictionary" } };
+        private Dictionary<String, String> PrimitiveMappingEnum = new Dictionary<String, String> { { "Int", "int" }, { "Byte", "byte" }, { "UInt8", "byte" }, { "UInt16", "ushort" }, { "UInt32", "uint" }, { "UInt64", "ulong" }, { "Int8", "sbyte" }, { "Int16", "short" }, { "Int32", "int" }, { "Int64", "long" } };
         private Regex rIdentifierPart = new Regex(@"[^\u0000-\u002F\u003A-\u0040\u005B-\u005E\u0060\u007B-\u007F]+");
         public String GetEscapedIdentifier(String Identifier)
         {
@@ -26,23 +37,27 @@ namespace Nivea.Generator.CSharpType
                 }
             });
         }
+        public String GetEscapedStringLiteral(String s)
+        {
+            return "\"" + new String(s.SelectMany(c => c == '\\' ? "\\\\" : c == '\"' ? "\\\"" : c == '\r' ? "\\r" : c == '\n' ? "\\n" : new String(c, 1)).ToArray()) + "\"";
+        }
         public String GetTypeString(TypeSpec Type)
         {
             if (Type.OnTypeRef)
             {
-                if (PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
+                if (PrimitiveMapping.ContainsKey(Type.TypeRef.Name))
                 {
-                    var PlatformName = PrimitiveMappings[Type.TypeRef.Name];
+                    var PlatformName = PrimitiveMapping[Type.TypeRef.Name];
                     if (PlatformName.StartsWith("System.Collections.Generic."))
                     {
                         return new String(PlatformName.Skip("System.Collections.Generic.".Length).ToArray());
                     }
                 }
-                return Type.TypeFriendlyName();
+                return GetEscapedIdentifier(Type.TypeFriendlyName());
             }
             else if (Type.OnGenericParameterRef)
             {
-                return Type.GenericParameterRef;
+                return GetEscapedIdentifier(Type.GenericParameterRef);
             }
             else if (Type.OnTuple)
             {
@@ -56,7 +71,7 @@ namespace Nivea.Generator.CSharpType
                 }
                 else
                 {
-                    return Type.TypeFriendlyName();
+                    return GetEscapedIdentifier(Type.TypeFriendlyName());
                 }
             }
             else if (Type.OnArray)
@@ -94,30 +109,21 @@ namespace Nivea.Generator.CSharpType
             {
                 throw new InvalidOperationException();
             }
-            if (!PrimitiveMappings.ContainsKey(Type.TypeRef.Name))
+            if ((Type.TypeRef.Version == "") && PrimitiveMappingEnum.ContainsKey(Type.TypeRef.Name))
             {
-                return GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
+                return PrimitiveMappingEnum[Type.TypeRef.Name];
             }
-            switch (PrimitiveMappings[Type.TypeRef.Name])
+            return GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
+        }
+        public String GetGenericParameters(List<VariableDef> GenericParameters)
+        {
+            if (GenericParameters.Count == 0)
             {
-                case "System.UInt8":
-                    return "byte";
-                case "System.UInt16":
-                    return "ushort";
-                case "System.UInt32":
-                    return "uint";
-                case "System.UInt64":
-                    return "ulong";
-                case "System.Int8":
-                    return "sbyte";
-                case "System.Int16":
-                    return "short";
-                case "System.Int32":
-                    return "int";
-                case "System.Int64":
-                    return "long";
-                default:
-                    return GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
+                return "";
+            }
+            else
+            {
+                return "<" + String.Join(", ", GenericParameters.Select(gp => GetEscapedIdentifier(gp.Name))) + ">";
             }
         }
     }
