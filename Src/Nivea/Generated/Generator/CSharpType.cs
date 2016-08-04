@@ -252,34 +252,36 @@ namespace Nivea.Generator.CSharpType
             yield return "    }";
             yield return "}";
         }
-        public IEnumerable<String> Alias(String Name, TypeSpec Type, String Description)
+        public IEnumerable<String> Alias(AliasDef a)
         {
-            foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
+            var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
+            var Type = GetTypeString(a.Type);
+            foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
             {
                 yield return _Line;
             }
             yield return "[Alias]";
-            foreach (var _Line in Combine(Combine(Begin(), "public sealed class "), GetEscapedIdentifier(Name)))
+            foreach (var _Line in Combine(Combine(Begin(), "public sealed class "), Name))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    public "), GetEscapedIdentifier(GetTypeString(Type))), " Value;"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    public "), Type), " Value;"))
             {
                 yield return _Line;
             }
             yield return "";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    public static implicit operator "), GetEscapedIdentifier(Name)), "("), GetEscapedIdentifier(GetTypeString(Type))), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    public static implicit operator "), Name), "("), Type), " o)"))
             {
                 yield return _Line;
             }
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        return new "), GetEscapedIdentifier(Name)), " {Value = o};"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        return new "), Name), " {Value = o};"))
             {
                 yield return _Line;
             }
             yield return "    }";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    public static implicit operator "), GetEscapedIdentifier(GetTypeString(Type))), "("), GetEscapedIdentifier(Name)), " c)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    public static implicit operator "), Type), "("), Name), " c)"))
             {
                 yield return _Line;
             }
@@ -288,42 +290,45 @@ namespace Nivea.Generator.CSharpType
             yield return "    }";
             yield return "}";
         }
-        public IEnumerable<String> Record(String Name, List<VariableDef> Fields, String Description)
+        public IEnumerable<String> Record(RecordDef r)
         {
-            foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
+            var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+            foreach (var _Line in Combine(Begin(), GetXmlComment(r.Description)))
             {
                 yield return _Line;
             }
             yield return "[Record]";
-            foreach (var _Line in Combine(Combine(Begin(), "public sealed class "), GetEscapedIdentifier(Name)))
+            foreach (var _Line in Combine(Combine(Begin(), "public sealed class "), Name))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var f in Fields)
+            foreach (var f in r.Fields)
             {
                 foreach (var _Line in Combine(Begin(), GetXmlComment(f.Description)))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(GetTypeString(f.Type))), " "), GetEscapedIdentifier(f.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(f.Type)), " "), GetEscapedIdentifier(f.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
             }
             yield return "}";
         }
-        public IEnumerable<String> TaggedUnion(String Name, List<VariableDef> Alternatives, String Description)
+        public IEnumerable<String> TaggedUnion(TaggedUnionDef tu)
         {
-            foreach (var _Line in Combine(Combine(Begin(), "public enum "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Tag"))))
+            var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
+            var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+            foreach (var _Line in Combine(Combine(Begin(), "public enum "), TagName))
             {
                 yield return _Line;
             }
             yield return "{";
             var k = 0;
-            foreach (var a in Alternatives)
+            foreach (var a in tu.Alternatives)
             {
-                if (k == Alternatives.Count - 1)
+                if (k == tu.Alternatives.Count - 1)
                 {
                     foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                     {
@@ -348,34 +353,34 @@ namespace Nivea.Generator.CSharpType
                 k += 1;
             }
             yield return "}";
-            foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
+            foreach (var _Line in Combine(Begin(), GetXmlComment(tu.Description)))
             {
                 yield return _Line;
             }
             yield return "[TaggedUnion]";
-            foreach (var _Line in Combine(Combine(Begin(), "public sealed class "), GetEscapedIdentifier(Name)))
+            foreach (var _Line in Combine(Combine(Begin(), "public sealed class "), Name))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    [Tag] public "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Tag"))), " _Tag;"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    [Tag] public "), TagName), " _Tag;"))
             {
                 yield return _Line;
             }
             yield return "";
-            foreach (var a in Alternatives)
+            foreach (var a in tu.Alternatives)
             {
                 foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(GetTypeString(a.Type))), " "), GetEscapedIdentifier(a.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(a.Type)), " "), GetEscapedIdentifier(a.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
             }
             yield return "";
-            foreach (var a in Alternatives)
+            foreach (var a in tu.Alternatives)
             {
                 if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
                 {
@@ -383,7 +388,7 @@ namespace Nivea.Generator.CSharpType
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(Name)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "() { return new "), GetEscapedIdentifier(Name)), " { _Tag = "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "Tag."), a.Name))), ", "), GetEscapedIdentifier(a.Name)), " = default(Unit) }; }"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), Name), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "() { return new "), Name), " { _Tag = "), TagName), "."), GetEscapedIdentifier(a.Name)), ", "), GetEscapedIdentifier(a.Name)), " = default(Unit) }; }"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -394,58 +399,61 @@ namespace Nivea.Generator.CSharpType
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(Name)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetEscapedIdentifier(GetTypeString(a.Type))), " Value) { return new "), GetEscapedIdentifier(Name)), " { _Tag = "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "Tag."), a.Name))), ", "), GetEscapedIdentifier(a.Name)), " = Value }; }"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), Name), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetTypeString(a.Type)), " Value) { return new "), Name), " { _Tag = "), TagName), "."), GetEscapedIdentifier(a.Name)), ", "), GetEscapedIdentifier(a.Name)), " = Value }; }"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                 }
             }
             yield return "";
-            foreach (var a in Alternatives)
+            foreach (var a in tu.Alternatives)
             {
                 foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public Boolean "), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), " { get { return _Tag == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "Tag."), a.Name))), "; } }"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public Boolean "), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), " { get { return _Tag == "), TagName), "."), GetEscapedIdentifier(a.Name)), "; } }"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
             }
             yield return "}";
         }
-        public IEnumerable<String> Enum(String Name, TypeSpec UnderlyingType, List<LiteralDef> Literals, String Description)
+        public IEnumerable<String> Enum(EnumDef e)
         {
-            foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
+            var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+            var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
+            var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
+            foreach (var _Line in Combine(Begin(), GetXmlComment(e.Description)))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public enum "), GetEscapedIdentifier(Name)), " : "), GetEnumTypeString(UnderlyingType)))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public enum "), Name), " : "), GetEnumTypeString(e.UnderlyingType)))
             {
                 yield return _Line;
             }
             yield return "{";
             var k = 0;
-            foreach (var ltl in Literals)
+            foreach (var l in e.Literals)
             {
-                if (k == Literals.Count - 1)
+                if (k == e.Literals.Count - 1)
                 {
-                    foreach (var _Line in Combine(Begin(), GetXmlComment(ltl.Description)))
+                    foreach (var _Line in Combine(Begin(), GetXmlComment(l.Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), GetEscapedIdentifier(ltl.Name)), " = "), ltl.Value))
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), GetEscapedIdentifier(l.Name)), " = "), l.Value))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                 }
                 else
                 {
-                    foreach (var _Line in Combine(Begin(), GetXmlComment(ltl.Description)))
+                    foreach (var _Line in Combine(Begin(), GetXmlComment(l.Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(ltl.Name)), " = "), ltl.Value), ","))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(l.Name)), " = "), l.Value), ","))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }

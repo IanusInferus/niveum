@@ -26,13 +26,13 @@ using Float64 = System.Double;
 
 namespace Nivea
 {
-    [Record]
-    public struct Unit {}
-    public class RecordAttribute : Attribute {}
     public class AliasAttribute : Attribute {}
+    public class RecordAttribute : Attribute {}
     public class TaggedUnionAttribute : Attribute {}
     public class TagAttribute : Attribute {}
     public class TupleAttribute : Attribute {}
+    [Record]
+    public struct Unit {}
     public enum OptionalTag
     {
         NotHasValue = 0,

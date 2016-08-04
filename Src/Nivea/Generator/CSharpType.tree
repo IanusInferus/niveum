@@ -4,7 +4,7 @@
       File:        CSharpType.tree
       Location:    Nivea <Tree>
       Description: C#类型代码生成
-      Version:     2016.08.03.
+      Version:     2016.08.05.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -172,45 +172,53 @@
         }
     }
 
-#Template Alias Name:String Type:TypeSpec Description:String
-    ${GetXmlComment(Description)}
+#Template Alias a:AliasDef
+    $$
+        var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
+        var Type = GetTypeString(a.Type);
+    ${GetXmlComment(a.Description)}
     [Alias]
-    public sealed class [[${Name}]]
+    public sealed class ${Name}
     {
-        public [[${GetTypeString(Type)}]] Value;
+        public ${Type} Value;
 
-        public static implicit operator [[${Name}]]([[${GetTypeString(Type)}]] o)
+        public static implicit operator ${Name}(${Type} o)
         {
-            return new [[${Name}]] {Value = o};
+            return new ${Name} {Value = o};
         }
-        public static implicit operator [[${GetTypeString(Type)}]]([[${Name}]] c)
+        public static implicit operator ${Type}(${Name} c)
         {
             return c.Value;
         }
     }
 
-#Template Record Name:String Fields:List<VariableDef> Description:String
-    ${GetXmlComment(Description)}
+#Template Record r:RecordDef
+    $$
+        var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+    ${GetXmlComment(r.Description)}
     [Record]
-    public sealed class [[${Name}]]
+    public sealed class ${Name}
     {
         $$
-            foreach (var f in Fields)
+            foreach (var f in r.Fields)
             {
                 ##
                     ${GetXmlComment(f.Description)}
-                    public [[${GetTypeString(f.Type)}]] [[${f.Name}]];
+                    public ${GetTypeString(f.Type)} [[${f.Name}]];
             }
     }
 
-#Template TaggedUnion Name:String Alternatives:List<VariableDef> Description:String
-    public enum [[${Name}Tag]]
+#Template TaggedUnion tu:TaggedUnionDef
+    $$
+        var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
+        var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+    public enum ${TagName}
     {
         $$
             var k = 0;
-            foreach (var a in Alternatives)
+            foreach (var a in tu.Alternatives)
             {
-                if (k == Alternatives.Count - 1)
+                if (k == tu.Alternatives.Count - 1)
                 {
                     ##
                         ${GetXmlComment(a.Description)}
@@ -225,65 +233,69 @@
                 k += 1;
             }
     }
-    ${GetXmlComment(Description)}
+    ${GetXmlComment(tu.Description)}
     [TaggedUnion]
-    public sealed class [[${Name}]]
+    public sealed class ${Name}
     {
-        [Tag] public [[${Name}Tag]] _Tag;
+        [Tag] public ${TagName} _Tag;
 
         $$
-            foreach (var a in Alternatives)
+            foreach (var a in tu.Alternatives)
             {
                 ##
                     ${GetXmlComment(a.Description)}
-                    public [[${GetTypeString(a.Type)}]] [[${a.Name}]];
+                    public ${GetTypeString(a.Type)} [[${a.Name}]];
             }
 
         $$
-            foreach (var a in Alternatives)
+            foreach (var a in tu.Alternatives)
             {
                 if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
                 {
                     ##
                         ${GetXmlComment(a.Description)}
-                        public static [[${Name}]] [[Create${a.Name}]]() { return new [[${Name}]] { _Tag = [[${Name}Tag.${a.Name}]], [[${a.Name}]] = default(Unit) }; }
+                        public static ${Name} [[Create${a.Name}]]() { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[${a.Name}]] = default(Unit) }; }
                 }
                 else
                 {
                     ##
                         ${GetXmlComment(a.Description)}
-                        public static [[${Name}]] [[Create${a.Name}]]([[${GetTypeString(a.Type)}]] Value) { return new [[${Name}]] { _Tag = [[${Name}Tag.${a.Name}]], [[${a.Name}]] = Value }; }
+                        public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type)} Value) { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[${a.Name}]] = Value }; }
                 }
             }
 
         $$
-            foreach (var a in Alternatives)
+            foreach (var a in tu.Alternatives)
             {
                 ##
                     ${GetXmlComment(a.Description)}
-                    public Boolean [[On${a.Name}]] { get { return _Tag == [[${Name}Tag.${a.Name}]]; } }
+                    public Boolean [[On${a.Name}]] { get { return _Tag == ${TagName}.[[${a.Name}]]; } }
             }
     }
 
-#Template Enum Name:String UnderlyingType:TypeSpec Literals:List<LiteralDef> Description:String
-    ${GetXmlComment(Description)}
-    public enum [[${Name}]] : ${GetEnumTypeString(UnderlyingType)}
+#Template Enum e:EnumDef
+    $$
+        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+        var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
+        var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
+    ${GetXmlComment(e.Description)}
+    public enum ${Name} : ${GetEnumTypeString(e.UnderlyingType)}
     {
         $$
             var k = 0;
-            foreach (var ltl in Literals)
+            foreach (var l in e.Literals)
             {
-                if (k == Literals.Count - 1)
+                if (k == e.Literals.Count - 1)
                 {
                     ##
-                        ${GetXmlComment(ltl.Description)}
-                        [[${ltl.Name}]] = ${ltl.Value}
+                        ${GetXmlComment(l.Description)}
+                        [[${l.Name}]] = ${l.Value}
                 }
                 else
                 {
                     ##
-                        ${GetXmlComment(ltl.Description)}
-                        [[${ltl.Name}]] = ${ltl.Value},
+                        ${GetXmlComment(l.Description)}
+                        [[${l.Name}]] = ${l.Value},
                 }
                 k += 1;
             }
