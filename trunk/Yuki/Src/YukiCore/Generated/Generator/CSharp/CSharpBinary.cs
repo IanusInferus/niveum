@@ -1736,7 +1736,6 @@ namespace Yuki.ObjectSchema.CSharpBinary
         {
             var ElementType = o.GenericTypeSpec.ParameterValues.Single();
             var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
-
             var TypeFriendlyName = o.TypeFriendlyName();
             var TypeString = GetTypeString(o);
             var Name = "Optional";
