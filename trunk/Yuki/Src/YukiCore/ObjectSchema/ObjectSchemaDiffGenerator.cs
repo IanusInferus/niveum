@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaDiffGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构差异生成器
-//  Version:     2016.05.13.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -88,15 +88,13 @@ namespace Yuki.ObjectSchema
             {
                 Types = Right.Types.Where(t => !CommonTypes.Contains(t.Name())).ToList(),
                 TypeRefs = Right.TypeRefs.Concat(Right.Types.Where(t => CommonTypes.Contains(t.Name()))).ToList(),
-                Imports = Right.Imports.Except(Left.Imports, StringComparer.OrdinalIgnoreCase).ToList(),
-                TypePaths = Right.TypePaths.Where(tp => !CommonTypes.Contains(tp.Name)).ToList()
+                Imports = Right.Imports.Except(Left.Imports, StringComparer.OrdinalIgnoreCase).ToList()
             };
             var Revert = new Schema
             {
                 Types = Left.Types.Where(t => !CommonTypes.Contains(t.Name())).ToList(),
                 TypeRefs = Left.TypeRefs.Concat(Left.Types.Where(t => CommonTypes.Contains(t.Name()))).ToList(),
-                Imports = Left.Imports.Except(Right.Imports, StringComparer.OrdinalIgnoreCase).ToList(),
-                TypePaths = Right.TypePaths.Where(tp => !CommonTypes.Contains(tp.Name)).ToList()
+                Imports = Left.Imports.Except(Right.Imports, StringComparer.OrdinalIgnoreCase).ToList()
             };
 
             return new ObjectSchemaDiffResult

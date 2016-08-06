@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0代码生成器
-//  Version:     2016.07.14.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -89,7 +89,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                         }
                         if (c.Primitive.Name == "Unit")
                         {
-                            l.Add(GetFile("Unit", GetRecord(new RecordDef { Name = "Unit", Version = "", Fields = new List<VariableDef> { }, Description = "" })));
+                            l.Add(GetFile("Unit", GetRecord(new RecordDef { Name = "Unit", Version = "", Fields = new List<VariableDef> { }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" })));
                         }
                     }
                     else if (c.OnAlias)
@@ -102,7 +102,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                     }
                     else if (c.OnTaggedUnion)
                     {
-                        var tut = new EnumDef { Name = c.TaggedUnion.TypeFriendlyName() + "Tag", Version = "", UnderlyingType = TypeSpec.CreateTypeRef(new TypeRef { Name = "Int", Version = "" }), Literals = c.TaggedUnion.Alternatives.Select((a, i) => new LiteralDef { Name = a.Name, Value = i, Description = a.Description }).ToList(), Description = c.TaggedUnion.Description };
+                        var tut = new EnumDef { Name = c.TaggedUnion.TypeFriendlyName() + "Tag", Version = "", UnderlyingType = TypeSpec.CreateTypeRef(new TypeRef { Name = "Int", Version = "" }), Literals = c.TaggedUnion.Alternatives.Select((a, i) => new LiteralDef { Name = a.Name, Value = i, Attributes = a.Attributes, Description = a.Description }).ToList(), Attributes = c.TaggedUnion.Attributes, Description = c.TaggedUnion.Description };
                         l.Add(GetFile(tut.TypeFriendlyName(), GetEnum(tut)));
                         l.Add(GetFile(c.TaggedUnion.TypeFriendlyName(), GetTaggedUnion(c.TaggedUnion)));
                     }
@@ -113,7 +113,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                     else if (c.OnClientCommand)
                     {
                         var creq = new RecordDef { Name = c.ClientCommand.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.ClientCommand.OutParameters, Description = c.ClientCommand.Description };
-                        var crept = new EnumDef { Name = c.ClientCommand.TypeFriendlyName() + "ReplyTag", Version = "", UnderlyingType = TypeSpec.CreateTypeRef(new TypeRef { Name = "Int", Version = "" }), Literals = c.ClientCommand.InParameters.Select((a, i) => new LiteralDef { Name = a.Name, Value = i, Description = a.Description }).ToList(), Description = c.ClientCommand.Description };
+                        var crept = new EnumDef { Name = c.ClientCommand.TypeFriendlyName() + "ReplyTag", Version = "", UnderlyingType = TypeSpec.CreateTypeRef(new TypeRef { Name = "Int", Version = "" }), Literals = c.ClientCommand.InParameters.Select((a, i) => new LiteralDef { Name = a.Name, Value = i, Attributes = a.Attributes, Description = a.Description }).ToList(), Attributes = c.ClientCommand.Attributes, Description = c.ClientCommand.Description };
                         var crep = new TaggedUnionDef { Name = c.ClientCommand.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.ClientCommand.InParameters, Description = c.ClientCommand.Description };
                         l.Add(GetFile(creq.TypeFriendlyName(), GetRecord(creq)));
                         l.Add(GetFile(crept.TypeFriendlyName(), GetEnum(crept)));
@@ -138,17 +138,17 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                 var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToList();
                 if (GenericOptionalTypes.Count > 0)
                 {
-                    var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Description = "" } }, Description = "" };
-                    var GenericKeyValuePairType = new RecordDef { Name = "KeyValuePair", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "TKey", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" }, new VariableDef { Name = "TValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Fields = new List<VariableDef> { new VariableDef { Name = "Key", Type = TypeSpec.CreateGenericParameterRef("TKey"), Description = "" }, new VariableDef { Name = "Value", Type = TypeSpec.CreateGenericParameterRef("TValue"), Description = "" } }, Description = "" };
+                    var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
+                    var GenericKeyValuePairType = new RecordDef { Name = "KeyValuePair", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "TKey", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "TValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Fields = new List<VariableDef> { new VariableDef { Name = "Key", Type = TypeSpec.CreateGenericParameterRef("TKey"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "Value", Type = TypeSpec.CreateGenericParameterRef("TValue"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
                     foreach (var gts in GenericTypeSpecs)
                     {
                         if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                         {
                             var ElementType = gts.GenericTypeSpec.ParameterValues.Single();
                             var Name = "Opt" + ElementType.TypeFriendlyName();
-                            var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToList();
-                            var tut = new EnumDef { Name = Name + "Tag", Version = "", UnderlyingType = TypeSpec.CreateTypeRef(new TypeRef { Name = "Int", Version = "" }), Literals = Alternatives.Select((a, i) => new LiteralDef { Name = a.Name, Value = i, Description = a.Description }).ToList(), Description = GenericOptionalType.Description };
-                            var tu = new TaggedUnionDef { Name = Name, Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = Alternatives, Description = GenericOptionalType.Description };
+                            var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
+                            var tut = new EnumDef { Name = Name + "Tag", Version = "", UnderlyingType = TypeSpec.CreateTypeRef(new TypeRef { Name = "Int", Version = "" }), Literals = Alternatives.Select((a, i) => new LiteralDef { Name = a.Name, Value = i, Attributes = a.Attributes, Description = a.Description }).ToList(), Attributes = GenericOptionalType.Attributes, Description = GenericOptionalType.Description };
+                            var tu = new TaggedUnionDef { Name = Name, Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = Alternatives, Attributes = GenericOptionalType.Attributes, Description = GenericOptionalType.Description };
                             l.Add(GetFile(tut.TypeFriendlyName(), GetEnum(tut)));
                             l.Add(GetFile(tu.TypeFriendlyName(), GetTaggedUnion(tu)));
                         }
@@ -157,8 +157,8 @@ namespace Yuki.ObjectSchema.ActionScript.Common
                             var KeyType = gts.GenericTypeSpec.ParameterValues[0];
                             var ValueType = gts.GenericTypeSpec.ParameterValues[1];
                             var Name = "KeyValuePairOf" + KeyType.TypeFriendlyName() + "And" + ValueType.TypeFriendlyName();
-                            var Fields = GenericKeyValuePairType.Fields.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef && a.Type.GenericParameterRef == "TKey" ? KeyType : a.Type.OnGenericParameterRef && a.Type.GenericParameterRef == "TValue" ? ValueType : a.Type, Description = a.Description }).ToList();
-                            var r = new RecordDef { Name = Name, Version = "", GenericParameters = new List<VariableDef> { }, Fields = Fields, Description = GenericOptionalType.Description };
+                            var Fields = GenericKeyValuePairType.Fields.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef && a.Type.GenericParameterRef == "TKey" ? KeyType : a.Type.OnGenericParameterRef && a.Type.GenericParameterRef == "TValue" ? ValueType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
+                            var r = new RecordDef { Name = Name, Version = "", GenericParameters = new List<VariableDef> { }, Fields = Fields, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = GenericOptionalType.Description };
                             l.Add(GetFile(r.TypeFriendlyName(), GetRecord(r)));
                         }
                     }
@@ -254,7 +254,7 @@ namespace Yuki.ObjectSchema.ActionScript.Common
             public List<String> GetTuple(String Name, List<TypeSpec> Types)
             {
                 var TupleElements = GetTupleElements(Types);
-                var Fields = Types.Select((tp, i) => new VariableDef { Name = String.Format("Item{0}", i), Type = tp, Description = "" }).ToList();
+                var Fields = Types.Select((tp, i) => new VariableDef { Name = String.Format("Item{0}", i), Type = tp, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }).ToList();
                 return GetTemplate("Tuple").Substitute("Name", Name).Substitute("TupleElements", TupleElements);
             }
             public List<String> GetField(VariableDef f)

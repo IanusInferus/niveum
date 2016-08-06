@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2016.07.14.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,15 +20,15 @@ namespace Yuki.ObjectSchema.CSharpCompatible
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpCompatible(this Schema Schema, String NamespaceName, String ClassName, HashSet<String> AsyncCommands)
+        public static String CompileToCSharpCompatible(this Schema Schema, String NamespaceName, String ClassName)
         {
-            var w = new Writer(Schema, NamespaceName, ClassName, AsyncCommands);
+            var w = new Writer(Schema, NamespaceName, ClassName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
         public static String CompileToCSharpCompatible(this Schema Schema, String ClassName)
         {
-            return CompileToCSharpCompatible(Schema, "", ClassName, new HashSet<String> { });
+            return CompileToCSharpCompatible(Schema, "", ClassName);
         }
 
         public class Writer
@@ -42,7 +42,6 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             private Dictionary<String, TypeDef> VersionedNameToType;
             private String NamespaceName;
             private String ClassName;
-            private HashSet<String> AsyncCommands;
 
             static Writer()
             {
@@ -52,16 +51,15 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
-            public Writer(Schema Schema, String NamespaceName, String ClassName, HashSet<String> AsyncCommands)
+            public Writer(Schema Schema, String NamespaceName, String ClassName)
             {
                 this.Schema = Schema;
                 this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.VersionedNameToType = Schema.GetMap().ToDictionary(t => t.Key, t => t.Value, StringComparer.OrdinalIgnoreCase);
                 this.NamespaceName = NamespaceName;
                 this.ClassName = ClassName;
-                this.AsyncCommands = AsyncCommands;
 
-                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, AsyncCommands, false);
+                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, false);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
@@ -477,11 +475,11 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedName = a.TypeFriendlyName();
                 if (aHead == null)
                 {
-                    FillTranslatorRecordFrom(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new List<VariableDef> { }, l, true);
+                    FillTranslatorRecordFrom(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { }, l, true);
                 }
                 else
                 {
-                    FillTranslatorRecordFrom(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Description = "" } }, l, false);
+                    FillTranslatorRecordFrom(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, l, false);
                 }
             }
             public void FillTranslatorAliasTo(AliasDef a, List<String> l)
@@ -499,11 +497,11 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var VersionedName = a.TypeFriendlyName();
                 if (aHead == null)
                 {
-                    FillTranslatorRecordTo(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new List<VariableDef> { }, l, true);
+                    FillTranslatorRecordTo(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { }, l, true);
                 }
                 else
                 {
-                    FillTranslatorRecordTo(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Description = "" } }, l, false);
+                    FillTranslatorRecordTo(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, l, false);
                 }
             }
             public void FillTranslatorRecordFrom(RecordDef r, List<String> l)
@@ -815,7 +813,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     }
                 }
                 var VersionedName = c.TypeFriendlyName();
-                if (AsyncCommands.Contains(Name))
+                if (c.Attributes.Any(a => a.Key == "Async"))
                 {
                     l.AddRange(GetTemplate("Translator_ClientCommandAsync").Substitute("Name", Name).Substitute("VersionedName", VersionedName));
                 }
@@ -861,8 +859,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             {
                 var nts = ts.Nonversioned();
                 var Name = nts.TypeFriendlyName();
-                var Fields = ts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
-                var HeadFields = nts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
+                var Fields = ts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }).ToList();
+                var HeadFields = nts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }).ToList();
                 var VersionedName = ts.TypeFriendlyName();
                 FillTranslatorRecordFrom(Name, VersionedName, Fields, HeadFields, l, false);
             }
@@ -870,8 +868,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             {
                 var nts = ts.Nonversioned();
                 var Name = nts.TypeFriendlyName();
-                var Fields = ts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
-                var HeadFields = nts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Description = "" }).ToList();
+                var Fields = ts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }).ToList();
+                var HeadFields = nts.Tuple.Select((t, i) => new VariableDef { Name = "Item" + i.ToInvariantString(), Type = t, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }).ToList();
                 var VersionedName = ts.TypeFriendlyName();
                 FillTranslatorRecordTo(Name, VersionedName, Fields, HeadFields, l, false);
             }
@@ -885,13 +883,13 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
                 var Alternatives = new List<VariableDef>
                 {
-                    new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" },
-                    new VariableDef { Name = "HasValue", Type = ElementTypeSpec, Description = "" }
+                    new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                    new VariableDef { Name = "HasValue", Type = ElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
                 };
                 var HeadAlternatives = new List<VariableDef>
                 {
-                    new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" },
-                    new VariableDef { Name = "HasValue", Type = HeadElementTypeSpec, Description = "" }
+                    new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                    new VariableDef { Name = "HasValue", Type = HeadElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
                 };
                 if (!IsExistentType(HeadElementTypeSpec))
                 {
@@ -912,13 +910,13 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
                 var Alternatives = new List<VariableDef>
                 {
-                    new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" },
-                    new VariableDef { Name = "HasValue", Type = ElementTypeSpec, Description = "" }
+                    new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                    new VariableDef { Name = "HasValue", Type = ElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
                 };
                 var HeadAlternatives = new List<VariableDef>
                 {
-                    new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" },
-                    new VariableDef { Name = "HasValue", Type = HeadElementTypeSpec, Description = "" }
+                    new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                    new VariableDef { Name = "HasValue", Type = HeadElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
                 };
                 if (!IsExistentType(HeadElementTypeSpec))
                 {
