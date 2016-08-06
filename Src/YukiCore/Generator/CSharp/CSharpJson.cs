@@ -1,8 +1,8 @@
 ﻿//==========================================================================
 //
-//  File:        CSharpBinary.cs
+//  File:        CSharpJson.cs
 //  Location:    Yuki.Core <Visual C#>
-//  Description: 对象类型结构C#二进制通讯代码生成器
+//  Description: 对象类型结构C# JSON通讯代码生成器
 //  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
@@ -12,30 +12,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Yuki.ObjectSchema.CSharpBinary
+namespace Yuki.ObjectSchema.CSharpJson
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpBinary(this Schema Schema, String NamespaceName, Boolean WithFirefly)
+        public static String CompileToCSharpJson(this Schema Schema, String NamespaceName)
         {
-            var t = new Templates(WithFirefly);
+            var t = new Templates();
             var Lines = t.Main(Schema, NamespaceName).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
-        public static String CompileToCSharpBinary(this Schema Schema)
+        public static String CompileToCSharpJson(this Schema Schema)
         {
-            return CompileToCSharpBinary(Schema, "", true);
+            return CompileToCSharpJson(Schema, "");
         }
     }
 
     public partial class Templates
     {
         private CSharp.Templates Inner = new CSharp.Templates();
-        private Boolean WithFirefly;
-        public Templates(Boolean WithFirefly)
-        {
-            this.WithFirefly = WithFirefly;
-        }
 
         public String GetEscapedIdentifier(String Identifier)
         {
@@ -54,29 +49,29 @@ namespace Yuki.ObjectSchema.CSharpBinary
         {
             return Inner.GetPrimitives(Schema);
         }
-        public List<String> GetBinaryTranslatorSerializers(Schema Schema)
+        public List<String> GetJsonTranslatorSerializers(Schema Schema)
         {
             var l = new List<String>();
 
             var PrimitiveTranslators = new Dictionary<String, Func<IEnumerable<String>>>
             {
-                { "Unit", BinaryTranslator_Primitive_Unit },
-                { "Boolean", BinaryTranslator_Primitive_Boolean },
-                { "String", BinaryTranslator_Primitive_String },
-                { "Int", BinaryTranslator_Primitive_Int },
-                { "Real", BinaryTranslator_Primitive_Real },
-                { "Byte", BinaryTranslator_Primitive_Byte },
-                { "UInt8", BinaryTranslator_Primitive_UInt8 },
-                { "UInt16", BinaryTranslator_Primitive_UInt16 },
-                { "UInt32", BinaryTranslator_Primitive_UInt32 },
-                { "UInt64", BinaryTranslator_Primitive_UInt64 },
-                { "Int8", BinaryTranslator_Primitive_Int8 },
-                { "Int16", BinaryTranslator_Primitive_Int16 },
-                { "Int32", BinaryTranslator_Primitive_Int32 },
-                { "Int64", BinaryTranslator_Primitive_Int64 },
-                { "Float32", BinaryTranslator_Primitive_Float32 },
-                { "Float64", BinaryTranslator_Primitive_Float64 },
-                { "Type", BinaryTranslator_Primitive_Type }
+                { "Unit", JsonTranslator_Primitive_Unit },
+                { "Boolean", JsonTranslator_Primitive_Boolean },
+                { "String", JsonTranslator_Primitive_String },
+                { "Int", JsonTranslator_Primitive_Int },
+                { "Real", JsonTranslator_Primitive_Real },
+                { "Byte", JsonTranslator_Primitive_Byte },
+                { "UInt8", JsonTranslator_Primitive_UInt8 },
+                { "UInt16", JsonTranslator_Primitive_UInt16 },
+                { "UInt32", JsonTranslator_Primitive_UInt32 },
+                { "UInt64", JsonTranslator_Primitive_UInt64 },
+                { "Int8", JsonTranslator_Primitive_Int8 },
+                { "Int16", JsonTranslator_Primitive_Int16 },
+                { "Int32", JsonTranslator_Primitive_Int32 },
+                { "Int64", JsonTranslator_Primitive_Int64 },
+                { "Float32", JsonTranslator_Primitive_Float32 },
+                { "Float64", JsonTranslator_Primitive_Float64 },
+                { "Type", JsonTranslator_Primitive_Type }
             };
 
             foreach (var c in Schema.TypeRefs.Concat(Schema.Types))
@@ -98,27 +93,27 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 }
                 else if (c.OnAlias)
                 {
-                    l.AddRange(BinaryTranslator_Alias(c.Alias));
+                    l.AddRange(JsonTranslator_Alias(c.Alias));
                 }
                 else if (c.OnRecord)
                 {
-                    l.AddRange(BinaryTranslator_Record(c.Record));
+                    l.AddRange(JsonTranslator_Record(c.Record));
                 }
                 else if (c.OnTaggedUnion)
                 {
-                    l.AddRange(BinaryTranslator_TaggedUnion(c.TaggedUnion));
+                    l.AddRange(JsonTranslator_TaggedUnion(c.TaggedUnion));
                 }
                 else if (c.OnEnum)
                 {
-                    l.AddRange(BinaryTranslator_Enum(c.Enum));
+                    l.AddRange(JsonTranslator_Enum(c.Enum));
                 }
                 else if (c.OnClientCommand)
                 {
-                    l.AddRange(BinaryTranslator_ClientCommand(c.ClientCommand));
+                    l.AddRange(JsonTranslator_ClientCommand(c.ClientCommand));
                 }
                 else if (c.OnServerCommand)
                 {
-                    l.AddRange(BinaryTranslator_ServerCommand(c.ServerCommand));
+                    l.AddRange(JsonTranslator_ServerCommand(c.ServerCommand));
                 }
                 else
                 {
@@ -134,7 +129,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
 
             foreach (var t in Tuples)
             {
-                l.AddRange(BinaryTranslator_Tuple(t));
+                l.AddRange(JsonTranslator_Tuple(t));
                 l.Add("");
             }
 
@@ -143,29 +138,29 @@ namespace Yuki.ObjectSchema.CSharpBinary
             if (GenericOptionalTypes.Count > 0)
             {
                 GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
-                l.AddRange(BinaryTranslator_Enum("OptionalTag", "Int", "Int"));
+                l.AddRange(JsonTranslator_Enum("OptionalTag"));
                 l.Add("");
             }
             foreach (var gts in GenericTypeSpecs)
             {
                 if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(BinaryTranslator_Optional(gts, GenericOptionalType));
+                    l.AddRange(JsonTranslator_Optional(gts, GenericOptionalType));
                     l.Add("");
                 }
                 else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(BinaryTranslator_List(gts));
+                    l.AddRange(JsonTranslator_List(gts));
                     l.Add("");
                 }
                 else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(BinaryTranslator_Set(gts));
+                    l.AddRange(JsonTranslator_Set(gts));
                     l.Add("");
                 }
                 else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gts.GenericTypeSpec.ParameterValues.Count == 2)
                 {
-                    l.AddRange(BinaryTranslator_Map(gts));
+                    l.AddRange(JsonTranslator_Map(gts));
                     l.Add("");
                 }
                 else
@@ -203,21 +198,22 @@ namespace Yuki.ObjectSchema.CSharpBinary
             {
                 var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 var Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).Hash();
-                l.AddRange(BinarySerializationServer(Hash, cl, SchemaClosureGenerator));
+                l.AddRange(JsonSerializationServer(Hash, cl, SchemaClosureGenerator));
                 l.Add("");
-                l.AddRange(IBinarySender());
+                l.AddRange(IJsonSender());
                 l.Add("");
-                l.AddRange(BinarySerializationClient(Hash, cl, SchemaClosureGenerator));
+                l.AddRange(JsonSerializationClient(Hash, cl, SchemaClosureGenerator));
                 l.Add("");
             }
 
-            if (!WithFirefly)
+            var ocl = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+            if (ocl.Count > 0)
             {
-                l.AddRange(Streams());
+                l.AddRange(JsonLogAspectWrapper(ocl));
                 l.Add("");
             }
 
-            l.AddRange(BinaryTranslator(Schema));
+            l.AddRange(JsonTranslator(Schema));
             l.Add("");
 
             if (l.Count > 0)
