@@ -3,7 +3,7 @@
 //  File:        CSharp.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2016.08.05.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -12,8 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Firefly;
-using Firefly.TextEncoding;
 
 namespace Yuki.ObjectSchema.CSharp
 {

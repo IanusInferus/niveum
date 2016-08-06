@@ -5,6 +5,8 @@ Yuki.Core, Yuki.Relation:
 重写类型结构加载器。
 *:
 相应修改。
+Yuki.Core:
+增加新版C#二进制通讯代码生成。
 
 2016.08.05
 Nivea:
