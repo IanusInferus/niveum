@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构ActionScript3.0 JSON通讯代码生成器
-//  Version:     2016.05.21.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -118,7 +118,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                     }
                     else if (c.OnAlias)
                     {
-                        l.AddRange(GetJsonTranslatorRecord(new RecordDef { Name = c.Alias.Name, Version = c.Alias.Version, GenericParameters = c.Alias.GenericParameters, Fields = new List<VariableDef> { new VariableDef { Name = "Value", Type = c.Alias.Type, Description = "" } }, Description = "" }));
+                        l.AddRange(GetJsonTranslatorRecord(new RecordDef { Name = c.Alias.Name, Version = c.Alias.Version, GenericParameters = c.Alias.GenericParameters, Fields = new List<VariableDef> { new VariableDef { Name = "Value", Type = c.Alias.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }));
                     }
                     else if (c.OnRecord)
                     {
@@ -154,7 +154,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
 
                 foreach (var t in Tuples)
                 {
-                    l.AddRange(GetJsonTranslatorRecord(new RecordDef { Name = t.TypeFriendlyName(), Version = "", GenericParameters = new List<VariableDef> { }, Fields = t.Tuple.Select((tp, i) => new VariableDef { Name = String.Format("Item{0}", i), Type = tp, Description = "" }).ToList(), Description = "" }));
+                    l.AddRange(GetJsonTranslatorRecord(new RecordDef { Name = t.TypeFriendlyName(), Version = "", GenericParameters = new List<VariableDef> { }, Fields = t.Tuple.Select((tp, i) => new VariableDef { Name = String.Format("Item{0}", i), Type = tp, Description = "" }).ToList(), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }));
                     l.Add("");
                 }
 
@@ -162,7 +162,7 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                 TaggedUnionDef GenericOptionalType = null;
                 if (GenericOptionalTypes.Count > 0)
                 {
-                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Description = "" } }, Description = "" };
+                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
                 }
                 foreach (var gts in GenericTypeSpecs)
                 {
@@ -170,8 +170,8 @@ namespace Yuki.ObjectSchema.ActionScriptJson
                     {
                         var ElementType = gts.GenericTypeSpec.ParameterValues.Single();
                         var Name = "Opt" + ElementType.TypeFriendlyName();
-                        var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToList();
-                        l.AddRange(GetJsonTranslatorTaggedUnion(new TaggedUnionDef { Name = Name, Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = Alternatives, Description = GenericOptionalType.Description }));
+                        var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
+                        l.AddRange(GetJsonTranslatorTaggedUnion(new TaggedUnionDef { Name = Name, Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = Alternatives, Attributes = GenericOptionalType.Attributes, Description = GenericOptionalType.Description }));
                     }
                     else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                     {

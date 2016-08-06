@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2016.07.14.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,9 +23,9 @@ namespace Yuki.ObjectSchema.Xhtml
     }
     public static class CodeGenerator
     {
-        public static List<FileResult> CompileToXhtml(this Schema Schema, String Title, String CopyrightText)
+        public static List<FileResult> CompileToXhtml(this ObjectSchemaLoaderResult oslr, String Title, String CopyrightText)
         {
-            var w = new Common.CodeGenerator.Writer(Schema, Title, CopyrightText);
+            var w = new Common.CodeGenerator.Writer(oslr, Title, CopyrightText);
             var Files = w.GetFiles();
             return Files;
         }
@@ -49,16 +49,16 @@ namespace Yuki.ObjectSchema.Xhtml.Common
                 TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.Xhtml);
             }
 
-            public Writer(Schema Schema, String Title, String CopyrightText)
+            public Writer(ObjectSchemaLoaderResult oslr, String Title, String CopyrightText)
             {
-                this.Schema = Schema;
+                this.Schema = oslr.Schema;
                 this.Title = Title;
                 this.CopyrightText = CopyrightText;
 
                 TypeInfoDict = new Dictionary<String, TypeInfo>(StringComparer.OrdinalIgnoreCase);
 
                 String Root = "";
-                if (Schema.TypePaths.Count > 0)
+                if (oslr.Positions.Count > 0)
                 {
                     Func<String, String, String> GetCommonHead = (a, b) =>
                     {
@@ -73,7 +73,7 @@ namespace Yuki.ObjectSchema.Xhtml.Common
                         }
                         return new String(lc.ToArray());
                     };
-                    Root = Schema.TypePaths.Select(tp => FileNameHandling.GetDirectoryPathWithTailingSeparator(FileNameHandling.GetFileDirectory(tp.Path))).Aggregate((a, b) => GetCommonHead(a, b));
+                    Root = oslr.Positions.Select(p => FileNameHandling.GetDirectoryPathWithTailingSeparator(FileNameHandling.GetFileDirectory(p.Value.Text.Path))).Aggregate((a, b) => GetCommonHead(a, b));
                     if (Root != FileNameHandling.GetDirectoryPathWithTailingSeparator(Root))
                     {
                         Root = FileNameHandling.GetFileDirectory(Root);
@@ -81,25 +81,18 @@ namespace Yuki.ObjectSchema.Xhtml.Common
                 }
 
                 var Map = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value);
-                foreach (var p in Schema.TypePaths)
-                {
-                    var Path = FileNameHandling.GetRelativePath(p.Path, Root);
-                    var PathWithoutExt = FileNameHandling.GetPath(FileNameHandling.GetFileDirectory(Path), FileNameHandling.GetMainFileName(Path));
-                    var DocFilePath = PathWithoutExt.Replace(@"\", @"_").Replace(@"/", @"_").Replace(@".", "_").Replace(@":", @"_").Replace(@"#", @"_") + @".html";
-                    var tli = new TypeInfo { Def = Map[p.Name], FriendlyPath = PathWithoutExt.Replace(@"\", @"/"), DocFilePath = DocFilePath, DocPath = String.Format("{0}#{1}", DocFilePath, p.Name) };
-                    TypeInfoDict.Add(p.Name, tli);
-                }
                 foreach (var t in Schema.Types)
                 {
-                    if (!TypeInfoDict.ContainsKey(t.VersionedName()))
+                    var Name = t.VersionedName();
+                    var Path = "Default.tree";
+                    if (oslr.Positions.ContainsKey(t))
                     {
-                        var p = new TypePath { Name = t.VersionedName(), Path = "Default.tree" };
-                        var Path = FileNameHandling.GetRelativePath(p.Path, Root);
-                        var PathWithoutExt = FileNameHandling.GetPath(FileNameHandling.GetFileDirectory(Path), FileNameHandling.GetMainFileName(Path));
-                        var DocFilePath = PathWithoutExt.Replace(@"\", @"_").Replace(@"/", @"_").Replace(@".", "_").Replace(@":", @"_").Replace(@"#", @"_") + @".html";
-                        var tli = new TypeInfo { Def = Map[p.Name], FriendlyPath = PathWithoutExt.Replace(@"\", @"/"), DocFilePath = DocFilePath, DocPath = String.Format("{0}#{1}", DocFilePath, p.Name) };
-                        TypeInfoDict.Add(p.Name, tli);
+                        Path = FileNameHandling.GetRelativePath(oslr.Positions[t].Text.Path, Root);
                     }
+                    var PathWithoutExt = FileNameHandling.GetPath(FileNameHandling.GetFileDirectory(Path), FileNameHandling.GetMainFileName(Path));
+                    var DocFilePath = PathWithoutExt.Replace(@"\", @"_").Replace(@"/", @"_").Replace(@".", "_").Replace(@":", @"_").Replace(@"#", @"_") + @".html";
+                    var tli = new TypeInfo { Def = Map[Name], FriendlyPath = PathWithoutExt.Replace(@"\", @"/"), DocFilePath = DocFilePath, DocPath = String.Format("{0}#{1}", DocFilePath, Name) };
+                    TypeInfoDict.Add(Name, tli);
                 }
             }
 

@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2016.07.14.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -138,17 +138,17 @@ namespace Yuki.RelationSchema
             if (t.OnPrimitive)
             {
                 var p = t.Primitive;
-                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, Description = "" });
+                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, Attributes = p.Attributes, Description = "" });
             }
             else if (t.OnEntity)
             {
-                var r = t.Entity;
-                return TypeDef.CreateEntity(new EntityDef { Name = r.Name, CollectionName = r.CollectionName, Fields = r.Fields.Select(gp => MapWithoutDescription(gp)).ToList(), Description = "", PrimaryKey = r.PrimaryKey, UniqueKeys = r.UniqueKeys, NonUniqueKeys = r.NonUniqueKeys });
+                var e = t.Entity;
+                return TypeDef.CreateEntity(new EntityDef { Name = e.Name, CollectionName = e.CollectionName, Fields = e.Fields.Select(gp => MapWithoutDescription(gp)).ToList(), Attributes = e.Attributes, Description = "", PrimaryKey = e.PrimaryKey, UniqueKeys = e.UniqueKeys, NonUniqueKeys = e.NonUniqueKeys });
             }
             else if (t.OnEnum)
             {
                 var e = t.Enum;
-                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, UnderlyingType = e.UnderlyingType, Literals = e.Literals.Select(l => MapWithoutDescription(l)).ToList(), Description = "" });
+                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, UnderlyingType = e.UnderlyingType, Literals = e.Literals.Select(l => MapWithoutDescription(l)).ToList(), Attributes = e.Attributes, Description = "" });
             }
             else if (t.OnQueryList)
             {
@@ -162,11 +162,11 @@ namespace Yuki.RelationSchema
         }
         private static VariableDef MapWithoutDescription(VariableDef v)
         {
-            return new VariableDef { Name = v.Name, Type = v.Type, Description = "", Attribute = v.Attribute };
+            return new VariableDef { Name = v.Name, Type = v.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "", Attribute = v.Attribute };
         }
         private static LiteralDef MapWithoutDescription(LiteralDef l)
         {
-            return new LiteralDef { Name = l.Name, Value = l.Value, Description = "" };
+            return new LiteralDef { Name = l.Name, Value = l.Value, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
         }
 
         private class Marker
@@ -248,9 +248,10 @@ namespace Yuki.RelationSchema
             }
         }
 
-        public static void Verify(this Schema s)
+        public static void Verify(this RelationSchemaLoaderResult rslr)
         {
-            VerifyDuplicatedNames(s);
+            VerifyDuplicatedNames(rslr);
+            var s = rslr.Schema;
             VerifyTypes(s);
             VerifyEntityKeys(s);
             VerifyEntityForeignKeys(s);
@@ -258,23 +259,42 @@ namespace Yuki.RelationSchema
             VerifyQuerySemantics(s);
         }
 
-        public static void VerifyDuplicatedNames(this Schema s)
+        public static void VerifyDuplicatedNames(this RelationSchemaLoaderResult rslr)
         {
-            CheckDuplicatedNames(s.TypePaths, tp => tp.Name, tp => String.Format("DuplicatedName {0}: at {1}", tp.Name, tp.Path));
-
-            var PathDict = s.TypePaths.ToDictionary(tp => tp.Name, tp => tp.Path);
+            var s = rslr.Schema;
+            Func<String, Object, String> GetPositionedMessage = (Message, o) =>
+            {
+                if (rslr.Positions.ContainsKey(o))
+                {
+                    var ftr = rslr.Positions[o];
+                    if (ftr.Range.OnHasValue)
+                    {
+                        var r = ftr.Range.Value;
+                        return String.Format("{0}({1},{2},{3},{4}): {5}", ftr.Text.Path, r.Start.Row, r.Start.Column, r.End.Row, r.End.Column, Message);
+                    }
+                    else
+                    {
+                        return String.Format("{0}: {1}", ftr.Text.Path, Message);
+                    }
+                }
+                else
+                {
+                    return Message;
+                }
+            };
+            CheckDuplicatedNames(s.TypeRefs.Concat(s.Types).Where(t => !t.OnQueryList), t => t.Name(), t => GetPositionedMessage(String.Format("DuplicatedName: {0}", t.Name()), t));
 
             foreach (var t in s.TypeRefs.Concat(s.Types))
             {
                 if (t.OnEntity)
                 {
-                    var r = t.Entity;
-                    CheckDuplicatedNames(r.Fields, rf => rf.Name, rf => String.Format("DuplicatedField {0}: record {1}, at {2}", rf.Name, r.Name, PathDict[r.Name]));
+                    var e = t.Entity;
+                    CheckDuplicatedNames(e.Fields, rf => rf.Name, rf => GetPositionedMessage(String.Format("DuplicatedField: {0}.{1}", e.Name, rf.Name), rf));
                 }
                 else if (t.OnEnum)
                 {
                     var e = t.Enum;
-                    CheckDuplicatedNames(e.Literals, el => el.Name, el => String.Format("DuplicatedLiteral {0}: enum {1}, at {2}", el.Name, e.Name, PathDict[e.Name]));
+                    CheckDuplicatedNames(e.Literals, el => el.Name, el => GetPositionedMessage(String.Format("DuplicatedLiteral: {0}.{1}", e.Name, el.Name), el));
                 }
                 else
                 {

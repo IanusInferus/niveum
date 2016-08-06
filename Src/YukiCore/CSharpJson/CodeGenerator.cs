@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2016.05.21.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,15 +19,15 @@ namespace Yuki.ObjectSchema.CSharpJson
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpJson(this Schema Schema, String NamespaceName, HashSet<String> AsyncCommands)
+        public static String CompileToCSharpJson(this Schema Schema, String NamespaceName)
         {
-            var w = new Writer(Schema, NamespaceName, AsyncCommands);
+            var w = new Writer(Schema, NamespaceName);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
         public static String CompileToCSharpJson(this Schema Schema)
         {
-            return CompileToCSharpJson(Schema, "", new HashSet<String> { });
+            return CompileToCSharpJson(Schema, "");
         }
 
         public class Writer
@@ -39,7 +39,6 @@ namespace Yuki.ObjectSchema.CSharpJson
             private Schema Schema;
             private ISchemaClosureGenerator SchemaClosureGenerator;
             private String NamespaceName;
-            private HashSet<String> AsyncCommands;
             private UInt64 Hash;
 
             static Writer()
@@ -50,15 +49,14 @@ namespace Yuki.ObjectSchema.CSharpJson
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
-            public Writer(Schema Schema, String NamespaceName, HashSet<String> AsyncCommands)
+            public Writer(Schema Schema, String NamespaceName)
             {
                 this.Schema = Schema;
                 this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.NamespaceName = NamespaceName;
-                this.AsyncCommands = AsyncCommands;
                 this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).Hash();
 
-                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, AsyncCommands, false);
+                InnerWriter = new CSharp.Common.CodeGenerator.Writer(Schema, NamespaceName, false);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
@@ -117,7 +115,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                     {
                         if (c.ClientCommand.Version == "")
                         {
-                            if (AsyncCommands.Contains(c.ClientCommand.Name))
+                            if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                             {
                                 l.AddRange(GetTemplate("JsonSerializationServer_ClientCommandAsyncWithoutHash").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()));
                             }
@@ -127,7 +125,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                             }
                         }
                         var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0));
-                        if (AsyncCommands.Contains(c.ClientCommand.Name))
+                        if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
                             l.AddRange(GetTemplate("JsonSerializationServer_ClientCommandAsync").Substitute("CommandName", c.ClientCommand.Name).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                         }
@@ -208,7 +206,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 {
                     if (c.OnClientCommand)
                     {
-                        if (AsyncCommands.Contains(c.ClientCommand.Name))
+                        if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
                             l.AddRange(GetTemplate("JsonLogAspectWrapper_ClientCommandAsyncHook").Substitute("Name", c.ClientCommand.TypeFriendlyName()));
                         }
@@ -345,7 +343,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 TaggedUnionDef GenericOptionalType = null;
                 if (GenericOptionalTypes.Count > 0)
                 {
-                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Description = "" } }, Description = "" };
+                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
                     l.AddRange(GetTemplate("JsonTranslator_Enum").Substitute("Name", "OptionalTag"));
                     l.Add("");
                 }
@@ -493,7 +491,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             public List<String> GetJsonTranslatorOptional(TypeSpec o, TaggedUnionDef GenericOptionalType)
             {
                 var ElementType = o.GenericTypeSpec.ParameterValues.Single();
-                var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToList();
+                var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
 
                 var TypeFriendlyName = o.TypeFriendlyName();
                 var TypeString = GetTypeString(o);

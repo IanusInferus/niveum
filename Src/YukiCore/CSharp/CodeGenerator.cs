@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2016.07.22.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -15,23 +15,6 @@ using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
 
-namespace Yuki.ObjectSchema.CSharp
-{
-    public static class CodeGenerator
-    {
-        public static String CompileToCSharp(this Schema Schema, String NamespaceName, HashSet<String> AsyncCommands, Boolean WithFirefly)
-        {
-            var w = new Common.CodeGenerator.Writer(Schema, NamespaceName, AsyncCommands, WithFirefly);
-            var a = w.GetSchema();
-            return String.Join("\r\n", a);
-        }
-        public static String CompileToCSharp(this Schema Schema)
-        {
-            return CompileToCSharp(Schema, "", new HashSet<String> { }, true);
-        }
-    }
-}
-
 namespace Yuki.ObjectSchema.CSharp.Common
 {
     public static class CodeGenerator
@@ -42,7 +25,6 @@ namespace Yuki.ObjectSchema.CSharp.Common
 
             private Schema Schema;
             private String NamespaceName;
-            private HashSet<String> AsyncCommands;
             private Boolean WithFirefly;
 
             static Writer()
@@ -50,11 +32,10 @@ namespace Yuki.ObjectSchema.CSharp.Common
                 TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharp);
             }
 
-            public Writer(Schema Schema, String NamespaceName, HashSet<String> AsyncCommands, Boolean WithFirefly)
+            public Writer(Schema Schema, String NamespaceName, Boolean WithFirefly)
             {
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
-                this.AsyncCommands = AsyncCommands;
                 this.WithFirefly = WithFirefly;
             }
 
@@ -230,7 +211,7 @@ namespace Yuki.ObjectSchema.CSharp.Common
             }
             public List<String> GetAlternativeLiterals(List<VariableDef> Alternatives)
             {
-                return GetLiterals(Alternatives.Select((a, i) => new LiteralDef { Name = a.Name, Value = i, Description = a.Description }).ToList());
+                return GetLiterals(Alternatives.Select((a, i) => new LiteralDef { Name = a.Name, Value = i, Attributes = a.Attributes, Description = a.Description }).ToList());
             }
             public List<String> GetAlternative(VariableDef a)
             {
@@ -334,13 +315,13 @@ namespace Yuki.ObjectSchema.CSharp.Common
             public List<String> GetClientCommand(ClientCommandDef c)
             {
                 var l = new List<String>();
-                l.AddRange(GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Description = c.Description }));
-                l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Description = c.Description }));
+                l.AddRange(GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description }));
+                l.AddRange(GetTaggedUnion(new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description }));
                 return l;
             }
             public List<String> GetServerCommand(ServerCommandDef c)
             {
-                return GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Description = c.Description });
+                return GetRecord(new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description });
             }
             public List<String> GetXmlComment(String Description)
             {
@@ -370,7 +351,7 @@ namespace Yuki.ObjectSchema.CSharp.Common
                 {
                     if (c.OnClientCommand)
                     {
-                        if (AsyncCommands.Contains(c.ClientCommand.Name))
+                        if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
                             l.AddRange(GetTemplate("IApplicationServer_ClientCommandAsync").Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("XmlComment", GetXmlComment(c.ClientCommand.Description)));
                         }

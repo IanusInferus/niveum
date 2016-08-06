@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffVerifier.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异验证器
-//  Version:     2015.06.17.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Yuki.RelationSchema;
-using Yuki.RelationValue;
 
 namespace Yuki.RelationSchemaDiff
 {
@@ -56,7 +55,7 @@ namespace Yuki.RelationSchemaDiff
                     if (!OldTypes.ContainsKey(EntityNameSource)) { throw new InvalidOperationException("OldNotExist: " + EntityNameSource); }
                     var ne = NewTypes[m.EntityName].Entity;
                     var oe = OldTypes[EntityNameSource].Entity;
-                    var e = new EntityDef { Name = ne.Name, CollectionName = ne.CollectionName, Fields = oe.Fields, Description = oe.Description, PrimaryKey = oe.PrimaryKey, UniqueKeys = oe.UniqueKeys, NonUniqueKeys = oe.NonUniqueKeys };
+                    var e = new EntityDef { Name = ne.Name, CollectionName = ne.CollectionName, Fields = oe.Fields, Attributes = oe.Attributes, Description = oe.Description, PrimaryKey = oe.PrimaryKey, UniqueKeys = oe.UniqueKeys, NonUniqueKeys = oe.NonUniqueKeys };
                     AppliedTypes.Add(m.EntityName, TypeDef.CreateEntity(e));
                 }
             }
@@ -121,7 +120,7 @@ namespace Yuki.RelationSchemaDiff
                     }
                 }
 
-                var e = new EntityDef { Name = oe.Name, CollectionName = oe.CollectionName, Fields = AppliedFields.Select(f => f.Value).ToList(), Description = oe.Description, PrimaryKey = oe.PrimaryKey, UniqueKeys = oe.UniqueKeys, NonUniqueKeys = oe.NonUniqueKeys };
+                var e = new EntityDef { Name = oe.Name, CollectionName = oe.CollectionName, Fields = AppliedFields.Select(f => f.Value).ToList(), Attributes = oe.Attributes, Description = oe.Description, PrimaryKey = oe.PrimaryKey, UniqueKeys = oe.UniqueKeys, NonUniqueKeys = oe.NonUniqueKeys };
                 AppliedTypes[EntityName] = TypeDef.CreateEntity(e);
             }
 

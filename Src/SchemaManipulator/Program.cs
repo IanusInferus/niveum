@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2016.05.13.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -192,6 +192,7 @@ namespace Yuki.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
+                        InvalidateSchema();
                         LoadAsync(args[0]);
                     }
                     else
@@ -613,17 +614,35 @@ namespace Yuki.SchemaManipulator
         }
 
         private static ObjectSchemaLoader osl = new ObjectSchemaLoader();
-        private static OS.Schema os = null;
+        private static OS.ObjectSchemaLoaderResult oslr = null;
         private static Assembly osa = null;
         private static TreeBinaryConverter tbc = null;
         private static HashSet<String> AsyncCommands = new HashSet<String>();
         private static bool AsyncAll = false;
+        private static OS.ObjectSchemaLoaderResult GetObjectSchemaLoaderResult()
+        {
+            if (oslr != null) { return oslr; }
+            oslr = osl.GetResult();
+            oslr.Verify();
+            foreach (var t in oslr.Schema.Types)
+            {
+                if (t.OnClientCommand)
+                {
+                    var cc = t.ClientCommand;
+                    if (AsyncAll || AsyncCommands.Contains(cc.Name))
+                    {
+                        if (!cc.Attributes.Any(a => a.Key == "Async"))
+                        {
+                            cc.Attributes.Add(new KeyValuePair<String, List<String>>("Async", new List<String> { }));
+                        }
+                    }
+                }
+            }
+            return oslr;
+        }
         private static OS.Schema GetObjectSchema()
         {
-            if (os != null) { return os; }
-            os = osl.GetResult();
-            os.Verify();
-            return os;
+            return GetObjectSchemaLoaderResult().Schema;
         }
         private static Assembly SchemaAssembly()
         {
@@ -659,7 +678,7 @@ namespace Yuki.SchemaManipulator
         }
         private static void InvalidateSchema()
         {
-            os = null;
+            oslr = null;
             osa = null;
             tbc = null;
         }
@@ -679,17 +698,6 @@ namespace Yuki.SchemaManipulator
                 {
                     AsyncCommands.Add(c);
                 }
-            }
-        }
-        private static HashSet<String> GetAsyncCommands(ObjectSchema.Schema s)
-        {
-            if (AsyncAll)
-            {
-                return new HashSet<String>(s.Types.Where(t => t.OnClientCommand).Select(t => t.ClientCommand.Name));
-            }
-            else
-            {
-                return AsyncCommands;
             }
         }
 
@@ -747,7 +755,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCSharpCode(String CsCodePath, String NamespaceName, Boolean WithFirefly)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharp(NamespaceName, GetAsyncCommands(ObjectSchema), WithFirefly);
+            var Compiled = ObjectSchema.CompileToCSharp(NamespaceName, WithFirefly);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -764,7 +772,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCSharpBinaryCode(String CsCodePath, String NamespaceName, Boolean WithFirefly)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpBinary(NamespaceName, GetAsyncCommands(ObjectSchema), WithFirefly);
+            var Compiled = ObjectSchema.CompileToCSharpBinary(NamespaceName, WithFirefly);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -781,7 +789,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCSharpJsonCode(String CsCodePath, String NamespaceName)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpJson(NamespaceName, GetAsyncCommands(ObjectSchema));
+            var Compiled = ObjectSchema.CompileToCSharpJson(NamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -798,7 +806,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCSharpCompatibleCode(String CsCodePath, String ClassName, String NamespaceName)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ClassName, GetAsyncCommands(ObjectSchema));
+            var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ClassName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -815,7 +823,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCSharpRetryCode(String CsCodePath, String NamespaceName)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpRetry(NamespaceName, GetAsyncCommands(ObjectSchema));
+            var Compiled = ObjectSchema.CompileToCSharpRetry(NamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -866,7 +874,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCppCode(String CppCodePath, String NamespaceName)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCpp(NamespaceName, GetAsyncCommands(ObjectSchema));
+            var Compiled = ObjectSchema.CompileToCpp(NamespaceName);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);
@@ -883,7 +891,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToCppBinaryCode(String CppCodePath, String NamespaceName, Boolean WithServer, Boolean WithClient)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCppBinary(NamespaceName, GetAsyncCommands(ObjectSchema), WithServer, WithClient);
+            var Compiled = ObjectSchema.CompileToCppBinary(NamespaceName, WithServer, WithClient);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);
@@ -999,8 +1007,8 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToXhtml(String XhtmlDir, String Title, String CopyrightText)
         {
-            var ObjectSchema = GetObjectSchema();
-            var CompiledFiles = ObjectSchema.CompileToXhtml(Title, CopyrightText);
+            var oslr = GetObjectSchemaLoaderResult();
+            var CompiledFiles = oslr.CompileToXhtml(Title, CopyrightText);
             foreach (var f in CompiledFiles)
             {
                 var Compiled = f.Content;
@@ -1024,12 +1032,14 @@ namespace Yuki.SchemaManipulator
             var HeadObjectSchema = GetObjectSchema();
             var oosl = new ObjectSchemaLoader();
             oosl.LoadSchema(OldCookedObjectSchemaFile);
-            var OldObjectSchema = oosl.GetResult();
-            OldObjectSchema.Verify();
+            var OldObjectSchemaLoaderResult = oosl.GetResult();
+            OldObjectSchemaLoaderResult.Verify();
+            var OldObjectSchema = OldObjectSchemaLoaderResult.Schema;
             var nosl = new ObjectSchemaLoader();
             nosl.LoadSchema(NewCookedObjectSchemaFile);
-            var NewObjectSchema = nosl.GetResult();
-            NewObjectSchema.Verify();
+            var NewObjectSchemaLoaderResult = nosl.GetResult();
+            NewObjectSchemaLoaderResult.Verify();
+            var NewObjectSchema = NewObjectSchemaLoaderResult.Schema;
 
             var HeadCommandSchema = HeadObjectSchema.GetSubSchema(HeadObjectSchema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { });
             var OldCommandSchema = OldObjectSchema.GetSubSchema(OldObjectSchema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { });
