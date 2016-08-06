@@ -2,8 +2,8 @@
 //
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
-//  Description: 对象类型结构处理工具
-//  Version:     2015.02.05.
+//  Description: 关系类型结构处理工具
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -540,27 +540,28 @@ namespace Yuki.RelationSchemaManipulator
         }
 
         private static RS.RelationSchemaLoader rsl = new RS.RelationSchemaLoader();
-        private static RS.Schema rs = null;
+        private static RS.RelationSchemaLoaderResult rslr = null;
         private static OS.Schema os = null;
+        private static RS.RelationSchemaLoaderResult GetRelationSchemaLoaderResult()
+        {
+            if (rslr != null) { return rslr; }
+            rslr = rsl.GetResult();
+            rslr.Verify();
+            return rslr;
+        }
         private static RS.Schema GetRelationSchema()
         {
-            if (rs != null) { return rs; }
-            rs = rsl.GetResult();
-            rs.Verify();
-            os = RS.PlainObjectSchemaGenerator.Generate(rs);
-            return rs;
+            return GetRelationSchemaLoaderResult().Schema;
         }
         private static OS.Schema GetObjectSchema()
         {
             if (os != null) { return os; }
-            rs = rsl.GetResult();
-            rs.Verify();
-            os = RS.PlainObjectSchemaGenerator.Generate(rs);
+            os = RS.PlainObjectSchemaGenerator.Generate(GetRelationSchema());
             return os;
         }
         private static void InvalidateSchema()
         {
-            rs = null;
+            rslr = null;
             os = null;
         }
 
@@ -901,8 +902,8 @@ namespace Yuki.RelationSchemaManipulator
 
         public static void RelationSchemaToXhtml(String XhtmlDir, String Title, String CopyrightText)
         {
-            var RelationSchema = GetRelationSchema();
-            var CompiledFiles = RelationSchema.CompileToXhtml(Title, CopyrightText);
+            var rslr = GetRelationSchemaLoaderResult();
+            var CompiledFiles = rslr.CompileToXhtml(Title, CopyrightText);
             foreach (var f in CompiledFiles)
             {
                 var Compiled = f.Content;

@@ -622,8 +622,9 @@ namespace TcpSendReceive
                     osl.LoadType(ObjectSchemaPath);
                 }
             }
-            os = osl.GetResult();
-            os.Verify();
+            var oslr = osl.GetResult();
+            oslr.Verify();
+            os = oslr.Schema;
             return os;
         }
         private static Assembly SchemaAssembly()

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2016.05.21.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,15 +19,15 @@ namespace Yuki.ObjectSchema.CppBinary
 {
     public static class CodeGenerator
     {
-        public static String CompileToCppBinary(this Schema Schema, String NamespaceName, HashSet<String> AsyncCommands, Boolean WithServer = true, Boolean WithClient = true)
+        public static String CompileToCppBinary(this Schema Schema, String NamespaceName, Boolean WithServer = true, Boolean WithClient = true)
         {
-            var w = new Writer(Schema, NamespaceName, AsyncCommands, WithServer, WithClient);
+            var w = new Writer(Schema, NamespaceName, WithServer, WithClient);
             var a = w.GetSchema();
             return String.Join("\r\n", a);
         }
         public static String CompileToCppBinary(this Schema Schema)
         {
-            return CompileToCppBinary(Schema, "", new HashSet<String> { });
+            return CompileToCppBinary(Schema, "");
         }
 
         public class Writer
@@ -39,7 +39,6 @@ namespace Yuki.ObjectSchema.CppBinary
             private Schema Schema;
             private ISchemaClosureGenerator SchemaClosureGenerator;
             private String NamespaceName;
-            private HashSet<String> AsyncCommands;
             private UInt64 Hash;
             private Boolean WithServer;
             private Boolean WithClient;
@@ -52,17 +51,16 @@ namespace Yuki.ObjectSchema.CppBinary
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
-            public Writer(Schema Schema, String NamespaceName, HashSet<String> AsyncCommands, Boolean WithServer = true, Boolean WithClient = true)
+            public Writer(Schema Schema, String NamespaceName, Boolean WithServer = true, Boolean WithClient = true)
             {
                 this.Schema = Schema;
                 this.SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 this.NamespaceName = NamespaceName;
-                this.AsyncCommands = AsyncCommands;
                 this.Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).Hash();
                 this.WithServer = WithServer;
                 this.WithClient = WithClient;
 
-                InnerWriter = new Cpp.Common.CodeGenerator.Writer(Schema, NamespaceName, AsyncCommands);
+                InnerWriter = new Cpp.Common.CodeGenerator.Writer(Schema, NamespaceName);
 
                 foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
                 {
@@ -128,7 +126,7 @@ namespace Yuki.ObjectSchema.CppBinary
                     if (c.OnClientCommand)
                     {
                         var CommandHash = (UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0));
-                        if (AsyncCommands.Contains(c.ClientCommand.Name))
+                        if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
                             l.AddRange(GetTemplate("BinarySerializationServer_ClientCommandAsync").Substitute("CommandName", c.ClientCommand.Name.Escape()).Substitute("Name", c.ClientCommand.TypeFriendlyName()).Substitute("CommandHash", CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture)));
                         }
@@ -305,7 +303,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 TaggedUnionDef GenericOptionalType = null;
                 if (GenericOptionalTypes.Count > 0)
                 {
-                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Description = "" } }, Description = "" };
+                    GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
                     l.AddRange(GetTemplate("BinaryTranslator_Enum").Substitute("Name", "OptionalTag").Substitute("UnderlyingTypeFriendlyName", "Int").Substitute("UnderlyingType", "Int"));
                     l.Add("");
                 }
@@ -471,7 +469,7 @@ namespace Yuki.ObjectSchema.CppBinary
             public List<String> GetBinaryTranslatorOptional(TypeSpec o, TaggedUnionDef GenericOptionalType)
             {
                 var ElementType = o.GenericTypeSpec.ParameterValues.Single();
-                var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Description = a.Description }).ToList();
+                var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
 
                 var TypeFriendlyName = o.TypeFriendlyName();
                 var TypeString = GetTypeString(o, true);

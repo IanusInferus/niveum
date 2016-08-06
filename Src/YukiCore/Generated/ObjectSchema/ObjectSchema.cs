@@ -155,6 +155,8 @@ namespace Yuki.ObjectSchema
         public String Name;
         /// <summary>泛型参数</summary>
         public List<VariableDef> GenericParameters;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
     }
@@ -170,6 +172,8 @@ namespace Yuki.ObjectSchema
         public List<VariableDef> GenericParameters;
         /// <summary>类型</summary>
         public TypeSpec Type;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
     }
@@ -185,6 +189,8 @@ namespace Yuki.ObjectSchema
         public List<VariableDef> GenericParameters;
         /// <summary>字段</summary>
         public List<VariableDef> Fields;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
     }
@@ -200,6 +206,8 @@ namespace Yuki.ObjectSchema
         public List<VariableDef> GenericParameters;
         /// <summary>选择</summary>
         public List<VariableDef> Alternatives;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
     }
@@ -215,6 +223,8 @@ namespace Yuki.ObjectSchema
         public TypeSpec UnderlyingType;
         /// <summary>字面量</summary>
         public List<LiteralDef> Literals;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
     }
@@ -226,12 +236,12 @@ namespace Yuki.ObjectSchema
         public String Name;
         /// <summary>版本</summary>
         public String Version;
-        /// <summary>泛型参数</summary>
-        public List<VariableDef> GenericParameters;
         /// <summary>传出参数（客户端到服务端）</summary>
         public List<VariableDef> OutParameters;
         /// <summary>传入参数（服务端到客户端）</summary>
         public List<VariableDef> InParameters;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
     }
@@ -243,10 +253,10 @@ namespace Yuki.ObjectSchema
         public String Name;
         /// <summary>版本</summary>
         public String Version;
-        /// <summary>泛型参数</summary>
-        public List<VariableDef> GenericParameters;
         /// <summary>传出参数（服务端到客户端）</summary>
         public List<VariableDef> OutParameters;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
     }
@@ -267,6 +277,8 @@ namespace Yuki.ObjectSchema
         public String Name;
         /// <summary>类型</summary>
         public TypeSpec Type;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
     }
@@ -278,17 +290,10 @@ namespace Yuki.ObjectSchema
         public String Name;
         /// <summary>值</summary>
         public Int64 Value;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
-    }
-    /// <summary>类型路径</summary>
-    [Record]
-    public sealed class TypePath
-    {
-        /// <summary>类型名称</summary>
-        public String Name;
-        /// <summary>文件路径</summary>
-        public String Path;
     }
     /// <summary>类型定义集</summary>
     [Record]
@@ -300,7 +305,5 @@ namespace Yuki.ObjectSchema
         public List<TypeDef> TypeRefs;
         /// <summary>命名空间导入</summary>
         public List<String> Imports;
-        /// <summary>类型路径</summary>
-        public List<TypePath> TypePaths;
     }
 }

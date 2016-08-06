@@ -127,6 +127,8 @@ namespace Yuki.RelationSchema
     {
         /// <summary>名称</summary>
         public String Name;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
     }
@@ -138,6 +140,8 @@ namespace Yuki.RelationSchema
         public String Name;
         /// <summary>类型</summary>
         public TypeSpec Type;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
         /// <summary>特性</summary>
@@ -221,6 +225,8 @@ namespace Yuki.RelationSchema
         public String CollectionName;
         /// <summary>字段</summary>
         public List<VariableDef> Fields;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
         /// <summary>主键</summary>
@@ -238,6 +244,8 @@ namespace Yuki.RelationSchema
         public String Name;
         /// <summary>值</summary>
         public Int64 Value;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
     }
@@ -251,6 +259,8 @@ namespace Yuki.RelationSchema
         public TypeSpec UnderlyingType;
         /// <summary>字面量</summary>
         public List<LiteralDef> Literals;
+        /// <summary>特性</summary>
+        public List<KeyValuePair<String, List<String>>> Attributes;
         /// <summary>描述</summary>
         public String Description;
     }
@@ -415,7 +425,5 @@ namespace Yuki.RelationSchema
         public List<TypeDef> TypeRefs;
         /// <summary>命名空间导入</summary>
         public List<String> Imports;
-        /// <summary>类型路径</summary>
-        public List<TypePath> TypePaths;
     }
 }

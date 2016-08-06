@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2016.05.21.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -89,8 +89,8 @@ namespace Yuki.RelationSchema.CppMemory
                          )
                     }
                 ).ToList();
-                Types.Add(OS.TypeDef.CreateRecord(new OS.RecordDef { Name = "MemoryDataTables", Version = "", GenericParameters = new List<OS.VariableDef> { }, Fields = TableFields, Description = "" }));
-                InnerBinaryWriter = new OS.CppBinary.CodeGenerator.Writer(new OS.Schema { Types = Types, TypeRefs = InnerSchema.TypeRefs, Imports = InnerSchema.Imports, TypePaths = InnerSchema.TypePaths }, NamespaceName, new HashSet<String> { });
+                Types.Add(OS.TypeDef.CreateRecord(new OS.RecordDef { Name = "MemoryDataTables", Version = "", GenericParameters = new List<OS.VariableDef> { }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Fields = TableFields, Description = "" }));
+                InnerBinaryWriter = new OS.CppBinary.CodeGenerator.Writer(new OS.Schema { Types = Types, TypeRefs = InnerSchema.TypeRefs, Imports = InnerSchema.Imports }, NamespaceName);
             }
 
             public List<String> GetSchema()

@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2016.07.14.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -145,7 +145,7 @@ namespace Nivea.Template.Syntax
                                 }
 
                                 var ContentLines = new List<FunctionCallTableLine> { };
-                                if (Functions.Contains(f.Name.Text) && f.Content.OnHasValue)
+                                if (f.Content.OnHasValue)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (!ContentValue.OnTableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }

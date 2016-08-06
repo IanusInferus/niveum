@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2016.05.26.
+//  Version:     2016.08.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -76,8 +76,9 @@ namespace Yuki.DatabaseRegenerator
             {
                 if (rs == null)
                 {
-                    rs = rsl.GetResult();
-                    rs.Verify();
+                    var rslr = rsl.GetResult();
+                    rslr.Verify();
+                    rs = rslr.Schema;
                 }
                 return rs;
             };
