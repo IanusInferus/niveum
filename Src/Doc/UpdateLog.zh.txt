@@ -7,6 +7,9 @@ Yuki.Core, Yuki.Relation:
 相应修改。
 Yuki.Core:
 增加新版C#二进制通讯代码生成。
+增加新版C# JSON通讯代码生成。
+*:
+更新Firefly。
 
 2016.08.05
 Nivea:
