@@ -1,8 +1,13 @@
 ﻿2016.08.22
 Yuki.Core:
 增加新版C#通讯兼容代码生成。
+修正注释中不在最开始的[]也被看作Attribute的问题。
+Yuki.Relation:
+修正生成文档时崩溃的问题。
 Yuki.SchemaManipulator:
 修正存储类型结构数据存储，直接存为Tree文件，不再经过XML。
+*:
+更新Firefly。
 
 2016.08.06
 Yuki.Core, Yuki.Relation:

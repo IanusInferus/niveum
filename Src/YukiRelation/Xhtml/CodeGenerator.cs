@@ -79,6 +79,7 @@ namespace Yuki.RelationSchema.Xhtml
                 var Map = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value);
                 foreach (var t in Schema.Types)
                 {
+                    if (t.OnQueryList) { continue; }
                     var Name = t.Name();
                     var Path = "Default.tree";
                     if (rslr.Positions.ContainsKey(t))

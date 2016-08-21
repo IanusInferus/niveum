@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 词法解析器
-//  Version:     2016.08.05.
+//  Version:     2016.08.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -470,13 +470,16 @@ namespace Yuki.ObjectSchema
         public static DescriptionComposite DecomposeDescription(String Description)
         {
             var Attributes = new List<KeyValuePair<String, List<String>>>();
+            var CurrentIndex = 0;
             var d = rAttribute.Replace(Description,
                 m =>
                 {
+                    if (m.Index != CurrentIndex) { return m.Value; }
                     var Name = m.Result("${Name}");
                     var Params = m.Result("${Params}") ?? "";
                     var Parameters = Params == "" ? new List<String> { } : Params.Split(',').Select(p => p.Trim(' ')).ToList();
                     Attributes.Add(new KeyValuePair<String, List<String>>(Name, Parameters));
+                    CurrentIndex = m.Index + m.Length;
                     return "";
                 }
             );
