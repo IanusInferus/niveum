@@ -480,7 +480,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 yield return _Line;
             }
             yield return "{";
-            foreach (var ltl in Literals)
+            foreach (var ltl in HeadLiterals)
             {
                 foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "."), ltl.Name))), ")"))
                 {
