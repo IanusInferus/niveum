@@ -400,7 +400,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public void FillTranslatorEnumFrom(String Name, String VersionedName, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals, List<String> l)
         {
-            l.AddRange(Translator_EnumFrom(Name, VersionedName, Literals, HeadLiterals));
+            l.AddRange(Translator_EnumFrom(Name, VersionedName, Literals, HeadLiterals).Select(Line => "//" + Line));
         }
         public void FillTranslatorEnumTo(Dictionary<String, TypeDef> VersionedNameToType, EnumDef e, List<String> l)
         {
@@ -426,7 +426,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public void FillTranslatorEnumTo(String Name, String VersionedName, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals, List<String> l)
         {
-            l.AddRange(Translator_EnumTo(Name, VersionedName, Literals, HeadLiterals));
+            l.AddRange(Translator_EnumTo(Name, VersionedName, Literals, HeadLiterals).Select(Line => "//" + Line));
         }
         public void FillTranslatorClientCommand(Dictionary<String, TypeDef> VersionedNameToType, ClientCommandDef c, List<String> l)
         {
@@ -808,6 +808,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
 
             var ServerCommands = Schema.Types.Where(t => t.OnServerCommand).Select(t => t.ServerCommand).ToList();
             l.AddRange(EventPump(ServerCommands));
+            l.Add("");
 
             var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
             var VersionedNameToType = Schema.GetMap().ToDictionary(t => t.Key, t => t.Value);

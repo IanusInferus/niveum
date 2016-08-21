@@ -307,7 +307,7 @@
     public [[${VersionedName}]] [[${VersionedName}FromHead]]([[${Name}]] ho)
     {
         $$
-            foreach (var ltl in Literals)
+            foreach (var ltl in HeadLiterals)
             {
                 ##
                     if (ho == [[${Name}.${ltl.Name}]])
