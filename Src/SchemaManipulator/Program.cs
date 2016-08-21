@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2016.08.06.
+//  Version:     2016.08.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -15,7 +15,7 @@ using System.IO;
 using System.Reflection;
 using System.CodeDom.Compiler;
 using Firefly;
-using Firefly.Mapping.XmlText;
+using Firefly.Mapping.TreeText;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
 using Firefly.Texting;
@@ -82,7 +82,6 @@ namespace Yuki.SchemaManipulator
                 return 0;
             }
 
-            var xs = new XmlSerializer();
             foreach (var opt in CmdLine.Options)
             {
                 var optNameLower = opt.Name.ToLower();
@@ -113,8 +112,9 @@ namespace Yuki.SchemaManipulator
                     {
                         var CookedObjectSchemaPath = args[0];
                         var s = GetObjectSchema();
-                        var x = xs.Write(s);
-                        TreeFile.WriteFile(CookedObjectSchemaPath, x);
+                        var ts = new TreeSerializer();
+                        var t = ts.Write(s);
+                        TreeFile.WriteDirect(CookedObjectSchemaPath, t);
                     }
                     else
                     {
