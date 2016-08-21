@@ -1,4 +1,10 @@
-﻿2016.08.06
+﻿2016.08.22
+Yuki.Core:
+增加新版C#通讯兼容代码生成。
+Yuki.SchemaManipulator:
+修正存储类型结构数据存储，直接存为Tree文件，不再经过XML。
+
+2016.08.06
 Yuki.Core, Yuki.Relation:
 增加新版C#类型代码生成。
 增加Attribute。
