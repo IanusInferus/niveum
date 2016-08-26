@@ -1,4 +1,11 @@
-﻿2016.08.22
+﻿2016.08.26
+Yuki.Core:
+增加新版C#重试循环代码生成。
+ObjectSchema加载时忽略Namespace。
+Example:
+修正Expression编译。
+
+2016.08.22
 Yuki.Core:
 增加新版C#通讯兼容代码生成。
 修正注释中不在最开始的[]也被看作Attribute的问题。
