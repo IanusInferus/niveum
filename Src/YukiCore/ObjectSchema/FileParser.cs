@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 文件解析器
-//  Version:     2016.08.06.
+//  Version:     2016.08.26.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -37,7 +37,9 @@ namespace Yuki.ObjectSchema
             var ps = new TreeFormatParseSetting()
             {
                 IsTableParameterFunction = Name => TypeFunctions.Contains(Name),
-                IsTableContentFunction = Name => TypeFunctions.Contains(Name)
+                IsTableContentFunction = Name => TypeFunctions.Contains(Name),
+                IsTreeParameterFunction = Name => Name == "Namespace",
+                IsTreeContentFunction = Name => Name == "Namespace"
             };
 
             var sp = new TreeFormatSyntaxParser(ps, Text);
@@ -520,6 +522,10 @@ namespace Yuki.ObjectSchema
                                             throw new InvalidEvaluationException("UnknownFunction", nm.GetFileRange(f), f);
                                         }
                                 }
+                            }
+                            else if (f.Name.Text == "Namespace")
+                            {
+                                return new List<TFSemantics.Node> { };
                             }
                             else
                             {

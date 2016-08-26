@@ -204,12 +204,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 l.Add("");
                 l.AddRange(JsonSerializationClient(Hash, cl, SchemaClosureGenerator));
                 l.Add("");
-            }
-
-            var ocl = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
-            if (ocl.Count > 0)
-            {
-                l.AddRange(JsonLogAspectWrapper(ocl));
+                l.AddRange(JsonLogAspectWrapper(cl));
                 l.Add("");
             }
 
