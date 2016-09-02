@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 关系类型结构处理工具
-//  Version:     2016.08.06.
+//  Version:     2016.09.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -12,8 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Reflection;
-using System.CodeDom.Compiler;
 using Firefly;
 using Firefly.Mapping.XmlText;
 using Firefly.Streaming;
@@ -23,24 +21,16 @@ using Firefly.Texting.TreeFormat;
 using Yuki.RelationSchema;
 using OS = Yuki.ObjectSchema;
 using RS = Yuki.RelationSchema;
-using Yuki.ObjectSchema.CSharp;
-using Yuki.ObjectSchema.Cpp;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
-using Yuki.RelationSchema.FoundationDbSql;
-using Yuki.RelationSchema.DbmlDatabase;
-using Yuki.RelationSchema.CSharpLinqToSql;
 using Yuki.RelationSchema.CSharpLinqToEntities;
 using Yuki.RelationSchema.CSharpPlain;
 using Yuki.RelationSchema.CSharpMemory;
 using Yuki.RelationSchema.CSharpSqlServer;
 using Yuki.RelationSchema.CSharpPostgreSql;
 using Yuki.RelationSchema.CSharpMySql;
-using Yuki.RelationSchema.CSharpFoundationDbSql;
 using Yuki.RelationSchema.CSharpKrustallos;
-using Yuki.RelationSchema.CSharpKrustallosMySql;
-using Yuki.RelationSchema.CSharpKrustallosMySqlLoader;
 using Yuki.RelationSchema.CSharpCounted;
 using Yuki.RelationSchema.CppPlain;
 using Yuki.RelationSchema.CppMemory;
@@ -233,45 +223,6 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (optNameLower == "t2fdbsql")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 2)
-                    {
-                        RelationSchemaToFoundationDbSqlCode(args[0], args[1]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
-                else if (optNameLower == "t2dbml")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 5)
-                    {
-                        RelationSchemaToDbmlDatabaseCode(args[0], args[1], args[2], args[3], args[4]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
-                else if (optNameLower == "t2csd")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 5)
-                    {
-                        RelationSchemaToCSharpLinqToSqlCode(args[0], args[1], args[2], args[3], args[4]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
                 else if (optNameLower == "t2cse")
                 {
                     var args = opt.Arguments;
@@ -354,51 +305,12 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (optNameLower == "t2csfdbsql")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 3)
-                    {
-                        RelationSchemaToCSharpFoundationDbSqlCode(args[0], args[1], args[2]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
                 else if (optNameLower == "t2cskrs")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 3)
                     {
                         RelationSchemaToCSharpKrustallosCode(args[0], args[1], args[2]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
-                else if (optNameLower == "t2cskrsmysql")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 5)
-                    {
-                        RelationSchemaToCSharpKrustallosMySqlCode(args[0], args[1], args[2], args[3], args[4]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
-                else if (optNameLower == "t2cskrsmysqlloader")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 4)
-                    {
-                        RelationSchemaToCSharpKrustallosMySqlLoaderCode(args[0], args[1], args[2], args[3]);
                     }
                     else
                     {
@@ -492,12 +404,6 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2pgsql:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成MySQL数据库DROP和CREATE脚本");
             Console.WriteLine(@"/t2mysql:<SqlCodePath>,<DatabaseName>");
-            Console.WriteLine(@"生成FoundationDB SQL数据库DROP和CREATE脚本");
-            Console.WriteLine(@"/t2fdbsql:<SqlCodePath>,<DatabaseName>");
-            Console.WriteLine(@"生成Dbml文件");
-            Console.WriteLine(@"/t2dbml:<DbmlCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
-            Console.WriteLine(@"生成C#数据库Linq to SQL类型");
-            Console.WriteLine(@"/t2csd:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库Linq to Entities类型");
             Console.WriteLine(@"/t2cse:<CsCodePath>,<DatabaseName>,<EntityNamespaceName>,<ContextNamespaceName>,<ContextClassName>");
             Console.WriteLine(@"生成C#数据库简单类型");
@@ -510,14 +416,8 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2cspgsql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# MySQL类型");
             Console.WriteLine(@"/t2csmysql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
-            Console.WriteLine(@"生成C# FoundationDB SQL类型");
-            Console.WriteLine(@"/t2csfdbsql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# Krustallos类型");
             Console.WriteLine(@"/t2cskrs:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
-            Console.WriteLine(@"生成C# Krustallos-MySQL类型");
-            Console.WriteLine(@"/t2cskrsmysql:<CsCodePath>,<EntityNamespaceName>,<KrustallosContextNamespaceName>,<MySqlContextNamespaceName>,<ContextNamespaceName>");
-            Console.WriteLine(@"生成C# Krustallos-MySQL加载器类型");
-            Console.WriteLine(@"/t2cskrsmysqlloader:<CsCodePath>,<EntityNamespaceName>,<KrustallosContextNamespaceName>,<MySqlContextNamespaceName>");
             Console.WriteLine(@"生成C# 计时包装类型");
             Console.WriteLine(@"/t2cscw:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C++数据库简单类型");
@@ -526,7 +426,6 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"RelationSchemaDir|RelationSchemaFile 关系类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"DatabaseName 数据库名。");
             Console.WriteLine(@"SqlCodePath SQL代码文件路径。");
-            Console.WriteLine(@"DbmlCodePath Dbml文件路径。");
             Console.WriteLine(@"CsCodePath C#代码文件路径。");
             Console.WriteLine(@"EntityNamespaceName 实体命名空间名称。");
             Console.WriteLine(@"ContextNamespaceName 上下文命名空间名称。");
@@ -614,70 +513,6 @@ namespace Yuki.RelationSchemaManipulator
             var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
             if (SqlCodeDir != "" && !Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
             Txt.WriteFile(SqlCodePath, Compiled);
-        }
-
-        public static void RelationSchemaToFoundationDbSqlCode(String SqlCodePath, String DatabaseName)
-        {
-            var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToFoundationDbSql(DatabaseName);
-            if (File.Exists(SqlCodePath))
-            {
-                var Original = Txt.ReadFile(SqlCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
-            if (SqlCodeDir != "" && !Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
-            Txt.WriteFile(SqlCodePath, Compiled);
-        }
-
-        public static void RelationSchemaToDbmlDatabaseCode(String SqlCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
-        {
-            var RelationSchema = GetRelationSchema();
-            var CompiledX = RelationSchema.CompileToDbmlDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
-            String Compiled = "";
-            using (var s = Streams.CreateMemoryStream())
-            {
-                using (var sw = Txt.CreateTextWriter(s.Partialize(0, Int64.MaxValue, 0).AsNewWriting(), TextEncoding.UTF8))
-                {
-                    XmlFile.WriteFile(sw, CompiledX);
-                }
-                s.Position = 0;
-                using (var sr = Txt.CreateTextReader(s.Partialize(0, s.Length).AsNewReading(), TextEncoding.UTF8))
-                {
-                    Compiled = Txt.ReadFile(sr);
-                }
-            }
-            if (File.Exists(SqlCodePath))
-            {
-                var Original = Txt.ReadFile(SqlCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
-            if (SqlCodeDir != "" && !Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
-            Txt.WriteFile(SqlCodePath, TextEncoding.UTF8, Compiled);
-        }
-
-        public static void RelationSchemaToCSharpLinqToSqlCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
-        {
-            var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpLinqToSql(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
-            if (File.Exists(CsCodePath))
-            {
-                var Original = Txt.ReadFile(CsCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(CsCodePath, Compiled);
         }
 
         public static void RelationSchemaToCSharpLinqToEntitiesCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
@@ -782,60 +617,10 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void RelationSchemaToCSharpFoundationDbSqlCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
-        {
-            var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpFoundationDbSql(EntityNamespaceName, ContextNamespaceName);
-            if (File.Exists(CsCodePath))
-            {
-                var Original = Txt.ReadFile(CsCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(CsCodePath, Compiled);
-        }
-
         public static void RelationSchemaToCSharpKrustallosCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCSharpKrustallos(EntityNamespaceName, ContextNamespaceName);
-            if (File.Exists(CsCodePath))
-            {
-                var Original = Txt.ReadFile(CsCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(CsCodePath, Compiled);
-        }
-
-        public static void RelationSchemaToCSharpKrustallosMySqlCode(String CsCodePath, String EntityNamespaceName, String KrustallosContextNamespaceName, String MySqlContextNamespaceName, String ContextNamespaceName)
-        {
-            var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpKrustallosMySql(EntityNamespaceName, KrustallosContextNamespaceName, MySqlContextNamespaceName, ContextNamespaceName);
-            if (File.Exists(CsCodePath))
-            {
-                var Original = Txt.ReadFile(CsCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(CsCodePath, Compiled);
-        }
-        public static void RelationSchemaToCSharpKrustallosMySqlLoaderCode(String CsCodePath, String EntityNamespaceName, String KrustallosContextNamespaceName, String MySqlContextNamespaceName)
-        {
-            var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpKrustallosMySqlLoader(EntityNamespaceName, KrustallosContextNamespaceName, MySqlContextNamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);

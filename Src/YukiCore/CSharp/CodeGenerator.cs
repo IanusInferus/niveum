@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2016.08.06.
+//  Version:     2016.09.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -37,22 +37,6 @@ namespace Yuki.ObjectSchema.CSharp.Common
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
                 this.WithFirefly = WithFirefly;
-            }
-
-            public List<String> GetSchema()
-            {
-                var Header = GetHeader();
-                var Primitives = GetPrimitives();
-                var ComplexTypes = GetComplexTypes();
-
-                if (NamespaceName != "")
-                {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
-                }
-                else
-                {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
-                }
             }
 
             public List<String> GetHeader()
