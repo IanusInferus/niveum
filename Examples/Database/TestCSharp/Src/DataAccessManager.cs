@@ -12,9 +12,7 @@ namespace Database
         SqlServerCe,
         PostgreSQL,
         MySQL,
-        FoundationDBSQL,
-        Krustallos,
-        KrustallosMySQL
+        Krustallos
     }
 
     public interface IDataAccessProvider
@@ -34,15 +32,11 @@ namespace Database
         private static readonly String SqlServerType = "Database.SqlServer.Provider";
         private static readonly String PostgreSqlType = "Database.PostgreSql.Provider";
         private static readonly String MySqlType = "Database.MySql.Provider";
-        private static readonly String FoundationDbSqlType = "Database.FoundationDbSql.Provider";
         private static readonly String KrustallosType = "Database.Krustallos.Provider";
-        private static readonly String KrustallosMySqlType = "Database.KrustallosMySql.Provider";
         private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Test";
         private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=test;";
         private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Test;";
-        private static readonly String FoundationDbSqlConnectionString = "server=localhost;Port=15432;uid=root;pwd={Password};database=test;";
         private static readonly String KrustallosConnectionString = "";
-        private static readonly String KrustallosMySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Test;";
 
         private static Type GetType(String FullName, Boolean ThrowOnError = false)
         {
@@ -103,24 +97,10 @@ namespace Database
                 }
             }
             {
-                var t = GetType(KrustallosMySqlType);
-                if (t != null)
-                {
-                    return KrustallosMySqlConnectionString;
-                }
-            }
-            {
                 var t = GetType(MySqlType);
                 if (t != null)
                 {
                     return MySqlConnectionString;
-                }
-            }
-            {
-                var t = GetType(FoundationDbSqlType);
-                if (t != null)
-                {
-                    return FoundationDbSqlConnectionString;
                 }
             }
             {
@@ -150,20 +130,10 @@ namespace Database
                 var t = GetType(MySqlType, true);
                 return MySqlConnectionString;
             }
-            else if (Type == DatabaseType.FoundationDBSQL)
-            {
-                var t = GetType(FoundationDbSqlType, true);
-                return FoundationDbSqlConnectionString;
-            }
             else if (Type == DatabaseType.Krustallos)
             {
                 var t = GetType(KrustallosType, true);
                 return KrustallosConnectionString;
-            }
-            else if (Type == DatabaseType.KrustallosMySQL)
-            {
-                var t = GetType(KrustallosMySqlType, true);
-                return KrustallosMySqlConnectionString;
             }
             else
             {
@@ -184,15 +154,7 @@ namespace Database
             }
             if (t == null)
             {
-                t = GetType(KrustallosMySqlType);
-            }
-            if (t == null)
-            {
                 t = GetType(MySqlType);
-            }
-            if (t == null)
-            {
-                t = GetType(FoundationDbSqlType);
             }
             if (t == null)
             {
@@ -224,17 +186,9 @@ namespace Database
             {
                 t = GetType(MySqlType, true);
             }
-            else if (Type == DatabaseType.FoundationDBSQL)
-            {
-                t = GetType(FoundationDbSqlType, true);
-            }
             else if (Type == DatabaseType.Krustallos)
             {
                 t = GetType(KrustallosType, true);
-            }
-            else if (Type == DatabaseType.KrustallosMySQL)
-            {
-                t = GetType(KrustallosMySqlType, true);
             }
             else
             {

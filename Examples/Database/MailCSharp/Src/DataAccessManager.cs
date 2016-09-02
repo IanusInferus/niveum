@@ -13,7 +13,6 @@ namespace Database
         SqlServerCe,
         PostgreSQL,
         MySQL,
-        FoundationDBSQL,
         Krustallos
     }
 
@@ -36,13 +35,11 @@ namespace Database
         private static readonly String SqlServerType = "Database.SqlServer.Provider";
         private static readonly String PostgreSqlType = "Database.PostgreSql.Provider";
         private static readonly String MySqlType = "Database.MySql.Provider";
-        private static readonly String FoundationDbSqlType = "Database.FoundationDbSql.Provider";
         private static readonly String KrustallosType = "Database.Krustallos.Provider";
         private static readonly String MemoryConnectionString = "Mail.md";
         private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Mail";
         private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=mail;";
         private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Mail;";
-        private static readonly String FoundationDbSqlConnectionString = "server=localhost;Port=15432;uid=root;pwd={Password};database=mail;";
         private static readonly String KrustallosConnectionString = "File=Mail.kd";
 
         private static Type GetType(String FullName, Boolean ThrowOnError = false)
@@ -118,13 +115,6 @@ namespace Database
                 }
             }
             {
-                var t = GetType(FoundationDbSqlType);
-                if (t != null)
-                {
-                    return FoundationDbSqlConnectionString;
-                }
-            }
-            {
                 var t = GetType(KrustallosType);
                 if (t != null)
                 {
@@ -156,11 +146,6 @@ namespace Database
                 var t = GetType(MySqlType, true);
                 return MySqlConnectionString;
             }
-            else if (Type == DatabaseType.FoundationDBSQL)
-            {
-                var t = GetType(FoundationDbSqlType, true);
-                return FoundationDbSqlConnectionString;
-            }
             else if (Type == DatabaseType.Krustallos)
             {
                 var t = GetType(KrustallosType, true);
@@ -190,10 +175,6 @@ namespace Database
             if (t == null)
             {
                 t = GetType(MySqlType);
-            }
-            if (t == null)
-            {
-                t = GetType(FoundationDbSqlType);
             }
             if (t == null)
             {
@@ -229,10 +210,6 @@ namespace Database
             else if (Type == DatabaseType.MySQL)
             {
                 t = GetType(MySqlType, true);
-            }
-            else if (Type == DatabaseType.FoundationDBSQL)
-            {
-                t = GetType(FoundationDbSqlType, true);
             }
             else if (Type == DatabaseType.Krustallos)
             {
