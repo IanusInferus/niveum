@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2016.07.26.
+//  Version:     2016.09.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -16,7 +16,6 @@ using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
 using OS = Yuki.ObjectSchema;
-using Yuki.RelationSchema.DbmlDatabase;
 
 namespace Yuki.RelationSchema.CSharpLinqToEntities
 {
@@ -33,7 +32,6 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
         {
 
             private static OS.ObjectSchemaTemplateInfo TemplateInfo;
-            private XElement Dbml;
 
             private Schema Schema;
             private String DatabaseName;
@@ -55,8 +53,6 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 this.EntityNamespaceName = EntityNamespaceName;
                 this.ContextNamespaceName = ContextNamespaceName;
                 this.ContextClassName = ContextClassName;
-
-                Dbml = Schema.CompileToDbmlDatabase(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
 
                 Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
                 Records = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
@@ -286,11 +282,36 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
             }
             public String GetAssociationParameters(EntityDef r, VariableDef f)
             {
-                var c = Dbml.Elements().Where(x => x.Name.LocalName == "Table" && x.Attribute("Name") != null && x.Attribute("Name").Value == r.CollectionName).Single().Elements().Single().Elements().Where(x => x.Name.LocalName == "Association" && x.Attribute("Member") != null && x.Attribute("Member").Value == f.Name).Single();
                 var a = f.Attribute.Navigation;
                 var l = new List<String>();
-                var Name = c.Attribute("Name").Value;
-                l.Add(String.Format(@"Association(""{0}"", ""{1}"", ""{2}"", IsForeignKey = {3})", Name, String.Join(", ", a.ThisKey), String.Join(", ", a.OtherKey), !a.IsReverse ? "true" : "false"));
+                ForeignKey fk;
+                if (a.IsReverse)
+                {
+                    EntityDef ThisTable = null;
+                    if (f.Type.OnTypeRef)
+                    {
+                        ThisTable = Records[f.Type.TypeRef.Value];
+                    }
+                    else if (f.Type.OnOptional)
+                    {
+                        ThisTable = Records[f.Type.Optional.Value];
+                    }
+                    else if (f.Type.OnList)
+                    {
+                        ThisTable = Records[f.Type.List.Value];
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                    fk = new ForeignKey { ThisTableName = ThisTable.CollectionName, ThisKeyColumns = f.Attribute.Navigation.OtherKey, OtherTableName = r.CollectionName, OtherKeyColumns = f.Attribute.Navigation.ThisKey };
+                }
+                else
+                {
+                    fk = new ForeignKey { ThisTableName = r.CollectionName, ThisKeyColumns = f.Attribute.Navigation.ThisKey, OtherTableName = Records[f.Type.TypeRef.Value].CollectionName, OtherKeyColumns = f.Attribute.Navigation.OtherKey };
+                }
+                var AssociationName = fk.ThisTableName + "_" + String.Join("_", fk.ThisKeyColumns) + "_" + fk.OtherTableName + "_" + String.Join("_", fk.OtherKeyColumns);
+                l.Add(String.Format(@"Association(""{0}"", ""{1}"", ""{2}"", IsForeignKey = {3})", AssociationName, String.Join(", ", a.ThisKey), String.Join(", ", a.OtherKey), !a.IsReverse ? "true" : "false"));
                 return String.Join(", ", l.ToArray());
             }
             public List<String> GetProperty(EntityDef r, VariableDef f, int Index)
