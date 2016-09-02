@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2016.05.13.
+//  Version:     2016.09.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,8 +22,7 @@ namespace Yuki.DatabaseRegenerator
     {
         SqlServer,
         PostgreSQL,
-        MySQL,
-        FoundationDBSQL
+        MySQL
     }
     public static class TableOperations
     {
@@ -34,7 +33,7 @@ namespace Yuki.DatabaseRegenerator
             {
                 Escape = s => "[" + s + "]";
             }
-            else if ((Type == DatabaseType.PostgreSQL) || (Type == DatabaseType.FoundationDBSQL))
+            else if (Type == DatabaseType.PostgreSQL)
             {
                 Escape = s => "\"" + s.ToLowerInvariant() + "\"";
             }
@@ -297,30 +296,6 @@ namespace Yuki.DatabaseRegenerator
                         cmd.ExecuteNonQuery();
                     }
                 }
-                else if (Type == DatabaseType.FoundationDBSQL)
-                {
-                    var IdentityColumns = Meta.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity).Select(f => f.Name).ToList();
-                    foreach (var ic in IdentityColumns)
-                    {
-                        Int64 Value;
-
-                        {
-                            var cmd = c.CreateCommand();
-                            cmd.Transaction = b;
-                            cmd.CommandText = String.Format(@"SELECT IFNULL(MAX({1}) + 1, 1) FROM {0};", Escape(CollectionName), Escape(ic));
-                            cmd.CommandType = CommandType.Text;
-                            Value = Convert.ToInt64(cmd.ExecuteScalar());
-                        }
-
-                        {
-                            var cmd = c.CreateCommand();
-                            cmd.Transaction = b;
-                            cmd.CommandText = String.Format(@"ALTER TABLE {0} ALTER COLUMN {1} RESTART WITH {2};", Escape(CollectionName), Escape(ic), Value);
-                            cmd.CommandType = CommandType.Text;
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-                }
             }
             finally
             {
@@ -345,7 +320,7 @@ namespace Yuki.DatabaseRegenerator
             {
                 Escape = s => "[" + s + "]";
             }
-            else if ((Type == DatabaseType.PostgreSQL) || (Type == DatabaseType.FoundationDBSQL))
+            else if (Type == DatabaseType.PostgreSQL)
             {
                 Escape = s => "\"" + s.ToLowerInvariant() + "\"";
             }

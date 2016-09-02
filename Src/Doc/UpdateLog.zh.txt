@@ -1,4 +1,8 @@
-﻿2016.08.26
+﻿2016.09.02
+Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator, Example:
+结束对Linq to SQL, FoundationDB和Krustallos-MySQL三种数据库的支持，并移除代码。
+
+2016.08.26
 Yuki.Core:
 增加新版C#重试循环代码生成。
 ObjectSchema加载时忽略Namespace。

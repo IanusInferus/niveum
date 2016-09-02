@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2016.08.06.
+//  Version:     2016.09.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -25,7 +25,6 @@ using Yuki.RelationSchema;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
-using Yuki.RelationSchema.FoundationDbSql;
 using Yuki.RelationValue;
 using Yuki.RelationSchemaDiff;
 
@@ -260,19 +259,6 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (optNameLower == "regenfdbsql")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length >= 0)
-                    {
-                        RegenFoundationDBSQL(Schema(), ConnectionString, DatabaseName, args);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
                 else if (optNameLower == "exportmssql")
                 {
                     var args = opt.Arguments;
@@ -305,19 +291,6 @@ namespace Yuki.DatabaseRegenerator
                     if (args.Length == 1)
                     {
                         ExportMySQL(Schema(), ConnectionString, DatabaseName, args[0]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
-                else if (optNameLower == "exportfdbsql")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 1)
-                    {
-                        ExportFoundationDBSQL(Schema(), ConnectionString, DatabaseName, args[0]);
                     }
                     else
                     {
@@ -393,16 +366,12 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/regenpgsql:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"重建MySQL数据库");
             Console.WriteLine(@"/regenmysql:(<DataDir>|<MemoryDatabaseFile>)*");
-            Console.WriteLine(@"重建FoundationDB/PostgreSQL数据库");
-            Console.WriteLine(@"/regenfdbsql:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"导出SQL Server数据库");
             Console.WriteLine(@"/exportmssql:<MemoryDatabaseFile>");
             Console.WriteLine(@"导出PostgreSQL数据库");
             Console.WriteLine(@"/exportpgsql:<MemoryDatabaseFile>");
             Console.WriteLine(@"导出MySQL数据库");
             Console.WriteLine(@"/exportmysql:<MemoryDatabaseFile>");
-            Console.WriteLine(@"导出FoundationDB/PostgreSQL数据库");
-            Console.WriteLine(@"/exportfdbsql:<MemoryDatabaseFile>");
             Console.WriteLine(@"生成数据库结构差异文件");
             Console.WriteLine(@"/diff:<MemoryDatabaseFileOld>,<MemoryDatabaseFileNew>,<SchemaDiffFile>");
             Console.WriteLine(@"应用数据库结构差异生成新数据库");
@@ -938,102 +907,6 @@ namespace Yuki.DatabaseRegenerator
             }
         }
 
-        public static void RegenFoundationDBSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String[] DataDirOrMemoryDatabaseFiles)
-        {
-            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
-
-            var Value = LoadData(s, DataDirOrMemoryDatabaseFiles, bs);
-
-            var GenSqls = s.CompileToFoundationDbSql(DatabaseName);
-            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture).ToList();
-            RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToList();
-            var CreateDatabases = new String[] { String.Format("DROP SCHEMA IF EXISTS \"{0}\" CASCADE", DatabaseName.ToLowerInvariant()), String.Format("CREATE SCHEMA \"{0}\"", DatabaseName.ToLowerInvariant()) };
-            var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToList();
-            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER")).ToList();
-
-            var cf = GetConnectionFactory(DatabaseType.FoundationDBSQL);
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                foreach (var Sql in CreateDatabases)
-                {
-                    if (Sql == "") { continue; }
-
-                    var cmd = c.CreateCommand();
-                    cmd.CommandText = Sql;
-                    cmd.CommandType = CommandType.Text;
-                    cmd.ExecuteNonQuery();
-                }
-            }
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                foreach (var Sql in Creates)
-                {
-                    if (Sql == "") { continue; }
-
-                    var cmd = c.CreateCommand();
-                    cmd.CommandText = Sql;
-                    cmd.CommandType = CommandType.Text;
-                    cmd.ExecuteNonQuery();
-                }
-            }
-
-            var TableInfo = TableOperations.GetTableInfo(s);
-            var EntityMetas = TableInfo.EntityMetas;
-            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
-            var Tables = TableOperations.GetTableDictionary(s, EntityMetas, Value);
-
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                foreach (var t in Tables)
-                {
-                    var PartitionSize = 1000;
-                    var NumPartition = (t.Value.Rows.Count + PartitionSize - 1) / PartitionSize;
-                    for (int k = 0; k < NumPartition; k += 1)
-                    {
-                        var p = new KeyValuePair<String, TableVal>(t.Key, new TableVal { Rows = t.Value.Rows.Skip(k * PartitionSize).Take(PartitionSize).ToList() });
-                        using (var b = c.BeginTransaction())
-                        {
-                            var Success = false;
-                            try
-                            {
-                                TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, p, DatabaseType.FoundationDBSQL);
-
-                                b.Commit();
-                                Success = true;
-                            }
-                            finally
-                            {
-                                if (!Success)
-                                {
-                                    b.Rollback();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                foreach (var Sql in Alters)
-                {
-                    if (Sql == "") { continue; }
-
-                    var cmd = c.CreateCommand();
-                    cmd.CommandText = Sql;
-                    cmd.CommandType = CommandType.Text;
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
-
         public static void ExportSqlServer(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String MemoryDatabaseFile)
         {
             if (DatabaseName == "")
@@ -1144,48 +1017,13 @@ namespace Yuki.DatabaseRegenerator
             SaveData(s, MemoryDatabaseFile, Value, bs);
         }
 
-        public static void ExportFoundationDBSQL(RelationSchema.Schema s, String ConnectionString, String DatabaseName, String MemoryDatabaseFile)
-        {
-            var bs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
-
-            var cf = GetConnectionFactory(DatabaseType.FoundationDBSQL);
-
-            var TableInfo = TableOperations.GetTableInfo(s);
-            var EntityMetas = TableInfo.EntityMetas;
-            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
-
-            var Value = new RelationVal { Tables = new List<TableVal>() };
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                c.ChangeDatabase(DatabaseName);
-                using (var b = c.BeginTransaction())
-                {
-                    try
-                    {
-                        foreach (var t in EntityMetas)
-                        {
-                            var Table = TableOperations.ExportTable(EntityMetas, EnumUnderlyingTypes, c, b, t.Value.Name, DatabaseType.FoundationDBSQL);
-                            Value.Tables.Add(Table);
-                        }
-                    }
-                    finally
-                    {
-                        b.Rollback();
-                    }
-                }
-            }
-
-            SaveData(s, MemoryDatabaseFile, Value, bs);
-        }
-
         private static Func<String, IDbConnection> GetConnectionFactory(DatabaseType Type)
         {
             if (Type == DatabaseType.SqlServer)
             {
                 return GetConnectionFactorySqlServer();
             }
-            else if ((Type == DatabaseType.PostgreSQL) || (Type == DatabaseType.FoundationDBSQL))
+            else if (Type == DatabaseType.PostgreSQL)
             {
                 return GetConnectionFactoryPostgreSQL();
             }
