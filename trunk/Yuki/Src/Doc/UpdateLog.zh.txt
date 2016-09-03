@@ -1,4 +1,12 @@
-﻿2016.09.02
+﻿2016.09.04
+*:
+更新Firefly。
+Yuki.Relation, Yuki.DatabaseRegenerator:
+合并Krustallos和Memory数据库格式。
+Example:
+修正Database编译。
+
+2016.09.02
 Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator, Example:
 结束对Linq to SQL, FoundationDB和Krustallos-MySQL三种数据库的支持，并移除代码。
 

@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Krustallos代码模板数据
-      Version:     2015.09.26.
+      Version:     2016.09.04.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -526,19 +526,40 @@ ObjectSchemaTemplate
                                 Save(sbw, bw, s, Schema);
                             }
                         }
-                        public Yuki.RelationSchema.Schema Load(IBinaryReader<IReadableStream> sbr, IBinaryReader<IReadableStream> br, IReadableStream s)
+                        public Yuki.RelationSchema.Schema Load(IBinaryReader<IReadableStream> sbr, IBinaryReader<IReadableStream> br, IReadableSeekableStream s)
                         {
+                            if (s.ReadSimpleString(8) != "KRUSDATA") { throw new InvalidOperationException(); }
                             var Hash = s.ReadUInt64();
                             if (Hash != KrustallosDataAccess.Hash) { throw new InvalidOperationException(); }
+                            var SchemaLength = s.ReadInt64();
+                            if (SchemaLength == 0) { throw new InvalidOperationException(); }
+                            var SchemaPosition = s.Position;
                             var Schema = sbr.Read<Yuki.RelationSchema.Schema>(s);
+                            if (s.Position != SchemaPosition + SchemaLength) { throw new InvalidOperationException(); }
+                            var DataLength = s.ReadInt64();
+                            var DataPosition = s.Position;
                             ${Loads}
+                            if (s.Position != DataPosition + DataLength) { throw new InvalidOperationException(); }
                             return Schema;
                         }
-                        public void Save(IBinaryWriter<IWritableStream> sbw, IBinaryWriter<IWritableStream> bw, IWritableStream s, Yuki.RelationSchema.Schema Schema)
+                        public void Save(IBinaryWriter<IWritableStream> sbw, IBinaryWriter<IWritableStream> bw, IWritableSeekableStream s, Yuki.RelationSchema.Schema Schema)
                         {
+                            s.WriteSimpleString("KRUSDATA", 8);
                             s.WriteUInt64(KrustallosDataAccess.Hash);
+                            var SchemaLengthPosition = s.Position;
+                            s.WriteInt64(0);
+                            var SchemaPosition = s.Position;
                             sbw.Write(Schema, s);
+                            var SchemaLength = s.Position - SchemaPosition;
+                            var DataLengthPosition = s.Position;
+                            s.WriteInt64(0);
+                            var DataPosition = s.Position;
                             ${Saves}
+                            var DataLength = s.Position - DataPosition;
+                            s.Position = SchemaLengthPosition;
+                            s.WriteInt64(SchemaLength);
+                            s.Position = DataLengthPosition;
+                            s.WriteInt64(DataLength);
                         }
                     }
         Template
