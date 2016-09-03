@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Memory代码模板数据
-      Version:     2014.09.22.
+      Version:     2016.09.04.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -109,8 +109,12 @@ ObjectSchemaTemplate
                             bs.PutCounterTranslator(st);
                             using (var s = Streams.OpenReadable(ConnectionString))
                             {
+                                if (s.ReadSimpleString(8) != "KRUSDATA") { throw new InvalidOperationException(); }
                                 var Hash = s.ReadUInt64();
                                 if (Hash != 0x${Hash}) { throw new InvalidOperationException(); }
+                                var SchemaLength = s.ReadInt64();
+                                s.Position += SchemaLength;
+                                s.ReadInt64();
                                 Tables = bs.Read<MemoryDataTables>(s);
                             }
                             Indices = new MemoryDataIndices();
