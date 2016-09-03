@@ -31,12 +31,12 @@ namespace Database
         private Func<Exception, Boolean> IsRetryable;
         private Action Dispose;
 
-        private static readonly String MemoryType = "Database.Memory.MemoryDataAccessPool";
+        private static readonly String MemoryType = "Database.Memory.Provider";
         private static readonly String SqlServerType = "Database.SqlServer.Provider";
         private static readonly String PostgreSqlType = "Database.PostgreSql.Provider";
         private static readonly String MySqlType = "Database.MySql.Provider";
         private static readonly String KrustallosType = "Database.Krustallos.Provider";
-        private static readonly String MemoryConnectionString = "Mail.md";
+        private static readonly String MemoryConnectionString = "Mail.kd";
         private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Mail";
         private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=mail;";
         private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Mail;";
