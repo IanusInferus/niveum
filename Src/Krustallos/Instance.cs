@@ -11,7 +11,6 @@ namespace Krustallos
     /// 支持读写事务两阶段提交(2PL)
     /// 支持悲观并发控制(Pessimistic Concurrency Control)
     /// 写需要锁定整个事务写入的所有表
-    /// 不支持自增字段
     /// </summary>
     public class Instance
     {
