@@ -118,6 +118,7 @@ namespace Yuki.ObjectSchema.CSharp
             yield return "public class TaggedUnionAttribute : Attribute {}";
             yield return "public class TagAttribute : Attribute {}";
             yield return "public class TupleAttribute : Attribute {}";
+            yield return "";
             yield return "[Record]";
             yield return "public struct Unit {}";
         }
@@ -136,7 +137,7 @@ namespace Yuki.ObjectSchema.CSharp
             yield return "    public Unit NotHasValue;";
             yield return "    public T HasValue;";
             yield return "";
-            yield return "    public static Optional<T> CreateNotHasValue() { return new Optional<T> { _Tag = OptionalTag.NotHasValue, NotHasValue = new Unit() }; }";
+            yield return "    public static Optional<T> CreateNotHasValue() { return new Optional<T> { _Tag = OptionalTag.NotHasValue, NotHasValue = default(Unit) }; }";
             yield return "    public static Optional<T> CreateHasValue(T Value) { return new Optional<T> { _Tag = OptionalTag.HasValue, HasValue = Value }; }";
             yield return "";
             yield return "    public Boolean OnNotHasValue { get { return _Tag == OptionalTag.NotHasValue; } }";
