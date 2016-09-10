@@ -65,12 +65,14 @@
     <Compile Include="Generated\Generator\CSharp\CSharpCompatible.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharpJson.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharpRetry.cs" />
+    <Compile Include="Generated\Generator\VB\VB.cs" />
     <Compile Include="Generated\ObjectSchema\ObjectSchema.cs" />
     <Compile Include="Generator\CSharp\CSharp.cs" />
     <Compile Include="Generator\CSharp\CSharpBinary.cs" />
     <Compile Include="Generator\CSharp\CSharpCompatible.cs" />
     <Compile Include="Generator\CSharp\CSharpJson.cs" />
     <Compile Include="Generator\CSharp\CSharpRetry.cs" />
+    <Compile Include="Generator\VB\VB.cs" />
     <Compile Include="HaxeJson\CodeGenerator.cs" />
     <Compile Include="Haxe\CodeGenerator.cs" />
     <Compile Include="JavaBinary\CodeGenerator.cs" />
@@ -86,7 +88,6 @@
     <Compile Include="ObjectSchema\TypeParser.cs" />
     <Compile Include="Properties\Resources.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VB\CodeGenerator.cs" />
     <Compile Include="Xhtml\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -106,8 +107,8 @@
     <None Include="Generator\CSharp\CSharpCompatible.tree" />
     <None Include="Generator\CSharp\CSharpJson.tree" />
     <None Include="Generator\CSharp\CSharpRetry.tree" />
+    <None Include="Generator\VB\VB.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
-    <EmbeddedResource Include="VB\Schema.tree" />
     <EmbeddedResource Include="Xhtml\Schema.tree" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

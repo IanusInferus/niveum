@@ -4,7 +4,7 @@
       File:        CSharpType.tree
       Location:    Nivea <Tree>
       Description: C#类型代码生成
-      Version:     2016.08.05.
+      Version:     2016.09.10.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -36,6 +36,7 @@
     public class TaggedUnionAttribute : Attribute {}
     public class TagAttribute : Attribute {}
     public class TupleAttribute : Attribute {}
+
     [Record]
     public struct Unit {}
 
