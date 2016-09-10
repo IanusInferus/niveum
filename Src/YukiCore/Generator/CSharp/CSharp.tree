@@ -4,7 +4,7 @@
       File:        CSharp.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#模板
-      Version:     2016.08.06.
+      Version:     2016.09.10.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -159,6 +159,7 @@
     public class TaggedUnionAttribute : Attribute {}
     public class TagAttribute : Attribute {}
     public class TupleAttribute : Attribute {}
+
     [Record]
     public struct Unit {}
 
@@ -176,7 +177,7 @@
         public Unit NotHasValue;
         public T HasValue;
 
-        public static Optional<T> CreateNotHasValue() { return new Optional<T> { _Tag = OptionalTag.NotHasValue, NotHasValue = new Unit() }; }
+        public static Optional<T> CreateNotHasValue() { return new Optional<T> { _Tag = OptionalTag.NotHasValue, NotHasValue = default(Unit) }; }
         public static Optional<T> CreateHasValue(T Value) { return new Optional<T> { _Tag = OptionalTag.HasValue, HasValue = Value }; }
 
         public Boolean OnNotHasValue { get { return _Tag == OptionalTag.NotHasValue; } }

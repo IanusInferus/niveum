@@ -115,6 +115,7 @@ namespace Nivea.Generator.CSharpType
             yield return "public class TaggedUnionAttribute : Attribute {}";
             yield return "public class TagAttribute : Attribute {}";
             yield return "public class TupleAttribute : Attribute {}";
+            yield return "";
             yield return "[Record]";
             yield return "public struct Unit {}";
         }
