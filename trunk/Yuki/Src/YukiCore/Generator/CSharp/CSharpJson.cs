@@ -3,7 +3,7 @@
 //  File:        CSharpJson.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2016.08.06.
+//  Version:     2016.10.03.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -18,7 +18,7 @@ namespace Yuki.ObjectSchema.CSharpJson
     {
         public static String CompileToCSharpJson(this Schema Schema, String NamespaceName)
         {
-            var t = new Templates();
+            var t = new Templates(Schema);
             var Lines = t.Main(Schema, NamespaceName).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
@@ -30,7 +30,11 @@ namespace Yuki.ObjectSchema.CSharpJson
 
     public partial class Templates
     {
-        private CSharp.Templates Inner = new CSharp.Templates();
+        private CSharp.Templates Inner;
+        public Templates(Schema Schema)
+        {
+            this.Inner = new CSharp.Templates(Schema);
+        }
 
         public String GetEscapedIdentifier(String Identifier)
         {

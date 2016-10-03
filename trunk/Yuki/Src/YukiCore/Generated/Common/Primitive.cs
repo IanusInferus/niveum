@@ -31,6 +31,7 @@ namespace Yuki
     public class TaggedUnionAttribute : Attribute {}
     public class TagAttribute : Attribute {}
     public class TupleAttribute : Attribute {}
+
     [Record]
     public struct Unit {}
     public enum OptionalTag

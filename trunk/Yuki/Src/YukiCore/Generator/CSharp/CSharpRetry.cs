@@ -3,7 +3,7 @@
 //  File:        CSharpRetry.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#重试循环代码生成器
-//  Version:     2016.08.26.
+//  Version:     2016.10.03.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -18,7 +18,7 @@ namespace Yuki.ObjectSchema.CSharpRetry
     {
         public static String CompileToCSharpRetry(this Schema Schema, String NamespaceName)
         {
-            var t = new Templates();
+            var t = new Templates(Schema);
             var Lines = t.Main(Schema, NamespaceName).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
@@ -30,7 +30,11 @@ namespace Yuki.ObjectSchema.CSharpRetry
 
     public partial class Templates
     {
-        private CSharp.Templates Inner = new CSharp.Templates();
+        private CSharp.Templates Inner;
+        public Templates(Schema Schema)
+        {
+            this.Inner = new CSharp.Templates(Schema);
+        }
 
         public String GetEscapedIdentifier(String Identifier)
         {
