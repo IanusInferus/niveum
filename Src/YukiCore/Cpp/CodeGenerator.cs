@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2016.08.06.
+//  Version:     2016.10.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,23 +14,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
-
-namespace Yuki.ObjectSchema.Cpp
-{
-    public static class CodeGenerator
-    {
-        public static String CompileToCpp(this Schema Schema, String NamespaceName)
-        {
-            var w = new Common.CodeGenerator.Writer(Schema, NamespaceName);
-            var a = w.GetSchema();
-            return String.Join("\r\n", a);
-        }
-        public static String CompileToCpp(this Schema Schema)
-        {
-            return CompileToCpp(Schema, "");
-        }
-    }
-}
 
 namespace Yuki.ObjectSchema.Cpp.Common
 {

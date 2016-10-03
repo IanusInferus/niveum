@@ -3,7 +3,7 @@
 //  File:        VB.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构VB.Net代码生成器
-//  Version:     2016.09.10.
+//  Version:     2016.10.03.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,7 +19,7 @@ namespace Yuki.ObjectSchema.VB
     {
         public static String CompileToVB(this Schema Schema, String NamespaceName, Boolean WithFirefly)
         {
-            var t = new Templates();
+            var t = new Templates(Schema);
             var Lines = t.Main(Schema, NamespaceName).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
@@ -31,6 +31,20 @@ namespace Yuki.ObjectSchema.VB
 
     public partial class Templates
     {
+        public Templates(Schema Schema)
+        {
+            foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
+            {
+                if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && PrimitiveMapping.ContainsKey(gp.Type.TypeRef.Name) && gp.Type.TypeRef.Name == "Type"))
+                {
+                    throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
+                }
+            }
+
+            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Unit").Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
+            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Boolean").Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
+        }
+
         private Regex rIdentifierPart = new Regex(@"[^\u0000-\u002F\u003A-\u0040\u005B-\u005E\u0060\u007B-\u007F]+");
         public String GetEscapedIdentifier(String Identifier)
         {
@@ -147,11 +161,6 @@ namespace Yuki.ObjectSchema.VB
 
             foreach (var c in Schema.Types)
             {
-                if (!c.GenericParameters().All(gp => gp.Type.OnTypeRef && gp.Type.TypeRef.Name == "Type"))
-                {
-                    continue;
-                }
-
                 if (c.OnPrimitive)
                 {
                     if (c.VersionedName() == "Unit")
