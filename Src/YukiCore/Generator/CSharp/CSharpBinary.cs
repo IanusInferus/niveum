@@ -3,7 +3,7 @@
 //  File:        CSharpBinary.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#二进制通讯代码生成器
-//  Version:     2016.08.06.
+//  Version:     2016.10.03.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -18,7 +18,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
     {
         public static String CompileToCSharpBinary(this Schema Schema, String NamespaceName, Boolean WithFirefly)
         {
-            var t = new Templates(WithFirefly);
+            var t = new Templates(Schema, WithFirefly);
             var Lines = t.Main(Schema, NamespaceName).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
@@ -30,10 +30,11 @@ namespace Yuki.ObjectSchema.CSharpBinary
 
     public partial class Templates
     {
-        private CSharp.Templates Inner = new CSharp.Templates();
+        private CSharp.Templates Inner;
         private Boolean WithFirefly;
-        public Templates(Boolean WithFirefly)
+        public Templates(Schema Schema, Boolean WithFirefly)
         {
+            this.Inner = new CSharp.Templates(Schema);
             this.WithFirefly = WithFirefly;
         }
 
