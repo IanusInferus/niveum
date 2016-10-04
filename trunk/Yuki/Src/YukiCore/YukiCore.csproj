@@ -61,6 +61,7 @@
     <Compile Include="CSharp\CodeGenerator.cs" />
     <Compile Include="Generated\Common\Primitive.cs" />
     <Compile Include="Generated\Generator\Cpp\Cpp.cs" />
+    <Compile Include="Generated\Generator\Cpp\CppBinary.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharp.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharpBinary.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharpCompatible.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="Generated\Generator\VB\VB.cs" />
     <Compile Include="Generated\ObjectSchema\ObjectSchema.cs" />
     <Compile Include="Generator\Cpp\Cpp.cs" />
+    <Compile Include="Generator\Cpp\CppBinary.cs" />
     <Compile Include="Generator\CSharp\CSharp.cs" />
     <Compile Include="Generator\CSharp\CSharpBinary.cs" />
     <Compile Include="Generator\CSharp\CSharpCompatible.cs" />
@@ -105,6 +107,7 @@
     <EmbeddedResource Include="HaxeJson\Schema.tree" />
     <None Include="Common\Primitive.tree" />
     <None Include="Generator\Cpp\Cpp.tree" />
+    <None Include="Generator\Cpp\CppBinary.tree" />
     <None Include="Generator\CSharp\CSharp.tree" />
     <None Include="Generator\CSharp\CSharpBinary.tree" />
     <None Include="Generator\CSharp\CSharpCompatible.tree" />

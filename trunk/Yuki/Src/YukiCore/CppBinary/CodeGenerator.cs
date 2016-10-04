@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++二进制代码生成器
-//  Version:     2016.08.06.
+//  Version:     2016.10.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,19 +17,8 @@ using Firefly.TextEncoding;
 
 namespace Yuki.ObjectSchema.CppBinary
 {
-    public static class CodeGenerator
+    public static class CodeGenerator2
     {
-        public static String CompileToCppBinary(this Schema Schema, String NamespaceName, Boolean WithServer = true, Boolean WithClient = true)
-        {
-            var w = new Writer(Schema, NamespaceName, WithServer, WithClient);
-            var a = w.GetSchema();
-            return String.Join("\r\n", a);
-        }
-        public static String CompileToCppBinary(this Schema Schema)
-        {
-            return CompileToCppBinary(Schema, "");
-        }
-
         public class Writer
         {
             private static ObjectSchemaTemplateInfo TemplateInfo;
