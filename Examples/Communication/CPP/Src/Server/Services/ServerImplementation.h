@@ -83,27 +83,27 @@ namespace Server
             }
 
             /// <summary>关闭服务器</summary>
-            std::shared_ptr<ShutdownReply> Shutdown(std::shared_ptr<ShutdownRequest> r);
+            std::shared_ptr<ShutdownReply> Shutdown(std::shared_ptr<ShutdownRequest> r) override;
             /// <summary>服务器时间</summary>
-            std::shared_ptr<ServerTimeReply> ServerTime(std::shared_ptr<ServerTimeRequest> r);
+            std::shared_ptr<ServerTimeReply> ServerTime(std::shared_ptr<ServerTimeRequest> r) override;
             /// <summary>退出</summary>
-            std::shared_ptr<QuitReply> Quit(std::shared_ptr<QuitRequest> r);
+            std::shared_ptr<QuitReply> Quit(std::shared_ptr<QuitRequest> r) override;
             /// <summary>检测类型结构版本</summary>
-            std::shared_ptr<CheckSchemaVersionReply> CheckSchemaVersion(std::shared_ptr<CheckSchemaVersionRequest> r);
+            std::shared_ptr<CheckSchemaVersionReply> CheckSchemaVersion(std::shared_ptr<CheckSchemaVersionRequest> r) override;
             /// <summary>发送消息</summary>
-            std::shared_ptr<SendMessageReply> SendMessage(std::shared_ptr<SendMessageRequest> r);
+            std::shared_ptr<SendMessageReply> SendMessage(std::shared_ptr<SendMessageRequest> r) override;
             /// <summary>发送消息</summary>
-            std::shared_ptr<SendMessageAt1Reply> SendMessageAt1(std::shared_ptr<SendMessageAt1Request> r);
+            std::shared_ptr<SendMessageAt1Reply> SendMessageAt1(std::shared_ptr<SendMessageAt1Request> r) override;
             /// <summary>加法</summary>
-            void TestAdd(std::shared_ptr<TestAddRequest> r, std::function<void(std::shared_ptr<TestAddReply>)> Callback, std::function<void(const std::exception &)> OnFailure);
+            void TestAdd(std::shared_ptr<TestAddRequest> r, std::function<void(std::shared_ptr<TestAddReply>)> Callback, std::function<void(const std::exception &)> OnFailure) override;
             /// <summary>两百万次浮点乘法</summary>
-            std::shared_ptr<TestMultiplyReply> TestMultiply(std::shared_ptr<TestMultiplyRequest> r);
+            std::shared_ptr<TestMultiplyReply> TestMultiply(std::shared_ptr<TestMultiplyRequest> r) override;
             /// <summary>文本原样返回</summary>
-            std::shared_ptr<TestTextReply> TestText(std::shared_ptr<TestTextRequest> r);
+            std::shared_ptr<TestTextReply> TestText(std::shared_ptr<TestTextRequest> r) override;
             /// <summary>群发消息</summary>
-            std::shared_ptr<TestMessageReply> TestMessage(std::shared_ptr<TestMessageRequest> r);
+            std::shared_ptr<TestMessageReply> TestMessage(std::shared_ptr<TestMessageRequest> r) override;
             /// <summary>加法</summary>
-            void TestAddAt1(std::shared_ptr<TestAddAt1Request> r, std::function<void(std::shared_ptr<TestAddAt1Reply>)> Callback, std::function<void(const std::exception &)> OnFailure);
+            void TestAddAt1(std::shared_ptr<TestAddAt1Request> r, std::function<void(std::shared_ptr<TestAddAt1Reply>)> Callback, std::function<void(const std::exception &)> OnFailure) override;
         };
     }
     typedef _Impl::ServerImplementation ServerImplementation;
