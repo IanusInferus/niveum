@@ -18,6 +18,9 @@
     <ClInclude Include="Clients\IContext.h">
       <Filter>Clients</Filter>
     </ClInclude>
+    <ClInclude Include="BaseSystem\AutoRelease.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
     <ClInclude Include="BaseSystem\Cryptography.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>

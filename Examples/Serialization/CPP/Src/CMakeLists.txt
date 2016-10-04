@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 find_package(Threads)
 add_definitions("-std=c++11")
-include_directories("../Lib/utf8")
-include_directories("../Lib_Gcc")
 include_directories(".")
 
 file(GLOB_RECURSE SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp")
