@@ -87,6 +87,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BaseSystem\AutoRelease.h" />
     <ClInclude Include="BaseSystem\Cryptography.h" />
     <ClInclude Include="BaseSystem\ExceptionStackTrace.h" />
     <ClInclude Include="BaseSystem\LockedVariable.h" />

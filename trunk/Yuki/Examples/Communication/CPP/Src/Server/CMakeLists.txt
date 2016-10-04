@@ -6,7 +6,6 @@ add_definitions("-DASIO_STANDALONE")
 include_directories("../../Lib/utf8")
 include_directories("../../Lib/cppformat")
 include_directories("../../Lib/asio/include")
-include_directories("../../Lib_Gcc")
 include_directories(".")
 
 file(GLOB_RECURSE SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp")
