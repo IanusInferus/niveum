@@ -1,6 +1,9 @@
 ﻿2016.10.04
 Yuki.Core:
 增加新版C++类型代码生成。
+增加新版C++二进制通讯代码生成。
+Example:
+修正Serialization、Communication的C++项目编译。
 
 2016.09.10
 Yuki.Core:

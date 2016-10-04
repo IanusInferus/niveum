@@ -63,6 +63,10 @@ namespace Yuki.ObjectSchema.Cpp
                 }
             }).Replace(".", "::");
         }
+        public String GetEscapedStringLiteral(String s)
+        {
+            return "L\"" + new String(s.SelectMany(c => c == '\\' ? "\\\\" : c == '\"' ? "\\\"" : c == '\r' ? "\\r" : c == '\n' ? "\\n" : new String(c, 1)).ToArray()) + "\"";
+        }
         private HashSet<String> EnumSet = new HashSet<String>();
         public String GetTypeString(TypeSpec Type, Boolean ForceAsValue = false)
         {
