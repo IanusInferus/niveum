@@ -2,17 +2,14 @@
 
 Windows平台下需要软件
 .Net Framework 4.0
-Haxe 3.0.0
+Haxe 3.3.0
 nginx，可选，部署环境
 FlashDevelop，可选，开发环境
 Chrome，可选，调试环境，支持Source map功能，可以直接调试Haxe代码
 
 1)配置Haxe
 从下面地址下载安装包安装，然后
-http://haxe.org/file/haxe-3.0.0-win.exe
-
-*可选，从下面地址下载最新版，覆盖安装目录
-http://94.142.242.48/builds/windows/?C=M;O=D
+https://haxe.org/website-content/downloads/3.3.0-rc.1/downloads/haxe-3.3.0-rc.1-win.exe
 
 2)生成代码并编译CSharp服务器
 运行外层目录BuildCode.cmd。
