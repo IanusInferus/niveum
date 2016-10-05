@@ -32,9 +32,6 @@ using Yuki.ObjectSchema.Java;
 using Yuki.ObjectSchema.JavaBinary;
 using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
-using Yuki.ObjectSchema.ActionScript;
-using Yuki.ObjectSchema.ActionScriptBinary;
-using Yuki.ObjectSchema.ActionScriptJson;
 using Yuki.ObjectSchema.Haxe;
 using Yuki.ObjectSchema.HaxeJson;
 using Yuki.ObjectSchema.Xhtml;
@@ -413,45 +410,6 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (optNameLower == "t2as")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 2)
-                    {
-                        ObjectSchemaToActionScriptCode(args[0], args[1]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
-                else if (optNameLower == "t2asb")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 2)
-                    {
-                        ObjectSchemaToActionScriptBinaryCode(args[0], args[1]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
-                else if (optNameLower == "t2asj")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 2)
-                    {
-                        ObjectSchemaToActionScriptJsonCode(args[0], args[1]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
                 else if (optNameLower == "t2hx")
                 {
                     var args = opt.Arguments;
@@ -568,12 +526,6 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2cpp:<CppCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C++2011二进制通讯类型");
             Console.WriteLine(@"/t2cppb:<CppCodePath>[,<NamespaceName>[,<WithServer=true>,<WithClient=true>]]");
-            Console.WriteLine(@"生成ActionScript类型");
-            Console.WriteLine(@"/t2as:<AsCodeDir>,<PackageName>");
-            Console.WriteLine(@"生成ActionScript二进制通讯类型");
-            Console.WriteLine(@"/t2asb:<AsCodeDir>,<PackageName>");
-            Console.WriteLine(@"生成ActionScript JSON通讯类型");
-            Console.WriteLine(@"/t2asj:<AsCodeDir>,<PackageName>");
             Console.WriteLine(@"生成Haxe类型");
             Console.WriteLine(@"/t2hx:<HaxeCodePath>,<PackageName>");
             Console.WriteLine(@"生成Haxe JSON通讯类型");
@@ -589,7 +541,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"BinaryFile 二进制文件路径。");
             Console.WriteLine(@"MainType 主类型。");
             Console.WriteLine(@"NamespaceName C#文件中的命名空间名称。");
-            Console.WriteLine(@"PackageName Java/ActionScript文件中的包名。");
+            Console.WriteLine(@"PackageName Java文件中的包名。");
             Console.WriteLine(@"ClassName Java文件中的类名。");
             Console.WriteLine(@"VbCodePath VB代码文件路径。");
             Console.WriteLine(@"CsCodePath C#代码文件路径。");
@@ -598,7 +550,6 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"WithServer 是否生成服务器代码。");
             Console.WriteLine(@"WithClient 是否生成客户端代码。");
             Console.WriteLine(@"JavaCodePath Java代码文件路径。");
-            Console.WriteLine(@"AsCodeDir ActionScript代码文件夹路径。");
             Console.WriteLine(@"HaxeCodePath Haxe代码文件路径。");
             Console.WriteLine(@"XhtmlDir XHTML文件夹路径。");
             Console.WriteLine(@"Title 标题。");
@@ -903,72 +854,6 @@ namespace Yuki.SchemaManipulator
             var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CppCodePath, Compiled);
-        }
-
-        public static void ObjectSchemaToActionScriptCode(String AsCodeDir, String PackageName)
-        {
-            var ObjectSchema = GetObjectSchema();
-            var CompiledFiles = ObjectSchema.CompileToActionScript(PackageName);
-            foreach (var f in CompiledFiles)
-            {
-                var Compiled = f.Content;
-                var AsCodePath = FileNameHandling.GetPath(AsCodeDir, f.Path + ".as");
-                if (File.Exists(AsCodePath))
-                {
-                    var Original = Txt.ReadFile(AsCodePath);
-                    if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
-                }
-                var Dir = FileNameHandling.GetFileDirectory(AsCodePath);
-                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-                Txt.WriteFile(AsCodePath, TextEncoding.UTF8, Compiled);
-            }
-        }
-
-        public static void ObjectSchemaToActionScriptBinaryCode(String AsCodeDir, String PackageName)
-        {
-            var ObjectSchema = GetObjectSchema();
-            var CompiledFiles = ObjectSchema.CompileToActionScriptBinary(PackageName);
-            foreach (var f in CompiledFiles)
-            {
-                var Compiled = f.Content;
-                var AsCodePath = FileNameHandling.GetPath(AsCodeDir, f.Path + ".as");
-                if (File.Exists(AsCodePath))
-                {
-                    var Original = Txt.ReadFile(AsCodePath);
-                    if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
-                }
-                var Dir = FileNameHandling.GetFileDirectory(AsCodePath);
-                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-                Txt.WriteFile(AsCodePath, TextEncoding.UTF8, Compiled);
-            }
-        }
-
-        public static void ObjectSchemaToActionScriptJsonCode(String AsCodeDir, String PackageName)
-        {
-            var ObjectSchema = GetObjectSchema();
-            var CompiledFiles = ObjectSchema.CompileToActionScriptJson(PackageName);
-            foreach (var f in CompiledFiles)
-            {
-                var Compiled = f.Content;
-                var AsCodePath = FileNameHandling.GetPath(AsCodeDir, f.Path + ".as");
-                if (File.Exists(AsCodePath))
-                {
-                    var Original = Txt.ReadFile(AsCodePath);
-                    if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
-                }
-                var Dir = FileNameHandling.GetFileDirectory(AsCodePath);
-                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-                Txt.WriteFile(AsCodePath, TextEncoding.UTF8, Compiled);
-            }
         }
 
         public static void ObjectSchemaToHaxeCode(String HaxeCodePath, String NamespaceName)
