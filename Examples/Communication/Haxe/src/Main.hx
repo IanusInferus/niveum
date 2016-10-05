@@ -3,8 +3,7 @@
 import haxe.Template;
 import haxe.Json;
 
-import js.Lib;
-import js.Lib.alert;
+import js.Browser.alert;
 
 import jQuery.JQuery;
 
