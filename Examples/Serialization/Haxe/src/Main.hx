@@ -20,7 +20,7 @@ class Main
                 start = 3;
             }
         }
-        return b.readString(start, b.length - start);
+        return b.getString(start, b.length - start);
     }
     
     static function writeUtf8File(path : String, s : String) : Void
