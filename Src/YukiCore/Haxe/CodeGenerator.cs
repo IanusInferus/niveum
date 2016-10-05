@@ -15,23 +15,6 @@ using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
 
-namespace Yuki.ObjectSchema.Haxe
-{
-    public static class CodeGenerator
-    {
-        public static String CompileToHaxe(this Schema Schema, String PackageName)
-        {
-            var w = new Common.CodeGenerator.Writer(Schema, PackageName);
-            var a = w.GetSchema();
-            return String.Join("\r\n", a);
-        }
-        public static String CompileToHaxe(this Schema Schema)
-        {
-            return CompileToHaxe(Schema, "");
-        }
-    }
-}
-
 namespace Yuki.ObjectSchema.Haxe.Common
 {
     public static class CodeGenerator
