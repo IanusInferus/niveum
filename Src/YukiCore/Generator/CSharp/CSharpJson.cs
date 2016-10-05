@@ -3,7 +3,7 @@
 //  File:        CSharpJson.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2016.10.03.
+//  Version:     2016.10.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -39,6 +39,21 @@ namespace Yuki.ObjectSchema.CSharpJson
         public String GetEscapedIdentifier(String Identifier)
         {
             return Inner.GetEscapedIdentifier(Identifier);
+        }
+        public String LowercaseCamelize(String PascalName)
+        {
+            var l = new List<Char>();
+            foreach (var c in PascalName)
+            {
+                if (Char.IsLower(c))
+                {
+                    break;
+                }
+
+                l.Add(Char.ToLower(c));
+            }
+
+            return new String(l.ToArray()) + PascalName.Substring(l.Count);
         }
         public String GetEscapedStringLiteral(String s)
         {
