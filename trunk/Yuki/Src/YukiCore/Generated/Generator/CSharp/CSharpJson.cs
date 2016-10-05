@@ -778,7 +778,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             }
             foreach (var a in Fields)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromJson"))), "(jo["), GetEscapedStringLiteral(a.Name.ToLowerInvariant())), "]);"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromJson"))), "(jo["), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "]);"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -793,7 +793,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             yield return "    var jo = new JObject();";
             foreach (var a in Fields)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "jo.Add("), GetEscapedStringLiteral(a.Name.ToLowerInvariant())), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToJson"))), "(o."), GetEscapedIdentifier(a.Name)), "));"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "jo.Add("), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToJson"))), "(o."), GetEscapedIdentifier(a.Name)), "));"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -829,7 +829,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             yield return "    var d = (IDictionary<string, JToken>)(jo);";
             foreach (var a in Alternatives)
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (d.ContainsKey("), GetEscapedStringLiteral(a.Name.ToLowerInvariant())), "))"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (d.ContainsKey("), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "))"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -838,7 +838,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromJson"))), "(jo["), GetEscapedStringLiteral(a.Name.ToLowerInvariant())), "]);"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromJson"))), "(jo["), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "]);"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -860,7 +860,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    jo.Add("), GetEscapedStringLiteral(a.Name.ToLowerInvariant())), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToJson"))), "(o."), GetEscapedIdentifier(a.Name)), "));"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    jo.Add("), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToJson"))), "(o."), GetEscapedIdentifier(a.Name)), "));"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -988,7 +988,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             yield return "    var d = (IDictionary<string, JToken>)(jo);";
             foreach (var a in Alternatives)
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (d.ContainsKey("), GetEscapedStringLiteral(a.Name.ToLowerInvariant())), "))"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (d.ContainsKey("), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "))"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -997,7 +997,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromJson"))), "(jo["), GetEscapedStringLiteral(a.Name.ToLowerInvariant())), "]);"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromJson"))), "(jo["), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "]);"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -1019,7 +1019,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    jo.Add("), GetEscapedStringLiteral(a.Name.ToLowerInvariant())), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToJson"))), "(o."), GetEscapedIdentifier(a.Name)), "));"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    jo.Add("), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToJson"))), "(o."), GetEscapedIdentifier(a.Name)), "));"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }

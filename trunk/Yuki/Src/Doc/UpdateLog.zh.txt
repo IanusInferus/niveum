@@ -1,6 +1,8 @@
 ﻿2016.10.05
 Yuki.Core, Example:
 结束对ActionScript的支持，并移除代码。
+Yuki.Core:
+修在新版C# JSON代码生成中名称小写与之前不一致的问题。
 
 2016.10.04
 Yuki.Core:
