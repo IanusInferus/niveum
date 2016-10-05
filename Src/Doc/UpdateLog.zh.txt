@@ -3,6 +3,9 @@ Yuki.Core, Example:
 结束对ActionScript的支持，并移除代码。
 Yuki.Core:
 修在新版C# JSON代码生成中名称小写与之前不一致的问题。
+增加新版Haxe类型代码生成。
+Example:
+更新Haxe编译器至3.3.0，修正一些warning。
 
 2016.10.04
 Yuki.Core:
