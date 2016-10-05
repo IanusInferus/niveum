@@ -26,12 +26,6 @@ SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /lo
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2cpp:CPP\Src\Client\Communication.h,Communication
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /import:""Communication.h"" /import:""Workaround.h"" /t2cppb:CPP\Src\Client\CommunicationBinary.h,Communication.Binary
 
-:: ActionScript
-@if not exist ActionScript\src\communication @md ActionScript\src\communication
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2as:ActionScript\src\communication,communication
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2asb:ActionScript\src\communication,communication
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2asj:ActionScript\src\communication,communication
-
 ::Haxe
 SchemaManipulator.exe /loadtype:Schema\Common /t2hx:Haxe\src\Common.hx
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /import:Common /t2hx:Haxe\src\communication\Communication.hx,communication
