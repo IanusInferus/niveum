@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板
-      Version:     2016.08.06.
+      Version:     2016.10.05.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -603,7 +603,7 @@
             foreach (var a in Fields)
             {
                 ##
-                    o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromJson]](jo[${GetEscapedStringLiteral(a.Name.ToLowerInvariant())}]);
+                    o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
             }
         return o;
     }
@@ -614,7 +614,7 @@
             foreach (var a in Fields)
             {
                 ##
-                    jo.Add(${GetEscapedStringLiteral(a.Name.ToLowerInvariant())}, [[${a.Type.TypeFriendlyName()}ToJson]](o.[[${a.Name}]]));
+                    jo.Add(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${a.Type.TypeFriendlyName()}ToJson]](o.[[${a.Name}]]));
             }
         return jo;
     }
@@ -635,10 +635,10 @@
             foreach (var a in Alternatives)
             {
                 ##
-                    if (d.ContainsKey(${GetEscapedStringLiteral(a.Name.ToLowerInvariant())}))
+                    if (d.ContainsKey(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}))
                     {
                         o._Tag = [[${Name}Tag.${a.Name}]];
-                        o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromJson]](jo[${GetEscapedStringLiteral(a.Name.ToLowerInvariant())}]);
+                        o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
                         return o;
                     }
             }
@@ -653,7 +653,7 @@
                 ##
                     if (o._Tag == [[${Name}Tag.${a.Name}]])
                     {
-                        jo.Add(${GetEscapedStringLiteral(a.Name.ToLowerInvariant())}, [[${a.Type.TypeFriendlyName()}ToJson]](o.[[${a.Name}]]));
+                        jo.Add(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${a.Type.TypeFriendlyName()}ToJson]](o.[[${a.Name}]]));
                         return jo;
                     }
             }
@@ -738,10 +738,10 @@
             foreach (var a in Alternatives)
             {
                 ##
-                    if (d.ContainsKey(${GetEscapedStringLiteral(a.Name.ToLowerInvariant())}))
+                    if (d.ContainsKey(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}))
                     {
                         o._Tag = [[${Name}Tag.${a.Name}]];
-                        o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromJson]](jo[${GetEscapedStringLiteral(a.Name.ToLowerInvariant())}]);
+                        o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
                         return o;
                     }
             }
@@ -756,7 +756,7 @@
                 ##
                     if (o._Tag == [[${Name}Tag.${a.Name}]])
                     {
-                        jo.Add(${GetEscapedStringLiteral(a.Name.ToLowerInvariant())}, [[${a.Type.TypeFriendlyName()}ToJson]](o.[[${a.Name}]]));
+                        jo.Add(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${a.Type.TypeFriendlyName()}ToJson]](o.[[${a.Name}]]));
                         return jo;
                     }
             }
