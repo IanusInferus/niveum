@@ -3,7 +3,7 @@
 //  File:        Resources.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 资源读取类
-//  Version:     2012.12.21.
+//  Version:     2016.10.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -27,21 +27,13 @@ namespace Yuki.ObjectSchema.Properties
             }
         }
 
-        public static Byte[] ActionScript { get { return GetResource("ActionScript"); } }
-        public static Byte[] ActionScriptBinary { get { return GetResource("ActionScriptBinary"); } }
-        public static Byte[] ActionScriptJson { get { return GetResource("ActionScriptJson"); } }
         public static Byte[] Cpp { get { return GetResource("Cpp"); } }
         public static Byte[] CppBinary { get { return GetResource("CppBinary"); } }
         public static Byte[] CSharp { get { return GetResource("CSharp"); } }
-        public static Byte[] CSharpCompatible { get { return GetResource("CSharpCompatible"); } }
-        public static Byte[] CSharpBinary { get { return GetResource("CSharpBinary"); } }
-        public static Byte[] CSharpJson { get { return GetResource("CSharpJson"); } }
-        public static Byte[] CSharpRetry { get { return GetResource("CSharpRetry"); } }
-        public static Byte[] Haxe { get { return GetResource("Haxe"); } }
+         public static Byte[] Haxe { get { return GetResource("Haxe"); } }
         public static Byte[] HaxeJson { get { return GetResource("HaxeJson"); } }
         public static Byte[] Java { get { return GetResource("Java"); } }
         public static Byte[] JavaBinary { get { return GetResource("JavaBinary"); } }
-        public static Byte[] VB { get { return GetResource("VB"); } }
         public static Byte[] Xhtml { get { return GetResource("Xhtml"); } }
     }
 }
