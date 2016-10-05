@@ -39,12 +39,4 @@ if exist Haxe\bin\DataCopy.n (
   @popd
 )
 
-:: ActionScript
-@if not exist ActionScript\Data @md ActionScript\Data
-if exist ActionScript\bin\DataCopy.swf (
-  @pushd ActionScript
-  call Run.bat
-  @popd
-)
-
 @pause
