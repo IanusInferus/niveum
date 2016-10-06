@@ -555,9 +555,13 @@ namespace Yuki.ObjectSchema.Cpp
             }
             yield return "};";
         }
-        public IEnumerable<String> EnumFunctor(EnumDef e)
+        public IEnumerable<String> EnumFunctor(EnumDef e, String NamespaceName)
         {
             var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+            if (NamespaceName != "")
+            {
+                Name = NamespaceName.Replace(".", "::") + "::" + Name;
+            }
             yield return "template <>";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "struct hash<"), Name), ">"))
             {
@@ -569,7 +573,7 @@ namespace Yuki.ObjectSchema.Cpp
                 yield return _Line;
             }
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        return hash<"), GetTypeString(e.UnderlyingType)), ">()(x);"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "        return hash<"), GetTypeString(e.UnderlyingType)), ">()(static_cast<"), GetTypeString(e.UnderlyingType)), ">(x));"))
             {
                 yield return _Line;
             }
@@ -586,7 +590,7 @@ namespace Yuki.ObjectSchema.Cpp
                 yield return _Line;
             }
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        return less<"), GetTypeString(e.UnderlyingType)), ">()(x, y);"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "        return less<"), GetTypeString(e.UnderlyingType)), ">()(static_cast<"), GetTypeString(e.UnderlyingType)), ">(x), static_cast<"), GetTypeString(e.UnderlyingType)), ">(y));"))
             {
                 yield return _Line;
             }
@@ -748,7 +752,7 @@ namespace Yuki.ObjectSchema.Cpp
             }
             var Primitives = GetPrimitives(Schema);
             var SimpleTypes = GetSimpleTypes(Schema);
-            var EnumFunctors = GetEnumFunctors(Schema);
+            var EnumFunctors = GetEnumFunctors(Schema, NamespaceName);
             var ComplexTypes = GetComplexTypes(Schema);
             foreach (var _Line in Combine(Begin(), Primitives))
             {

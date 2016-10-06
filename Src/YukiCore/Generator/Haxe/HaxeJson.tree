@@ -1,7 +1,7 @@
 ﻿$Comment
     ==========================================================================
 
-      File:        CSharpJson.tree
+      File:        HaxeJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Haxe JSON通讯模板
       Version:     2016.10.06.

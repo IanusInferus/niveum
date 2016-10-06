@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2016.10.04.
+//  Version:     2016.10.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -32,7 +32,7 @@ namespace Yuki.RelationSchema.CppMemory
             private static OS.ObjectSchemaTemplateInfo TemplateInfo;
 
             private CppPlain.CodeGenerator.Writer InnerWriter;
-            private OS.CppBinary.CodeGenerator2.Writer InnerBinaryWriter;
+            private OS.CppBinary.Templates InnerBinaryWriter;
 
             private Schema Schema;
             private String EntityNamespaceName;
@@ -43,10 +43,7 @@ namespace Yuki.RelationSchema.CppMemory
 
             static Writer()
             {
-                var OriginalTemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CppPlain);
                 TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CppMemory);
-                TemplateInfo.Keywords = OriginalTemplateInfo.Keywords;
-                TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
             public Writer(Schema Schema, String EntityNamespaceName, String NamespaceName)
@@ -90,12 +87,11 @@ namespace Yuki.RelationSchema.CppMemory
                     }
                 ).ToList();
                 Types.Add(OS.TypeDef.CreateRecord(new OS.RecordDef { Name = "MemoryDataTables", Version = "", GenericParameters = new List<OS.VariableDef> { }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Fields = TableFields, Description = "" }));
-                InnerBinaryWriter = new OS.CppBinary.CodeGenerator2.Writer(new OS.Schema { Types = Types, TypeRefs = InnerSchema.TypeRefs, Imports = InnerSchema.Imports }, NamespaceName);
+                InnerBinaryWriter = new OS.CppBinary.Templates(new OS.Schema { Types = Types, TypeRefs = InnerSchema.TypeRefs, Imports = InnerSchema.Imports }, false, false);
             }
 
             public List<String> GetSchema()
             {
-                var Header = GetHeader();
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToList();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes();
@@ -109,12 +105,12 @@ namespace Yuki.RelationSchema.CppMemory
                     Contents = GetTemplate("NamespaceImplementation").Substitute("EntityNamespaceName", EntityNamespaceName).Substitute("Contents", Contents);
                 }
                 Contents = WrapContents(NamespaceName, Contents);
-                return EvaluateEscapedIdentifiers(GetMain(Header, Includes, Primitives, new List<String> { }, new List<String> { }, Contents)).Select(Line => Line.TrimEnd(' ')).ToList();
+                return EvaluateEscapedIdentifiers(GetMain(Includes, Primitives, new List<String> { }, new List<String> { }, Contents)).Select(Line => Line.TrimEnd(' ')).ToList();
             }
 
-            public List<String> GetMain(List<String> Header, List<String> Includes, List<String> Primitives, List<String> SimpleTypes, List<String> EnumFunctors, List<String> ComplexTypes)
+            public List<String> GetMain(List<String> Includes, List<String> Primitives, List<String> SimpleTypes, List<String> EnumFunctors, List<String> ComplexTypes)
             {
-                return InnerWriter.GetMain(Header, Includes, Primitives, SimpleTypes, EnumFunctors, ComplexTypes);
+                return InnerWriter.GetMain(Includes, Primitives, SimpleTypes, EnumFunctors, ComplexTypes);
             }
 
             public List<String> WrapContents(String Namespace, List<String> Contents)
@@ -125,11 +121,6 @@ namespace Yuki.RelationSchema.CppMemory
             public Boolean IsInclude(String s)
             {
                 return InnerWriter.IsInclude(s);
-            }
-
-            public List<String> GetHeader()
-            {
-                return GetTemplate("Header");
             }
 
             public List<String> GetPrimitives()
@@ -399,8 +390,8 @@ namespace Yuki.RelationSchema.CppMemory
 
                 var Tables = GetTables();
                 var Indices = GetIndices();
-                var Streams = InnerBinaryWriter.GetTemplate("Streams");
-                var BinaryTranslator = InnerBinaryWriter.GetBinaryTranslator();
+                var Streams = InnerBinaryWriter.Streams().ToList();
+                var BinaryTranslator = InnerBinaryWriter.BinaryTranslator(InnerSchema).ToList();
                 var Generates = GetGenerates();
                 var Hash = Schema.Hash().ToString("X16", System.Globalization.CultureInfo.InvariantCulture);
                 var Queries = GetQueries();
@@ -419,27 +410,27 @@ namespace Yuki.RelationSchema.CppMemory
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static List<String> GetLines(String Value)
+            public List<String> GetLines(String Value)
             {
-                return OS.Cpp.Common.CodeGenerator.Writer.GetLines(Value);
+                return InnerWriter.GetLines(Value);
             }
-            public static String GetEscapedIdentifier(String Identifier)
+            public String GetEscapedIdentifier(String Identifier)
             {
-                return OS.Cpp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
+                return InnerWriter.GetEscapedIdentifier(Identifier);
             }
             private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
-                return OS.Cpp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
+                return InnerWriter.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
         private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
-            return OS.Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            return CppPlain.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
         private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
-            return OS.Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            return CppPlain.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
     }
 }

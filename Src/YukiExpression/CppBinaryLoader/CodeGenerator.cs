@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式结构C++二进制加载器代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.10.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -11,11 +11,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Firefly;
-using Firefly.Mapping.MetaSchema;
+using System.Text.RegularExpressions;
 using Firefly.TextEncoding;
 using Yuki.ObjectSchema;
-using Cpp = Yuki.ObjectSchema.Cpp;
+using OS = Yuki.ObjectSchema;
 
 namespace Yuki.ExpressionSchema.CppBinaryLoader
 {
@@ -36,21 +35,30 @@ namespace Yuki.ExpressionSchema.CppBinaryLoader
         {
             private static ObjectSchemaTemplateInfo TemplateInfo;
 
+            private OS.Cpp.Templates InnerWriter;
+
             private Schema Schema;
             private String NamespaceName;
 
             static Writer()
             {
-                var OriginalTemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Yuki.ObjectSchema.Properties.Resources.Cpp);
                 TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CppBinaryLoader);
-                TemplateInfo.Keywords = OriginalTemplateInfo.Keywords;
-                TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
 
             public Writer(Schema Schema, String NamespaceName)
             {
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
+                InnerWriter = new OS.Cpp.Templates(new OS.Schema
+                {
+                    Types = new List<TypeDef> { },
+                    TypeRefs = new List<TypeDef>
+                    {
+                        TypeDef.CreatePrimitive(new PrimitiveDef { Name = "Unit", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } }),
+                        TypeDef.CreatePrimitive(new PrimitiveDef { Name = "Boolean", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } })
+                    },
+                    Imports = new List<String> { }
+                });
             }
 
             public List<String> GetSchema()
@@ -147,27 +155,80 @@ namespace Yuki.ExpressionSchema.CppBinaryLoader
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static List<String> GetLines(String Value)
+            public List<String> GetLines(String Value)
             {
-                return Cpp.Common.CodeGenerator.Writer.GetLines(Value);
+                return Value.UnifyNewLineToLf().Split('\n').ToList();
             }
-            public static String GetEscapedIdentifier(String Identifier)
+            public String GetEscapedIdentifier(String Identifier)
             {
-                return Cpp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
+                return InnerWriter.GetEscapedIdentifier(Identifier);
             }
-            private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
+            private Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
+            public List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
-                return Cpp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
+                return Lines.Select(Line => rIdentifier.Replace(Line, s => GetEscapedIdentifier(s.Result("${Identifier}"))).Replace("[[[[", "[[").Replace("]]]]", "]]")).ToList();
             }
         }
 
-        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
+        public static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
-            return Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            var ParameterString = "${" + Parameter + "}";
+            var LowercaseParameterString = "${" + LowercaseCamelize(Parameter) + "}";
+            var LowercaseValue = LowercaseCamelize(Value);
+
+            var l = new List<String>();
+            foreach (var Line in Lines)
+            {
+                var NewLine = Line;
+
+                if (Line.Contains(ParameterString))
+                {
+                    NewLine = NewLine.Replace(ParameterString, Value);
+                }
+
+                if (Line.Contains(LowercaseParameterString))
+                {
+                    NewLine = NewLine.Replace(LowercaseParameterString, LowercaseValue);
+                }
+
+                l.Add(NewLine);
+            }
+            return l;
         }
-        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        public static String LowercaseCamelize(String PascalName)
         {
-            return Cpp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            var l = new List<Char>();
+            foreach (var c in PascalName)
+            {
+                if (Char.IsLower(c))
+                {
+                    break;
+                }
+
+                l.Add(Char.ToLower(c));
+            }
+
+            return new String(l.ToArray()) + new String(PascalName.Skip(l.Count).ToArray());
+        }
+        public static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        {
+            var l = new List<String>();
+            foreach (var Line in Lines)
+            {
+                var ParameterString = "${" + Parameter + "}";
+                if (Line.Contains(ParameterString))
+                {
+                    foreach (var vLine in Value)
+                    {
+                        l.Add(Line.Replace(ParameterString, vLine));
+                    }
+                }
+                else
+                {
+                    l.Add(Line);
+                }
+            }
+            return l;
         }
     }
 }

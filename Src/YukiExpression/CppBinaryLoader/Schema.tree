@@ -128,7 +128,7 @@
             //Parameters: ${FunctionName}, ${Name}, ${Type}
             Value
                 $String
-                    eptp.Parameters[L"${Name}"] = Yuki::ExpressionSchema::PrimitiveType_${Type};
+                    eptp.Parameters[L"${Name}"] = Yuki::ExpressionSchema::PrimitiveType::${Type};
         Template
             Name Module_FunctionCall
             //Parameters: ${FunctionName}, ${ParameterList}, ${Parameters}, ${ReturnType}
