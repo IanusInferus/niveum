@@ -1,4 +1,9 @@
-﻿2016.10.05
+﻿2016.10.06
+Yuki.Core:
+增加新版Haxe二进制通讯代码生成。
+修正对类型字符串中转义的处理。
+
+2016.10.05
 Yuki.Core, Example:
 结束对ActionScript的支持，并移除代码。
 Yuki.Core:

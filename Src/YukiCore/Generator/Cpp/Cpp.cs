@@ -3,7 +3,7 @@
 //  File:        Cpp.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2016.10.04.
+//  Version:     2016.10.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -81,22 +81,22 @@ namespace Yuki.ObjectSchema.Cpp
                     }
                     else
                     {
-                        return Type.TypeRef.TypeFriendlyName();
+                        return GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
                     }
                 }
                 else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
                 {
-                    return "enum " + Type.TypeRef.TypeFriendlyName();
+                    return "enum " + GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
                 }
                 if (ForceAsValue)
                 {
-                    return Type.TypeRef.TypeFriendlyName();
+                    return GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
                 }
-                return "std::shared_ptr<class " + Type.TypeRef.TypeFriendlyName() + ">";
+                return "std::shared_ptr<class " + GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName()) + ">";
             }
             else if (Type.OnGenericParameterRef)
             {
-                return Type.GenericParameterRef;
+                return GetEscapedIdentifier(Type.GenericParameterRef);
             }
             else if (Type.OnTuple)
             {
@@ -121,9 +121,9 @@ namespace Yuki.ObjectSchema.Cpp
                 {
                     if (ForceAsValue)
                     {
-                        return Type.TypeFriendlyName();
+                        return GetEscapedIdentifier(Type.TypeFriendlyName());
                     }
-                    return "std::shared_ptr<class " + Type.TypeFriendlyName() + ">";
+                    return "std::shared_ptr<class " + GetEscapedIdentifier(Type.TypeFriendlyName()) + ">";
                 }
             }
             else

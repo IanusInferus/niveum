@@ -4,7 +4,7 @@
       File:        Haxe.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Haxe模板
-      Version:     2016.10.05.
+      Version:     2016.10.06.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -185,9 +185,12 @@
         var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
     ${Record(Event)}
 
-#Template Tuple Name:String Types:List<TypeSpec>
+#Template Tuple tp:TypeSpec
+    $$
+        var Name = GetEscapedIdentifier(tp.TypeFriendlyName());
+        var Types = tp.Tuple;
     /* Tuple */
-    typedef [[${Name}]] =
+    typedef ${Name} =
     {
         $$
             var k = 0;

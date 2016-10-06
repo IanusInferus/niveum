@@ -3,7 +3,7 @@
 //  File:        CSharpCompatible.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2016.10.03.
+//  Version:     2016.10.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -343,11 +343,11 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             var VersionedName = tu.TypeFriendlyName();
             if (tuHead == null)
             {
-                FillTranslatorTaggedUnionFrom(VersionedName, Name, VersionedName, tu.Alternatives, new List<VariableDef> { }, l, true);
+                FillTranslatorTaggedUnionFrom(VersionedName, GetEscapedIdentifier(Name), GetEscapedIdentifier(VersionedName), tu.Alternatives, new List<VariableDef> { }, l, true);
             }
             else
             {
-                FillTranslatorTaggedUnionFrom(VersionedName, Name, VersionedName, tu.Alternatives, tuHead.Alternatives, l, false);
+                FillTranslatorTaggedUnionFrom(VersionedName, GetEscapedIdentifier(Name), GetEscapedIdentifier(VersionedName), tu.Alternatives, tuHead.Alternatives, l, false);
             }
         }
         public void FillTranslatorTaggedUnionFrom(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, List<String> l, Boolean InitialHasError)
@@ -369,11 +369,11 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             var VersionedName = tu.TypeFriendlyName();
             if (tuHead == null)
             {
-                FillTranslatorTaggedUnionTo(VersionedName, Name, VersionedName, tu.Alternatives, new List<VariableDef> { }, l, true);
+                FillTranslatorTaggedUnionTo(VersionedName, GetEscapedIdentifier(Name), GetEscapedIdentifier(VersionedName), tu.Alternatives, new List<VariableDef> { }, l, true);
             }
             else
             {
-                FillTranslatorTaggedUnionTo(VersionedName, Name, VersionedName, tu.Alternatives, tuHead.Alternatives, l, false);
+                FillTranslatorTaggedUnionTo(VersionedName, GetEscapedIdentifier(Name), GetEscapedIdentifier(VersionedName), tu.Alternatives, tuHead.Alternatives, l, false);
             }
         }
         public void FillTranslatorTaggedUnionTo(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, List<String> l, Boolean InitialHasError)

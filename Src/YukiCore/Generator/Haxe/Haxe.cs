@@ -3,7 +3,7 @@
 //  File:        Haxe.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Haxe代码生成器
-//  Version:     2016.10.05.
+//  Version:     2016.10.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -100,15 +100,15 @@ namespace Yuki.ObjectSchema.Haxe
                 {
                     return GetTypeString(EnumDict[Type.TypeRef.VersionedName()].UnderlyingType);
                 }
-                return Type.TypeRef.TypeFriendlyName();
+                return GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
             }
             else if (Type.OnGenericParameterRef)
             {
-                return Type.GenericParameterRef;
+                return GetEscapedIdentifier(Type.GenericParameterRef);
             }
             else if (Type.OnTuple)
             {
-                return Type.TypeFriendlyName();
+                return GetEscapedIdentifier(Type.TypeFriendlyName());
             }
             else if (Type.OnGenericTypeSpec)
             {
@@ -118,7 +118,7 @@ namespace Yuki.ObjectSchema.Haxe
                 }
                 else
                 {
-                    return Type.TypeFriendlyName();
+                    return GetEscapedIdentifier(Type.TypeFriendlyName());
                 }
             }
             else
@@ -228,7 +228,7 @@ namespace Yuki.ObjectSchema.Haxe
             var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
             foreach (var t in Tuples)
             {
-                l.AddRange(Tuple(t.TypeFriendlyName(), t.Tuple));
+                l.AddRange(Tuple(t));
                 l.Add("");
             }
 

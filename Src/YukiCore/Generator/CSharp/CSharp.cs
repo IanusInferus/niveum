@@ -165,8 +165,6 @@ namespace Yuki.ObjectSchema.CSharp
         {
             var l = new List<String>();
 
-            List<TypeDef> cl = new List<TypeDef>();
-
             foreach (var c in Schema.Types)
             {
                 if (c.OnPrimitive)
@@ -203,12 +201,10 @@ namespace Yuki.ObjectSchema.CSharp
                 else if (c.OnClientCommand)
                 {
                     l.AddRange(ClientCommand(c.ClientCommand));
-                    cl.Add(c);
                 }
                 else if (c.OnServerCommand)
                 {
                     l.AddRange(ServerCommand(c.ServerCommand));
-                    cl.Add(c);
                 }
                 else
                 {
@@ -217,13 +213,14 @@ namespace Yuki.ObjectSchema.CSharp
                 l.Add("");
             }
 
-            if (cl.Count > 0)
+            var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+            if (Commands.Count > 0)
             {
-                l.AddRange(IApplicationServer(cl));
+                l.AddRange(IApplicationServer(Commands));
                 l.Add("");
-                l.AddRange(IApplicationClient(cl));
+                l.AddRange(IApplicationClient(Commands));
                 l.Add("");
-                l.AddRange(IEventPump(cl));
+                l.AddRange(IEventPump(Commands));
                 l.Add("");
             }
 
