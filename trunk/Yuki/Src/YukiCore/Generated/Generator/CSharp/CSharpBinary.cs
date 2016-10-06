@@ -1661,7 +1661,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
         {
             var TypeFriendlyName = tp.TypeFriendlyName();
             var TypeString = GetTypeString(tp);
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
             {
                 yield return _Line;
             }
@@ -1684,7 +1684,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), GetEscapedIdentifier(TypeString)), " t)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), TypeString), " t)"))
             {
                 yield return _Line;
             }
@@ -1701,7 +1701,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 }
             }
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBytes"))), "(Byte[] Bytes)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBytes"))), "(Byte[] Bytes)"))
             {
                 yield return _Line;
             }
@@ -1716,7 +1716,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             }
             yield return "    }";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static Byte[] "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBytes"))), "("), GetEscapedIdentifier(TypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static Byte[] "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBytes"))), "("), TypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -1739,12 +1739,12 @@ namespace Yuki.ObjectSchema.CSharpBinary
             var TypeFriendlyName = o.TypeFriendlyName();
             var TypeString = GetTypeString(o);
             var Name = "Optional";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), GetEscapedIdentifier(TypeString)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), TypeString), "();"))
             {
                 yield return _Line;
             }
@@ -1765,7 +1765,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             }
             yield return "    throw new InvalidOperationException();";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), GetEscapedIdentifier(TypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), TypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -1787,7 +1787,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             }
             yield return "    throw new InvalidOperationException();";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBytes"))), "(Byte[] Bytes)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBytes"))), "(Byte[] Bytes)"))
             {
                 yield return _Line;
             }
@@ -1802,7 +1802,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             }
             yield return "    }";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static Byte[] "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBytes"))), "("), GetEscapedIdentifier(TypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static Byte[] "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBytes"))), "("), TypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -1823,12 +1823,12 @@ namespace Yuki.ObjectSchema.CSharpBinary
             var TypeFriendlyName = l.TypeFriendlyName();
             var TypeString = GetTypeString(l);
             var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), GetEscapedIdentifier(TypeString)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), TypeString), "();"))
             {
                 yield return _Line;
             }
@@ -1842,7 +1842,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             yield return "    }";
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), GetEscapedIdentifier(TypeString)), " l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), TypeString), " l)"))
             {
                 yield return _Line;
             }
@@ -1857,7 +1857,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             }
             yield return "    }";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBytes"))), "(Byte[] Bytes)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBytes"))), "(Byte[] Bytes)"))
             {
                 yield return _Line;
             }
@@ -1872,7 +1872,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             }
             yield return "    }";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static Byte[] "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBytes"))), "("), GetEscapedIdentifier(TypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static Byte[] "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBytes"))), "("), TypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -1893,12 +1893,12 @@ namespace Yuki.ObjectSchema.CSharpBinary
             var TypeFriendlyName = l.TypeFriendlyName();
             var TypeString = GetTypeString(l);
             var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), GetEscapedIdentifier(TypeString)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), TypeString), "();"))
             {
                 yield return _Line;
             }
@@ -1912,7 +1912,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             yield return "    }";
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), GetEscapedIdentifier(TypeString)), " l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), TypeString), " l)"))
             {
                 yield return _Line;
             }
@@ -1927,7 +1927,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             }
             yield return "    }";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBytes"))), "(Byte[] Bytes)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBytes"))), "(Byte[] Bytes)"))
             {
                 yield return _Line;
             }
@@ -1942,7 +1942,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             }
             yield return "    }";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static Byte[] "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBytes"))), "("), GetEscapedIdentifier(TypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static Byte[] "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBytes"))), "("), TypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -1969,12 +1969,12 @@ namespace Yuki.ObjectSchema.CSharpBinary
             var TypeString = GetTypeString(l);
             var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
             var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), GetEscapedIdentifier(TypeString)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), TypeString), "();"))
             {
                 yield return _Line;
             }
@@ -1992,7 +1992,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             yield return "    }";
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), GetEscapedIdentifier(TypeString)), " l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), TypeString), " l)"))
             {
                 yield return _Line;
             }
@@ -2011,7 +2011,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             }
             yield return "    }";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBytes"))), "(Byte[] Bytes)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBytes"))), "(Byte[] Bytes)"))
             {
                 yield return _Line;
             }
@@ -2026,7 +2026,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             }
             yield return "    }";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static Byte[] "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBytes"))), "("), GetEscapedIdentifier(TypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static Byte[] "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBytes"))), "("), TypeString), " o)"))
             {
                 yield return _Line;
             }

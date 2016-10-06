@@ -243,10 +243,12 @@ namespace Yuki.ObjectSchema.Haxe
                 yield return _Line;
             }
         }
-        public IEnumerable<String> Tuple(String Name, List<TypeSpec> Types)
+        public IEnumerable<String> Tuple(TypeSpec tp)
         {
+            var Name = GetEscapedIdentifier(tp.TypeFriendlyName());
+            var Types = tp.Tuple;
             yield return "/* Tuple */";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "typedef "), GetEscapedIdentifier(Name)), " ="))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "typedef "), Name), " ="))
             {
                 yield return _Line;
             }

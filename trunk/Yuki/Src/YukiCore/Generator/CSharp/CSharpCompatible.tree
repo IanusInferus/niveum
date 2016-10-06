@@ -4,7 +4,7 @@
       File:        CSharpCompatible.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#通讯兼容模板
-      Version:     2016.08.21.
+      Version:     2016.10.06.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -195,7 +195,7 @@
         }
 
 #Template Translator_TaggedUnionFrom VersionedName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef>
-    public [[${VersionedTypeString}]] [[${VersionedName}FromHead]]([[${TypeString}]] ho)
+    public ${VersionedTypeString} [[${VersionedName}FromHead]](${TypeString} ho)
     {
         $$
             var d = Alternatives.ToDictionary(a => a.Name);
@@ -257,7 +257,7 @@
         }
 
 #Template Translator_TaggedUnionTo VersionedName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef>
-    public [[${TypeString}]] [[${VersionedName}ToHead]]([[${VersionedTypeString}]] o)
+    public ${TypeString} [[${VersionedName}ToHead]](${VersionedTypeString} o)
     {
         $$
             var d = Alternatives.ToDictionary(a => a.Name);
@@ -367,7 +367,7 @@
         }
 
 #Template Translator_TupleFrom VersionedName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec>
-    public [[${VersionedTypeString}]] [[${VersionedName}FromHead]]([[${TypeString}]] ho)
+    public ${VersionedTypeString} [[${VersionedName}FromHead]](${TypeString} ho)
     {
         $$
             var k = 0;
@@ -402,7 +402,7 @@
                     var Item${k + 1} = ho.Item${k + 1};
                 k += 1;
             }
-        return new [[${VersionedTypeString}]](${String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))});
+        return new ${VersionedTypeString}(${String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))});
     }
 
 #Template Translator_TupleTo VersionedName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec> InitialHasError:Boolean
@@ -420,7 +420,7 @@
         }
 
 #Template Translator_TupleTo VersionedName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec>
-    public [[${TypeString}]] [[${VersionedName}ToHead]]([[${VersionedTypeString}]] o)
+    public ${TypeString} [[${VersionedName}ToHead]](${VersionedTypeString} o)
     {
         $$
             var k = 0;
@@ -455,37 +455,37 @@
                     var Item${k + 1} = o.Item${k + 1};
                 k += 1;
             }
-        return new [[${TypeString}]](${String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))});
+        return new ${TypeString}(${String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))});
     }
 
 #Template Translator_ListFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public [[${VersionedTypeString}]] [[${VersionedTypeFriendlyName}FromHead]]([[${TypeString}]] ho)
+    public ${VersionedTypeString} [[${VersionedTypeFriendlyName}FromHead]](${TypeString} ho)
     {
         return ho.Select(he => [[${VersionedElementTypeFriendlyName}FromHead]](he)).ToList();
     }
 
 #Template Translator_ListTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public [[${TypeString}]] [[${VersionedTypeFriendlyName}ToHead]]([[${VersionedTypeString}]] o)
+    public ${TypeString} [[${VersionedTypeFriendlyName}ToHead]](${VersionedTypeString} o)
     {
         return o.Select(e => [[${VersionedElementTypeFriendlyName}ToHead]](e)).ToList();
     }
 
 #Template Translator_SetFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public [[${VersionedTypeString}]] [[${VersionedTypeFriendlyName}FromHead]]([[${TypeString}]] ho)
+    public ${VersionedTypeString} [[${VersionedTypeFriendlyName}FromHead]](${TypeString} ho)
     {
-        return new [[${VersionedTypeString}]](ho.Select(he => [[${VersionedElementTypeFriendlyName}FromHead]](he)));
+        return new ${VersionedTypeString}(ho.Select(he => [[${VersionedElementTypeFriendlyName}FromHead]](he)));
     }
 
 #Template Translator_SetTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public [[${TypeString}]] [[${VersionedTypeFriendlyName}ToHead]]([[${VersionedTypeString}]] o)
+    public ${TypeString} [[${VersionedTypeFriendlyName}ToHead]](${VersionedTypeString} o)
     {
-        return new [[${TypeString}]](o.Select(e => [[${VersionedElementTypeFriendlyName}ToHead]](e)));
+        return new ${TypeString}(o.Select(e => [[${VersionedElementTypeFriendlyName}ToHead]](e)));
     }
 
 #Template Translator_MapFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String KeyTypeSpec:TypeSpec HeadKeyTypeSpec:TypeSpec ValueTypeSpec:TypeSpec HeadValueTypeSpec:TypeSpec
-    public [[${VersionedTypeString}]] [[${VersionedTypeFriendlyName}FromHead]]([[${TypeString}]] ho)
+    public ${VersionedTypeString} [[${VersionedTypeFriendlyName}FromHead]](${TypeString} ho)
     {
-        var o = new [[${VersionedTypeString}]]();
+        var o = new ${VersionedTypeString}();
         foreach (var hp in ho)
         {
             $$
@@ -515,9 +515,9 @@
     }
 
 #Template Translator_MapTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String KeyTypeSpec:TypeSpec HeadKeyTypeSpec:TypeSpec ValueTypeSpec:TypeSpec HeadValueTypeSpec:TypeSpec
-    public [[${TypeString}]] [[${VersionedTypeFriendlyName}ToHead]]([[${VersionedTypeString}]] o)
+    public ${TypeString} [[${VersionedTypeFriendlyName}ToHead]](${VersionedTypeString} o)
     {
-        var ho = new [[${TypeString}]]();
+        var ho = new ${TypeString}();
         foreach (var p in o)
         {
             $$

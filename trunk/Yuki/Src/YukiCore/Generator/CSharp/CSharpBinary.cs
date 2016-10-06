@@ -3,7 +3,7 @@
 //  File:        CSharpBinary.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#二进制通讯代码生成器
-//  Version:     2016.10.03.
+//  Version:     2016.10.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -186,29 +186,16 @@ namespace Yuki.ObjectSchema.CSharpBinary
         {
             var l = new List<String>();
 
-            List<TypeDef> cl = new List<TypeDef>();
-
-            foreach (var c in Schema.Types)
-            {
-                if (c.OnClientCommand)
-                {
-                    cl.Add(c);
-                }
-                else if (c.OnServerCommand)
-                {
-                    cl.Add(c);
-                }
-            }
-
-            if (cl.Count > 0)
+            var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+            if (Commands.Count > 0)
             {
                 var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 var Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).Hash();
-                l.AddRange(BinarySerializationServer(Hash, cl, SchemaClosureGenerator));
+                l.AddRange(BinarySerializationServer(Hash, Commands, SchemaClosureGenerator));
                 l.Add("");
                 l.AddRange(IBinarySender());
                 l.Add("");
-                l.AddRange(BinarySerializationClient(Hash, cl, SchemaClosureGenerator));
+                l.AddRange(BinarySerializationClient(Hash, Commands, SchemaClosureGenerator));
                 l.Add("");
             }
 

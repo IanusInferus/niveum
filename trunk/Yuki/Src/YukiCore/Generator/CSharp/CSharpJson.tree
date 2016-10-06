@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板
-      Version:     2016.10.05.
+      Version:     2016.10.06.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -686,7 +686,7 @@
     $$
         var TypeFriendlyName = tp.TypeFriendlyName();
         var TypeString = GetTypeString(tp);
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromJson]](JToken j)
+    public static ${TypeString} [[${TypeFriendlyName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
@@ -704,7 +704,7 @@
             }
         return Tuple.Create(${String.Join(", ", ItemNames)});
     }
-    public static JArray [[${TypeFriendlyName}ToJson]]([[${TypeString}]] t)
+    public static JArray [[${TypeFriendlyName}ToJson]](${TypeString} t)
     {
         var ja = new JArray();
         $$
@@ -727,12 +727,12 @@
         var TypeFriendlyName = o.TypeFriendlyName();
         var TypeString = GetTypeString(o);
         var Name = "Optional";
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromJson]](JToken j)
+    public static ${TypeString} [[${TypeFriendlyName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
         var jo = j as JObject;
         if (jo == null) { throw new InvalidOperationException(); }
-        var o = new [[${TypeString}]]();
+        var o = new ${TypeString}();
         var d = (IDictionary<string, JToken>)(jo);
         $$
             foreach (var a in Alternatives)
@@ -747,7 +747,7 @@
             }
         throw new InvalidOperationException();
     }
-    public static JObject [[${TypeFriendlyName}ToJson]]([[${TypeString}]] o)
+    public static JObject [[${TypeFriendlyName}ToJson]](${TypeString} o)
     {
         var jo = new JObject();
         $$
@@ -768,18 +768,18 @@
         var TypeFriendlyName = l.TypeFriendlyName();
         var TypeString = GetTypeString(l);
         var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromJson]](JToken j)
+    public static ${TypeString} [[${TypeFriendlyName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
-        var a = new [[${TypeString}]]();
+        var a = new ${TypeString}();
         foreach (var e in ja.Children())
         {
             a.Add([[${ElementTypeFriendlyName}FromJson]](e));
         }
         return a;
     }
-    public static JArray [[${TypeFriendlyName}ToJson]]([[${TypeString}]] c)
+    public static JArray [[${TypeFriendlyName}ToJson]](${TypeString} c)
     {
         var ja = new JArray();
         foreach (var e in c)
@@ -794,18 +794,18 @@
         var TypeFriendlyName = l.TypeFriendlyName();
         var TypeString = GetTypeString(l);
         var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromJson]](JToken j)
+    public static ${TypeString} [[${TypeFriendlyName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
-        var a = new [[${TypeString}]]();
+        var a = new ${TypeString}();
         foreach (var e in ja.Children())
         {
             a.Add([[${ElementTypeFriendlyName}FromJson]](e));
         }
         return a;
     }
-    public static JArray [[${TypeFriendlyName}ToJson]]([[${TypeString}]] c)
+    public static JArray [[${TypeFriendlyName}ToJson]](${TypeString} c)
     {
         var ja = new JArray();
         foreach (var e in c)
@@ -826,11 +826,11 @@
         var TypeString = GetTypeString(l);
         var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
         var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromJson]](JToken j)
+    public static ${TypeString} [[${TypeFriendlyName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
-        var a = new [[${TypeString}]]();
+        var a = new ${TypeString}();
         foreach (var e in ja.Children())
         {
             var Key = [[${KeyTypeFriendlyName}FromJson]](e["key"]);
@@ -839,7 +839,7 @@
         }
         return a;
     }
-    public static JArray [[${TypeFriendlyName}ToJson]]([[${TypeString}]] c)
+    public static JArray [[${TypeFriendlyName}ToJson]](${TypeString} c)
     {
         var ja = new JArray();
         foreach (var e in c)

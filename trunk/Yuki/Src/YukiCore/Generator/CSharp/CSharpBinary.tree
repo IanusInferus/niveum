@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板
-      Version:     2016.08.06.
+      Version:     2016.10.06.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -1393,7 +1393,7 @@
     $$
         var TypeFriendlyName = tp.TypeFriendlyName();
         var TypeString = GetTypeString(tp);
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromBinary]](IReadableStream s)
+    public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
     {
         $$
             var ItemNames = new List<String>{};
@@ -1409,7 +1409,7 @@
             }
         return Tuple.Create(${String.Join(", ", ItemNames)});
     }
-    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, [[${TypeString}]] t)
+    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, ${TypeString} t)
     {
         $$
             {
@@ -1422,7 +1422,7 @@
                 }
             }
     }
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1431,7 +1431,7 @@
             return [[${TypeFriendlyName}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${TypeFriendlyName}ToBytes]]([[${TypeString}]] o)
+    public static Byte[] [[${TypeFriendlyName}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1448,9 +1448,9 @@
         var TypeFriendlyName = o.TypeFriendlyName();
         var TypeString = GetTypeString(o);
         var Name = "Optional";
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromBinary]](IReadableStream s)
+    public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
     {
-        var o = new [[${TypeString}]]();
+        var o = new ${TypeString}();
         o._Tag = OptionalTagFromBinary(s);
         $$
             foreach (var a in Alternatives)
@@ -1464,7 +1464,7 @@
             }
         throw new InvalidOperationException();
     }
-    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, [[${TypeString}]] o)
+    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, ${TypeString} o)
     {
         OptionalTagToBinary(s, o._Tag);
         $$
@@ -1479,7 +1479,7 @@
             }
         throw new InvalidOperationException();
     }
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1488,7 +1488,7 @@
             return [[${TypeFriendlyName}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${TypeFriendlyName}ToBytes]]([[${TypeString}]] o)
+    public static Byte[] [[${TypeFriendlyName}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1503,9 +1503,9 @@
         var TypeFriendlyName = l.TypeFriendlyName();
         var TypeString = GetTypeString(l);
         var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromBinary]](IReadableStream s)
+    public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
     {
-        var l = new [[${TypeString}]]();
+        var l = new ${TypeString}();
         int Length = (int)(IntFromBinary(s));
         for (int k = 0; k < Length; k += 1)
         {
@@ -1513,7 +1513,7 @@
         }
         return l;
     }
-    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, [[${TypeString}]] l)
+    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
         int Length = l.Count;
         IntToBinary(s, (Int)(Length));
@@ -1522,7 +1522,7 @@
             [[${ElementTypeFriendlyName}ToBinary]](s, l[k]);
         }
     }
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1531,7 +1531,7 @@
             return [[${TypeFriendlyName}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${TypeFriendlyName}ToBytes]]([[${TypeString}]] o)
+    public static Byte[] [[${TypeFriendlyName}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1546,9 +1546,9 @@
         var TypeFriendlyName = l.TypeFriendlyName();
         var TypeString = GetTypeString(l);
         var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromBinary]](IReadableStream s)
+    public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
     {
-        var l = new [[${TypeString}]]();
+        var l = new ${TypeString}();
         int Length = (int)(IntFromBinary(s));
         for (int k = 0; k < Length; k += 1)
         {
@@ -1556,7 +1556,7 @@
         }
         return l;
     }
-    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, [[${TypeString}]] l)
+    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
         int Length = l.Count;
         IntToBinary(s, (Int)(Length));
@@ -1565,7 +1565,7 @@
             [[${ElementTypeFriendlyName}ToBinary]](s, e);
         }
     }
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1574,7 +1574,7 @@
             return [[${TypeFriendlyName}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${TypeFriendlyName}ToBytes]]([[${TypeString}]] o)
+    public static Byte[] [[${TypeFriendlyName}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1595,9 +1595,9 @@
         var TypeString = GetTypeString(l);
         var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
         var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromBinary]](IReadableStream s)
+    public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
     {
-        var l = new [[${TypeString}]]();
+        var l = new ${TypeString}();
         int Length = (Int)(IntFromBinary(s));
         for (int k = 0; k < Length; k += 1)
         {
@@ -1606,7 +1606,7 @@
         }
         return l;
     }
-    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, [[${TypeString}]] l)
+    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
         int Length = l.Count;
         IntToBinary(s, (Int)(Length));
@@ -1616,7 +1616,7 @@
             [[${ValueTypeFriendlyName}ToBinary]](s, p.Value);
         }
     }
-    public static [[${TypeString}]] [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1625,7 +1625,7 @@
             return [[${TypeFriendlyName}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${TypeFriendlyName}ToBytes]]([[${TypeString}]] o)
+    public static Byte[] [[${TypeFriendlyName}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {

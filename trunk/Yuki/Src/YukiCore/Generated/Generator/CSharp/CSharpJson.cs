@@ -921,7 +921,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             var TypeFriendlyName = tp.TypeFriendlyName();
             var TypeString = GetTypeString(tp);
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromJson"))), "(JToken j)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromJson"))), "(JToken j)"))
             {
                 yield return _Line;
             }
@@ -946,7 +946,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 yield return _Line;
             }
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToJson"))), "("), GetEscapedIdentifier(TypeString)), " t)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToJson"))), "("), TypeString), " t)"))
             {
                 yield return _Line;
             }
@@ -973,7 +973,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             var TypeFriendlyName = o.TypeFriendlyName();
             var TypeString = GetTypeString(o);
             var Name = "Optional";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromJson"))), "(JToken j)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromJson"))), "(JToken j)"))
             {
                 yield return _Line;
             }
@@ -981,7 +981,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             yield return "    if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }";
             yield return "    var jo = j as JObject;";
             yield return "    if (jo == null) { throw new InvalidOperationException(); }";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), GetEscapedIdentifier(TypeString)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), TypeString), "();"))
             {
                 yield return _Line;
             }
@@ -1006,7 +1006,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             }
             yield return "    throw new InvalidOperationException();";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JObject "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToJson"))), "("), GetEscapedIdentifier(TypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JObject "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToJson"))), "("), TypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -1034,14 +1034,14 @@ namespace Yuki.ObjectSchema.CSharpJson
             var TypeFriendlyName = l.TypeFriendlyName();
             var TypeString = GetTypeString(l);
             var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromJson"))), "(JToken j)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromJson"))), "(JToken j)"))
             {
                 yield return _Line;
             }
             yield return "{";
             yield return "    if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }";
             yield return "    var ja = j as JArray;";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var a = new "), GetEscapedIdentifier(TypeString)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var a = new "), TypeString), "();"))
             {
                 yield return _Line;
             }
@@ -1054,7 +1054,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             yield return "    }";
             yield return "    return a;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToJson"))), "("), GetEscapedIdentifier(TypeString)), " c)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToJson"))), "("), TypeString), " c)"))
             {
                 yield return _Line;
             }
@@ -1075,14 +1075,14 @@ namespace Yuki.ObjectSchema.CSharpJson
             var TypeFriendlyName = l.TypeFriendlyName();
             var TypeString = GetTypeString(l);
             var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromJson"))), "(JToken j)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromJson"))), "(JToken j)"))
             {
                 yield return _Line;
             }
             yield return "{";
             yield return "    if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }";
             yield return "    var ja = j as JArray;";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var a = new "), GetEscapedIdentifier(TypeString)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var a = new "), TypeString), "();"))
             {
                 yield return _Line;
             }
@@ -1095,7 +1095,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             yield return "    }";
             yield return "    return a;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToJson"))), "("), GetEscapedIdentifier(TypeString)), " c)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToJson"))), "("), TypeString), " c)"))
             {
                 yield return _Line;
             }
@@ -1122,14 +1122,14 @@ namespace Yuki.ObjectSchema.CSharpJson
             var TypeString = GetTypeString(l);
             var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
             var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromJson"))), "(JToken j)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromJson"))), "(JToken j)"))
             {
                 yield return _Line;
             }
             yield return "{";
             yield return "    if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }";
             yield return "    var ja = j as JArray;";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var a = new "), GetEscapedIdentifier(TypeString)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var a = new "), TypeString), "();"))
             {
                 yield return _Line;
             }
@@ -1147,7 +1147,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             yield return "    }";
             yield return "    return a;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToJson"))), "("), GetEscapedIdentifier(TypeString)), " c)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToJson"))), "("), TypeString), " c)"))
             {
                 yield return _Line;
             }

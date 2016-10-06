@@ -316,7 +316,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_TaggedUnionFrom(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(VersionedTypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), GetEscapedIdentifier(TypeString)), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
@@ -405,7 +405,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_TaggedUnionTo(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), GetEscapedIdentifier(VersionedTypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -585,7 +585,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_TupleFrom(String VersionedName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(VersionedTypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), GetEscapedIdentifier(TypeString)), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
@@ -630,7 +630,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 }
                 k += 1;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), GetEscapedIdentifier(VersionedTypeString)), "("), String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))), ");"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), VersionedTypeString), "("), String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))), ");"))
             {
                 yield return _Line;
             }
@@ -656,7 +656,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_TupleTo(String VersionedName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), GetEscapedIdentifier(VersionedTypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -701,7 +701,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 }
                 k += 1;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), GetEscapedIdentifier(TypeString)), "("), String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))), ");"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), TypeString), "("), String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))), ");"))
             {
                 yield return _Line;
             }
@@ -709,7 +709,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_ListFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(VersionedTypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), GetEscapedIdentifier(TypeString)), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
@@ -722,7 +722,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_ListTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), GetEscapedIdentifier(VersionedTypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -735,12 +735,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_SetFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(VersionedTypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), GetEscapedIdentifier(TypeString)), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), GetEscapedIdentifier(VersionedTypeString)), "(ho.Select(he => "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he)));"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), VersionedTypeString), "(ho.Select(he => "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he)));"))
             {
                 yield return _Line;
             }
@@ -748,12 +748,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_SetTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), GetEscapedIdentifier(VersionedTypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), GetEscapedIdentifier(TypeString)), "(o.Select(e => "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e)));"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), TypeString), "(o.Select(e => "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e)));"))
             {
                 yield return _Line;
             }
@@ -761,12 +761,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_MapFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(VersionedTypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), GetEscapedIdentifier(TypeString)), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), GetEscapedIdentifier(VersionedTypeString)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), VersionedTypeString), "();"))
             {
                 yield return _Line;
             }
@@ -801,12 +801,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_MapTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), GetEscapedIdentifier(VersionedTypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var ho = new "), GetEscapedIdentifier(TypeString)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var ho = new "), TypeString), "();"))
             {
                 yield return _Line;
             }
