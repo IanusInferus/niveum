@@ -528,15 +528,19 @@
             }
     };
 
-#Template EnumFunctor e:EnumDef
+#Template EnumFunctor e:EnumDef NamespaceName:String
     $$
         var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+        if (NamespaceName != "")
+        {
+            Name = NamespaceName.Replace(".", "::") + "::" + Name;
+        }
     template <>
     struct hash<${Name}>
     {
         size_t operator()(const ${Name} &x) const
         {
-            return hash<${GetTypeString(e.UnderlyingType)}>()(x);
+            return hash<${GetTypeString(e.UnderlyingType)}>()(static_cast<${GetTypeString(e.UnderlyingType)}>(x));
         }
     };
     template <>
@@ -544,7 +548,7 @@
     {
         bool operator()(const ${Name} &x, const ${Name} &y) const
         {
-            return less<${GetTypeString(e.UnderlyingType)}>()(x, y);
+            return less<${GetTypeString(e.UnderlyingType)}>()(static_cast<${GetTypeString(e.UnderlyingType)}>(x), static_cast<${GetTypeString(e.UnderlyingType)}>(y));
         }
     };
 
@@ -659,7 +663,7 @@
     $$
         var Primitives = GetPrimitives(Schema);
         var SimpleTypes = GetSimpleTypes(Schema);
-        var EnumFunctors = GetEnumFunctors(Schema);
+        var EnumFunctors = GetEnumFunctors(Schema, NamespaceName);
         var ComplexTypes = GetComplexTypes(Schema);
     ${Primitives}
     ${WrapContents(NamespaceName, SimpleTypes)}

@@ -53,8 +53,6 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CppBinary\CodeGenerator.cs" />
-    <Compile Include="Cpp\CodeGenerator.cs" />
     <Compile Include="CSharp\CodeGenerator.cs" />
     <Compile Include="Generated\Common\Primitive.cs" />
     <Compile Include="Generated\Generator\Cpp\Cpp.cs" />
@@ -94,8 +92,6 @@
     <Compile Include="Xhtml\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="CppBinary\Schema.tree" />
-    <EmbeddedResource Include="Cpp\Schema.tree" />
     <EmbeddedResource Include="CSharp\Schema.tree" />
     <EmbeddedResource Include="JavaBinary\Schema.tree" />
     <EmbeddedResource Include="Java\Schema.tree" />

@@ -1,6 +1,6 @@
 ﻿//==========================================================================
 //
-//  File:        CSharpJson.cs
+//  File:        HaxeJson.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
 //  Version:     2016.10.06.
