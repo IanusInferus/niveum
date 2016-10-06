@@ -12,28 +12,28 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Yuki.ObjectSchema.CSharpJson
+namespace Yuki.ObjectSchema.HaxeJson
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpJson(this Schema Schema, String NamespaceName)
+        public static String CompileToHaxeJson(this Schema Schema, String PackageName)
         {
             var t = new Templates(Schema);
-            var Lines = t.Main(Schema, NamespaceName).Select(Line => Line.TrimEnd(' '));
+            var Lines = t.Main(Schema, PackageName).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
-        public static String CompileToCSharpJson(this Schema Schema)
+        public static String CompileToHaxeJson(this Schema Schema)
         {
-            return CompileToCSharpJson(Schema, "");
+            return CompileToHaxeJson(Schema, "");
         }
     }
 
     public partial class Templates
     {
-        private CSharp.Templates Inner;
+        private Haxe.Templates Inner;
         public Templates(Schema Schema)
         {
-            this.Inner = new CSharp.Templates(Schema);
+            this.Inner = new Haxe.Templates(Schema);
         }
 
         public String GetEscapedIdentifier(String Identifier)
@@ -42,18 +42,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         }
         public String LowercaseCamelize(String PascalName)
         {
-            var l = new List<Char>();
-            foreach (var c in PascalName)
-            {
-                if (Char.IsLower(c))
-                {
-                    break;
-                }
-
-                l.Add(Char.ToLower(c));
-            }
-
-            return new String(l.ToArray()) + PascalName.Substring(l.Count);
+            return Inner.LowercaseCamelize(PascalName);
         }
         public String GetEscapedStringLiteral(String s)
         {
@@ -64,10 +53,6 @@ namespace Yuki.ObjectSchema.CSharpJson
             return Inner.GetTypeString(Type);
         }
 
-        public List<String> GetPrimitives(Schema Schema)
-        {
-            return Inner.GetPrimitives(Schema);
-        }
         public List<String> GetJsonTranslatorSerializers(Schema Schema)
         {
             var l = new List<String>();
@@ -152,19 +137,11 @@ namespace Yuki.ObjectSchema.CSharpJson
                 l.Add("");
             }
 
-            var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToList();
-            TaggedUnionDef GenericOptionalType = null;
-            if (GenericOptionalTypes.Count > 0)
-            {
-                GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
-                l.AddRange(JsonTranslator_Enum("OptionalTag"));
-                l.Add("");
-            }
             foreach (var gts in GenericTypeSpecs)
             {
                 if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(JsonTranslator_Optional(gts, GenericOptionalType));
+                    l.AddRange(JsonTranslator_Optional(gts));
                     l.Add("");
                 }
                 else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gts.GenericTypeSpec.ParameterValues.Count == 1)
@@ -195,22 +172,18 @@ namespace Yuki.ObjectSchema.CSharpJson
 
             return l;
         }
-        public List<String> GetComplexTypes(Schema Schema)
+        public List<String> GetTypes(Schema Schema)
         {
             var l = new List<String>();
 
-            var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+            var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Where(t => t.Version() == "").ToList();
             if (Commands.Count > 0)
             {
                 var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 var Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).Hash();
-                l.AddRange(JsonSerializationServer(Hash, Commands, SchemaClosureGenerator));
-                l.Add("");
                 l.AddRange(IJsonSender());
                 l.Add("");
                 l.AddRange(JsonSerializationClient(Hash, Commands, SchemaClosureGenerator));
-                l.Add("");
-                l.AddRange(JsonLogAspectWrapper(Commands));
                 l.Add("");
             }
 

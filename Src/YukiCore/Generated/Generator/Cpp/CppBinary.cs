@@ -1101,7 +1101,7 @@ namespace Yuki.ObjectSchema.CppBinary
         {
             var TypeFriendlyName = tp.TypeFriendlyName();
             var TypeString = GetTypeString(tp);
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
@@ -1124,7 +1124,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, "), GetEscapedIdentifier(TypeString)), " t)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " t)"))
             {
                 yield return _Line;
             }
@@ -1149,12 +1149,12 @@ namespace Yuki.ObjectSchema.CppBinary
             var TypeFriendlyName = o.TypeFriendlyName();
             var TypeString = GetTypeString(o);
             var Name = "Optional";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), GetEscapedIdentifier(TypeString)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = "), GetEscapedIdentifier(TypeString)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = "), TypeString), "();"))
             {
                 yield return _Line;
             }
@@ -1175,7 +1175,7 @@ namespace Yuki.ObjectSchema.CppBinary
             }
             yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, "), GetEscapedIdentifier(TypeString)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -1203,12 +1203,12 @@ namespace Yuki.ObjectSchema.CppBinary
             var TypeFriendlyName = l.TypeFriendlyName();
             var TypeString = GetTypeString(l, true);
             var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static std::shared_ptr<class "), GetEscapedIdentifier(TypeString)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), GetEscapedIdentifier(TypeString)), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), TypeString), ">();"))
             {
                 yield return _Line;
             }
@@ -1222,7 +1222,7 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "    }";
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, std::shared_ptr<class "), GetEscapedIdentifier(TypeString)), "> l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, std::shared_ptr<class "), TypeString), "> l)"))
             {
                 yield return _Line;
             }
@@ -1243,12 +1243,12 @@ namespace Yuki.ObjectSchema.CppBinary
             var TypeFriendlyName = l.TypeFriendlyName();
             var TypeString = GetTypeString(l, true);
             var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static std::shared_ptr<class "), GetEscapedIdentifier(TypeString)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), GetEscapedIdentifier(TypeString)), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), TypeString), ">();"))
             {
                 yield return _Line;
             }
@@ -1262,7 +1262,7 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "    }";
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, std::shared_ptr<class "), GetEscapedIdentifier(TypeString)), "> l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, std::shared_ptr<class "), TypeString), "> l)"))
             {
                 yield return _Line;
             }
@@ -1289,12 +1289,12 @@ namespace Yuki.ObjectSchema.CppBinary
             var TypeString = GetTypeString(l, true);
             var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
             var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static std::shared_ptr<class "), GetEscapedIdentifier(TypeString)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), GetEscapedIdentifier(TypeString)), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), TypeString), ">();"))
             {
                 yield return _Line;
             }
@@ -1312,7 +1312,7 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "    }";
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, std::shared_ptr<class "), GetEscapedIdentifier(TypeString)), "> l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, std::shared_ptr<class "), TypeString), "> l)"))
             {
                 yield return _Line;
             }
