@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly.TextEncoding;
-using Yuki.ObjectSchema;
 using OS = Yuki.ObjectSchema;
 
 namespace Yuki.ExpressionSchema.CppBinaryLoader
@@ -33,7 +32,7 @@ namespace Yuki.ExpressionSchema.CppBinaryLoader
 
         public class Writer
         {
-            private static ObjectSchemaTemplateInfo TemplateInfo;
+            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
 
             private OS.Cpp.Templates InnerWriter;
 
@@ -42,7 +41,7 @@ namespace Yuki.ExpressionSchema.CppBinaryLoader
 
             static Writer()
             {
-                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CppBinaryLoader);
+                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CppBinaryLoader);
             }
 
             public Writer(Schema Schema, String NamespaceName)
@@ -51,11 +50,11 @@ namespace Yuki.ExpressionSchema.CppBinaryLoader
                 this.NamespaceName = NamespaceName;
                 InnerWriter = new OS.Cpp.Templates(new OS.Schema
                 {
-                    Types = new List<TypeDef> { },
-                    TypeRefs = new List<TypeDef>
+                    Types = new List<OS.TypeDef> { },
+                    TypeRefs = new List<OS.TypeDef>
                     {
-                        TypeDef.CreatePrimitive(new PrimitiveDef { Name = "Unit", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } }),
-                        TypeDef.CreatePrimitive(new PrimitiveDef { Name = "Boolean", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } })
+                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Unit", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } }),
+                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Boolean", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } })
                     },
                     Imports = new List<String> { }
                 });

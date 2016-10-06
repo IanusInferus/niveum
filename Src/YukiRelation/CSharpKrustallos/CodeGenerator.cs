@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.10.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -12,8 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Firefly;
-using Firefly.Mapping.MetaSchema;
-using Firefly.TextEncoding;
 using OS = Yuki.ObjectSchema;
 
 namespace Yuki.RelationSchema.CSharpKrustallos
@@ -676,27 +674,27 @@ namespace Yuki.RelationSchema.CSharpKrustallos
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static List<String> GetLines(String Value)
+            public List<String> GetLines(String Value)
             {
-                return OS.CSharp.Common.CodeGenerator.Writer.GetLines(Value);
+                return InnerWriter.GetLines(Value);
             }
-            public static String GetEscapedIdentifier(String Identifier)
+            public String GetEscapedIdentifier(String Identifier)
             {
-                return OS.CSharp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
+                return InnerWriter.GetEscapedIdentifier(Identifier);
             }
             private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
-                return OS.CSharp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
+                return InnerWriter.EvaluateEscapedIdentifiers(Lines);
             }
         }
 
         private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
-            return OS.CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            return CSharpPlain.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
         private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
-            return OS.CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            return CSharpPlain.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
     }
 }
