@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2016.09.02.
+//  Version:     2016.10.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -11,7 +11,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
@@ -33,6 +32,8 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
 
             private static OS.ObjectSchemaTemplateInfo TemplateInfo;
 
+            private OS.CSharp.Templates InnerWriter;
+
             private Schema Schema;
             private String DatabaseName;
             private String EntityNamespaceName;
@@ -41,9 +42,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
 
             static Writer()
             {
-                var OriginalTemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(OS.Properties.Resources.CSharp);
                 TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpLinqToEntities);
-                TemplateInfo.Keywords = OriginalTemplateInfo.Keywords;
             }
 
             public Writer(Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
@@ -53,6 +52,16 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                 this.EntityNamespaceName = EntityNamespaceName;
                 this.ContextNamespaceName = ContextNamespaceName;
                 this.ContextClassName = ContextClassName;
+                InnerWriter = new OS.CSharp.Templates(new OS.Schema
+                {
+                    Types = new List<OS.TypeDef> { },
+                    TypeRefs = new List<OS.TypeDef>
+                    {
+                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Unit", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } }),
+                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Boolean", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } })
+                    },
+                    Imports = new List<String> { }
+                });
 
                 Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
                 Records = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
@@ -532,20 +541,13 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static List<String> GetLines(String Value)
+            public List<String> GetLines(String Value)
             {
                 return Value.UnifyNewLineToLf().Split('\n').ToList();
             }
-            public static String GetEscapedIdentifier(String Identifier)
+            public String GetEscapedIdentifier(String Identifier)
             {
-                if (TemplateInfo.Keywords.Contains(Identifier))
-                {
-                    return "@" + Identifier;
-                }
-                else
-                {
-                    return Identifier;
-                }
+                return InnerWriter.GetEscapedIdentifier(Identifier);
             }
             private static Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
             private List<String> EvaluateEscapedIdentifiers(List<String> Lines)

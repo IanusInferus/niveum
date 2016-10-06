@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 表达式结构C#二进制加载器代码生成器
-//  Version:     2016.05.13.
+//  Version:     2016.10.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -11,11 +11,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Firefly;
-using Firefly.Mapping.MetaSchema;
 using Firefly.TextEncoding;
-using Yuki.ObjectSchema;
-using CSharp = Yuki.ObjectSchema.CSharp;
+using OS = Yuki.ObjectSchema;
 
 namespace Yuki.ExpressionSchema.CSharpBinaryLoader
 {
@@ -34,43 +33,46 @@ namespace Yuki.ExpressionSchema.CSharpBinaryLoader
 
         public class Writer
         {
-            private static ObjectSchemaTemplateInfo TemplateInfo;
+            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
+
+            private OS.CSharp.Templates InnerWriter;
 
             private Schema Schema;
             private String NamespaceName;
 
             static Writer()
             {
-                var OriginalTemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Yuki.ObjectSchema.Properties.Resources.CSharp);
-                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpBinaryLoader);
-                TemplateInfo.Keywords = OriginalTemplateInfo.Keywords;
-                TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
+                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpBinaryLoader);
             }
 
             public Writer(Schema Schema, String NamespaceName)
             {
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
+                InnerWriter = new OS.CSharp.Templates(new OS.Schema
+                {
+                    Types = new List<OS.TypeDef> { },
+                    TypeRefs = new List<OS.TypeDef>
+                    {
+                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Unit", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } }),
+                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Boolean", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } })
+                    },
+                    Imports = new List<String> { }
+                });
             }
 
             public List<String> GetSchema()
             {
-                var Header = GetHeader();
                 var ComplexTypes = GetComplexTypes(Schema);
 
                 if (NamespaceName != "")
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("Header", Header).Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
                 else
                 {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Header", Header).Substitute("Imports", Schema.Imports).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
+                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Imports", Schema.Imports).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
                 }
-            }
-
-            public List<String> GetHeader()
-            {
-                return GetTemplate("Header");
             }
 
             public List<String> GetModuleFunctionContext(FunctionDecl Function)
@@ -133,27 +135,80 @@ namespace Yuki.ExpressionSchema.CSharpBinaryLoader
             {
                 return GetLines(TemplateInfo.Templates[Name].Value);
             }
-            public static List<String> GetLines(String Value)
+            public List<String> GetLines(String Value)
             {
-                return CSharp.Common.CodeGenerator.Writer.GetLines(Value);
+                return Value.UnifyNewLineToLf().Split('\n').ToList();
             }
-            public static String GetEscapedIdentifier(String Identifier)
+            public String GetEscapedIdentifier(String Identifier)
             {
-                return CSharp.Common.CodeGenerator.Writer.GetEscapedIdentifier(Identifier);
+                return InnerWriter.GetEscapedIdentifier(Identifier);
             }
-            private List<String> EvaluateEscapedIdentifiers(List<String> Lines)
+            private Regex rIdentifier = new Regex(@"(?<!\[\[)\[\[(?<Identifier>.*?)\]\](?!\]\])", RegexOptions.ExplicitCapture);
+            public List<String> EvaluateEscapedIdentifiers(List<String> Lines)
             {
-                return CSharp.Common.CodeGenerator.Writer.EvaluateEscapedIdentifiers(Lines);
+                return Lines.Select(Line => rIdentifier.Replace(Line, s => GetEscapedIdentifier(s.Result("${Identifier}"))).Replace("[[[[", "[[").Replace("]]]]", "]]")).ToList();
             }
         }
 
-        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
+        public static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
-            return CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            var ParameterString = "${" + Parameter + "}";
+            var LowercaseParameterString = "${" + LowercaseCamelize(Parameter) + "}";
+            var LowercaseValue = LowercaseCamelize(Value);
+
+            var l = new List<String>();
+            foreach (var Line in Lines)
+            {
+                var NewLine = Line;
+
+                if (Line.Contains(ParameterString))
+                {
+                    NewLine = NewLine.Replace(ParameterString, Value);
+                }
+
+                if (Line.Contains(LowercaseParameterString))
+                {
+                    NewLine = NewLine.Replace(LowercaseParameterString, LowercaseValue);
+                }
+
+                l.Add(NewLine);
+            }
+            return l;
         }
-        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        public static String LowercaseCamelize(String PascalName)
         {
-            return CSharp.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            var l = new List<Char>();
+            foreach (var c in PascalName)
+            {
+                if (Char.IsLower(c))
+                {
+                    break;
+                }
+
+                l.Add(Char.ToLower(c));
+            }
+
+            return new String(l.ToArray()) + new String(PascalName.Skip(l.Count).ToArray());
+        }
+        public static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        {
+            var l = new List<String>();
+            foreach (var Line in Lines)
+            {
+                var ParameterString = "${" + Parameter + "}";
+                if (Line.Contains(ParameterString))
+                {
+                    foreach (var vLine in Value)
+                    {
+                        l.Add(Line.Replace(ParameterString, vLine));
+                    }
+                }
+                else
+                {
+                    l.Add(Line);
+                }
+            }
+            return l;
         }
     }
 }

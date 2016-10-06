@@ -27,7 +27,6 @@ namespace Yuki.ObjectSchema.Properties
             }
         }
 
-        public static Byte[] CSharp { get { return GetResource("CSharp"); } }
         public static Byte[] Java { get { return GetResource("Java"); } }
         public static Byte[] JavaBinary { get { return GetResource("JavaBinary"); } }
         public static Byte[] Xhtml { get { return GetResource("Xhtml"); } }
