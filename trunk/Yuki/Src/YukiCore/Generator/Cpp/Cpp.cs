@@ -86,7 +86,7 @@ namespace Yuki.ObjectSchema.Cpp
                 }
                 else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
                 {
-                    return "enum " + GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
+                    return "enum class " + GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
                 }
                 if (ForceAsValue)
                 {
@@ -204,7 +204,7 @@ namespace Yuki.ObjectSchema.Cpp
 
             List<TypeDef> cl = new List<TypeDef>();
 
-            foreach (var c in Schema.Types)
+            foreach (var c in Schema.TypeRefs.Concat(Schema.Types))
             {
                 if (c.OnPrimitive)
                 {
@@ -290,7 +290,7 @@ namespace Yuki.ObjectSchema.Cpp
             return l;
         }
 
-        public List<String> GetEnumFunctors(Schema Schema)
+        public List<String> GetEnumFunctors(Schema Schema, String NamespaceName)
         {
             var l = new List<String>();
 
@@ -300,7 +300,7 @@ namespace Yuki.ObjectSchema.Cpp
             {
                 if (c.OnEnum)
                 {
-                    l.AddRange(EnumFunctor(c.Enum));
+                    l.AddRange(EnumFunctor(c.Enum, NamespaceName));
                 }
                 else
                 {
