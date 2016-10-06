@@ -222,15 +222,15 @@ namespace Yuki
 
 static bool MatchFuncType(Any ParameterFunc, PrimitiveType t)
 {
-    if (t == PrimitiveType_Boolean && ParameterFunc.type() == typeid(std::function<bool(ExpressionParameterContext &)>))
+    if (t == PrimitiveType::Boolean && ParameterFunc.type() == typeid(std::function<bool(ExpressionParameterContext &)>))
     {
         return true;
     }
-    if (t == PrimitiveType_Int && ParameterFunc.type() == typeid(std::function<int(ExpressionParameterContext &)>))
+    if (t == PrimitiveType::Int && ParameterFunc.type() == typeid(std::function<int(ExpressionParameterContext &)>))
     {
         return true;
     }
-    if (t == PrimitiveType_Real && ParameterFunc.type() == typeid(std::function<double(ExpressionParameterContext &)>))
+    if (t == PrimitiveType::Real && ParameterFunc.type() == typeid(std::function<double(ExpressionParameterContext &)>))
     {
         return true;
     }
@@ -297,15 +297,15 @@ Any ExpressionCalculator::BuildExpr(ExpressionParameterTypeProvider &eptp, std::
             throw std::logic_error(w2s(L"ParameterNotExist: " + Name));
         }
         auto t = eptp.Parameters[Name];
-        if (t == PrimitiveType_Boolean)
+        if (t == PrimitiveType::Boolean)
         {
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return AnyCast<bool>(epc.Parameters[Name]); });
         }
-        else if (t == PrimitiveType_Int)
+        else if (t == PrimitiveType::Int)
         {
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return AnyCast<int>(epc.Parameters[Name]); });
         }
-        else if (t == PrimitiveType_Real)
+        else if (t == PrimitiveType::Real)
         {
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return AnyCast<double>(epc.Parameters[Name]); });
         }
@@ -324,103 +324,103 @@ Any ExpressionCalculator::BuildExpr(ExpressionParameterTypeProvider &eptp, std::
         }
 
         //算术运算
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"+", PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"+", PrimitiveType::Int))
         {
             auto Operand = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return +Operand(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"-", PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"-", PrimitiveType::Int))
         {
             auto Operand = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return -Operand(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"+", PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"+", PrimitiveType::Real))
         {
             auto Operand = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return +Operand(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"-", PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"-", PrimitiveType::Real))
         {
             auto Operand = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return -Operand(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"+", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"+", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) + Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"-", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"-", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) - Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"*", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"*", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) * Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"/", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"/", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return (double)(Left(epc)) / (double)(Right(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"+", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"+", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) + Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"-", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"-", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) - Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"*", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"*", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) * Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"/", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"/", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) / Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"pow", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"pow", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::pow(Left(epc), Right(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"pow", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"pow", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::pow(Left(epc), Right(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"exp", PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"exp", PrimitiveType::Real))
         {
             auto Operand = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::exp(Operand(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"log", PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"log", PrimitiveType::Real))
         {
             auto Operand = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::log(Operand(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"mod", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"mod", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::mod(Left(epc), Right(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"div", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"div", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
@@ -428,80 +428,80 @@ Any ExpressionCalculator::BuildExpr(ExpressionParameterTypeProvider &eptp, std::
         }
 
         //逻辑运算
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"!", PrimitiveType_Boolean))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"!", PrimitiveType::Boolean))
         {
             auto Operand = AnyCast<std::function<bool(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return !Operand(epc); });
         }
 
         //关系运算
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"<", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"<", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) < Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L">", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L">", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) > Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"<=", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"<=", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) <= Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L">=", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L">=", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) >= Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"==", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"==", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) == Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"!=", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"!=", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) != Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"<", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"<", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) < Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L">", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L">", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) > Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"<=", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"<=", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) <= Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L">=", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L">=", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) >= Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"==", PrimitiveType_Boolean, PrimitiveType_Boolean))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"==", PrimitiveType::Boolean, PrimitiveType::Boolean))
         {
             auto Left = AnyCast<std::function<bool(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<bool(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<bool(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Left(epc) == Right(epc); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"!=", PrimitiveType_Boolean, PrimitiveType_Boolean))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"!=", PrimitiveType::Boolean, PrimitiveType::Boolean))
         {
             auto Left = AnyCast<std::function<bool(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<bool(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
@@ -509,34 +509,34 @@ Any ExpressionCalculator::BuildExpr(ExpressionParameterTypeProvider &eptp, std::
         }
 
         //取整运算
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"round", PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"round", PrimitiveType::Real))
         {
             auto Operand = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::round(Operand(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"floor", PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"floor", PrimitiveType::Real))
         {
             auto Operand = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::floor(Operand(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"ceil", PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"ceil", PrimitiveType::Real))
         {
             auto Operand = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::ceil(Operand(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"round", PrimitiveType_Real, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"round", PrimitiveType::Real, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::round(Left(epc), Right(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"floor", PrimitiveType_Real, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"floor", PrimitiveType::Real, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::floor(Left(epc), Right(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"ceil", PrimitiveType_Real, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"ceil", PrimitiveType::Real, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
@@ -544,38 +544,38 @@ Any ExpressionCalculator::BuildExpr(ExpressionParameterTypeProvider &eptp, std::
         }
 
         //范围限制运算
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"min", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"min", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::min(Left(epc), Right(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"max", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"max", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Left = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::max(Left(epc), Right(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"clamp", PrimitiveType_Int, PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"clamp", PrimitiveType::Int, PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Arg0 = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Arg1 = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             auto Arg2 = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[2]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::clamp(Arg0(epc), Arg1(epc), Arg2(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"min", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"min", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::min(Left(epc), Right(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"max", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"max", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Left = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Right = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::max(Left(epc), Right(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"clamp", PrimitiveType_Real, PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"clamp", PrimitiveType::Real, PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Arg0 = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Arg1 = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
@@ -584,12 +584,12 @@ Any ExpressionCalculator::BuildExpr(ExpressionParameterTypeProvider &eptp, std::
         }
 
         //其他运算
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"abs", PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"abs", PrimitiveType::Int))
         {
             auto Operand = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::abs(Operand(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"abs", PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"abs", PrimitiveType::Real))
         {
             auto Operand = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::abs(Operand(epc)); });
@@ -598,19 +598,19 @@ Any ExpressionCalculator::BuildExpr(ExpressionParameterTypeProvider &eptp, std::
         {
             return std::function<double(ExpressionParameterContext &)>([](ExpressionParameterContext &epc) { return Expression::rand(); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"rand", PrimitiveType_Int, PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"rand", PrimitiveType::Int, PrimitiveType::Int))
         {
             auto Arg0 = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Arg1 = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<int(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::rand(Arg0(epc), Arg1(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"rand", PrimitiveType_Real, PrimitiveType_Real))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"rand", PrimitiveType::Real, PrimitiveType::Real))
         {
             auto Arg0 = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             auto Arg1 = AnyCast<std::function<double(ExpressionParameterContext &)>>((*ParameterFuncs)[1]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Expression::rand(Arg0(epc), Arg1(epc)); });
         }
-        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"creal", PrimitiveType_Int))
+        if (MatchFunctionNameAndParameters(Name, ParameterFuncs, L"creal", PrimitiveType::Int))
         {
             auto Operand = AnyCast<std::function<int(ExpressionParameterContext &)>>((*ParameterFuncs)[0]);
             return std::function<double(ExpressionParameterContext &)>([=](ExpressionParameterContext &epc) { return Operand(epc); });

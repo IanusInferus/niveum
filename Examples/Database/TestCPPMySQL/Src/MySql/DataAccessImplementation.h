@@ -127,39 +127,39 @@ namespace Database
             }
 
             Optional<std::shared_ptr<class TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordSelectOptionalByA(String A) { throw logic_error("NotImplementedException"); }
-            Optional<std::shared_ptr<class TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordSelectOptionalByAAndB(String A, enum TestEnum B) { throw logic_error("NotImplementedException"); }
+            Optional<std::shared_ptr<class TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordSelectOptionalByAAndB(String A, enum class TestEnum B) { throw logic_error("NotImplementedException"); }
             std::shared_ptr<class TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordSelectOneByA(String A) { throw logic_error("NotImplementedException"); }
-            std::shared_ptr<class TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordSelectOneByAAndB(String A, enum TestEnum B) { throw logic_error("NotImplementedException"); }
+            std::shared_ptr<class TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordSelectOneByAAndB(String A, enum class TestEnum B) { throw logic_error("NotImplementedException"); }
             std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordSelectManyByA(String A) { throw logic_error("NotImplementedException"); }
-            std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordSelectManyByAAndB(String A, enum TestEnum B) { throw logic_error("NotImplementedException"); }
+            std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordSelectManyByAAndB(String A, enum class TestEnum B) { throw logic_error("NotImplementedException"); }
             std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordSelectAll() { throw logic_error("NotImplementedException"); }
             std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordSelectRangeByAOrderByAAndBDesc(String A, Int _Skip_, Int _Take_) { throw logic_error("NotImplementedException"); }
             std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordSelectRangeOrderByADescAndB(Int _Skip_, Int _Take_) { throw logic_error("NotImplementedException"); }
             Int FromTestDuplicatedKeyNameRecordSelectCount() { throw logic_error("NotImplementedException"); }
             Int FromTestDuplicatedKeyNameRecordSelectCountByA(String A) { throw logic_error("NotImplementedException"); }
-            Int FromTestDuplicatedKeyNameRecordSelectCountByAAndB(String A, enum TestEnum B) { throw logic_error("NotImplementedException"); }
+            Int FromTestDuplicatedKeyNameRecordSelectCountByAAndB(String A, enum class TestEnum B) { throw logic_error("NotImplementedException"); }
             Optional<std::shared_ptr<class TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordLockOptionalByA(String A) { throw logic_error("NotImplementedException"); }
-            Optional<std::shared_ptr<class TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordLockOptionalByAAndB(String A, enum TestEnum B) { throw logic_error("NotImplementedException"); }
+            Optional<std::shared_ptr<class TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordLockOptionalByAAndB(String A, enum class TestEnum B) { throw logic_error("NotImplementedException"); }
             std::shared_ptr<class TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordLockOneByA(String A) { throw logic_error("NotImplementedException"); }
-            std::shared_ptr<class TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordLockOneByAAndB(String A, enum TestEnum B) { throw logic_error("NotImplementedException"); }
+            std::shared_ptr<class TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordLockOneByAAndB(String A, enum class TestEnum B) { throw logic_error("NotImplementedException"); }
             std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordLockManyByA(String A) { throw logic_error("NotImplementedException"); }
-            std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordLockManyByAAndB(String A, enum TestEnum B) { throw logic_error("NotImplementedException"); }
+            std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordLockManyByAAndB(String A, enum class TestEnum B) { throw logic_error("NotImplementedException"); }
             std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordLockAll() { throw logic_error("NotImplementedException"); }
             std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordLockRangeByAOrderByAAndBDesc(String A, Int _Skip_, Int _Take_) { throw logic_error("NotImplementedException"); }
             std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordLockRangeOrderByADescAndB(Int _Skip_, Int _Take_) { throw logic_error("NotImplementedException"); }
             Int FromTestDuplicatedKeyNameRecordLockCountByA(String A) { throw logic_error("NotImplementedException"); }
-            Int FromTestDuplicatedKeyNameRecordLockCountByAAndB(String A, enum TestEnum B) { throw logic_error("NotImplementedException"); }
+            Int FromTestDuplicatedKeyNameRecordLockCountByAAndB(String A, enum class TestEnum B) { throw logic_error("NotImplementedException"); }
             void FromTestDuplicatedKeyNameRecordInsertOne(std::shared_ptr<class TestDuplicatedKeyNameRecord> v) { throw logic_error("NotImplementedException"); }
             void FromTestDuplicatedKeyNameRecordInsertMany(std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> l) { throw logic_error("NotImplementedException"); }
             void FromTestDuplicatedKeyNameRecordUpdateOptional(std::shared_ptr<class TestDuplicatedKeyNameRecord> v) { throw logic_error("NotImplementedException"); }
             void FromTestDuplicatedKeyNameRecordUpdateOne(std::shared_ptr<class TestDuplicatedKeyNameRecord> v) { throw logic_error("NotImplementedException"); }
             void FromTestDuplicatedKeyNameRecordUpdateMany(std::shared_ptr<std::vector<std::shared_ptr<class TestDuplicatedKeyNameRecord>>> l) { throw logic_error("NotImplementedException"); }
             void FromTestDuplicatedKeyNameRecordDeleteOptionalByA(String A) { throw logic_error("NotImplementedException"); }
-            void FromTestDuplicatedKeyNameRecordDeleteOptionalByAAndB(String A, enum TestEnum B) { throw logic_error("NotImplementedException"); }
+            void FromTestDuplicatedKeyNameRecordDeleteOptionalByAAndB(String A, enum class TestEnum B) { throw logic_error("NotImplementedException"); }
             void FromTestDuplicatedKeyNameRecordDeleteOneByA(String A) { throw logic_error("NotImplementedException"); }
-            void FromTestDuplicatedKeyNameRecordDeleteOneByAAndB(String A, enum TestEnum B) { throw logic_error("NotImplementedException"); }
+            void FromTestDuplicatedKeyNameRecordDeleteOneByAAndB(String A, enum class TestEnum B) { throw logic_error("NotImplementedException"); }
             void FromTestDuplicatedKeyNameRecordDeleteManyByA(String A) { throw logic_error("NotImplementedException"); }
-            void FromTestDuplicatedKeyNameRecordDeleteManyByAAndB(String A, enum TestEnum B) { throw logic_error("NotImplementedException"); }
+            void FromTestDuplicatedKeyNameRecordDeleteManyByAAndB(String A, enum class TestEnum B) { throw logic_error("NotImplementedException"); }
             void FromTestDuplicatedKeyNameRecordDeleteAll() { throw logic_error("NotImplementedException"); }
         };
     }
