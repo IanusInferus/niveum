@@ -63,6 +63,8 @@
     <Compile Include="Generated\Generator\CSharp\CSharpRetry.cs" />
     <Compile Include="Generated\Generator\Haxe\Haxe.cs" />
     <Compile Include="Generated\Generator\Haxe\HaxeJson.cs" />
+    <Compile Include="Generated\Generator\Java\Java.cs" />
+    <Compile Include="Generated\Generator\Java\JavaBinary.cs" />
     <Compile Include="Generated\Generator\VB\VB.cs" />
     <Compile Include="Generated\ObjectSchema\ObjectSchema.cs" />
     <Compile Include="Generator\Cpp\Cpp.cs" />
@@ -74,9 +76,9 @@
     <Compile Include="Generator\CSharp\CSharpRetry.cs" />
     <Compile Include="Generator\Haxe\Haxe.cs" />
     <Compile Include="Generator\Haxe\HaxeJson.cs" />
+    <Compile Include="Generator\Java\Java.cs" />
+    <Compile Include="Generator\Java\JavaBinary.cs" />
     <Compile Include="Generator\VB\VB.cs" />
-    <Compile Include="JavaBinary\CodeGenerator.cs" />
-    <Compile Include="Java\CodeGenerator.cs" />
     <Compile Include="ObjectSchema\FileParser.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaDiffGenerator.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaWriter.cs" />
@@ -91,8 +93,6 @@
     <Compile Include="Xhtml\CodeGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="JavaBinary\Schema.tree" />
-    <EmbeddedResource Include="Java\Schema.tree" />
     <None Include="Common\Primitive.tree" />
     <None Include="Generator\Cpp\Cpp.tree" />
     <None Include="Generator\Cpp\CppBinary.tree" />
@@ -103,6 +103,8 @@
     <None Include="Generator\CSharp\CSharpRetry.tree" />
     <None Include="Generator\Haxe\Haxe.tree" />
     <None Include="Generator\Haxe\HaxeJson.tree" />
+    <None Include="Generator\Java\Java.tree" />
+    <None Include="Generator\Java\JavaBinary.tree" />
     <None Include="Generator\VB\VB.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
     <EmbeddedResource Include="Xhtml\Schema.tree" />
