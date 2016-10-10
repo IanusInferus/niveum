@@ -1,0 +1,323 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Java.tree
+      Location:    Yuki.Core <Tree>
+      Description: 对象类型结构Java模板
+      Version:     2016.10.10.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Yuki.ObjectSchema.Java
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+
+#Constant Keywords:List<String>
+    $List String
+        abstract
+        boolean
+        break
+        byte
+        case
+        catch
+        char
+        class
+        const
+        continue
+        default
+        do
+        double
+        else
+        extends
+        final
+        finally
+        float
+        for
+        goto
+        if
+        implements
+        import
+        instanceof
+        int
+        interface
+        long
+        native
+        new
+        package
+        private
+        protected
+        public
+        return
+        short
+        static
+        strictfp
+        super
+        switch
+        synchronized
+        this
+        throw
+        throws
+        transient
+        try
+        void
+        volatile
+        while
+        true
+        false
+        null
+
+#Constant PrimitiveMapping:Map<String, String>
+    $Table KeyValuePairOfStringAndString Key Value
+        Unit                Unit
+        Boolean             boolean
+        String              java.lang.String
+        Int                 int
+        Real                double
+        Byte                byte                // signed
+        UInt8               byte                // signed
+        UInt16              short
+        UInt32              int
+        UInt64              long
+        Int8                byte                // signed
+        Int16               short
+        Int32               int
+        Int64               long
+        Float32             float
+        Float64             double
+        Type                java.lang.reflect.Type
+        Optional            Optional
+        List                java.util.ArrayList
+        Set                 java.util.LinkedHashSet
+        Map                 java.util.LinkedHashMap
+
+#Constant ReferenceTypeMapping:Map<String, String>
+    $Table KeyValuePairOfStringAndString Key Value
+        boolean             java.lang.Boolean
+        byte                java.lang.Byte
+        short               java.lang.Short
+        int                 java.lang.Integer
+        long                java.lang.Long
+        float               java.lang.Float
+        double              java.lang.Double
+
+#Template SingleLineXmlComment Description:String
+    /** ${Description} */
+
+#Template MultiLineXmlComment Description:List<String>
+    /**
+      * ${Description}
+      * */
+
+#Template Primitive Name:String PlatformName:String
+    // ${Name} = ${PlatformName};
+
+#Template Primitive_Unit
+    public @interface Record
+    {
+    }
+
+    public @interface Alias
+    {
+    }
+
+    public @interface TaggedUnion
+    {
+    }
+
+    public @interface Tag
+    {
+    }
+
+    public @interface Tuple
+    {
+    }
+
+    @Record
+    public static class Unit
+    {
+        public static final Unit Value = new Unit();
+        private Unit()
+        {
+        }
+    }
+
+#Template Alias a:AliasDef
+    $$
+        var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
+        var Type = GetTypeString(a.Type);
+    ${GetXmlComment(a.Description)}
+    @Alias
+    public static final class ${Name}
+    {
+        public ${Type} Value;
+
+        public static ${Name} Create(${Type} o)
+        {
+            ${Name} r = new ${Name}();
+            r.Value = o;
+            return r;
+        }
+    }
+
+#Template Record r:RecordDef
+    $$
+        var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+    ${GetXmlComment(r.Description)}
+    @Record
+    public static final class [[${Name}]]
+    {
+        $$
+            foreach (var f in r.Fields)
+            {
+                ##
+                    ${GetXmlComment(f.Description, f.Type)}
+                    public ${GetTypeString(f.Type)} [[${f.Name}]];
+            }
+    }
+
+#Template TaggedUnion tu:TaggedUnionDef
+    $$
+        var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
+        var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+    public static final class ${TagName}
+    {
+        $$
+            var k = 0;
+            foreach (var a in tu.Alternatives)
+            {
+                ##
+                    ${GetXmlComment(a.Description)}
+                    public static final int [[${a.Name}]] = ${k};
+                k += 1;
+            }
+    }
+    ${GetXmlComment(tu.Description)}
+    @TaggedUnion
+    public static final class ${Name}
+    {
+        @Tag public int _Tag;
+
+        $$
+            foreach (var a in tu.Alternatives)
+            {
+                ##
+                    ${GetXmlComment(a.Description, a.Type)}
+                    public ${GetTypeString(a.Type)} [[${a.Name}]];
+            }
+
+        $$
+            foreach (var a in tu.Alternatives)
+            {
+                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        public static ${Name} [[Create${a.Name}]]()
+                        {
+                            ${Name} r = new ${Name}();
+                            r._Tag = ${TagName}.[[${a.Name}]];
+                            r.[[${a.Name}]] = Unit.Value;
+                            return r;
+                        }
+                }
+                else
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type)} Value)
+                        {
+                            ${Name} r = new ${Name}();
+                            r._Tag = ${TagName}.[[${a.Name}]];
+                            r.[[${a.Name}]] = Value;
+                            return r;
+                        }
+                }
+            }
+
+        $$
+            foreach (var a in tu.Alternatives)
+            {
+                ##
+                    ${GetXmlComment(a.Description)}
+                    public boolean [[On${a.Name}]]() { return _Tag == ${TagName}.[[${a.Name}]]; }
+            }
+    }
+
+#Template Enum e:EnumDef
+    $$
+        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+        var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
+        var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
+    ${GetXmlComment(e.Description)}
+    public static final class ${Name} // ${GetEnumTypeString(e.UnderlyingType)}
+    {
+        $$
+            var k = 0;
+            foreach (var l in e.Literals)
+            {
+                ##
+                    ${GetXmlComment(l.Description)}
+                    public static final ${GetTypeString(e.UnderlyingType)} [[${l.Name}]] = ${l.Value};
+                k += 1;
+            }
+    }
+
+#Template ClientCommand c:ClientCommandDef
+    $$
+        var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+    ${Record(Request)}
+    ${TaggedUnion(Reply)}
+
+#Template ServerCommand c:ServerCommandDef
+    $$
+        var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+    ${Record(Event)}
+
+#Template Tuple tp:TypeSpec
+    $$
+        var Name = GetEscapedIdentifier(tp.TypeFriendlyName());
+        var Types = tp.Tuple;
+    @Tuple
+    public static final class ${Name}
+    {
+        $$
+            var k = 0;
+            foreach (var e in Types)
+            {
+                ##
+                    public ${GetTypeString(e)} [[Item${k}]];
+                k += 1;
+            }
+    }
+
+#Template Main Schema:Schema ClassName:String PackageName:String
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    $$
+        if (PackageName != "")
+        {
+            ##
+                package ${PackageName};
+        }
+    import ${Schema.Imports}.*;
+    ${GetPrimitives(Schema)}
+
+    public class ${ClassName}
+    {
+        ${GetComplexTypes(Schema)}
+    }
+
+$End
