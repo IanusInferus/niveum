@@ -1,0 +1,319 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Xhtml.tree
+      Location:    Yuki.Core <Tree>
+      Description: 对象类型结构XHTML模板
+      Version:     2016.10.12.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Yuki.ObjectSchema.Xhtml
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+
+#Template Ref Name:String Ref:String Description:String
+    $$
+        if (Description == "")
+        {
+            ##
+                <a href="${GetEscaped(Ref)}">${GetEscaped(Name)}</a>
+        }
+        else
+        {
+            ##
+                <a href="${GetEscaped(Ref)}" title="${GetEscaped(Description)}">${GetEscaped(Name)}</a>
+        }
+
+#Template BarRef Name:String Ref:String Description:String
+    $$
+        if (Description == "")
+        {
+            ##
+                <a href="${GetEscaped(Ref)}" target="contentFrame">${GetEscaped(Name)}</a>
+        }
+        else
+        {
+            ##
+                <a href="${GetEscaped(Ref)}" title="${GetEscaped(Description)}" target="contentFrame">${GetEscaped(Name)}</a>
+        }
+
+#Template Type t:TypeDef
+    $$
+        var Name = t.VersionedName();
+        var MetaType = GetMetaType(t);
+        var GenericParameters = t.GenericParameters();
+        var Description = t.Description();
+    <h3 id="${GetEscaped(Name)}">${GetEscaped(MetaType)} ${GetEscaped(Name)}</h3>
+    <pre>${GetEscaped(Description)}</pre>
+    $$
+        if (GenericParameters.Count > 0)
+        {
+            ##
+                <table>
+                    $$
+                        foreach (var gp in GenericParameters)
+                        {
+                            ##
+                                ${Variable("'" + gp.Name, gp.Type, gp.Description)}
+                        }
+                </table>
+        }
+        if (t.OnPrimitive)
+        {
+        }
+        else if (t.OnAlias)
+        {
+            var TypeSpec = GetTypeString(t.Alias.Type, true);
+            ##
+                <pre>类型：${TypeSpec}</pre>
+        }
+        else if (t.OnRecord)
+        {
+            ##
+                <table>
+                    ${Variables(t.Record.Fields)}
+                </table>
+        }
+        else if (t.OnTaggedUnion)
+        {
+            ##
+                <table>
+                    ${Variables(t.TaggedUnion.Alternatives)}
+                </table>
+        }
+        else if (t.OnEnum)
+        {
+            ##
+                <table>
+                    ${Literals(t.Enum.Literals)}
+                </table>
+        }
+        else if (t.OnClientCommand)
+        {
+            ##
+                <div><pre>参数</pre></div>
+                <table>
+                    ${Variables(t.ClientCommand.OutParameters)}
+                </table>
+                <div><pre>返回值</pre></div>
+                <table>
+                    ${Variables(t.ClientCommand.InParameters)}
+                </table>
+        }
+        else if (t.OnServerCommand)
+        {
+            ##
+                <table>
+                    ${Variables(t.ServerCommand.OutParameters)}
+                </table>
+        }
+        else
+        {
+            throw new InvalidOperationException();
+        }
+    <pre></pre>
+
+#Template Variable Name:String Type:TypeSpec Description:String
+    <tr>
+        <td>${GetEscaped(Name)}</td>
+        <td>${GetTypeString(Type, true)}</td>
+        <td><pre>${GetEscaped(Description)}</pre></td>
+    </tr>
+
+#Template Variables l:List<VariableDef>
+    $$
+        if (l.Count > 0)
+        {
+            foreach (var v in l)
+            {
+                ##
+                    ${Variable(v.Name, v.Type, v.Description)}
+            }
+        }
+        else
+        {
+            ##
+                <tr>
+                    <td><pre>        </pre></td>
+                    <td><pre>        </pre></td>
+                    <td><pre>        </pre></td>
+                </tr>
+        }
+
+#Template Literal Name:String Value:Int64 Description:String
+    <tr>
+        <td>${GetEscaped(Name)}</td>
+        <td>${Value}</td>
+        <td><pre>${GetEscaped(Description)}</pre></td>
+    </tr>
+
+#Template Literals l:List<LiteralDef>
+    $$
+        if (l.Count > 0)
+        {
+            foreach (var v in l)
+            {
+                ##
+                    ${Literal(v.Name, v.Value, v.Description)}
+            }
+        }
+        else
+        {
+            ##
+                <tr>
+                    <td><pre>        </pre></td>
+                    <td><pre>        </pre></td>
+                    <td><pre>        </pre></td>
+                </tr>
+        }
+
+#Template Brief FilePath:String Types:IEnumerable<String>
+    <h3>${GetEscaped(FilePath)}</h3>
+    <table>
+        ${Types}
+    </table>
+    <pre></pre>
+
+#Template TypeBrief t:TypeDef
+    $$
+        var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = t.Name(), Version = t.Version() });
+        var MetaType = GetMetaType(t);
+        var Description = t.Description();
+    <tr>
+        <td>${GetTypeString(ts, false)}</td>
+        <td>${GetEscaped(MetaType)}</td>
+        <td><pre>${GetEscaped(Description)}</pre></td>
+    </tr>
+
+#Template BarBrief FilePath:String Types:IEnumerable<String>
+    <h3>${GetEscaped(FilePath)}</h3>
+    ${Types}
+
+#Template BarTypeBrief t:TypeDef
+    $$
+        var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = t.Name(), Version = t.Version() });
+    <p>${GetTypeString(ts, true, true)}</p>
+
+#Template PageContent Name:String Title:String CopyrightText:String Content:IEnumerable<String> UseBackToMain:Boolean
+    <head>
+        <title>${GetEscaped(Name)}-${GetEscaped(Title)}</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <h2>${GetEscaped(Title)}</h2>
+        $$
+            if (UseBackToMain)
+            {
+                ##
+                    <a href="main.html">返回首页</a>
+            }
+        <h1>${GetEscaped(Name)}</h1>
+        <pre></pre>
+        ${Content}
+        <pre></pre>
+        <pre>${GetEscaped(CopyrightText)}</pre>
+    </body>
+
+#Template BarPageContent Name:String Title:String Content:IEnumerable<String>
+    <head>
+        <title>${GetEscaped(Name)}-${GetEscaped(Title)}</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <h2>${GetEscaped(Title)}</h2>
+        <a href="main.html" target="contentFrame">所有</a>
+        ${Content}
+    </body>
+
+#Template IndexPageContent Name:String Title:String
+    <head>
+        <title>${GetEscaped(Name)}-${GetEscaped(Title)}</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <frameset cols="20%,80%" title="">
+        <frame src="bar.html" name="barFrame" />
+        <frame src="main.html" name="contentFrame" />
+    </frameset>
+
+#Template PageWrapper Content:IEnumerable<String>
+    <?xml version="1.0" encoding="utf-8"?>
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN"
+        "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">
+    <!--
+    ==========================================================================
+
+        Notice:      This file is automatically generated.
+                    Please don't modify this file.
+
+    ==========================================================================
+    -->
+    <html xmlns="http://www.w3.org/1999/xhtml">
+        ${Content}
+    </html>
+
+$End
+
+#Template Css
+    h1
+    {
+        font-family: 宋体;
+        font-size: x-large;
+    }
+
+    h2
+    {
+        font-family: 宋体;
+        font-size: large;
+    }
+
+    h2
+    {
+        font-family: 宋体;
+        font-size: medium;
+    }
+
+    table, td
+    {
+        border-color: Gray;
+        border-style: solid;
+    }
+
+    table
+    {
+        border-width: 0 0 1pt 1pt;
+        border-spacing: 0;
+        border-collapse: collapse;
+    }
+
+    td
+    {
+        border-width: 1pt 1pt 0 0;
+        margin: 0;
+        padding: 5pt 5pt 5pt 5pt;
+    }
+
+    a
+    {
+        text-decoration: none;
+    }
+
+    td, pre
+    {
+        font-size: medium;
+    }
+
+    pre
+    {
+        margin: 0;
+        padding: 5pt 0pt 5pt 0pt;
+    }
+
+$End

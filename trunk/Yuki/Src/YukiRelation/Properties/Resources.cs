@@ -3,7 +3,7 @@
 //  File:        Resources.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 资源读取类
-//  Version:     2016.09.02.
+//  Version:     2016.10.12.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -40,5 +40,6 @@ namespace Yuki.RelationSchema.Properties
         public static Byte[] MySql { get { return GetResource("MySql"); } }
         public static Byte[] PostgreSql { get { return GetResource("PostgreSql"); } }
         public static Byte[] TSql { get { return GetResource("TSql"); } }
+        public static Byte[] Xhtml { get { return GetResource("Xhtml"); } }
     }
 }
