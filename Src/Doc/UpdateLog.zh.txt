@@ -1,6 +1,8 @@
 ﻿2016.10.12
 Yuki.Core:
 增加新版XHTML代码生成，移除旧版。
+Yuki.Relation:
+修正编译。
 
 2016.10.11
 Yuki.Core:
