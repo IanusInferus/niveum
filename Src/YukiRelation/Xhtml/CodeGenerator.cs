@@ -42,7 +42,7 @@ namespace Yuki.RelationSchema.Xhtml
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(OS.Properties.Resources.Xhtml);
+                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.Xhtml);
             }
 
             public Writer(RelationSchemaLoaderResult rslr, String Title, String CopyrightText)
@@ -305,21 +305,51 @@ namespace Yuki.RelationSchema.Xhtml
             }
             public static List<String> GetLines(String Value)
             {
-                return OS.Xhtml.Common.CodeGenerator.Writer.GetLines(Value);
+                return Value.UnifyNewLineToLf().Split('\n').ToList();
             }
             public static String GetEscaped(String v)
             {
-                return OS.Xhtml.Common.CodeGenerator.Writer.GetEscaped(v);
+                return v.Replace(@"&", @"&amp;").Replace(@"""", @"&quot;").Replace(@"'", @"&#39;").Replace(@"<", @"&lt;").Replace(@">", @"&gt;").Replace("\r", "&#13;").Replace("\n", "&#10;");
             }
         }
 
-        private static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
+        public static List<String> Substitute(this List<String> Lines, String Parameter, String Value)
         {
-            return OS.Xhtml.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            var ParameterString = "${" + Parameter + "}";
+
+            var l = new List<String>();
+            foreach (var Line in Lines)
+            {
+                var NewLine = Line;
+
+                if (Line.Contains(ParameterString))
+                {
+                    NewLine = NewLine.Replace(ParameterString, Value);
+                }
+
+                l.Add(NewLine);
+            }
+            return l;
         }
-        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        public static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
         {
-            return OS.Xhtml.Common.CodeGenerator.Substitute(Lines, Parameter, Value);
+            var l = new List<String>();
+            foreach (var Line in Lines)
+            {
+                var ParameterString = "${" + Parameter + "}";
+                if (Line.Contains(ParameterString))
+                {
+                    foreach (var vLine in Value)
+                    {
+                        l.Add(Line.Replace(ParameterString, vLine));
+                    }
+                }
+                else
+                {
+                    l.Add(Line);
+                }
+            }
+            return l;
         }
     }
 }

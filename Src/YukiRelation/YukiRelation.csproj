@@ -106,6 +106,7 @@
     <None Include="RelationSchema\RelationSchema.tree" />
     <EmbeddedResource Include="TSql\Schema.tree" />
     <None Include="RelationValue\RelationValue.tree" />
+    <EmbeddedResource Include="Xhtml\Schema.tree" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YukiCore\YukiCore.csproj">
