@@ -63,10 +63,10 @@
     <Compile Include="CSharpPlain\CodeGenerator.cs" />
     <Compile Include="CSharpPostgreSql\CodeGenerator.cs" />
     <Compile Include="CSharpSqlServer\CodeGenerator.cs" />
+    <Compile Include="Generated\RelationSchemaDiff\RelationSchemaDiff.cs" />
     <Compile Include="Generated\RelationSchema\RelationSchema.cs" />
     <Compile Include="MySql\CodeGenerator.cs" />
     <Compile Include="PostgreSql\CodeGenerator.cs" />
-    <Compile Include="RelationSchemaDiff\RelationSchemaDiff.Designer.cs" />
     <Compile Include="RelationSchemaDiff\RelationSchemaDiffTranslator.cs" />
     <Compile Include="RelationSchemaDiff\RelationSchemaDiffVerifier.cs" />
     <Compile Include="RelationSchemaDiff\RelationSchemaDiffGenerator.cs" />
