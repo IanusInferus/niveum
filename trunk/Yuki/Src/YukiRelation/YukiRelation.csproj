@@ -74,6 +74,7 @@
     <Compile Include="RelationSchemaDiff\RelationSchemaDiffWriter.cs" />
     <Compile Include="RelationSchemaDiff\RelationSchemaDiffLoader.cs" />
     <Compile Include="RelationSchema\FileParser.cs" />
+    <Compile Include="RelationSchema\ObjectSchemaTemplate.cs" />
     <Compile Include="RelationSchema\PlainObjectSchemaGenerator.cs" />
     <Compile Include="RelationSchema\RelationSchemaExtensions.cs" />
     <Compile Include="RelationSchema\RelationSchemaLoader.cs" />
