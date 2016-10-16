@@ -3,7 +3,7 @@
 //  File:        Resources.cs
 //  Location:    Yuki.Expression <Visual C#>
 //  Description: 资源读取类
-//  Version:     2015.02.12.
+//  Version:     2016.10.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -28,6 +28,5 @@ namespace Yuki.ExpressionSchema.Properties
         }
 
         public static Byte[] CppBinaryLoader { get { return GetResource("CppBinaryLoader"); } }
-        public static Byte[] CSharpBinaryLoader { get { return GetResource("CSharpBinaryLoader"); } }
     }
 }
