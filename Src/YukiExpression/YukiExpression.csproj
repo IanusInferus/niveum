@@ -53,7 +53,6 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CppBinaryLoader\CodeGenerator.cs" />
     <Compile Include="ExpressionSchema\ExpressionAssemblyLoader.cs" />
     <Compile Include="ExpressionSchema\ExpressionParser.cs" />
     <Compile Include="ExpressionSchema\ExpressionSchemaExtensions.cs" />
@@ -67,10 +66,11 @@
     <Compile Include="Expression\VariableContext.cs" />
     <Compile Include="Generated\ExpressionSchema\Semantics.cs" />
     <Compile Include="Generated\ExpressionSchema\Syntax.cs" />
+    <Compile Include="Generated\Generator\Cpp\CppBinaryLoader.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharpBinaryLoader.cs" />
+    <Compile Include="Generator\Cpp\CppBinaryLoader.cs" />
     <Compile Include="Generator\CSharp\CSharpBinaryLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YukiCore\YukiCore.csproj">
@@ -79,14 +79,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="CppBinaryLoader\Schema.tree" />
     <None Include="ExpressionSchema\Semantics.tree" />
     <None Include="ExpressionSchema\Syntax.tree" />
+    <None Include="Generator\Cpp\CppBinaryLoader.tree" />
     <None Include="Generator\CSharp\CSharpBinaryLoader.tree" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Generator\Cpp\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
