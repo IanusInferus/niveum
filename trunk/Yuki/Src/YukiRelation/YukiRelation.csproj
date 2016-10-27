@@ -61,13 +61,11 @@
     <Compile Include="CSharpMemory\CodeGenerator.cs" />
     <Compile Include="CSharpMySql\CodeGenerator.cs" />
     <Compile Include="CSharpPlain\CodeGenerator.cs" />
-    <Compile Include="CSharpPostgreSql\CodeGenerator.cs" />
     <Compile Include="CSharpSqlServer\CodeGenerator.cs" />
     <Compile Include="Generated\RelationSchemaDiff\RelationSchemaDiff.cs" />
     <Compile Include="Generated\RelationSchema\RelationSchema.cs" />
     <Compile Include="Generated\RelationValue\RelationValue.cs" />
     <Compile Include="MySql\CodeGenerator.cs" />
-    <Compile Include="PostgreSql\CodeGenerator.cs" />
     <Compile Include="RelationSchemaDiff\RelationSchemaDiffTranslator.cs" />
     <Compile Include="RelationSchemaDiff\RelationSchemaDiffVerifier.cs" />
     <Compile Include="RelationSchemaDiff\RelationSchemaDiffGenerator.cs" />
@@ -94,10 +92,8 @@
     <EmbeddedResource Include="CSharpLinqToEntities\Schema.tree" />
     <EmbeddedResource Include="CSharpMySql\Schema.tree" />
     <EmbeddedResource Include="CSharpPlain\Schema.tree" />
-    <EmbeddedResource Include="CSharpPostgreSql\Schema.tree" />
     <EmbeddedResource Include="CSharpSqlServer\Schema.tree" />
     <EmbeddedResource Include="MySql\Schema.tree" />
-    <EmbeddedResource Include="PostgreSql\Schema.tree" />
     <EmbeddedResource Include="CSharpMemory\Schema.tree" />
     <EmbeddedResource Include="CppPlain\Schema.tree" />
     <EmbeddedResource Include="CppMemory\Schema.tree" />

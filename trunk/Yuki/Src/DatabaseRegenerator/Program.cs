@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2016.09.04.
+//  Version:     2016.10.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,7 +23,6 @@ using Syntax = Firefly.Texting.TreeFormat.Syntax;
 using Firefly.Texting.TreeFormat.Semantics;
 using Yuki.RelationSchema;
 using Yuki.RelationSchema.TSql;
-using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
 using Yuki.RelationValue;
 using Yuki.RelationSchemaDiff;
@@ -220,19 +219,6 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
-                else if (optNameLower == "regenpgsql")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length >= 0)
-                    {
-                        RegenPostgreSQL(Schema(), ConnectionString, DatabaseName, args);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
                 else if (optNameLower == "regenmysql")
                 {
                     var args = opt.Arguments;
@@ -345,8 +331,6 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/importcoll:<DataDir>+");
             Console.WriteLine(@"重建SQL Server数据库");
             Console.WriteLine(@"/regenmssql:(<DataDir>|<MemoryDatabaseFile>)*");
-            Console.WriteLine(@"重建PostgreSQL数据库");
-            Console.WriteLine(@"/regenpgsql:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"重建MySQL数据库");
             Console.WriteLine(@"/regenmysql:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"导出SQL Server数据库");
@@ -739,94 +723,6 @@ namespace Yuki.DatabaseRegenerator
                             b.Rollback();
                         }
                     }
-                }
-            }
-        }
-
-        public static void RegenPostgreSQL(Schema s, String ConnectionString, String DatabaseName, String[] DataDirOrMemoryDatabaseFiles)
-        {
-            var Value = LoadData(s, DataDirOrMemoryDatabaseFiles);
-
-            var GenSqls = s.CompileToPostgreSql(DatabaseName, true);
-            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture).ToList();
-            RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToList();
-            var CreateDatabases = new String[] { String.Format("DROP DATABASE IF EXISTS \"{0}\"", DatabaseName.ToLowerInvariant()), String.Format("CREATE DATABASE \"{0}\"", DatabaseName.ToLowerInvariant()) };
-            var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToList();
-            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER") || q.StartsWith("COMMENT")).ToList();
-
-            var cf = GetConnectionFactory(DatabaseType.PostgreSQL);
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                foreach (var Sql in CreateDatabases)
-                {
-                    if (Sql == "") { continue; }
-
-                    var cmd = c.CreateCommand();
-                    cmd.CommandText = Sql;
-                    cmd.CommandType = CommandType.Text;
-                    cmd.ExecuteNonQuery();
-                }
-            }
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                foreach (var Sql in Creates)
-                {
-                    if (Sql == "") { continue; }
-
-                    var cmd = c.CreateCommand();
-                    cmd.CommandText = Sql;
-                    cmd.CommandType = CommandType.Text;
-                    cmd.ExecuteNonQuery();
-                }
-            }
-
-            var TableInfo = TableOperations.GetTableInfo(s);
-            var EntityMetas = TableInfo.EntityMetas;
-            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
-            var Tables = TableOperations.GetTableDictionary(s, EntityMetas, Value);
-
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                using (var b = c.BeginTransaction())
-                {
-                    var Success = false;
-                    try
-                    {
-                        foreach (var t in Tables)
-                        {
-                            TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.PostgreSQL);
-                        }
-
-                        b.Commit();
-                        Success = true;
-                    }
-                    finally
-                    {
-                        if (!Success)
-                        {
-                            b.Rollback();
-                        }
-                    }
-                }
-            }
-
-            using (var c = cf(ConnectionString))
-            {
-                c.Open();
-                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
-                foreach (var Sql in Alters)
-                {
-                    if (Sql == "") { continue; }
-
-                    var cmd = c.CreateCommand();
-                    cmd.CommandText = Sql;
-                    cmd.CommandType = CommandType.Text;
-                    cmd.ExecuteNonQuery();
                 }
             }
         }
