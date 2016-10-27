@@ -10,8 +10,6 @@ namespace Database
     {
         Memory,
         SqlServer,
-        SqlServerCe,
-        PostgreSQL,
         MySQL,
         Krustallos
     }
@@ -33,12 +31,10 @@ namespace Database
 
         private static readonly String MemoryType = "Database.Memory.Provider";
         private static readonly String SqlServerType = "Database.SqlServer.Provider";
-        private static readonly String PostgreSqlType = "Database.PostgreSql.Provider";
         private static readonly String MySqlType = "Database.MySql.Provider";
         private static readonly String KrustallosType = "Database.Krustallos.Provider";
         private static readonly String MemoryConnectionString = "Mail.kd";
         private static readonly String SqlServerConnectionString = "Data Source=.;Integrated Security=True;Database=Mail";
-        private static readonly String PostgreSqlConnectionString = "Server=localhost;User ID=postgres;Password={Password};Database=mail;";
         private static readonly String MySqlConnectionString = "server=localhost;uid=root;pwd={Password};database=Mail;";
         private static readonly String KrustallosConnectionString = "File=Mail.kd";
 
@@ -101,13 +97,6 @@ namespace Database
                 }
             }
             {
-                var t = GetType(PostgreSqlType);
-                if (t != null)
-                {
-                    return PostgreSqlConnectionString;
-                }
-            }
-            {
                 var t = GetType(MySqlType);
                 if (t != null)
                 {
@@ -136,11 +125,6 @@ namespace Database
                 var t = GetType(SqlServerType, true);
                 return SqlServerConnectionString;
             }
-            else if (Type == DatabaseType.PostgreSQL)
-            {
-                var t = GetType(PostgreSqlType, true);
-                return PostgreSqlConnectionString;
-            }
             else if (Type == DatabaseType.MySQL)
             {
                 var t = GetType(MySqlType, true);
@@ -167,10 +151,6 @@ namespace Database
             if (t == null)
             {
                 t = GetType(SqlServerType);
-            }
-            if (t == null)
-            {
-                t = GetType(PostgreSqlType);
             }
             if (t == null)
             {
@@ -202,10 +182,6 @@ namespace Database
             else if (Type == DatabaseType.SqlServer)
             {
                 t = GetType(SqlServerType, true);
-            }
-            else if (Type == DatabaseType.PostgreSQL)
-            {
-                t = GetType(PostgreSqlType, true);
             }
             else if (Type == DatabaseType.MySQL)
             {
