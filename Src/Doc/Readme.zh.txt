@@ -86,10 +86,10 @@ Xhtml               √              无需                无需            无
 查询 Query
 表示Select、Lock、Insert、Update、Upsert、Delete等6种基本操作。
 
-这部分的代码生成主要分成四个部分：类型定义、内存只读数据库、SQL Server、PostgreSQL和MySQL。
+这部分的代码生成主要分成：类型定义、内存只读数据库、内存数据库Krustallos、SQL Server和MySQL。
 下面列出各语言代码生成支持的部分。
 
-                    类型定义        内存只读数据库  SQL Server      PostgreSQL      MySQL
+                    类型定义        只读数据库      Krustallos      SQL Server      MySQL
 C#                  √              √              √              √              √
 C++2011             √              √              ×              ×              ×
 Xhtml               √              无需            无需            无需            无需
