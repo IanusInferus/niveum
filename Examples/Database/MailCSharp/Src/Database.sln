@@ -1,13 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseMySQL", "DatabaseMySQL.csproj", "{A5018DF4-7814-4D70-B704-443ED3A46F02}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseMSSQL", "DatabaseMSSQL.csproj", "{9FDC9059-B327-48C4-B46C-A42E91284F3D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabasePostgreSQL", "DatabasePostgreSQL.csproj", "{F066A479-9D36-4E44-A1F0-58A150F7818A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseMemory", "DatabaseMemory.csproj", "{6A8BEECC-8A3B-479A-8BD7-AF9ED10D8A6A}"
 EndProject
@@ -27,10 +25,6 @@ Global
 		{9FDC9059-B327-48C4-B46C-A42E91284F3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FDC9059-B327-48C4-B46C-A42E91284F3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FDC9059-B327-48C4-B46C-A42E91284F3D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F066A479-9D36-4E44-A1F0-58A150F7818A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F066A479-9D36-4E44-A1F0-58A150F7818A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F066A479-9D36-4E44-A1F0-58A150F7818A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F066A479-9D36-4E44-A1F0-58A150F7818A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6A8BEECC-8A3B-479A-8BD7-AF9ED10D8A6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6A8BEECC-8A3B-479A-8BD7-AF9ED10D8A6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A8BEECC-8A3B-479A-8BD7-AF9ED10D8A6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
