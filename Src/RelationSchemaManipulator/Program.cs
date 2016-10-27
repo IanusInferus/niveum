@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 关系类型结构处理工具
-//  Version:     2016.09.02.
+//  Version:     2016.10.27.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,7 +14,6 @@ using System.Linq;
 using System.IO;
 using Firefly;
 using Firefly.Mapping.XmlText;
-using Firefly.Streaming;
 using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
@@ -22,13 +21,11 @@ using Yuki.RelationSchema;
 using OS = Yuki.ObjectSchema;
 using RS = Yuki.RelationSchema;
 using Yuki.RelationSchema.TSql;
-using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
 using Yuki.RelationSchema.CSharpLinqToEntities;
 using Yuki.RelationSchema.CSharpPlain;
 using Yuki.RelationSchema.CSharpMemory;
 using Yuki.RelationSchema.CSharpSqlServer;
-using Yuki.RelationSchema.CSharpPostgreSql;
 using Yuki.RelationSchema.CSharpMySql;
 using Yuki.RelationSchema.CSharpKrustallos;
 using Yuki.RelationSchema.CSharpCounted;
@@ -197,19 +194,6 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
-                else if (optNameLower == "t2pgsql")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 2)
-                    {
-                        RelationSchemaToPostgreSqlCode(args[0], args[1]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
                 else if (optNameLower == "t2mysql")
                 {
                     var args = opt.Arguments;
@@ -272,19 +256,6 @@ namespace Yuki.RelationSchemaManipulator
                     if (args.Length == 3)
                     {
                         RelationSchemaToCSharpSqlServerCode(args[0], args[1], args[2]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
-                else if (optNameLower == "t2cspgsql")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 3)
-                    {
-                        RelationSchemaToCSharpPostgreSqlCode(args[0], args[1], args[2]);
                     }
                     else
                     {
@@ -400,8 +371,6 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/import:<NamespaceName>");
             Console.WriteLine(@"生成T-SQL(SQL Server)数据库DROP和CREATE脚本");
             Console.WriteLine(@"/t2tsql:<SqlCodePath>,<DatabaseName>");
-            Console.WriteLine(@"生成PostgreSQL数据库DROP和CREATE脚本");
-            Console.WriteLine(@"/t2pgsql:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成MySQL数据库DROP和CREATE脚本");
             Console.WriteLine(@"/t2mysql:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成C#数据库Linq to Entities类型");
@@ -412,8 +381,6 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2csm:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# SQL Server类型");
             Console.WriteLine(@"/t2csmssql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
-            Console.WriteLine(@"生成C# PostgreSQL类型");
-            Console.WriteLine(@"/t2cspgsql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# MySQL类型");
             Console.WriteLine(@"/t2csmysql:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C# Krustallos类型");
@@ -468,23 +435,6 @@ namespace Yuki.RelationSchemaManipulator
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToTSql(DatabaseName, true);
-            if (File.Exists(SqlCodePath))
-            {
-                var Original = Txt.ReadFile(SqlCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
-            if (SqlCodeDir != "" && !Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
-            Txt.WriteFile(SqlCodePath, Compiled);
-        }
-
-        public static void RelationSchemaToPostgreSqlCode(String SqlCodePath, String DatabaseName)
-        {
-            var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToPostgreSql(DatabaseName, true);
             if (File.Exists(SqlCodePath))
             {
                 var Original = Txt.ReadFile(SqlCodePath);
@@ -570,23 +520,6 @@ namespace Yuki.RelationSchemaManipulator
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToCSharpSqlServer(EntityNamespaceName, ContextNamespaceName);
-            if (File.Exists(CsCodePath))
-            {
-                var Original = Txt.ReadFile(CsCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(CsCodePath, Compiled);
-        }
-
-        public static void RelationSchemaToCSharpPostgreSqlCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
-        {
-            var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpPostgreSql(EntityNamespaceName, ContextNamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);

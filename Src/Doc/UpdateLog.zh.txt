@@ -1,4 +1,8 @@
-﻿2016.10.16
+﻿2016.10.27
+Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator, Example:
+结束对PostgreSQL的支持。
+
+2016.10.16
 Yuki.Expression:
 增加新版C#表达式计算二进制程序集加载代码生成，移除旧版。
 增加新版C++表达式计算二进制程序集加载代码生成，移除旧版。
