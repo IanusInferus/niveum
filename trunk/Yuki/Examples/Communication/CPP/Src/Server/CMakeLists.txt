@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 find_package(Threads)
-add_definitions("-std=c++11")
+add_definitions("-std=c++14")
 add_definitions("-DFMT_HEADER_ONLY")
 add_definitions("-DASIO_STANDALONE")
 include_directories("../../Lib/utf8")

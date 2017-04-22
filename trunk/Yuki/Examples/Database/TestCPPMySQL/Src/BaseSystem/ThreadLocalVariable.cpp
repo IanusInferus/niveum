@@ -67,7 +67,7 @@ std::function<void()> do_at_thread_exit(std::function<void()> f)
 #include <pthread.h>
 #include <cstdio>
 
-namespace BaseSystem {
+namespace easyar {
 namespace detail {
 
 struct Context

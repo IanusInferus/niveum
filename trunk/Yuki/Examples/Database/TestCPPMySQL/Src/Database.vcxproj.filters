@@ -5,20 +5,26 @@
     <ClInclude Include="LoadTest.h" />
     <ClInclude Include="PerformanceTest.h" />
     <ClInclude Include="TestService.h" />
-    <ClInclude Include="ThreadLocalVariable.h" />
     <ClInclude Include="MySql\DataAccessBase.h">
       <Filter>MySql</Filter>
     </ClInclude>
     <ClInclude Include="MySql\DataAccessImplementation.h">
       <Filter>MySql</Filter>
     </ClInclude>
-    <ClInclude Include="LockedVariable.h" />
-    <ClInclude Include="AutoResetEvent.h" />
     <ClInclude Include="Database.h" />
     <ClInclude Include="BaseSystem\StringUtilities.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
-    <ClInclude Include="UtfEncoding.h" />
+    <ClInclude Include="BaseSystem\LockedVariable.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\ThreadLocalVariable.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\AutoResetEvent.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Workaround.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
@@ -26,8 +32,10 @@
     <ClCompile Include="MySql\DataAccessBase.cpp">
       <Filter>MySql</Filter>
     </ClCompile>
-    <ClCompile Include="ThreadLocalVariable.cpp" />
     <ClCompile Include="BaseSystem\StringUtilities.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>

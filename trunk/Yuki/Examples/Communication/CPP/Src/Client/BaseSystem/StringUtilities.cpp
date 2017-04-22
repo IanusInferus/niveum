@@ -1,6 +1,9 @@
 ﻿#include "StringUtilities.h"
 
+#include <stdexcept>
 #include <limits>
+#include <locale>
+#include <codecvt>
 
 bool EqualIgnoreCase(const std::wstring& l, const std::wstring& r)
 {
@@ -58,4 +61,26 @@ std::string w2s(const std::wstring& ws)
     if (n == 0) { return s; }
     std::wcstombs(&s[0], ws.c_str(), n);
     return s;
+}
+
+std::wstring u2w(const std::string &us)
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> conv;
+    return conv.from_bytes(us);
+}
+
+std::string w2u(const std::wstring &ws)
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> conv;
+    return conv.to_bytes(ws);
+}
+
+std::string s2u(const std::string &s)
+{
+    return w2u(s2w(s));
+}
+
+std::string u2s(const std::string &us)
+{
+    return w2s(u2w(us));
 }

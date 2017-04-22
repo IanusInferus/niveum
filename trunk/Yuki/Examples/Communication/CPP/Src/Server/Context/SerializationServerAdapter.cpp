@@ -13,12 +13,12 @@
 
 namespace Server
 {
-    static std::shared_ptr<BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>> sss = std::make_shared<BaseSystem::ThreadLocalVariable<Communication::Binary::BinarySerializationServer>>([]() { return std::make_shared<Communication::Binary::BinarySerializationServer>(); });
+    static BaseSystem::ThreadLocalVariable<std::shared_ptr<Communication::Binary::BinarySerializationServer>> sss = BaseSystem::ThreadLocalVariable<std::shared_ptr<Communication::Binary::BinarySerializationServer>>([]() { return std::make_shared<Communication::Binary::BinarySerializationServer>(); });
 
     BinarySerializationServerAdapter::BinarySerializationServerAdapter(std::shared_ptr<Communication::IApplicationServer> ApplicationServer)
     {
         s = ApplicationServer;
-        ss = sss->Value();
+        ss = sss.Value();
         ssed = std::make_shared<Communication::Binary::BinarySerializationServerEventDispatcher>(ApplicationServer);
         ssed->ServerEvent = [=](std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
         {
