@@ -4,7 +4,7 @@
       File:        HaxeJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Haxe JSON通讯模板
-      Version:     2016.10.06.
+      Version:     2017.04.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -68,7 +68,7 @@
                 {
                     var CommandName = c.ClientCommand.Name;
                     var Name = c.ClientCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     ##
                         public function [[${LowercaseCamelize(Name)}]](r : [[${Name}Request]], _callback : [[${Name}Reply]] -> Void) : Void
                         {
@@ -111,7 +111,7 @@
                     {
                         var CommandName = c.ServerCommand.Name;
                         var Name = c.ServerCommand.TypeFriendlyName();
-                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
                             serverCommands.set(${GetEscapedStringLiteral(CommandName)}, {commandHash : "${CommandHash}", _callback : function(parameters) { c.[[raise${Name}]](JsonTranslator.[[${LowercaseCamelize(Name)}EventFromJson]](Json.parse(parameters))); }});
                     }

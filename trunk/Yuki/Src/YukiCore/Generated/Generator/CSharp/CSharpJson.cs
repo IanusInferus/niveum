@@ -124,7 +124,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 {
                     var CommandName = c.ClientCommand.Name;
                     var Name = c.ClientCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (c.ClientCommand.Version == "")
                     {
                         if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
@@ -221,7 +221,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 {
                     var CommandName = c.ServerCommand.Name;
                     var Name = c.ServerCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "s."), Name), " += e => OnServerEvent("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ", JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "EventToJson"))), "(e).ToString(Formatting.None));"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
@@ -307,7 +307,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 {
                     var CommandName = c.ClientCommand.Name;
                     var Name = c.ClientCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void "), GetEscapedIdentifier(Name)), "("), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), " r, Action<"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), "> Callback)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
@@ -357,7 +357,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 {
                     var CommandName = c.ServerCommand.Name;
                     var Name = c.ServerCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ServerCommands.Add(new KeyValuePair<String, UInt32>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), "), Parameters => c."), GetEscapedIdentifier(Combine(Combine(Begin(), "Raise"), Name))), "(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "EventFromJson"))), "(JToken.Parse(Parameters))));"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;

@@ -120,7 +120,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 {
                     var CommandName = c.ClientCommand.Name;
                     var Name = c.ClientCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (WithFirefly)
                     {
                         if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
@@ -200,7 +200,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 {
                     var CommandName = c.ServerCommand.Name;
                     var Name = c.ServerCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (WithFirefly)
                     {
                         foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "s."), Name), " += e => OnServerEvent("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ", BinaryTranslator.Serialize(e));"))
@@ -296,7 +296,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 {
                     var CommandName = c.ClientCommand.Name;
                     var Name = c.ClientCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (WithFirefly)
                     {
                         foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void "), GetEscapedIdentifier(Name)), "("), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), " r, Action<"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), "> Callback)"))
@@ -367,7 +367,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 {
                     var CommandName = c.ServerCommand.Name;
                     var Name = c.ServerCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (WithFirefly)
                     {
                         foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ServerCommands.Add(new KeyValuePair<String, UInt32>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), "), Parameters => c."), GetEscapedIdentifier(Combine(Combine(Begin(), "Raise"), Name))), "(BinaryTranslator.Deserialize<"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), ">(Parameters)));"))

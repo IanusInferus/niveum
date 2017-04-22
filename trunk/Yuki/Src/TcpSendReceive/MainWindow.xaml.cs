@@ -240,7 +240,7 @@ namespace TcpSendReceive
                         var tRequest = a.GetType(CommandName + "Request");
                         var oRequest = a.GetType("JsonTranslator").GetMethod(CommandName + "RequestFromJson").Invoke(null, new Object[] { jParameters });
                         var Parameters = (Byte[])a.GetType("BinaryTranslator").GetMethod("Serialize").MakeGenericMethod(tRequest).Invoke(null, new Object[] { oRequest });
-                        var CommandHash = (UInt32)(Sche.GetSubSchema(new TypeDef[] { CommandDef }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                        var CommandHash = (UInt32)(Sche.GetSubSchema(new TypeDef[] { CommandDef }, new TypeSpec[] { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0));
 
                         var CommandNameBytes = TextEncoding.UTF16.GetBytes(CommandName);
                         s.WriteInt32(CommandNameBytes.Length);
@@ -491,7 +491,7 @@ namespace TcpSendReceive
 
                     var CommandName = r.Command.CommandName;
                     var CommandDef = Sche.Types.Where(t => t.Name() == CommandName && t.Version() == "").Single();
-                    var CommandHash = (UInt32)(Sche.GetSubSchema(new TypeDef[] { CommandDef }, new TypeSpec[] { }).GetNonversioned().Hash().Bits(31, 0));
+                    var CommandHash = (UInt32)(Sche.GetSubSchema(new TypeDef[] { CommandDef }, new TypeSpec[] { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0));
                     if (CommandHash != r.Command.CommandHash)
                     {
                         throw new InvalidOperationException(String.Format("Command '{0}' ReceivedHash '{1}' ExceptedHash '{2}'", r.Command.CommandName, r.Command.CommandHash, CommandHash));
