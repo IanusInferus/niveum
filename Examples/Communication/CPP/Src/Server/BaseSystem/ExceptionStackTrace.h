@@ -2,7 +2,7 @@
 //
 //  File:        ExceptionStackTrace.h
 //  Description: C++异常捕捉时获得代码栈
-//  Version:     2015.08.31.
+//  Version:     2017.04.22.
 //  Author:      F.R.C.(地狱门神)
 //  Copyright(C) Public Domain
 //
@@ -55,6 +55,7 @@ namespace ExceptionStackTrace
 
     bool IsDebuggerAttached();
     std::string GetStackTrace();
+    std::string GetStackFrame(int Skip);
 
     template<typename TFunc>
     static inline auto Execute(TFunc f, typename std::enable_if<!std::is_void<decltype(f())>::value>::type * = nullptr) -> decltype(f())

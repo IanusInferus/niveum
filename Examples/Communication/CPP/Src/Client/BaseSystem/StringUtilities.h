@@ -182,5 +182,20 @@ bool EqualIgnoreCase(const std::wstring &l, const std::wstring &r);
 std::wstring ToLower(const std::wstring &Input);
 std::wstring ToUpper(const std::wstring &Input);
 
+// convert string from multibyte to widechar
 std::wstring s2w(const std::string &s);
+
+// convert string from widechar to multibyte
 std::string w2s(const std::wstring &ws);
+
+// convert string from UTF-8 to widechar
+std::wstring u2w(const std::string &us);
+
+// convert string from widechar to UTF-8
+std::string w2u(const std::wstring &ws);
+
+// convert string from multibyte to UTF-8
+std::string s2u(const std::string &s);
+
+// convert string from UTF-8 to multibyte
+std::string u2s(const std::string &us);

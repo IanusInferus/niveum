@@ -8,7 +8,7 @@ mysql-community-server、mysql-workbench
 cmake
 直接用YaST从光盘安装。
 
-gcc-c++、gcc48-c++、libpth-devel
+gcc-c++、gcc52-c++、libpth-devel
 直接用YaST从光盘安装。
 
 p7zip

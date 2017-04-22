@@ -12,7 +12,6 @@ http://dev.mysql.com/doc/refman/5.0/en/identifier-case-sensitivity.html
 
 若需要在Windows上导入不输入密码，可以将密码设为空，避免在开发环境中出现密码。
 
-从开始菜单打开MySQL 5.5 Command Line Client，输入初始root密码。
+从开始菜单打开MySQL 5.6 Command Line Client，输入初始root密码。
 输入
-UPDATE mysql.user SET Password=PASSWORD('') WHERE User='root';
-FLUSH PRIVILEGES;
+SET PASSWORD = '';

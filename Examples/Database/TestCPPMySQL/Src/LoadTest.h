@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include "AutoResetEvent.h"
-#include "LockedVariable.h"
-#include "ThreadLocalVariable.h"
+#include "BaseSystem/AutoResetEvent.h"
+#include "BaseSystem/LockedVariable.h"
+#include "BaseSystem/ThreadLocalVariable.h"
 #include "TestService.h"
 
 #include <memory>
@@ -57,7 +57,7 @@ namespace Database
         static void TestForNumUser(std::shared_ptr<DataAccessManager> dam, int NumUser, std::wstring Title, std::function<void(int, int, std::shared_ptr<TestService>)> Test)
         {
             auto Factory = [=]() -> std::shared_ptr<TestService> { return std::make_shared<TestService>(*dam); };
-            auto tf = std::make_shared<BaseSystem::ThreadLocalVariable<TestService>>(Factory);
+            auto tf = BaseSystem::ThreadLocalVariable<std::shared_ptr<TestService>>(Factory);
 
             int ProcessorCount = (int)(std::thread::hardware_concurrency());
             auto ThreadCount = ProcessorCount * 2 + 1;
@@ -105,9 +105,9 @@ namespace Database
 
             for (int i = 0; i < NumUser; i += 1)
             {
-                auto a = [=, &eNum, &vNum]()
+                auto a = [=, &tf, &eNum, &vNum]()
                 {
-                    Test(NumUser, i, tf->Value());
+                    Test(NumUser, i, tf.Value());
                     vNum.Update([](const int &n) { return n - 1; });
                     eNum.Set();
                 };
