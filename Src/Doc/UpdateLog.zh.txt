@@ -1,4 +1,10 @@
-﻿2016.10.27
+﻿2017.04.22
+Example:
+升级C++代码。
+Yuki.Core, Yuki.SchemaManipulator, Yuki.TcpSendReceive:
+修正async标记导致的服务器端和客户端散列值不一致。
+
+2016.10.27
 Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator, Example:
 结束对PostgreSQL的支持。
 

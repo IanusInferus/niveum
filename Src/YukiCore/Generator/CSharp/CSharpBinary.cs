@@ -3,7 +3,7 @@
 //  File:        CSharpBinary.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#二进制通讯代码生成器
-//  Version:     2016.10.06.
+//  Version:     2017.04.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -190,7 +190,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
             if (Commands.Count > 0)
             {
                 var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
-                var Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).Hash();
+                var Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).GetNonattributed().Hash();
                 l.AddRange(BinarySerializationServer(Hash, Commands, SchemaClosureGenerator));
                 l.Add("");
                 l.AddRange(IBinarySender());

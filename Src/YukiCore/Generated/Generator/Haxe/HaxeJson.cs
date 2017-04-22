@@ -138,7 +138,7 @@ namespace Yuki.ObjectSchema.HaxeJson
                 {
                     var CommandName = c.ClientCommand.Name;
                     var Name = c.ClientCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public function "), GetEscapedIdentifier(LowercaseCamelize(Name))), "(r : "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), ", _callback : "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), " -> Void) : Void"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
@@ -196,7 +196,7 @@ namespace Yuki.ObjectSchema.HaxeJson
                 {
                     var CommandName = c.ServerCommand.Name;
                     var Name = c.ServerCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "serverCommands.set("), GetEscapedStringLiteral(CommandName)), ", {commandHash : \""), CommandHash), "\", _callback : function(parameters) { c."), GetEscapedIdentifier(Combine(Combine(Begin(), "raise"), Name))), "(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "EventFromJson"))), "(Json.parse(parameters))); }});"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
