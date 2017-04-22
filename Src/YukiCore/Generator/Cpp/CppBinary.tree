@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制通讯模板
-      Version:     2016.10.06.
+      Version:     2017.04.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -44,7 +44,7 @@
                     {
                         var CommandName = c.ClientCommand.Name;
                         var Name = c.ClientCommand.TypeFriendlyName();
-                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
                             ##
@@ -123,7 +123,7 @@
                     {
                         var CommandName = c.ServerCommand.Name;
                         var Name = c.ServerCommand.TypeFriendlyName();
-                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
                             s->${Name} = [=](std::shared_ptr<class [[${Name}Event]]> e)
                             {
@@ -203,7 +203,7 @@
                     {
                         var CommandName = c.ClientCommand.Name;
                         var Name = c.ClientCommand.TypeFriendlyName();
-                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
                             void [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r, std::function<void(std::shared_ptr<class [[${Name}Reply]]>)> Callback)
                             {
@@ -251,7 +251,7 @@
                     {
                         var CommandName = c.ServerCommand.Name;
                         var Name = c.ServerCommand.TypeFriendlyName();
-                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
                             ServerCommands[std::pair<String, std::uint32_t>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash})] = [&](std::shared_ptr<std::vector<std::uint8_t>> Parameters)
                             {

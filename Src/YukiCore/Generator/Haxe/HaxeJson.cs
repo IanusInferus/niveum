@@ -3,7 +3,7 @@
 //  File:        HaxeJson.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2016.10.06.
+//  Version:     2017.04.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -180,7 +180,7 @@ namespace Yuki.ObjectSchema.HaxeJson
             if (Commands.Count > 0)
             {
                 var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
-                var Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).Hash();
+                var Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).GetNonattributed().Hash();
                 l.AddRange(IJsonSender());
                 l.Add("");
                 l.AddRange(JsonSerializationClient(Hash, Commands, SchemaClosureGenerator));

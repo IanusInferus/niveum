@@ -110,7 +110,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     var CommandName = c.ClientCommand.Name;
                     var Name = c.ClientCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
                         foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands[std::pair<std::wstring, std::uint32_t>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::shared_ptr<std::vector<std::uint8_t>> p, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void"))
@@ -213,7 +213,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     var CommandName = c.ServerCommand.Name;
                     var Name = c.ServerCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "s->"), Name), " = [=](std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), "> e)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
@@ -305,7 +305,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     var CommandName = c.ClientCommand.Name;
                     var Name = c.ClientCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), "> r, std::function<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), ">)> Callback)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
@@ -366,7 +366,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 {
                     var CommandName = c.ServerCommand.Name;
                     var Name = c.ServerCommand.TypeFriendlyName();
-                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ServerCommands[std::pair<String, std::uint32_t>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ")] = [&](std::shared_ptr<std::vector<std::uint8_t>> Parameters)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
