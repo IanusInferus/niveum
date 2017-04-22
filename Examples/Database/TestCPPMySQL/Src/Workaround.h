@@ -6,7 +6,6 @@
 #include <iterator>
 #include <stdexcept>
 #include <codecvt>
-#include <locale>
 #include <utf8.h>
 
 namespace std

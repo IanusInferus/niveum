@@ -1,7 +1,6 @@
 ﻿#include "DataAccessBase.h"
 
 #include "BaseSystem/StringUtilities.h"
-#include "UtfEncoding.h"
 
 #include <exception>
 #include <stdexcept>
