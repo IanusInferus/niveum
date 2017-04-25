@@ -245,7 +245,7 @@ namespace Yuki.ObjectSchema.VB
                 yield return _Line;
             }
             yield return "<[Alias]()>";
-            foreach (var _Line in Combine(Combine(Begin(), "Public Class "), Name))
+            foreach (var _Line in Combine(Combine(Begin(), "Public NotInheritable Class "), Name))
             {
                 yield return _Line;
             }
