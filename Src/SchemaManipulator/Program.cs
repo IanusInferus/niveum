@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2017.04.22.
+//  Version:     2017.04.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -34,6 +34,7 @@ using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.Haxe;
 using Yuki.ObjectSchema.HaxeJson;
+using Yuki.ObjectSchema.Python;
 using Yuki.ObjectSchema.Xhtml;
 
 namespace Yuki.SchemaManipulator
@@ -444,6 +445,32 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "t2py")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ObjectSchemaToPythonCode(args[0]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "t2pyb")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ObjectSchemaToPythonBinaryCode(args[0]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "t2xhtml")
                 {
                     var args = opt.Arguments;
@@ -530,6 +557,10 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2hx:<HaxeCodePath>,<PackageName>");
             Console.WriteLine(@"生成Haxe JSON通讯类型");
             Console.WriteLine(@"/t2hxj:<HaxeCodePath>,<PackageName>");
+            Console.WriteLine(@"生成Python类型");
+            Console.WriteLine(@"/t2py:<PythonCodePath>");
+            Console.WriteLine(@"生成Python二进制类型");
+            Console.WriteLine(@"/t2pyb:<PythonCodePath>");
             Console.WriteLine(@"生成XHTML文档");
             Console.WriteLine(@"/t2xhtml:<XhtmlDir>,<Title>,<CopyrightText>");
             Console.WriteLine(@"生成兼容类型结构Tree文件(当前加载的类型结构为Head，生成的兼容用对象类型结构为Old - New中的通讯命令 + Head中的类型)");
@@ -551,6 +582,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"WithClient 是否生成客户端代码。");
             Console.WriteLine(@"JavaCodePath Java代码文件路径。");
             Console.WriteLine(@"HaxeCodePath Haxe代码文件路径。");
+            Console.WriteLine(@"PythonCodePath Python代码文件路径。");
             Console.WriteLine(@"XhtmlDir XHTML文件夹路径。");
             Console.WriteLine(@"Title 标题。");
             Console.WriteLine(@"CopyrightText 版权文本。");
@@ -888,6 +920,40 @@ namespace Yuki.SchemaManipulator
             var Dir = FileNameHandling.GetFileDirectory(HaxeCodePath);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(HaxeCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToPythonCode(String PythonCodePath)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToPython();
+            if (File.Exists(PythonCodePath))
+            {
+                var Original = Txt.ReadFile(PythonCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(PythonCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(PythonCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToPythonBinaryCode(String PythonCodePath)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToPython(); //TODO
+            if (File.Exists(PythonCodePath))
+            {
+                var Original = Txt.ReadFile(PythonCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(PythonCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(PythonCodePath, Compiled);
         }
 
         public static void ObjectSchemaToXhtml(String XhtmlDir, String Title, String CopyrightText)

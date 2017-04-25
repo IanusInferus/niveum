@@ -4,7 +4,7 @@
       File:        VB.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构VB.Net模板
-      Version:     2016.09.10.
+      Version:     2017.04.23.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -339,7 +339,7 @@
         var Type = GetTypeString(a.Type);
     ${GetXmlComment(a.Description)}
     <[Alias]()>
-    Public Class ${Name}
+    Public NotInheritable Class ${Name}
         Public Value As ${Type}
 
         Public Shared Widening Operator CType(ByVal o As ${Type}) As ${Name}

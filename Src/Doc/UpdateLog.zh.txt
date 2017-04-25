@@ -1,4 +1,8 @@
-﻿2017.04.22
+﻿2017.04.25
+Yuki.Core, Yuki.SchemaManipulator:
+增加Python类型代码生成。
+
+2017.04.22
 Example:
 升级C++代码。
 Yuki.Core, Yuki.SchemaManipulator, Yuki.TcpSendReceive:
