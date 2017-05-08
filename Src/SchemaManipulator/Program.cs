@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2017.04.25.
+//  Version:     2017.05.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -35,6 +35,7 @@ using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.Haxe;
 using Yuki.ObjectSchema.HaxeJson;
 using Yuki.ObjectSchema.Python;
+using Yuki.ObjectSchema.PythonBinary;
 using Yuki.ObjectSchema.Xhtml;
 
 namespace Yuki.SchemaManipulator
@@ -942,7 +943,7 @@ namespace Yuki.SchemaManipulator
         public static void ObjectSchemaToPythonBinaryCode(String PythonCodePath)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToPython(); //TODO
+            var Compiled = ObjectSchema.CompileToPythonBinary();
             if (File.Exists(PythonCodePath))
             {
                 var Original = Txt.ReadFile(PythonCodePath);

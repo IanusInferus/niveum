@@ -114,17 +114,11 @@ namespace Yuki.ObjectSchema.Python
         {
             var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
             var Type = GetTypeString(a.Type);
-            yield return "#Alias";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "class "), Name), "(NamedTuple):"))
+            foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Begin(), "    "), GetXmlComment(a.Description)))
-            {
-                yield return _Line;
-            }
-            yield return "";
-            foreach (var _Line in Combine(Combine(Begin(), "    Value: "), Type))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), Name), " = "), Type))
             {
                 yield return _Line;
             }
@@ -162,7 +156,7 @@ namespace Yuki.ObjectSchema.Python
         {
             var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
             var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "class "), TagName), "(Enum):"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "class "), TagName), "(IntEnum):"))
             {
                 yield return _Line;
             }
@@ -272,9 +266,7 @@ namespace Yuki.ObjectSchema.Python
         public IEnumerable<String> Enum(EnumDef e)
         {
             var Name = GetEscapedIdentifier(e.TypeFriendlyName());
-            var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
-            var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "class "), Name), "(Enum):"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "class "), Name), "(IntFlag):"))
             {
                 yield return _Line;
             }
@@ -319,7 +311,7 @@ namespace Yuki.ObjectSchema.Python
             yield return "from typing import List";
             yield return "from typing import Set";
             yield return "from typing import Dict";
-            yield return "from enum import Enum";
+            yield return "from enum import IntEnum";
             yield return "from enum import IntFlag";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "from "), Schema.Imports), " import *"))
             {
