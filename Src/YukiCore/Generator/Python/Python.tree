@@ -4,7 +4,7 @@
       File:        Python.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Python3模板
-      Version:     2017.04.25.
+      Version:     2017.05.08.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -94,11 +94,8 @@
     $$
         var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
         var Type = GetTypeString(a.Type);
-    #Alias
-    class ${Name}(NamedTuple):
-        ${GetXmlComment(a.Description)}
-
-        Value: ${Type}
+    ${GetXmlComment(a.Description)}
+    ${Name} = ${Type}
 
 #Template Record r:RecordDef
     $$
@@ -124,7 +121,7 @@
     $$
         var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
         var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
-    class ${TagName}(Enum):
+    class ${TagName}(IntEnum):
         $$
             var k = 0;
             foreach (var a in tu.Alternatives)
@@ -190,9 +187,7 @@
 #Template Enum e:EnumDef
     $$
         var Name = GetEscapedIdentifier(e.TypeFriendlyName());
-        var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
-        var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
-    class ${Name}(Enum):
+    class ${Name}(IntFlag):
         ${GetXmlComment(e.Description)}
 
         $$
@@ -227,7 +222,7 @@
     from typing import List
     from typing import Set
     from typing import Dict
-    from enum import Enum
+    from enum import IntEnum
     from enum import IntFlag
     from ${Schema.Imports} import *
     $$
