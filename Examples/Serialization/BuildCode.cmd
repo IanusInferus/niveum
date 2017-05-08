@@ -24,6 +24,10 @@ SchemaManipulator.exe /loadtyperef:Schema /t2cppb:CPP\Src\WorldBinary.h,World
 SchemaManipulator.exe /loadtype:Schema /t2hx:Haxe\src\World.hx
 SchemaManipulator.exe /loadtype:Schema /import:World /t2hxj:Haxe\src\WorldJson.hx
 
+::Python
+SchemaManipulator.exe /loadtype:Schema /t2py:Python\src\World.py
+SchemaManipulator.exe /loadtype:Schema /import:World /t2pyb:Python\src\WorldBinary.py
+
 :: Xhtml
 @if not exist XHTML @md XHTML
 SchemaManipulator.exe /loadtype:Schema /t2xhtml:XHTML,"Binary Serialization Example","Copyright Public Domain"

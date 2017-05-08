@@ -39,4 +39,12 @@ if exist Haxe\bin\DataCopy.n (
   @popd
 )
 
+:: Python
+@if not exist Python\Data @md Python\Data
+if exist Python\src\Run.cmd (
+  @pushd Python
+  call Run.cmd
+  @popd
+)
+
 @pause
