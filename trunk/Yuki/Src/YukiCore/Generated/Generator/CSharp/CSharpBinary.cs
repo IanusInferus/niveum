@@ -1828,11 +1828,11 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), TypeString), "();"))
+            yield return "    int Length = (int)(IntFromBinary(s));";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), TypeString), "(Length);"))
             {
                 yield return _Line;
             }
-            yield return "    int Length = (int)(IntFromBinary(s));";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
@@ -1849,9 +1849,9 @@ namespace Yuki.ObjectSchema.CSharpBinary
             yield return "{";
             yield return "    int Length = l.Count;";
             yield return "    IntToBinary(s, (Int)(Length));";
-            yield return "    for (int k = 0; k < Length; k += 1)";
+            yield return "    foreach (var e in l)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, l[k]);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, e);"))
             {
                 yield return _Line;
             }
@@ -1892,17 +1892,18 @@ namespace Yuki.ObjectSchema.CSharpBinary
         {
             var TypeFriendlyName = l.TypeFriendlyName();
             var TypeString = GetTypeString(l);
+            var ElementTypeString = GetTypeString(l.GenericTypeSpec.ParameterValues.Single());
             var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), TypeString), "();"))
+            yield return "    int Length = (int)(IntFromBinary(s));";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new List<"), ElementTypeString), ">(Length);"))
             {
                 yield return _Line;
             }
-            yield return "    int Length = (int)(IntFromBinary(s));";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
@@ -1910,7 +1911,10 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "    }";
-            yield return "    return l;";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return new "), TypeString), "(l);"))
+            {
+                yield return _Line;
+            }
             yield return "}";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), TypeString), " l)"))
             {
@@ -1974,11 +1978,11 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), TypeString), "();"))
+            yield return "    int Length = (Int)(IntFromBinary(s));";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), TypeString), "(Length);"))
             {
                 yield return _Line;
             }
-            yield return "    int Length = (Int)(IntFromBinary(s));";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        var Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeFriendlyName), "FromBinary"))), "(s);"))

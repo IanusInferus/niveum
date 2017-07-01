@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制通讯模板
-      Version:     2017.04.22.
+      Version:     2017.07.02.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -939,8 +939,9 @@
         var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
     static std::shared_ptr<class ${TypeString}> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
     {
-        auto l = std::make_shared<${TypeString}>();
         int Length = static_cast<int>(IntFromBinary(s));
+        auto l = std::make_shared<${TypeString}>();
+        l->reserve(static_cast<std::size_t>(Length));
         for (int k = 0; k < Length; k += 1)
         {
             l->push_back([[${ElementTypeFriendlyName}FromBinary]](s));
@@ -951,9 +952,9 @@
     {
         int Length = static_cast<int>(l->size());
         IntToBinary(s, static_cast<Int>(Length));
-        for (int k = 0; k < Length; k += 1)
+        for (auto e : *l)
         {
-            [[${ElementTypeFriendlyName}ToBinary]](s, (*l)[k]);
+            [[${ElementTypeFriendlyName}ToBinary]](s, e);
         }
     }
 
@@ -964,8 +965,9 @@
         var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
     static std::shared_ptr<class ${TypeString}> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
     {
-        auto l = std::make_shared<${TypeString}>();
         int Length = static_cast<int>(IntFromBinary(s));
+        auto l = std::make_shared<${TypeString}>();
+        l->reserve(static_cast<std::size_t>(Length));
         for (int k = 0; k < Length; k += 1)
         {
             l->insert([[${ElementTypeFriendlyName}FromBinary]](s));
@@ -976,9 +978,9 @@
     {
         int Length = static_cast<int>(l->size());
         IntToBinary(s, static_cast<Int>(Length));
-        for (auto i = l->begin(); i != l->end(); i.operator++())
+        for (auto e : *l)
         {
-            [[${ElementTypeFriendlyName}ToBinary]](s, (*i));
+            [[${ElementTypeFriendlyName}ToBinary]](s, e);
         }
     }
 
@@ -995,8 +997,9 @@
         var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
     static std::shared_ptr<class ${TypeString}> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
     {
-        auto l = std::make_shared<${TypeString}>();
         int Length = static_cast<int>(IntFromBinary(s));
+        auto l = std::make_shared<${TypeString}>();
+        l->reserve(static_cast<std::size_t>(Length));
         for (int k = 0; k < Length; k += 1)
         {
             auto Key = [[${KeyTypeFriendlyName}FromBinary]](s);
@@ -1008,10 +1011,10 @@
     {
         int Length = static_cast<int>(l->size());
         IntToBinary(s, static_cast<Int>(Length));
-        for (auto i = l->begin(); i != l->end(); i.operator++())
+        for (auto p : *l)
         {
-            [[${KeyTypeFriendlyName}ToBinary]](s, std::get<0>(*i));
-            [[${ValueTypeFriendlyName}ToBinary]](s, std::get<1>(*i));
+            [[${KeyTypeFriendlyName}ToBinary]](s, std::get<0>(p));
+            [[${ValueTypeFriendlyName}ToBinary]](s, std::get<1>(p));
         }
     }
 
