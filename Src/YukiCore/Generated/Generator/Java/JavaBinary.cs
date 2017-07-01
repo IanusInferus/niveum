@@ -789,16 +789,17 @@ namespace Yuki.ObjectSchema.JavaBinary
             var TypeFriendlyName = l.TypeFriendlyName();
             var TypeString = GetTypeString(l);
             var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
+            var ElementTypeString = GetTypeString(l.GenericTypeSpec.ParameterValues.Single());
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), TypeString), " l = new "), TypeString), "();"))
+            yield return "    int Length = IntFromBinary(s);";
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), TypeString), " l = new "), TypeString), "(Length);"))
             {
                 yield return _Line;
             }
-            yield return "    int Length = IntFromBinary(s);";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
@@ -815,9 +816,12 @@ namespace Yuki.ObjectSchema.JavaBinary
             yield return "{";
             yield return "    int Length = l.size();";
             yield return "    IntToBinary(s, Length);";
-            yield return "    for (int k = 0; k < Length; k += 1)";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    for ("), ElementTypeString), " e : l)"))
+            {
+                yield return _Line;
+            }
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, l.get(k));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, e);"))
             {
                 yield return _Line;
             }
@@ -835,11 +839,11 @@ namespace Yuki.ObjectSchema.JavaBinary
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), TypeString), " l = new "), TypeString), "();"))
+            yield return "    int Length = IntFromBinary(s);";
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), TypeString), " l = new "), TypeString), "(Length);"))
             {
                 yield return _Line;
             }
-            yield return "    int Length = IntFromBinary(s);";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
@@ -885,11 +889,11 @@ namespace Yuki.ObjectSchema.JavaBinary
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), TypeString), " l = new "), TypeString), "();"))
+            yield return "    int Length = IntFromBinary(s);";
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), TypeString), " l = new "), TypeString), "(Length);"))
             {
                 yield return _Line;
             }
-            yield return "    int Length = IntFromBinary(s);";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "        "), KeyTypeString), " Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeFriendlyName), "FromBinary"))), "(s);"))

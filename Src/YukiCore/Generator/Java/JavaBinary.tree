@@ -4,7 +4,7 @@
       File:        JavaBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构Java二进制模板
-      Version:     2016.10.11.
+      Version:     2017.07.01.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -583,10 +583,11 @@
         var TypeFriendlyName = l.TypeFriendlyName();
         var TypeString = GetTypeString(l);
         var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
+        var ElementTypeString = GetTypeString(l.GenericTypeSpec.ParameterValues.Single());
     public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
     {
-        ${TypeString} l = new ${TypeString}();
         int Length = IntFromBinary(s);
+        ${TypeString} l = new ${TypeString}(Length);
         for (int k = 0; k < Length; k += 1)
         {
             l.add([[${ElementTypeFriendlyName}FromBinary]](s));
@@ -597,9 +598,9 @@
     {
         int Length = l.size();
         IntToBinary(s, Length);
-        for (int k = 0; k < Length; k += 1)
+        for (${ElementTypeString} e : l)
         {
-            [[${ElementTypeFriendlyName}ToBinary]](s, l.get(k));
+            [[${ElementTypeFriendlyName}ToBinary]](s, e);
         }
     }
 
@@ -611,8 +612,8 @@
         var ElementTypeString = GetTypeString(l.GenericTypeSpec.ParameterValues.Single());
     public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
     {
-        ${TypeString} l = new ${TypeString}();
         int Length = IntFromBinary(s);
+        ${TypeString} l = new ${TypeString}(Length);
         for (int k = 0; k < Length; k += 1)
         {
             l.add([[${ElementTypeFriendlyName}FromBinary]](s));
@@ -643,8 +644,8 @@
         var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
     public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
     {
-        ${TypeString} l = new ${TypeString}();
         int Length = IntFromBinary(s);
+        ${TypeString} l = new ${TypeString}(Length);
         for (int k = 0; k < Length; k += 1)
         {
             ${KeyTypeString} Key = [[${KeyTypeFriendlyName}FromBinary]](s);
