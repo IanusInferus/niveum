@@ -1208,11 +1208,12 @@ namespace Yuki.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "{";
+            yield return "    int Length = static_cast<int>(IntFromBinary(s));";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), TypeString), ">();"))
             {
                 yield return _Line;
             }
-            yield return "    int Length = static_cast<int>(IntFromBinary(s));";
+            yield return "    l->reserve(static_cast<std::size_t>(Length));";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l->push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
@@ -1229,9 +1230,9 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "{";
             yield return "    int Length = static_cast<int>(l->size());";
             yield return "    IntToBinary(s, static_cast<Int>(Length));";
-            yield return "    for (int k = 0; k < Length; k += 1)";
+            yield return "    for (auto e : *l)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, (*l)[k]);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, e);"))
             {
                 yield return _Line;
             }
@@ -1248,11 +1249,12 @@ namespace Yuki.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "{";
+            yield return "    int Length = static_cast<int>(IntFromBinary(s));";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), TypeString), ">();"))
             {
                 yield return _Line;
             }
-            yield return "    int Length = static_cast<int>(IntFromBinary(s));";
+            yield return "    l->reserve(static_cast<std::size_t>(Length));";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l->insert("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
@@ -1269,9 +1271,9 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "{";
             yield return "    int Length = static_cast<int>(l->size());";
             yield return "    IntToBinary(s, static_cast<Int>(Length));";
-            yield return "    for (auto i = l->begin(); i != l->end(); i.operator++())";
+            yield return "    for (auto e : *l)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, (*i));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, e);"))
             {
                 yield return _Line;
             }
@@ -1294,11 +1296,12 @@ namespace Yuki.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "{";
+            yield return "    int Length = static_cast<int>(IntFromBinary(s));";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), TypeString), ">();"))
             {
                 yield return _Line;
             }
-            yield return "    int Length = static_cast<int>(IntFromBinary(s));";
+            yield return "    l->reserve(static_cast<std::size_t>(Length));";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        auto Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeFriendlyName), "FromBinary"))), "(s);"))
@@ -1319,13 +1322,13 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "{";
             yield return "    int Length = static_cast<int>(l->size());";
             yield return "    IntToBinary(s, static_cast<Int>(Length));";
-            yield return "    for (auto i = l->begin(); i != l->end(); i.operator++())";
+            yield return "    for (auto p : *l)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeFriendlyName), "ToBinary"))), "(s, std::get<0>(*i));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeFriendlyName), "ToBinary"))), "(s, std::get<0>(p));"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeFriendlyName), "ToBinary"))), "(s, std::get<1>(*i));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeFriendlyName), "ToBinary"))), "(s, std::get<1>(p));"))
             {
                 yield return _Line;
             }
