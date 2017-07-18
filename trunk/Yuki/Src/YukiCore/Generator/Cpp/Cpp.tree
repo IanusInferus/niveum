@@ -4,7 +4,7 @@
       File:        Cpp.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++模板
-      Version:     2016.10.04.
+      Version:     2017.07.19.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -206,7 +206,7 @@
 #Template Primitive_Unit
     #ifndef _UNIT_TYPE_
         typedef struct {} Unit;
-        #define _UNIT_TYPE_
+    #   define _UNIT_TYPE_
     #endif
 
 #Template Primitive_Optional
@@ -369,7 +369,7 @@
             };
         }
 
-        #define _OPTIONAL_TYPE_
+    #   define _OPTIONAL_TYPE_
     #endif
 
 #Template TypePredefinition Name:String MetaType:String GenericParameters:List<VariableDef>
@@ -660,6 +660,15 @@
     #include <exception>
     #include <stdexcept>
     #include ${Schema.Imports.Where(i => IsInclude(i))}
+
+    #ifndef _ENUM_CLASS_
+    #   if defined(_MSC_VER)
+    #       define _ENUM_CLASS_ enum class
+    #   else
+    #       define _ENUM_CLASS_ enum
+    #   endif
+    #endif
+
     $$
         var Primitives = GetPrimitives(Schema);
         var SimpleTypes = GetSimpleTypes(Schema);

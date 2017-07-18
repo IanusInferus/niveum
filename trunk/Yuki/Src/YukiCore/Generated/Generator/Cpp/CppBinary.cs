@@ -1365,6 +1365,15 @@ namespace Yuki.ObjectSchema.CppBinary
             {
                 yield return _Line;
             }
+            yield return "";
+            yield return "#ifndef _ENUM_CLASS_";
+            yield return "#   if defined(_MSC_VER)";
+            yield return "#       define _ENUM_CLASS_ enum class";
+            yield return "#   else";
+            yield return "#       define _ENUM_CLASS_ enum";
+            yield return "#   endif";
+            yield return "#endif";
+            yield return "";
             var Primitives = GetPrimitives(Schema);
             var ComplexTypes = GetComplexTypes(Schema);
             foreach (var _Line in Combine(Begin(), Primitives))
