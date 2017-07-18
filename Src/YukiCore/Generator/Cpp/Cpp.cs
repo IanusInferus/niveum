@@ -3,7 +3,7 @@
 //  File:        Cpp.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2016.10.06.
+//  Version:     2017.07.18.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -202,8 +202,6 @@ namespace Yuki.ObjectSchema.Cpp
         {
             var l = new List<String>();
 
-            List<TypeDef> cl = new List<TypeDef>();
-
             foreach (var c in Schema.TypeRefs.Concat(Schema.Types))
             {
                 if (c.OnPrimitive)
@@ -252,8 +250,6 @@ namespace Yuki.ObjectSchema.Cpp
         {
             var l = new List<String>();
 
-            List<TypeDef> cl = new List<TypeDef>();
-
             foreach (var c in Schema.Types)
             {
                 if (c.OnEnum)
@@ -294,8 +290,6 @@ namespace Yuki.ObjectSchema.Cpp
         {
             var l = new List<String>();
 
-            List<TypeDef> cl = new List<TypeDef>();
-
             foreach (var c in Schema.Types)
             {
                 if (c.OnEnum)
@@ -321,7 +315,7 @@ namespace Yuki.ObjectSchema.Cpp
         {
             var l = new List<String>();
 
-            List<TypeDef> cl = new List<TypeDef>();
+            var cl = new List<TypeDef>();
 
             foreach (var c in Schema.Types)
             {
