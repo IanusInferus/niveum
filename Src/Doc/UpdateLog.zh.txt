@@ -1,4 +1,8 @@
-﻿2017.07.18
+﻿2017.07.19
+Yuki.Core, Yuki.Relation:
+修正C++代码生成中枚举的Elaborated type specifier使用enum class，在clang上不兼容的问题。
+
+2017.07.18
 Yuki.Relation:
 修正C++内存数据库代码生成中的编译错误。
 Yuki.Expression:

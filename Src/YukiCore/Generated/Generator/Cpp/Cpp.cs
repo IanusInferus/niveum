@@ -114,7 +114,7 @@ namespace Yuki.ObjectSchema.Cpp
         {
             yield return "#ifndef _UNIT_TYPE_";
             yield return "    typedef struct {} Unit;";
-            yield return "    #define _UNIT_TYPE_";
+            yield return "#   define _UNIT_TYPE_";
             yield return "#endif";
         }
         public IEnumerable<String> Primitive_Optional()
@@ -278,7 +278,7 @@ namespace Yuki.ObjectSchema.Cpp
             yield return "        };";
             yield return "    }";
             yield return "";
-            yield return "    #define _OPTIONAL_TYPE_";
+            yield return "#   define _OPTIONAL_TYPE_";
             yield return "#endif";
         }
         public IEnumerable<String> TypePredefinition(String Name, String MetaType, List<VariableDef> GenericParameters)
@@ -750,6 +750,15 @@ namespace Yuki.ObjectSchema.Cpp
             {
                 yield return _Line;
             }
+            yield return "";
+            yield return "#ifndef _ENUM_CLASS_";
+            yield return "#   if defined(_MSC_VER)";
+            yield return "#       define _ENUM_CLASS_ enum class";
+            yield return "#   else";
+            yield return "#       define _ENUM_CLASS_ enum";
+            yield return "#   endif";
+            yield return "#endif";
+            yield return "";
             var Primitives = GetPrimitives(Schema);
             var SimpleTypes = GetSimpleTypes(Schema);
             var EnumFunctors = GetEnumFunctors(Schema, NamespaceName);

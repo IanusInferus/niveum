@@ -3,7 +3,7 @@
 //  File:        Cpp.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2017.07.18.
+//  Version:     2017.07.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -86,7 +86,7 @@ namespace Yuki.ObjectSchema.Cpp
                 }
                 else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
                 {
-                    return "enum class " + GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
+                    return "_ENUM_CLASS_ " + GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
                 }
                 if (ForceAsValue)
                 {
