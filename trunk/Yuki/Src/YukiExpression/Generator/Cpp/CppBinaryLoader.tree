@@ -4,7 +4,7 @@
       File:        CppBinaryLoader.tree
       Location:    Yuki.Expression <Tree>
       Description: 表达式结构C++二进制加载器模板
-      Version:     2016.10.16.
+      Version:     2017.07.18.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -49,6 +49,9 @@
                 }
         }
     };
+
+#Template TypePredefinition Name:String
+    class [[${Name}]];
 
 #Template Module m:ModuleDecl
     class [[${m.Name}]]
@@ -129,7 +132,9 @@
     typedef double Real;
 
     $$
+        var SimpleTypes = GetSimpleTypes(Schema);
         var ComplexTypes = GetComplexTypes(Schema);
+    ${WrapContents(NamespaceName, SimpleTypes)}
     ${WrapContents(NamespaceName, ComplexTypes)}
 
 $End

@@ -3,7 +3,7 @@
 //  File:        Python.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构Python3代码生成器
-//  Version:     2017.04.23.
+//  Version:     2017.07.18.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -149,8 +149,6 @@ namespace Yuki.ObjectSchema.Python
         public List<String> GetComplexTypes(Schema Schema)
         {
             var l = new List<String>();
-
-            List<TypeDef> cl = new List<TypeDef>();
 
             foreach (var c in Schema.Types)
             {

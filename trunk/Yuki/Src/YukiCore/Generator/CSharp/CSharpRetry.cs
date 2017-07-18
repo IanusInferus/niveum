@@ -3,7 +3,7 @@
 //  File:        CSharpRetry.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#重试循环代码生成器
-//  Version:     2016.10.03.
+//  Version:     2017.07.18.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -50,7 +50,7 @@ namespace Yuki.ObjectSchema.CSharpRetry
         {
             var l = new List<String>();
 
-            List<TypeDef> cl = new List<TypeDef>();
+            var cl = new List<TypeDef>();
 
             foreach (var c in Schema.Types)
             {

@@ -121,6 +121,13 @@ namespace Yuki.ExpressionSchema.CppBinaryLoader
             yield return "    }";
             yield return "};";
         }
+        public IEnumerable<String> TypePredefinition(String Name)
+        {
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "class "), GetEscapedIdentifier(Name)), ";"))
+            {
+                yield return _Line;
+            }
+        }
         public IEnumerable<String> Module(ModuleDecl m)
         {
             foreach (var _Line in Combine(Combine(Begin(), "class "), GetEscapedIdentifier(m.Name)))
@@ -221,7 +228,12 @@ namespace Yuki.ExpressionSchema.CppBinaryLoader
             yield return "typedef std::int32_t Int;";
             yield return "typedef double Real;";
             yield return "";
+            var SimpleTypes = GetSimpleTypes(Schema);
             var ComplexTypes = GetComplexTypes(Schema);
+            foreach (var _Line in Combine(Begin(), WrapContents(NamespaceName, SimpleTypes)))
+            {
+                yield return _Line;
+            }
             foreach (var _Line in Combine(Begin(), WrapContents(NamespaceName, ComplexTypes)))
             {
                 yield return _Line;
