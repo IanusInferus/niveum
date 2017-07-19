@@ -1,4 +1,8 @@
-﻿2017.07.19
+﻿2017.07.20
+Nivea:
+将变量名转义表达式扩充为过滤器表达式，可以使用自定义函数实现多个过滤器。
+
+2017.07.19
 Yuki.Core, Yuki.Relation:
 修正C++代码生成中枚举的Elaborated type specifier使用enum class，在clang上不兼容的问题。
 Nivea:
