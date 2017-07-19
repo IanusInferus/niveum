@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2017.07.19.
+//  Version:     2017.07.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -51,7 +51,11 @@ namespace Nivea.Template.Syntax
             var Sections = new List<SectionDef>();
             var Positions = new Dictionary<Object, TextRange>();
             var InlineExpressionRegex = new Regex(@"\$(?<open>{)+(?<Expr>.*?)(?<-open>})+(?(open)(?!))", RegexOptions.ExplicitCapture);
-            var InlineIdentifierRegex = new Regex(@"\[\[(?<Identifier>.*?)\]\]", RegexOptions.ExplicitCapture);
+            var FilterNameAndRegex = new List<KeyValuePair<String, Regex>>();
+            var FilterNameToParameter = new Dictionary<String, String>();
+            FilterNameAndRegex.Add(new KeyValuePair<String, Regex>("GetEscapedIdentifier", new Regex(@"\[\[(?<Identifier>.*?)\]\]", RegexOptions.ExplicitCapture)));
+            FilterNameToParameter.Add("GetEscapedIdentifier", "Identifier");
+            var DefaultFilterOnly = true;
             var EnableEmbeddedExpr = false;
 
             foreach (var TopNode in ParserResult.Value.MultiNodesList)
@@ -483,18 +487,52 @@ namespace Nivea.Template.Syntax
                                             throw new InvalidEvaluationException("InvalidInlineExpressionRegex", nm.GetFileRange(ValueNode), ValueNode, ex);
                                         }
                                     }
-                                    else if (Name == "InlineIdentifierRegex")
+                                    else if (Name == "Filters")
                                     {
-                                        if (Node.Stem.Children.Count != 1) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(Node), Node); }
-                                        var ValueNode = Node.Stem.Children.Single();
-                                        var InlineIdentifierRegexValue = GetLeafNodeValue(ValueNode, nm, "InvalidOption");
-                                        try
+                                        if (DefaultFilterOnly)
                                         {
-                                            InlineIdentifierRegex = new Regex(InlineIdentifierRegexValue, RegexOptions.ExplicitCapture);
+                                            FilterNameAndRegex.Clear();
+                                            FilterNameToParameter.Clear();
+                                            DefaultFilterOnly = false;
                                         }
-                                        catch (ArgumentException ex)
+                                        foreach (var RecordNode in Node.Stem.Children)
                                         {
-                                            throw new InvalidEvaluationException("InvalidInlineIdentifierRegex", nm.GetFileRange(ValueNode), ValueNode, ex);
+                                            if (RecordNode.OnEmpty) { continue; }
+                                            if (!RecordNode.OnStem) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(RecordNode), RecordNode); }
+                                            var FilterName = Optional<String>.Empty;
+                                            var Parameter = Optional<String>.Empty;
+                                            var FilterRegex = Optional<Regex>.Empty;
+                                            foreach (var FieldNode in RecordNode.Stem.Children)
+                                            {
+                                                if (!FieldNode.OnStem) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(FieldNode), FieldNode); }
+                                                if (FieldNode.Stem.Children.Count != 1) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(FieldNode), FieldNode); }
+                                                if (FieldNode.Stem.Name == "Name")
+                                                {
+                                                    var ValueNode = FieldNode.Stem.Children.Single();
+                                                    FilterName = GetLeafNodeValue(ValueNode, nm, "InvalidOption");
+                                                }
+                                                else if (FieldNode.Stem.Name == "Parameter")
+                                                {
+                                                    var ValueNode = FieldNode.Stem.Children.Single();
+                                                    Parameter = GetLeafNodeValue(ValueNode, nm, "InvalidOption");
+                                                }
+                                                else if (FieldNode.Stem.Name == "Regex")
+                                                {
+                                                    var ValueNode = FieldNode.Stem.Children.Single();
+                                                    var RegexValue = GetLeafNodeValue(ValueNode, nm, "InvalidOption");
+                                                    try
+                                                    {
+                                                        FilterRegex = new Regex(RegexValue, RegexOptions.ExplicitCapture);
+                                                    }
+                                                    catch (ArgumentException ex)
+                                                    {
+                                                        throw new InvalidEvaluationException("InvalidInlineIdentifierRegex", nm.GetFileRange(ValueNode), ValueNode, ex);
+                                                    }
+                                                }
+                                            }
+                                            if (FilterName.OnNotHasValue || Parameter.OnNotHasValue || FilterRegex.OnNotHasValue) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(RecordNode), RecordNode); }
+                                            FilterNameToParameter.Add(FilterName.Value, Parameter.Value);
+                                            FilterNameAndRegex.Add(new KeyValuePair<String, Regex>(FilterName.Value, FilterRegex.Value));
                                         }
                                     }
                                     else if (Name == "EnableEmbeddedExpr")
@@ -699,7 +737,7 @@ namespace Nivea.Template.Syntax
                                     Positions.Add(Signature, new TextRange { Start = FirstRange.Value.Start, End = FirstRange.Value.End });
                                 }
 
-                                var Body = ExprParser.ParseTemplateBody(Content.Lines, Content.IndentLevel * 4, InlineExpressionRegex, InlineIdentifierRegex, EnableEmbeddedExpr, nm, Positions);
+                                var Body = ExprParser.ParseTemplateBody(Content.Lines, Content.IndentLevel * 4, InlineExpressionRegex, FilterNameAndRegex, FilterNameToParameter, EnableEmbeddedExpr, nm, Positions);
                                 Mark(Body, Content);
                                 var t = new TemplateDef { Signature = Signature, Body = Body };
                                 Mark(t, f);
@@ -744,7 +782,7 @@ namespace Nivea.Template.Syntax
                 }
             }
 
-            var File = new File { Sections = Sections };
+            var File = new File { Filters = FilterNameAndRegex.Select(p => new FilterDef { Name = p.Key, Parameter = FilterNameToParameter[p.Key] }).ToList(), Sections = Sections };
             return new FileParserResult { File = File, Text = Text, Positions = Positions };
         }
 

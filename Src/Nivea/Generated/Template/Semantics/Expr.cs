@@ -58,8 +58,8 @@ namespace Nivea.Template.Semantics
     {
         /// <summary>字面量</summary>
         Literal = 0,
-        /// <summary>标识符</summary>
-        Identifier = 1,
+        /// <summary>过滤器</summary>
+        Filter = 1,
         /// <summary>表达式</summary>
         Expr = 2
     }
@@ -71,24 +71,33 @@ namespace Nivea.Template.Semantics
 
         /// <summary>字面量</summary>
         public String Literal;
-        /// <summary>标识符</summary>
-        public List<TemplateSpan> Identifier;
+        /// <summary>过滤器</summary>
+        public FilterExpr Filter;
         /// <summary>表达式</summary>
         public Expr Expr;
 
         /// <summary>字面量</summary>
         public static TemplateSpan CreateLiteral(String Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Literal, Literal = Value }; }
-        /// <summary>标识符</summary>
-        public static TemplateSpan CreateIdentifier(List<TemplateSpan> Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Identifier, Identifier = Value }; }
+        /// <summary>过滤器</summary>
+        public static TemplateSpan CreateFilter(FilterExpr Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Filter, Filter = Value }; }
         /// <summary>表达式</summary>
         public static TemplateSpan CreateExpr(Expr Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Expr, Expr = Value }; }
 
         /// <summary>字面量</summary>
         public Boolean OnLiteral { get { return _Tag == TemplateSpanTag.Literal; } }
-        /// <summary>标识符</summary>
-        public Boolean OnIdentifier { get { return _Tag == TemplateSpanTag.Identifier; } }
+        /// <summary>过滤器</summary>
+        public Boolean OnFilter { get { return _Tag == TemplateSpanTag.Filter; } }
         /// <summary>表达式</summary>
         public Boolean OnExpr { get { return _Tag == TemplateSpanTag.Expr; } }
+    }
+    /// <summary>过滤器表达式</summary>
+    [Record]
+    public sealed class FilterExpr
+    {
+        /// <summary>过滤器名称</summary>
+        public String Name;
+        /// <summary>内容块</summary>
+        public List<TemplateSpan> Spans;
     }
     /// <summary>缩进的表达式</summary>
     [Record]
