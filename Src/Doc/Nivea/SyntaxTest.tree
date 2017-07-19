@@ -1,5 +1,5 @@
 ﻿#Option
-    InlineExpressionRegex "\${(?<Expr>.*?)}"
+    InlineExpressionRegex "\$(?<open>{)+(?<Expr>.*?)(?<-open>})+(?(open)(?!))" //${xxxx}, ${{xxxx}}, ${{{xxxx}}}, ...
     InlineIdentifierRegex "\[\[(?<Identifier>.*?)\]\]"
     EnableEmbeddedExpr False
 
