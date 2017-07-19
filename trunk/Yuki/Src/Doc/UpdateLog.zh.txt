@@ -1,6 +1,8 @@
 ﻿2017.07.19
 Yuki.Core, Yuki.Relation:
 修正C++代码生成中枚举的Elaborated type specifier使用enum class，在clang上不兼容的问题。
+Nivea:
+更改行内嵌入表达式语法，支持${xxxx}, ${{xxxx}}, ${{{xxxx}}}, ...，使得更容易处理内部有"}"的情况。
 
 2017.07.18
 Yuki.Relation:
