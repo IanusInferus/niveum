@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2016.08.06.
+//  Version:     2017.07.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -50,7 +50,7 @@ namespace Nivea.Template.Syntax
 
             var Sections = new List<SectionDef>();
             var Positions = new Dictionary<Object, TextRange>();
-            var InlineExpressionRegex = new Regex(@"\${(?<Expr>.*?)}", RegexOptions.ExplicitCapture);
+            var InlineExpressionRegex = new Regex(@"\$(?<open>{)+(?<Expr>.*?)(?<-open>})+(?(open)(?!))", RegexOptions.ExplicitCapture);
             var InlineIdentifierRegex = new Regex(@"\[\[(?<Identifier>.*?)\]\]", RegexOptions.ExplicitCapture);
             var EnableEmbeddedExpr = false;
 

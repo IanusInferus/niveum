@@ -1,0 +1,170 @@
+﻿#Option
+    InlineExpressionRegex "\$(?<open>{)+(?<Expr>.*?)(?<-open>})+(?(open)(?!))" //${xxxx}, ${{xxxx}}, ${{{xxxx}}}, ...
+    InlineIdentifierRegex "\[\[(?<Identifier>.*?)\]\]"
+    EnableEmbeddedExpr True
+
+#Namespace Yuki.ObjectSchema.CSharp
+
+#Constant A:Map<String, Optional<Int>>
+    Pair
+        Key
+            1
+        Value
+            HasValue 2
+    Pair
+        Key
+            1
+        Value
+            NotHasValue $Empty
+
+#Constant B:Float64
+    1.5
+
+#Constant C:String
+    1.5
+
+#Constant D:Type
+    Map<Int, String>
+
+#Constant Keywords:Set<String>
+    $List String
+        abstract
+        event
+        new
+        struct
+        as
+        explicit
+        null
+        switch
+        base
+        extern
+        object
+        this
+        bool
+        false
+        operator
+        throw
+        break
+        finally
+        out
+        true
+        byte
+        fixed
+        override
+        try
+        case
+        float
+        params
+        typeof
+        catch
+        for
+        private
+        uint
+        char
+        foreach
+        protected
+        ulong
+        checked
+        goto
+        public
+        unchecked
+        class
+        if
+        readonly
+        unsafe
+        const
+        implicit
+        ref
+        ushort
+        continue
+        in
+        return
+        using
+        decimal
+        int
+        sbyte
+        virtual
+        default
+        interface
+        sealed
+        volatile
+        delegate
+        internal
+        short
+        void
+        do
+        is
+        sizeof
+        while
+        double
+        lock
+        stackalloc
+        else
+        long
+        static
+        enum
+        namespace
+        string
+        get
+        partial
+        set
+        value
+        where
+        yield
+
+#Constant PrimitiveMapping:Map<String, String>
+    $Table KeyValuePairOfStringAndString Key Value
+        Unit                Unit
+        Boolean             System.Boolean
+        String              System.String
+        Int                 System.Int32
+        Real                System.Double
+        Byte                System.Byte
+        UInt8               System.Byte
+        UInt16              System.UInt16
+        UInt32              System.UInt32
+        UInt64              System.UInt64
+        Int8                System.SByte
+        Int16               System.Int16
+        Int32               System.Int32
+        Int64               System.Int64
+        Float32             System.Single
+        Float64             System.Double
+        Type                System.Type
+        Optional            Optional
+        List                System.Collections.Generic.List
+        Set                 System.Collections.Generic.HashSet
+        Map                 System.Collections.Generic.Dictionary
+
+#Constant A:Map<String, Optional<Int>>
+    Pair
+        Key
+            1
+        Value
+            HasValue 2
+    Pair
+        Key
+            1
+        Value
+            NotHasValue $Empty
+
+#Assembly
+    System
+    System.Core
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+    System.Linq.Enumerable
+
+#Template Test a:Int b:List<Mat{ \n\x7B\u007B\U0007B}ch>
+    //====
+    ${a}
+    [[abcd${"123"}]]efgh
+    ${{String.Join("", Enumerable.Range(0, 5).Select(k => "{")) + String.Join("", Enumerable.Range(0, 5).Select(k => "}"))}}
+
+    $$
+        var k = 0;
+        ##
+            abcdefghijk
