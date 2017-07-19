@@ -30,8 +30,19 @@ namespace Nivea.Template.Semantics
     [Record]
     public sealed class File
     {
+        /// <summary>过滤器</summary>
+        public List<FilterDef> Filters;
         /// <summary>节列表</summary>
         public List<SectionDef> Sections;
+    }
+    /// <summary>过滤器定义</summary>
+    [Record]
+    public sealed class FilterDef
+    {
+        /// <summary>名称</summary>
+        public String Name;
+        /// <summary>参数</summary>
+        public String Parameter;
     }
     public enum SectionDefTag
     {

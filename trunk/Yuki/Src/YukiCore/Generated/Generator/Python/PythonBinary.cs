@@ -68,22 +68,11 @@ namespace Yuki.ObjectSchema.PythonBinary
                 }
             }
         }
-        private IEnumerable<String> GetEscapedIdentifier(Object Identifier)
+        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> Values)
         {
-            yield return GetEscapedIdentifier(Convert.ToString(Identifier, System.Globalization.CultureInfo.InvariantCulture));
-        }
-        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> Identifiers)
-        {
-            foreach (var v in Identifiers)
+            foreach (var v in Values)
             {
                 yield return GetEscapedIdentifier(v);
-            }
-        }
-        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<Object> Identifiers)
-        {
-            foreach (var v in Identifiers)
-            {
-                yield return GetEscapedIdentifier(Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture));
             }
         }
         public IEnumerable<String> Streams()

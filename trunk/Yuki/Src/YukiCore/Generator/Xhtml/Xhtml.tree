@@ -4,12 +4,13 @@
       File:        Xhtml.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构XHTML模板
-      Version:     2016.10.12.
+      Version:     2017.07.20.
       Copyright(C) F.R.C.
 
     ==========================================================================
 
 #Option
+    Filters $Empty
     EnableEmbeddedExpr True
 
 #Namespace Yuki.ObjectSchema.Xhtml

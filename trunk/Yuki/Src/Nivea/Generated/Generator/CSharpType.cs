@@ -67,22 +67,11 @@ namespace Nivea.Generator.CSharpType
                 }
             }
         }
-        private IEnumerable<String> GetEscapedIdentifier(Object Identifier)
-        {
-            yield return GetEscapedIdentifier(Convert.ToString(Identifier, System.Globalization.CultureInfo.InvariantCulture));
-        }
         private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> Identifiers)
         {
             foreach (var v in Identifiers)
             {
                 yield return GetEscapedIdentifier(v);
-            }
-        }
-        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<Object> Identifiers)
-        {
-            foreach (var v in Identifiers)
-            {
-                yield return GetEscapedIdentifier(Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture));
             }
         }
         public IEnumerable<String> SingleLineXmlComment(String Description)
