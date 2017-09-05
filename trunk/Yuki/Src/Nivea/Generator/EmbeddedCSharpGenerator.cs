@@ -3,7 +3,7 @@
 //  File:        EmbeddedCSharpGenerator.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 嵌入C#代码生成器
-//  Version:     2017.07.20.
+//  Version:     2017.09.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -148,11 +148,14 @@ namespace Nivea.Generator
                         yield return GetIndentSpace() + "}";
                         foreach (var f in File.Filters)
                         {
-                            yield return GetIndentSpace() + "private IEnumerable<String> " + GetEscapedIdentifier(f.Name) + "(IEnumerable<String> Values)";
+                            yield return GetIndentSpace() + "private IEnumerable<String> " + GetEscapedIdentifier(f.Name) + "(" + String.Join(", ", f.Parameters.Select(p => "IEnumerable<String> " + GetEscapedIdentifier(p + "Values"))) + ")";
                             yield return GetIndentSpace() + "{";
-                            yield return GetIndentSpace() + "    foreach (var v in Values)";
+                            foreach (var p in f.Parameters)
+                            {
+                                yield return GetIndentSpace() + "    foreach (var " + GetEscapedIdentifier(p) + " in " + GetEscapedIdentifier(p + "Values") + ")";
+                            }
                             yield return GetIndentSpace() + "    {";
-                            yield return GetIndentSpace() + "        yield return " + GetEscapedIdentifier(f.Name) + "(v);";
+                            yield return GetIndentSpace() + "        yield return " + GetEscapedIdentifier(f.Name) + "(" + String.Join(", ", f.Parameters.Select(p => GetEscapedIdentifier(p))) + ");";
                             yield return GetIndentSpace() + "    }";
                             yield return GetIndentSpace() + "}";
                         }
@@ -348,13 +351,13 @@ namespace Nivea.Generator
                 }
                 else if (s.OnFilter)
                 {
-                    if (s.Filter.Spans.All(i => i.OnLiteral) || (s.Filter.Spans.Count == 1))
+                    if (s.Filter.Spans.All(sp => sp.All(i => i.OnLiteral) || (sp.Count == 1)))
                     {
-                        yield return GetEscapedIdentifier(s.Filter.Name) + "(" + GetTemplateSpans(s.Filter.Spans).Single() + ")";
+                        yield return GetEscapedIdentifier(s.Filter.Name) + "(" + String.Join(", ", s.Filter.Spans.Select(sp => GetTemplateSpans(sp).Single())) + ")";
                     }
                     else
                     {
-                        yield return GetEscapedIdentifier(s.Filter.Name) + "(" + GetCombines(GetTemplateSpans(s.Filter.Spans)) + ")";
+                        yield return GetEscapedIdentifier(s.Filter.Name) + "(" + String.Join(", ", s.Filter.Spans.Select(sp => GetCombines(GetTemplateSpans(sp)))) + ")";
                     }
                 }
                 else if (s.OnExpr)
