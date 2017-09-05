@@ -67,9 +67,9 @@ namespace Nivea.Generator.CSharpType
                 }
             }
         }
-        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> Identifiers)
+        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> Values)
         {
-            foreach (var v in Identifiers)
+            foreach (var v in Values)
             {
                 yield return GetEscapedIdentifier(v);
             }

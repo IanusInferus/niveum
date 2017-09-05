@@ -97,7 +97,7 @@ namespace Nivea.Template.Semantics
         /// <summary>过滤器名称</summary>
         public String Name;
         /// <summary>内容块</summary>
-        public List<TemplateSpan> Spans;
+        public List<List<TemplateSpan>> Spans;
     }
     /// <summary>缩进的表达式</summary>
     [Record]

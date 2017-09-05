@@ -42,7 +42,7 @@ namespace Nivea.Template.Semantics
         /// <summary>名称</summary>
         public String Name;
         /// <summary>参数</summary>
-        public String Parameter;
+        public List<String> Parameters;
     }
     public enum SectionDefTag
     {
