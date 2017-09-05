@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2017.07.20.
+//  Version:     2017.09.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -52,9 +52,9 @@ namespace Nivea.Template.Syntax
             var Positions = new Dictionary<Object, TextRange>();
             var InlineExpressionRegex = new Regex(@"\$(?<open>{)+(?<Expr>.*?)(?<-open>})+(?(open)(?!))", RegexOptions.ExplicitCapture);
             var FilterNameAndRegex = new List<KeyValuePair<String, Regex>>();
-            var FilterNameToParameter = new Dictionary<String, String>();
+            var FilterNameToParameters = new Dictionary<String, List<String>>();
             FilterNameAndRegex.Add(new KeyValuePair<String, Regex>("GetEscapedIdentifier", new Regex(@"\[\[(?<Identifier>.*?)\]\]", RegexOptions.ExplicitCapture)));
-            FilterNameToParameter.Add("GetEscapedIdentifier", "Identifier");
+            FilterNameToParameters.Add("GetEscapedIdentifier", new List<String> { "Identifier" });
             var DefaultFilterOnly = true;
             var EnableEmbeddedExpr = false;
 
@@ -492,7 +492,7 @@ namespace Nivea.Template.Syntax
                                         if (DefaultFilterOnly)
                                         {
                                             FilterNameAndRegex.Clear();
-                                            FilterNameToParameter.Clear();
+                                            FilterNameToParameters.Clear();
                                             DefaultFilterOnly = false;
                                         }
                                         foreach (var RecordNode in Node.Stem.Children)
@@ -500,24 +500,21 @@ namespace Nivea.Template.Syntax
                                             if (RecordNode.OnEmpty) { continue; }
                                             if (!RecordNode.OnStem) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(RecordNode), RecordNode); }
                                             var FilterName = Optional<String>.Empty;
-                                            var Parameter = Optional<String>.Empty;
                                             var FilterRegex = Optional<Regex>.Empty;
+                                            var Parameters = new List<String>();
                                             foreach (var FieldNode in RecordNode.Stem.Children)
                                             {
-                                                if (!FieldNode.OnStem) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(FieldNode), FieldNode); }
-                                                if (FieldNode.Stem.Children.Count != 1) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(FieldNode), FieldNode); }
                                                 if (FieldNode.Stem.Name == "Name")
                                                 {
+                                                    if (!FieldNode.OnStem) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(FieldNode), FieldNode); }
+                                                    if (FieldNode.Stem.Children.Count != 1) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(FieldNode), FieldNode); }
                                                     var ValueNode = FieldNode.Stem.Children.Single();
                                                     FilterName = GetLeafNodeValue(ValueNode, nm, "InvalidOption");
                                                 }
-                                                else if (FieldNode.Stem.Name == "Parameter")
-                                                {
-                                                    var ValueNode = FieldNode.Stem.Children.Single();
-                                                    Parameter = GetLeafNodeValue(ValueNode, nm, "InvalidOption");
-                                                }
                                                 else if (FieldNode.Stem.Name == "Regex")
                                                 {
+                                                    if (!FieldNode.OnStem) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(FieldNode), FieldNode); }
+                                                    if (FieldNode.Stem.Children.Count != 1) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(FieldNode), FieldNode); }
                                                     var ValueNode = FieldNode.Stem.Children.Single();
                                                     var RegexValue = GetLeafNodeValue(ValueNode, nm, "InvalidOption");
                                                     try
@@ -529,9 +526,18 @@ namespace Nivea.Template.Syntax
                                                         throw new InvalidEvaluationException("InvalidInlineIdentifierRegex", nm.GetFileRange(ValueNode), ValueNode, ex);
                                                     }
                                                 }
+                                                else if (FieldNode.Stem.Name == "Parameters")
+                                                {
+                                                    if (!FieldNode.OnStem) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(FieldNode), FieldNode); }
+                                                    foreach (var ParameterNode in FieldNode.Stem.Children)
+                                                    {
+                                                        var Parameter = GetLeafNodeValue(ParameterNode, nm, "InvalidOption");
+                                                        Parameters.Add(Parameter);
+                                                    }
+                                                }
                                             }
-                                            if (FilterName.OnNotHasValue || Parameter.OnNotHasValue || FilterRegex.OnNotHasValue) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(RecordNode), RecordNode); }
-                                            FilterNameToParameter.Add(FilterName.Value, Parameter.Value);
+                                            if (FilterName.OnNotHasValue || FilterRegex.OnNotHasValue) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(RecordNode), RecordNode); }
+                                            FilterNameToParameters.Add(FilterName.Value, Parameters);
                                             FilterNameAndRegex.Add(new KeyValuePair<String, Regex>(FilterName.Value, FilterRegex.Value));
                                         }
                                     }
@@ -737,7 +743,7 @@ namespace Nivea.Template.Syntax
                                     Positions.Add(Signature, new TextRange { Start = FirstRange.Value.Start, End = FirstRange.Value.End });
                                 }
 
-                                var Body = ExprParser.ParseTemplateBody(Content.Lines, Content.IndentLevel * 4, InlineExpressionRegex, FilterNameAndRegex, FilterNameToParameter, EnableEmbeddedExpr, nm, Positions);
+                                var Body = ExprParser.ParseTemplateBody(Content.Lines, Content.IndentLevel * 4, InlineExpressionRegex, FilterNameAndRegex, FilterNameToParameters, EnableEmbeddedExpr, nm, Positions);
                                 Mark(Body, Content);
                                 var t = new TemplateDef { Signature = Signature, Body = Body };
                                 Mark(t, f);
@@ -782,7 +788,7 @@ namespace Nivea.Template.Syntax
                 }
             }
 
-            var File = new File { Filters = FilterNameAndRegex.Select(p => new FilterDef { Name = p.Key, Parameter = FilterNameToParameter[p.Key] }).ToList(), Sections = Sections };
+            var File = new File { Filters = FilterNameAndRegex.Select(p => new FilterDef { Name = p.Key, Parameters = FilterNameToParameters[p.Key] }).ToList(), Sections = Sections };
             return new FileParserResult { File = File, Text = Text, Positions = Positions };
         }
 

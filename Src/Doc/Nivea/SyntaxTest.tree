@@ -1,8 +1,11 @@
 ﻿#Option
     InlineExpressionRegex "\$(?<open>{)+(?<Expr>.*?)(?<-open>})+(?(open)(?!))" //${xxxx}, ${{xxxx}}, ${{{xxxx}}}, ...
     Filters
-        $Table Filter Name Parameter Regex
-            GetEscapedIdentifier Identifier "\[\[(?<Identifier>.*?)\]\]"
+        Filter
+            Name GetEscapedIdentifier
+            Regex "\[\[(?<Identifier>.*?)\]\]"
+            Parameters
+                Identifier
     EnableEmbeddedExpr False
 
 #Namespace Yuki.ObjectSchema.CSharp
