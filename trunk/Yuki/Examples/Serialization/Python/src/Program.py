@@ -5,19 +5,19 @@ from WorldBinary import *
 import sys
 
 def DisplayInfo() -> None:
-    print("数据复制工具");
-    print("DataCopy，Public Domain");
-    print("F.R.C.");
-    print("");
-    print("用法:");
-    print("DataCopy <BinaryFile1> <BinaryFile2>");
-    print("复制二进制数据");
-    print("BinaryFile1 二进制文件路径。");
-    print("BinaryFile2 二进制文件路径。");
-    print("");
-    print("示例:");
-    print(".\\Program.py ..\\..\\SchemaManipulator\\Data\\WorldData.bin ..\\Data\\WorldData.bin");
-    print("复制WorldData.bin。");
+    print("数据复制工具")
+    print("DataCopy，Public Domain")
+    print("F.R.C.")
+    print("")
+    print("用法:")
+    print("DataCopy <BinaryFile1> <BinaryFile2>")
+    print("复制二进制数据")
+    print("BinaryFile1 二进制文件路径。")
+    print("BinaryFile2 二进制文件路径。")
+    print("")
+    print("示例:")
+    print(".\\Program.py ..\\..\\SchemaManipulator\\Data\\WorldData.bin ..\\Data\\WorldData.bin")
+    print("复制WorldData.bin。")
 
 class ReadableStream(IReadableStream):
     def __init__(self, path: str) -> None:
