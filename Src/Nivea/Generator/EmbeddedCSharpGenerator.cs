@@ -3,7 +3,7 @@
 //  File:        EmbeddedCSharpGenerator.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 嵌入C#代码生成器
-//  Version:     2017.09.05.
+//  Version:     2018.01.11.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -136,7 +136,7 @@ namespace Nivea.Generator
                         yield return GetIndentSpace() + "        }";
                         yield return GetIndentSpace() + "    }";
                         yield return GetIndentSpace() + "}";
-                        yield return GetIndentSpace() + "private IEnumerable<String> Combine(IEnumerable<String> Left, IEnumerable<Object> Right)";
+                        yield return GetIndentSpace() + "private IEnumerable<String> Combine<T>(IEnumerable<String> Left, IEnumerable<T> Right)";
                         yield return GetIndentSpace() + "{";
                         yield return GetIndentSpace() + "    foreach (var vLeft in Left)";
                         yield return GetIndentSpace() + "    {";
