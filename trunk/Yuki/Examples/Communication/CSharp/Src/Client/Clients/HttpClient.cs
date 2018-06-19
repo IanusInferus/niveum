@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Net;
 using Newtonsoft.Json.Linq;
-using BaseSystem;
-using Net;
 
 namespace Client
 {
