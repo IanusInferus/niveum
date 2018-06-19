@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2015.08.15.
+//  Version:     2018.06.19.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -11,12 +11,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Linq;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Reflection;
 using System.Net;
 using Firefly;
 using Firefly.Mapping.XmlText;

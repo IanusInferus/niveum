@@ -5,11 +5,8 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
-using System.Net.Sockets;
 using Communication;
 using BaseSystem;
-using Communication.Binary;
-using Communication.Json;
 
 namespace Client
 {
