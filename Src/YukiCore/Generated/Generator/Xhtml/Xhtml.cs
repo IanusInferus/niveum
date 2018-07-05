@@ -57,7 +57,7 @@ namespace Yuki.ObjectSchema.Xhtml
                 }
             }
         }
-        private IEnumerable<String> Combine(IEnumerable<String> Left, IEnumerable<Object> Right)
+        private IEnumerable<String> Combine<T>(IEnumerable<String> Left, IEnumerable<T> Right)
         {
             foreach (var vLeft in Left)
             {
