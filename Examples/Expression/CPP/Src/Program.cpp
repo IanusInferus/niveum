@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 表达式计算工具
-//  Version:     2015.07.22.
+//  Version:     2018.07.05.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
