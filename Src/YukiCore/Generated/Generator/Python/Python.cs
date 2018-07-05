@@ -59,7 +59,7 @@ namespace Yuki.ObjectSchema.Python
                 }
             }
         }
-        private IEnumerable<String> Combine(IEnumerable<String> Left, IEnumerable<Object> Right)
+        private IEnumerable<String> Combine<T>(IEnumerable<String> Left, IEnumerable<T> Right)
         {
             foreach (var vLeft in Left)
             {
@@ -69,11 +69,11 @@ namespace Yuki.ObjectSchema.Python
                 }
             }
         }
-        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> Values)
+        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> IdentifierValues)
         {
-            foreach (var v in Values)
+            foreach (var Identifier in IdentifierValues)
             {
-                yield return GetEscapedIdentifier(v);
+                yield return GetEscapedIdentifier(Identifier);
             }
         }
         public IEnumerable<String> SingleLineXmlComment(String Description)

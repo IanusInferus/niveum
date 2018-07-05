@@ -936,26 +936,47 @@
     $$
         var TypeFriendlyName = l.TypeFriendlyName();
         var TypeString = GetTypeString(l, true);
-        var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
+        var ElementType = l.GenericTypeSpec.ParameterValues.Single();
+        var ElementTypeFriendlyName = ElementType.TypeFriendlyName();
     static std::shared_ptr<class ${TypeString}> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
     {
         int Length = static_cast<int>(IntFromBinary(s));
-        auto l = std::make_shared<${TypeString}>();
-        l->reserve(static_cast<std::size_t>(Length));
-        for (int k = 0; k < Length; k += 1)
-        {
-            l->push_back([[${ElementTypeFriendlyName}FromBinary]](s));
-        }
+        $$
+            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
+            {
+                ##
+                    auto l = s.ReadBytes(Length);
+            }
+            else
+            {
+                ##
+                    auto l = std::make_shared<${TypeString}>();
+                    l->reserve(static_cast<std::size_t>(Length));
+                    for (int k = 0; k < Length; k += 1)
+                    {
+                        l->push_back([[${ElementTypeFriendlyName}FromBinary]](s));
+                    }
+            }
         return l;
     }
     static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<class ${TypeString}> l)
     {
         int Length = static_cast<int>(l->size());
         IntToBinary(s, static_cast<Int>(Length));
-        for (auto e : *l)
-        {
-            [[${ElementTypeFriendlyName}ToBinary]](s, e);
-        }
+        $$
+            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
+            {
+                ##
+                    s.WriteBytes(l);
+            }
+            else
+            {
+                ##
+                    for (auto e : *l)
+                    {
+                        [[${ElementTypeFriendlyName}ToBinary]](s, e);
+                    }
+            }
     }
 
 #Template BinaryTranslator_Set l:TypeSpec

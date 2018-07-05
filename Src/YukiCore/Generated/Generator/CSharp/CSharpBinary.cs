@@ -58,7 +58,7 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 }
             }
         }
-        private IEnumerable<String> Combine(IEnumerable<String> Left, IEnumerable<Object> Right)
+        private IEnumerable<String> Combine<T>(IEnumerable<String> Left, IEnumerable<T> Right)
         {
             foreach (var vLeft in Left)
             {
@@ -68,11 +68,11 @@ namespace Yuki.ObjectSchema.CSharpBinary
                 }
             }
         }
-        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> Values)
+        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> IdentifierValues)
         {
-            foreach (var v in Values)
+            foreach (var Identifier in IdentifierValues)
             {
-                yield return GetEscapedIdentifier(v);
+                yield return GetEscapedIdentifier(Identifier);
             }
         }
         public IEnumerable<String> BinarySerializationServer(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator)
@@ -1811,24 +1811,32 @@ namespace Yuki.ObjectSchema.CSharpBinary
         {
             var TypeFriendlyName = l.TypeFriendlyName();
             var TypeString = GetTypeString(l);
-            var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
+            var ElementType = l.GenericTypeSpec.ParameterValues.Single();
+            var ElementTypeFriendlyName = ElementType.TypeFriendlyName();
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream s)"))
             {
                 yield return _Line;
             }
             yield return "{";
             yield return "    int Length = (int)(IntFromBinary(s));";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), TypeString), "(Length);"))
+            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
             {
-                yield return _Line;
+                yield return "    " + "var l = new List<Byte>(s.ReadBytes(Length));";
             }
-            yield return "    for (int k = 0; k < Length; k += 1)";
-            yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
+            else
             {
-                yield return _Line;
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "var l = new "), TypeString), "(Length);"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
+                yield return "    " + "for (int k = 0; k < Length; k += 1)";
+                yield return "    " + "{";
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "    l.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
+                yield return "    " + "}";
             }
-            yield return "    }";
             yield return "    return l;";
             yield return "}";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream s, "), TypeString), " l)"))
@@ -1838,13 +1846,20 @@ namespace Yuki.ObjectSchema.CSharpBinary
             yield return "{";
             yield return "    int Length = l.Count;";
             yield return "    IntToBinary(s, (Int)(Length));";
-            yield return "    foreach (var e in l)";
-            yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, e);"))
+            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
             {
-                yield return _Line;
+                yield return "    " + "s.WriteBytes(l.ToArray());";
             }
-            yield return "    }";
+            else
+            {
+                yield return "    " + "foreach (var e in l)";
+                yield return "    " + "{";
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, e);"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
+                yield return "    " + "}";
+            }
             yield return "}";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBytes"))), "(Byte[] Bytes)"))
             {
