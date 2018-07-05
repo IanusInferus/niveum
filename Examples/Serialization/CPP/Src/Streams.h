@@ -59,7 +59,11 @@ namespace World
         public:
             WritableStream(String Path)
             {
+#if defined WIN32 || defined _WIN32
                 s.open(Path, std::ofstream::binary);
+#else
+                s.open(w2s(Path), std::ofstream::binary);
+#endif
                 if (!s)
                 {
                     throw std::runtime_error("IOException");
