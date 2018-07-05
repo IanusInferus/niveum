@@ -1502,25 +1502,46 @@
     $$
         var TypeFriendlyName = l.TypeFriendlyName();
         var TypeString = GetTypeString(l);
-        var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
+        var ElementType = l.GenericTypeSpec.ParameterValues.Single();
+        var ElementTypeFriendlyName = ElementType.TypeFriendlyName();
     public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
     {
         int Length = (int)(IntFromBinary(s));
-        var l = new ${TypeString}(Length);
-        for (int k = 0; k < Length; k += 1)
-        {
-            l.Add([[${ElementTypeFriendlyName}FromBinary]](s));
-        }
+        $$
+            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
+            {
+                ##
+                    var l = new List<Byte>(s.ReadBytes(Length));
+            }
+            else
+            {
+                ##
+                    var l = new ${TypeString}(Length);
+                    for (int k = 0; k < Length; k += 1)
+                    {
+                        l.Add([[${ElementTypeFriendlyName}FromBinary]](s));
+                    }
+            }
         return l;
     }
     public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
         int Length = l.Count;
         IntToBinary(s, (Int)(Length));
-        foreach (var e in l)
-        {
-            [[${ElementTypeFriendlyName}ToBinary]](s, e);
-        }
+        $$
+            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
+            {
+                ##
+                    s.WriteBytes(l.ToArray());
+            }
+            else
+            {
+                ##
+                    foreach (var e in l)
+                    {
+                        [[${ElementTypeFriendlyName}ToBinary]](s, e);
+                    }
+            }
     }
     public static ${TypeString} [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
     {

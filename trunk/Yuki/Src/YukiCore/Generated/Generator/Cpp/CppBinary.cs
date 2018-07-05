@@ -58,7 +58,7 @@ namespace Yuki.ObjectSchema.CppBinary
                 }
             }
         }
-        private IEnumerable<String> Combine(IEnumerable<String> Left, IEnumerable<Object> Right)
+        private IEnumerable<String> Combine<T>(IEnumerable<String> Left, IEnumerable<T> Right)
         {
             foreach (var vLeft in Left)
             {
@@ -68,11 +68,11 @@ namespace Yuki.ObjectSchema.CppBinary
                 }
             }
         }
-        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> Values)
+        private IEnumerable<String> GetEscapedIdentifier(IEnumerable<String> IdentifierValues)
         {
-            foreach (var v in Values)
+            foreach (var Identifier in IdentifierValues)
             {
-                yield return GetEscapedIdentifier(v);
+                yield return GetEscapedIdentifier(Identifier);
             }
         }
         public IEnumerable<String> BinarySerializationServer(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator)
@@ -1191,25 +1191,33 @@ namespace Yuki.ObjectSchema.CppBinary
         {
             var TypeFriendlyName = l.TypeFriendlyName();
             var TypeString = GetTypeString(l, true);
-            var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
+            var ElementType = l.GenericTypeSpec.ParameterValues.Single();
+            var ElementTypeFriendlyName = ElementType.TypeFriendlyName();
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
             yield return "{";
             yield return "    int Length = static_cast<int>(IntFromBinary(s));";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), TypeString), ">();"))
+            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
             {
-                yield return _Line;
+                yield return "    " + "auto l = s.ReadBytes(Length);";
             }
-            yield return "    l->reserve(static_cast<std::size_t>(Length));";
-            yield return "    for (int k = 0; k < Length; k += 1)";
-            yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l->push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
+            else
             {
-                yield return _Line;
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto l = std::make_shared<"), TypeString), ">();"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
+                yield return "    " + "l->reserve(static_cast<std::size_t>(Length));";
+                yield return "    " + "for (int k = 0; k < Length; k += 1)";
+                yield return "    " + "{";
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "    l->push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
+                yield return "    " + "}";
             }
-            yield return "    }";
             yield return "    return l;";
             yield return "}";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, std::shared_ptr<class "), TypeString), "> l)"))
@@ -1219,13 +1227,20 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "{";
             yield return "    int Length = static_cast<int>(l->size());";
             yield return "    IntToBinary(s, static_cast<Int>(Length));";
-            yield return "    for (auto e : *l)";
-            yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, e);"))
+            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
             {
-                yield return _Line;
+                yield return "    " + "s.WriteBytes(l);";
             }
-            yield return "    }";
+            else
+            {
+                yield return "    " + "for (auto e : *l)";
+                yield return "    " + "{";
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, e);"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
+                yield return "    " + "}";
+            }
             yield return "}";
         }
         public IEnumerable<String> BinaryTranslator_Set(TypeSpec l)
