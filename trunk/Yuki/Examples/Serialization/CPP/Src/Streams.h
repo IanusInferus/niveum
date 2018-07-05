@@ -1,11 +1,13 @@
 ﻿#pragma once
 
+#include "BaseSystem/StringUtilities.h"
 #include "World.h"
 #include "WorldBinary.h"
 
 #include <cstdint>
-#include <cstdio>
+#include <cstddef>
 #include <stdexcept>
+#include <fstream>
 
 namespace World
 {
@@ -14,64 +16,69 @@ namespace World
         class ReadableStream : public IReadableStream
         {
         private:
-            FILE *f;
+            std::ifstream s;
         public:
             ReadableStream(String Path)
             {
-                f = fopen(w2s(Path).c_str(), "rb");
-                if (f == NULL)
+#if defined WIN32 || defined _WIN32
+                s.open(Path, std::ifstream::binary);
+#else
+                s.open(w2s(Path), std::ifstream::binary);
+#endif
+                if (!s)
                 {
                     throw std::runtime_error("IOException");
                 }
-            }
-            ~ReadableStream()
-            {
-                fclose(f);
             }
 
             uint8_t ReadByte()
             {
                 uint8_t b = 0;
-                if (fread(&b, 1, 1, f) != 1)
+                if (!s.get(reinterpret_cast<char &>(b)))
                 {
                     throw std::runtime_error("IOException");
                 }
                 return b;
             }
-            std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(size_t Size)
+            std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(std::size_t Size)
             {
-                throw std::runtime_error("NotSupported");
+                auto l = std::make_shared<std::vector<std::uint8_t>>();
+                l->resize(Size);
+                if (!s.read(reinterpret_cast<char *>(l->data()), Size))
+                {
+                    throw std::runtime_error("IOException");
+                }
+                return l;
             }
         };
 
         class WritableStream : public IWritableStream
         {
         private:
-            FILE *f;
+            std::ofstream s;
         public:
             WritableStream(String Path)
             {
-                f = fopen(w2s(Path).c_str(), "wb");
-                if (f == NULL)
+                s.open(Path, std::ofstream::binary);
+                if (!s)
                 {
                     throw std::runtime_error("IOException");
                 }
             }
-            ~WritableStream()
-            {
-                fclose(f);
-            }
 
             virtual void WriteByte(std::uint8_t b)
             {
-                if (fwrite(&b, 1, 1, f) != 1)
+                if (!s.put(static_cast<char>(b)))
                 {
                     throw std::runtime_error("IOException");
                 }
             }
             virtual void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l)
             {
-                throw std::runtime_error("NotSupported");
+                if (!s.write(reinterpret_cast<char *>(l->data()), l->size()))
+                {
+                    throw std::runtime_error("IOException");
+                }
             }
         };
     }
