@@ -681,7 +681,9 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             }
             else
             {
-                throw new InvalidOperationException();
+                var ToTypeClosure = SchemaClosureGenerator.GetClosure(new List<TypeDef> { }, t.ClientCommand.OutParameters.Select(p => p.Type));
+                ToTypeDefs = ToTypeClosure.TypeDefs;
+                ToTypeSpecs = ToTypeClosure.TypeSpecs;
             }
             foreach (var td in FromTypeDefs)
             {
@@ -805,34 +807,60 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             }
             return l;
         }
-
         public List<String> GetComplexTypes(Schema Schema)
         {
             var l = new List<String>();
 
-            var ServerCommands = Schema.Types.Where(t => t.OnServerCommand).Select(t => t.ServerCommand).ToList();
-            l.AddRange(EventPump(ServerCommands));
-            l.Add("");
-
-            var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
-            var VersionedNameToType = Schema.GetMap().ToDictionary(t => t.Key, t => t.Value);
-
-            foreach (var c in Schema.Types)
+            if (Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Any())
             {
-                if (c.GenericParameters().Count() != 0)
+                var ServerCommands = Schema.Types.Where(t => t.OnServerCommand).Select(t => t.ServerCommand).ToList();
+                l.AddRange(EventPump(ServerCommands));
+                l.Add("");
+
+                var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
+                var VersionedNameToType = Schema.GetMap().ToDictionary(t => t.Key, t => t.Value);
+
+                foreach (var c in Schema.Types)
                 {
-                    continue;
+                    if (c.GenericParameters().Count() != 0)
+                    {
+                        continue;
+                    }
+                    if (c.OnPrimitive)
+                    {
+                        continue;
+                    }
+                    if (c.Version() == "")
+                    {
+                        continue;
+                    }
+                    if (c.OnClientCommand || c.OnServerCommand)
+                    {
+                        var Translator = GetTranslator(SchemaClosureGenerator, VersionedNameToType, c);
+                        l.AddRange(Translator);
+                        l.Add("");
+                    }
                 }
-                if (c.OnPrimitive)
+            }
+            else
+            {
+                var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
+                var VersionedNameToType = Schema.GetMap().ToDictionary(t => t.Key, t => t.Value);
+
+                foreach (var c in Schema.Types)
                 {
-                    continue;
-                }
-                if (c.Version() == "")
-                {
-                    continue;
-                }
-                if (c.OnClientCommand || c.OnServerCommand)
-                {
+                    if (c.GenericParameters().Count() != 0)
+                    {
+                        continue;
+                    }
+                    if (c.OnPrimitive)
+                    {
+                        continue;
+                    }
+                    if (c.Version() == "")
+                    {
+                        continue;
+                    }
                     var Translator = GetTranslator(SchemaClosureGenerator, VersionedNameToType, c);
                     l.AddRange(Translator);
                     l.Add("");
