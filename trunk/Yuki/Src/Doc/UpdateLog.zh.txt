@@ -1,4 +1,9 @@
-﻿2018.07.05
+﻿2018.08.15
+Yuki.Core, Yuki.SchemaManipulator:
+增加非通讯Schema比较功能。
+增加C#非通讯兼容代码生成。
+
+2018.07.05
 Yuki.Core:
 优化C#和C++二进制代码生成中对二进制数据List<Byte>的处理。
 修改整体框架名称为Niveum。
