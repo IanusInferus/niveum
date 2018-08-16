@@ -26,7 +26,7 @@ using Int64 = System.Int64;
 using Float32 = System.Single;
 using Float64 = System.Double;
 
-namespace Yuki.ObjectSchema.CSharpCompatible
+namespace Yuki.ObjectSchema.CppCompatible
 {
     partial class Templates
     {
@@ -78,27 +78,19 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         public IEnumerable<String> EventPump(List<ServerCommandDef> ServerCommands)
         {
             var ServerCommandGroups = ServerCommands.GroupBy(sc => sc.Name).Where(g => g.Any(sc => sc.Version == "")).ToList();
-            yield return "private class EventPump : IEventPump";
+            yield return "class EventPump : public IEventPump";
             yield return "{";
-            foreach (var g in ServerCommandGroups)
-            {
-                var Name = g.Key;
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public Action<"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), "> "), GetEscapedIdentifier(Name)), " { get; set; }"))
-                {
-                    yield return _Line == "" ? "" : "    " + _Line;
-                }
-            }
-            yield return "}";
-            yield return "private IEventPump CreateEventPump(Func<String> GetVersion)";
+            yield return "};";
+            yield return "private IEventPump CreateEventPump(std::function<std::wstring()> GetVersion)";
             yield return "{";
-            yield return "    var ep = new EventPump();";
+            yield return "    auto ep = std::make_shared<EventPump>();";
             foreach (var g in ServerCommandGroups)
             {
                 var Name = g.Key;
                 var GroupCommands = g.ToList();
                 if (GroupCommands.Count == 1)
                 {
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(Combine(Combine(Begin(), "ep."), Name))), " = e => { if ("), GetEscapedIdentifier(Name)), " != null) { "), GetEscapedIdentifier(Name)), "(e); } };"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ep->"), GetEscapedIdentifier(Name)), " = [](std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), "> e) { if ("), GetEscapedIdentifier(Name)), " != nullptr) { "), GetEscapedIdentifier(Name)), "(e); } };"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -106,15 +98,15 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                 else
                 {
                     var SortedGroupCommands = GroupCommands.Where(sc => sc.Version != "").OrderByDescending(sc => new NumericString(sc.Version)).ToList();
-                    foreach (var _Line in Combine(Combine(Begin(), GetEscapedIdentifier(Combine(Combine(Begin(), "ep."), Name))), " = eHead =>"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ep->"), GetEscapedIdentifier(Name)), " = [](std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), "> eHead)"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                     yield return "    " + "{";
-                    yield return "    " + "    var Version = GetVersion();";
-                    yield return "    " + "    if (Version == \"\")";
+                    yield return "    " + "    auto Version = GetVersion();";
+                    yield return "    " + "    if (Version == L\"\")";
                     yield return "    " + "    {";
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "        if ("), GetEscapedIdentifier(Name)), " != null) { "), GetEscapedIdentifier(Name)), "(eHead); }"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "        if ("), GetEscapedIdentifier(Name)), " != nullptr) { "), GetEscapedIdentifier(Name)), "(eHead); }"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -123,23 +115,23 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     foreach (var sc in SortedGroupCommands)
                     {
                         var VersionedTypeFriendlyName = sc.TypeFriendlyName();
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (Version == \""), sc.Version), "\")"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (Version == L\""), sc.Version), "\")"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
                         yield return "        " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    var e = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "EventFromHead"))), "(eHead);"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto e = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "EventFromHead"))), "(eHead);"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    if ("), GetEscapedIdentifier(VersionedTypeFriendlyName)), " != null) { "), GetEscapedIdentifier(VersionedTypeFriendlyName)), "(e); }"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    if ("), GetEscapedIdentifier(VersionedTypeFriendlyName)), " != nullptr) { "), GetEscapedIdentifier(VersionedTypeFriendlyName)), "(e); }"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
                         yield return "        " + "    return;";
                         yield return "        " + "}";
                     }
-                    yield return "    " + "    throw new InvalidOperationException();";
+                    yield return "    " + "    throw std::logic_error(\"InvalidOperation\");";
                     yield return "    " + "};";
                 }
             }
@@ -167,12 +159,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_RecordFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(VersionedName)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), GetEscapedIdentifier(Name)), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "(std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), GetEscapedIdentifier(VersionedName)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = std::make_shared<class "), GetEscapedIdentifier(VersionedName)), ">();"))
             {
                 yield return _Line;
             }
@@ -181,7 +173,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             {
                 if (IsNullType(f.Type))
                 {
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(f.Name)), " = new Unit();"))
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "o->"), GetEscapedIdentifier(f.Name)), " = Unit();"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -192,7 +184,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     var fHead = d[f.Name];
                     if (IsSameType(f.Type, fHead.Type, false))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(f.Name)), " = ho."), GetEscapedIdentifier(f.Name)), ";"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "o->"), GetEscapedIdentifier(f.Name)), " = ho->"), GetEscapedIdentifier(f.Name)), ";"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -200,7 +192,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     }
                     else if (IsSameType(f.Type, fHead.Type, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.TypeFriendlyName()), "FromHead"))), "(ho."), GetEscapedIdentifier(f.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "o->"), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.TypeFriendlyName()), "FromHead"))), "(ho->"), GetEscapedIdentifier(f.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -236,12 +228,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_RecordTo(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(Name)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), GetEscapedIdentifier(VersionedName)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "(std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), "> o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var ho = new "), GetEscapedIdentifier(Name)), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var ho = std::make_shared<class "), GetEscapedIdentifier(Name)), ">();"))
             {
                 yield return _Line;
             }
@@ -250,7 +242,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             {
                 if (IsNullType(fHead.Type))
                 {
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "ho."), GetEscapedIdentifier(fHead.Name)), " = new Unit();"))
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "ho->"), GetEscapedIdentifier(fHead.Name)), " = Unit();"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -261,7 +253,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     var f = d[fHead.Name];
                     if (IsSameType(f.Type, fHead.Type, false))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ho."), GetEscapedIdentifier(f.Name)), " = o."), GetEscapedIdentifier(f.Name)), ";"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ho->"), GetEscapedIdentifier(f.Name)), " = o->"), GetEscapedIdentifier(f.Name)), ";"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -269,14 +261,14 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     }
                     else if (IsSameType(f.Type, fHead.Type, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ho."), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.TypeFriendlyName()), "ToHead"))), "(o."), GetEscapedIdentifier(f.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ho->"), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.TypeFriendlyName()), "ToHead"))), "(o->"), GetEscapedIdentifier(f.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         continue;
                     }
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ho."), GetEscapedIdentifier(fHead.Name)), " = o."), GetEscapedIdentifier(fHead.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ho->"), GetEscapedIdentifier(fHead.Name)), " = o->"), GetEscapedIdentifier(fHead.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -318,12 +310,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     var a = d[aHead.Name];
                     if (IsNullType(a.Type))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho."), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), ")"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho->"), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), "())"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), ".Create"), a.Name))), "();"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), "::Create"), a.Name))), "();"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -332,12 +324,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     }
                     else if (IsSameType(a.Type, aHead.Type, false))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho."), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), ")"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho->"), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), "())"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), ".Create"), a.Name))), "(ho."), GetEscapedIdentifier(a.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), "::Create"), a.Name))), "(ho->"), GetEscapedIdentifier(a.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -346,12 +338,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     }
                     else if (IsSameType(a.Type, aHead.Type, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho."), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), ")"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho->"), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), "())"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), ".Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromHead"))), "(ho."), GetEscapedIdentifier(a.Name)), "));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), "::Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromHead"))), "(ho->"), GetEscapedIdentifier(a.Name)), "));"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -359,18 +351,18 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                         continue;
                     }
                 }
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho."), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), aHead.Name))), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho->"), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), aHead.Name))), "())"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), ".Create"), aHead.Name))), "(ho."), GetEscapedIdentifier(aHead.Name)), ");"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), "::Create"), aHead.Name))), "(ho->"), GetEscapedIdentifier(aHead.Name)), ");"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "}";
             }
-            yield return "    throw new InvalidOperationException();";
+            yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
         }
         public IEnumerable<String> Translator_TaggedUnionTo(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, Boolean InitialHasError)
@@ -407,12 +399,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     var a = d[aHead.Name];
                     if (IsNullType(aHead.Type))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o."), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), ")"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o->"), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), "())"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), ".Create"), a.Name))), "();"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), "::Create"), a.Name))), "();"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -421,12 +413,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     }
                     else if (IsSameType(a.Type, aHead.Type, false))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o."), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), ")"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o->"), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), "())"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), ".Create"), a.Name))), "(o."), GetEscapedIdentifier(a.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), "::Create"), a.Name))), "(o->"), GetEscapedIdentifier(a.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -435,12 +427,12 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     }
                     else if (IsSameType(a.Type, aHead.Type, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o."), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), ")"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o->"), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), "())"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), ".Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToHead"))), "(o."), GetEscapedIdentifier(a.Name)), "));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), "::Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToHead"))), "(o->"), GetEscapedIdentifier(a.Name)), "));"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -448,18 +440,18 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                         continue;
                     }
                 }
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o."), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), aHead.Name))), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o->"), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), aHead.Name))), "())"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), ".Create"), aHead.Name))), "(o."), GetEscapedIdentifier(aHead.Name)), ");"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), "::Create"), aHead.Name))), "(o->"), GetEscapedIdentifier(aHead.Name)), ");"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "}";
             }
-            yield return "    throw new InvalidOperationException();";
+            yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
         }
         public IEnumerable<String> Translator_EnumFrom(String Name, String VersionedName, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals)
@@ -471,18 +463,18 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             yield return "{";
             foreach (var ltl in HeadLiterals)
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "."), ltl.Name))), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "::"), ltl.Name))), ")"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedName), "."), ltl.Name))), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedName), "::"), ltl.Name))), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "}";
             }
-            yield return "    throw new InvalidOperationException();";
+            yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
         }
         public IEnumerable<String> Translator_EnumTo(String Name, String VersionedName, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals)
@@ -494,23 +486,23 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             yield return "{";
             foreach (var ltl in Literals)
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedName), "."), ltl.Name))), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedName), "::"), ltl.Name))), ")"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "."), ltl.Name))), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "::"), ltl.Name))), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "}";
             }
-            yield return "    throw new InvalidOperationException();";
+            yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
         }
         public IEnumerable<String> Translator_ClientCommand(String Name, String VersionedName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), " "), GetEscapedIdentifier(VersionedName)), "("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Request"))), " r)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), "> "), GetEscapedIdentifier(VersionedName)), "(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Request"))), "> r)"))
             {
                 yield return _Line;
             }
@@ -532,7 +524,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_ClientCommandAsync(String Name, String VersionedName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void "), GetEscapedIdentifier(VersionedName)), "("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Request"))), " r, Action<"), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), "> Callback, Action<Exception> OnFailure)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), ">(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Request"))), "> r, std::functional<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), ">)> Callback, std::functional<void(std::wstring)> OnFailure)"))
             {
                 yield return _Line;
             }
@@ -541,7 +533,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Name)), "(HeadRequest, HeadReply => Callback("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ReplyFromHead"))), "(HeadReply)), OnFailure);"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Name)), "(HeadRequest, [](std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), "> HeadReply) { Callback("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ReplyFromHead"))), "(HeadReply)); }, OnFailure);"))
             {
                 yield return _Line;
             }
@@ -549,7 +541,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_ServerCommand(String VersionedName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public event Action<"), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Event"))), "> "), GetEscapedIdentifier(VersionedName)), ";"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "std::function<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Event"))), ">)> "), GetEscapedIdentifier(VersionedName)), ";"))
             {
                 yield return _Line;
             }
@@ -584,7 +576,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             {
                 if (IsNullType(e))
                 {
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "var Item"), k + 1), " = new Unit();"))
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Item"), k + 1), " = Unit();"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -596,7 +588,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     var eHead = HeadElements[k];
                     if (IsSameType(e, eHead, false))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "var Item"), k + 1), " = ho.Item"), k + 1), ";"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "auto Item"), k), " = std::get<"), k), ">(ho);"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -605,7 +597,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     }
                     else if (IsSameType(e, eHead, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "var Item"), k + 1), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), e.TypeFriendlyName()), "FromHead"))), "(ho.Item"), k + 1), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "auto Item"), k), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), e.TypeFriendlyName()), "FromHead"))), "(std::get<"), k), ">(ho));"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -613,13 +605,13 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                         continue;
                     }
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "var Item"), k + 1), " = ho.Item"), k + 1), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "auto Item"), k), " = std::get<"), k), ">(ho);"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 k += 1;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), VersionedTypeString), "("), String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))), ");"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return std::make_tuple("), String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + i.ToInvariantString()))), ");"))
             {
                 yield return _Line;
             }
@@ -655,7 +647,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             {
                 if (IsNullType(eHead))
                 {
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "var Item"), k + 1), " = new Unit();"))
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Item"), k), " = Unit();"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -667,7 +659,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     var e = Elements[k];
                     if (IsSameType(e, eHead, false))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "var Item"), k + 1), " = o.Item"), k + 1), ";"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "auto Item"), k), " = std::get<"), k), ">(o);"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -676,7 +668,7 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                     }
                     else if (IsSameType(e, eHead, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "var Item"), k + 1), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), e.TypeFriendlyName()), "ToHead"))), "(o.Item"), k + 1), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "auto Item"), k), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), e.TypeFriendlyName()), "ToHead"))), "(std::get<"), k), ">(o));"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -684,13 +676,13 @@ namespace Yuki.ObjectSchema.CSharpCompatible
                         continue;
                     }
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "var Item"), k + 1), " = o.Item"), k + 1), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "auto Item"), k), " = std::get<"), k), ">(o);"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 k += 1;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), TypeString), "("), String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))), ");"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return std::make_tuple("), String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + i.ToInvariantString()))), ");"))
             {
                 yield return _Line;
             }
@@ -698,135 +690,193 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_ListFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return ho.Select(he => "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he)).ToList();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), VersionedTypeString), ">();"))
             {
                 yield return _Line;
             }
+            yield return "    for (auto he : ho)";
+            yield return "    {";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l->push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he));"))
+            {
+                yield return _Line;
+            }
+            yield return "    }";
+            yield return "    return l;";
             yield return "}";
         }
         public IEnumerable<String> Translator_ListTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return o.Select(e => "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e)).ToList();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), TypeString), ">();"))
             {
                 yield return _Line;
             }
+            yield return "    for (auto e : o)";
+            yield return "    {";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l->push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e));"))
+            {
+                yield return _Line;
+            }
+            yield return "    }";
+            yield return "    return l;";
             yield return "}";
         }
         public IEnumerable<String> Translator_SetFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), VersionedTypeString), "(ho.Select(he => "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he)));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto s = std::make_shared<"), VersionedTypeString), ">();"))
             {
                 yield return _Line;
             }
+            yield return "    for (auto he : ho)";
+            yield return "    {";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        s->insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he));"))
+            {
+                yield return _Line;
+            }
+            yield return "    }";
+            yield return "    return s;";
             yield return "}";
         }
         public IEnumerable<String> Translator_SetTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), TypeString), "(o.Select(e => "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e)));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto s = std::make_shared<"), TypeString), ">();"))
             {
                 yield return _Line;
             }
+            yield return "    for (auto e : o)";
+            yield return "    {";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        s->insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e));"))
+            {
+                yield return _Line;
+            }
+            yield return "    }";
+            yield return "    return s;";
             yield return "}";
         }
         public IEnumerable<String> Translator_MapFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), VersionedTypeString), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = std::make_shared<"), VersionedTypeString), ">();"))
             {
                 yield return _Line;
             }
-            yield return "    foreach (var hp in ho)";
+            yield return "    for (auto hp : *ho)";
             yield return "    {";
             if (IsSameType(KeyTypeSpec, HeadKeyTypeSpec, false))
             {
-                yield return "        " + "var Key = hp.Key;";
+                yield return "        " + "auto Key = std::get<0>(hp);";
             }
             else
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "var Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeSpec.TypeFriendlyName()), "FromHead"))), "(hp.Key);"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeSpec.TypeFriendlyName()), "FromHead"))), "(std::get<0>(hp));"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
             }
             if (IsSameType(ValueTypeSpec, HeadValueTypeSpec, false))
             {
-                yield return "        " + "var Value = hp.Value;";
+                yield return "        " + "auto Value = std::get<1>(hp);";
             }
             else
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "var Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSpec.TypeFriendlyName()), "FromHead"))), "(hp.Value);"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSpec.TypeFriendlyName()), "FromHead"))), "(std::get<1>(hp));"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
             }
-            yield return "        o.Add(Key, Value);";
+            yield return "        (*o)[Key] = Value;";
             yield return "    }";
             yield return "    return o;";
             yield return "}";
         }
         public IEnumerable<String> Translator_MapTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var ho = new "), TypeString), "();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto ho = std::make_shared<"), TypeString), ">();"))
             {
                 yield return _Line;
             }
-            yield return "    foreach (var p in o)";
+            yield return "    for (auto p : *o)";
             yield return "    {";
             if (IsSameType(KeyTypeSpec, HeadKeyTypeSpec, false))
             {
-                yield return "        " + "var Key = p.Key;";
+                yield return "        " + "auto Key = std::get<0>(p);";
             }
             else
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "var Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeSpec.TypeFriendlyName()), "ToHead"))), "(p.Key);"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeSpec.TypeFriendlyName()), "ToHead"))), "(std::get<0>(p));"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
             }
             if (IsSameType(ValueTypeSpec, HeadValueTypeSpec, false))
             {
-                yield return "        " + "var Value = p.Value;";
+                yield return "        " + "auto Value = std::get<1>(p);";
             }
             else
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "var Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSpec.TypeFriendlyName()), "ToHead"))), "(p.Value);"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSpec.TypeFriendlyName()), "ToHead"))), "(std::get<1>(p));"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
             }
-            yield return "        ho.Add(Key, Value);";
+            yield return "        (*ho)[Key] = Value;";
             yield return "    }";
             yield return "    return ho;";
             yield return "}";
+        }
+        public IEnumerable<String> WrapNamespace(String NamespacePart, IEnumerable<String> Contents)
+        {
+            foreach (var _Line in Combine(Combine(Begin(), "namespace "), GetEscapedIdentifier(NamespacePart)))
+            {
+                yield return _Line;
+            }
+            yield return "{";
+            foreach (var _Line in Combine(Combine(Begin(), "    "), Contents))
+            {
+                yield return _Line;
+            }
+            yield return "}";
+        }
+        public IEnumerable<String> WrapClass(String ClassName, IEnumerable<String> Contents)
+        {
+            foreach (var _Line in Combine(Combine(Begin(), "/* partial */ class "), GetEscapedIdentifier(ClassName)))
+            {
+                yield return _Line;
+            }
+            yield return "{";
+            foreach (var _Line in Combine(Combine(Begin(), "    "), Contents))
+            {
+                yield return _Line;
+            }
+            yield return "};";
         }
         public IEnumerable<String> Main(Schema Schema, String NamespaceName, String ClassName)
         {
@@ -837,51 +887,33 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             yield return "//";
             yield return "//==========================================================================";
             yield return "";
-            yield return "using System;";
-            yield return "using System.Collections.Generic;";
-            yield return "using System.Linq;";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "using "), Schema.Imports), ";"))
-            {
-                yield return _Line;
-            }
-            var Primitives = GetPrimitives(Schema);
-            foreach (var _Line in Combine(Begin(), Primitives))
+            yield return "#pragma once";
+            yield return "";
+            yield return "#include <cstddef>";
+            yield return "#include <cstdint>";
+            yield return "#include <string>";
+            yield return "#include <vector>";
+            yield return "#include <unordered_set>";
+            yield return "#include <unordered_map>";
+            yield return "#include <tuple>";
+            yield return "#include <memory>";
+            yield return "#include <functional>";
+            yield return "#include <exception>";
+            yield return "#include <stdexcept>";
+            foreach (var _Line in Combine(Combine(Begin(), "#include "), Schema.Imports.Where(i => IsInclude(i))))
             {
                 yield return _Line;
             }
             yield return "";
+            var Primitives = GetPrimitives(Schema);
             var ComplexTypes = GetComplexTypes(Schema);
-            if (NamespaceName == "")
+            foreach (var _Line in Combine(Begin(), Primitives))
             {
-                foreach (var _Line in Combine(Combine(Begin(), "public partial class "), GetEscapedIdentifier(ClassName)))
-                {
-                    yield return _Line;
-                }
-                yield return "{";
-                foreach (var _Line in Combine(Combine(Begin(), "    "), ComplexTypes))
-                {
-                    yield return _Line;
-                }
-                yield return "}";
+                yield return _Line;
             }
-            else
+            foreach (var _Line in Combine(Begin(), WrapContents(NamespaceName, WrapClass(ClassName, ComplexTypes).ToList())))
             {
-                foreach (var _Line in Combine(Combine(Begin(), "namespace "), GetEscapedIdentifier(NamespaceName)))
-                {
-                    yield return _Line;
-                }
-                yield return "{";
-                foreach (var _Line in Combine(Combine(Begin(), "    public partial class "), GetEscapedIdentifier(ClassName)))
-                {
-                    yield return _Line;
-                }
-                yield return "    {";
-                foreach (var _Line in Combine(Combine(Begin(), "        "), ComplexTypes))
-                {
-                    yield return _Line;
-                }
-                yield return "    }";
-                yield return "}";
+                yield return _Line;
             }
             yield return "";
         }

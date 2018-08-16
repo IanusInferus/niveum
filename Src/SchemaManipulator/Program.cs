@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2017.05.08.
+//  Version:     2018.08.16.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -32,6 +32,7 @@ using Yuki.ObjectSchema.Java;
 using Yuki.ObjectSchema.JavaBinary;
 using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
+using Yuki.ObjectSchema.CppCompatible;
 using Yuki.ObjectSchema.Haxe;
 using Yuki.ObjectSchema.HaxeJson;
 using Yuki.ObjectSchema.Python;
@@ -412,6 +413,23 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "t2cppc")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        ObjectSchemaToCppCompatibleCode(args[0], args[1], "");
+                    }
+                    else if (args.Length == 3)
+                    {
+                        ObjectSchemaToCppCompatibleCode(args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "t2hx")
                 {
                     var args = opt.Arguments;
@@ -555,7 +573,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2csb:<CsCodePath>[,<NamespaceName>[,<WithFirefly=true>]]");
             Console.WriteLine(@"生成C# JSON通讯类型");
             Console.WriteLine(@"/t2csj:<CsCodePath>[,<NamespaceName>]");
-            Console.WriteLine(@"生成C#通讯兼容类型");
+            Console.WriteLine(@"生成C#兼容类型");
             Console.WriteLine(@"/t2csc:<CsCodePath>,<ClassName>[,<NamespaceName>]");
             Console.WriteLine(@"生成C#重试循环类型");
             Console.WriteLine(@"/t2csr:<CsCodePath>[,<NamespaceName>]");
@@ -567,6 +585,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2cpp:<CppCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C++2011二进制通讯类型");
             Console.WriteLine(@"/t2cppb:<CppCodePath>[,<NamespaceName>[,<WithServer=true>,<WithClient=true>]]");
+            Console.WriteLine(@"生成C++兼容类型");
+            Console.WriteLine(@"/t2cppc:<CsCodePath>,<ClassName>[,<NamespaceName>]");
             Console.WriteLine(@"生成Haxe类型");
             Console.WriteLine(@"/t2hx:<HaxeCodePath>,<PackageName>");
             Console.WriteLine(@"生成Haxe JSON通讯类型");
@@ -891,6 +911,23 @@ namespace Yuki.SchemaManipulator
         {
             var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCppBinary(NamespaceName, WithServer, WithClient);
+            if (File.Exists(CppCodePath))
+            {
+                var Original = Txt.ReadFile(CppCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CppCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToCppCompatibleCode(String CppCodePath, String ClassName, String NamespaceName)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToCppCompatible(NamespaceName, ClassName);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);
