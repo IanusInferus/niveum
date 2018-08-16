@@ -4,7 +4,7 @@
       File:        CppCompatible.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++通讯兼容模板
-      Version:     2018.08.16.
+      Version:     2018.08.17.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -26,7 +26,7 @@
     class EventPump : public IEventPump
     {
     };
-    private IEventPump CreateEventPump(std::function<std::wstring()> GetVersion)
+    IEventPump CreateEventPump(std::function<std::wstring()> GetVersion)
     {
         auto ep = std::make_shared<EventPump>();
         $$
@@ -86,7 +86,7 @@
         }
 
 #Template Translator_RecordFrom Name:String VersionedName:String Fields:List<VariableDef> HeadFields:List<VariableDef>
-    public std::shared_ptr<class [[${VersionedName}]]> [[${VersionedName}FromHead]](std::shared_ptr<class [[${Name}]]> ho)
+    std::shared_ptr<class [[${VersionedName}]]> [[${VersionedName}FromHead]](std::shared_ptr<class [[${Name}]]> ho)
     {
         var o = std::make_shared<class [[${VersionedName}]]>();
         $$
@@ -137,7 +137,7 @@
         }
 
 #Template Translator_RecordTo Name:String VersionedName:String Fields:List<VariableDef> HeadFields:List<VariableDef>
-    public std::shared_ptr<class [[${Name}]]> [[${VersionedName}ToHead]](std::shared_ptr<class [[${VersionedName}]]> o)
+    std::shared_ptr<class [[${Name}]]> [[${VersionedName}ToHead]](std::shared_ptr<class [[${VersionedName}]]> o)
     {
         var ho = std::make_shared<class [[${Name}]]>();
         $$
@@ -188,7 +188,7 @@
         }
 
 #Template Translator_TaggedUnionFrom VersionedName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef>
-    public ${VersionedTypeString} [[${VersionedName}FromHead]](${TypeString} ho)
+    ${VersionedTypeString} [[${VersionedName}FromHead]](${TypeString} ho)
     {
         $$
             var d = Alternatives.ToDictionary(a => a.Name);
@@ -250,7 +250,7 @@
         }
 
 #Template Translator_TaggedUnionTo VersionedName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef>
-    public ${TypeString} [[${VersionedName}ToHead]](${VersionedTypeString} o)
+    ${TypeString} [[${VersionedName}ToHead]](${VersionedTypeString} o)
     {
         $$
             var d = Alternatives.ToDictionary(a => a.Name);
@@ -297,7 +297,7 @@
     }
 
 #Template Translator_EnumFrom Name:String VersionedName:String Literals:List<LiteralDef> HeadLiterals:List<LiteralDef>
-    public [[${VersionedName}]] [[${VersionedName}FromHead]]([[${Name}]] ho)
+    [[${VersionedName}]] [[${VersionedName}FromHead]]([[${Name}]] ho)
     {
         $$
             foreach (var ltl in HeadLiterals)
@@ -312,7 +312,7 @@
     }
 
 #Template Translator_EnumTo Name:String VersionedName:String Literals:List<LiteralDef> HeadLiterals:List<LiteralDef>
-    public [[${Name}]] [[${VersionedName}ToHead]]([[${VersionedName}]] o)
+    [[${Name}]] [[${VersionedName}ToHead]]([[${VersionedName}]] o)
     {
         $$
             foreach (var ltl in Literals)
@@ -327,7 +327,7 @@
     }
 
 #Template Translator_ClientCommand Name:String VersionedName:String
-    public std::shared_ptr<class [[${VersionedName}Reply]]> [[${VersionedName}]](std::shared_ptr<class [[${VersionedName}Request]]> r)
+    std::shared_ptr<class [[${VersionedName}Reply]]> [[${VersionedName}]](std::shared_ptr<class [[${VersionedName}Request]]> r)
     {
         var HeadRequest = [[${VersionedName}RequestToHead]](r);
         var HeadReply = [[${Name}]](HeadRequest);
@@ -336,7 +336,7 @@
     }
 
 #Template Translator_ClientCommandAsync Name:String VersionedName:String
-    public void std::shared_ptr<class [[${VersionedName}]]>(std::shared_ptr<class [[${VersionedName}Request]]> r, std::functional<void(std::shared_ptr<class [[${VersionedName}Reply]]>)> Callback, std::functional<void(std::wstring)> OnFailure)
+    void std::shared_ptr<class [[${VersionedName}]]>(std::shared_ptr<class [[${VersionedName}Request]]> r, std::functional<void(std::shared_ptr<class [[${VersionedName}Reply]]>)> Callback, std::functional<void(std::wstring)> OnFailure)
     {
         var HeadRequest = [[${VersionedName}RequestToHead]](r);
         [[${Name}]](HeadRequest, [](std::shared_ptr<class [[${VersionedName}Reply]]> HeadReply) { Callback([[${VersionedName}ReplyFromHead]](HeadReply)); }, OnFailure);
@@ -360,7 +360,7 @@
         }
 
 #Template Translator_TupleFrom VersionedName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec>
-    public ${VersionedTypeString} [[${VersionedName}FromHead]](${TypeString} ho)
+    ${VersionedTypeString} [[${VersionedName}FromHead]](${TypeString} ho)
     {
         $$
             var k = 0;
@@ -413,7 +413,7 @@
         }
 
 #Template Translator_TupleTo VersionedName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec>
-    public ${TypeString} [[${VersionedName}ToHead]](${VersionedTypeString} o)
+    ${TypeString} [[${VersionedName}ToHead]](${VersionedTypeString} o)
     {
         $$
             var k = 0;
@@ -452,7 +452,7 @@
     }
 
 #Template Translator_ListFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public std::shared_ptr<class ${VersionedTypeString}> [[${VersionedTypeFriendlyName}FromHead]](std::shared_ptr<class ${TypeString}> ho)
+    std::shared_ptr<class ${VersionedTypeString}> [[${VersionedTypeFriendlyName}FromHead]](std::shared_ptr<class ${TypeString}> ho)
     {
         auto l = std::make_shared<${VersionedTypeString}>();
         for (auto he : ho)
@@ -463,7 +463,7 @@
     }
 
 #Template Translator_ListTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public std::shared_ptr<class ${TypeString}> [[${VersionedTypeFriendlyName}ToHead]](std::shared_ptr<class ${VersionedTypeString}> o)
+    std::shared_ptr<class ${TypeString}> [[${VersionedTypeFriendlyName}ToHead]](std::shared_ptr<class ${VersionedTypeString}> o)
     {
         auto l = std::make_shared<${TypeString}>();
         for (auto e : o)
@@ -474,7 +474,7 @@
     }
 
 #Template Translator_SetFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public std::shared_ptr<class ${VersionedTypeString}> [[${VersionedTypeFriendlyName}FromHead]](std::shared_ptr<class ${TypeString}> ho)
+    std::shared_ptr<class ${VersionedTypeString}> [[${VersionedTypeFriendlyName}FromHead]](std::shared_ptr<class ${TypeString}> ho)
     {
         auto s = std::make_shared<${VersionedTypeString}>();
         for (auto he : ho)
@@ -485,7 +485,7 @@
     }
 
 #Template Translator_SetTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public std::shared_ptr<class ${TypeString}> [[${VersionedTypeFriendlyName}ToHead]](std::shared_ptr<class ${VersionedTypeString}> o)
+    std::shared_ptr<class ${TypeString}> [[${VersionedTypeFriendlyName}ToHead]](std::shared_ptr<class ${VersionedTypeString}> o)
     {
         auto s = std::make_shared<${TypeString}>();
         for (auto e : o)
@@ -496,7 +496,7 @@
     }
 
 #Template Translator_MapFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String KeyTypeSpec:TypeSpec HeadKeyTypeSpec:TypeSpec ValueTypeSpec:TypeSpec HeadValueTypeSpec:TypeSpec
-    public std::shared_ptr<class ${VersionedTypeString}> [[${VersionedTypeFriendlyName}FromHead]](std::shared_ptr<class ${TypeString}> ho)
+    std::shared_ptr<class ${VersionedTypeString}> [[${VersionedTypeFriendlyName}FromHead]](std::shared_ptr<class ${TypeString}> ho)
     {
         auto o = std::make_shared<${VersionedTypeString}>();
         for (auto hp : *ho)
@@ -528,7 +528,7 @@
     }
 
 #Template Translator_MapTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String KeyTypeSpec:TypeSpec HeadKeyTypeSpec:TypeSpec ValueTypeSpec:TypeSpec HeadValueTypeSpec:TypeSpec
-    public std::shared_ptr<class ${TypeString}> [[${VersionedTypeFriendlyName}ToHead]](std::shared_ptr<class ${VersionedTypeString}> o)
+    std::shared_ptr<class ${TypeString}> [[${VersionedTypeFriendlyName}ToHead]](std::shared_ptr<class ${VersionedTypeString}> o)
     {
         auto ho = std::make_shared<${TypeString}>();
         for (auto p : *o)
@@ -568,6 +568,7 @@
 #Template WrapClass ClassName:String Contents:IEnumerable<String>
     /* partial */ class [[${ClassName}]]
     {
+    public:
         ${Contents}
     };
 

@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2016.08.06.
+//  Version:     2018.08.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -113,7 +113,7 @@ namespace Yuki.RelationSchema
             var Types = s.GetMap().OrderBy(t => t.Key, StringComparer.Ordinal).Select(t => t.Value).ToList();
             var TypesWithoutDescription = Types.Select(t => MapWithoutDescription(t)).ToList();
 
-            var sha = new SHA1CryptoServiceProvider();
+            var sha = new SHA256CryptoServiceProvider();
             Byte[] result;
 
             using (var ms = Streams.CreateMemoryStream())
