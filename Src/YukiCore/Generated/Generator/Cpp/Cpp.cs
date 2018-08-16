@@ -704,6 +704,9 @@ namespace Yuki.ObjectSchema.Cpp
         {
             yield return "class IEventPump";
             yield return "{";
+            yield return "public:";
+            yield return "    virtual ~IEventPump() {}";
+            yield return "";
             foreach (var c in Commands)
             {
                 if (c.OnServerCommand)

@@ -81,7 +81,7 @@ namespace Yuki.ObjectSchema.CppCompatible
             yield return "class EventPump : public IEventPump";
             yield return "{";
             yield return "};";
-            yield return "private IEventPump CreateEventPump(std::function<std::wstring()> GetVersion)";
+            yield return "IEventPump CreateEventPump(std::function<std::wstring()> GetVersion)";
             yield return "{";
             yield return "    auto ep = std::make_shared<EventPump>();";
             foreach (var g in ServerCommandGroups)
@@ -159,7 +159,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_RecordFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "(std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "(std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> ho)"))
             {
                 yield return _Line;
             }
@@ -228,7 +228,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_RecordTo(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "(std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), "> o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "(std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), "> o)"))
             {
                 yield return _Line;
             }
@@ -297,7 +297,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_TaggedUnionFrom(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), TypeString), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
@@ -386,7 +386,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_TaggedUnionTo(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), VersionedTypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -456,7 +456,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_EnumFrom(String Name, String VersionedName, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(VersionedName)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), GetEscapedIdentifier(Name)), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(VersionedName)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), GetEscapedIdentifier(Name)), " ho)"))
             {
                 yield return _Line;
             }
@@ -479,7 +479,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_EnumTo(String Name, String VersionedName, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetEscapedIdentifier(Name)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), GetEscapedIdentifier(VersionedName)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(Name)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), GetEscapedIdentifier(VersionedName)), " o)"))
             {
                 yield return _Line;
             }
@@ -502,7 +502,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_ClientCommand(String Name, String VersionedName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), "> "), GetEscapedIdentifier(VersionedName)), "(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Request"))), "> r)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), "> "), GetEscapedIdentifier(VersionedName)), "(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Request"))), "> r)"))
             {
                 yield return _Line;
             }
@@ -524,7 +524,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_ClientCommandAsync(String Name, String VersionedName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), ">(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Request"))), "> r, std::functional<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), ">)> Callback, std::functional<void(std::wstring)> OnFailure)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), ">(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Request"))), "> r, std::functional<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), ">)> Callback, std::functional<void(std::wstring)> OnFailure)"))
             {
                 yield return _Line;
             }
@@ -566,7 +566,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_TupleFrom(String VersionedName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), TypeString), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
@@ -637,7 +637,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_TupleTo(String VersionedName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), VersionedTypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -690,7 +690,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_ListFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
             {
                 yield return _Line;
             }
@@ -711,7 +711,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_ListTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
             {
                 yield return _Line;
             }
@@ -732,7 +732,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_SetFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
             {
                 yield return _Line;
             }
@@ -753,7 +753,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_SetTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
             {
                 yield return _Line;
             }
@@ -774,7 +774,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_MapFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
             {
                 yield return _Line;
             }
@@ -814,7 +814,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_MapTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
             {
                 yield return _Line;
             }
@@ -872,6 +872,7 @@ namespace Yuki.ObjectSchema.CppCompatible
                 yield return _Line;
             }
             yield return "{";
+            yield return "public:";
             foreach (var _Line in Combine(Combine(Begin(), "    "), Contents))
             {
                 yield return _Line;

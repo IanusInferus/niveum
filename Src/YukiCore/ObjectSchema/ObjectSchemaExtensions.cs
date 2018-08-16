@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2017.04.22.
+//  Version:     2018.08.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -68,7 +68,7 @@ namespace Yuki.ObjectSchema
 
         public static UInt64 Hash(this Schema s)
         {
-            var sha = new SHA1CryptoServiceProvider();
+            var sha = new SHA256CryptoServiceProvider();
             var Bytes = GetUnifiedBinaryRepresentation(s);
             var result = sha.ComputeHash(Bytes);
             using (var ms = Streams.CreateMemoryStream())
@@ -233,7 +233,10 @@ namespace Yuki.ObjectSchema
             var Types = s.Types.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => "") }).ToList();
             var TypeRefs = s.TypeRefs.Select(t => new { Original = t, Current = MapWithVersion(t, (Name, Version) => "") }).ToList();
             var Dict = Types.Concat(TypeRefs).ToDictionary(t => t.Original.VersionedName(), t => t.Current.VersionedName(), StringComparer.OrdinalIgnoreCase);
-            return new Schema { Types = Types.Select(t => t.Current).ToList(), TypeRefs = TypeRefs.Select(t => t.Current).ToList(), Imports = s.Imports.ToList() };
+            var Nonversioned = new Schema { Types = Types.Select(t => t.Current).ToList(), TypeRefs = TypeRefs.Select(t => t.Current).ToList(), Imports = s.Imports.ToList() };
+            var oslr = new ObjectSchemaLoaderResult { Schema = Nonversioned, Positions = new Dictionary<object, FileTextRange> { } };
+            oslr.Verify();
+            return Nonversioned;
         }
         public static Schema GetNonattributed(this Schema s)
         {
