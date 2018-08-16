@@ -1,9 +1,18 @@
-﻿using System;
+﻿//==========================================================================
+//
+//  File:        ExpressionSchemaExtensions.cs
+//  Location:    Yuki.Expression <Visual C#>
+//  Description: 表达式类型结构扩展
+//  Version:     2018.08.17.
+//  Copyright(C) F.R.C.
+//
+//==========================================================================
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using Firefly;
-using Firefly.Mapping.Binary;
 using Firefly.Streaming;
 
 namespace Yuki.ExpressionSchema
@@ -29,7 +38,7 @@ namespace Yuki.ExpressionSchema
         public static UInt64 Hash(this Schema s)
         {
             var Bytes = GetUnifiedBinaryRepresentation(s);
-            var sha = new SHA1CryptoServiceProvider();
+            var sha = new SHA256CryptoServiceProvider();
             Byte[] result;
 
             using (var ms = Streams.CreateMemoryStream())

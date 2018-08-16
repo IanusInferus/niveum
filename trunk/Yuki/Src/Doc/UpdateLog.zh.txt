@@ -1,4 +1,13 @@
-﻿2018.08.16
+﻿2018.08.17
+Yuki.Core, Yuki.Relation, Yuki.Expression:
+将用到的SHA-1算法换成SHA-256算法。
+Yuki.Core, Yuki.SchemaManipulator:
+增加C#和C++类型版本代码生成。
+Example:
+修正序列化示例中的Schema旧版本类型误引用新版本类型的错误。
+序列化示例中增加C#和C++类型版本代码生成。
+
+2018.08.16
 Yuki.Core, Yuki.SchemaManipulator:
 增加C++兼容代码生成。
 

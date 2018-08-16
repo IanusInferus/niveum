@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2018.08.16.
+//  Version:     2018.08.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -28,11 +28,13 @@ using Yuki.ObjectSchema.CSharpBinary;
 using Yuki.ObjectSchema.CSharpJson;
 using Yuki.ObjectSchema.CSharpCompatible;
 using Yuki.ObjectSchema.CSharpRetry;
+using Yuki.ObjectSchema.CSharpVersion;
 using Yuki.ObjectSchema.Java;
 using Yuki.ObjectSchema.JavaBinary;
 using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.CppCompatible;
+using Yuki.ObjectSchema.CppVersion;
 using Yuki.ObjectSchema.Haxe;
 using Yuki.ObjectSchema.HaxeJson;
 using Yuki.ObjectSchema.Python;
@@ -341,6 +343,19 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "t2csv")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length >= 2)
+                    {
+                        ObjectSchemaToCSharpVersionCode(args[0], args[1], args.Skip(2).ToList());
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "t2jv")
                 {
                     var args = opt.Arguments;
@@ -423,6 +438,19 @@ namespace Yuki.SchemaManipulator
                     else if (args.Length == 3)
                     {
                         ObjectSchemaToCppCompatibleCode(args[0], args[1], args[2]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "t2cppv")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length >= 2)
+                    {
+                        ObjectSchemaToCppVersionCode(args[0], args[1], args.Skip(2).ToList());
                     }
                     else
                     {
@@ -577,6 +605,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2csc:<CsCodePath>,<ClassName>[,<NamespaceName>]");
             Console.WriteLine(@"生成C#重试循环类型");
             Console.WriteLine(@"/t2csr:<CsCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"生成C#版本类型");
+            Console.WriteLine(@"/t2csv:<CsCodePath>,<NamespaceName>,<TypeName>*");
             Console.WriteLine(@"生成Java类型");
             Console.WriteLine(@"/t2jv:<JavaCodePath>,<ClassName>[,<PackageName>]");
             Console.WriteLine(@"生成Java二进制类型");
@@ -587,6 +617,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2cppb:<CppCodePath>[,<NamespaceName>[,<WithServer=true>,<WithClient=true>]]");
             Console.WriteLine(@"生成C++兼容类型");
             Console.WriteLine(@"/t2cppc:<CsCodePath>,<ClassName>[,<NamespaceName>]");
+            Console.WriteLine(@"生成C++版本类型");
+            Console.WriteLine(@"/t2cppv:<CsCodePath>,<NamespaceName>,<TypeName>*");
             Console.WriteLine(@"生成Haxe类型");
             Console.WriteLine(@"/t2hx:<HaxeCodePath>,<PackageName>");
             Console.WriteLine(@"生成Haxe JSON通讯类型");
@@ -856,6 +888,23 @@ namespace Yuki.SchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
+        public static void ObjectSchemaToCSharpVersionCode(String CsCodePath, String NamespaceName, IEnumerable<String> TypeNames)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToCSharpVersion(NamespaceName, TypeNames);
+            if (File.Exists(CsCodePath))
+            {
+                var Original = Txt.ReadFile(CsCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CsCodePath, Compiled);
+        }
+
         public static void ObjectSchemaToJavaCode(String JavaCodePath, String ClassName, String PackageName)
         {
             var ObjectSchema = GetObjectSchema();
@@ -928,6 +977,23 @@ namespace Yuki.SchemaManipulator
         {
             var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCppCompatible(NamespaceName, ClassName);
+            if (File.Exists(CppCodePath))
+            {
+                var Original = Txt.ReadFile(CppCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(CppCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToCppVersionCode(String CppCodePath, String NamespaceName, IEnumerable<String> TypeNames)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToCppVersion(NamespaceName, TypeNames);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);
