@@ -81,6 +81,7 @@
     <ClInclude Include="Streams.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldBinary.h" />
+    <ClInclude Include="WorldVersions.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseSystem\StringUtilities.cpp" />

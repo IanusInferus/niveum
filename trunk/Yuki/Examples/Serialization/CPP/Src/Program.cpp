@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 数据复制工具
-//  Version:     2018.07.05.
+//  Version:     2018.08.17.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -12,6 +12,7 @@
 #include "BaseSystem/StringUtilities.h"
 #include "World.h"
 #include "WorldBinary.h"
+#include "WorldVersions.h"
 #include "Streams.h"
 
 #include <exception>

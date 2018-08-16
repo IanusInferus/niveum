@@ -7,6 +7,7 @@
     <ClInclude Include="BaseSystem\StringUtilities.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
+    <ClInclude Include="WorldVersions.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
