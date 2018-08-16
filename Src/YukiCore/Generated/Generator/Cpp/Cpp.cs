@@ -700,6 +700,29 @@ namespace Yuki.ObjectSchema.Cpp
             }
             yield return "};";
         }
+        public IEnumerable<String> IEventPump(List<TypeDef> Commands)
+        {
+            yield return "class IEventPump";
+            yield return "{";
+            foreach (var c in Commands)
+            {
+                if (c.OnServerCommand)
+                {
+                    if (c.ServerCommand.Version != "") { continue; }
+                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Description = c.ServerCommand.Description;
+                    foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "std::function<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), ">)> "), GetEscapedIdentifier(Name)), ";"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                }
+            }
+            yield return "};";
+        }
         public IEnumerable<String> WrapNamespace(String NamespacePart, IEnumerable<String> Contents)
         {
             foreach (var _Line in Combine(Combine(Begin(), "namespace "), GetEscapedIdentifier(NamespacePart)))

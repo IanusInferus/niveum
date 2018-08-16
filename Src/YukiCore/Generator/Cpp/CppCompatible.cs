@@ -1,6 +1,6 @@
 ﻿//==========================================================================
 //
-//  File:        CSharpCompatible.cs
+//  File:        CppCompatible.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
 //  Version:     2018.08.16.
@@ -13,28 +13,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Yuki.ObjectSchema.CSharpCompatible
+namespace Yuki.ObjectSchema.CppCompatible
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpCompatible(this Schema Schema, String NamespaceName, String ClassName)
+        public static String CompileToCppCompatible(this Schema Schema, String NamespaceName, String ClassName)
         {
             var t = new Templates(Schema);
             var Lines = t.Main(Schema, NamespaceName, ClassName).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
-        public static String CompileToCSharpCompatible(this Schema Schema, String ClassName)
+        public static String CompileToCppCompatible(this Schema Schema, String ClassName)
         {
-            return CompileToCSharpCompatible(Schema, "", ClassName);
+            return CompileToCppCompatible(Schema, "", ClassName);
         }
     }
 
     public partial class Templates
     {
-        private CSharp.Templates Inner;
+        private Cpp.Templates Inner;
         public Templates(Schema Schema)
         {
-            this.Inner = new CSharp.Templates(Schema);
+            this.Inner = new Cpp.Templates(Schema);
         }
 
         public String GetEscapedIdentifier(String Identifier)
@@ -45,9 +45,9 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         {
             return Inner.GetEscapedStringLiteral(s);
         }
-        public String GetTypeString(TypeSpec Type)
+        public String GetTypeString(TypeSpec Type, Boolean ForceAsValue = false)
         {
-            return Inner.GetTypeString(Type);
+            return Inner.GetTypeString(Type, ForceAsValue);
         }
 
         public List<String> GetPrimitives(Schema Schema)
@@ -555,8 +555,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         {
             var nts = Nonversioned(ts);
             var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts);
-            var VersionedTypeString = GetTypeString(ts);
+            var TypeString = GetTypeString(nts, true);
+            var VersionedTypeString = GetTypeString(ts, true);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
             var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
@@ -571,8 +571,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         {
             var nts = Nonversioned(ts);
             var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts);
-            var VersionedTypeString = GetTypeString(ts);
+            var TypeString = GetTypeString(nts, true);
+            var VersionedTypeString = GetTypeString(ts, true);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
             var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
@@ -587,8 +587,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         {
             var nts = Nonversioned(ts);
             var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts);
-            var VersionedTypeString = GetTypeString(ts);
+            var TypeString = GetTypeString(nts, true);
+            var VersionedTypeString = GetTypeString(ts, true);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
             var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
@@ -603,8 +603,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         {
             var nts = Nonversioned(ts);
             var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts);
-            var VersionedTypeString = GetTypeString(ts);
+            var TypeString = GetTypeString(nts, true);
+            var VersionedTypeString = GetTypeString(ts, true);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
             var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
@@ -619,8 +619,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         {
             var nts = Nonversioned(ts);
             var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts);
-            var VersionedTypeString = GetTypeString(ts);
+            var TypeString = GetTypeString(nts, true);
+            var VersionedTypeString = GetTypeString(ts, true);
             var KeyTypeSpec = ts.GenericTypeSpec.ParameterValues[0];
             var ValueTypeSpec = ts.GenericTypeSpec.ParameterValues[1];
             var HeadKeyTypeSpec = nts.GenericTypeSpec.ParameterValues[0];
@@ -636,8 +636,8 @@ namespace Yuki.ObjectSchema.CSharpCompatible
         {
             var nts = Nonversioned(ts);
             var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts);
-            var VersionedTypeString = GetTypeString(ts);
+            var TypeString = GetTypeString(nts, true);
+            var VersionedTypeString = GetTypeString(ts, true);
             var KeyTypeSpec = ts.GenericTypeSpec.ParameterValues[0];
             var ValueTypeSpec = ts.GenericTypeSpec.ParameterValues[1];
             var HeadKeyTypeSpec = nts.GenericTypeSpec.ParameterValues[0];
@@ -876,6 +876,16 @@ namespace Yuki.ObjectSchema.CSharpCompatible
             }
 
             return l;
+        }
+
+        public List<String> WrapContents(String Namespace, List<String> Contents)
+        {
+            return Inner.WrapContents(Namespace, Contents);
+        }
+
+        public Boolean IsInclude(String s)
+        {
+            return Inner.IsInclude(s);
         }
     }
 }
