@@ -1,4 +1,8 @@
-﻿2018.08.15
+﻿2018.08.16
+Yuki.Core, Yuki.SchemaManipulator:
+增加C++兼容代码生成。
+
+2018.08.15
 Yuki.Core, Yuki.SchemaManipulator:
 增加非通讯Schema比较功能。
 增加C#非通讯兼容代码生成。
