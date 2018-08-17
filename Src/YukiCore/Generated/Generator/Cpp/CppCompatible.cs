@@ -164,7 +164,7 @@ namespace Yuki.ObjectSchema.CppCompatible
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = std::make_shared<class "), GetEscapedIdentifier(VersionedName)), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = std::make_shared<class "), GetEscapedIdentifier(VersionedName)), ">();"))
             {
                 yield return _Line;
             }
@@ -233,7 +233,7 @@ namespace Yuki.ObjectSchema.CppCompatible
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var ho = std::make_shared<class "), GetEscapedIdentifier(Name)), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto ho = std::make_shared<class "), GetEscapedIdentifier(Name)), ">();"))
             {
                 yield return _Line;
             }
@@ -297,7 +297,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_TaggedUnionFrom(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), TypeString), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
             {
                 yield return _Line;
             }
@@ -386,7 +386,7 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_TaggedUnionTo(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), VersionedTypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
             {
                 yield return _Line;
             }
@@ -507,15 +507,15 @@ namespace Yuki.ObjectSchema.CppCompatible
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var HeadRequest = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "RequestToHead"))), "(r);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto HeadRequest = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "RequestToHead"))), "(r);"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var HeadReply = "), GetEscapedIdentifier(Name)), "(HeadRequest);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto HeadReply = "), GetEscapedIdentifier(Name)), "(HeadRequest);"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var Reply = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ReplyFromHead"))), "(HeadReply);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto Reply = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ReplyFromHead"))), "(HeadReply);"))
             {
                 yield return _Line;
             }
@@ -529,7 +529,7 @@ namespace Yuki.ObjectSchema.CppCompatible
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var HeadRequest = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "RequestToHead"))), "(r);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto HeadRequest = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "RequestToHead"))), "(r);"))
             {
                 yield return _Line;
             }
@@ -699,7 +699,7 @@ namespace Yuki.ObjectSchema.CppCompatible
             {
                 yield return _Line;
             }
-            yield return "    for (auto he : ho)";
+            yield return "    for (auto he : *ho)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l->push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he));"))
             {
@@ -720,7 +720,7 @@ namespace Yuki.ObjectSchema.CppCompatible
             {
                 yield return _Line;
             }
-            yield return "    for (auto e : o)";
+            yield return "    for (auto e : *o)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l->push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e));"))
             {
@@ -741,7 +741,7 @@ namespace Yuki.ObjectSchema.CppCompatible
             {
                 yield return _Line;
             }
-            yield return "    for (auto he : ho)";
+            yield return "    for (auto he : *ho)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        s->insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he));"))
             {
@@ -762,7 +762,7 @@ namespace Yuki.ObjectSchema.CppCompatible
             {
                 yield return _Line;
             }
-            yield return "    for (auto e : o)";
+            yield return "    for (auto e : *o)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        s->insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e));"))
             {
