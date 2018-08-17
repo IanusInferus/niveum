@@ -501,8 +501,8 @@ namespace Yuki.ObjectSchema.CppCompatible
         {
             var nts = Nonversioned(ts);
             var VersionedName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts);
-            var VersionedTypeString = GetTypeString(ts);
+            var TypeString = GetTypeString(nts, true);
+            var VersionedTypeString = GetTypeString(ts, true);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
             var Alternatives = new List<VariableDef>
@@ -528,8 +528,8 @@ namespace Yuki.ObjectSchema.CppCompatible
         {
             var nts = Nonversioned(ts);
             var VersionedName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts);
-            var VersionedTypeString = GetTypeString(ts);
+            var TypeString = GetTypeString(nts, true);
+            var VersionedTypeString = GetTypeString(ts, true);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
             var Alternatives = new List<VariableDef>

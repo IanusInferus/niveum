@@ -69,5 +69,10 @@ namespace Yuki.ObjectSchema.CppVersion
 
             return l;
         }
+
+        public List<String> WrapContents(String Namespace, List<String> Contents)
+        {
+            return Inner.WrapContents(Namespace, Contents);
+        }
     }
 }

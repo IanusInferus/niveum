@@ -22,6 +22,19 @@
 #Template GetTypeVersion TypeFriendlyName:String Hash:UInt64
     constexpr static std::uint64_t [[${TypeFriendlyName}]] = 0x${Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)}ull;
 
+#Template WrapNamespace NamespacePart:String Contents:IEnumerable<String>
+    namespace [[${NamespacePart}]]
+    {
+        ${Contents}
+    }
+
+#Template WrapClass ClassName:String Contents:IEnumerable<String>
+    class [[${ClassName}]] final
+    {
+    public:
+        ${Contents}
+    };
+
 #Template Main Schema:Schema NamespaceName:String TypeNames:IEnumerable<String>
     //==========================================================================
     //
@@ -36,26 +49,6 @@
 
     $$
         var TypeVersions = GetTypeVersions(Schema, TypeNames);
-        if (NamespaceName == "")
-        {
-            ##
-                class Versions final
-                {
-                public:
-                    ${TypeVersions}
-                };
-        }
-        else
-        {
-            ##
-                namespace [[${NamespaceName}]]
-                {
-                    class Versions final
-                    {
-                    public:
-                        ${TypeVersions}
-                    };
-                }
-        }
+    ${WrapContents(NamespaceName, WrapClass("Versions", TypeVersions).ToList())}
 
 $End
