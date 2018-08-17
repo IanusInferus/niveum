@@ -6,6 +6,8 @@ Yuki.Core, Yuki.SchemaManipulator:
 Example:
 修正序列化示例中的Schema旧版本类型误引用新版本类型的错误。
 序列化示例中增加C#和C++类型版本代码生成。
+Yuki.Core:
+修正C++兼容代码生成和类型版本代码生成中的错误。
 
 2018.08.16
 Yuki.Core, Yuki.SchemaManipulator:

@@ -81,6 +81,33 @@ namespace Yuki.ObjectSchema.CppVersion
                 yield return _Line;
             }
         }
+        public IEnumerable<String> WrapNamespace(String NamespacePart, IEnumerable<String> Contents)
+        {
+            foreach (var _Line in Combine(Combine(Begin(), "namespace "), GetEscapedIdentifier(NamespacePart)))
+            {
+                yield return _Line;
+            }
+            yield return "{";
+            foreach (var _Line in Combine(Combine(Begin(), "    "), Contents))
+            {
+                yield return _Line;
+            }
+            yield return "}";
+        }
+        public IEnumerable<String> WrapClass(String ClassName, IEnumerable<String> Contents)
+        {
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "class "), GetEscapedIdentifier(ClassName)), " final"))
+            {
+                yield return _Line;
+            }
+            yield return "{";
+            yield return "public:";
+            foreach (var _Line in Combine(Combine(Begin(), "    "), Contents))
+            {
+                yield return _Line;
+            }
+            yield return "};";
+        }
         public IEnumerable<String> Main(Schema Schema, String NamespaceName, IEnumerable<String> TypeNames)
         {
             yield return "//==========================================================================";
@@ -95,33 +122,9 @@ namespace Yuki.ObjectSchema.CppVersion
             yield return "#include <cstdint>";
             yield return "";
             var TypeVersions = GetTypeVersions(Schema, TypeNames);
-            if (NamespaceName == "")
+            foreach (var _Line in Combine(Begin(), WrapContents(NamespaceName, WrapClass("Versions", TypeVersions).ToList())))
             {
-                yield return "class Versions final";
-                yield return "{";
-                yield return "public:";
-                foreach (var _Line in Combine(Combine(Begin(), "    "), TypeVersions))
-                {
-                    yield return _Line;
-                }
-                yield return "};";
-            }
-            else
-            {
-                foreach (var _Line in Combine(Combine(Begin(), "namespace "), GetEscapedIdentifier(NamespaceName)))
-                {
-                    yield return _Line;
-                }
-                yield return "{";
-                yield return "    class Versions final";
-                yield return "    {";
-                yield return "    public:";
-                foreach (var _Line in Combine(Combine(Begin(), "        "), TypeVersions))
-                {
-                    yield return _Line;
-                }
-                yield return "    };";
-                yield return "}";
+                yield return _Line;
             }
             yield return "";
         }
