@@ -96,7 +96,7 @@ namespace Yuki.ExpressionSchema.CppBinaryLoader
                 yield return _Line;
             }
             yield return "        std::unordered_map<std::wstring, std::shared_ptr<Yuki::ExpressionSchema::ModuleDef>> _d_;";
-            yield return "        for (auto m : *a->Modules)";
+            yield return "        for (auto m : a->Modules)";
             yield return "        {";
             yield return "            _d_[m->Name] = m;";
             yield return "        }";
@@ -140,7 +140,7 @@ namespace Yuki.ExpressionSchema.CppBinaryLoader
             }
             yield return "    {";
             yield return "        std::unordered_map<std::wstring, std::shared_ptr<Yuki::ExpressionSchema::Expr>> fd;";
-            yield return "        for (auto _f_ : *md->Functions)";
+            yield return "        for (auto _f_ : md->Functions)";
             yield return "        {";
             yield return "            fd[_f_->Name] = _f_->Body;";
             yield return "        }";

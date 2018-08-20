@@ -138,6 +138,144 @@ namespace Yuki.ObjectSchema.CppCompatible
             yield return "    return ep;";
             yield return "}";
         }
+        public IEnumerable<String> Translator_AliasFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, Boolean InitialHasError)
+        {
+            var d = HeadFields.ToDictionary(f => f.Name);
+            var HasError = InitialHasError || !Fields.All(f => IsNullType(f.Type) || (d.ContainsKey(f.Name) && (IsSameType(f.Type, d[f.Name].Type, false) || IsSameType(f.Type, d[f.Name].Type, true))));
+            if (HasError)
+            {
+                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_AliasFrom(Name, VersionedName, Fields, HeadFields)))
+                {
+                    yield return _Line;
+                }
+            }
+            else
+            {
+                foreach (var _Line in Combine(Begin(), Translator_AliasFrom(Name, VersionedName, Fields, HeadFields)))
+                {
+                    yield return _Line;
+                }
+            }
+        }
+        public IEnumerable<String> Translator_AliasFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields)
+        {
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "class "), GetEscapedIdentifier(VersionedName)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "(class "), GetEscapedIdentifier(Name)), " ho)"))
+            {
+                yield return _Line;
+            }
+            yield return "{";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    class "), GetEscapedIdentifier(VersionedName)), " o;"))
+            {
+                yield return _Line;
+            }
+            var d = HeadFields.ToDictionary(f => f.Name);
+            foreach (var f in Fields)
+            {
+                if (IsNullType(f.Type))
+                {
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(f.Name)), " = Unit();"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                    continue;
+                }
+                if (d.ContainsKey(f.Name))
+                {
+                    var fHead = d[f.Name];
+                    if (IsSameType(f.Type, fHead.Type, false))
+                    {
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(f.Name)), " = ho."), GetEscapedIdentifier(f.Name)), ";"))
+                        {
+                            yield return _Line == "" ? "" : "    " + _Line;
+                        }
+                        continue;
+                    }
+                    else if (IsSameType(f.Type, fHead.Type, true))
+                    {
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.TypeFriendlyName()), "FromHead"))), "(ho."), GetEscapedIdentifier(f.Name)), ");"))
+                        {
+                            yield return _Line == "" ? "" : "    " + _Line;
+                        }
+                        continue;
+                    }
+                }
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(f.Name)), " = ho."), GetEscapedIdentifier(f.Name)), ";"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
+            }
+            yield return "    return o;";
+            yield return "}";
+        }
+        public IEnumerable<String> Translator_AliasTo(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, Boolean InitialHasError)
+        {
+            var d = Fields.ToDictionary(f => f.Name);
+            var HasError = InitialHasError || !HeadFields.All(fHead => IsNullType(fHead.Type) || (d.ContainsKey(fHead.Name) && (IsSameType(d[fHead.Name].Type, fHead.Type, false) || IsSameType(d[fHead.Name].Type, fHead.Type, true))));
+            if (HasError)
+            {
+                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_AliasTo(Name, VersionedName, Fields, HeadFields)))
+                {
+                    yield return _Line;
+                }
+            }
+            else
+            {
+                foreach (var _Line in Combine(Begin(), Translator_AliasTo(Name, VersionedName, Fields, HeadFields)))
+                {
+                    yield return _Line;
+                }
+            }
+        }
+        public IEnumerable<String> Translator_AliasTo(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields)
+        {
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "class "), GetEscapedIdentifier(Name)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "(class "), GetEscapedIdentifier(VersionedName)), " o)"))
+            {
+                yield return _Line;
+            }
+            yield return "{";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    class "), GetEscapedIdentifier(Name)), " ho;"))
+            {
+                yield return _Line;
+            }
+            var d = Fields.ToDictionary(f => f.Name);
+            foreach (var fHead in HeadFields)
+            {
+                if (IsNullType(fHead.Type))
+                {
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "ho."), GetEscapedIdentifier(fHead.Name)), " = Unit();"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                    continue;
+                }
+                if (d.ContainsKey(fHead.Name))
+                {
+                    var f = d[fHead.Name];
+                    if (IsSameType(f.Type, fHead.Type, false))
+                    {
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ho."), GetEscapedIdentifier(f.Name)), " = o."), GetEscapedIdentifier(f.Name)), ";"))
+                        {
+                            yield return _Line == "" ? "" : "    " + _Line;
+                        }
+                        continue;
+                    }
+                    else if (IsSameType(f.Type, fHead.Type, true))
+                    {
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ho."), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.TypeFriendlyName()), "ToHead"))), "(o."), GetEscapedIdentifier(f.Name)), ");"))
+                        {
+                            yield return _Line == "" ? "" : "    " + _Line;
+                        }
+                        continue;
+                    }
+                }
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ho."), GetEscapedIdentifier(fHead.Name)), " = o."), GetEscapedIdentifier(fHead.Name)), ";"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
+            }
+            yield return "    return ho;";
+            yield return "}";
+        }
         public IEnumerable<String> Translator_RecordFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, Boolean InitialHasError)
         {
             var d = HeadFields.ToDictionary(f => f.Name);
@@ -199,7 +337,7 @@ namespace Yuki.ObjectSchema.CppCompatible
                         continue;
                     }
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(f.Name)), " = ho."), GetEscapedIdentifier(f.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "o->"), GetEscapedIdentifier(f.Name)), " = ho->"), GetEscapedIdentifier(f.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -690,18 +828,18 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_ListFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), VersionedTypeString), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), VersionedTypeString), " l;"))
             {
                 yield return _Line;
             }
-            yield return "    for (auto he : *ho)";
+            yield return "    for (auto he : ho)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l->push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he));"))
             {
                 yield return _Line;
             }
@@ -711,18 +849,18 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_ListTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto l = std::make_shared<"), TypeString), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), TypeString), " l;"))
             {
                 yield return _Line;
             }
-            yield return "    for (auto e : *o)";
+            yield return "    for (auto e : o)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l->push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e));"))
             {
                 yield return _Line;
             }
@@ -732,18 +870,18 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_SetFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto s = std::make_shared<"), VersionedTypeString), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), VersionedTypeString), " s;"))
             {
                 yield return _Line;
             }
-            yield return "    for (auto he : *ho)";
+            yield return "    for (auto he : ho)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        s->insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        s.insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he));"))
             {
                 yield return _Line;
             }
@@ -753,18 +891,18 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_SetTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto s = std::make_shared<"), TypeString), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), TypeString), " s;"))
             {
                 yield return _Line;
             }
-            yield return "    for (auto e : *o)";
+            yield return "    for (auto e : o)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        s->insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        s.insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e));"))
             {
                 yield return _Line;
             }
@@ -774,16 +912,16 @@ namespace Yuki.ObjectSchema.CppCompatible
         }
         public IEnumerable<String> Translator_MapFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = std::make_shared<"), VersionedTypeString), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), VersionedTypeString), " o;"))
             {
                 yield return _Line;
             }
-            yield return "    for (auto hp : *ho)";
+            yield return "    for (auto hp : ho)";
             yield return "    {";
             if (IsSameType(KeyTypeSpec, HeadKeyTypeSpec, false))
             {
@@ -807,23 +945,23 @@ namespace Yuki.ObjectSchema.CppCompatible
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
             }
-            yield return "        (*o)[Key] = Value;";
+            yield return "        o[Key] = Value;";
             yield return "    }";
             yield return "    return o;";
             yield return "}";
         }
         public IEnumerable<String> Translator_MapTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto ho = std::make_shared<"), TypeString), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), TypeString), " ho;"))
             {
                 yield return _Line;
             }
-            yield return "    for (auto p : *o)";
+            yield return "    for (auto p : o)";
             yield return "    {";
             if (IsSameType(KeyTypeSpec, HeadKeyTypeSpec, false))
             {
@@ -847,7 +985,7 @@ namespace Yuki.ObjectSchema.CppCompatible
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
             }
-            yield return "        (*ho)[Key] = Value;";
+            yield return "        ho[Key] = Value;";
             yield return "    }";
             yield return "    return ho;";
             yield return "}";
