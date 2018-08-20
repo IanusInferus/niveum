@@ -87,8 +87,8 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "            return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);";
             yield return "        }";
             yield return "    };";
-            yield return "    std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<std::shared_ptr<std::vector<std::uint8_t>>(std::shared_ptr<IApplicationServer>, std::shared_ptr<std::vector<std::uint8_t>>)>, Hash> ClientCommands;";
-            yield return "    std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<void(std::shared_ptr<IApplicationServer>, std::shared_ptr<std::vector<std::uint8_t>>, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)>, std::function<void(const std::exception &)>)>, Hash> AsyncClientCommands;";
+            yield return "    std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<std::vector<std::uint8_t>(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>)>, Hash> ClientCommands;";
+            yield return "    std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<void(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>, std::function<void(std::vector<std::uint8_t>)>, std::function<void(const std::exception &)>)>, Hash> AsyncClientCommands;";
             yield return "";
             yield return "public:";
             yield return "    BinarySerializationServer()";
@@ -102,7 +102,7 @@ namespace Yuki.ObjectSchema.CppBinary
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands[std::pair<std::wstring, std::uint32_t>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::shared_ptr<std::vector<std::uint8_t>> p, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands[std::pair<std::wstring, std::uint32_t>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -133,7 +133,7 @@ namespace Yuki.ObjectSchema.CppBinary
                     }
                     else
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ClientCommands[std::pair<std::wstring, std::uint32_t>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::shared_ptr<std::vector<std::uint8_t>> p) -> std::shared_ptr<std::vector<std::uint8_t>>"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ClientCommands[std::pair<std::wstring, std::uint32_t>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p) -> std::vector<std::uint8_t>"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -180,12 +180,12 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "        return AsyncClientCommands.count(std::pair<String, std::uint32_t>(CommandName, CommandHash)) > 0;";
             yield return "    }";
             yield return "";
-            yield return "    std::shared_ptr<std::vector<std::uint8_t>> ExecuteCommand(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)";
+            yield return "    std::vector<std::uint8_t> ExecuteCommand(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)";
             yield return "    {";
             yield return "        auto cmd = ClientCommands[std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash)];";
             yield return "        return cmd(s, Parameters);";
             yield return "    }";
-            yield return "    void ExecuteCommandAsync(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> Callback, std::function<void(const std::exception &)> OnFailure)";
+            yield return "    void ExecuteCommandAsync(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure)";
             yield return "    {";
             yield return "        auto cmd = AsyncClientCommands[std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash)];";
             yield return "        cmd(s, Parameters, Callback, OnFailure);";
@@ -223,8 +223,8 @@ namespace Yuki.ObjectSchema.CppBinary
             }
             yield return "    }";
             yield return "";
-            yield return "    /// (std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters) -> void";
-            yield return "    typedef std::function<void(std::wstring, std::uint32_t, std::shared_ptr<std::vector<std::uint8_t>>)> ServerEventDelegate;";
+            yield return "    /// (std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) -> void";
+            yield return "    typedef std::function<void(std::wstring, std::uint32_t, std::vector<std::uint8_t>)> ServerEventDelegate;";
             yield return "    ServerEventDelegate ServerEvent;";
             yield return "};";
         }
@@ -235,7 +235,7 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "public:";
             yield return "    virtual ~IBinarySender() {}";
             yield return "";
-            yield return "    virtual void Send(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters) = 0;";
+            yield return "    virtual void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) = 0;";
             yield return "};";
         }
         public IEnumerable<String> BinarySerializationClient(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator)
@@ -250,8 +250,8 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "            return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);";
             yield return "        }";
             yield return "    };";
-            yield return "    typedef std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> ClientCommandCallback;";
-            yield return "    typedef std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> ServerCommandCallback;";
+            yield return "    typedef std::function<void(std::vector<std::uint8_t>)> ClientCommandCallback;";
+            yield return "    typedef std::function<void(std::vector<std::uint8_t>)> ServerCommandCallback;";
             yield return "";
             yield return "    class ApplicationClient : public IApplicationClient";
             yield return "    {";
@@ -307,7 +307,7 @@ namespace Yuki.ObjectSchema.CppBinary
                     }
                     yield return "        " + "    bas.SetPosition(0);";
                     yield return "        " + "    auto Request = bas.ReadBytes(bas.GetLength());";
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ", [=](std::shared_ptr<std::vector<std::uint8_t>> Parameters)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ", [=](std::vector<std::uint8_t> Parameters)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -356,7 +356,7 @@ namespace Yuki.ObjectSchema.CppBinary
                     var CommandName = c.ServerCommand.Name;
                     var Name = c.ServerCommand.TypeFriendlyName();
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ServerCommands[std::pair<String, std::uint32_t>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ")] = [&](std::shared_ptr<std::vector<std::uint8_t>> Parameters)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ServerCommands[std::pair<String, std::uint32_t>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ")] = [&](std::vector<std::uint8_t> Parameters)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -388,7 +388,7 @@ namespace Yuki.ObjectSchema.CppBinary
             yield return "        return c;";
             yield return "    }";
             yield return "";
-            yield return "    void HandleResult(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)";
+            yield return "    void HandleResult(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)";
             yield return "    {";
             yield return "        if (c->ClientCommandCallbacks.count(CommandName) > 0)";
             yield return "        {";

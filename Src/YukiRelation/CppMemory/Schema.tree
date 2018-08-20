@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C++ Memory代码模板数据
-      Version:     2017.07.18.
+      Version:     2018.08.20.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -17,13 +17,13 @@ ObjectSchemaTemplate
     Templates
         Template
             Name NamespaceImplementation
-            //Parameters: ${NamespaceName}, ${Contents}
+            //Parameters: ${EntityNamespaceName}, ${Contents}
             Value
                 $String
                     namespace _Impl
                     {
                         using namespace cpplinq;
-                        using namespace ${EntityNamespaceName};
+                        using namespace ::${EntityNamespaceName};
                         ${Contents}
                     }
                     typedef _Impl::MemoryDataAccess MemoryDataAccess;
@@ -54,7 +54,7 @@ ObjectSchemaTemplate
                         std::shared_ptr<MemoryDataTables> Tables;
                         std::shared_ptr<MemoryDataIndices> Indices;
 
-                        MemoryDataAccess(std::shared_ptr<std::vector<std::uint8_t>> Buffer)
+                        MemoryDataAccess(std::vector<std::uint8_t> Buffer)
                         {
                             {
                                 ByteArrayStream bas;
@@ -64,7 +64,7 @@ ObjectSchemaTemplate
                                 auto Hash = bas.ReadUInt64();
                                 if (Hash != 0x${Hash}) { throw std::logic_error("InvalidOperation"); }
                                 auto SchemaLength = bas.ReadInt64();
-                                bas.SetPosition(bas.GetPosition() + SchemaLength);
+                                bas.SetPosition(static_cast<std::size_t>(bas.GetPosition() + SchemaLength));
                                 bas.ReadInt64();
                                 Tables = BinaryTranslator::MemoryDataTablesFromBinary(bas);
                             }
@@ -73,7 +73,7 @@ ObjectSchemaTemplate
                         }
 
                     public:
-                        static inline std::shared_ptr<IDataAccess> Create(std::shared_ptr<std::vector<std::uint8_t>> Buffer)
+                        static inline std::shared_ptr<IDataAccess> Create(std::vector<std::uint8_t> Buffer)
                         {
                             return std::static_pointer_cast<IDataAccess>(std::make_shared<MemoryDataAccess>(Buffer));
                         }
@@ -104,10 +104,12 @@ ObjectSchemaTemplate
                     {
                         Indices->[[${IndexName}]] = std::make_shared<${IndexType}>();
                         auto &Table = *Indices->[[${IndexName}]];
+                        int k = 0;
                         for (auto &&r : Tables->[[${EntityName}]])
                         {
                             ${Fetches}
                             ${Add}
+                            k += 1;
                         }
                     }
         Template
@@ -220,7 +222,7 @@ ObjectSchemaTemplate
                 $String
                     auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
-                    auto _c_ = from([[_Index${ByIndex}_]]${Filters})>>select([&](Int _i_) { return this->Tables->[[${EntityName}]][_i_]; })${OrderBys}>>count();
+                    auto _c_ = from([[_Index${ByIndex}_]])${Filters}>>count();
                     return _c_;
         Template
             Name SelectLock_Count_WhenEmpty

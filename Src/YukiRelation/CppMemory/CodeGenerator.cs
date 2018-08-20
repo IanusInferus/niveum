@@ -103,7 +103,7 @@ namespace Yuki.RelationSchema.CppMemory
                 }
                 else
                 {
-                    Contents = GetTemplate("NamespaceImplementation").Substitute("EntityNamespaceName", EntityNamespaceName).Substitute("Contents", Contents);
+                    Contents = GetTemplate("NamespaceImplementation").Substitute("EntityNamespaceName", EntityNamespaceName.Replace(".", "::")).Substitute("Contents", Contents);
                 }
                 Contents = WrapContents(NamespaceName, Contents);
                 return EvaluateEscapedIdentifiers(GetMain(Includes, Primitives, new List<String> { }, new List<String> { }, Contents)).Select(Line => Line.TrimEnd(' ')).ToList();
@@ -184,7 +184,7 @@ namespace Yuki.RelationSchema.CppMemory
                     var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(k => k.Columns.Select(c => c.Name).ToList()).Distinct(new StringArrayComparer()).ToList();
                     foreach (var k in NondirectionalKeys)
                     {
-                        var IndexName = e.Name + "By" + String.Join("And", k);
+                        var IndexName = e.Name + GetByIndex(k);
                         var IndexType = GetIndexType(e, k);
                         l.AddRange(GetTemplate("DataAccessBase_Index").Substitute("IndexName", IndexName).Substitute("IndexType", IndexType));
                     }
@@ -203,28 +203,36 @@ namespace Yuki.RelationSchema.CppMemory
                     var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(k => k.Columns.Select(c => c.Name).ToList()).Distinct(new StringArrayComparer()).ToList();
                     foreach (var k in NondirectionalKeys)
                     {
-                        var IndexName = e.Name + "By" + String.Join("And", k);
+                        var IndexName = e.Name + GetByIndex(k);
                         var IndexType = GetIndexType(e, k, true);
                         var Fetches = new List<String>();
                         for (var n = 0; n < k.Count; n += 1)
                         {
-                            var ParentByIndex = "";
-                            if (n > 0)
-                            {
-                                ParentByIndex = "By" + String.Join("And", k.Take(n));
-                            }
+                            var ParentByIndex = GetByIndex(k.Take(n));
                             var RemainIndexType = GetIndexType(e, k.Skip(n + 1).ToList(), true);
                             var Column = k[n];
-                            var ByIndex = "By" + String.Join("And", k.Take(n + 1));
+                            var ByIndex = GetByIndex(k.Take(n + 1));
                             Fetches.AddRange(GetTemplate("DataAccessBase_Generate_Fetch").Substitute("ParentByIndex", ParentByIndex).Substitute("RemainIndexType", RemainIndexType).Substitute("Column", Column).Substitute("ByIndex", ByIndex));
                         }
-                        var Add = GetTemplate("DataAccessBase_Generate_Add").Substitute("ByIndex", "By" + String.Join("And", k));
+                        var Add = GetTemplate("DataAccessBase_Generate_Add").Substitute("ByIndex", GetByIndex(k));
                         l.AddRange(GetTemplate("DataAccessBase_Generate").Substitute("EntityName", e.Name).Substitute("IndexName", IndexName).Substitute("IndexType", IndexType).Substitute("Fetches", Fetches).Substitute("Add", Add));
                     }
                 }
                 return l;
             }
 
+            public static String GetByIndex(IEnumerable<String> KeyColumns)
+            {
+                var l = KeyColumns.ToList();
+                if (l.Count == 0)
+                {
+                    return "";
+                }
+                else
+                {
+                    return "By" + String.Join("And", l);
+                }
+            }
             public static String GetOrderBy(QueryDef q, String EntityName)
             {
                 var l = new List<String>();
@@ -338,17 +346,13 @@ namespace Yuki.RelationSchema.CppMemory
                             }
                             if (k == null) { throw new InvalidOperationException(); }
                         }
-                        var IndexName = e.Name + "By" + String.Join("And", k);
+                        var IndexName = e.Name + GetByIndex(k);
                         var Fetches = new List<String>();
                         for (var n = 0; n < Key.Count; n += 1)
                         {
-                            var ParentByIndex = "";
-                            if (n > 0)
-                            {
-                                ParentByIndex = "By" + String.Join("And", Key.Take(n));
-                            }
+                            var ParentByIndex = GetByIndex(Key.Take(n));
                             var Column = GetEscapedIdentifier(k[n]);
-                            var ByIndex = "By" + String.Join("And", Key.Take(n + 1));
+                            var ByIndex = GetByIndex(Key.Take(n + 1));
                             Fetches.AddRange(GetTemplate("SelectMany_Fetch").Substitute("EntityName", e.Name).Substitute("ParentByIndex", ParentByIndex).Substitute("Column", Column).Substitute("ByIndex", ByIndex).Substitute("WhenEmpty", WhenEmpty));
                         }
                         var Filters = new List<String>();
@@ -356,7 +360,7 @@ namespace Yuki.RelationSchema.CppMemory
                         {
                             Filters.Add(@">>select_many([](" + GetIndexType(e, k.Skip(n).ToList(), true) + @"::value_type _d_) { return from(*std::get<1>(_d_)); })");
                         }
-                        Content = Content.Substitute("EntityName", e.Name).Substitute("IndexName", IndexName).Substitute("Fetches", Fetches).Substitute("ByIndex", "By" + String.Join("And", Key.ToArray())).Substitute("Filters", String.Join("", Filters.ToArray()));
+                        Content = Content.Substitute("EntityName", e.Name).Substitute("IndexName", IndexName).Substitute("Fetches", Fetches).Substitute("ByIndex", GetByIndex(Key)).Substitute("Filters", String.Join("", Filters.ToArray()));
                     }
                 }
                 else if (q.Verb.OnInsert || q.Verb.OnUpdate || q.Verb.OnUpsert || q.Verb.OnDelete)
