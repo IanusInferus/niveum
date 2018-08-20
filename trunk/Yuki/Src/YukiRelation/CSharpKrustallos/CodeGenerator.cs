@@ -198,7 +198,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Keys = KeysDict[e.Name];
                     foreach (var k in Keys)
                     {
-                        var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        var IndexName = e.Name + GetByIndex(k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var IndexType = "ImmutableSortedDictionary<Key, " + e.Name + ">";
                         l.AddRange(GetTemplate("Data_IndexDefinition").Substitute("IndexName", IndexName).Substitute("IndexType", IndexType));
                     }
@@ -223,7 +223,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     foreach (var k in Keys)
                     {
                         var Index = String.Join(", ", (new List<String> { e.Name }).Concat(k.Columns.Select(c => c.IsDescending ? c.Name + "-" : c.Name)).Select(v => @"""{0}""".Formats(v)));
-                        var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        var IndexName = e.Name + GetByIndex(k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var IndexType = "ImmutableSortedDictionary<Key, " + e.Name + ">";
                         var KeyComparer = "new KeyComparer({0})".Formats(String.Join(", ", k.Columns.Select(c => "ConcurrentComparer.AsObjectComparer(ConcurrentComparer.CreateDefault<{0}>({1}))".Formats(GetTypeString(d[c.Name].Type), c.IsDescending ? "true" : "false"))));
                         var CanBePartitioned = KeyCanBePartitioned[k];
@@ -304,6 +304,18 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 return String.Join("", l.ToArray());
             }
 
+            public static String GetByIndex(IEnumerable<String> KeyColumns)
+            {
+                var l = KeyColumns.ToList();
+                if (l.Count == 0)
+                {
+                    return "";
+                }
+                else
+                {
+                    return "By" + String.Join("And", l);
+                }
+            }
             public List<String> GetQuery(QueryDef q)
             {
                 var e = TypeDict[q.EntityName].Entity;
@@ -375,7 +387,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         }
                         LockingStatement = GetTemplate("Lock_LockingStatement").Substitute("EntityNameAndParameterAndValues", String.Join(", ", EntityNameAndParameterAndValues.ToArray()));
                     }
-                    var IndexName = e.Name + "By" + String.Join("And", SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                    var IndexName = e.Name + GetByIndex(SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                     var Filters = GetFilters(q, SearchKey.Columns.Count);
                     if (CanBePartitioned && (By.Count == 0))
                     {
@@ -422,7 +434,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Keys = KeysDict[e.Name];
                     foreach (var k in Keys)
                     {
-                        var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        var IndexName = e.Name + GetByIndex(k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var PartitionIndex = KeyCanBePartitioned[k] ? "v.[[" + k.Columns.First().Name + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
                         var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
                         UpdateStatements.AddRange(GetTemplate("Insert_UpdateStatement").Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("PartitionIndex", PartitionIndex).Substitute("Key", Key));
@@ -475,14 +487,14 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Keys = KeysDict[e.Name];
                     foreach (var k in Keys)
                     {
-                        var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        var IndexName = e.Name + GetByIndex(k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var PartitionIndex = KeyCanBePartitioned[k] ? "_v_.[[" + k.Columns.First().Name + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
                         var Key = String.Join(", ", k.Columns.Select(c => "_v_.[[{0}]]".Formats(c.Name)));
                         DeleteStatements.AddRange(GetTemplate("Delete_UpdateStatement_ManyRange").Substitute("IndexName", IndexName).Substitute("Function", "Remove").Substitute("PartitionIndex", PartitionIndex).Substitute("Key", Key));
                         UpdateStatements.AddRange(GetTemplate("Insert_UpdateStatement").Substitute("IndexName", IndexName).Substitute("Function", "Add").Substitute("PartitionIndex", PartitionIndex).Substitute("Key", Key));
                     }
                     {
-                        var IndexName = e.Name + "By" + String.Join("And", SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        var IndexName = e.Name + GetByIndex(SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var PartitionIndex = KeyCanBePartitioned[SearchKey] ? "v.[[" + By.First() + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
                         var Filters = GetFilters(new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = q.Numeral, By = By, OrderBy = q.OrderBy }, SearchKey.Columns.Count, true);
                         Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("PartitionIndex", PartitionIndex).Substitute("Filters", Filters).Substitute("DeleteStatements", DeleteStatements).Substitute("UpdateStatements", UpdateStatements);
@@ -528,7 +540,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Keys = KeysDict[e.Name];
                     foreach (var k in Keys)
                     {
-                        var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        var IndexName = e.Name + GetByIndex(k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         if (q.Numeral.OnOptional || q.Numeral.OnOne)
                         {
                             var PartitionIndex = KeyCanBePartitioned[k] ? "_v_.[[" + k.Columns.First().Name + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
@@ -559,7 +571,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         }
                     }
                     {
-                        var IndexName = e.Name + "By" + String.Join("And", SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        var IndexName = e.Name + GetByIndex(SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var Filters = GetFilters(q, SearchKey.Columns.Count);
                         if (CanBePartitioned && (By.Count == 0))
                         {
@@ -592,7 +604,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     var Updates = new List<String>();
                     foreach (var k in Keys)
                     {
-                        var IndexName = e.Name + "By" + String.Join("And", k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                        var IndexName = e.Name + GetByIndex(k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                         var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
                         var FirstColumnName = k.Columns.First().Name;
                         var FirstColumnType = d[FirstColumnName].Type;
@@ -616,7 +628,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 var l = new List<String>();
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
                 {
-                    var IndexName = e.Name + "By" + String.Join("And", e.PrimaryKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
+                    var IndexName = e.Name + GetByIndex(e.PrimaryKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
                     l.AddRange(GetTemplate("LoadSave_Save").Substitute("IndexName", IndexName));
                 }
                 return l;

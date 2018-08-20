@@ -151,7 +151,7 @@ namespace Yuki.RelationSchema.CSharpMemory
                     var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(k => k.Columns.Select(c => c.Name).ToList()).Distinct(new StringArrayComparer()).ToList();
                     foreach (var k in NondirectionalKeys)
                     {
-                        var IndexName = e.Name + "By" + String.Join("And", k);
+                        var IndexName = e.Name + GetByIndex(k);
                         var IndexType = GetIndexType(e, k);
                         l.AddRange(GetTemplate("DataAccessBase_Index").Substitute("IndexName", IndexName).Substitute("IndexType", IndexType));
                     }
@@ -178,23 +178,19 @@ namespace Yuki.RelationSchema.CSharpMemory
                             if (h.Contains(Key)) { continue; }
                             h.Add(Key);
                             var Remain = k.Skip(j).ToList();
-                            var PartialIndexName = "By" + String.Join("And", Key);
-                            var IndexName = e.Name + "By" + String.Join("And", k);
+                            var PartialIndexName = GetByIndex(Key);
+                            var IndexName = e.Name + GetByIndex(k);
                             var ParameterDeclarations = String.Join(", ", Key.Select(c => "{0} {1}".Formats(GetEscapedIdentifier(GetTypeString(d[c].Type)), GetEscapedIdentifier(c))).ToArray());
                             var Fetches = new List<String>();
                             for (var n = 0; n < Key.Count; n += 1)
                             {
-                                var ParentByIndex = "";
-                                if (n > 0)
-                                {
-                                    ParentByIndex = "By" + String.Join("And", Key.Take(n).ToArray());
-                                }
+                                var ParentByIndex = GetByIndex(Key.Take(n));
                                 var Column = GetEscapedIdentifier(k[n]);
-                                var ByIndex = "By" + String.Join("And", Key.Take(n + 1).ToArray());
+                                var ByIndex = GetByIndex(Key.Take(n + 1));
                                 Fetches.AddRange(GetTemplate("DataAccessBase_SelectMany_Fetch").Substitute("EntityName", e.Name).Substitute("ParentByIndex", ParentByIndex).Substitute("Column", Column).Substitute("ByIndex", ByIndex));
                             }
                             var Filters = String.Join("", Remain.Select(c => ".SelectMany(_d_ => _d_.Value)").ToArray());
-                            l.AddRange(GetTemplate("DataAccessBase_SelectMany").Substitute("EntityName", e.Name).Substitute("PartialIndexName", PartialIndexName).Substitute("IndexName", IndexName).Substitute("ParameterDeclarations", ParameterDeclarations).Substitute("Fetches", Fetches).Substitute("ByIndex", "By" + String.Join("And", Key.ToArray())).Substitute("Filters", Filters));
+                            l.AddRange(GetTemplate("DataAccessBase_SelectMany").Substitute("EntityName", e.Name).Substitute("PartialIndexName", PartialIndexName).Substitute("IndexName", IndexName).Substitute("ParameterDeclarations", ParameterDeclarations).Substitute("Fetches", Fetches).Substitute("ByIndex", GetByIndex(Key)).Substitute("Filters", Filters));
                         }
                     }
                 }
@@ -212,24 +208,20 @@ namespace Yuki.RelationSchema.CSharpMemory
                     var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(k => k.Columns.Select(c => c.Name).ToList()).Distinct(new StringArrayComparer()).ToList();
                     foreach (var k in NondirectionalKeys)
                     {
-                        var IndexName = e.Name + "By" + String.Join("And", k);
+                        var IndexName = e.Name + GetByIndex(k);
                         var IndexType = GetIndexType(e, k);
                         var Fetches = new List<String>();
                         for (var n = 0; n < k.Count; n += 1)
                         {
-                            var ParentByIndex = "";
-                            if (n > 0)
-                            {
-                                ParentByIndex = "By" + String.Join("And", k.Take(n).ToArray());
-                            }
+                            var ParentByIndex = GetByIndex(k.Take(n));
                             var RemainIndexType = GetIndexType(e, k.Skip(n + 1).ToList());
                             var NextColumnConstructorParameters = "";
                             if (n + 1 < k.Count) { NextColumnConstructorParameters = rd[k[n + 1]].Type.OnOptional ? "new OptionalComparer<" + GetEscapedIdentifier(GetTypeString(d[k[n + 1]].Type.GenericTypeSpec.ParameterValues.Single())) + ">()" : ""; }
                             var Column = k[n];
-                            var ByIndex = "By" + String.Join("And", k.Take(n + 1).ToArray());
+                            var ByIndex = GetByIndex(k.Take(n + 1));
                             Fetches.AddRange(GetTemplate("DataAccessBase_Generate_Fetch").Substitute("ParentByIndex", ParentByIndex).Substitute("RemainIndexType", RemainIndexType).Substitute("NextColumnConstructorParameters", NextColumnConstructorParameters).Substitute("Column", Column).Substitute("ByIndex", ByIndex));
                         }
-                        var Add = GetTemplate("DataAccessBase_Generate_Add").Substitute("ByIndex", "By" + String.Join("And", k));
+                        var Add = GetTemplate("DataAccessBase_Generate_Add").Substitute("ByIndex", GetByIndex(k));
                         var FirstColumnConstructorParameters = rd[k[0]].Type.OnOptional ? "new OptionalComparer<" + GetEscapedIdentifier(GetTypeString(d[k[0]].Type.GenericTypeSpec.ParameterValues.Single())) + ">()" : "";
                         l.AddRange(GetTemplate("DataAccessBase_Generate").Substitute("EntityName", e.Name).Substitute("IndexName", IndexName).Substitute("IndexType", IndexType).Substitute("FirstColumnConstructorParameters", FirstColumnConstructorParameters).Substitute("Fetches", Fetches).Substitute("Add", Add));
                     }
@@ -237,6 +229,18 @@ namespace Yuki.RelationSchema.CSharpMemory
                 return l;
             }
 
+            public static String GetByIndex(IEnumerable<String> KeyColumns)
+            {
+                var l = KeyColumns.ToList();
+                if (l.Count == 0)
+                {
+                    return "";
+                }
+                else
+                {
+                    return "By" + String.Join("And", l);
+                }
+            }
             public static String GetOrderBy(QueryDef q)
             {
                 var l = new List<String>();
