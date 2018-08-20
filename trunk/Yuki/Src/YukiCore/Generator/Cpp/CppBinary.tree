@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++二进制通讯模板
-      Version:     2017.07.19.
+      Version:     2018.08.20.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -310,7 +310,7 @@
     {
     public:
         virtual std::uint8_t ReadByte() = 0;
-        virtual std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(std::size_t Size) = 0;
+        virtual std::vector<std::uint8_t> ReadBytes(std::size_t Size) = 0;
 
         Unit ReadUnit()
         {
@@ -419,7 +419,7 @@
     {
     public:
         virtual void WriteByte(std::uint8_t b) = 0;
-        virtual void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l) = 0;
+        virtual void WriteBytes(const std::vector<std::uint8_t> & l) = 0;
 
         void WriteUnit(Unit v)
         {
@@ -538,13 +538,13 @@
             Position += 1;
             return b;
         }
-        std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(std::size_t Size)
+        std::vector<std::uint8_t> ReadBytes(std::size_t Size)
         {
             if (Position + Size > Buffer.size()) { throw std::out_of_range(""); }
-            auto l = std::make_shared<std::vector<std::uint8_t>>();
-            l->resize(Size, 0);
+            std::vector<std::uint8_t> l;
+            l.resize(Size, 0);
             if (Size == 0) { return l; }
-            std::copy(Buffer.data() + Position, Buffer.data() + Position + Size, l->data());
+            std::copy(Buffer.data() + Position, Buffer.data() + Position + Size, l.data());
             Position += Size;
             return l;
         }
@@ -555,12 +555,12 @@
             Buffer[Position] = b;
             Position += 1;
         }
-        void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l)
+        void WriteBytes(const std::vector<std::uint8_t> & l)
         {
-            auto Size = l->size();
+            auto Size = l.size();
             if (Size == 0) { return; }
             if (Position + Size > Buffer.size()) { Buffer.resize(Position + Size, 0); }
-            std::copy(l->data(), l->data() + Size, Buffer.data() + Position);
+            std::copy(l.data(), l.data() + Size, Buffer.data() + Position);
             Position += Size;
         }
 
@@ -766,15 +766,15 @@
     $$
         var Name = a.TypeFriendlyName();
         var ValueTypeFriendlyName = a.Type.TypeFriendlyName();
-    static std::shared_ptr<class [[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
+    static class [[${Name}]] [[${Name}FromBinary]](IReadableStream &s)
     {
-        auto o = std::make_shared<[[${Name}]]>();
-        o->Value = [[${ValueTypeFriendlyName}FromBinary]](s);
+        class [[${Name}]] o;
+        o.Value = [[${ValueTypeFriendlyName}FromBinary]](s);
         return o;
     }
-    static void [[${Name}ToBinary]](IWritableStream &s, std::shared_ptr<class [[${Name}]]> o)
+    static void [[${Name}ToBinary]](IWritableStream &s, class [[${Name}]] o)
     {
-        [[${ValueTypeFriendlyName}ToBinary]](s, o->Value);
+        [[${ValueTypeFriendlyName}ToBinary]](s, o.Value);
     }
 
 #Template BinaryTranslator_Record r:RecordDef
@@ -935,10 +935,10 @@
 #Template BinaryTranslator_List l:TypeSpec
     $$
         var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l, true);
+        var TypeString = GetTypeString(l);
         var ElementType = l.GenericTypeSpec.ParameterValues.Single();
         var ElementTypeFriendlyName = ElementType.TypeFriendlyName();
-    static std::shared_ptr<class ${TypeString}> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+    static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
     {
         int Length = static_cast<int>(IntFromBinary(s));
         $$
@@ -950,18 +950,18 @@
             else
             {
                 ##
-                    auto l = std::make_shared<${TypeString}>();
-                    l->reserve(static_cast<std::size_t>(Length));
+                    ${TypeString} l;
+                    l.reserve(static_cast<std::size_t>(Length));
                     for (int k = 0; k < Length; k += 1)
                     {
-                        l->push_back([[${ElementTypeFriendlyName}FromBinary]](s));
+                        l.push_back([[${ElementTypeFriendlyName}FromBinary]](s));
                     }
             }
         return l;
     }
-    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<class ${TypeString}> l)
+    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, ${TypeString} l)
     {
-        int Length = static_cast<int>(l->size());
+        int Length = static_cast<int>(l.size());
         IntToBinary(s, static_cast<Int>(Length));
         $$
             if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
@@ -972,7 +972,7 @@
             else
             {
                 ##
-                    for (auto e : *l)
+                    for (auto e : l)
                     {
                         [[${ElementTypeFriendlyName}ToBinary]](s, e);
                     }
@@ -982,24 +982,24 @@
 #Template BinaryTranslator_Set l:TypeSpec
     $$
         var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l, true);
+        var TypeString = GetTypeString(l);
         var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    static std::shared_ptr<class ${TypeString}> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+    static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
     {
         int Length = static_cast<int>(IntFromBinary(s));
-        auto l = std::make_shared<${TypeString}>();
-        l->reserve(static_cast<std::size_t>(Length));
+        ${TypeString} l;
+        l.reserve(static_cast<std::size_t>(Length));
         for (int k = 0; k < Length; k += 1)
         {
-            l->insert([[${ElementTypeFriendlyName}FromBinary]](s));
+            l.insert([[${ElementTypeFriendlyName}FromBinary]](s));
         }
         return l;
     }
-    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<class ${TypeString}> l)
+    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, ${TypeString} l)
     {
-        int Length = static_cast<int>(l->size());
+        int Length = static_cast<int>(l.size());
         IntToBinary(s, static_cast<Int>(Length));
-        for (auto e : *l)
+        for (auto e : l)
         {
             [[${ElementTypeFriendlyName}ToBinary]](s, e);
         }
@@ -1013,26 +1013,26 @@
             throw new ArgumentException();
         }
         var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l, true);
+        var TypeString = GetTypeString(l);
         var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
         var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-    static std::shared_ptr<class ${TypeString}> [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+    static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
     {
         int Length = static_cast<int>(IntFromBinary(s));
-        auto l = std::make_shared<${TypeString}>();
-        l->reserve(static_cast<std::size_t>(Length));
+        ${TypeString} l;
+        l.reserve(static_cast<std::size_t>(Length));
         for (int k = 0; k < Length; k += 1)
         {
             auto Key = [[${KeyTypeFriendlyName}FromBinary]](s);
-            (*l)[Key] = [[${ValueTypeFriendlyName}FromBinary]](s);
+            l[Key] = [[${ValueTypeFriendlyName}FromBinary]](s);
         }
         return l;
     }
-    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, std::shared_ptr<class ${TypeString}> l)
+    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, ${TypeString} l)
     {
-        int Length = static_cast<int>(l->size());
+        int Length = static_cast<int>(l.size());
         IntToBinary(s, static_cast<Int>(Length));
-        for (auto p : *l)
+        for (auto p : l)
         {
             [[${KeyTypeFriendlyName}ToBinary]](s, std::get<0>(p));
             [[${ValueTypeFriendlyName}ToBinary]](s, std::get<1>(p));

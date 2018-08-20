@@ -3,7 +3,7 @@
 
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
-      Description: 关系类型结构C# Memory代码模板数据
+      Description: 关系类型结构C++ Memory代码模板数据
       Version:     2017.07.18.
       Copyright(C) F.R.C.
 
@@ -89,7 +89,7 @@ ObjectSchemaTemplate
             //Parameters: ${EntityName}
             Value
                 $String
-                    std::shared_ptr<std::vector<std::shared_ptr<class [[${EntityName}]]>>> [[${EntityName}]];
+                    std::vector<std::shared_ptr<class [[${EntityName}]]>> [[${EntityName}]];
         Template
             Name DataAccessBase_Index
             //Parameters: ${IndexName}, ${IndexType}
@@ -104,9 +104,8 @@ ObjectSchemaTemplate
                     {
                         Indices->[[${IndexName}]] = std::make_shared<${IndexType}>();
                         auto &Table = *Indices->[[${IndexName}]];
-                        for (int k = 0; k < (int)(Tables->[[${EntityName}]]->size()); k += 1)
+                        for (auto &&r : Tables->[[${EntityName}]])
                         {
-                            auto r = (*Tables->[[${EntityName}]])[k];
                             ${Fetches}
                             ${Add}
                         }
@@ -150,7 +149,7 @@ ObjectSchemaTemplate
                 $String
                     auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
-                    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return (*this->Tables->[[${EntityName}]])[_i_]; })>>to_vector();
+                    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return this->Tables->[[${EntityName}]][_i_]; })>>to_vector();
                     if (_l_.size() == 0) { return nullptr; }
                     if (_l_.size() != 1) { throw std::logic_error("NotSingle"); }
                     return _l_[0];
@@ -167,7 +166,7 @@ ObjectSchemaTemplate
                 $String
                     auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
-                    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return (*this->Tables->[[${EntityName}]])[_i_]; })>>to_vector();
+                    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return this->Tables->[[${EntityName}]][_i_]; })>>to_vector();
                     if (_l_.size() != 1) { throw std::logic_error("NotSingle"); }
                     return _l_[0];
         Template
@@ -183,14 +182,14 @@ ObjectSchemaTemplate
                 $String
                     auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
-                    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return (*this->Tables->[[${EntityName}]])[_i_]; })${OrderBys}>>to_vector();
+                    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return this->Tables->[[${EntityName}]][_i_]; })${OrderBys}>>to_vector();
                     return std::make_shared<std::vector<std::shared_ptr<class [[${EntityName}]]>>>(std::move(_l_));
         Template
             Name SelectLock_All
             //Parameters: ${AllName}, ${OrderBys}, ${EntityName}
             Value
                 $String
-                    auto _l_ = from(*this->Tables->[[${EntityName}]])${OrderBys}>>to_vector();
+                    auto _l_ = from(this->Tables->[[${EntityName}]])${OrderBys}>>to_vector();
                     return std::make_shared<std::vector<std::shared_ptr<class [[${EntityName}]]>>>(std::move(_l_));
         Template
             Name SelectLock_Range
@@ -199,14 +198,14 @@ ObjectSchemaTemplate
                 $String
                     auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
-                    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return (*this->Tables->[[${EntityName}]])[_i_]; })${OrderBys}>>skip(_Skip_)>>take(_Take_)>>to_vector();
+                    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return this->Tables->[[${EntityName}]][_i_]; })${OrderBys}>>skip(_Skip_)>>take(_Take_)>>to_vector();
                     return std::make_shared<std::vector<std::shared_ptr<class [[${EntityName}]]>>>(std::move(_l_));
         Template
             Name SelectLock_RangeAll
             //Parameters: ${AllName}, ${OrderBys}, ${EntityName}
             Value
                 $String
-                    auto _l_ = from(*this->Tables->[[${EntityName}]])${OrderBys}>>skip(_Skip_)>>take(_Take_)>>to_vector();
+                    auto _l_ = from(this->Tables->[[${EntityName}]])${OrderBys}>>skip(_Skip_)>>take(_Take_)>>to_vector();
                     return std::make_shared<std::vector<std::shared_ptr<class [[${EntityName}]]>>>(std::move(_l_));
         Template
             Name SelectLock_ManyRange_WhenEmpty
@@ -221,7 +220,7 @@ ObjectSchemaTemplate
                 $String
                     auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
-                    auto _c_ = from([[_Index${ByIndex}_]]${Filters})>>select([&](Int _i_) { return (*this->Tables->[[${EntityName}]])[_i_]; })${OrderBys}>>count();
+                    auto _c_ = from([[_Index${ByIndex}_]]${Filters})>>select([&](Int _i_) { return this->Tables->[[${EntityName}]][_i_]; })${OrderBys}>>count();
                     return _c_;
         Template
             Name SelectLock_Count_WhenEmpty
