@@ -22,7 +22,7 @@ namespace Database
         void SaveData(int SessionIndex, int Value)
         {
             auto da = dam.Create();
-            auto tr = std::make_shared<TestRecord>();
+            auto tr = std::make_shared<Database::TestRecord>();
             tr->SessionIndex = SessionIndex;
             tr->Value = Value;
             da->FromTestRecordUpsertOne(tr);
@@ -46,7 +46,7 @@ namespace Database
         void SaveLockData(int Value)
         {
             auto da = dam.Create();
-            auto tlr = std::make_shared<TestLockRecord>();
+            auto tlr = std::make_shared<Database::TestLockRecord>();
             tlr->Id = 1;
             tlr->Value = Value;
             da->FromTestLockRecordUpsertOne(tlr);
@@ -57,14 +57,14 @@ namespace Database
         {
             auto da = dam.Create();
             auto ov = da->FromTestLockRecordLockOptionalById(1);
-            std::shared_ptr<TestLockRecord> v;
+            std::shared_ptr<Database::TestLockRecord> v;
             if (ov.OnHasValue())
             {
                 v = ov.HasValue;
             }
             else
             {
-                v = std::make_shared<TestLockRecord>();
+                v = std::make_shared<Database::TestLockRecord>();
                 v->Id = 1;
                 v->Value = 0;
             }
@@ -77,7 +77,7 @@ namespace Database
         {
             auto da = dam.Create();
             auto ov = da->FromTestLockRecordSelectOptionalById(1);
-            std::shared_ptr<TestLockRecord> v;
+            std::shared_ptr<Database::TestLockRecord> v;
             if (ov.OnHasValue())
             {
                 v = ov.HasValue;

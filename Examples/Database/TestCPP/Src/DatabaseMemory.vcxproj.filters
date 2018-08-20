@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="DataAccessManager.h" />
+    <ClInclude Include="LoadTest.h" />
+    <ClInclude Include="PerformanceTest.h" />
+    <ClInclude Include="TestService.h" />
+    <ClInclude Include="Database.h" />
+    <ClInclude Include="BaseSystem\StringUtilities.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\LockedVariable.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\ThreadLocalVariable.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem\AutoResetEvent.h">
+      <Filter>BaseSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Workaround.h" />
+    <ClInclude Include="Memory\MemoryDataAccess.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Program.cpp" />
+    <ClCompile Include="BaseSystem\StringUtilities.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
+      <Filter>BaseSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="DataAccessManagerMemory.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="BaseSystem">
+      <UniqueIdentifier>{fef616b2-d198-4daf-bab7-6f89e20a542b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{a93a4666-81e7-4ae4-bd32-6b7c6bb10bcf}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

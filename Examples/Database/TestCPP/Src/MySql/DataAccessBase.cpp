@@ -21,32 +21,29 @@
 
 namespace Database
 {
-    namespace _Impl
+    namespace MySql
     {
-        using namespace std;
-        using namespace sql;
-
         static std::mutex DriverMutex;
 
-        DataAccessBase::DataAccessBase(wstring ConnectionString)
+        DataAccessBase::DataAccessBase(std::wstring ConnectionString)
         {
             std::wregex rWhitespace(L"^\\s+|\\s+$");
             std::wregex rPort(L"\\d+");
 
             auto Fields = SplitString(ConnectionString, L";");
 
-            wstring Server;
-            wstring Port = L"3306";
-            wstring Uid;
-            wstring Pwd;
-            wstring DbName;
+            std::wstring Server;
+            std::wstring Port = L"3306";
+            std::wstring Uid;
+            std::wstring Pwd;
+            std::wstring DbName;
 
             for (int i = 0; i < static_cast<int>(Fields.size()); i += 1)
             {
                 auto f = std::regex_replace(Fields[i], rWhitespace, L"");
                 if (f == L"") { continue; }
                 auto Parts = SplitString(f, L"=");
-                if (Parts.size() != 2) { throw logic_error("ConnectionStringInvalid: " + w2s(f)); }
+                if (Parts.size() != 2) { throw std::logic_error("ConnectionStringInvalid: " + w2s(f)); }
 
                 auto Name = std::regex_replace(Parts[0], rWhitespace, L"");
                 auto Value = std::regex_replace(Parts[1], rWhitespace, L"");
@@ -57,7 +54,7 @@ namespace Database
                 }
                 else if (EqualIgnoreCase(Name, L"port"))
                 {
-                    if (!std::regex_match(Value, rPort)) { throw logic_error("ConnectionStringInvalid: " + w2s(f)); }
+                    if (!std::regex_match(Value, rPort)) { throw std::logic_error("ConnectionStringInvalid: " + w2s(f)); }
                     Port = Value;
                 }
                 else if (EqualIgnoreCase(Name, L"uid"))
@@ -74,21 +71,21 @@ namespace Database
                 }
                 else
                 {
-                    throw logic_error("ConnectionStringInvalid: " + w2s(f));
+                    throw std::logic_error("ConnectionStringInvalid: " + w2s(f));
                 }
             }
 
             if (Server == L"")
             {
-                throw logic_error("ConnectionStringInvalid: FieldNotFound: server");
+                throw std::logic_error("ConnectionStringInvalid: FieldNotFound: server");
             }
             if (Uid == L"")
             {
-                throw logic_error("ConnectionStringInvalid: FieldNotFound: uid");
+                throw std::logic_error("ConnectionStringInvalid: FieldNotFound: uid");
             }
             if (DbName == L"")
             {
-                throw logic_error("ConnectionStringInvalid: FieldNotFound: database");
+                throw std::logic_error("ConnectionStringInvalid: FieldNotFound: database");
             }
 
             {
@@ -103,9 +100,9 @@ namespace Database
                     connectionProperties["password"] = w2s(Pwd);
                 }
                 driver->threadInit();
-                con = shared_ptr<Connection>(driver->connect(connectionProperties));
+                con = std::shared_ptr<sql::Connection>(driver->connect(connectionProperties));
             }
-            auto stmt = shared_ptr<Statement>(con->createStatement());
+            auto stmt = std::shared_ptr<sql::Statement>(con->createStatement());
             stmt->execute(ConvertToSQLString(L"USE " + DbName));
             stmt->execute("START TRANSACTION");
         }
@@ -114,7 +111,7 @@ namespace Database
         {
             if (con != nullptr)
             {
-                auto stmt = shared_ptr<Statement>(con->createStatement());
+                auto stmt = std::shared_ptr<sql::Statement>(con->createStatement());
                 stmt->execute("ROLLBACK");
                 {
                     std::unique_lock<std::mutex> Lock(DriverMutex);
@@ -128,7 +125,7 @@ namespace Database
 
         void DataAccessBase::Complete()
         {
-            auto stmt = shared_ptr<Statement>(con->createStatement());
+            auto stmt = std::shared_ptr<sql::Statement>(con->createStatement());
             stmt->execute("COMMIT");
             {
                 std::unique_lock<std::mutex> Lock(DriverMutex);
@@ -139,57 +136,57 @@ namespace Database
             }
         }
 
-        wstring DataAccessBase::ConvertToWString(SQLString s)
+        std::wstring DataAccessBase::ConvertToWString(sql::SQLString s)
         {
-            wstring_convert<codecvt_utf8<wchar_t, 0x10FFFF, little_endian>, wchar_t> conv;
+            std::wstring_convert<std::codecvt_utf8<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
             return conv.from_bytes(reinterpret_cast<const char *>(s->data()), reinterpret_cast<const char *>(s->data() + s->size()));
         }
 
-        SQLString DataAccessBase::ConvertToSQLString(wstring s)
+        sql::SQLString DataAccessBase::ConvertToSQLString(std::wstring s)
         {
-            wstring_convert<codecvt_utf8<wchar_t, 0x10FFFF, little_endian>, wchar_t> conv;
+            std::wstring_convert<std::codecvt_utf8<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
             auto Bytes = conv.to_bytes(s);
             return Bytes;
         }
 
-        shared_ptr<PreparedStatement> DataAccessBase::CreateTextCommand(wstring CommandText)
+        std::shared_ptr<sql::PreparedStatement> DataAccessBase::CreateTextCommand(std::wstring CommandText)
         {
-            auto stmt = shared_ptr<PreparedStatement>(con->prepareStatement(ConvertToSQLString(CommandText)));
+            auto stmt = std::shared_ptr<sql::PreparedStatement>(con->prepareStatement(ConvertToSQLString(CommandText)));
             return stmt;
         }
 
-        void DataAccessBase::Add(wstring ParameterName, bool Value)
+        void DataAccessBase::Add(std::wstring ParameterName, bool Value)
         {
-            auto stmt = shared_ptr<PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
+            auto stmt = std::shared_ptr<sql::PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
             stmt->setBoolean(1, Value);
             stmt->execute();
         }
 
-        void DataAccessBase::Add(wstring ParameterName, wstring Value)
+        void DataAccessBase::Add(std::wstring ParameterName, std::wstring Value)
         {
-            auto stmt = shared_ptr<PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
+            auto stmt = std::shared_ptr<sql::PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
             stmt->setString(1, ConvertToSQLString(Value));
             stmt->execute();
         }
 
-        void DataAccessBase::Add(wstring ParameterName, int Value)
+        void DataAccessBase::Add(std::wstring ParameterName, int Value)
         {
-            auto stmt = shared_ptr<PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
+            auto stmt = std::shared_ptr<sql::PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
             stmt->setInt(1, Value);
             stmt->execute();
         }
 
-        void DataAccessBase::Add(wstring ParameterName, double Value)
+        void DataAccessBase::Add(std::wstring ParameterName, double Value)
         {
-            auto stmt = shared_ptr<PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
+            auto stmt = std::shared_ptr<sql::PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
             stmt->setDouble(1, Value);
             stmt->execute();
         }
 
-        class ByteBuffer : public streambuf
+        class ByteBuffer : public std::streambuf
         {
         public:
-            ByteBuffer(shared_ptr<vector<uint8_t>> Value)
+            ByteBuffer(std::shared_ptr<std::vector<std::uint8_t>> Value)
             {
                 auto d = reinterpret_cast<char *>(Value->data());
                 auto s = Value->size();
@@ -197,105 +194,105 @@ namespace Database
             }
         };
 
-        void DataAccessBase::Add(wstring ParameterName, shared_ptr<vector<uint8_t>> Value)
+        void DataAccessBase::Add(std::wstring ParameterName, std::shared_ptr<std::vector<std::uint8_t>> Value)
         {
-            auto stmt = shared_ptr<PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
+            auto stmt = std::shared_ptr<sql::PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
             ByteBuffer buffer(Value);
-            istream s(&buffer);
+            std::istream s(&buffer);
             stmt->setBlob(1, &s);
             stmt->execute();
         }
 
-        void DataAccessBase::AddNull(wstring ParameterName)
+        void DataAccessBase::AddNull(std::wstring ParameterName)
         {
-            auto stmt = shared_ptr<PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
+            auto stmt = std::shared_ptr<sql::PreparedStatement>(con->prepareStatement(ConvertToSQLString(L"SET @" + ParameterName + L"=?;")));
             stmt->setNull(1, 0);
             stmt->execute();
         }
 
-        bool DataAccessBase::GetBoolean(shared_ptr<ResultSet> rs, wstring FieldName)
+        bool DataAccessBase::GetBoolean(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
-            if (rs->isNull(FieldNameS)) { throw logic_error("InvalidOperationException"); }
+            if (rs->isNull(FieldNameS)) { throw std::logic_error("InvalidOperationException"); }
             return rs->getBoolean(FieldNameS);
         }
 
-        wstring DataAccessBase::GetString(shared_ptr<ResultSet> rs, wstring FieldName)
+        std::wstring DataAccessBase::GetString(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
-            if (rs->isNull(FieldNameS)) { throw logic_error("InvalidOperationException"); }
+            if (rs->isNull(FieldNameS)) { throw std::logic_error("InvalidOperationException"); }
             return ConvertToWString(rs->getString(FieldNameS));
         }
 
-        int DataAccessBase::GetInt(shared_ptr<ResultSet> rs, wstring FieldName)
+        int DataAccessBase::GetInt(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
-            if (rs->isNull(FieldNameS)) { throw logic_error("InvalidOperationException"); }
+            if (rs->isNull(FieldNameS)) { throw std::logic_error("InvalidOperationException"); }
             return rs->getInt(FieldNameS);
         }
 
-        double DataAccessBase::GetReal(shared_ptr<ResultSet> rs, wstring FieldName)
+        double DataAccessBase::GetReal(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
-            if (rs->isNull(FieldNameS)) { throw logic_error("InvalidOperationException"); }
+            if (rs->isNull(FieldNameS)) { throw std::logic_error("InvalidOperationException"); }
             return rs->getDouble(FieldNameS);
         }
 
-        shared_ptr<vector<uint8_t>> DataAccessBase::GetBinary(shared_ptr<ResultSet> rs, wstring FieldName)
+        std::shared_ptr<std::vector<std::uint8_t>> DataAccessBase::GetBinary(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
-            if (rs->isNull(FieldNameS)) { throw logic_error("InvalidOperationException"); }
-            auto is = shared_ptr<istream>(rs->getBlob(FieldNameS));
-            auto s = make_shared<vector<uint8_t>>();
+            if (rs->isNull(FieldNameS)) { throw std::logic_error("InvalidOperationException"); }
+            auto is = std::shared_ptr<std::istream>(rs->getBlob(FieldNameS));
+            auto s = std::make_shared<std::vector<std::uint8_t>>();
             char b = 0;
             while (is->get(b))
             {
                 s->push_back(b);
             }
-            if (!is->eof()) { throw logic_error("InvalidOperationException"); }
+            if (!is->eof()) { throw std::logic_error("InvalidOperationException"); }
             return s;
         }
 
-        Optional<bool> DataAccessBase::GetOptionalOfBoolean(shared_ptr<ResultSet> rs, wstring FieldName)
+        Optional<bool> DataAccessBase::GetOptionalOfBoolean(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
             if (rs->isNull(FieldNameS)) { return nullptr; }
             return rs->getBoolean(FieldNameS);
         }
 
-        Optional<wstring> DataAccessBase::GetOptionalOfString(shared_ptr<ResultSet> rs, wstring FieldName)
+        Optional<std::wstring> DataAccessBase::GetOptionalOfString(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
             if (rs->isNull(FieldNameS)) { return nullptr; }
             return ConvertToWString(rs->getString(FieldNameS));
         }
 
-        Optional<int> DataAccessBase::GetOptionalOfInt(shared_ptr<ResultSet> rs, wstring FieldName)
+        Optional<int> DataAccessBase::GetOptionalOfInt(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
             if (rs->isNull(FieldNameS)) { return nullptr; }
             return rs->getInt(FieldNameS);
         }
 
-        Optional<double> DataAccessBase::GetOptionalOfReal(shared_ptr<ResultSet> rs, wstring FieldName)
+        Optional<double> DataAccessBase::GetOptionalOfReal(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
             if (rs->isNull(FieldNameS)) { return nullptr; }
             return rs->getDouble(FieldNameS);
         }
 
-        Optional<shared_ptr<vector<uint8_t>>> DataAccessBase::GetOptionalOfBinary(shared_ptr<ResultSet> rs, wstring FieldName)
+        Optional<std::shared_ptr<std::vector<std::uint8_t>>> DataAccessBase::GetOptionalOfBinary(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
             if (rs->isNull(FieldNameS)) { return nullptr; }
-            auto is = shared_ptr<istream>(rs->getBlob(FieldNameS));
-            auto s = make_shared<vector<uint8_t>>();
+            auto is = std::shared_ptr<std::istream>(rs->getBlob(FieldNameS));
+            auto s = std::make_shared<std::vector<std::uint8_t>>();
             char b = 0;
             while (is->get(b))
             {
                 s->push_back(b);
             }
-            if (!is->eof()) { throw logic_error("InvalidOperationException"); }
+            if (!is->eof()) { throw std::logic_error("InvalidOperationException"); }
             return s;
         }
     }

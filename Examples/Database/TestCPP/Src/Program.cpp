@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Yuki.Examples <C++ 2011>
 //  Description: 数据库示例程序
-//  Version:     2015.07.22.
+//  Version:     2018.08.21.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -44,13 +44,13 @@ namespace Database
                 }
                 else
                 {
-                    DisplayInfo();
+                    DisplayInfo(DataAccessManager::GetProgramName(), DataAccessManager::GetConnectionStringExample());
                     return -1;
                 }
             }
             else
             {
-                DisplayInfo();
+                DisplayInfo(DataAccessManager::GetProgramName(), DataAccessManager::GetConnectionStringExample());
                 return -1;
             }
             return 0;
@@ -63,15 +63,18 @@ namespace Database
             std::wprintf(L"%ls\n", L"Copyright(C) Public Domain");
         }
 
-        static void DisplayInfo()
+        static void DisplayInfo(std::wstring ProgramName, std::wstring ConnectionString)
         {
             std::wprintf(L"%ls\n", L"用法:");
-            std::wprintf(L"%ls\n", L"Database <ConnectionString> /load|/perf");
+            std::wprintf(L"%ls\n", (ProgramName + L" <ConnectionString> /load|/perf").c_str());
             std::wprintf(L"%ls\n", L"ConnectionString 数据库连接字符串");
             std::wprintf(L"%ls\n", L"/load 自动化负载测试");
             std::wprintf(L"%ls\n", L"/perf 自动化性能测试");
             std::wprintf(L"%ls\n", L"示例:");
-            std::wprintf(L"%ls\n", L"Database \"server=localhost;uid=root;pwd=password;database=Test;\" /load");
+            if (ConnectionString != L"")
+            {
+                std::wprintf(L"%ls\n", (ProgramName + L" \"" + ConnectionString + L"\" /load").c_str());
+            }
         }
     };
 }
