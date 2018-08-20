@@ -318,9 +318,9 @@ Any ExpressionCalculator::BuildExpr(ExpressionParameterTypeProvider &eptp, std::
     {
         auto Name = e->Function->Name;
         auto ParameterFuncs = std::make_shared<std::vector<Any>>();
-        for (auto i = e->Function->Parameters->begin(); i != e->Function->Parameters->end(); i.operator ++())
+        for (auto p : e->Function->Parameters)
         {
-            ParameterFuncs->push_back(BuildExpr(eptp, *i));
+            ParameterFuncs->push_back(BuildExpr(eptp, p));
         }
 
         //算术运算
