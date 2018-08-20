@@ -4,7 +4,7 @@
       File:        CppBinaryLoader.tree
       Location:    Yuki.Expression <Tree>
       Description: 表达式结构C++二进制加载器模板
-      Version:     2017.07.18.
+      Version:     2018.08.20.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -37,7 +37,7 @@
         {
             if (a->Hash != 0x${Hash}) { throw std::logic_error("InvalidOperation"); }
             std::unordered_map<std::wstring, std::shared_ptr<Yuki::ExpressionSchema::ModuleDef>> _d_;
-            for (auto m : *a->Modules)
+            for (auto m : a->Modules)
             {
                 _d_[m->Name] = m;
             }
@@ -68,7 +68,7 @@
         [[${m.Name}]](std::shared_ptr<Yuki::ExpressionSchema::ModuleDef> md)
         {
             std::unordered_map<std::wstring, std::shared_ptr<Yuki::ExpressionSchema::Expr>> fd;
-            for (auto _f_ : *md->Functions)
+            for (auto _f_ : md->Functions)
             {
                 fd[_f_->Name] = _f_->Body;
             }

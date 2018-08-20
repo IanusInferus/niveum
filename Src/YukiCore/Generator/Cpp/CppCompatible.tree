@@ -4,7 +4,7 @@
       File:        CppCompatible.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C++通讯兼容模板
-      Version:     2018.08.17.
+      Version:     2018.08.20.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -70,6 +70,108 @@
         return ep;
     }
 
+#Template Translator_AliasFrom Name:String VersionedName:String Fields:List<VariableDef> HeadFields:List<VariableDef> InitialHasError:Boolean
+    $$
+        var d = HeadFields.ToDictionary(f => f.Name);
+        var HasError = InitialHasError || !Fields.All(f => IsNullType(f.Type) || (d.ContainsKey(f.Name) && (IsSameType(f.Type, d[f.Name].Type, false) || IsSameType(f.Type, d[f.Name].Type, true))));
+        if (HasError)
+        {
+            ##
+                //${Translator_AliasFrom(Name, VersionedName, Fields, HeadFields)}
+        }
+        else
+        {
+            ##
+                ${Translator_AliasFrom(Name, VersionedName, Fields, HeadFields)}
+        }
+
+#Template Translator_AliasFrom Name:String VersionedName:String Fields:List<VariableDef> HeadFields:List<VariableDef>
+    class [[${VersionedName}]] [[${VersionedName}FromHead]](class [[${Name}]] ho)
+    {
+        class [[${VersionedName}]] o;
+        $$
+            var d = HeadFields.ToDictionary(f => f.Name);
+            foreach (var f in Fields)
+            {
+                if (IsNullType(f.Type))
+                {
+                    ##
+                        o.[[${f.Name}]] = Unit();
+                    continue;
+                }
+                if (d.ContainsKey(f.Name))
+                {
+                    var fHead = d[f.Name];
+                    if (IsSameType(f.Type, fHead.Type, false))
+                    {
+                        ##
+                            o.[[${f.Name}]] = ho.[[${f.Name}]];
+                        continue;
+                    }
+                    else if (IsSameType(f.Type, fHead.Type, true))
+                    {
+                        ##
+                            o.[[${f.Name}]] = [[${f.Type.TypeFriendlyName()}FromHead]](ho.[[${f.Name}]]);
+                        continue;
+                    }
+                }
+                ##
+                    o.[[${f.Name}]] = ho.[[${f.Name}]];
+            }
+        return o;
+    }
+
+#Template Translator_AliasTo Name:String VersionedName:String Fields:List<VariableDef> HeadFields:List<VariableDef> InitialHasError:Boolean
+    $$
+        var d = Fields.ToDictionary(f => f.Name);
+        var HasError = InitialHasError || !HeadFields.All(fHead => IsNullType(fHead.Type) || (d.ContainsKey(fHead.Name) && (IsSameType(d[fHead.Name].Type, fHead.Type, false) || IsSameType(d[fHead.Name].Type, fHead.Type, true))));
+        if (HasError)
+        {
+            ##
+                //${Translator_AliasTo(Name, VersionedName, Fields, HeadFields)}
+        }
+        else
+        {
+            ##
+                ${Translator_AliasTo(Name, VersionedName, Fields, HeadFields)}
+        }
+
+#Template Translator_AliasTo Name:String VersionedName:String Fields:List<VariableDef> HeadFields:List<VariableDef>
+    class [[${Name}]] [[${VersionedName}ToHead]](class [[${VersionedName}]] o)
+    {
+        class [[${Name}]] ho;
+        $$
+            var d = Fields.ToDictionary(f => f.Name);
+            foreach (var fHead in HeadFields)
+            {
+                if (IsNullType(fHead.Type))
+                {
+                    ##
+                        ho.[[${fHead.Name}]] = Unit();
+                    continue;
+                }
+                if (d.ContainsKey(fHead.Name))
+                {
+                    var f = d[fHead.Name];
+                    if (IsSameType(f.Type, fHead.Type, false))
+                    {
+                        ##
+                            ho.[[${f.Name}]] = o.[[${f.Name}]];
+                        continue;
+                    }
+                    else if (IsSameType(f.Type, fHead.Type, true))
+                    {
+                        ##
+                            ho.[[${f.Name}]] = [[${f.Type.TypeFriendlyName()}ToHead]](o.[[${f.Name}]]);
+                        continue;
+                    }
+                }
+                ##
+                    ho.[[${fHead.Name}]] = o.[[${fHead.Name}]];
+            }
+        return ho;
+    }
+
 #Template Translator_RecordFrom Name:String VersionedName:String Fields:List<VariableDef> HeadFields:List<VariableDef> InitialHasError:Boolean
     $$
         var d = HeadFields.ToDictionary(f => f.Name);
@@ -116,7 +218,7 @@
                     }
                 }
                 ##
-                    o.[[${f.Name}]] = ho.[[${f.Name}]];
+                    o->[[${f.Name}]] = ho->[[${f.Name}]];
             }
         return o;
     }
@@ -452,54 +554,54 @@
     }
 
 #Template Translator_ListFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    std::shared_ptr<class ${VersionedTypeString}> [[${VersionedTypeFriendlyName}FromHead]](std::shared_ptr<class ${TypeString}> ho)
+    ${VersionedTypeString} [[${VersionedTypeFriendlyName}FromHead]](${TypeString} ho)
     {
-        auto l = std::make_shared<${VersionedTypeString}>();
-        for (auto he : *ho)
+        ${VersionedTypeString} l;
+        for (auto he : ho)
         {
-            l->push_back([[${VersionedElementTypeFriendlyName}FromHead]](he));
+            l.push_back([[${VersionedElementTypeFriendlyName}FromHead]](he));
         }
         return l;
     }
 
 #Template Translator_ListTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    std::shared_ptr<class ${TypeString}> [[${VersionedTypeFriendlyName}ToHead]](std::shared_ptr<class ${VersionedTypeString}> o)
+    ${TypeString} [[${VersionedTypeFriendlyName}ToHead]](${VersionedTypeString} o)
     {
-        auto l = std::make_shared<${TypeString}>();
-        for (auto e : *o)
+        ${TypeString} l;
+        for (auto e : o)
         {
-            l->push_back([[${VersionedElementTypeFriendlyName}ToHead]](e));
+            l.push_back([[${VersionedElementTypeFriendlyName}ToHead]](e));
         }
         return l;
     }
 
 #Template Translator_SetFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    std::shared_ptr<class ${VersionedTypeString}> [[${VersionedTypeFriendlyName}FromHead]](std::shared_ptr<class ${TypeString}> ho)
+    ${VersionedTypeString} [[${VersionedTypeFriendlyName}FromHead]](${TypeString} ho)
     {
-        auto s = std::make_shared<${VersionedTypeString}>();
-        for (auto he : *ho)
+        ${VersionedTypeString} s;
+        for (auto he : ho)
         {
-            s->insert([[${VersionedElementTypeFriendlyName}FromHead]](he));
+            s.insert([[${VersionedElementTypeFriendlyName}FromHead]](he));
         }
         return s;
     }
 
 #Template Translator_SetTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    std::shared_ptr<class ${TypeString}> [[${VersionedTypeFriendlyName}ToHead]](std::shared_ptr<class ${VersionedTypeString}> o)
+    ${TypeString} [[${VersionedTypeFriendlyName}ToHead]](${VersionedTypeString} o)
     {
-        auto s = std::make_shared<${TypeString}>();
-        for (auto e : *o)
+        ${TypeString} s;
+        for (auto e : o)
         {
-            s->insert([[${VersionedElementTypeFriendlyName}ToHead]](e));
+            s.insert([[${VersionedElementTypeFriendlyName}ToHead]](e));
         }
         return s;
     }
 
 #Template Translator_MapFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String KeyTypeSpec:TypeSpec HeadKeyTypeSpec:TypeSpec ValueTypeSpec:TypeSpec HeadValueTypeSpec:TypeSpec
-    std::shared_ptr<class ${VersionedTypeString}> [[${VersionedTypeFriendlyName}FromHead]](std::shared_ptr<class ${TypeString}> ho)
+    ${VersionedTypeString} [[${VersionedTypeFriendlyName}FromHead]](${TypeString} ho)
     {
-        auto o = std::make_shared<${VersionedTypeString}>();
-        for (auto hp : *ho)
+        ${VersionedTypeString} o;
+        for (auto hp : ho)
         {
             $$
                 if (IsSameType(KeyTypeSpec, HeadKeyTypeSpec, false))
@@ -522,16 +624,16 @@
                     ##
                         auto Value = [[${ValueTypeSpec.TypeFriendlyName()}FromHead]](std::get<1>(hp));
                 }
-            (*o)[Key] = Value;
+            o[Key] = Value;
         }
         return o;
     }
 
 #Template Translator_MapTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String KeyTypeSpec:TypeSpec HeadKeyTypeSpec:TypeSpec ValueTypeSpec:TypeSpec HeadValueTypeSpec:TypeSpec
-    std::shared_ptr<class ${TypeString}> [[${VersionedTypeFriendlyName}ToHead]](std::shared_ptr<class ${VersionedTypeString}> o)
+    ${TypeString} [[${VersionedTypeFriendlyName}ToHead]](${VersionedTypeString} o)
     {
-        auto ho = std::make_shared<${TypeString}>();
-        for (auto p : *o)
+        ${TypeString} ho;
+        for (auto p : o)
         {
             $$
                 if (IsSameType(KeyTypeSpec, HeadKeyTypeSpec, false))
@@ -554,7 +656,7 @@
                     ##
                         auto Value = [[${ValueTypeSpec.TypeFriendlyName()}ToHead]](std::get<1>(p));
                 }
-            (*ho)[Key] = Value;
+            ho[Key] = Value;
         }
         return ho;
     }

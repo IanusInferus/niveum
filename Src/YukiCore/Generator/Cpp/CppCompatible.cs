@@ -3,7 +3,7 @@
 //  File:        CppCompatible.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2018.08.16.
+//  Version:     2018.08.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -247,12 +247,16 @@ namespace Yuki.ObjectSchema.CppCompatible
             var VersionedName = a.TypeFriendlyName();
             if (aHead == null)
             {
-                FillTranslatorRecordFrom(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { }, l, true);
+                FillTranslatorAliasFrom(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { }, l, true);
             }
             else
             {
-                FillTranslatorRecordFrom(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, l, false);
+                FillTranslatorAliasFrom(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, l, false);
             }
+        }
+        public void FillTranslatorAliasFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, List<String> l, Boolean InitialHasError)
+        {
+            l.AddRange(Translator_AliasFrom(Name, VersionedName, Fields, HeadFields, InitialHasError));
         }
         public void FillTranslatorAliasTo(Dictionary<String, TypeDef> VersionedNameToType, AliasDef a, List<String> l)
         {
@@ -269,12 +273,16 @@ namespace Yuki.ObjectSchema.CppCompatible
             var VersionedName = a.TypeFriendlyName();
             if (aHead == null)
             {
-                FillTranslatorRecordTo(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { }, l, true);
+                FillTranslatorAliasTo(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { }, l, true);
             }
             else
             {
-                FillTranslatorRecordTo(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, l, false);
+                FillTranslatorAliasTo(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, l, false);
             }
+        }
+        public void FillTranslatorAliasTo(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, List<String> l, Boolean InitialHasError)
+        {
+            l.AddRange(Translator_AliasTo(Name, VersionedName, Fields, HeadFields, InitialHasError));
         }
         public void FillTranslatorRecordFrom(Dictionary<String, TypeDef> VersionedNameToType, RecordDef r, List<String> l)
         {

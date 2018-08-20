@@ -3,7 +3,7 @@
 //  File:        Cpp.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2018.08.16.
+//  Version:     2018.08.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -44,6 +44,7 @@ namespace Yuki.ObjectSchema.Cpp
             if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Unit").Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
             if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Boolean").Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
 
+            AliasSet = new HashSet<String>(Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnAlias).Select(c => c.VersionedName()).Distinct());
             EnumSet = new HashSet<String>(Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).Select(c => c.VersionedName()).Distinct());
         }
 
@@ -67,6 +68,7 @@ namespace Yuki.ObjectSchema.Cpp
         {
             return "L\"" + new String(s.SelectMany(c => c == '\\' ? "\\\\" : c == '\"' ? "\\\"" : c == '\r' ? "\\r" : c == '\n' ? "\\n" : new String(c, 1)).ToArray()) + "\"";
         }
+        private HashSet<String> AliasSet = new HashSet<String>();
         private HashSet<String> EnumSet = new HashSet<String>();
         public String GetTypeString(TypeSpec Type, Boolean ForceAsValue = false)
         {
@@ -84,13 +86,17 @@ namespace Yuki.ObjectSchema.Cpp
                         return GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
                     }
                 }
+                else if (AliasSet.Contains(Type.TypeRef.VersionedName()))
+                {
+                    return "class " + GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
+                }
                 else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
                 {
                     return "_ENUM_CLASS_ " + GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
                 }
                 if (ForceAsValue)
                 {
-                    return GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
+                    return "class " + GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
                 }
                 return "std::shared_ptr<class " + GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName()) + ">";
             }
@@ -115,13 +121,25 @@ namespace Yuki.ObjectSchema.Cpp
                     {
                         return TypeString;
                     }
-                    return "std::shared_ptr<class " + TypeString + ">";
+                    else if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && Type.GenericTypeSpec.ParameterValues.Count == 1)
+                    {
+                        return TypeString;
+                    }
+                    else if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && Type.GenericTypeSpec.ParameterValues.Count == 1)
+                    {
+                        return TypeString;
+                    }
+                    else if (Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && Type.GenericTypeSpec.ParameterValues.Count == 2)
+                    {
+                        return TypeString;
+                    }
+                    return "std::shared_ptr<" + TypeString + ">";
                 }
                 else
                 {
                     if (ForceAsValue)
                     {
-                        return GetEscapedIdentifier(Type.TypeFriendlyName());
+                        return "class " + GetEscapedIdentifier(Type.TypeFriendlyName());
                     }
                     return "std::shared_ptr<class " + GetEscapedIdentifier(Type.TypeFriendlyName()) + ">";
                 }
@@ -278,6 +296,19 @@ namespace Yuki.ObjectSchema.Cpp
             }
             l.Add("");
 
+            foreach (var c in Schema.Types)
+            {
+                if (c.OnAlias)
+                {
+                    l.AddRange(Alias(c.Alias));
+                }
+                else
+                {
+                    continue;
+                }
+                l.Add("");
+            }
+
             if (l.Count > 0)
             {
                 l = l.Take(l.Count - 1).ToList();
@@ -323,7 +354,7 @@ namespace Yuki.ObjectSchema.Cpp
                 }
                 else if (c.OnAlias)
                 {
-                    l.AddRange(Alias(c.Alias));
+                    continue;
                 }
                 else if (c.OnRecord)
                 {
