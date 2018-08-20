@@ -40,11 +40,11 @@ namespace World
                 }
                 return b;
             }
-            std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(std::size_t Size)
+            std::vector<std::uint8_t> ReadBytes(std::size_t Size)
             {
-                auto l = std::make_shared<std::vector<std::uint8_t>>();
-                l->resize(Size);
-                if (!s.read(reinterpret_cast<char *>(l->data()), Size))
+                std::vector<std::uint8_t> l;
+                l.resize(Size);
+                if (!s.read(reinterpret_cast<char *>(l.data()), Size))
                 {
                     throw std::runtime_error("IOException");
                 }
@@ -77,9 +77,9 @@ namespace World
                     throw std::runtime_error("IOException");
                 }
             }
-            virtual void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l)
+            virtual void WriteBytes(const std::vector<std::uint8_t> & l)
             {
-                if (!s.write(reinterpret_cast<char *>(l->data()), l->size()))
+                if (!s.write(reinterpret_cast<const char *>(l.data()), l.size()))
                 {
                     throw std::runtime_error("IOException");
                 }
