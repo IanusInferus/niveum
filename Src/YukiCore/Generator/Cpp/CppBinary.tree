@@ -31,8 +31,8 @@
                 return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);
             }
         };
-        std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<std::shared_ptr<std::vector<std::uint8_t>>(std::shared_ptr<IApplicationServer>, std::shared_ptr<std::vector<std::uint8_t>>)>, Hash> ClientCommands;
-        std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<void(std::shared_ptr<IApplicationServer>, std::shared_ptr<std::vector<std::uint8_t>>, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)>, std::function<void(const std::exception &)>)>, Hash> AsyncClientCommands;
+        std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<std::vector<std::uint8_t>(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>)>, Hash> ClientCommands;
+        std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<void(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>, std::function<void(std::vector<std::uint8_t>)>, std::function<void(const std::exception &)>)>, Hash> AsyncClientCommands;
 
     public:
         BinarySerializationServer()
@@ -48,7 +48,7 @@
                         if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
                             ##
-                                AsyncClientCommands[std::pair<std::wstring, std::uint32_t>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::shared_ptr<std::vector<std::uint8_t>> p, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void
+                                AsyncClientCommands[std::pair<std::wstring, std::uint32_t>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void
                                 {
                                     ByteArrayStream bas;
                                     bas.WriteBytes(p);
@@ -68,7 +68,7 @@
                         else
                         {
                             ##
-                                ClientCommands[std::pair<std::wstring, std::uint32_t>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::shared_ptr<std::vector<std::uint8_t>> p) -> std::shared_ptr<std::vector<std::uint8_t>>
+                                ClientCommands[std::pair<std::wstring, std::uint32_t>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p) -> std::vector<std::uint8_t>
                                 {
                                     ByteArrayStream bas;
                                     bas.WriteBytes(p);
@@ -100,12 +100,12 @@
             return AsyncClientCommands.count(std::pair<String, std::uint32_t>(CommandName, CommandHash)) > 0;
         }
 
-        std::shared_ptr<std::vector<std::uint8_t>> ExecuteCommand(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
+        std::vector<std::uint8_t> ExecuteCommand(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
         {
             auto cmd = ClientCommands[std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash)];
             return cmd(s, Parameters);
         }
-        void ExecuteCommandAsync(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> Callback, std::function<void(const std::exception &)> OnFailure)
+        void ExecuteCommandAsync(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure)
         {
             auto cmd = AsyncClientCommands[std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash)];
             cmd(s, Parameters, Callback, OnFailure);
@@ -136,8 +136,8 @@
                 }
         }
 
-        /// (std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters) -> void
-        typedef std::function<void(std::wstring, std::uint32_t, std::shared_ptr<std::vector<std::uint8_t>>)> ServerEventDelegate;
+        /// (std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) -> void
+        typedef std::function<void(std::wstring, std::uint32_t, std::vector<std::uint8_t>)> ServerEventDelegate;
         ServerEventDelegate ServerEvent;
     };
 
@@ -147,7 +147,7 @@
     public:
         virtual ~IBinarySender() {}
 
-        virtual void Send(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters) = 0;
+        virtual void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) = 0;
     };
 
 #Template BinarySerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator
@@ -161,8 +161,8 @@
                 return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);
             }
         };
-        typedef std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> ClientCommandCallback;
-        typedef std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> ServerCommandCallback;
+        typedef std::function<void(std::vector<std::uint8_t>)> ClientCommandCallback;
+        typedef std::function<void(std::vector<std::uint8_t>)> ServerCommandCallback;
 
         class ApplicationClient : public IApplicationClient
         {
@@ -211,7 +211,7 @@
                                 BinaryTranslator::[[${Name}RequestToBinary]](bas, r);
                                 bas.SetPosition(0);
                                 auto Request = bas.ReadBytes(bas.GetLength());
-                                AddCallback(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, [=](std::shared_ptr<std::vector<std::uint8_t>> Parameters)
+                                AddCallback(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, [=](std::vector<std::uint8_t> Parameters)
                                 {
                                     ByteArrayStream bas;
                                     bas.WriteBytes(Parameters);
@@ -253,7 +253,7 @@
                         var Name = c.ServerCommand.TypeFriendlyName();
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
-                            ServerCommands[std::pair<String, std::uint32_t>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash})] = [&](std::shared_ptr<std::vector<std::uint8_t>> Parameters)
+                            ServerCommands[std::pair<String, std::uint32_t>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash})] = [&](std::vector<std::uint8_t> Parameters)
                             {
                                 ByteArrayStream bas;
                                 bas.WriteBytes(Parameters);
@@ -273,7 +273,7 @@
             return c;
         }
 
-        void HandleResult(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
+        void HandleResult(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
         {
             if (c->ClientCommandCallbacks.count(CommandName) > 0)
             {

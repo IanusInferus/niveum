@@ -389,6 +389,8 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/t2cscw:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"生成C++数据库简单类型");
             Console.WriteLine(@"/t2cppdp:<CsCodePath>,<EntityNamespaceName>");
+            Console.WriteLine(@"生成C++ Memory类型");
+            Console.WriteLine(@"/t2cppm:<CsCodePath>,<EntityNamespaceName>,<ContextNamespaceName>");
             Console.WriteLine(@"CookedRelationSchemaFile 已编译过的关系类型结构Tree文件路径。");
             Console.WriteLine(@"RelationSchemaDir|RelationSchemaFile 关系类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"DatabaseName 数据库名。");
