@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Database", "Database.vcxproj", "{B5902663-BC28-4F9E-B4C8-B350166A2654}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DatabaseMySQL", "DatabaseMySQL.vcxproj", "{B5902663-BC28-4F9E-B4C8-B350166A2654}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DatabaseMemory", "DatabaseMemory.vcxproj", "{F84506D5-B8C0-4D61-B00A-C2825142A8B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{B5902663-BC28-4F9E-B4C8-B350166A2654}.Debug|Win32.Build.0 = Debug|Win32
 		{B5902663-BC28-4F9E-B4C8-B350166A2654}.Release|Win32.ActiveCfg = Release|Win32
 		{B5902663-BC28-4F9E-B4C8-B350166A2654}.Release|Win32.Build.0 = Release|Win32
+		{F84506D5-B8C0-4D61-B00A-C2825142A8B9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F84506D5-B8C0-4D61-B00A-C2825142A8B9}.Debug|Win32.Build.0 = Debug|Win32
+		{F84506D5-B8C0-4D61-B00A-C2825142A8B9}.Release|Win32.ActiveCfg = Release|Win32
+		{F84506D5-B8C0-4D61-B00A-C2825142A8B9}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -23,7 +23,7 @@ namespace Client
         {
         public:
             virtual std::uint8_t ReadByte() = 0;
-            virtual std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(std::size_t Size) = 0;
+            virtual std::vector<std::uint8_t> ReadBytes(std::size_t Size) = 0;
 
             Unit ReadUnit()
             {
@@ -132,7 +132,7 @@ namespace Client
         {
         public:
             virtual void WriteByte(std::uint8_t b) = 0;
-            virtual void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l) = 0;
+            virtual void WriteBytes(const std::vector<std::uint8_t> & l) = 0;
 
             void WriteUnit(Unit v)
             {
@@ -251,13 +251,13 @@ namespace Client
                 Position += 1;
                 return b;
             }
-            std::shared_ptr<std::vector<std::uint8_t>> ReadBytes(std::size_t Size)
+            std::vector<std::uint8_t> ReadBytes(std::size_t Size)
             {
                 if (Position + Size > Buffer.size()) { throw std::out_of_range(""); }
-                auto l = std::make_shared<std::vector<std::uint8_t>>();
-                l->resize(Size, 0);
+                std::vector<std::uint8_t> l;
+                l.resize(Size, 0);
                 if (Size == 0) { return l; }
-                std::copy(Buffer.data() + Position, Buffer.data() + Position + Size, l->data());
+                std::copy(Buffer.data() + Position, Buffer.data() + Position + Size, l.data());
                 Position += Size;
                 return l;
             }
@@ -268,12 +268,12 @@ namespace Client
                 Buffer[Position] = b;
                 Position += 1;
             }
-            void WriteBytes(std::shared_ptr<std::vector<std::uint8_t>> l)
+            void WriteBytes(const std::vector<std::uint8_t> & l)
             {
-                auto Size = l->size();
+                auto Size = l.size();
                 if (Size == 0) { return; }
                 if (Position + Size > Buffer.size()) { Buffer.resize(Position + Size, 0); }
-                std::copy(l->data(), l->data() + Size, Buffer.data() + Position);
+                std::copy(l.data(), l.data() + Size, Buffer.data() + Position);
                 Position += Size;
             }
 
@@ -337,12 +337,12 @@ namespace Client
         {
             this->bc = bc;
             this->Transformer = Transformer;
-            bc->ClientEvent = [=](std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
+            bc->ClientEvent = [=](std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
             {
                 ByteArrayStream s;
                 s.WriteString(CommandName);
                 s.WriteUInt32(CommandHash);
-                s.WriteInt32(static_cast<std::int32_t>(Parameters->size()));
+                s.WriteInt32(static_cast<std::int32_t>(Parameters.size()));
                 s.WriteBytes(Parameters);
                 s.SetPosition(0);
                 auto Bytes = s.ReadBytes(s.GetLength());
@@ -350,10 +350,10 @@ namespace Client
                     std::unique_lock<std::mutex> Lock(c.WriteBufferLockee);
                     if (Transformer != nullptr)
                     {
-                        Transformer->Transform(*Bytes, 0, static_cast<int>(Bytes->size()));
+                        Transformer->Transform(Bytes, 0, static_cast<int>(Bytes.size()));
                     }
                 }
-                c.WriteBuffer.push_back(Bytes);
+                c.WriteBuffer.push_back(std::make_shared<std::vector<std::uint8_t>>(Bytes));
                 if (ClientMethod != nullptr) { ClientMethod(); }
             };
         }
@@ -452,7 +452,7 @@ namespace Client
         public:
             std::wstring CommandName;
             std::uint32_t CommandHash;
-            std::shared_ptr<std::vector<uint8_t>> Parameters;
+            std::vector<std::uint8_t> Parameters;
         };
 
         class TryShiftResult
@@ -547,11 +547,11 @@ namespace Client
             {
                 if (Length >= bc.ParametersLength)
                 {
-                    auto Parameters = std::make_shared<std::vector<uint8_t>>();
-                    Parameters->resize(bc.ParametersLength, 0);
+                    std::vector<std::uint8_t> Parameters;
+                    Parameters.resize(bc.ParametersLength, 0);
                     for (int k = 0; k < bc.ParametersLength; k += 1)
                     {
-                        (*Parameters)[k] = (*Buffer)[Position + k];
+                        Parameters[k] = (*Buffer)[Position + k];
                     }
                     auto cmd = std::make_shared<Command>();
                     cmd->CommandName = bc.CommandName;

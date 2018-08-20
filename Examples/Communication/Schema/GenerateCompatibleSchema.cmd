@@ -31,7 +31,7 @@
     )
     @call :qSort !SchemaDirs!
     @set SchemaDirs=!return!
-    @echo Generating compatible schema for '!TypeName!' at : !SchemaDirs!
+    @echo Generating compatible schema for 'Communication!TypeName!' at : !SchemaDirs!
 
     SchemaManipulator.exe /loadtype:Common /loadtype:Communication!TypeName! /save:Communication!TypeName!.tree
 
