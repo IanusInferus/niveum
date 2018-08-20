@@ -39,7 +39,7 @@ namespace Client
             {
             }
 
-            void Send(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
+            void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
             {
                 if (a.ClientCommandSent != nullptr)
                 {
@@ -120,7 +120,7 @@ namespace Client
         {
             std::wstring CommandName;
             std::uint32_t CommandHash;
-            std::shared_ptr<std::vector<std::uint8_t>> Parameters;
+            std::vector<std::uint8_t> Parameters;
         };
 
         std::shared_ptr<std::unordered_map<std::wstring, std::shared_ptr<std::queue<CommandRequest>>>> CommandRequests;
@@ -189,7 +189,7 @@ namespace Client
         {
             return bc->GetApplicationClient()->Hash();
         }
-        virtual void HandleResult(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters)
+        virtual void HandleResult(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
         {
             if (CommandRequests->count(CommandName) > 0)
             {

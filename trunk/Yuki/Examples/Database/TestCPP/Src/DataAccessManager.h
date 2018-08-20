@@ -14,6 +14,8 @@ namespace Database
     public:
         DataAccessManager(std::wstring ConnectionString);
 
-        std::shared_ptr<IDataAccess> Create();
+        std::shared_ptr<Database::IDataAccess> Create();
+        static std::wstring GetProgramName();
+        static std::wstring GetConnectionStringExample();
     };
 }

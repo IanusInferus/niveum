@@ -28,7 +28,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
-    <ClCompile Include="DataAccessManager.cpp" />
     <ClCompile Include="MySql\DataAccessBase.cpp">
       <Filter>MySql</Filter>
     </ClCompile>
@@ -38,6 +37,7 @@
     <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
+    <ClCompile Include="DataAccessManagerMySQL.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="MySql">

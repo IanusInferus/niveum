@@ -620,7 +620,7 @@ namespace Client
                     {
                         auto Index = Indices[0];
 
-                        auto NumIndex = Indices.size();
+                        auto NumIndex = static_cast<int>(Indices.size());
                         if (NumIndex > 0xFFFF)
                         {
                             return;
@@ -892,7 +892,7 @@ namespace Client
                         return;
                     }
                     auto NumIndex = (*Buffer)[Offset] | (static_cast<std::int32_t>((*Buffer)[Offset + 1]) << 8);
-                    if (Buffer->size() < 14 + NumIndex * 2)
+                    if (static_cast<int>(Buffer->size()) < 14 + NumIndex * 2)
                     {
                         return;
                     }

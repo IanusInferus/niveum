@@ -24,6 +24,6 @@ namespace Server
 
         std::uint64_t Hash();
         bool HasCommand(std::wstring CommandName, std::uint32_t CommandHash);
-        void ExecuteCommand(std::wstring CommandName, std::uint32_t CommandHash, std::shared_ptr<std::vector<std::uint8_t>> Parameters, std::function<void(std::shared_ptr<std::vector<std::uint8_t>>)> OnSuccess, std::function<void(const std::exception &)> OnFailure);
+        void ExecuteCommand(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> OnSuccess, std::function<void(const std::exception &)> OnFailure);
     };
 }
