@@ -31,7 +31,7 @@ namespace Yuki
             }
         }
 
-        uint8_t ReadByte()
+        uint8_t ReadByte() override
         {
             uint8_t b = 0;
             if (!s.get(reinterpret_cast<char &>(b)))
@@ -40,7 +40,7 @@ namespace Yuki
             }
             return b;
         }
-        std::vector<std::uint8_t> ReadBytes(std::size_t Size)
+        std::vector<std::uint8_t> ReadBytes(std::size_t Size) override
         {
             std::vector<std::uint8_t> l;
             l.resize(Size);
@@ -70,14 +70,14 @@ namespace Yuki
             }
         }
 
-        virtual void WriteByte(std::uint8_t b)
+        void WriteByte(std::uint8_t b) override
         {
             if (!s.put(static_cast<char>(b)))
             {
                 throw std::runtime_error("IOException");
             }
         }
-        virtual void WriteBytes(const std::vector<std::uint8_t> & l)
+        void WriteBytes(const std::vector<std::uint8_t> & l) override
         {
             if (!s.write(reinterpret_cast<const char *>(l.data()), l.size()))
             {
