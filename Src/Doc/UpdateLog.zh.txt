@@ -3,6 +3,7 @@ Yuki.Relation, Yuki.RelationSchemaManipulator:
 修正C#和C++内存数据库代码生成中的编译错误。
 Example:
 增加C++内存数据库示例。
+修改写法。
 
 2018.08.20
 Yuki.Core, Yuki.Relation, Yuki.Expression:
