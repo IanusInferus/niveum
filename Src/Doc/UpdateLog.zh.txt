@@ -1,4 +1,11 @@
-﻿2018.08.21
+﻿2018.08.29
+Example:
+修正C++和Java中读取文件时可能读到错误数组长度导致占用大量内存的问题。
+去除Java示例代码对eclipse的依赖。
+Lib:
+更新Firefly，修正TransEncoding版本不匹配的问题。
+
+2018.08.21
 Yuki.Relation, Yuki.RelationSchemaManipulator:
 修正C#和C++内存数据库代码生成中的编译错误。
 Example:
