@@ -17,6 +17,8 @@ namespace World
         {
         private:
             std::ifstream s;
+            std::streampos Position;
+            std::streampos FileLength;
         public:
             ReadableStream(String Path)
             {
@@ -29,6 +31,10 @@ namespace World
                 {
                     throw std::runtime_error("IOException");
                 }
+                Position = s.tellg();
+                s.seekg(0, std::ios_base::end);
+                FileLength = s.tellg();
+                s.seekg(Position, std::ios_base::beg);
             }
 
             uint8_t ReadByte() override
@@ -38,16 +44,22 @@ namespace World
                 {
                     throw std::runtime_error("IOException");
                 }
+                Position += 1;
                 return b;
             }
             std::vector<std::uint8_t> ReadBytes(std::size_t Size) override
             {
+                if (Position + static_cast<std::streampos>(Size) > FileLength)
+                {
+                    throw std::runtime_error("IOException");
+                }
                 std::vector<std::uint8_t> l;
                 l.resize(Size);
                 if (!s.read(reinterpret_cast<char *>(l.data()), Size))
                 {
                     throw std::runtime_error("IOException");
                 }
+                Position += Size;
                 return l;
             }
         };
@@ -56,6 +68,7 @@ namespace World
         {
         private:
             std::ofstream s;
+            std::streampos Position;
         public:
             WritableStream(String Path)
             {
@@ -68,6 +81,7 @@ namespace World
                 {
                     throw std::runtime_error("IOException");
                 }
+                Position = s.tellp();
             }
 
             void WriteByte(std::uint8_t b) override
@@ -76,6 +90,7 @@ namespace World
                 {
                     throw std::runtime_error("IOException");
                 }
+                Position += 1;
             }
             void WriteBytes(const std::vector<std::uint8_t> & l) override
             {
@@ -83,6 +98,7 @@ namespace World
                 {
                     throw std::runtime_error("IOException");
                 }
+                Position += l.size();
             }
         };
     }

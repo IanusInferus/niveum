@@ -48,7 +48,7 @@ public class Program
 		try
 		{
 	        FileInputStream fis = new FileInputStream(BinaryPath1);
-	        ReadableStream rs = new ReadableStream(fis);
+	        ReadableStream rs = new ReadableStream(fis, fis.getChannel().size());
 	        WorldBinary.World Data = WorldBinary.BinaryTranslator.WorldFromBinary(rs);
 	        fis.close();
 
