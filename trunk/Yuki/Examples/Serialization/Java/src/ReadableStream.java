@@ -4,16 +4,22 @@ public class ReadableStream extends WorldBinary.IReadableStream
 {
     private InputStream s;
     private long Position;
+    private long FileLength;
 
-    public ReadableStream(InputStream s)
+    public ReadableStream(InputStream s, long FileLength)
     {
         this.s = s;
         this.Position = 0;
+        this.FileLength = FileLength;
     }
 
     @Override
     public byte ReadByte()
     {
+        if (Position + 1 > FileLength)
+        {
+            throw new RuntimeException(new EOFException());
+        }
         try
         {
             int b = s.read();
@@ -33,6 +39,10 @@ public class ReadableStream extends WorldBinary.IReadableStream
     @Override
     public byte[] ReadBytes(int Size)
     {
+        if (Position + Size > FileLength)
+        {
+            throw new RuntimeException(new EOFException());
+        }
         try
         {
             byte[] l = new byte[Size];
