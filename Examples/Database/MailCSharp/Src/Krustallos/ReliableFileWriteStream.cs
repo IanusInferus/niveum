@@ -31,20 +31,24 @@ namespace Server
 
         public void Dispose()
         {
-            FileStream.Dispose();
-            if (File.Exists(AbsoluteFilePath))
+            if (FileStream != null)
             {
-                if (File.Exists(AbsoluteFilePath + ".old"))
+                FileStream.Dispose();
+                FileStream = null;
+                if (File.Exists(AbsoluteFilePath))
                 {
-                    throw new InvalidOperationException("FileExists: {0}".Formats(AbsoluteFilePath + ".old"));
+                    if (File.Exists(AbsoluteFilePath + ".old"))
+                    {
+                        throw new InvalidOperationException("FileExists: {0}".Formats(AbsoluteFilePath + ".old"));
+                    }
+                    File.Move(AbsoluteFilePath, AbsoluteFilePath + ".old");
+                    File.Move(AbsoluteFilePath + ".new", AbsoluteFilePath);
+                    File.Delete(AbsoluteFilePath + ".old");
                 }
-                File.Move(AbsoluteFilePath, AbsoluteFilePath + ".old");
-                File.Move(AbsoluteFilePath + ".new", AbsoluteFilePath);
-                File.Delete(AbsoluteFilePath + ".old");
-            }
-            else
-            {
-                File.Move(AbsoluteFilePath + ".new", AbsoluteFilePath);
+                else
+                {
+                    File.Move(AbsoluteFilePath + ".new", AbsoluteFilePath);
+                }
             }
         }
 
