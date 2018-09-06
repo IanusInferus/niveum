@@ -1,4 +1,8 @@
-﻿2018.08.29
+﻿2018.09.06
+Example:
+修正C# Krustallos数据库文件保存用的ReliableFileWriteStream释放多次会出错的问题。
+
+2018.08.29
 Example:
 修正C++和Java中读取文件时可能读到错误数组长度导致占用大量内存的问题。
 去除Java示例代码对eclipse的依赖。
