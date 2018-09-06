@@ -1,6 +1,8 @@
 ﻿2018.09.06
 Example:
 修正C# Krustallos数据库文件保存用的ReliableFileWriteStream释放多次会出错的问题。
+*:
+修正不使用VS2017的MSBuild的问题。
 
 2018.08.29
 Example:
