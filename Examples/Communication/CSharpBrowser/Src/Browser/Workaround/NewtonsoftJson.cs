@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Bridge.Html5;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Bridge.Html5;
 
 namespace Newtonsoft.Json
 {
@@ -154,24 +154,23 @@ namespace Newtonsoft.Json.Linq
             }
         }
 
-        JToken IDictionary<String, JToken>.this[String key]
+        JToken IDictionary<string, JToken>.this[string key]
         {
             get
             {
                 return Dict[key];
             }
-
             set
             {
                 Dict[key] = value;
             }
         }
 
-        public int Count
+        public ICollection<string> Keys
         {
             get
             {
-                return Dict.Count;
+                return Dict.Keys;
             }
         }
 
@@ -183,35 +182,68 @@ namespace Newtonsoft.Json.Linq
             }
         }
 
-        ICollection<String> IDictionary<String, JToken>.Keys
+        public int Count
         {
             get
             {
-                return Dict.Keys;
+                return Dict.Count;
             }
         }
 
-        public void Add(String propertyName, JToken value)
+        public bool IsReadOnly
         {
-            Dict.Add(propertyName, value);
+            get
+            {
+                return Dict.IsReadOnly;
+            }
         }
 
-        public bool ContainsKey(String key)
+        public void Add(string key, JToken value)
+        {
+            Dict.Add(key, value);
+        }
+
+        public void Add(KeyValuePair<string, JToken> item)
+        {
+            Dict.Add(item);
+        }
+
+        public void Clear()
+        {
+            Dict.Clear();
+        }
+
+        public bool Contains(KeyValuePair<string, JToken> item)
+        {
+            return Dict.Contains(item);
+        }
+
+        public bool ContainsKey(string key)
         {
             return Dict.ContainsKey(key);
         }
 
-        public IEnumerator<KeyValuePair<String, JToken>> GetEnumerator()
+        public void CopyTo(KeyValuePair<string, JToken>[] array, int arrayIndex)
+        {
+            Dict.CopyTo(array, arrayIndex);
+        }
+
+        public IEnumerator<KeyValuePair<string, JToken>> GetEnumerator()
         {
             return Dict.GetEnumerator();
         }
 
-        public bool Remove(String key)
+        public bool Remove(string key)
         {
             return Dict.Remove(key);
         }
 
-        public bool TryGetValue(String key, out JToken value)
+        public bool Remove(KeyValuePair<string, JToken> item)
+        {
+            return Dict.Remove(item);
+        }
+
+        public bool TryGetValue(string key, out JToken value)
         {
             return Dict.TryGetValue(key, out value);
         }
@@ -247,6 +279,14 @@ namespace Newtonsoft.Json.Linq
             get
             {
                 return ((IList<JToken>)Values).Count;
+            }
+        }
+
+        public bool IsReadOnly
+        {
+            get
+            {
+                return false;
             }
         }
 
@@ -306,6 +346,11 @@ namespace Newtonsoft.Json.Linq
         IEnumerator IEnumerable.GetEnumerator()
         {
             return ((IList<JToken>)Values).GetEnumerator();
+        }
+
+        public void CopyTo(JToken[] array, int arrayIndex)
+        {
+            Values.CopyTo(array, arrayIndex);
         }
     }
 }
