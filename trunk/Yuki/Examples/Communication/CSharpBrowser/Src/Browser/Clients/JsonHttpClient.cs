@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Bridge;
 using Bridge.Html5;
 using Bridge.jQuery2;
 
@@ -72,7 +73,9 @@ namespace Client
                 {
                     url = Prefix + ServiceVirtualPath + "?sessionid=" + Global.EncodeURIComponent(SessionId) + "&callback=?";
                 }
-                jQuery.GetJSON(url, new { data = JSON.Stringify(new[] { jo }) }, OnSuccess);
+                dynamic o = new Object();
+                o["data"] = JSON.Stringify(new[] { jo });
+                jQuery.GetJSON(url, o, OnSuccess);
             }
             else
             {
