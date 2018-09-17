@@ -1,0 +1,52 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Syntax.tree
+      Location:    Niveum.Json <Tree>
+      Description: 语法结构
+      Version:     2018.09.17.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Namespace Niveum.Json.Syntax
+
+#TaggedUnion TokenLiteral                           字面量
+    NullValue           Unit                        空
+    BooleanValue        Boolean                     布尔
+    NumberValue         Real                        实数
+    StringValue         String                      字符串
+
+#TaggedUnion SyntaxValue                            值
+    Literal             TokenLiteral                字面量
+    Object              SyntaxObject                对象字面量
+    Array               SyntaxArray                 数组字面量
+
+#Record SyntaxObject                                对象字面量
+    Members             Optional<SyntaxMembers>     成员列表
+
+#TaggedUnion SyntaxMembers                          成员列表
+    Single              Tuple<TokenLiteral, SyntaxValue>    单个成员
+    Multiple            Tuple<SyntaxMembers, TokenLiteral, SyntaxValue> 多个成员
+
+#Record SyntaxArray                                 数组字面量
+    Elements            Optional<SyntaxElements>    元素列表
+
+#TaggedUnion SyntaxElements                         元素列表
+    Single              SyntaxValue                 单个元素
+    Multiple            Tuple<SyntaxElements, SyntaxValue>  多个元素
+
+#TaggedUnion SyntaxRule                                 句法规则
+    Literal                 TokenLiteral                字面量
+    LeftBracket             Unit                        左方括号
+    RightBracket            Unit                        右方括号
+    LeftBrace               Unit                        左花括号
+    RightBrace              Unit                        右花括号
+    Colon                   Unit                        冒号
+    Comma                   Unit                        逗号
+    Whitespace              Unit                        空白
+    Value                   SyntaxValue                 值
+    Object                  SyntaxObject                对象
+    Members                 SyntaxMembers               成员
+    Array                   SyntaxArray                 数组
+    Elements                SyntaxElements              元素
