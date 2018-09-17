@@ -1,0 +1,321 @@
+﻿JSON语言定义
+
+参考
+https://www.json.org/
+http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf
+
+1.词法
+token ::= literal | '{' | '}' | '[' | ']' | ':' | ',' | whitespace
+literal ::= null_literal | boolean_literal | number_literal | string_literal
+null_literal ::= "null"
+boolean_literal ::= "true" | "false"
+number_literal ::= '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?
+string_literal ::= '"' ([^"\\\u0000-\u001F] | '\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"'
+whitespace ::= [\t\n\r ]+
+
+2.number_literal的状态机
+
+1)状态集
+
+State 0
+number_literal ::= @ '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? //Match '-', Proceed, Goto 1
+                 | '-'? @ ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? (@ '0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? //Match '0', Proceed, Goto 2
+                 | '-'? ('0' | @ [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? //Match [1-9], Proceed, Goto 3
+
+State 1
+number_literal ::= '-'? @ ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? (@ '0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? //Match '0', Proceed, Goto 2
+                 | '-'? ('0' | @ [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? //Match [1-9], Proceed, Goto 3
+
+State 2
+number_literal ::= '-'? ('0' @ | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) @ ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) (@ '.' [0-9]+)? ([eE] [+-]? [0-9]+)? //Match '.', Proceed, Goto 4
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? @ ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? (@ [eE] [+-]? [0-9]+)? //Match [eE], Proceed, Goto 5
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? @ //Match Otherwise, Accept
+
+State 3
+number_literal ::= '-'? ('0' | [1-9] @ [0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9] (@ [0-9])*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? //Match [0-9], Proceed, Goto 6
+                 | '-'? ('0' | [1-9][0-9]* @) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) @ ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) (@ '.' [0-9]+)? ([eE] [+-]? [0-9]+)? //Match '.', Proceed, Goto 4
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? @ ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? (@ [eE] [+-]? [0-9]+)? //Match [eE], Proceed, Goto 5
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? @ //Match Otherwise, Accept
+
+State 4
+number_literal ::= '-'? ('0' | [1-9][0-9]*) ('.' @ [0-9]+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) ('.' (@ [0-9])+)? ([eE] [+-]? [0-9]+)? //Match [0-9], Proceed, Goto 7
+
+State 5
+number_literal ::= '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] @ [+-]? [0-9]+)? //Match [+-], Proceed, Goto 8
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? @ [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? (@ [0-9])+)? //Match [0-9], Proceed, Goto 9
+
+State 6
+number_literal ::= '-'? ('0' | [1-9] ([0-9] @)*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9] (@ [0-9])*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? //Match [0-9], Proceed, Goto 6
+                 | '-'? ('0' | [1-9][0-9]* @) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) @ ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) (@ '.' [0-9]+)? ([eE] [+-]? [0-9]+)? //Match '.', Proceed, Goto 4
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? @ ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? (@ [eE] [+-]? [0-9]+)? //Match [eE], Proceed, Goto 5
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? @ //Match Otherwise, Accept
+
+State 7
+number_literal ::= '-'? ('0' | [1-9][0-9]*) ('.' ([0-9] @)+)? ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) ('.' (@ [0-9])+)? ([eE] [+-]? [0-9]+)? //Match [0-9], Proceed, Goto 7
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+ @)? ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? @ ([eE] [+-]? [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? (@ [eE] [+-]? [0-9]+)? //Match [eE], Proceed, Goto 5
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? @ //Match Otherwise, Accept
+
+State 8
+number_literal ::= '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? @ [0-9]+)?
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? (@ [0-9])+)? //Match [0-9], Proceed, Goto 9
+
+State 9
+number_literal ::= '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? ([0-9] @)+)?
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? (@ [0-9])+)? //Match [0-9], Proceed, Goto 9
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+ @)?
+                 | '-'? ('0' | [1-9][0-9]*) ('.' [0-9]+)? ([eE] [+-]? [0-9]+)? @ //Match Otherwise, Accept
+
+
+2)状态转移表
+
+  字符  '+'     '-'     '.'     [eE]    '0'     [1-9]   otherwise/endOfText
+状态
+0               1                       2       3
+1                                       2       3
+2                       4       5                       np,acc
+3/6                     4       5       6       6       np,acc
+4                                       7       7
+5       8       8                       9       9
+7                               5       7       7       np,acc
+8                                       9       9
+9                                       9       9       np,acc
+
+表中每个状态转移项中：
+字符类中有重复，匹配到一个即可
+数字表示移进到的状态，此时规则被消耗
+空白表示不适用，没有匹配到表示解析失败
+acc表示成功结束，np表示Non-proceed
+
+3.string_literal的状态机
+
+1)状态集
+
+State 0
+string_literal ::= @ '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"' //Match '"', Proceed, Goto 1
+
+State 1
+string_literal ::= '"' @ ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"'
+                 | '"' (@ ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4})))* '"'
+                 | '"' (@ [^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"' //Match [^"\\\u0000-\u001F], Proceed, Goto 2
+                 | '"' ([^"\\\u0000-\u001F] | @ '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"' //Match '\\', Proceed, Goto 3
+                 | '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* @ '"' //Match '"', Proceed, Accept
+
+State 2
+string_literal ::= '"' ([^"\\\u0000-\u001F] @ | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"'
+                 | '"' (([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4})) @)* '"'
+                 | '"' (@ ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4})))* '"'
+                 | '"' (@ [^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"' //Match [^"\\\u0000-\u001F], Proceed, Goto 2
+                 | '"' ([^"\\\u0000-\u001F] | @ '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"' //Match '\\', Proceed, Goto 3
+                 | '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* @ '"' //Match '"', Proceed, Accept
+
+State 3
+string_literal ::= '"' ([^"\\\u0000-\u001F] | '\\' @ (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"'
+                 | '"' ([^"\\\u0000-\u001F] | '\\' (@ ["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"' //Match ["\\/bfnrt], Proceed, Goto 4
+                 | '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | @ 'u' [0-9A-Fa-f]{4}))* '"' //Match 'u', Proceed, Goto 5
+
+State 4
+string_literal ::= '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] @ | 'u' [0-9A-Fa-f]{4}))* '"'
+                 | '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}) @)* '"'
+                 | '"' (([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4})) @)* '"'
+                 | '"' (@ ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4})))* '"'
+                 | '"' (@ [^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"' //Match [^"\\\u0000-\u001F], Proceed, Goto 2
+                 | '"' ([^"\\\u0000-\u001F] | @ '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"' //Match '\\', Proceed, Goto 3
+                 | '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* @ '"' //Match '"', Proceed, Accept
+
+State 5
+string_literal ::= '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' @ [0-9A-Fa-f]{4}))* '"' //Match [0-9A-Fa-f], Proceed, Goto 6
+
+State 6
+string_literal ::= '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f] @ [0-9A-Fa-f]{3}))* '"' //Match [0-9A-Fa-f], Proceed, Goto 7
+
+State 7
+string_literal ::= '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{2} @ [0-9A-Fa-f]{2}))* '"' //Match [0-9A-Fa-f], Proceed, Goto 8
+
+State 8
+string_literal ::= '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{3} @ [0-9A-Fa-f]))* '"' //Match [0-9A-Fa-f], Proceed, Goto 9
+
+State 9
+string_literal ::= '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4} @))* '"'
+                 | '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}) @)* '"'
+                 | '"' (([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4})) @)* '"'
+                 | '"' (@ ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4})))* '"'
+                 | '"' (@ [^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"' //Match [^"\\\u0000-\u001F], Proceed, Goto 2
+                 | '"' ([^"\\\u0000-\u001F] | @ '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* '"' //Match '\\', Proceed, Goto 3
+                 | '"' ([^"\\\u0000-\u001F] | '\\' (["\\/bfnrt] | 'u' [0-9A-Fa-f]{4}))* @ '"' //Match '"', Proceed, Accept
+
+2)状态转移表
+
+  字符  '"'     '\\'    'u'     [0-9A-Fa-f]     ["\\/bfnrt]     [^"\\\u0000-\u001F]
+状态
+0       1
+1/2/4/9 acc     3                                               2
+3                       5                       4
+5                               6
+6                               7
+7                               8
+8                               9
+
+表中每个状态转移项中：
+字符类中有重复，匹配到一个即可
+数字表示移进到的状态，此时规则被消耗
+空白表示不适用，没有匹配到表示解析失败
+acc表示成功结束
+
+4.词法分析
+
+1)状态集
+
+State 0
+token ::= @ (literal | '{' | '}' | '[' | ']' | ':' | ',' | whitespace)
+        | @ literal | '{' | '}' | '[' | ']' | ':' | ',' | whitespace
+        | literal | @ '{' | '}' | '[' | ']' | ':' | ',' | whitespace //Match '{', Proceed, Accept
+        | literal | '{' | @ '}' | '[' | ']' | ':' | ',' | whitespace //Match '}', Proceed, Accept
+        | literal | '{' | '}' | @ '[' | ']' | ':' | ',' | whitespace //Match '[', Proceed, Accept
+        | literal | '{' | '}' | '[' | @ ']' | ':' | ',' | whitespace //Match ']', Proceed, Accept
+        | literal | '{' | '}' | '[' | ']' | @ ':' | ',' | whitespace //Match ':', Proceed, Accept
+        | literal | '{' | '}' | '[' | ']' | ':' | @ ',' | whitespace //Match ',', Proceed, Accept
+        | literal | '{' | '}' | '[' | ']' | ':' | ',' | @ whitespace
+literal ::= @ (null_literal | boolean_literal | number_literal | string_literal)
+          | @ null_literal | boolean_literal | number_literal | string_literal
+          | null_literal | @ boolean_literal | number_literal | string_literal
+          | null_literal | boolean_literal | @ number_literal | string_literal //Match [\-0-9], Push number_literal parser, Accept
+          | null_literal | boolean_literal | number_literal | @ string_literal //Match '"', Push string_literal parser, Accept
+null_literal ::= "null" //Match 'n', Match "null", Proceed 4, Reduce
+boolean_literal ::= @ "true" | "false" //Match 't', Match "true", Proceed 4, Accept
+                  | "true" | @ "false" //Match 'f', Match "false", Proceed 5, Accept
+whitespace ::= @ [\t\n\r ]+
+             | (@ [\t\n\r ])+ //Match [\t\n\r ], Proceed, Goto 1
+
+State 1
+whitespace ::= ([\t\n\r ] @)+
+             | (@ [\t\n\r ])+ //Match [\t\n\r ], Proceed, Goto 1
+             | [\t\n\r ]+ @ //Match Otherwise/EndOfText, Accept
+
+2)状态转移表
+
+  字符  '"'     [\-0-9] '{'     '}'     '['     ']'     ':'     ','     't'     'f'     'n'     [\t\n\r ]    otherwise       endOfText
+状态
+0       special special acc     acc     acc     acc     acc     acc     special special special 1
+1                                                                                               1            acc             acc
+
+表中每个状态转移项中：
+字符类中有重复，匹配到一个即可
+数字表示移进到的状态，此时规则被消耗
+空白表示不适用，没有匹配到表示解析失败
+acc表示成功结束
+special表示特殊动作
+
+5.文法
+非终结符之间的whitespace需要忽略掉
+value ::= literal | object | array
+object ::= '{' members? '}'
+members ::= string_literal ':' value | members ',' string_literal ':' value
+array ::= '[' elements? ']'
+elements ::= value | elements ',' value
+
+6.value的状态机
+
+1)状态集
+
+定义Σ为
+value ::= @ (literal | object | array)
+        | @ literal | object | array  //Match literal, Proceed, Reduce
+        | literal | @ object | array //Match object, Proceed, Reduce
+        | literal | object | @ array //Match array, Proceed, Reduce
+
+State 0
+root ::= @ value //Match value, If EndOfFile, Accept
+Σ
+object ::= @ '{' members? '}' //Match '{', Proceed, Push, Goto 1
+array ::= @ '[' elements? ']' //Match '[', Proceed, Push, Goto 2
+
+State 1
+object ::= '{' @ members '}' //Match members, Proceed, Push, Goto 3
+         | '{' @ '}' //Match '}', Proceed, Reduce
+members ::= @ string_literal ':' value //Match string_literal, Proceed, Push, Goto 4
+          | @ members ',' string_literal ':' value //Match members, Proceed, Push, Goto 3
+
+State 2
+array ::= '[' @ elements ']' //Match elements, Proceed, Push, Goto 5
+        | '[' @ ']' //Match ']', Proceed, Reduce
+elements ::= @ value //Match value, Proceed, Reduce
+           | @ elements ',' value //Match elements, Proceed, Push, Goto 5
+Σ
+object ::= @ '{' members? '}' //Match '{', Proceed, Push, Goto 1
+array ::= @ '[' elements? ']' //Match '[', Proceed, Push, Goto 2
+
+State 3
+object ::= '{' members @ '}' //Match '}', Proceed, Reduce
+members ::= members @ ',' string_literal ':' value //Match ',', Proceed, Push, Goto 6
+
+State 4
+members ::= string_literal @ ':' value //Match ',', Proceed, Push, Goto 7
+
+State 5
+array ::= '[' elements @ ']' //Match ']', Proceed, Reduce
+elements ::= elements @ ',' value //Match elements, Proceed, Push, Goto 8
+
+State 6
+members ::= members ',' @ string_literal ':' value //Match string_literal, Proceed, Push, Goto 9
+
+State 7
+members ::= string_literal ':' @ value //Match value, Proceed, Reduce
+Σ
+object ::= @ '{' members? '}' //Match '{', Proceed, Push, Goto 1
+array ::= @ '[' elements? ']' //Match '[', Proceed, Push, Goto 2
+
+State 8
+elements ::= elements ',' @ value //Match value, Proceed, Reduce
+Σ
+object ::= @ '{' members? '}' //Match '{', Proceed, Push, Goto 1
+array ::= @ '[' elements? ']' //Match '[', Proceed, Push, Goto 2
+
+State 9
+members ::= members ',' string_literal @ ':' value //Match ':', Proceed, Push, Goto 10
+
+State 10
+members ::= members ',' string_literal ':' @ value //Match value, Proceed, Push, Goto 1
+Σ
+object ::= @ '{' members? '}' //Match '{', Proceed, Push, Goto 1
+array ::= @ '[' elements? ']' //Match '[', Proceed, Push, Goto 2
+
+2)状态转移表
+
+  字符  '{'     '}'     '['     ']'     ':'     ','     value   object  array   literal[string_literal] literal members elements
+状态
+0       1               2                               acc/err R       R                               R
+1               R                                                               4                               3
+2       1               2       R                       R       R       R                               R               5
+3               R                               6
+4                                       7
+5                               R               8
+6                                                                               9
+7       1               2                               R       R       R                               R
+8       1               2                               R       R       R                               R
+9                                       10
+10      1               2                               R       R       R                               R
+
+表中每个状态转移项中：
+规则中有重复，匹配到一个即可
+数字表示移进到的状态，此时规则被消耗
+空白表示不适用，没有匹配到表示解析失败
+R表示规约，此时对应表达式项数的规则被消耗，生成一个新规则
+acc表示成功结束，err表示失败

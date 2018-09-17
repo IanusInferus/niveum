@@ -1,4 +1,14 @@
-﻿2018.09.06
+﻿2018.09.17
+Niveum.Json:
+增加JSON解析库，完成词法分析。
+Doc:
+增加JSON格式文档。
+
+2018.09.10
+Example:
+更新C#通讯浏览器示例的Bridge.NET到17.3.0。
+
+2018.09.06
 Example:
 修正C# Krustallos数据库文件保存用的ReliableFileWriteStream释放多次会出错的问题。
 *:
