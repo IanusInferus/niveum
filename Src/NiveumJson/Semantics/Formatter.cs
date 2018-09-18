@@ -20,7 +20,7 @@ namespace Niveum.Json.Semantics
         {
             var Output = new StringBuilder();
             Write(Token, Formatting, Output, 0, true);
-            return String.Join("", Output);
+            return Output.ToString();
         }
         private static void Write(JToken Token, Formatting Formatting, StringBuilder Output, int Level, bool FirstInLine)
         {
