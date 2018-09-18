@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Niveum.Json <Visual C#>
 //  Description: 词法分析器
-//  Version:     2018.09.17.
+//  Version:     2018.09.18.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,10 +21,10 @@ namespace Niveum.Json.Syntax
             var StartPosition = r.CurrentPosition;
 
             Action Proceed = () => r.Read();
-            Func<Optional<Char>, Exception> MakeIllegalChar = c =>
+            Func<Exception> MakeIllegalChar = () =>
             {
                 var FilePath = r.FilePath;
-                var Message = c.OnHasValue ? "IllegalChar '" + c + "'" : "InvalidEndOfText";
+                var Message = !r.EndOfText ? "IllegalChar '" + r.Peek() + "'" : "InvalidEndOfText";
                 if (FilePath.OnHasValue)
                 {
                     return new InvalidOperationException(FilePath.Value + r.CurrentPosition.ToString() + ": " + Message);
@@ -42,7 +42,7 @@ namespace Niveum.Json.Syntax
                     TextRanges.Value.Add(Rule, Range);
                 }
                 return Rule;
-            };
+            }
 
             while (true)
             {
@@ -90,46 +90,46 @@ namespace Niveum.Json.Syntax
                     else if (c == 't')
                     {
                         Proceed();
-                        if (r.EndOfText) { throw MakeIllegalChar(Optional<Char>.Empty); }
+                        if (r.EndOfText) { throw MakeIllegalChar(); }
                         c = r.Read();
-                        if (c != 'r') { throw MakeIllegalChar(c); }
-                        if (r.EndOfText) { throw MakeIllegalChar(Optional<Char>.Empty); }
+                        if (c != 'r') { throw MakeIllegalChar(); }
+                        if (r.EndOfText) { throw MakeIllegalChar(); }
                         c = r.Read();
-                        if (c != 'u') { throw MakeIllegalChar(c); }
-                        if (r.EndOfText) { throw MakeIllegalChar(Optional<Char>.Empty); }
+                        if (c != 'u') { throw MakeIllegalChar(); }
+                        if (r.EndOfText) { throw MakeIllegalChar(); }
                         c = r.Read();
-                        if (c != 'e') { throw MakeIllegalChar(c); }
+                        if (c != 'e') { throw MakeIllegalChar(); }
                         return MarkRange(SyntaxRule.CreateLiteral(MarkRange(TokenLiteral.CreateBooleanValue(true))));
                     }
                     else if (c == 'f')
                     {
                         Proceed();
-                        if (r.EndOfText) { throw MakeIllegalChar(Optional<Char>.Empty); }
+                        if (r.EndOfText) { throw MakeIllegalChar(); }
                         c = r.Read();
-                        if (c != 'a') { throw MakeIllegalChar(c); }
-                        if (r.EndOfText) { throw MakeIllegalChar(Optional<Char>.Empty); }
+                        if (c != 'a') { throw MakeIllegalChar(); }
+                        if (r.EndOfText) { throw MakeIllegalChar(); }
                         c = r.Read();
-                        if (c != 'l') { throw MakeIllegalChar(c); }
-                        if (r.EndOfText) { throw MakeIllegalChar(Optional<Char>.Empty); }
+                        if (c != 'l') { throw MakeIllegalChar(); }
+                        if (r.EndOfText) { throw MakeIllegalChar(); }
                         c = r.Read();
-                        if (c != 's') { throw MakeIllegalChar(c); }
-                        if (r.EndOfText) { throw MakeIllegalChar(Optional<Char>.Empty); }
+                        if (c != 's') { throw MakeIllegalChar(); }
+                        if (r.EndOfText) { throw MakeIllegalChar(); }
                         c = r.Read();
-                        if (c != 'e') { throw MakeIllegalChar(c); }
+                        if (c != 'e') { throw MakeIllegalChar(); }
                         return MarkRange(SyntaxRule.CreateLiteral(MarkRange(TokenLiteral.CreateBooleanValue(false))));
                     }
                     else if (c == 'n')
                     {
                         Proceed();
-                        if (r.EndOfText) { throw MakeIllegalChar(Optional<Char>.Empty); }
+                        if (r.EndOfText) { throw MakeIllegalChar(); }
                         c = r.Read();
-                        if (c != 'u') { throw MakeIllegalChar(c); }
-                        if (r.EndOfText) { throw MakeIllegalChar(Optional<Char>.Empty); }
+                        if (c != 'u') { throw MakeIllegalChar(); }
+                        if (r.EndOfText) { throw MakeIllegalChar(); }
                         c = r.Read();
-                        if (c != 'l') { throw MakeIllegalChar(c); }
-                        if (r.EndOfText) { throw MakeIllegalChar(Optional<Char>.Empty); }
+                        if (c != 'l') { throw MakeIllegalChar(); }
+                        if (r.EndOfText) { throw MakeIllegalChar(); }
                         c = r.Read();
-                        if (c != 'l') { throw MakeIllegalChar(c); }
+                        if (c != 'l') { throw MakeIllegalChar(); }
                         return MarkRange(SyntaxRule.CreateLiteral(MarkRange(TokenLiteral.CreateNullValue())));
                     }
                     else if ((c == '\t') || (c == '\n') || (c == '\r') || (c == ' '))
@@ -139,7 +139,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if (State == 1)
@@ -173,10 +173,10 @@ namespace Niveum.Json.Syntax
             double ExpPart = 0;
 
             Action Proceed = () => r.Read();
-            Func<Optional<Char>, Exception> MakeIllegalChar = c =>
+            Func<Exception> MakeIllegalChar = () =>
             {
                 var FilePath = r.FilePath;
-                var Message = c.OnHasValue ? "IllegalChar '" + c + "'" : "InvalidEndOfText";
+                var Message = !r.EndOfText ? "IllegalChar '" + r.Peek() + "'" : "InvalidEndOfText";
                 if (FilePath.OnHasValue)
                 {
                     return new InvalidOperationException(FilePath.Value + r.CurrentPosition.ToString() + ": " + Message);
@@ -194,7 +194,7 @@ namespace Niveum.Json.Syntax
                     TextRanges.Value.Add(Rule, Range);
                 }
                 return Rule;
-            };
+            }
             Func<double> GetResult = () =>
             {
                 var d = ((NegativeSign ? -1 : 1) * (IntegerPart + FractionalPart / FractionalBase)) * Math.Pow(10, (ExpNegativeSign ? -1 : 1) * ExpPart);
@@ -226,7 +226,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if (State == 1)
@@ -245,7 +245,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if (State == 2)
@@ -299,7 +299,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if (State == 5)
@@ -324,7 +324,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if (State == 7)
@@ -356,7 +356,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if (State == 9)
