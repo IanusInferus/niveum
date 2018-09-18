@@ -237,65 +237,65 @@ elements ::= value | elements ',' value
 
 定义Σ为
 value ::= @ (literal | object | array)
-        | @ literal | object | array  //Match literal, Proceed, Reduce
-        | literal | @ object | array //Match object, Proceed, Reduce
-        | literal | object | @ array //Match array, Proceed, Reduce
+        | @ literal | object | array  //Match literal, Push, Proceed, Reduce
+        | literal | @ object | array //Match object, Push, Proceed, Reduce
+        | literal | object | @ array //Match array, Push, Proceed, Reduce
 
 State 0
-root ::= @ value //Match value, If EndOfFile, Accept
+root ::= @ value //Match value, If EndOfText, Accept
 Σ
-object ::= @ '{' members? '}' //Match '{', Proceed, Push, Goto 1
-array ::= @ '[' elements? ']' //Match '[', Proceed, Push, Goto 2
+object ::= @ '{' members? '}' //Match '{', Push, Proceed, Goto 1
+array ::= @ '[' elements? ']' //Match '[', Push, Proceed, Goto 2
 
 State 1
-object ::= '{' @ members '}' //Match members, Proceed, Push, Goto 3
-         | '{' @ '}' //Match '}', Proceed, Reduce
-members ::= @ string_literal ':' value //Match string_literal, Proceed, Push, Goto 4
-          | @ members ',' string_literal ':' value //Match members, Proceed, Push, Goto 3
+object ::= '{' @ members '}' //Match members, Push, Proceed, Goto 3
+         | '{' @ '}' //Match '}', Push, Proceed, Reduce
+members ::= @ string_literal ':' value //Match string_literal, Push, Proceed, Goto 4
+          | @ members ',' string_literal ':' value //Match members, Push, Proceed, Goto 3
 
 State 2
-array ::= '[' @ elements ']' //Match elements, Proceed, Push, Goto 5
-        | '[' @ ']' //Match ']', Proceed, Reduce
-elements ::= @ value //Match value, Proceed, Reduce
-           | @ elements ',' value //Match elements, Proceed, Push, Goto 5
+array ::= '[' @ elements ']' //Match elements, Push, Proceed, Goto 5
+        | '[' @ ']' //Match ']', Push, Proceed, Reduce
+elements ::= @ value //Match value, Push, Proceed, Reduce
+           | @ elements ',' value //Match elements, Push, Proceed, Goto 5
 Σ
-object ::= @ '{' members? '}' //Match '{', Proceed, Push, Goto 1
-array ::= @ '[' elements? ']' //Match '[', Proceed, Push, Goto 2
+object ::= @ '{' members? '}' //Match '{', Push, Proceed, Goto 1
+array ::= @ '[' elements? ']' //Match '[', Push, Proceed, Goto 2
 
 State 3
-object ::= '{' members @ '}' //Match '}', Proceed, Reduce
-members ::= members @ ',' string_literal ':' value //Match ',', Proceed, Push, Goto 6
+object ::= '{' members @ '}' //Match '}', Push, Proceed, Reduce
+members ::= members @ ',' string_literal ':' value //Match ',', Push, Proceed, Goto 6
 
 State 4
-members ::= string_literal @ ':' value //Match ',', Proceed, Push, Goto 7
+members ::= string_literal @ ':' value //Match ':', Push, Proceed, Goto 7
 
 State 5
-array ::= '[' elements @ ']' //Match ']', Proceed, Reduce
-elements ::= elements @ ',' value //Match elements, Proceed, Push, Goto 8
+array ::= '[' elements @ ']' //Match ']', Push, Proceed, Reduce
+elements ::= elements @ ',' value //Match ',', Push, Proceed, Goto 8
 
 State 6
-members ::= members ',' @ string_literal ':' value //Match string_literal, Proceed, Push, Goto 9
+members ::= members ',' @ string_literal ':' value //Match string_literal, Push, Proceed, Goto 9
 
 State 7
-members ::= string_literal ':' @ value //Match value, Proceed, Reduce
+members ::= string_literal ':' @ value //Match value, Push, Proceed, Reduce
 Σ
-object ::= @ '{' members? '}' //Match '{', Proceed, Push, Goto 1
-array ::= @ '[' elements? ']' //Match '[', Proceed, Push, Goto 2
+object ::= @ '{' members? '}' //Match '{', Push, Proceed, Goto 1
+array ::= @ '[' elements? ']' //Match '[', Push, Proceed, Goto 2
 
 State 8
 elements ::= elements ',' @ value //Match value, Proceed, Reduce
 Σ
-object ::= @ '{' members? '}' //Match '{', Proceed, Push, Goto 1
-array ::= @ '[' elements? ']' //Match '[', Proceed, Push, Goto 2
+object ::= @ '{' members? '}' //Match '{', Push, Proceed, Goto 1
+array ::= @ '[' elements? ']' //Match '[', Push, Proceed, Goto 2
 
 State 9
-members ::= members ',' string_literal @ ':' value //Match ':', Proceed, Push, Goto 10
+members ::= members ',' string_literal @ ':' value //Match ':', Push, Proceed, Goto 10
 
 State 10
-members ::= members ',' string_literal ':' @ value //Match value, Proceed, Push, Goto 1
+members ::= members ',' string_literal ':' @ value //Match value, Push, Proceed, Goto 1
 Σ
-object ::= @ '{' members? '}' //Match '{', Proceed, Push, Goto 1
-array ::= @ '[' elements? ']' //Match '[', Proceed, Push, Goto 2
+object ::= @ '{' members? '}' //Match '{', Push, Proceed, Goto 1
+array ::= @ '[' elements? ']' //Match '[', Push, Proceed, Goto 2
 
 2)状态转移表
 

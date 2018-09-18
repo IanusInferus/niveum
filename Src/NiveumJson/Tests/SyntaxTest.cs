@@ -3,14 +3,14 @@
 //  File:        SyntaxTest.cs
 //  Location:    Niveum.Json <Visual C#>
 //  Description: 文法测试
-//  Version:     2018.09.17.
+//  Version:     2018.09.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
+using Niveum.Json.Syntax;
 using System;
 using System.Collections.Generic;
-using Niveum.Json.Syntax;
 
 namespace Niveum.Json.Tests
 {
@@ -18,40 +18,68 @@ namespace Niveum.Json.Tests
     {
         public static void DoTest()
         {
-            Assert(SyntaxEquals(SyntaxParse(@"""123abc\u0020\t\"""""), SyntaxRule.CreateLiteral(TokenLiteral.CreateStringValue("123abc \t\""))));
+            Assert(SyntaxEquals(TokenParse(@"""123abc\u0020\t\"""""), SyntaxRule.CreateLiteral(TokenLiteral.CreateStringValue("123abc \t\""))));
 
-            Assert(SyntaxEquals(SyntaxParse(@"0"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(0))));
-            Assert(SyntaxEquals(SyntaxParse(@"-1000"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(-1000))));
-            Assert(SyntaxEquals(SyntaxParse(@"0.0"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(0))));
-            Assert(SyntaxEquals(SyntaxParse(@"123.456"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(123.456))));
-            Assert(SyntaxEquals(SyntaxParse(@"-10.1"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(-10.1))));
-            Assert(SyntaxEquals(SyntaxParse(@"100.001e10"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(100.001e10))));
-            Assert(SyntaxEquals(SyntaxParse(@"-100.00e+10"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(-100.00e+10))));
-            Assert(SyntaxEquals(SyntaxParse(@"100.001e-10"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(100.001e-10))));
-            Assert(SyntaxEquals(SyntaxParse(@"1.23456789123456789123456789e10"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(1.23456789123456789123456789e10))));
-            Assert(SyntaxEquals(SyntaxParse(@"1.79769e+308"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(1.79769e+308))));
-            Assert(SyntaxEquals(SyntaxParse(@"-1.79769e+308"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(-1.79769e+308))));
-            Assert(SyntaxEquals(SyntaxParse(@"2.22507e-308"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(2.22507e-308))));
-            Assert(SyntaxEquals(SyntaxParse(@"-2.22507e-308"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(-2.22507e-308))));
+            Assert(SyntaxEquals(TokenParse(@"0"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(0))));
+            Assert(SyntaxEquals(TokenParse(@"-1000"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(-1000))));
+            Assert(SyntaxEquals(TokenParse(@"0.0"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(0))));
+            Assert(SyntaxEquals(TokenParse(@"123.456"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(123.456))));
+            Assert(SyntaxEquals(TokenParse(@"-10.1"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(-10.1))));
+            Assert(SyntaxEquals(TokenParse(@"100.001e10"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(100.001e10))));
+            Assert(SyntaxEquals(TokenParse(@"-100.00e+10"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(-100.00e+10))));
+            Assert(SyntaxEquals(TokenParse(@"100.001e-10"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(100.001e-10))));
+            Assert(SyntaxEquals(TokenParse(@"1.23456789123456789123456789e10"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(1.23456789123456789123456789e10))));
+            Assert(SyntaxEquals(TokenParse(@"1.79769e+308"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(1.79769e+308))));
+            Assert(SyntaxEquals(TokenParse(@"-1.79769e+308"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(-1.79769e+308))));
+            Assert(SyntaxEquals(TokenParse(@"2.22507e-308"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(2.22507e-308))));
+            Assert(SyntaxEquals(TokenParse(@"-2.22507e-308"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNumberValue(-2.22507e-308))));
 
-            Assert(SyntaxEquals(SyntaxParse(@"null"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNullValue())));
-            Assert(SyntaxEquals(SyntaxParse(@"false"), SyntaxRule.CreateLiteral(TokenLiteral.CreateBooleanValue(false))));
-            Assert(SyntaxEquals(SyntaxParse(@"true"), SyntaxRule.CreateLiteral(TokenLiteral.CreateBooleanValue(true))));
-            Assert(SyntaxEquals(SyntaxParse(@"{"), SyntaxRule.CreateLeftBrace()));
-            Assert(SyntaxEquals(SyntaxParse(@"}"), SyntaxRule.CreateRightBrace()));
-            Assert(SyntaxEquals(SyntaxParse(@"["), SyntaxRule.CreateLeftBracket()));
-            Assert(SyntaxEquals(SyntaxParse(@"]"), SyntaxRule.CreateRightBracket()));
-            Assert(SyntaxEquals(SyntaxParse(@":"), SyntaxRule.CreateColon()));
-            Assert(SyntaxEquals(SyntaxParse(@","), SyntaxRule.CreateComma()));
-            Assert(SyntaxEquals(SyntaxParse(" \t\r\n"), SyntaxRule.CreateWhitespace()));
+            Assert(SyntaxEquals(TokenParse(@"null"), SyntaxRule.CreateLiteral(TokenLiteral.CreateNullValue())));
+            Assert(SyntaxEquals(TokenParse(@"false"), SyntaxRule.CreateLiteral(TokenLiteral.CreateBooleanValue(false))));
+            Assert(SyntaxEquals(TokenParse(@"true"), SyntaxRule.CreateLiteral(TokenLiteral.CreateBooleanValue(true))));
+            Assert(SyntaxEquals(TokenParse(@"{"), SyntaxRule.CreateLeftBrace()));
+            Assert(SyntaxEquals(TokenParse(@"}"), SyntaxRule.CreateRightBrace()));
+            Assert(SyntaxEquals(TokenParse(@"["), SyntaxRule.CreateLeftBracket()));
+            Assert(SyntaxEquals(TokenParse(@"]"), SyntaxRule.CreateRightBracket()));
+            Assert(SyntaxEquals(TokenParse(@":"), SyntaxRule.CreateColon()));
+            Assert(SyntaxEquals(TokenParse(@","), SyntaxRule.CreateComma()));
+            Assert(SyntaxEquals(TokenParse(" \t\r\n"), SyntaxRule.CreateWhitespace()));
+
+            Assert(SyntaxEquals(SyntaxParse("null"), SyntaxValue.CreateLiteral(TokenLiteral.CreateNullValue())));
+            Assert(SyntaxEquals(SyntaxParse("false"), SyntaxValue.CreateLiteral(TokenLiteral.CreateBooleanValue(false))));
+            Assert(SyntaxEquals(SyntaxParse("true"), SyntaxValue.CreateLiteral(TokenLiteral.CreateBooleanValue(true))));
+            Assert(SyntaxEquals(SyntaxParse("123"), SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(123))));
+            Assert(SyntaxEquals(SyntaxParse("\"123\""), SyntaxValue.CreateLiteral(TokenLiteral.CreateStringValue("123"))));
+            Assert(SyntaxEquals(SyntaxParse(" null "), SyntaxValue.CreateLiteral(TokenLiteral.CreateNullValue())));
+            Assert(SyntaxEquals(SyntaxParse(" false "), SyntaxValue.CreateLiteral(TokenLiteral.CreateBooleanValue(false))));
+            Assert(SyntaxEquals(SyntaxParse(" true "), SyntaxValue.CreateLiteral(TokenLiteral.CreateBooleanValue(true))));
+            Assert(SyntaxEquals(SyntaxParse(" 123 "), SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(123))));
+            Assert(SyntaxEquals(SyntaxParse(" \"123\" "), SyntaxValue.CreateLiteral(TokenLiteral.CreateStringValue("123"))));
+            Assert(SyntaxEquals(SyntaxParse("{}"), SyntaxValue.CreateObject(new SyntaxObject { Members = Optional<SyntaxMembers>.Empty })));
+            Assert(SyntaxEquals(SyntaxParse("[]"), SyntaxValue.CreateArray(new SyntaxArray { Elements = Optional<SyntaxElements>.Empty })));
+            Assert(SyntaxEquals(SyntaxParse("{ }"), SyntaxValue.CreateObject(new SyntaxObject { Members = Optional<SyntaxMembers>.Empty })));
+            Assert(SyntaxEquals(SyntaxParse("[ ]"), SyntaxValue.CreateArray(new SyntaxArray { Elements = Optional<SyntaxElements>.Empty })));
+            Assert(SyntaxEquals(SyntaxParse(" { }"), SyntaxValue.CreateObject(new SyntaxObject { Members = Optional<SyntaxMembers>.Empty })));
+            Assert(SyntaxEquals(SyntaxParse(" [ ]"), SyntaxValue.CreateArray(new SyntaxArray { Elements = Optional<SyntaxElements>.Empty })));
+            Assert(SyntaxEquals(SyntaxParse(" { } "), SyntaxValue.CreateObject(new SyntaxObject { Members = Optional<SyntaxMembers>.Empty })));
+            Assert(SyntaxEquals(SyntaxParse(" [ ] "), SyntaxValue.CreateArray(new SyntaxArray { Elements = Optional<SyntaxElements>.Empty })));
+            Assert(SyntaxEquals(SyntaxParse("{\"key\":1}"), SyntaxValue.CreateObject(new SyntaxObject { Members = SyntaxMembers.CreateSingle(new Tuple<TokenLiteral, SyntaxValue>(TokenLiteral.CreateStringValue("key"), SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(1)))) })));
+            Assert(SyntaxEquals(SyntaxParse("[1]"), SyntaxValue.CreateArray(new SyntaxArray { Elements = SyntaxElements.CreateSingle(SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(1))) })));
+            Assert(SyntaxEquals(SyntaxParse("{ \"key\" : 1 }"), SyntaxValue.CreateObject(new SyntaxObject { Members = SyntaxMembers.CreateSingle(new Tuple<TokenLiteral, SyntaxValue>(TokenLiteral.CreateStringValue("key"), SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(1)))) })));
+            Assert(SyntaxEquals(SyntaxParse("[ 1 ]"), SyntaxValue.CreateArray(new SyntaxArray { Elements = SyntaxElements.CreateSingle(SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(1))) })));
+            Assert(SyntaxEquals(SyntaxParse("{\"key\":1,\"value\":2}"), SyntaxValue.CreateObject(new SyntaxObject { Members = SyntaxMembers.CreateMultiple(new Tuple<SyntaxMembers, TokenLiteral, SyntaxValue>(SyntaxMembers.CreateSingle(new Tuple<TokenLiteral, SyntaxValue>(TokenLiteral.CreateStringValue("key"), SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(1)))), TokenLiteral.CreateStringValue("value"), SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(2)))) })));
+            Assert(SyntaxEquals(SyntaxParse("[1,2]"), SyntaxValue.CreateArray(new SyntaxArray { Elements = SyntaxElements.CreateMultiple(new Tuple<SyntaxElements, SyntaxValue>(SyntaxElements.CreateSingle(SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(1))), SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(2)))) })));
+            Assert(SyntaxEquals(SyntaxParse("{ \"key\" : 1, \"value\" : 2 }"), SyntaxValue.CreateObject(new SyntaxObject { Members = SyntaxMembers.CreateMultiple(new Tuple<SyntaxMembers, TokenLiteral, SyntaxValue>(SyntaxMembers.CreateSingle(new Tuple<TokenLiteral, SyntaxValue>(TokenLiteral.CreateStringValue("key"), SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(1)))), TokenLiteral.CreateStringValue("value"), SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(2)))) })));
+            Assert(SyntaxEquals(SyntaxParse("[ 1, 2 ]"), SyntaxValue.CreateArray(new SyntaxArray { Elements = SyntaxElements.CreateMultiple(new Tuple<SyntaxElements, SyntaxValue>(SyntaxElements.CreateSingle(SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(1))), SyntaxValue.CreateLiteral(TokenLiteral.CreateNumberValue(2)))) })));
         }
 
+        [System.Diagnostics.DebuggerNonUserCode]
         private static void Assert(bool b)
         {
             if (!b) { throw new InvalidOperationException("Assertion Failed"); }
         }
 
-        private static SyntaxRule SyntaxParse(String Text)
+        private static SyntaxRule TokenParse(String Text)
         {
             var TextRanges = new Dictionary<Object, TextRange>();
             using (var sr = new System.IO.StringReader(Text))
@@ -62,6 +90,18 @@ namespace Niveum.Json.Tests
                 return t;
             }
         }
+        private static SyntaxValue SyntaxParse(String Text)
+        {
+            var TextRanges = new Dictionary<Object, TextRange>();
+            using (var sr = new System.IO.StringReader(Text))
+            using (var ptr = new PositionedTextReader(Optional<String>.Empty, sr))
+            {
+                var t = SyntaxParser.ReadValue(ptr, TextRanges);
+                if (!ptr.EndOfText) { throw new InvalidOperationException(); }
+                return t;
+            }
+        }
+
         private static bool SyntaxEquals(SyntaxRule Left, SyntaxRule Right)
         {
             if (Left._Tag != Right._Tag) { return false; }
