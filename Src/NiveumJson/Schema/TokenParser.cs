@@ -3,13 +3,14 @@
 //  File:        TokenParser.cs
 //  Location:    Niveum.Json <Visual C#>
 //  Description: 词法分析器
-//  Version:     2018.09.18.
+//  Version:     2018.09.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Niveum.Json.Syntax
 {
@@ -20,8 +21,11 @@ namespace Niveum.Json.Syntax
             int State = 0;
             var StartPosition = r.CurrentPosition;
 
-            Action Proceed = () => r.Read();
-            Func<Exception> MakeIllegalChar = () =>
+            void Proceed()
+            {
+                r.Read();
+            }
+            Exception MakeIllegalChar()
             {
                 var FilePath = r.FilePath;
                 var Message = !r.EndOfText ? "IllegalChar '" + r.Peek() + "'" : "InvalidEndOfText";
@@ -33,7 +37,7 @@ namespace Niveum.Json.Syntax
                 {
                     return new InvalidOperationException(r.CurrentPosition.ToString() + ": " + Message);
                 }
-            };
+            }
             T MarkRange<T>(T Rule)
             {
                 if (TextRanges.OnHasValue)
@@ -46,14 +50,14 @@ namespace Niveum.Json.Syntax
 
             while (true)
             {
-                var c = r.EndOfText ? Optional<Char>.Empty : r.Peek();
+                var c = r.EndOfText ? default(Char) : r.Peek();
                 if (State == 0)
                 {
                     if (c == '"')
                     {
                         return ReadStringLiteral(r, TextRanges);
                     }
-                    else if ((c == '-') || (c.OnHasValue && (c.Value >= '0') && (c.Value <= '9')))
+                    else if ((c == '-') || ((c >= '0') && (c <= '9')))
                     {
                         return ReadNumberLiteral(r, TextRanges);
                     }
@@ -172,8 +176,11 @@ namespace Niveum.Json.Syntax
             bool ExpNegativeSign = false;
             double ExpPart = 0;
 
-            Action Proceed = () => r.Read();
-            Func<Exception> MakeIllegalChar = () =>
+            void Proceed()
+            {
+                r.Read();
+            }
+            Exception MakeIllegalChar()
             {
                 var FilePath = r.FilePath;
                 var Message = !r.EndOfText ? "IllegalChar '" + r.Peek() + "'" : "InvalidEndOfText";
@@ -185,7 +192,7 @@ namespace Niveum.Json.Syntax
                 {
                     return new InvalidOperationException(r.CurrentPosition.ToString() + ": " + Message);
                 }
-            };
+            }
             T MarkRange<T>(T Rule)
             {
                 if (TextRanges.OnHasValue)
@@ -203,7 +210,7 @@ namespace Niveum.Json.Syntax
 
             while (true)
             {
-                var c = r.EndOfText ? Optional<Char>.Empty : r.Peek();
+                var c = r.EndOfText ? default(Char) : r.Peek();
                 if (State == 0)
                 {
                     if (c == '-')
@@ -218,9 +225,9 @@ namespace Niveum.Json.Syntax
                         Proceed();
                         State = 2;
                     }
-                    else if (c.OnHasValue && (c.Value >= '1') && (c.Value <= '9'))
+                    else if ((c >= '1') && (c <= '9'))
                     {
-                        IntegerPart = IntegerPart * 10 + (c.Value - '0');
+                        IntegerPart = IntegerPart * 10 + (c - '0');
                         Proceed();
                         State = 3;
                     }
@@ -237,9 +244,9 @@ namespace Niveum.Json.Syntax
                         Proceed();
                         State = 2;
                     }
-                    else if (c.OnHasValue && (c.Value >= '1') && (c.Value <= '9'))
+                    else if ((c >= '1') && (c <= '9'))
                     {
-                        IntegerPart = IntegerPart * 10 + (c.Value - '0');
+                        IntegerPart = IntegerPart * 10 + (c - '0');
                         Proceed();
                         State = 3;
                     }
@@ -277,9 +284,9 @@ namespace Niveum.Json.Syntax
                         Proceed();
                         State = 5;
                     }
-                    else if (c.OnHasValue && (c.Value >= '0') && (c.Value <= '9'))
+                    else if ((c >= '0') && (c <= '9'))
                     {
-                        IntegerPart = IntegerPart * 10 + (c.Value - '0');
+                        IntegerPart = IntegerPart * 10 + (c - '0');
                         Proceed();
                         State = 6;
                     }
@@ -290,9 +297,9 @@ namespace Niveum.Json.Syntax
                 }
                 else if (State == 4)
                 {
-                    if (c.OnHasValue && (c.Value >= '0') && (c.Value <= '9'))
+                    if ((c >= '0') && (c <= '9'))
                     {
-                        FractionalPart = FractionalPart * 10 + (c.Value - '0');
+                        FractionalPart = FractionalPart * 10 + (c - '0');
                         FractionalBase *= 10;
                         Proceed();
                         State = 7;
@@ -316,9 +323,9 @@ namespace Niveum.Json.Syntax
                         Proceed();
                         State = 8;
                     }
-                    else if (c.OnHasValue && (c.Value >= '0') && (c.Value <= '9'))
+                    else if ((c >= '0') && (c <= '9'))
                     {
-                        ExpPart = ExpPart * 10 + (c.Value - '0');
+                        ExpPart = ExpPart * 10 + (c - '0');
                         Proceed();
                         State = 9;
                     }
@@ -334,9 +341,9 @@ namespace Niveum.Json.Syntax
                         Proceed();
                         State = 5;
                     }
-                    else if (c.OnHasValue && (c.Value >= '0') && (c.Value <= '9'))
+                    else if ((c >= '0') && (c <= '9'))
                     {
-                        FractionalPart = FractionalPart * 10 + (c.Value - '0');
+                        FractionalPart = FractionalPart * 10 + (c - '0');
                         FractionalBase *= 10;
                         Proceed();
                         State = 7;
@@ -348,9 +355,9 @@ namespace Niveum.Json.Syntax
                 }
                 else if (State == 8)
                 {
-                    if (c.OnHasValue && (c.Value >= '0') && (c.Value <= '9'))
+                    if ((c >= '0') && (c <= '9'))
                     {
-                        ExpPart = ExpPart * 10 + (c.Value - '0');
+                        ExpPart = ExpPart * 10 + (c - '0');
                         Proceed();
                         State = 9;
                     }
@@ -361,9 +368,9 @@ namespace Niveum.Json.Syntax
                 }
                 else if (State == 9)
                 {
-                    if (c.OnHasValue && (c.Value >= '0') && (c.Value <= '9'))
+                    if ((c >= '0') && (c <= '9'))
                     {
-                        ExpPart = ExpPart * 10 + (c.Value - '0');
+                        ExpPart = ExpPart * 10 + (c - '0');
                         Proceed();
                         State = 9;
                     }
@@ -383,14 +390,17 @@ namespace Niveum.Json.Syntax
         {
             int State = 0;
             var StartPosition = r.CurrentPosition;
-            var Chars = new List<Char>();
+            var Chars = new StringBuilder();
             int Hex = 0;
 
-            Action Proceed = () => r.Read();
-            Func<Optional<Char>, Exception> MakeIllegalChar = c =>
+            void Proceed()
+            {
+                r.Read();
+            }
+            Exception MakeIllegalChar()
             {
                 var FilePath = r.FilePath;
-                var Message = c.OnHasValue ? "IllegalChar '" + c + "'" : "InvalidEndOfText";
+                var Message = !r.EndOfText ? "IllegalChar '" + r.Peek() + "'" : "InvalidEndOfText";
                 if (FilePath.OnHasValue)
                 {
                     return new InvalidOperationException(FilePath.Value + r.CurrentPosition.ToString() + ": " + Message);
@@ -399,7 +409,7 @@ namespace Niveum.Json.Syntax
                 {
                     return new InvalidOperationException(r.CurrentPosition.ToString() + ": " + Message);
                 }
-            };
+            }
             T MarkRange<T>(T Rule)
             {
                 if (TextRanges.OnHasValue)
@@ -431,7 +441,7 @@ namespace Niveum.Json.Syntax
 
             while (true)
             {
-                if (r.EndOfText) { throw MakeIllegalChar(Optional<Char>.Empty); }
+                if (r.EndOfText) { throw MakeIllegalChar(); }
                 var c = r.Peek();
                 if (State == 0)
                 {
@@ -442,7 +452,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if ((State == 1) || (State == 2) || (State == 4) || (State == 9))
@@ -450,7 +460,7 @@ namespace Niveum.Json.Syntax
                     if (c == '"')
                     {
                         Proceed();
-                        return MarkRange(SyntaxRule.CreateLiteral(MarkRange(TokenLiteral.CreateStringValue(new String(Chars.ToArray())))));
+                        return MarkRange(SyntaxRule.CreateLiteral(MarkRange(TokenLiteral.CreateStringValue(Chars.ToString()))));
                     }
                     else if (c == '\\')
                     {
@@ -459,13 +469,13 @@ namespace Niveum.Json.Syntax
                     }
                     else if (c >= '\u0020')
                     {
-                        Chars.Add(c);
+                        Chars.Append(c);
                         Proceed();
                         State = 2;
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if (State == 3)
@@ -477,55 +487,55 @@ namespace Niveum.Json.Syntax
                     }
                     else if (c == '"')
                     {
-                        Chars.Add('"');
+                        Chars.Append('"');
                         Proceed();
                         State = 4;
                     }
                     else if (c == '\\')
                     {
-                        Chars.Add('\\');
+                        Chars.Append('\\');
                         Proceed();
                         State = 4;
                     }
                     else if (c == '/')
                     {
-                        Chars.Add('/');
+                        Chars.Append('/');
                         Proceed();
                         State = 4;
                     }
                     else if (c == 'b')
                     {
-                        Chars.Add('\b');
+                        Chars.Append('\b');
                         Proceed();
                         State = 4;
                     }
                     else if (c == 'f')
                     {
-                        Chars.Add('\f');
+                        Chars.Append('\f');
                         Proceed();
                         State = 4;
                     }
                     else if (c == 'n')
                     {
-                        Chars.Add('\n');
+                        Chars.Append('\n');
                         Proceed();
                         State = 4;
                     }
                     else if (c == 'r')
                     {
-                        Chars.Add('\r');
+                        Chars.Append('\r');
                         Proceed();
                         State = 4;
                     }
                     else if (c == 't')
                     {
-                        Chars.Add('\t');
+                        Chars.Append('\t');
                         Proceed();
                         State = 4;
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if (State == 5)
@@ -538,7 +548,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if (State == 6)
@@ -551,7 +561,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if (State == 7)
@@ -564,7 +574,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else if (State == 8)
@@ -572,13 +582,13 @@ namespace Niveum.Json.Syntax
                     if (TryParseHex(c) is int h)
                     {
                         Hex = Hex * 16 + h;
-                        Chars.Add((Char)(Hex));
+                        Chars.Append((Char)(Hex));
                         Proceed();
                         State = 9;
                     }
                     else
                     {
-                        throw MakeIllegalChar(c);
+                        throw MakeIllegalChar();
                     }
                 }
                 else

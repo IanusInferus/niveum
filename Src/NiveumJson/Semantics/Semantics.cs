@@ -41,11 +41,11 @@ namespace Niveum.Json
             return Formatter.ToString(this, Formatting);
         }
 
-        public static JToken Parse(String Text)
+        public static JToken Parse(String Text, bool Diagnostic = false)
         {
             SyntaxValue t;
             {
-                var TextRanges = new Dictionary<Object, TextRange>();
+                var TextRanges = Diagnostic ? new Dictionary<Object, TextRange>() : null;
                 using (var sr = new System.IO.StringReader(Text))
                 using (var ptr = new PositionedTextReader(Optional<String>.Empty, sr))
                 {
