@@ -4,7 +4,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Threading;
 using System.Net;
-using Newtonsoft.Json.Linq;
+using Niveum.Json;
 using Firefly;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
@@ -342,8 +342,8 @@ namespace Server
         {
             var jo = new JObject();
             jo["commands"] = new JArray(vts.TakeWriteBuffer());
-            jo["sessionid"] = NewSessionId;
-            var Result = jo.ToString(Newtonsoft.Json.Formatting.None);
+            jo["sessionid"] = new JValue(NewSessionId);
+            var Result = jo.ToString(Formatting.None);
             {
                 if (Query.ContainsKey("callback"))
                 {

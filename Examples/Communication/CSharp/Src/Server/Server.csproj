@@ -42,8 +42,8 @@
     <Reference Include="Firefly.Lite">
       <HintPath>..\..\..\..\..\Bin\Firefly.Lite.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\..\..\Bin\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Niveum.Json">
+      <HintPath>..\..\..\..\..\Bin\Niveum.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

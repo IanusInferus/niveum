@@ -1,37 +1,25 @@
-﻿using Bridge.Html5;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Bridge.Html5;
 
-namespace Newtonsoft.Json
+namespace Niveum.Json
 {
     public enum Formatting
     {
         None,
         Indented
     }
-}
 
-namespace Newtonsoft.Json.Linq
-{
     public enum JTokenType
     {
-        None = 0,
-        Object = 1,
-        Array = 2,
-        Constructor = 3,
-        Property = 4,
-        Comment = 5,
-        Integer = 6,
-        Float = 7,
-        String = 8,
-        Boolean = 9,
-        Null = 10,
-        Undefined = 11,
-        Date = 12,
-        Raw = 13,
-        Bytes = 14
+        Null,
+        Boolean,
+        Number,
+        String,
+        Object,
+        Array
     }
 
     public class JToken
@@ -101,13 +89,23 @@ namespace Newtonsoft.Json.Linq
         }
     }
 
-    public class JValue : JToken
+    public sealed class JValue : JToken
     {
         public Object Value { get; private set; }
 
+        public JValue()
+        {
+            this.Type = JTokenType.Null;
+            this.Value = null;
+        }
         public JValue(bool value)
         {
             this.Type = JTokenType.Boolean;
+            this.Value = value;
+        }
+        public JValue(double value)
+        {
+            this.Type = JTokenType.Number;
             this.Value = value;
         }
         public JValue(String value)
@@ -115,24 +113,9 @@ namespace Newtonsoft.Json.Linq
             this.Type = JTokenType.String;
             this.Value = value;
         }
-        public JValue(long value)
-        {
-            this.Type = JTokenType.Integer;
-            this.Value = value;
-        }
-        public JValue(ulong value)
-        {
-            this.Type = JTokenType.Integer;
-            this.Value = value;
-        }
-        public JValue(double value)
-        {
-            this.Type = JTokenType.Float;
-            this.Value = value;
-        }
     }
 
-    public class JObject : JToken, IDictionary<String, JToken>
+    public sealed class JObject : JToken, IDictionary<String, JToken>
     {
         private IDictionary<String, JToken> Dict;
         public JObject()
@@ -152,17 +135,35 @@ namespace Newtonsoft.Json.Linq
             {
                 return Dict[propertyName];
             }
+            set
+            {
+                if (Dict.ContainsKey(propertyName))
+                {
+                    Dict[propertyName] = value;
+                }
+                else
+                {
+                    Dict.Add(propertyName, value);
+                }
+            }
         }
 
-        JToken IDictionary<string, JToken>.this[string key]
+        JToken IDictionary<string, JToken>.this[String propertyName]
         {
             get
             {
-                return Dict[key];
+                return Dict[propertyName];
             }
             set
             {
-                Dict[key] = value;
+                if (Dict.ContainsKey(propertyName))
+                {
+                    Dict[propertyName] = value;
+                }
+                else
+                {
+                    Dict.Add(propertyName, value);
+                }
             }
         }
 
@@ -254,16 +255,16 @@ namespace Newtonsoft.Json.Linq
         }
     }
 
-    public class JArray : JToken, IList<JToken>
+    public sealed class JArray : JToken, IList<JToken>
     {
-        private List<JToken> Values;
+        private IList<JToken> Values;
 
         public JArray()
         {
             this.Type = JTokenType.Array;
             this.Values = new List<JToken>();
         }
-        public JArray(List<JToken> Values)
+        public JArray(IList<JToken> Values)
         {
             this.Type = JTokenType.Array;
             this.Values = Values;
@@ -278,7 +279,7 @@ namespace Newtonsoft.Json.Linq
         {
             get
             {
-                return ((IList<JToken>)Values).Count;
+                return Values.Count;
             }
         }
 
@@ -294,12 +295,12 @@ namespace Newtonsoft.Json.Linq
         {
             get
             {
-                return ((IList<JToken>)Values)[index];
+                return Values[index];
             }
 
             set
             {
-                ((IList<JToken>)Values)[index] = value;
+                Values[index] = value;
             }
         }
 
@@ -310,42 +311,42 @@ namespace Newtonsoft.Json.Linq
 
         public int IndexOf(JToken item)
         {
-            return ((IList<JToken>)Values).IndexOf(item);
+            return Values.IndexOf(item);
         }
 
         public void Insert(int index, JToken item)
         {
-            ((IList<JToken>)Values).Insert(index, item);
+            Values.Insert(index, item);
         }
 
         public void RemoveAt(int index)
         {
-            ((IList<JToken>)Values).RemoveAt(index);
+            Values.RemoveAt(index);
         }
 
         public void Clear()
         {
-            ((IList<JToken>)Values).Clear();
+            Values.Clear();
         }
 
         public bool Contains(JToken item)
         {
-            return ((IList<JToken>)Values).Contains(item);
+            return Values.Contains(item);
         }
 
         public bool Remove(JToken item)
         {
-            return ((IList<JToken>)Values).Remove(item);
+            return Values.Remove(item);
         }
 
         public IEnumerator<JToken> GetEnumerator()
         {
-            return ((IList<JToken>)Values).GetEnumerator();
+            return Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IList<JToken>)Values).GetEnumerator();
+            return Values.GetEnumerator();
         }
 
         public void CopyTo(JToken[] array, int arrayIndex)

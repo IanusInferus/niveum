@@ -17,6 +17,10 @@ SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication 
 SchemaManipulator.exe /loadtype:Schema\Common /t2cs:CSharpBrowser\Src\Browser\Generated\Common.cs,"",false
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2cs:CSharpBrowser\Src\Browser\Generated\Communication.cs,Communication,false
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csj:CSharpBrowser\Src\Browser\Generated\CommunicationJson.cs,Communication.Json
+@if not exist CSharpBrowserBlazor\Src\Client\Generated @md CSharpBrowserBlazor\Src\Client\Generated
+SchemaManipulator.exe /loadtype:Schema\Common /t2cs:CSharpBrowserBlazor\Src\Client\Generated\Common.cs,"",false
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2cs:CSharpBrowserBlazor\Src\Client\Generated\Communication.cs,Communication,false
+SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csj:CSharpBrowserBlazor\Src\Client\Generated\CommunicationJson.cs,Communication.Json
 
 :: C++2011
 @if not exist CPP\Src\Server @md CPP\Src\Server
