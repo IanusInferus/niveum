@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json.Linq;
+using Niveum.Json;
 
 namespace Server
 {
@@ -26,9 +26,9 @@ namespace Server
             this.ss.ServerEvent += (CommandName, CommandHash, Parameters) =>
             {
                 var rjo = new JObject();
-                rjo["commandName"] = CommandName;
-                rjo["commandHash"] = CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                rjo["parameters"] = Parameters;
+                rjo["commandName"] = new JValue(CommandName);
+                rjo["commandHash"] = new JValue(CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
+                rjo["parameters"] = new JValue(Parameters);
                 lock (c.WriteBufferLockee)
                 {
                     c.WriteBuffer.Add(rjo);
@@ -61,7 +61,7 @@ namespace Server
             var jo = CommandObject;
             if (jo["commandName"] == null || jo["commandName"].Type != JTokenType.String || (jo["commandHash"] != null && jo["commandHash"].Type != JTokenType.String) || jo["parameters"] == null || jo["parameters"].Type != JTokenType.String)
             {
-                return HttpVirtualTransportServerHandleResult.CreateBadCommandLine(new HttpVirtualTransportServerHandleResultBadCommandLine { CommandLine = jo.ToString(Newtonsoft.Json.Formatting.None) });
+                return HttpVirtualTransportServerHandleResult.CreateBadCommandLine(new HttpVirtualTransportServerHandleResultBadCommandLine { CommandLine = jo.ToString(Formatting.None) });
             }
             var CommandName = StringFromJson(jo["commandName"]);
             var CommandHash = Optional<UInt32>.Empty;
@@ -70,7 +70,7 @@ namespace Server
                 UInt32 ch;
                 if (!UInt32.TryParse(StringFromJson(jo["commandHash"]), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out ch))
                 {
-                    return HttpVirtualTransportServerHandleResult.CreateBadCommandLine(new HttpVirtualTransportServerHandleResultBadCommandLine { CommandLine = jo.ToString(Newtonsoft.Json.Formatting.None) });
+                    return HttpVirtualTransportServerHandleResult.CreateBadCommandLine(new HttpVirtualTransportServerHandleResultBadCommandLine { CommandLine = jo.ToString(Formatting.None) });
                 }
                 CommandHash = ch;
             }
@@ -89,9 +89,9 @@ namespace Server
                             Action<String> OnSuccessInner = OutputParameters =>
                             {
                                 var rjo = new JObject();
-                                rjo["commandName"] = CommandName;
-                                rjo["commandHash"] = CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                                rjo["parameters"] = OutputParameters;
+                                rjo["commandName"] = new JValue(CommandName);
+                                rjo["commandHash"] = new JValue(CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
+                                rjo["parameters"] = new JValue(OutputParameters);
                                 lock (c.WriteBufferLockee)
                                 {
                                     c.WriteBuffer.Add(rjo);
@@ -112,8 +112,8 @@ namespace Server
                             Action<String> OnSuccessInner = OutputParameters =>
                             {
                                 var rjo = new JObject();
-                                rjo["commandName"] = CommandName;
-                                rjo["parameters"] = OutputParameters;
+                                rjo["commandName"] = new JValue(CommandName);
+                                rjo["parameters"] = new JValue(OutputParameters);
                                 lock (c.WriteBufferLockee)
                                 {
                                     c.WriteBuffer.Add(rjo);

@@ -223,7 +223,7 @@ namespace DataConv
             var x = TreeFile.ReadFile(TreePath);
             var o = xs.Read<World.World>(x);
             var j = World.Json.JsonTranslator.WorldToJson(o);
-            var t = j.ToString(Newtonsoft.Json.Formatting.Indented);
+            var t = j.ToString(Niveum.Json.Formatting.Indented);
             Txt.WriteFile(JsonPath, t);
         }
 
@@ -231,7 +231,7 @@ namespace DataConv
         {
             var xs = new XmlSerializer(true);
             var t = Txt.ReadFile(JsonPath);
-            var j = Newtonsoft.Json.Linq.JToken.Parse(t);
+            var j = Niveum.Json.JToken.Parse(t);
             var o = World.Json.JsonTranslator.WorldFromJson(j);
             var x = xs.Write<World.World>(o);
             TreeFile.WriteFile(TreePath, x);
