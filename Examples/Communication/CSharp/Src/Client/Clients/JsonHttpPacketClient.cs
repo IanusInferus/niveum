@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
+using Niveum.Json;
 
 namespace Client
 {
@@ -22,9 +22,9 @@ namespace Client
                 jc.ClientEvent += (String CommandName, UInt32 CommandHash, String Parameters) =>
                 {
                     var jo = new JObject();
-                    jo["commandName"] = CommandName;
-                    jo["commandHash"] = CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                    jo["parameters"] = Parameters;
+                    jo["commandName"] = new JValue(CommandName);
+                    jo["commandHash"] = new JValue(CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
+                    jo["parameters"] = new JValue(Parameters);
                     c.WriteBuffer.Add(jo);
                     if (ClientMethod != null) { ClientMethod(); }
                 };

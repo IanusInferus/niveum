@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
-using Newtonsoft.Json.Linq;
+using Niveum.Json;
 
 namespace Client
 {
@@ -35,7 +35,7 @@ namespace Client
                 this.VirtualTransportClient = VirtualTransportClient;
                 VirtualTransportClient.ClientMethod += () =>
                 {
-                    var Bytes = System.Text.Encoding.UTF8.GetBytes((new JArray(VirtualTransportClient.TakeWriteBuffer())).ToString(Newtonsoft.Json.Formatting.None));
+                    var Bytes = System.Text.Encoding.UTF8.GetBytes((new JArray(VirtualTransportClient.TakeWriteBuffer())).ToString(Formatting.None));
 
                     Uri u;
                     if (SessionId == null)
@@ -81,7 +81,7 @@ namespace Client
 
                     var Result = (JObject)(JToken.Parse(ResultString));
                     var Commands = (JArray)(Result["commands"]);
-                    SessionId = (String)(Result["sessionid"]);
+                    SessionId = (String)((Result["sessionid"] as JValue).Value);
 
                     foreach (var co in Commands)
                     {
