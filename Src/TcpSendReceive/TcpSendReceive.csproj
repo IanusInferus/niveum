@@ -44,9 +44,6 @@
     <Reference Include="Firefly.Lite">
       <HintPath>..\Lib\Firefly\Firefly.Lite.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\Lib\JsonNet\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -111,6 +108,10 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\NiveumJson\NiveumJson.csproj">
+      <Project>{0a2acebf-1c9e-497a-a996-3a5549a13710}</Project>
+      <Name>NiveumJson</Name>
+    </ProjectReference>
     <ProjectReference Include="..\YukiCore\YukiCore.csproj">
       <Project>{23021296-4E59-4532-9B5F-CB3CED3A978E}</Project>
       <Name>YukiCore</Name>

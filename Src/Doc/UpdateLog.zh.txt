@@ -2,6 +2,12 @@
 Niveum.Json:
 JSON解析库增加文法分析、语义转换、格式化，完成基本功能。
 提高性能。
+Yuki.Core:
+C# JSON代码生成中去除对Json.NET(Newtonsoft.Json)的使用，改为使用Niveum.Json，严格遵守JSON标准(ECMA-404)，避免新版Json.NET对日期等字符串的特殊扩展处理导致的问题。
+Yuki.TcpSendReceive:
+将Json.NET改为Niveum.Json。
+Example:
+将Json.NET改为Niveum.Json。
 
 2018.09.17
 Niveum.Json:

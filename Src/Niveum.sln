@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchemaManipulator", "SchemaManipulator\SchemaManipulator.csproj", "{D9D1181E-2141-4CE7-80F5-73F3B8620247}"
 EndProject
@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nivea", "Nivea\Nivea.csproj
 	ProjectSection(ProjectDependencies) = postProject
 		{D9D1181E-2141-4CE7-80F5-73F3B8620247} = {D9D1181E-2141-4CE7-80F5-73F3B8620247}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NiveumJson", "NiveumJson\NiveumJson.csproj", "{0A2ACEBF-1C9E-497A-A996-3A5549A13710}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,8 +68,15 @@ Global
 		{E089D347-36D7-4012-9EE5-E57F2EC33870}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E089D347-36D7-4012-9EE5-E57F2EC33870}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E089D347-36D7-4012-9EE5-E57F2EC33870}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A2ACEBF-1C9E-497A-A996-3A5549A13710}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A2ACEBF-1C9E-497A-A996-3A5549A13710}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A2ACEBF-1C9E-497A-A996-3A5549A13710}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A2ACEBF-1C9E-497A-A996-3A5549A13710}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C612E419-72AC-423C-8DFE-F9A9C3251D3E}
 	EndGlobalSection
 EndGlobal
