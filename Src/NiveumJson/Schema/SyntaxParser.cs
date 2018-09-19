@@ -20,22 +20,25 @@ namespace Niveum.Json.Syntax
             int State = 0;
             var StartPosition = r.CurrentPosition;
             var States = new Stack<int>();
-            var Symbols = new Stack<SyntaxRule>();
-            var CurrentSymbol = Optional<SyntaxRule>.Empty;
+            var Rules = new Stack<SyntaxRule>();
+            var CurrentRule = Optional<SyntaxRule>.Empty;
 
-            Action Push = () =>
+            void Push()
             {
                 States.Push(State);
-                Symbols.Push(CurrentSymbol.Value);
-            };
-            Action Proceed = () => CurrentSymbol = Optional<SyntaxRule>.Empty;
-            Func<Exception> MakeIllegalSymbol = () =>
+                Rules.Push(CurrentRule.Value);
+            }
+            void Proceed()
+            {
+                CurrentRule = Optional<SyntaxRule>.Empty;
+            }
+            Exception MakeIllegalSyntaxRule()
             {
                 var FilePath = r.FilePath;
-                var Message = CurrentSymbol.OnHasValue ? "IllegalSymbol" : !r.EndOfText ? "InvalidChar '" + r.Peek() + "'" : "InvalidEndOfText";
-                if (CurrentSymbol.OnHasValue && TextRanges.OnHasValue && TextRanges.Value.ContainsKey(CurrentSymbol.Value))
+                var Message = CurrentRule.OnHasValue ? "IllegalSyntaxRule '" + CurrentRule.Value._Tag.ToString() + "'" : !r.EndOfText ? "InvalidChar '" + r.Peek() + "'" : "InvalidEndOfText";
+                if (CurrentRule.OnHasValue && TextRanges.OnHasValue && TextRanges.Value.ContainsKey(CurrentRule.Value))
                 {
-                    var Range = TextRanges.Value[CurrentSymbol.Value];
+                    var Range = TextRanges.Value[CurrentRule.Value];
                     if (FilePath.OnHasValue)
                     {
                         return new InvalidOperationException(FilePath.Value + Range.ToString() + ": " + Message);
@@ -53,7 +56,7 @@ namespace Niveum.Json.Syntax
                 {
                     return new InvalidOperationException(r.CurrentPosition.ToString() + ": " + Message);
                 }
-            };
+            }
             T MarkRange<T>(T Rule, Object StartToken, Object EndToken)
             {
                 if (TextRanges.OnHasValue)
@@ -69,36 +72,36 @@ namespace Niveum.Json.Syntax
             }
             void Reduce1(Func<SyntaxRule, SyntaxRule> Translator)
             {
-                var Rule1 = Symbols.Pop();
-                CurrentSymbol = Translator(Rule1);
+                var Rule1 = Rules.Pop();
+                CurrentRule = Translator(Rule1);
                 State = States.Pop();
             }
             void Reduce2(Func<SyntaxRule, SyntaxRule, SyntaxRule> Translator)
             {
-                var Rule2 = Symbols.Pop();
-                var Rule1 = Symbols.Pop();
-                CurrentSymbol = Translator(Rule1, Rule2);
+                var Rule2 = Rules.Pop();
+                var Rule1 = Rules.Pop();
+                CurrentRule = Translator(Rule1, Rule2);
                 States.Pop();
                 State = States.Pop();
             }
             void Reduce3(Func<SyntaxRule, SyntaxRule, SyntaxRule, SyntaxRule> Translator)
             {
-                var Rule3 = Symbols.Pop();
-                var Rule2 = Symbols.Pop();
-                var Rule1 = Symbols.Pop();
-                CurrentSymbol = Translator(Rule1, Rule2, Rule3);
+                var Rule3 = Rules.Pop();
+                var Rule2 = Rules.Pop();
+                var Rule1 = Rules.Pop();
+                CurrentRule = Translator(Rule1, Rule2, Rule3);
                 States.Pop();
                 States.Pop();
                 State = States.Pop();
             }
             void Reduce5(Func<SyntaxRule, SyntaxRule, SyntaxRule, SyntaxRule, SyntaxRule, SyntaxRule> Translator)
             {
-                var Rule5 = Symbols.Pop();
-                var Rule4 = Symbols.Pop();
-                var Rule3 = Symbols.Pop();
-                var Rule2 = Symbols.Pop();
-                var Rule1 = Symbols.Pop();
-                CurrentSymbol = Translator(Rule1, Rule2, Rule3, Rule4, Rule5);
+                var Rule5 = Rules.Pop();
+                var Rule4 = Rules.Pop();
+                var Rule3 = Rules.Pop();
+                var Rule2 = Rules.Pop();
+                var Rule1 = Rules.Pop();
+                CurrentRule = Translator(Rule1, Rule2, Rule3, Rule4, Rule5);
                 States.Pop();
                 States.Pop();
                 States.Pop();
@@ -108,19 +111,19 @@ namespace Niveum.Json.Syntax
 
             while (true)
             {
-                while (CurrentSymbol.OnNotHasValue && !r.EndOfText)
+                while (CurrentRule.OnNotHasValue && !r.EndOfText)
                 {
-                    CurrentSymbol = TokenParser.ReadToken(r, TextRanges);
-                    if (CurrentSymbol.OnHasValue && CurrentSymbol.Value.OnWhitespace)
+                    CurrentRule = TokenParser.ReadToken(r, TextRanges);
+                    if (CurrentRule.OnHasValue && CurrentRule.Value.OnWhitespace)
                     {
-                        CurrentSymbol = Optional<SyntaxRule>.Empty;
+                        CurrentRule = Optional<SyntaxRule>.Empty;
                     }
                 }
-                if (CurrentSymbol.OnNotHasValue)
+                if (CurrentRule.OnNotHasValue)
                 {
-                    throw MakeIllegalSymbol();
+                    throw MakeIllegalSyntaxRule();
                 }
-                var c = CurrentSymbol.Value;
+                var c = CurrentRule.Value;
                 if (State == 0)
                 {
                     if (c.OnLeftBrace)
@@ -140,10 +143,10 @@ namespace Niveum.Json.Syntax
                         var Value = c.Value;
                         while (!r.EndOfText)
                         {
-                            CurrentSymbol = TokenParser.ReadToken(r, TextRanges);
-                            if (CurrentSymbol.OnHasValue && !CurrentSymbol.Value.OnWhitespace)
+                            CurrentRule = TokenParser.ReadToken(r, TextRanges);
+                            if (CurrentRule.OnHasValue && !CurrentRule.Value.OnWhitespace)
                             {
-                                throw MakeIllegalSymbol();
+                                throw MakeIllegalSyntaxRule();
                             }
                         }
                         return Value;
@@ -168,7 +171,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalSymbol();
+                        throw MakeIllegalSyntaxRule();
                     }
                 }
                 else if (State == 1)
@@ -193,7 +196,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalSymbol();
+                        throw MakeIllegalSyntaxRule();
                     }
                 }
                 else if (State == 2)
@@ -248,7 +251,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalSymbol();
+                        throw MakeIllegalSyntaxRule();
                     }
                 }
                 else if (State == 3)
@@ -273,7 +276,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalSymbol();
+                        throw MakeIllegalSyntaxRule();
                     }
                 }
                 else if (State == 4)
@@ -286,7 +289,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalSymbol();
+                        throw MakeIllegalSyntaxRule();
                     }
                 }
                 else if (State == 5)
@@ -305,7 +308,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalSymbol();
+                        throw MakeIllegalSyntaxRule();
                     }
                 }
                 else if (State == 6)
@@ -318,7 +321,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalSymbol();
+                        throw MakeIllegalSyntaxRule();
                     }
                 }
                 else if (State == 7)
@@ -367,7 +370,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalSymbol();
+                        throw MakeIllegalSyntaxRule();
                     }
                 }
                 else if (State == 8)
@@ -416,7 +419,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalSymbol();
+                        throw MakeIllegalSyntaxRule();
                     }
                 }
                 else if (State == 9)
@@ -429,7 +432,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalSymbol();
+                        throw MakeIllegalSyntaxRule();
                     }
                 }
                 else if (State == 10)
@@ -478,7 +481,7 @@ namespace Niveum.Json.Syntax
                     }
                     else
                     {
-                        throw MakeIllegalSymbol();
+                        throw MakeIllegalSyntaxRule();
                     }
                 }
                 else
