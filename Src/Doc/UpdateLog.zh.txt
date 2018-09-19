@@ -8,6 +8,7 @@ Yuki.TcpSendReceive:
 将Json.NET改为Niveum.Json。
 Example:
 将Json.NET改为Niveum.Json。
+增加C# Blazor浏览器通讯示例。
 
 2018.09.17
 Niveum.Json:
