@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板
-      Version:     2017.04.22.
+      Version:     2018.09.19.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -389,7 +389,7 @@
 #Template JsonTranslator_Primitive_Boolean
     public static Boolean BooleanFromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Boolean) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Boolean) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToBoolean(jv.Value);
     }
@@ -413,7 +413,7 @@
 #Template JsonTranslator_Primitive_Int
     public static Int IntFromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToInt32(jv.Value);
     }
@@ -425,7 +425,7 @@
 #Template JsonTranslator_Primitive_Real
     public static Real RealFromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.Float) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToDouble(jv.Value);
     }
@@ -437,7 +437,7 @@
 #Template JsonTranslator_Primitive_Byte
     public static Byte ByteFromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToByte(jv.Value);
     }
@@ -449,7 +449,7 @@
 #Template JsonTranslator_Primitive_UInt8
     public static UInt8 UInt8FromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToByte(jv.Value);
     }
@@ -461,7 +461,7 @@
 #Template JsonTranslator_Primitive_UInt16
     public static UInt16 UInt16FromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToUInt16(jv.Value);
     }
@@ -473,7 +473,7 @@
 #Template JsonTranslator_Primitive_UInt32
     public static UInt32 UInt32FromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToUInt32(jv.Value);
     }
@@ -485,7 +485,7 @@
 #Template JsonTranslator_Primitive_UInt64
     public static UInt64 UInt64FromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToUInt64(jv.Value);
     }
@@ -497,7 +497,7 @@
 #Template JsonTranslator_Primitive_Int8
     public static Int8 Int8FromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToSByte(jv.Value);
     }
@@ -509,7 +509,7 @@
 #Template JsonTranslator_Primitive_Int16
     public static Int16 Int16FromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToInt16(jv.Value);
     }
@@ -521,7 +521,7 @@
 #Template JsonTranslator_Primitive_Int32
     public static Int32 Int32FromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToInt32(jv.Value);
     }
@@ -533,7 +533,7 @@
 #Template JsonTranslator_Primitive_Int64
     public static Int64 Int64FromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToInt64(jv.Value);
     }
@@ -545,7 +545,7 @@
 #Template JsonTranslator_Primitive_Float32
     public static Float32 Float32FromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.Float) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToSingle(jv.Value);
     }
@@ -557,7 +557,7 @@
 #Template JsonTranslator_Primitive_Float64
     public static Float64 Float64FromJson(JToken j)
     {
-        if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.Float) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return Convert.ToDouble(jv.Value);
     }
@@ -666,7 +666,7 @@
 #Template JsonTranslator_Enum Name:String
     public static [[${Name}]] [[${Name}FromJson]](JToken j)
     {
-        if (j.Type != JTokenType.Integer) { throw new InvalidOperationException(); }
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
         var jv = j as JValue;
         return ([[${Name}]])(Convert.ToInt64(jv.Value));
     }
@@ -831,7 +831,7 @@
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
         var a = new ${TypeString}();
-        foreach (var e in ja.Children())
+        foreach (var e in ja.Children().OfType<JObject>())
         {
             var Key = [[${KeyTypeFriendlyName}FromJson]](e["key"]);
             var Value = [[${ValueTypeFriendlyName}FromJson]](e["value"]);
@@ -861,12 +861,12 @@
     //==========================================================================
 
     //Reference:
-    //Newtonsoft.Json.dll
+    //NiveumJson
 
     using System;
     using System.Collections.Generic;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
+    using System.Linq;
+    using Niveum.Json;
     using ${Schema.Imports};
     $$
         var Primitives = GetPrimitives(Schema);

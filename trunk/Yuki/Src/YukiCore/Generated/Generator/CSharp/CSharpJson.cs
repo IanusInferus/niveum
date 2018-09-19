@@ -517,7 +517,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static Boolean BooleanFromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Boolean) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Boolean) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToBoolean(jv.Value);";
             yield return "}";
@@ -543,7 +543,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static Int IntFromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToInt32(jv.Value);";
             yield return "}";
@@ -556,7 +556,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static Real RealFromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.Float) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToDouble(jv.Value);";
             yield return "}";
@@ -569,7 +569,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static Byte ByteFromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToByte(jv.Value);";
             yield return "}";
@@ -582,7 +582,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static UInt8 UInt8FromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToByte(jv.Value);";
             yield return "}";
@@ -595,7 +595,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static UInt16 UInt16FromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToUInt16(jv.Value);";
             yield return "}";
@@ -608,7 +608,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static UInt32 UInt32FromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToUInt32(jv.Value);";
             yield return "}";
@@ -621,7 +621,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static UInt64 UInt64FromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToUInt64(jv.Value);";
             yield return "}";
@@ -634,7 +634,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static Int8 Int8FromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToSByte(jv.Value);";
             yield return "}";
@@ -647,7 +647,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static Int16 Int16FromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToInt16(jv.Value);";
             yield return "}";
@@ -660,7 +660,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static Int32 Int32FromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToInt32(jv.Value);";
             yield return "}";
@@ -673,7 +673,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static Int64 Int64FromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToInt64(jv.Value);";
             yield return "}";
@@ -686,7 +686,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static Float32 Float32FromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.Float) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToSingle(jv.Value);";
             yield return "}";
@@ -699,7 +699,7 @@ namespace Yuki.ObjectSchema.CSharpJson
         {
             yield return "public static Float64 Float64FromJson(JToken j)";
             yield return "{";
-            yield return "    if ((j.Type != JTokenType.Integer) && (j.Type != JTokenType.Float) && (j.Type != JTokenType.String)) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             yield return "    return Convert.ToDouble(jv.Value);";
             yield return "}";
@@ -873,7 +873,7 @@ namespace Yuki.ObjectSchema.CSharpJson
                 yield return _Line;
             }
             yield return "{";
-            yield return "    if (j.Type != JTokenType.Integer) { throw new InvalidOperationException(); }";
+            yield return "    if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }";
             yield return "    var jv = j as JValue;";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    return ("), GetEscapedIdentifier(Name)), ")(Convert.ToInt64(jv.Value));"))
             {
@@ -1122,7 +1122,7 @@ namespace Yuki.ObjectSchema.CSharpJson
             {
                 yield return _Line;
             }
-            yield return "    foreach (var e in ja.Children())";
+            yield return "    foreach (var e in ja.Children().OfType<JObject>())";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        var Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeFriendlyName), "FromJson"))), "(e[\"key\"]);"))
             {
@@ -1168,12 +1168,12 @@ namespace Yuki.ObjectSchema.CSharpJson
             yield return "//==========================================================================";
             yield return "";
             yield return "//Reference:";
-            yield return "//Newtonsoft.Json.dll";
+            yield return "//NiveumJson";
             yield return "";
             yield return "using System;";
             yield return "using System.Collections.Generic;";
-            yield return "using Newtonsoft.Json;";
-            yield return "using Newtonsoft.Json.Linq;";
+            yield return "using System.Linq;";
+            yield return "using Niveum.Json;";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "using "), Schema.Imports), ";"))
             {
                 yield return _Line;

@@ -104,17 +104,16 @@ namespace Niveum.Json
             {
                 return Dict[propertyName];
             }
-        }
-
-        JToken IDictionary<string, JToken>.this[string key]
-        {
-            get
-            {
-                return Dict[key];
-            }
             set
             {
-                Dict[key] = value;
+                if (Dict.ContainsKey(propertyName))
+                {
+                    Dict[propertyName] = value;
+                }
+                else
+                {
+                    Dict.Add(propertyName, value);
+                }
             }
         }
 

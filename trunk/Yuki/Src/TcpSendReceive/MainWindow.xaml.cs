@@ -9,14 +9,13 @@ using System.Text.RegularExpressions;
 using System.Net;
 using System.Net.Sockets;
 using System.Windows;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Firefly;
 using Firefly.Streaming;
 using Firefly.Mapping.XmlText;
 using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
+using Niveum.Json;
 using Yuki.ObjectSchema;
 using OS = Yuki.ObjectSchema;
 using Yuki.ObjectSchema.CSharp;
@@ -234,6 +233,7 @@ namespace TcpSendReceive
                     foreach (var Line in Lines)
                     {
                         var ma = r.Match(Line);
+                        if (!ma.Success) { throw new InvalidOperationException("InvalidLine: " + Line); }
                         var CommandName = ma.Result("${CommandName}");
                         var CommandDef = Sche.Types.Where(t => t.Name() == CommandName && t.Version() == "").Single();
                         var jParameters = JToken.Parse(ma.Result("${Params}"));
@@ -637,7 +637,7 @@ namespace TcpSendReceive
             cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(System.CodeDom.Compiler.CodeCompiler)).Location); //System.dll
             cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(System.Linq.Enumerable)).Location); //System.Core.dll
             cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(Firefly.N32)).Location); //Firefly.Core.dll
-            cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(Newtonsoft.Json.Linq.JObject)).Location); //Newtonsoft.Json.dll
+            cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(Niveum.Json.JObject)).Location); //Niveum.Json.dll
             cp.GenerateExecutable = false;
             cp.GenerateInMemory = true;
             var cr = (new Microsoft.CSharp.CSharpCodeProvider()).CompileAssemblyFromSource(cp, Codes);
