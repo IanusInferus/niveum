@@ -1,0 +1,89 @@
+﻿@using Communication
+@using Communication.Json
+@using Client
+@inject HttpClient Http
+
+<p><button class="btn btn-primary" onclick="@ButtonAlertClicked">Test Alert</button></p>
+
+<p>
+    <button class="btn btn-primary" onclick="@ButtonTemplateClicked">Test Template</button>
+    <div>
+        <table class="table">
+            <tbody>
+                @foreach (var user in users)
+                {
+                    <tr><td>@user.id</td><td>@user.name</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</p>
+
+<p>
+    <button class="btn btn-primary" onclick="@ButtonAjaxClicked">Test AJAX</button>
+    <div>
+        <table class="table">
+            <tbody>
+                @foreach (var user in usersAjax)
+                {
+                    <tr><td>@user.id</td><td>@user.name</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</p>
+
+<p>
+    <button class="btn btn-primary" onclick="@ButtonServerTimeClicked">Test ServerTime</button>
+    <p>@serverTime</p>
+</p>
+
+@functions {
+    public class User
+    {
+        public String id;
+        public String name;
+    }
+
+    List<User> users = new List<User> { };
+    List<User> usersAjax = new List<User> { };
+    String serverTime = "";
+
+    async Task ButtonAlertClicked()
+    {
+        await JSRuntime.Current.InvokeAsync<object>("alert", "Test Alert Message");
+    }
+    void ButtonTemplateClicked()
+    {
+        users.AddRange(new User[] { new User { id = "zhang3", name = "ZHANG San" }, new User { id = "li4", name = "LI Si" } });
+    }
+    async Task ButtonAjaxClicked()
+    {
+        usersAjax.AddRange(await Http.GetJsonAsync<User[]>("users.json"));
+    }
+
+    IApplicationClient jc = null;
+    protected override async Task OnInitAsync()
+    {
+        var jsca = new JsonSerializationClientAdapter();
+        var jhc = new JsonHttpClient(jsca, "/api/", "q", false, false, Http, Message => Console.WriteLine(Message));
+        jc = jsca.GetApplicationClient();
+        await Task.FromResult(0);
+    }
+
+    Task ButtonServerTimeClicked()
+    {
+        var t = new TaskCompletionSource<Unit>();
+
+        jc.ServerTime(new ServerTimeRequest { }, r =>
+        {
+            Console.WriteLine("test2");
+            if (r.OnSuccess)
+            {
+                serverTime = r.Success;
+                t.SetResult(default(Unit));
+            }
+        });
+        return t.Task;
+    }
+}
