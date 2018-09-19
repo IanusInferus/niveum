@@ -3,7 +3,7 @@
 //  File:        PositionedTextReader.cs
 //  Location:    Niveum.Json <Visual C#>
 //  Description: 带位置的文本读取器
-//  Version:     2018.09.17.
+//  Version:     2018.09.19.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -48,13 +48,24 @@ namespace Niveum.Json.Syntax
     {
         public Optional<String> FilePath { get; private set; }
         public System.IO.TextReader InnerReader { get; private set; }
-        public TextPosition CurrentPosition { get; private set; }
+        public TextPosition CurrentPosition
+        {
+            get
+            {
+                return new TextPosition(CharIndex, Row, Column);
+            }
+        }
+        private int CharIndex;
+        private int Row;
+        private int Column;
 
         public PositionedTextReader(Optional<String> FilePath, System.IO.TextReader InnerReader)
         {
             this.FilePath = FilePath;
             this.InnerReader = InnerReader;
-            this.CurrentPosition = new TextPosition(0, 1, 1);
+            this.CharIndex = 0;
+            this.Row = 1;
+            this.Column = 1;
         }
 
         public bool EndOfText
@@ -78,15 +89,19 @@ namespace Niveum.Json.Syntax
             var c = (Char)(i);
             if (c == '\n')
             {
-                CurrentPosition = new TextPosition(CurrentPosition.CharIndex + 1, CurrentPosition.Row + 1, 1);
+                CharIndex += 1;
+                Row += 1;
+                Column = 1;
             }
             else if (c == '\t')
             {
-                CurrentPosition = new TextPosition(CurrentPosition.CharIndex + 1, CurrentPosition.Row, (CurrentPosition.Column + 3) / 4 * 4 + 1);
+                CharIndex += 1;
+                Column = (Column + 3) / 4 * 4 + 1;
             }
             else
             {
-                CurrentPosition = new TextPosition(CurrentPosition.CharIndex + 1, CurrentPosition.Row, CurrentPosition.Column + 1);
+                CharIndex += 1;
+                Column += 1;
             }
             return c;
         }
