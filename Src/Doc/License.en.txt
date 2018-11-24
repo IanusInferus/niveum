@@ -1,7 +1,6 @@
-﻿* Firefly Framework License
-* (This license is a 3-clause BSD license.)
+﻿* (This license is a 3-clause BSD license.)
 *
-* Copyright (c) 2008-2010, F.R.C. (aka Rex, 地狱门神, Ianus Inferus,
+* Copyright (c) 2011-2018, F.R.C. (aka Rex, 地狱门神, Ianus Inferus,
 * Identified by the RSA public key shipped with the software: 
 * 00 24 00 00 04 80 00 00 94 00 00 00 06 02 00 00   // .$..............
 * 00 24 00 00 52 53 41 31 00 04 00 00 01 00 01 00   // .$..RSA1........
