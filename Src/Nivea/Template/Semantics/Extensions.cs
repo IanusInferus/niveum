@@ -7,7 +7,7 @@ namespace Nivea.Template.Semantics
     public static class Extensions
     {
 
-        public static String Name(this TypeDef t)
+        public static List<String> Name(this TypeDef t)
         {
             if (t.OnPrimitive)
             {
@@ -65,49 +65,49 @@ namespace Nivea.Template.Semantics
 
         public static String VersionedName(this PrimitiveDef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = "";
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this AliasDef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this RecordDef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this TaggedUnionDef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this EnumDef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this TypeDef t)
         {
-            var Name = t.Name();
+            var Name = String.Join(".", t.Name());
             var Version = t.Version();
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this TypeRef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
@@ -171,49 +171,49 @@ namespace Nivea.Template.Semantics
 
         public static String TypeFriendlyName(this PrimitiveDef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = "";
             if (Version == "") { return Name; }
             return Name + "At" + Version;
         }
         public static String TypeFriendlyName(this AliasDef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "At" + Version;
         }
         public static String TypeFriendlyName(this RecordDef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "At" + Version;
         }
         public static String TypeFriendlyName(this TaggedUnionDef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "At" + Version;
         }
         public static String TypeFriendlyName(this EnumDef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "At" + Version;
         }
         public static String TypeFriendlyName(this TypeDef t)
         {
-            var Name = t.Name();
+            var Name = String.Join(".", t.Name());
             var Version = t.Version();
             if (Version == "") { return Name; }
             return Name + "At" + Version;
         }
         public static String TypeFriendlyName(this TypeRef t)
         {
-            var Name = t.Name;
+            var Name = String.Join(".", t.Name);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "At" + Version;

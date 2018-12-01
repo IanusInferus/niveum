@@ -3,19 +3,19 @@
 //  File:        EmbeddedCSharpGenerator.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 嵌入C#代码生成器
-//  Version:     2018.01.11.
+//  Version:     2018.12.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.Texting.TreeFormat.Semantics;
 using Nivea.Template.Semantics;
 using Nivea.Template.Syntax;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Nivea.Generator
 {
@@ -199,18 +199,21 @@ namespace Nivea.Generator
                     var t = s.Type;
                     if (t.OnPrimitive)
                     {
-                        if (t.Primitive.Name == "Unit")
+                        if (t.Primitive.Name.Count == 1)
                         {
-                            foreach (var Line in Templates.Primitive_Unit())
+                            if (t.Primitive.Name.Single() == "Unit")
                             {
-                                yield return GetIndentSpace() + Line;
+                                foreach (var Line in Templates.Primitive_Unit())
+                                {
+                                    yield return GetIndentSpace() + Line;
+                                }
                             }
-                        }
-                        else if (t.Primitive.Name == "Optional")
-                        {
-                            foreach (var Line in Templates.Primitive_Optional())
+                            else if (t.Primitive.Name.Single() == "Optional")
                             {
-                                yield return GetIndentSpace() + Line;
+                                foreach (var Line in Templates.Primitive_Optional())
+                                {
+                                    yield return GetIndentSpace() + Line;
+                                }
                             }
                         }
                     }
@@ -415,8 +418,8 @@ namespace Nivea.Generator
             {
                 var t = Value.PrimitiveLiteral.Type;
                 var ov = Value.PrimitiveLiteral.Value;
-                if (!t.OnTypeRef || t.TypeRef.Version != "") { throw new NotSupportedException(GetTypeString(t)); }
-                var Name = t.TypeRef.Name;
+                if (!t.OnTypeRef || (t.TypeRef.Name.Count != 1) || (t.TypeRef.Version != "")) { throw new NotSupportedException(GetTypeString(t)); }
+                var Name = t.TypeRef.Name.Single();
                 if (Name == "Unit")
                 {
                     return "default(Unit)";
@@ -510,7 +513,7 @@ namespace Nivea.Generator
             else if (Value.OnTaggedUnionLiteral)
             {
                 var t = Value.TaggedUnionLiteral.Type.Value;
-                if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && (t.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional") && (t.GenericTypeSpec.TypeSpec.TypeRef.Version == "") && (t.GenericTypeSpec.ParameterValues.Count == 1))
+                if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && (t.GenericTypeSpec.TypeSpec.TypeRef.Name.Count == 1) && (t.GenericTypeSpec.TypeSpec.TypeRef.Name.Single() == "Optional") && (t.GenericTypeSpec.TypeSpec.TypeRef.Version == "") && (t.GenericTypeSpec.ParameterValues.Count == 1))
                 {
                     var AlternativeType = t.GenericTypeSpec.ParameterValues.Single();
                     return GetTypeString(t) + "." + GetEscapedIdentifier("Create" + Value.TaggedUnionLiteral.Alternative) + "(" + (Value.TaggedUnionLiteral.Expr.OnHasValue ? GetValueLiteral(Value.TaggedUnionLiteral.Expr.Value, AlternativeType) : "") + ")";
@@ -528,7 +531,7 @@ namespace Nivea.Generator
             else if (Value.OnListLiteral)
             {
                 var t = Value.ListLiteral.Type.Value;
-                if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && ((t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List") || (t.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set")) && (t.GenericTypeSpec.TypeSpec.TypeRef.Version == "") && (t.GenericTypeSpec.ParameterValues.Count == 1))
+                if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && (t.GenericTypeSpec.TypeSpec.TypeRef.Name.Count == 1) && ((t.GenericTypeSpec.TypeSpec.TypeRef.Name.Single() == "List") || (t.GenericTypeSpec.TypeSpec.TypeRef.Name.Single() == "Set")) && (t.GenericTypeSpec.TypeSpec.TypeRef.Version == "") && (t.GenericTypeSpec.ParameterValues.Count == 1))
                 {
                     var ElementType = t.GenericTypeSpec.ParameterValues.Single();
                     var l = new List<String> { };
@@ -538,7 +541,7 @@ namespace Nivea.Generator
                     }
                     return "new " + GetTypeString(Type) + " {" + String.Join(", ", l) + "}";
                 }
-                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && (t.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map") && (t.GenericTypeSpec.TypeSpec.TypeRef.Version == "") && (t.GenericTypeSpec.ParameterValues.Count == 2))
+                else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && (t.GenericTypeSpec.TypeSpec.TypeRef.Name.Count == 1) && (t.GenericTypeSpec.TypeSpec.TypeRef.Name.Single() == "Map") && (t.GenericTypeSpec.TypeSpec.TypeRef.Version == "") && (t.GenericTypeSpec.ParameterValues.Count == 2))
                 {
                     var KeyType = t.GenericTypeSpec.ParameterValues[0];
                     var ValueType = t.GenericTypeSpec.ParameterValues[1];

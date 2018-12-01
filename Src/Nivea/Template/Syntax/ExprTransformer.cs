@@ -3,7 +3,7 @@
 //  File:        ExprTransformer.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式转换器
-//  Version:     2016.08.01.
+//  Version:     2018.12.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -62,25 +62,25 @@ namespace Nivea.Template.Syntax
                 }
                 else if (s == "True")
                 {
-                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = "Boolean", Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
+                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = new List<String> { "Boolean" }, Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
                     var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = "True" }, Node, NodePositions, Positions);
                     return Mark(Expr.CreatePrimitiveLiteral(ple), Node, NodePositions, Positions);
                 }
                 else if (s == "False")
                 {
-                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = "Boolean", Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
+                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = new List<String> { "Boolean" }, Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
                     var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = "False" }, Node, NodePositions, Positions);
                     return Mark(Expr.CreatePrimitiveLiteral(ple), Node, NodePositions, Positions);
                 }
                 else if (TokenParser.IsIntLiteral(s))
                 {
-                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = "Int", Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
+                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = new List<String> { "Int" }, Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
                     var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = s }, Node, NodePositions, Positions);
                     return Mark(Expr.CreatePrimitiveLiteral(ple), Node, NodePositions, Positions);
                 }
                 else if (TokenParser.IsFloatLiteral(s))
                 {
-                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = "Real", Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
+                    var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = new List<String> { "Real" }, Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
                     var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = s }, Node, NodePositions, Positions);
                     return Mark(Expr.CreatePrimitiveLiteral(ple), Node, NodePositions, Positions);
                 }
@@ -96,12 +96,12 @@ namespace Nivea.Template.Syntax
                     Ambiguous.Add(Mark(Expr.CreateTypeLiteral(t), Node, NodePositions, Positions));
                     Ambiguous.Add(Mark(Expr.CreateVariableRef(tvmc.Variable), Node, NodePositions, Positions));
 
-                    if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
+                    if ((t.OnTypeRef && (t.TypeRef.Name.Count == 1) && (t.TypeRef.Version == "")) || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Name.Count == 1) && (t.Member.Child.TypeRef.Version == "")))
                     {
-                        var tule = Mark(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = Optional<Expr>.Empty }, Node, NodePositions, Positions);
+                        var tule = Mark(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name.Single() : t.TypeRef.Name.Single(), Expr = Optional<Expr>.Empty }, Node, NodePositions, Positions);
                         Ambiguous.Add(Mark(Expr.CreateTaggedUnionLiteral(tule), Node, NodePositions, Positions));
 
-                        var ele = Mark(new EnumLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Name = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name }, Node, NodePositions, Positions);
+                        var ele = Mark(new EnumLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Name = t.OnMember ? t.Member.Child.TypeRef.Name.Single() : t.TypeRef.Name.Single() }, Node, NodePositions, Positions);
                         Ambiguous.Add(Mark(Expr.CreateEnumLiteral(ele), Node, NodePositions, Positions));
                     }
                 }
@@ -118,7 +118,7 @@ namespace Nivea.Template.Syntax
             }
             else if (Node.OnLiteral)
             {
-                var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = "String", Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
+                var t = Mark(TypeSpec.CreateTypeRef(Mark(new TypeRef { Name = new List<String> { "String" }, Version = "" }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
                 return Mark(Expr.CreatePrimitiveLiteral(Mark(new PrimitiveLiteralExpr { Type = t, Value = Node.Literal }, Node, NodePositions, Positions)), Node, NodePositions, Positions);
             }
             else if (Node.OnOperator)
@@ -619,9 +619,9 @@ namespace Nivea.Template.Syntax
                     {
                         var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = Optional<String>.Empty }, NodesRange, NodePositions, Positions);
                         Ambiguous.Add(MarkRange(Expr.CreatePrimitiveLiteral(ple), Range, Positions));
-                        if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
+                        if ((t.OnTypeRef && (t.TypeRef.Name.Count == 1) && (t.TypeRef.Version == "")) || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Name.Count == 1) && (t.Member.Child.TypeRef.Version == "")))
                         {
-                            var tule = MarkRange(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = Optional<Expr>.Empty }, Range, Positions);
+                            var tule = MarkRange(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name.Single() : t.TypeRef.Name.Single(), Expr = Optional<Expr>.Empty }, Range, Positions);
                             Ambiguous.Add(MarkRange(Expr.CreateTaggedUnionLiteral(tule), Range, Positions));
                         }
                     }
@@ -637,9 +637,9 @@ namespace Nivea.Template.Syntax
                     if (Transformed.Count == 1)
                     {
                         var One = Transformed.Single();
-                        if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
+                        if ((t.OnTypeRef && (t.TypeRef.Name.Count == 1) && (t.TypeRef.Version == "")) || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Name.Count == 1) && (t.Member.Child.TypeRef.Version == "")))
                         {
-                            var tule = MarkRange(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = One }, Range, Positions);
+                            var tule = MarkRange(new TaggedUnionLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name.Single() : t.TypeRef.Name.Single(), Expr = One }, Range, Positions);
                             Ambiguous.Add(MarkRange(Expr.CreateTaggedUnionLiteral(tule), Range, Positions));
                         }
                     }
@@ -927,12 +927,12 @@ namespace Nivea.Template.Syntax
 
                     Ambiguous.Add(Mark(MatchPattern.CreateVariableRef(tvmc.Variable), Node, NodePositions, Positions));
 
-                    if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
+                    if ((t.OnTypeRef && (t.TypeRef.Name.Count == 1) && (t.TypeRef.Version == "")) || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Name.Count == 1) && (t.Member.Child.TypeRef.Version == "")))
                     {
-                        var tule = Mark(new TaggedUnionLiteralPattern { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = Optional<MatchPattern>.Empty }, Node, NodePositions, Positions);
+                        var tule = Mark(new TaggedUnionLiteralPattern { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name.Single() : t.TypeRef.Name.Single(), Expr = Optional<MatchPattern>.Empty }, Node, NodePositions, Positions);
                         Ambiguous.Add(Mark(MatchPattern.CreateTaggedUnionLiteral(tule), Node, NodePositions, Positions));
 
-                        var ele = Mark(new EnumLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Name = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name }, Node, NodePositions, Positions);
+                        var ele = Mark(new EnumLiteralExpr { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Name = t.OnMember ? t.Member.Child.TypeRef.Name.Single() : t.TypeRef.Name.Single() }, Node, NodePositions, Positions);
                         Ambiguous.Add(Mark(MatchPattern.CreateEnumLiteral(ele), Node, NodePositions, Positions));
                     }
                 }
@@ -1134,8 +1134,11 @@ namespace Nivea.Template.Syntax
                     {
                         var ple = Mark(new PrimitiveLiteralExpr { Type = t, Value = Optional<String>.Empty }, NodesRange, NodePositions, Positions);
                         Ambiguous.Add(MarkRange(MatchPattern.CreatePrimitiveLiteral(ple), Range, Positions));
-                        var tule = MarkRange(new TaggedUnionLiteralPattern { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = Optional<MatchPattern>.Empty }, Range, Positions);
-                        Ambiguous.Add(MarkRange(MatchPattern.CreateTaggedUnionLiteral(tule), Range, Positions));
+                        if ((t.OnTypeRef && (t.TypeRef.Name.Count == 1) && (t.TypeRef.Version == "")) || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Name.Count == 1) && (t.Member.Child.TypeRef.Version == "")))
+                        {
+                            var tule = MarkRange(new TaggedUnionLiteralPattern { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name.Single() : t.TypeRef.Name.Single(), Expr = Optional<MatchPattern>.Empty }, Range, Positions);
+                            Ambiguous.Add(MarkRange(MatchPattern.CreateTaggedUnionLiteral(tule), Range, Positions));
+                        }
                     }
                     else if (Nodes.Count == 1)
                     {
@@ -1149,9 +1152,9 @@ namespace Nivea.Template.Syntax
                     if (Transformed.Count == 1)
                     {
                         var One = Transformed.Single();
-                        if (t.OnTypeRef || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Version == "")))
+                        if ((t.OnTypeRef && (t.TypeRef.Name.Count == 1) && (t.TypeRef.Version == "")) || (t.OnMember && t.Member.Child.OnTypeRef && (t.Member.Child.TypeRef.Name.Count == 1) && (t.Member.Child.TypeRef.Version == "")))
                         {
-                            var tule = MarkRange(new TaggedUnionLiteralPattern { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name : t.TypeRef.Name, Expr = One }, Range, Positions);
+                            var tule = MarkRange(new TaggedUnionLiteralPattern { Type = t.OnMember ? t.Member.Child : Optional<TypeSpec>.Empty, Alternative = t.OnMember ? t.Member.Child.TypeRef.Name.Single() : t.TypeRef.Name.Single(), Expr = One }, Range, Positions);
                             Ambiguous.Add(MarkRange(MatchPattern.CreateTaggedUnionLiteral(tule), Range, Positions));
                         }
                     }
@@ -1261,7 +1264,11 @@ namespace Nivea.Template.Syntax
                 }
                 else
                 {
-                    var Ref = TypeParser.ParseTypeRef(Name);
+                    String Version;
+                    TypeParser.ParseNameAndVersion(Name, out Name, out Version);
+                    var NameList = new List<String> { Name };
+                    var Ref = new TypeRef { Name = NameList, Version = Version };
+                    Mark(NameList, s.NameStartIndex, s.NameStartIndex + Name.Length);
                     Mark(Ref, s.NameStartIndex, s.NameEndIndex);
                     t = TypeSpec.CreateTypeRef(Ref);
                 }

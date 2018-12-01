@@ -4,7 +4,7 @@
       File:        CSharpType.tree
       Location:    Nivea <Tree>
       Description: C#类型代码生成
-      Version:     2016.09.10.
+      Version:     2018.12.01.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -17,6 +17,7 @@
 #Import
     System
     System.Collections.Generic
+    System.Linq
     Nivea.Template.Semantics
 
 #Template SingleLineXmlComment Description:String
@@ -251,7 +252,7 @@
         $$
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name.Count == 1) && (a.Type.TypeRef.Name.Single() == "Unit") && (a.Type.TypeRef.Version == ""))
                 {
                     ##
                         ${GetXmlComment(a.Description)}

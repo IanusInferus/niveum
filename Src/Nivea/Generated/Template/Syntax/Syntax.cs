@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using Nivea.Template.Semantics;
 using Boolean = System.Boolean;
 using String = System.String;
 using Type = System.Type;
@@ -59,9 +58,9 @@ namespace Nivea.Template.Syntax
         /// <summary>运算符</summary>
         public String Operator;
         /// <summary>内嵌模板</summary>
-        public List<TemplateExpr> Template;
+        public List<Semantics.TemplateExpr> Template;
         /// <summary>内嵌模板生成</summary>
-        public List<TemplateExpr> YieldTemplate;
+        public List<Semantics.TemplateExpr> YieldTemplate;
         /// <summary>茎</summary>
         public ExprNodeStem Stem;
         /// <summary>待定序列</summary>
@@ -76,9 +75,9 @@ namespace Nivea.Template.Syntax
         /// <summary>运算符</summary>
         public static ExprNode CreateOperator(String Value) { return new ExprNode { _Tag = ExprNodeTag.Operator, Operator = Value }; }
         /// <summary>内嵌模板</summary>
-        public static ExprNode CreateTemplate(List<TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.Template, Template = Value }; }
+        public static ExprNode CreateTemplate(List<Semantics.TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.Template, Template = Value }; }
         /// <summary>内嵌模板生成</summary>
-        public static ExprNode CreateYieldTemplate(List<TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.YieldTemplate, YieldTemplate = Value }; }
+        public static ExprNode CreateYieldTemplate(List<Semantics.TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.YieldTemplate, YieldTemplate = Value }; }
         /// <summary>茎</summary>
         public static ExprNode CreateStem(ExprNodeStem Value) { return new ExprNode { _Tag = ExprNodeTag.Stem, Stem = Value }; }
         /// <summary>待定序列</summary>

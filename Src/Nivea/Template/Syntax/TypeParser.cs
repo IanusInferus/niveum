@@ -3,7 +3,7 @@
 //  File:        TypeParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 类型词法解析器
-//  Version:     2016.06.24.
+//  Version:     2018.12.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,22 +19,17 @@ namespace Nivea.Template.Syntax
     public static class TypeParser
     {
         private static Regex rVersion = new Regex(@"^(?<Name>.*?)\[(?<Version>.*?)\]$", RegexOptions.ExplicitCapture);
-        public static TypeRef ParseTypeRef(String TypeString)
+        public static void ParseNameAndVersion(String TypeString, out String Name, out String Version)
         {
             var m = rVersion.Match(TypeString);
             if (m.Success)
             {
-                return new TypeRef
-                {
-                    Name = m.Result("${Name}"),
-                    Version = m.Result("${Version}")
-                };
+                Name = m.Result("${Name}");
+                Version = m.Result("${Version}");
+                return;
             }
-            return new TypeRef
-            {
-                Name = TypeString,
-                Version = ""
-            };
+            Name = TypeString;
+            Version = "";
         }
 
         public static TypeSpec ParseTypeSpec(String TypeString, Action<Object, int, int> Mark, Func<int, Exception> InvalidCharExceptionGenerator)
@@ -91,7 +86,11 @@ namespace Nivea.Template.Syntax
                 }
                 else
                 {
-                    var Ref = ParseTypeRef(Name);
+                    String Version;
+                    ParseNameAndVersion(Name, out Name, out Version);
+                    var NameList = new List<String> { Name };
+                    var Ref = new TypeRef { Name = NameList, Version = Version };
+                    Mark(NameList, s.NameStartIndex, s.NameStartIndex + Name.Length);
                     Mark(Ref, s.NameStartIndex, s.NameEndIndex);
                     t = TypeSpec.CreateTypeRef(Ref);
                 }
