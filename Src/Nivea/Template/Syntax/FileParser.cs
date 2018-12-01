@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2017.09.05.
+//  Version:     2018.12.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -134,9 +134,7 @@ namespace Nivea.Template.Syntax
                             {
                                 if (f.Parameters.Count < 1 || f.Parameters.Count > 2) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
-                                var VersionedName = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
-                                var TypeRef = ParseTypeRef(VersionedName);
-                                Mark(TypeRef, f.Parameters[0]);
+                                var TypeRef = ParseTypeRef(f.Parameters[0], nm, Positions);
                                 var Name = TypeRef.Name;
                                 var Version = TypeRef.Version;
 
@@ -437,7 +435,9 @@ namespace Nivea.Template.Syntax
                                                 Literals.Add(ltl);
                                             }
 
-                                            var r = new TypeRef { Name = "Int", Version = "" };
+                                            var IntTypeName = new List<String> { "Int" };
+                                            Mark(IntTypeName, f);
+                                            var r = new TypeRef { Name = IntTypeName, Version = "" };
                                             Mark(r, f);
                                             var UnderlyingType = TypeSpec.CreateTypeRef(r);
                                             Mark(UnderlyingType, f);
@@ -798,9 +798,51 @@ namespace Nivea.Template.Syntax
             return n.Leaf;
         }
 
-        private static TypeRef ParseTypeRef(String TypeString)
+        private static TypeRef ParseTypeRef(TFSemantics.Node TypeNode, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
         {
-            return Syntax.TypeParser.ParseTypeRef(TypeString);
+            var ts = ParseTypeSpec(TypeNode, nm, Positions);
+            var NameParts = new LinkedList<String>();
+            var Version = "";
+            while (true)
+            {
+                if (ts.OnTypeRef)
+                {
+                    if (NameParts.Count == 0) { return ts.TypeRef; }
+                    if (ts.TypeRef.Version != "")
+                    {
+                        throw new InvalidEvaluationException("UnexpectedVersion", nm.GetFileRange(ts), ts);
+                    }
+                    foreach (var Part in ts.TypeRef.Name.AsEnumerable().Reverse())
+                    {
+                        NameParts.AddFirst(Part);
+                    }
+                    var Name = NameParts.ToList();
+                    var Ref = new TypeRef { Name = Name, Version = Version };
+                    if (Positions.ContainsKey(TypeNode))
+                    {
+                        var Range = Positions[TypeNode];
+                        Positions.Add(Name, Range);
+                        Positions.Add(Ref, Range);
+                    }
+                    return Ref;
+                }
+                else if (ts.OnMember)
+                {
+                    var Child = ts.Member.Child;
+                    if (!ts.Member.Child.OnTypeRef)
+                    {
+                        throw new InvalidEvaluationException("ExpectedTypeRef", nm.GetFileRange(Child), Child);
+                    }
+                    NameParts = new LinkedList<String>( Child.TypeRef.Name);
+                    Version = Child.TypeRef.Version;
+                    ts = ts.Member.Parent;
+                }
+                else
+                {
+                    throw new InvalidEvaluationException("ExpectedTypeRefOrMember", nm.GetFileRange(ts), ts);
+                }
+            }
+            throw new InvalidOperationException();
         }
 
         private static TypeSpec ParseTypeSpec(TFSemantics.Node TypeNode, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)

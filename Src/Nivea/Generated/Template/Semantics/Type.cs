@@ -83,7 +83,7 @@ namespace Nivea.Template.Semantics
     public sealed class TypeRef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
     }
@@ -152,7 +152,7 @@ namespace Nivea.Template.Semantics
     public sealed class PrimitiveDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>泛型参数</summary>
         public List<VariableDef> GenericParameters;
         /// <summary>描述</summary>
@@ -163,7 +163,7 @@ namespace Nivea.Template.Semantics
     public sealed class AliasDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
         /// <summary>泛型参数</summary>
@@ -178,7 +178,7 @@ namespace Nivea.Template.Semantics
     public sealed class RecordDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
         /// <summary>泛型参数</summary>
@@ -193,7 +193,7 @@ namespace Nivea.Template.Semantics
     public sealed class TaggedUnionDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
         /// <summary>泛型参数</summary>
@@ -208,7 +208,7 @@ namespace Nivea.Template.Semantics
     public sealed class EnumDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
         /// <summary>基础类型</summary>

@@ -3,7 +3,7 @@
 //  File:        ExprParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2017.09.05.
+//  Version:     2018.12.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -40,8 +40,9 @@ namespace Nivea.Template.Syntax
             //TODO 支持复杂类型
             if (Type.OnTypeRef)
             {
+                if (Type.TypeRef.Name.Count != 1) { throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type); }
                 if (Type.TypeRef.Version != "") { throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type); }
-                var Name = Type.TypeRef.Name;
+                var Name = Type.TypeRef.Name.Single();
                 if (!(Value.OnStem && (Value.Stem.Children.Count == 1))) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                 var One = Value.Stem.Children.Single();
                 if (One.OnEmpty)
@@ -288,8 +289,9 @@ namespace Nivea.Template.Syntax
             else if (Type.OnGenericTypeSpec)
             {
                 if (!Type.GenericTypeSpec.TypeSpec.OnTypeRef) { throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type); }
+                if (Type.GenericTypeSpec.TypeSpec.TypeRef.Name.Count != 1) { throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type); }
                 if (Type.GenericTypeSpec.TypeSpec.TypeRef.Version != "") { throw new InvalidEvaluationException("TypeNotSupportedInConstant", nm.GetFileRange(Type), Type); }
-                var Name = Type.GenericTypeSpec.TypeSpec.TypeRef.Name;
+                var Name = Type.GenericTypeSpec.TypeSpec.TypeRef.Name.Single();
                 if (!Value.OnStem) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                 if (Name == "Optional")
                 {
