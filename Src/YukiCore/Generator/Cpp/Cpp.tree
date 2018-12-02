@@ -1,0 +1,703 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Cpp.tree
+      Location:    Yuki.Core <Tree>
+      Description: 对象类型结构C++模板
+      Version:     2018.08.17.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Yuki.ObjectSchema.Cpp
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+
+#Constant Keywords:List<String>
+    $List String
+        __abstract
+        __alignof
+        __asm
+        __assume
+        __based
+        __box
+        __cdecl
+        __declspec
+        __delegate
+        __event
+        __except
+        __fastcall
+        __finally
+        __forceinline
+        __gc
+        __hook
+        __identifier
+        __if_exists
+        __if_not_exists
+        __inline
+        __int16
+        __int32
+        __int64
+        __int8
+        __interface
+        __leave
+        __m128
+        __m128d
+        __m128i
+        __m64
+        __multiple_inheritance
+        __nogc
+        __noop
+        __pin
+        __property
+        __raise
+        __sealed
+        __single_inheritance
+        __stdcall
+        __super
+        __thiscall
+        __try
+        __except
+        __finally
+        __try_cast
+        __unaligned
+        __unhook
+        __uuidof
+        __value
+        __virtual_inheritance
+        __w64
+        __wchar_t
+        wchar_t
+        abstract
+        array
+        auto
+        bool
+        break
+        case
+        catch
+        char
+        class
+        const
+        const_cast
+        continue
+        decltype
+        default
+        delegate
+        delete
+        deprecated
+        dllexport
+        dllimport
+        do
+        double
+        dynamic_cast
+        else
+        enum
+        event
+        explicit
+        extern
+        false
+        finally
+        float
+        for
+        each
+        in
+        friend
+        friend_as
+        gcnew
+        generic
+        goto
+        if
+        initonly
+        inline
+        int
+        interface
+        interior_ptr
+        literal
+        long
+        mutable
+        naked
+        namespace
+        new
+        noinline
+        noreturn
+        nothrow
+        novtable
+        nullptr
+        operator
+        private
+        property
+        protected
+        public
+        ref
+        register
+        reinterpret_cast
+        return
+        safecast
+        sealed
+        selectany
+        short
+        signed
+        sizeof
+        static
+        static_assert
+        static_cast
+        struct
+        switch
+        template
+        this
+        thread
+        throw
+        true
+        try
+        typedef
+        typeid
+        typename
+        union
+        unsigned
+        using
+        uuid
+        value
+        virtual
+        void
+        volatile
+        while
+
+#Constant PrimitiveMapping:Map<String, String>
+    $Table KeyValuePairOfStringAndString Key Value
+        Unit                Unit
+        Boolean             bool
+        String              std::wstring
+        Int                 std::int32_t
+        Real                double
+        Byte                std::uint8_t
+        UInt8               std::uint8_t
+        UInt16              std::uint16_t
+        UInt32              std::uint32_t
+        UInt64              std::uint64_t
+        Int8                std::int8_t
+        Int16               std::int16_t
+        Int32               std::int32_t
+        Int64               std::int64_t
+        Float32             float
+        Float64             double
+        Type                std::wstring
+        Optional            Optional
+        List                std::vector
+        Set                 std::unordered_set
+        Map                 std::unordered_map
+
+#Template SingleLineXmlComment Description:String
+    /// <summary>${Description}</summary>
+
+#Template MultiLineXmlComment Description:List<String>
+    /// <summary>
+    /// ${Description}
+    /// </summary>
+
+#Template Primitive Name:String PlatformName:String
+    typedef ${PlatformName} [[${Name}]];
+
+#Template Primitive_Unit
+    #ifndef _UNIT_TYPE_
+        typedef struct {} Unit;
+    #   define _UNIT_TYPE_
+    #endif
+
+#Template Primitive_Optional
+    #ifndef _OPTIONAL_TYPE_
+        enum class OptionalTag
+        {
+            NotHasValue = 0,
+            HasValue = 1
+        };
+        /* TaggedUnion */
+        template<typename T>
+        class Optional final
+        {
+        public:
+            /* Tag */ OptionalTag _Tag;
+
+            Unit NotHasValue;
+            T HasValue;
+
+            static Optional<T> CreateNotHasValue()
+            {
+                auto r = Optional<T>();
+                r._Tag = OptionalTag::NotHasValue;
+                r.NotHasValue = Unit();
+                return r;
+            }
+            static Optional<T> CreateHasValue(T Value)
+            {
+                auto r = Optional<T>();
+                r._Tag = OptionalTag::HasValue;
+                r.HasValue = Value;
+                return r;
+            }
+
+            Boolean OnNotHasValue() const
+            {
+                return _Tag == OptionalTag::NotHasValue;
+            }
+            Boolean OnHasValue() const
+            {
+                return _Tag == OptionalTag::HasValue;
+            }
+
+            static Optional<T> Empty() { return CreateNotHasValue(); }
+            Optional()
+                : _Tag(OptionalTag::NotHasValue),
+                  NotHasValue(Unit()),
+                  HasValue(T())
+            {
+            }
+            Optional(const T &v)
+                : _Tag(OptionalTag::HasValue),
+                  NotHasValue(Unit()),
+                  HasValue(v)
+            {
+            }
+            Optional(std::nullptr_t v)
+                : _Tag(OptionalTag::NotHasValue),
+                  NotHasValue(Unit()),
+                  HasValue(T())
+            {
+            }
+            explicit operator const T &() const
+            {
+                if (OnNotHasValue())
+                {
+                    throw std::logic_error("InvalidOperation");
+                }
+                return HasValue;
+            }
+            Boolean operator ==(const Optional<T> &Right) const
+            {
+                return Equals(*this, Right);
+            }
+            Boolean operator !=(const Optional<T> &Right) const
+            {
+                return !Equals(*this, Right);
+            }
+            Boolean operator ==(const T &Right) const
+            {
+                return Equals(*this, static_cast<const Optional<T> &>(Right));
+            }
+            Boolean operator !=(const T &Right) const
+            {
+                return !Equals(*this, static_cast<const Optional<T> &>(Right));
+            }
+            Boolean operator ==(std::nullptr_t Right) const
+            {
+                return Equals(*this, Right);
+            }
+            Boolean operator !=(std::nullptr_t Right) const
+            {
+                return !Equals(*this, Right);
+            }
+
+        private:
+            static Boolean Equals(const Optional<T> &Left, const Optional<T> &Right)
+            {
+                if (Left.OnNotHasValue() && Right.OnNotHasValue())
+                {
+                    return true;
+                }
+                if (Left.OnNotHasValue() || Right.OnNotHasValue())
+                {
+                    return false;
+                }
+                return Left.HasValue == Right.HasValue;
+            }
+            static Boolean Equals(const Optional<T> &Left, std::nullptr_t Right)
+            {
+                return Left.OnNotHasValue();
+            }
+
+        public:
+            T Value() const
+            {
+                if (OnHasValue())
+                {
+                    return HasValue;
+                }
+                else
+                {
+                    throw std::logic_error("InvalidOperation");
+                }
+            }
+            T ValueOrDefault(T Default) const
+            {
+                if (OnHasValue())
+                {
+                    return HasValue;
+                }
+                else
+                {
+                    return Default;
+                }
+            }
+        };
+
+        namespace std
+        {
+            template <typename T>
+            struct hash<Optional<T>>
+            {
+                size_t operator()(const Optional<T> &x) const
+                {
+                    if (x.OnNotHasValue()) { return 0; }
+                    return hash<T>()(x.HasValue);
+                }
+            };
+            template <typename T>
+            struct less<Optional<T>>
+            {
+                bool operator()(const Optional<T> &x, const Optional<T> &y) const
+                {
+                    if ((x == nullptr) && (y == nullptr)) { return false; }
+                    if (x == nullptr) { return true; }
+                    if (y == nullptr) { return false; }
+                    return x.HasValue < y.HasValue;
+                }
+            };
+        }
+
+    #   define _OPTIONAL_TYPE_
+    #endif
+
+#Template TypePredefinition Name:String MetaType:String GenericParameters:List<VariableDef>
+    ${GetGenericParameterLine(GenericParameters)}
+    ${MetaType} [[${Name}]];
+
+#Template Alias a:AliasDef
+    $$
+        var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
+        var Type = GetTypeString(a.Type);
+    ${GetXmlComment(a.Description)}
+    /* Alias */
+    ${GetGenericParameterLine(a.GenericParameters)}
+    class ${Name} final
+    {
+    public:
+        ${Type} Value;
+
+        ${Name}()
+        {
+        }
+        ${Name}(const ${Type} &v)
+            : Value(v)
+        {
+        }
+
+        operator const ${Type} &() const
+        {
+            return Value;
+        }
+    };
+
+#Template Record r:RecordDef
+    $$
+        var Name = GetEscapedIdentifier(r.TypeFriendlyName());
+    ${GetXmlComment(r.Description)}
+    /* Record */
+    ${GetGenericParameterLine(r.GenericParameters)}
+    class ${Name} final
+    {
+    public:
+        $$
+            foreach (var f in r.Fields)
+            {
+                ##
+                    ${GetXmlComment(f.Description)}
+                    ${GetTypeString(f.Type)} [[${f.Name}]];
+            }
+    };
+
+#Template TaggedUnion tu:TaggedUnionDef
+    $$
+        var Name = GetEscapedIdentifier(tu.TypeFriendlyName());
+        var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+    enum class ${TagName}
+    {
+        $$
+            var k = 0;
+            foreach (var a in tu.Alternatives)
+            {
+                if (k == tu.Alternatives.Count - 1)
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        [[${a.Name}]] = ${k}
+                }
+                else
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        [[${a.Name}]] = ${k},
+                }
+                k += 1;
+            }
+    };
+    ${GetXmlComment(tu.Description)}
+    /* TaggedUnion */
+    ${GetGenericParameterLine(tu.GenericParameters)}
+    class ${Name} final
+    {
+    public:
+        /* Tag */ ${TagName} _Tag;
+
+        $$
+            foreach (var a in tu.Alternatives)
+            {
+                ##
+                    ${GetXmlComment(a.Description)}
+                    ${GetTypeString(a.Type)} [[${a.Name}]];
+            }
+
+        $$
+            foreach (var a in tu.Alternatives)
+            {
+                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        static std::shared_ptr<class ${Name}> [[Create${a.Name}]]()
+                        {
+                            auto r = std::make_shared<${Name}>();
+                            r->_Tag = ${TagName}::[[${a.Name}]];
+                            r->[[${a.Name}]] = Unit();
+                            return r;
+                        }
+                }
+                else
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        static std::shared_ptr<class ${Name}> [[Create${a.Name}]](${GetTypeString(a.Type)} Value)
+                        {
+                            auto r = std::make_shared<${Name}>();
+                            r->_Tag = ${TagName}::[[${a.Name}]];
+                            r->[[${a.Name}]] = Value;
+                            return r;
+                        }
+                }
+            }
+
+        $$
+            foreach (var a in tu.Alternatives)
+            {
+                ##
+                    ${GetXmlComment(a.Description)}
+                    Boolean [[On${a.Name}]]() const
+                    {
+                        return _Tag == ${TagName}::[[${a.Name}]];
+                    }
+            }
+    };
+
+#Template Enum e:EnumDef
+    $$
+        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+    ${GetXmlComment(e.Description)}
+    enum class ${Name} : ${GetEnumTypeString(e.UnderlyingType)}
+    {
+        $$
+            var k = 0;
+            foreach (var l in e.Literals)
+            {
+                if (k == e.Literals.Count - 1)
+                {
+                    ##
+                        ${GetXmlComment(l.Description)}
+                        [[${l.Name}]] = ${l.Value}
+                }
+                else
+                {
+                    ##
+                        ${GetXmlComment(l.Description)}
+                        [[${l.Name}]] = ${l.Value},
+                }
+                k += 1;
+            }
+    };
+
+#Template EnumFunctor e:EnumDef NamespaceName:String
+    $$
+        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+        if (NamespaceName != "")
+        {
+            Name = NamespaceName.Replace(".", "::") + "::" + Name;
+        }
+    template <>
+    struct hash<${Name}>
+    {
+        size_t operator()(const ${Name} &x) const
+        {
+            return hash<${GetTypeString(e.UnderlyingType)}>()(static_cast<${GetTypeString(e.UnderlyingType)}>(x));
+        }
+    };
+    template <>
+    struct less<${Name}>
+    {
+        bool operator()(const ${Name} &x, const ${Name} &y) const
+        {
+            return less<${GetTypeString(e.UnderlyingType)}>()(static_cast<${GetTypeString(e.UnderlyingType)}>(x), static_cast<${GetTypeString(e.UnderlyingType)}>(y));
+        }
+    };
+
+#Template ClientCommand c:ClientCommandDef
+    $$
+        var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+    ${Record(Request)}
+    ${TaggedUnion(Reply)}
+
+#Template ServerCommand c:ServerCommandDef
+    $$
+        var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+    ${Record(Event)}
+
+#Template IApplicationServer Commands:List<TypeDef>
+    class IApplicationServer
+    {
+    public:
+        virtual ~IApplicationServer() {}
+
+        $$
+            foreach (var c in Commands)
+            {
+                if (c.OnClientCommand)
+                {
+                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Description = c.ClientCommand.Description;
+                    if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
+                    {
+                        ##
+                            ${GetXmlComment(Description)}
+                            virtual void [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r, std::function<void(std::shared_ptr<class [[${Name}Reply]]>)> Callback, std::function<void(const std::exception &)> OnFailure) = 0;
+                    }
+                    else
+                    {
+                        ##
+                            ${GetXmlComment(Description)}
+                            virtual std::shared_ptr<class [[${Name}Reply]]> [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r) = 0;
+                    }
+                }
+                else if (c.OnServerCommand)
+                {
+                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Description = c.ServerCommand.Description;
+                    ##
+                        ${GetXmlComment(Description)}
+                        std::function<void(std::shared_ptr<class [[${Name}Event]]>)> [[${Name}]];
+                }
+            }
+    };
+
+#Template IApplicationClient Commands:List<TypeDef>
+    class IApplicationClient
+    {
+    public:
+        virtual ~IApplicationClient() {}
+
+        virtual std::uint64_t Hash() = 0;
+        virtual void DequeueCallback(std::wstring CommandName) = 0;
+
+        $$
+            foreach (var c in Commands)
+            {
+                if (c.OnClientCommand)
+                {
+                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Description = c.ClientCommand.Description;
+                    ##
+                        ${GetXmlComment(Description)}
+                        virtual void [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r, std::function<void(std::shared_ptr<class [[${Name}Reply]]>)> Callback) = 0;
+                }
+                else if (c.OnServerCommand)
+                {
+                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Description = c.ServerCommand.Description;
+                    ##
+                        ${GetXmlComment(Description)}
+                        std::function<void(std::shared_ptr<class [[${Name}Event]]>)> [[${Name}]];
+                }
+            }
+    };
+
+#Template IEventPump Commands:List<TypeDef>
+    class IEventPump
+    {
+    public:
+        virtual ~IEventPump() {}
+
+        $$
+            foreach (var c in Commands)
+            {
+                if (c.OnServerCommand)
+                {
+                    if (c.ServerCommand.Version != "") { continue; }
+                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Description = c.ServerCommand.Description;
+                    ##
+                        ${GetXmlComment(Description)}
+                        std::function<void(std::shared_ptr<class [[${Name}Event]]>)> [[${Name}]];
+                }
+            }
+    };
+
+#Template WrapNamespace NamespacePart:String Contents:IEnumerable<String>
+    namespace [[${NamespacePart}]]
+    {
+        ${Contents}
+    }
+
+#Template Main Schema:Schema NamespaceName:String
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    #pragma once
+
+    #include <cstddef>
+    #include <cstdint>
+    #include <string>
+    #include <vector>
+    #include <unordered_set>
+    #include <unordered_map>
+    #include <tuple>
+    #include <memory>
+    #include <functional>
+    #include <exception>
+    #include <stdexcept>
+    #include ${Schema.Imports.Where(i => IsInclude(i))}
+
+    #ifndef _ENUM_CLASS_
+    #   if defined(_MSC_VER)
+    #       define _ENUM_CLASS_ enum class
+    #   else
+    #       define _ENUM_CLASS_ enum
+    #   endif
+    #endif
+
+    $$
+        var Primitives = GetPrimitives(Schema);
+        var SimpleTypes = GetSimpleTypes(Schema);
+        var EnumFunctors = GetEnumFunctors(Schema, NamespaceName);
+        var ComplexTypes = GetComplexTypes(Schema);
+    ${Primitives}
+    ${WrapContents(NamespaceName, SimpleTypes)}
+    ${WrapContents("std", EnumFunctors)}
+    ${WrapContents(NamespaceName, ComplexTypes)}
+
+$End

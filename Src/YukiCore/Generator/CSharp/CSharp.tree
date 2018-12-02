@@ -1,0 +1,591 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        CSharp.tree
+      Location:    Yuki.Core <Tree>
+      Description: 对象类型结构C#模板
+      Version:     2016.09.10.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Yuki.ObjectSchema.CSharp
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+
+#Constant Keywords:List<String>
+    $List String
+        abstract
+        event
+        new
+        struct
+        as
+        explicit
+        null
+        switch
+        base
+        extern
+        object
+        this
+        bool
+        false
+        operator
+        throw
+        break
+        finally
+        out
+        true
+        byte
+        fixed
+        override
+        try
+        case
+        float
+        params
+        typeof
+        catch
+        for
+        private
+        uint
+        char
+        foreach
+        protected
+        ulong
+        checked
+        goto
+        public
+        unchecked
+        class
+        if
+        readonly
+        unsafe
+        const
+        implicit
+        ref
+        ushort
+        continue
+        in
+        return
+        using
+        decimal
+        int
+        sbyte
+        virtual
+        default
+        interface
+        sealed
+        volatile
+        delegate
+        internal
+        short
+        void
+        do
+        is
+        sizeof
+        while
+        double
+        lock
+        stackalloc
+        else
+        long
+        static
+        enum
+        namespace
+        string
+        get
+        partial
+        set
+        value
+        where
+        yield
+
+#Constant PrimitiveMapping:Map<String, String>
+    $Table KeyValuePairOfStringAndString Key Value
+        Unit                Unit
+        Boolean             System.Boolean
+        String              System.String
+        Int                 System.Int32
+        Real                System.Double
+        Byte                System.Byte
+        UInt8               System.Byte
+        UInt16              System.UInt16
+        UInt32              System.UInt32
+        UInt64              System.UInt64
+        Int8                System.SByte
+        Int16               System.Int16
+        Int32               System.Int32
+        Int64               System.Int64
+        Float32             System.Single
+        Float64             System.Double
+        Type                System.Type
+        Optional            Optional
+        List                System.Collections.Generic.List
+        Set                 System.Collections.Generic.HashSet
+        Map                 System.Collections.Generic.Dictionary
+
+#Constant PrimitiveMappingEnum:Map<String, String>
+    $Table KeyValuePairOfStringAndString Key Value
+        Int                 int
+        Byte                byte
+        UInt8               byte
+        UInt16              ushort
+        UInt32              uint
+        UInt64              ulong
+        Int8                sbyte
+        Int16               short
+        Int32               int
+        Int64               long
+
+#Template SingleLineXmlComment Description:String
+    /// <summary>${Description}</summary>
+
+#Template MultiLineXmlComment Description:List<String>
+    /// <summary>
+    /// ${Description}
+    /// </summary>
+
+#Template Primitive Name:String PlatformName:String
+    using [[${Name}]] = ${PlatformName};
+
+#Template Primitive_Unit
+    public class AliasAttribute : Attribute {}
+    public class RecordAttribute : Attribute {}
+    public class TaggedUnionAttribute : Attribute {}
+    public class TagAttribute : Attribute {}
+    public class TupleAttribute : Attribute {}
+
+    [Record]
+    public struct Unit {}
+
+#Template Primitive_Optional
+    public enum OptionalTag
+    {
+        NotHasValue = 0,
+        HasValue = 1
+    }
+    [TaggedUnion]
+    public struct Optional<T>
+    {
+        [Tag] public OptionalTag _Tag;
+
+        public Unit NotHasValue;
+        public T HasValue;
+
+        public static Optional<T> CreateNotHasValue() { return new Optional<T> { _Tag = OptionalTag.NotHasValue, NotHasValue = default(Unit) }; }
+        public static Optional<T> CreateHasValue(T Value) { return new Optional<T> { _Tag = OptionalTag.HasValue, HasValue = Value }; }
+
+        public Boolean OnNotHasValue { get { return _Tag == OptionalTag.NotHasValue; } }
+        public Boolean OnHasValue { get { return _Tag == OptionalTag.HasValue; } }
+
+        public static Optional<T> Empty { get { return CreateNotHasValue(); } }
+        public static implicit operator Optional<T>(T v)
+        {
+            if (v == null)
+            {
+                return CreateNotHasValue();
+            }
+            else
+            {
+                return CreateHasValue(v);
+            }
+        }
+        public static explicit operator T(Optional<T> v)
+        {
+            if (v.OnNotHasValue)
+            {
+                throw new InvalidOperationException();
+            }
+            return v.HasValue;
+        }
+        public static Boolean operator ==(Optional<T> Left, Optional<T> Right)
+        {
+            return Equals(Left, Right);
+        }
+        public static Boolean operator !=(Optional<T> Left, Optional<T> Right)
+        {
+            return !Equals(Left, Right);
+        }
+        public static Boolean operator ==(Optional<T>? Left, Optional<T>? Right)
+        {
+            return Equals(Left, Right);
+        }
+        public static Boolean operator !=(Optional<T>? Left, Optional<T>? Right)
+        {
+            return !Equals(Left, Right);
+        }
+        public override Boolean Equals(Object obj)
+        {
+            if (obj == null) { return Equals(this, null); }
+            if (obj.GetType() != typeof(Optional<T>)) { return false; }
+            var o = (Optional<T>)(obj);
+            return Equals(this, o);
+        }
+        public override Int32 GetHashCode()
+        {
+            if (OnNotHasValue) { return 0; }
+            return HasValue.GetHashCode();
+        }
+
+        private static Boolean Equals(Optional<T> Left, Optional<T> Right)
+        {
+            if (Left.OnNotHasValue && Right.OnNotHasValue)
+            {
+                return true;
+            }
+            if (Left.OnNotHasValue || Right.OnNotHasValue)
+            {
+                return false;
+            }
+            return Left.HasValue.Equals(Right.HasValue);
+        }
+        private static Boolean Equals(Optional<T>? Left, Optional<T>? Right)
+        {
+            if ((!Left.HasValue || Left.Value.OnNotHasValue) && (!Right.HasValue || Right.Value.OnNotHasValue))
+            {
+                return true;
+            }
+            if (!Left.HasValue || Left.Value.OnNotHasValue || !Right.HasValue || Right.Value.OnNotHasValue)
+            {
+                return false;
+            }
+            return Equals(Left.Value, Right.Value);
+        }
+
+        public T Value
+        {
+            get
+            {
+                if (OnHasValue)
+                {
+                    return HasValue;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        public T ValueOrDefault(T Default)
+        {
+            if (OnHasValue)
+            {
+                return HasValue;
+            }
+            else
+            {
+                return Default;
+            }
+        }
+
+        public override String ToString()
+        {
+            if (OnHasValue)
+            {
+                return HasValue.ToString();
+            }
+            else
+            {
+                return "-";
+            }
+        }
+    }
+
+#Template Alias a:AliasDef
+    $$
+        var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
+        var Type = GetTypeString(a.Type);
+    ${GetXmlComment(a.Description)}
+    [Alias]
+    public sealed class ${Name}
+    {
+        public ${Type} Value;
+
+        public static implicit operator ${Name}(${Type} o)
+        {
+            return new ${Name} {Value = o};
+        }
+        public static implicit operator ${Type}(${Name} c)
+        {
+            return c.Value;
+        }
+    }
+
+#Template Record r:RecordDef
+    $$
+        var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+    ${GetXmlComment(r.Description)}
+    [Record]
+    public sealed class ${Name}
+    {
+        $$
+            foreach (var f in r.Fields)
+            {
+                ##
+                    ${GetXmlComment(f.Description)}
+                    public ${GetTypeString(f.Type)} [[${f.Name}]];
+            }
+    }
+
+#Template TaggedUnion tu:TaggedUnionDef
+    $$
+        var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
+        var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+    public enum ${TagName}
+    {
+        $$
+            var k = 0;
+            foreach (var a in tu.Alternatives)
+            {
+                if (k == tu.Alternatives.Count - 1)
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        [[${a.Name}]] = ${k}
+                }
+                else
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        [[${a.Name}]] = ${k},
+                }
+                k += 1;
+            }
+    }
+    ${GetXmlComment(tu.Description)}
+    [TaggedUnion]
+    public sealed class ${Name}
+    {
+        [Tag] public ${TagName} _Tag;
+
+        $$
+            foreach (var a in tu.Alternatives)
+            {
+                ##
+                    ${GetXmlComment(a.Description)}
+                    public ${GetTypeString(a.Type)} [[${a.Name}]];
+            }
+
+        $$
+            foreach (var a in tu.Alternatives)
+            {
+                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        public static ${Name} [[Create${a.Name}]]() { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[${a.Name}]] = default(Unit) }; }
+                }
+                else
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type)} Value) { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[${a.Name}]] = Value }; }
+                }
+            }
+
+        $$
+            foreach (var a in tu.Alternatives)
+            {
+                ##
+                    ${GetXmlComment(a.Description)}
+                    public Boolean [[On${a.Name}]] { get { return _Tag == ${TagName}.[[${a.Name}]]; } }
+            }
+    }
+
+#Template Enum e:EnumDef
+    $$
+        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+        var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
+        var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
+    ${GetXmlComment(e.Description)}
+    public enum ${Name} : ${GetEnumTypeString(e.UnderlyingType)}
+    {
+        $$
+            var k = 0;
+            foreach (var l in e.Literals)
+            {
+                if (k == e.Literals.Count - 1)
+                {
+                    ##
+                        ${GetXmlComment(l.Description)}
+                        [[${l.Name}]] = ${l.Value}
+                }
+                else
+                {
+                    ##
+                        ${GetXmlComment(l.Description)}
+                        [[${l.Name}]] = ${l.Value},
+                }
+                k += 1;
+            }
+    }
+    ${GetXmlComment(e.Description)}
+    public static class ${ParserName}
+    {
+        private static Dictionary<String, ${Name}> d = new Dictionary<String, ${Name}>();
+        static ${ParserName}()
+        {
+            $$
+                var LiteralDict = e.Literals.ToDictionary(l => l.Name);
+                var LiteralNameAdds = e.Literals.Select(l => new { Name = l.Name, NameOrDescription = l.Name });
+                var LiteralDescriptionAdds = e.Literals.GroupBy(l => l.Description).Where(l => l.Count() == 1).Select(l => l.Single()).Where(l => !LiteralDict.ContainsKey(l.Description)).Select(l => new { Name = l.Name, NameOrDescription = l.Description });
+                foreach (var l in LiteralNameAdds.Concat(LiteralDescriptionAdds))
+                {
+                    ##
+                        d.Add(${GetEscapedStringLiteral(l.NameOrDescription)}, ${Name}.[[${l.Name}]]);
+                }
+        }
+        public static ${Name}? TryParse(String Value)
+        {
+            if (d.ContainsKey(Value)) { return d[Value]; }
+            return null;
+        }
+    }
+    ${GetXmlComment(e.Description)}
+    public static class ${WriterName}
+    {
+        private static Dictionary<${Name}, String> d = new Dictionary<${Name}, String>();
+        static ${WriterName}()
+        {
+            $$
+                foreach (var l in e.Literals)
+                {
+                    ##
+                        if (!d.ContainsKey(${Name}.[[${l.Name}]])) { d.Add(${Name}.[[${l.Name}]], ${GetEscapedStringLiteral(l.Description)}); }
+                }
+        }
+        public static String GetDescription([[${Name}]] Value)
+        {
+            return d[Value];
+        }
+    }
+
+#Template ClientCommand c:ClientCommandDef
+    $$
+        var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+    ${Record(Request)}
+    ${TaggedUnion(Reply)}
+
+#Template ServerCommand c:ServerCommandDef
+    $$
+        var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+    ${Record(Event)}
+
+#Template IApplicationServer Commands:List<TypeDef>
+    public interface IApplicationServer
+    {
+        $$
+            foreach (var c in Commands)
+            {
+                if (c.OnClientCommand)
+                {
+                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Description = c.ClientCommand.Description;
+                    if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
+                    {
+                        ##
+                            ${GetXmlComment(Description)}
+                            void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback, Action<Exception> OnFailure);
+                    }
+                    else
+                    {
+                        ##
+                            ${GetXmlComment(Description)}
+                            [[${Name}Reply]] [[${Name}]]([[${Name}Request]] r);
+                    }
+                }
+                else if (c.OnServerCommand)
+                {
+                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Description = c.ServerCommand.Description;
+                    ##
+                        ${GetXmlComment(Description)}
+                        event Action<[[${Name}Event]]> [[${Name}]];
+                }
+            }
+    }
+
+#Template IApplicationClient Commands:List<TypeDef>
+    public interface IApplicationClient
+    {
+        UInt64 Hash { get; }
+        void DequeueCallback(String CommandName);
+
+        $$
+            foreach (var c in Commands)
+            {
+                if (c.OnClientCommand)
+                {
+                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Description = c.ClientCommand.Description;
+                    ##
+                        ${GetXmlComment(Description)}
+                        void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback);
+                }
+                else if (c.OnServerCommand)
+                {
+                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Description = c.ServerCommand.Description;
+                    ##
+                        ${GetXmlComment(Description)}
+                        event Action<[[${Name}Event]]> [[${Name}]];
+                }
+            }
+    }
+
+#Template IEventPump Commands:List<TypeDef>
+    public interface IEventPump
+    {
+        $$
+            foreach (var c in Commands)
+            {
+                if (c.OnServerCommand)
+                {
+                    if (c.ServerCommand.Version != "") { continue; }
+                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Description = c.ServerCommand.Description;
+                    ##
+                        ${GetXmlComment(Description)}
+                        Action<[[${Name}Event]]> [[${Name}]] { get; }
+                }
+            }
+    }
+
+#Template Main Schema:Schema NamespaceName:String
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    using System;
+    using System.Collections.Generic;
+    using ${Schema.Imports};
+    $$
+        var Primitives = GetPrimitives(Schema);
+    ${Primitives}
+
+    $$
+        var ComplexTypes = GetComplexTypes(Schema);
+        if (NamespaceName == "")
+        {
+            ##
+                ${ComplexTypes}
+        }
+        else
+        {
+            ##
+                namespace [[${NamespaceName}]]
+                {
+                    ${ComplexTypes}
+                }
+        }
+
+$End

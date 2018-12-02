@@ -53,8 +53,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\NiveumCore\NiveumCore.csproj">
+      <Project>{23021296-4e59-4532-9b5f-cb3ced3a978e}</Project>
+      <Name>NiveumCore</Name>
+    </ProjectReference>
     <ProjectReference Include="..\YukiCore\YukiCore.csproj">
-      <Project>{23021296-4E59-4532-9B5F-CB3CED3A978E}</Project>
+      <Project>{023b572f-ba8d-47cd-aff7-b36d65d3cfba}</Project>
       <Name>YukiCore</Name>
     </ProjectReference>
   </ItemGroup>
