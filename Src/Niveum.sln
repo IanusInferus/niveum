@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchemaManipulator", "Schema
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseRegenerator", "DatabaseRegenerator\DatabaseRegenerator.csproj", "{8EA3C197-8B12-4A72-8C91-E22DB8039E51}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YukiCore", "YukiCore\YukiCore.csproj", "{23021296-4E59-4532-9B5F-CB3CED3A978E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NiveumCore", "NiveumCore\NiveumCore.csproj", "{23021296-4E59-4532-9B5F-CB3CED3A978E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YukiRelation", "YukiRelation\YukiRelation.csproj", "{7BD101DA-2049-4B20-A89F-D5C7D4384D8B}"
 EndProject
