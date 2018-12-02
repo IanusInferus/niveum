@@ -529,8 +529,8 @@ namespace Yuki.ObjectSchema.CSharp
         }
         public IEnumerable<String> ClientCommand(ClientCommandDef c)
         {
-            var Request = new RecordDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Request"), Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-            var Reply = new TaggedUnionDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Reply"), Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+            var Request = new RecordDef { Name = c.Name.NameConcat("Request"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            var Reply = new TaggedUnionDef { Name = c.Name.NameConcat("Reply"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
             foreach (var _Line in Combine(Begin(), Record(Request)))
             {
                 yield return _Line;
@@ -542,13 +542,13 @@ namespace Yuki.ObjectSchema.CSharp
         }
         public IEnumerable<String> ServerCommand(ServerCommandDef c)
         {
-            var Event = new RecordDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Event"), Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            var Event = new RecordDef { Name = c.Name.NameConcat("Event"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
             foreach (var _Line in Combine(Begin(), Record(Event)))
             {
                 yield return _Line;
             }
         }
-        public IEnumerable<String> IApplicationServer(List<TypeDef> Commands)
+        public IEnumerable<String> IApplicationServer(List<TypeDef> Commands, String NamespaceName)
         {
             yield return "public interface IApplicationServer";
             yield return "{";
@@ -558,13 +558,15 @@ namespace Yuki.ObjectSchema.CSharp
                 {
                     var Name = c.ClientCommand.SimpleName();
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
                         foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "("), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), " r, Action<"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), "> Callback, Action<Exception> OnFailure);"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, Action<"), ReplyTypeString), "> Callback, Action<Exception> OnFailure);"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -575,7 +577,7 @@ namespace Yuki.ObjectSchema.CSharp
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), " "), GetEscapedIdentifier(Name)), "("), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), " r);"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), ReplyTypeString), " "), GetEscapedIdentifier(Name)), "("), GetEscapedIdentifier(RequestTypeString)), " r);"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -585,11 +587,12 @@ namespace Yuki.ObjectSchema.CSharp
                 {
                     var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "event Action<"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), "> "), GetEscapedIdentifier(Name)), ";"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "event Action<"), EventTypeString), "> "), GetEscapedIdentifier(Name)), ";"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -597,7 +600,7 @@ namespace Yuki.ObjectSchema.CSharp
             }
             yield return "}";
         }
-        public IEnumerable<String> IApplicationClient(List<TypeDef> Commands)
+        public IEnumerable<String> IApplicationClient(List<TypeDef> Commands, String NamespaceName)
         {
             yield return "public interface IApplicationClient";
             yield return "{";
@@ -610,11 +613,13 @@ namespace Yuki.ObjectSchema.CSharp
                 {
                     var Name = c.ClientCommand.SimpleName();
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "("), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), " r, Action<"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), "> Callback);"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, Action<"), ReplyTypeString), "> Callback);"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -623,11 +628,12 @@ namespace Yuki.ObjectSchema.CSharp
                 {
                     var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "event Action<"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), "> "), GetEscapedIdentifier(Name)), ";"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "event Action<"), EventTypeString), "> "), GetEscapedIdentifier(Name)), ";"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -635,7 +641,7 @@ namespace Yuki.ObjectSchema.CSharp
             }
             yield return "}";
         }
-        public IEnumerable<String> IEventPump(List<TypeDef> Commands)
+        public IEnumerable<String> IEventPump(List<TypeDef> Commands, String NamespaceName)
         {
             yield return "public interface IEventPump";
             yield return "{";
@@ -646,11 +652,12 @@ namespace Yuki.ObjectSchema.CSharp
                     if (c.ServerCommand.Version != "") { continue; }
                     var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "Action<"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), "> "), GetEscapedIdentifier(Name)), " { get; }"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "Action<"), EventTypeString), "> "), GetEscapedIdentifier(Name)), " { get; }"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }

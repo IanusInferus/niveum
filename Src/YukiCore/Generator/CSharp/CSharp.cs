@@ -80,11 +80,11 @@ namespace Yuki.ObjectSchema.CSharp
                 var Ref = Type.TypeRef;
                 if ((Ref.NamespaceName() == NamespaceName) || (Ref.NamespaceName() == ""))
                 {
-                    return GetEscapedIdentifier(Type.SimpleName(NamespaceName));
+                    return GetEscapedIdentifier(Ref.SimpleName(Ref.NamespaceName()));
                 }
                 else
                 {
-                    return GetEscapedIdentifier(Ref.NamespaceName() + "." + Type.SimpleName(NamespaceName));
+                    return GetEscapedIdentifier(Ref.NamespaceName() + "." + Ref.SimpleName(Ref.NamespaceName()));
                 }
             }
             else if (Type.OnGenericParameterRef)
@@ -110,6 +110,11 @@ namespace Yuki.ObjectSchema.CSharp
             {
                 throw new InvalidOperationException();
             }
+        }
+        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName)
+        {
+            var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = Name.NameConcat(Suffix), Version = Version });
+            return GetTypeString(ts, NamespaceName);
         }
         public IEnumerable<String> GetXmlComment(String Description)
         {
@@ -227,9 +232,9 @@ namespace Yuki.ObjectSchema.CSharp
             var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
             if (Commands.Count > 0)
             {
-                AddClass(NamespaceName, IApplicationServer(Commands));
-                AddClass(NamespaceName, IApplicationClient(Commands));
-                AddClass(NamespaceName, IEventPump(Commands));
+                AddClass(NamespaceName, IApplicationServer(Commands, NamespaceName));
+                AddClass(NamespaceName, IApplicationClient(Commands, NamespaceName));
+                AddClass(NamespaceName, IEventPump(Commands, NamespaceName));
             }
 
             var Classes = NamespaceToClasses.Select(p => WrapNamespace(p.Key, p.Value.Join(new String[] { "" })));
