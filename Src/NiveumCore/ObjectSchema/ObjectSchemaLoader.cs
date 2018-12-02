@@ -214,7 +214,7 @@ namespace Niveum.ObjectSchema
                         throw new InvalidOperationException();
                     }
                 },
-                TypeDefMarker = Mark,
+                TypeDefMarker = MarkTypeDef,
                 TypeSpecMarker = Mark,
                 VariableDefMarker = Mark
             };
@@ -261,6 +261,22 @@ namespace Niveum.ObjectSchema
             if (Positions.ContainsKey(sOld) && !Positions.ContainsKey(sNew))
             {
                 Positions.Add(sNew, Positions[sOld]);
+            }
+            return sNew;
+        }
+        private TypeDef MarkTypeDef(TypeDef sOld, TypeDef sNew)
+        {
+            if (Positions.ContainsKey(sOld) && !Positions.ContainsKey(sNew))
+            {
+                Positions.Add(sNew, Positions[sOld]);
+            }
+            if (TypeToNamespace.ContainsKey(sOld) && !TypeToNamespace.ContainsKey(sNew))
+            {
+                TypeToNamespace.Add(sNew, TypeToNamespace[sOld]);
+            }
+            if (TypeToNamespaceImports.ContainsKey(sOld) && !TypeToNamespaceImports.ContainsKey(sNew))
+            {
+                TypeToNamespaceImports.Add(sNew, TypeToNamespaceImports[sOld]);
             }
             return sNew;
         }
