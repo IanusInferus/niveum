@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaDiffGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构差异生成器
-//  Version:     2016.08.06.
+//  Version:     2018.12.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -30,11 +30,11 @@ namespace Yuki.ObjectSchema
         {
             foreach (var t in Left.Types)
             {
-                if (t.Version() != "") { throw new InvalidOperationException(String.Format("VersionedTypeIsNotAllowed: {0}", t.Name())); }
+                if (t.Version() != "") { throw new InvalidOperationException(String.Format("VersionedTypeIsNotAllowed: {0}", t.FullName())); }
             }
             foreach (var t in Right.Types)
             {
-                if (t.Version() != "") { throw new InvalidOperationException(String.Format("VersionedTypeIsNotAllowed: {0}", t.Name())); }
+                if (t.Version() != "") { throw new InvalidOperationException(String.Format("VersionedTypeIsNotAllowed: {0}", t.FullName())); }
             }
 
             Func<Schema, Func<TypeDef, Schema>> GetGen = s =>
@@ -45,8 +45,8 @@ namespace Yuki.ObjectSchema
 
             var LeftGen = GetGen(Left);
             var RightGen = GetGen(Right);
-            var LeftTypeRefBinaries = Left.TypeRefs.ToDictionary(t => t.Name(), t => LeftGen(t).GetUnifiedBinaryRepresentation(), StringComparer.OrdinalIgnoreCase);
-            var RightTypeRefBinaries = Right.TypeRefs.ToDictionary(t => t.Name(), t => RightGen(t).GetUnifiedBinaryRepresentation(), StringComparer.OrdinalIgnoreCase);
+            var LeftTypeRefBinaries = Left.TypeRefs.ToDictionary(t => t.FullName(), t => LeftGen(t).GetUnifiedBinaryRepresentation(), StringComparer.OrdinalIgnoreCase);
+            var RightTypeRefBinaries = Right.TypeRefs.ToDictionary(t => t.FullName(), t => RightGen(t).GetUnifiedBinaryRepresentation(), StringComparer.OrdinalIgnoreCase);
             var CommonTypeRefs = LeftTypeRefBinaries.Keys.Intersect(RightTypeRefBinaries.Keys, StringComparer.OrdinalIgnoreCase).ToList();
             if ((LeftTypeRefBinaries.Count > CommonTypeRefs.Count) || (RightTypeRefBinaries.Count > CommonTypeRefs.Count))
             {
@@ -70,8 +70,8 @@ namespace Yuki.ObjectSchema
                 throw new InvalidOperationException(String.Format("TypeRefChanged: {0}", String.Join(" ", ChangedTypeRefs)));
             }
 
-            var LeftTypeBinaries = Left.Types.ToDictionary(t => t.Name(), t => LeftGen(t).GetUnifiedBinaryRepresentation(), StringComparer.OrdinalIgnoreCase);
-            var RightTypeBinaries = Right.Types.ToDictionary(t => t.Name(), t => RightGen(t).GetUnifiedBinaryRepresentation(), StringComparer.OrdinalIgnoreCase);
+            var LeftTypeBinaries = Left.Types.ToDictionary(t => t.FullName(), t => LeftGen(t).GetUnifiedBinaryRepresentation(), StringComparer.OrdinalIgnoreCase);
+            var RightTypeBinaries = Right.Types.ToDictionary(t => t.FullName(), t => RightGen(t).GetUnifiedBinaryRepresentation(), StringComparer.OrdinalIgnoreCase);
             var CommonTypes = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
             foreach (var Name in LeftTypeBinaries.Keys.Intersect(RightTypeBinaries.Keys))
             {
@@ -86,14 +86,14 @@ namespace Yuki.ObjectSchema
 
             var Patch = new Schema
             {
-                Types = Right.Types.Where(t => !CommonTypes.Contains(t.Name())).ToList(),
-                TypeRefs = Right.TypeRefs.Concat(Right.Types.Where(t => CommonTypes.Contains(t.Name()))).ToList(),
+                Types = Right.Types.Where(t => !CommonTypes.Contains(t.FullName())).ToList(),
+                TypeRefs = Right.TypeRefs.Concat(Right.Types.Where(t => CommonTypes.Contains(t.FullName()))).ToList(),
                 Imports = Right.Imports.Except(Left.Imports, StringComparer.OrdinalIgnoreCase).ToList()
             };
             var Revert = new Schema
             {
-                Types = Left.Types.Where(t => !CommonTypes.Contains(t.Name())).ToList(),
-                TypeRefs = Left.TypeRefs.Concat(Left.Types.Where(t => CommonTypes.Contains(t.Name()))).ToList(),
+                Types = Left.Types.Where(t => !CommonTypes.Contains(t.FullName())).ToList(),
+                TypeRefs = Left.TypeRefs.Concat(Left.Types.Where(t => CommonTypes.Contains(t.FullName()))).ToList(),
                 Imports = Left.Imports.Except(Right.Imports, StringComparer.OrdinalIgnoreCase).ToList()
             };
 

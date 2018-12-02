@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2018.08.17.
+//  Version:     2018.12.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -674,13 +674,12 @@ namespace Yuki.SchemaManipulator
         {
             if (oslr != null) { return oslr; }
             oslr = osl.GetResult();
-            oslr.Verify();
             foreach (var t in oslr.Schema.Types)
             {
                 if (t.OnClientCommand)
                 {
                     var cc = t.ClientCommand;
-                    if (AsyncAll || AsyncCommands.Contains(cc.Name))
+                    if (AsyncAll || AsyncCommands.Contains(cc.FullName()))
                     {
                         if (!cc.Attributes.Any(a => a.Key == "Async"))
                         {
@@ -754,7 +753,7 @@ namespace Yuki.SchemaManipulator
 
         public static void TreeToBinary(String TreePath, String BinaryPath, String MainType)
         {
-            var TypeName = ObjectSchemaLoader.GetTypeFriendlyNameFromVersionedName(MainType);
+            var TypeName = ObjectSchemaExtensions.GetDotNetFullNameFromVersionedName(MainType);
             var a = SchemaAssembly();
             var t = a.GetType(TypeName);
             var tbc = TreeBinaryConverter();
@@ -770,7 +769,7 @@ namespace Yuki.SchemaManipulator
         }
         public static void BinaryToTree(String BinaryPath, String TreePath, String MainType)
         {
-            var TypeName = ObjectSchemaLoader.GetTypeFriendlyNameFromVersionedName(MainType);
+            var TypeName = ObjectSchemaExtensions.GetDotNetFullNameFromVersionedName(MainType);
             var a = SchemaAssembly();
             var t = a.GetType(TypeName);
             var tbc = TreeBinaryConverter();
@@ -1103,12 +1102,10 @@ namespace Yuki.SchemaManipulator
             var oosl = new ObjectSchemaLoader();
             oosl.LoadSchema(OldCookedObjectSchemaFile);
             var OldObjectSchemaLoaderResult = oosl.GetResult();
-            OldObjectSchemaLoaderResult.Verify();
             var OldObjectSchema = OldObjectSchemaLoaderResult.Schema;
             var nosl = new ObjectSchemaLoader();
             nosl.LoadSchema(NewCookedObjectSchemaFile);
             var NewObjectSchemaLoaderResult = nosl.GetResult();
-            NewObjectSchemaLoaderResult.Verify();
             var NewObjectSchema = NewObjectSchemaLoaderResult.Schema;
 
             var HeadSchema = HeadObjectSchema.GetSubSchema(HeadObjectSchema.Types.Where(t => t.Version() == ""), new TypeSpec[] { });
@@ -1156,12 +1153,10 @@ namespace Yuki.SchemaManipulator
             var oosl = new ObjectSchemaLoader();
             oosl.LoadSchema(OldCookedObjectSchemaFile);
             var OldObjectSchemaLoaderResult = oosl.GetResult();
-            OldObjectSchemaLoaderResult.Verify();
             var OldObjectSchema = OldObjectSchemaLoaderResult.Schema;
             var nosl = new ObjectSchemaLoader();
             nosl.LoadSchema(NewCookedObjectSchemaFile);
             var NewObjectSchemaLoaderResult = nosl.GetResult();
-            NewObjectSchemaLoaderResult.Verify();
             var NewObjectSchema = NewObjectSchemaLoaderResult.Schema;
 
             var HeadCommandSchema = HeadObjectSchema.GetSubSchema(HeadObjectSchema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { });

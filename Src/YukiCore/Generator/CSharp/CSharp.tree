@@ -4,7 +4,7 @@
       File:        CSharp.tree
       Location:    Yuki.Core <Tree>
       Description: 对象类型结构C#模板
-      Version:     2016.09.10.
+      Version:     2018.12.02.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -298,8 +298,8 @@
 
 #Template Alias a:AliasDef
     $$
-        var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-        var Type = GetTypeString(a.Type);
+        var Name = GetEscapedIdentifier(a.SimpleName()) + GetGenericParameters(a.GenericParameters);
+        var Type = GetTypeString(a.Type, a.NamespaceName());
     ${GetXmlComment(a.Description)}
     [Alias]
     public sealed class ${Name}
@@ -318,7 +318,7 @@
 
 #Template Record r:RecordDef
     $$
-        var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+        var Name = GetEscapedIdentifier(r.SimpleName()) + GetGenericParameters(r.GenericParameters);
     ${GetXmlComment(r.Description)}
     [Record]
     public sealed class ${Name}
@@ -328,14 +328,14 @@
             {
                 ##
                     ${GetXmlComment(f.Description)}
-                    public ${GetTypeString(f.Type)} [[${f.Name}]];
+                    public ${GetTypeString(f.Type, r.NamespaceName())} [[${f.Name}]];
             }
     }
 
 #Template TaggedUnion tu:TaggedUnionDef
     $$
-        var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
-        var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+        var Name = GetEscapedIdentifier(tu.SimpleName()) + GetGenericParameters(tu.GenericParameters);
+        var TagName = GetEscapedIdentifier(tu.SimpleName() + "Tag");
     public enum ${TagName}
     {
         $$
@@ -368,13 +368,13 @@
             {
                 ##
                     ${GetXmlComment(a.Description)}
-                    public ${GetTypeString(a.Type)} [[${a.Name}]];
+                    public ${GetTypeString(a.Type, tu.NamespaceName())} [[${a.Name}]];
             }
 
         $$
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches(RefName => RefName == "Unit"))
                 {
                     ##
                         ${GetXmlComment(a.Description)}
@@ -384,7 +384,7 @@
                 {
                     ##
                         ${GetXmlComment(a.Description)}
-                        public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type)} Value) { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[${a.Name}]] = Value }; }
+                        public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type, tu.NamespaceName())} Value) { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[${a.Name}]] = Value }; }
                 }
             }
 
@@ -399,9 +399,9 @@
 
 #Template Enum e:EnumDef
     $$
-        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
-        var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
-        var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
+        var Name = GetEscapedIdentifier(e.SimpleName());
+        var ParserName = GetEscapedIdentifier(e.SimpleName() + "Parser");
+        var WriterName = GetEscapedIdentifier(e.SimpleName() + "Writer");
     ${GetXmlComment(e.Description)}
     public enum ${Name} : ${GetEnumTypeString(e.UnderlyingType)}
     {
@@ -467,14 +467,14 @@
 
 #Template ClientCommand c:ClientCommandDef
     $$
-        var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-        var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+        var Request = new RecordDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Request"), Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var Reply = new TaggedUnionDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Reply"), Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
     ${Record(Request)}
     ${TaggedUnion(Reply)}
 
 #Template ServerCommand c:ServerCommandDef
     $$
-        var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var Event = new RecordDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Event"), Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
     ${Record(Event)}
 
 #Template IApplicationServer Commands:List<TypeDef>
@@ -485,7 +485,7 @@
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.SimpleName();
                     var Description = c.ClientCommand.Description;
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
@@ -502,7 +502,7 @@
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
                     ##
                         ${GetXmlComment(Description)}
@@ -522,7 +522,7 @@
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.SimpleName();
                     var Description = c.ClientCommand.Description;
                     ##
                         ${GetXmlComment(Description)}
@@ -530,7 +530,7 @@
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
                     ##
                         ${GetXmlComment(Description)}
@@ -548,7 +548,7 @@
                 if (c.OnServerCommand)
                 {
                     if (c.ServerCommand.Version != "") { continue; }
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
                     ##
                         ${GetXmlComment(Description)}
@@ -556,6 +556,22 @@
                 }
             }
     }
+
+#Template WrapNamespace NamespaceName:String Contents:IEnumerable<String>
+    $$
+        if (NamespaceName == "")
+        {
+            ##
+                ${Contents}
+        }
+        else
+        {
+            ##
+                namespace [[${NamespaceName}]]
+                {
+                    ${Contents}
+                }
+        }
 
 #Template Main Schema:Schema NamespaceName:String
     //==========================================================================
@@ -568,24 +584,6 @@
     using System;
     using System.Collections.Generic;
     using ${Schema.Imports};
-    $$
-        var Primitives = GetPrimitives(Schema);
-    ${Primitives}
-
-    $$
-        var ComplexTypes = GetComplexTypes(Schema);
-        if (NamespaceName == "")
-        {
-            ##
-                ${ComplexTypes}
-        }
-        else
-        {
-            ##
-                namespace [[${NamespaceName}]]
-                {
-                    ${ComplexTypes}
-                }
-        }
+    ${GetTypes(Schema, NamespaceName)}
 
 $End

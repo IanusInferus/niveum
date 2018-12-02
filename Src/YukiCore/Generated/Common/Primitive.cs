@@ -24,124 +24,110 @@ using Int64 = System.Int64;
 using Float32 = System.Single;
 using Float64 = System.Double;
 
-namespace Yuki
+public class AliasAttribute : Attribute {}
+public class RecordAttribute : Attribute {}
+public class TaggedUnionAttribute : Attribute {}
+public class TagAttribute : Attribute {}
+public class TupleAttribute : Attribute {}
+
+[Record]
+public struct Unit {}
+public enum OptionalTag
 {
-    public class AliasAttribute : Attribute {}
-    public class RecordAttribute : Attribute {}
-    public class TaggedUnionAttribute : Attribute {}
-    public class TagAttribute : Attribute {}
-    public class TupleAttribute : Attribute {}
+    NotHasValue = 0,
+    HasValue = 1
+}
+[TaggedUnion]
+public struct Optional<T>
+{
+    [Tag] public OptionalTag _Tag;
 
-    [Record]
-    public struct Unit {}
-    public enum OptionalTag
+    public Unit NotHasValue;
+    public T HasValue;
+
+    public static Optional<T> CreateNotHasValue() { return new Optional<T> { _Tag = OptionalTag.NotHasValue, NotHasValue = new Unit() }; }
+    public static Optional<T> CreateHasValue(T Value) { return new Optional<T> { _Tag = OptionalTag.HasValue, HasValue = Value }; }
+
+    public Boolean OnNotHasValue { get { return _Tag == OptionalTag.NotHasValue; } }
+    public Boolean OnHasValue { get { return _Tag == OptionalTag.HasValue; } }
+
+    public static Optional<T> Empty { get { return CreateNotHasValue(); } }
+    public static implicit operator Optional<T>(T v)
     {
-        NotHasValue = 0,
-        HasValue = 1
+        if (v == null)
+        {
+            return CreateNotHasValue();
+        }
+        else
+        {
+            return CreateHasValue(v);
+        }
     }
-    [TaggedUnion]
-    public struct Optional<T>
+    public static explicit operator T(Optional<T> v)
     {
-        [Tag] public OptionalTag _Tag;
+        if (v.OnNotHasValue)
+        {
+            throw new InvalidOperationException();
+        }
+        return v.HasValue;
+    }
+    public static Boolean operator ==(Optional<T> Left, Optional<T> Right)
+    {
+        return Equals(Left, Right);
+    }
+    public static Boolean operator !=(Optional<T> Left, Optional<T> Right)
+    {
+        return !Equals(Left, Right);
+    }
+    public static Boolean operator ==(Optional<T>? Left, Optional<T>? Right)
+    {
+        return Equals(Left, Right);
+    }
+    public static Boolean operator !=(Optional<T>? Left, Optional<T>? Right)
+    {
+        return !Equals(Left, Right);
+    }
+    public override Boolean Equals(Object obj)
+    {
+        if (obj == null) { return Equals(this, null); }
+        if (obj.GetType() != typeof(Optional<T>)) { return false; }
+        var o = (Optional<T>)(obj);
+        return Equals(this, o);
+    }
+    public override Int32 GetHashCode()
+    {
+        if (OnNotHasValue) { return 0; }
+        return HasValue.GetHashCode();
+    }
 
-        public Unit NotHasValue;
-        public T HasValue;
+    private static Boolean Equals(Optional<T> Left, Optional<T> Right)
+    {
+        if (Left.OnNotHasValue && Right.OnNotHasValue)
+        {
+            return true;
+        }
+        if (Left.OnNotHasValue || Right.OnNotHasValue)
+        {
+            return false;
+        }
+        return Left.HasValue.Equals(Right.HasValue);
+    }
+    private static Boolean Equals(Optional<T>? Left, Optional<T>? Right)
+    {
+        if ((!Left.HasValue || Left.Value.OnNotHasValue) && (!Right.HasValue || Right.Value.OnNotHasValue))
+        {
+            return true;
+        }
+        if (!Left.HasValue || Left.Value.OnNotHasValue || !Right.HasValue || Right.Value.OnNotHasValue)
+        {
+            return false;
+        }
+        return Equals(Left.Value, Right.Value);
+    }
 
-        public static Optional<T> CreateNotHasValue() { return new Optional<T> { _Tag = OptionalTag.NotHasValue, NotHasValue = new Unit() }; }
-        public static Optional<T> CreateHasValue(T Value) { return new Optional<T> { _Tag = OptionalTag.HasValue, HasValue = Value }; }
-
-        public Boolean OnNotHasValue { get { return _Tag == OptionalTag.NotHasValue; } }
-        public Boolean OnHasValue { get { return _Tag == OptionalTag.HasValue; } }
-
-        public static Optional<T> Empty { get { return CreateNotHasValue(); } }
-        public static implicit operator Optional<T>(T v)
-        {
-            if (v == null)
-            {
-                return CreateNotHasValue();
-            }
-            else
-            {
-                return CreateHasValue(v);
-            }
-        }
-        public static explicit operator T(Optional<T> v)
-        {
-            if (v.OnNotHasValue)
-            {
-                throw new InvalidOperationException();
-            }
-            return v.HasValue;
-        }
-        public static Boolean operator ==(Optional<T> Left, Optional<T> Right)
-        {
-            return Equals(Left, Right);
-        }
-        public static Boolean operator !=(Optional<T> Left, Optional<T> Right)
-        {
-            return !Equals(Left, Right);
-        }
-        public static Boolean operator ==(Optional<T>? Left, Optional<T>? Right)
-        {
-            return Equals(Left, Right);
-        }
-        public static Boolean operator !=(Optional<T>? Left, Optional<T>? Right)
-        {
-            return !Equals(Left, Right);
-        }
-        public override Boolean Equals(Object obj)
-        {
-            if (obj == null) { return Equals(this, null); }
-            if (obj.GetType() != typeof(Optional<T>)) { return false; }
-            var o = (Optional<T>)(obj);
-            return Equals(this, o);
-        }
-        public override Int32 GetHashCode()
-        {
-            if (OnNotHasValue) { return 0; }
-            return HasValue.GetHashCode();
-        }
-
-        private static Boolean Equals(Optional<T> Left, Optional<T> Right)
-        {
-            if (Left.OnNotHasValue && Right.OnNotHasValue)
-            {
-                return true;
-            }
-            if (Left.OnNotHasValue || Right.OnNotHasValue)
-            {
-                return false;
-            }
-            return Left.HasValue.Equals(Right.HasValue);
-        }
-        private static Boolean Equals(Optional<T>? Left, Optional<T>? Right)
-        {
-            if ((!Left.HasValue || Left.Value.OnNotHasValue) && (!Right.HasValue || Right.Value.OnNotHasValue))
-            {
-                return true;
-            }
-            if (!Left.HasValue || Left.Value.OnNotHasValue || !Right.HasValue || Right.Value.OnNotHasValue)
-            {
-                return false;
-            }
-            return Equals(Left.Value, Right.Value);
-        }
-
-        public T Value
-        {
-            get
-            {
-                if (OnHasValue)
-                {
-                    return HasValue;
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-            }
-        }
-        public T ValueOrDefault(T Default)
+    public T Value
+    {
+        get
         {
             if (OnHasValue)
             {
@@ -149,20 +135,31 @@ namespace Yuki
             }
             else
             {
-                return Default;
+                throw new InvalidOperationException();
             }
         }
-
-        public override String ToString()
+    }
+    public T ValueOrDefault(T Default)
+    {
+        if (OnHasValue)
         {
-            if (OnHasValue)
-            {
-                return HasValue.ToString();
-            }
-            else
-            {
-                return "-";
-            }
+            return HasValue;
+        }
+        else
+        {
+            return Default;
+        }
+    }
+
+    public override String ToString()
+    {
+        if (OnHasValue)
+        {
+            return HasValue.ToString();
+        }
+        else
+        {
+            return "-";
         }
     }
 }

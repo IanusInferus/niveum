@@ -51,13 +51,13 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration.cs" />
     <Compile Include="Context\SerializationServerAdapter.cs" />
     <Compile Include="Generated\Common.cs" />
     <Compile Include="Generated\Communication.cs" />
     <Compile Include="Generated\CommunicationBinary.cs" />
     <Compile Include="Generated\CommunicationCompatibility.cs" />
     <Compile Include="Generated\CommunicationJson.cs" />
+    <Compile Include="Generated\Configuration.cs" />
     <Compile Include="Servers\Concept.cs">
       <SubType>Code</SubType>
     </Compile>

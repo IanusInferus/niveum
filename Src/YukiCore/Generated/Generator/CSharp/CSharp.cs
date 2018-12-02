@@ -247,8 +247,8 @@ namespace Yuki.ObjectSchema.CSharp
         }
         public IEnumerable<String> Alias(AliasDef a)
         {
-            var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-            var Type = GetTypeString(a.Type);
+            var Name = GetEscapedIdentifier(a.SimpleName()) + GetGenericParameters(a.GenericParameters);
+            var Type = GetTypeString(a.Type, a.NamespaceName());
             foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
             {
                 yield return _Line;
@@ -285,7 +285,7 @@ namespace Yuki.ObjectSchema.CSharp
         }
         public IEnumerable<String> Record(RecordDef r)
         {
-            var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+            var Name = GetEscapedIdentifier(r.SimpleName()) + GetGenericParameters(r.GenericParameters);
             foreach (var _Line in Combine(Begin(), GetXmlComment(r.Description)))
             {
                 yield return _Line;
@@ -302,7 +302,7 @@ namespace Yuki.ObjectSchema.CSharp
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(f.Type)), " "), GetEscapedIdentifier(f.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(f.Type, r.NamespaceName())), " "), GetEscapedIdentifier(f.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -311,8 +311,8 @@ namespace Yuki.ObjectSchema.CSharp
         }
         public IEnumerable<String> TaggedUnion(TaggedUnionDef tu)
         {
-            var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
-            var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+            var Name = GetEscapedIdentifier(tu.SimpleName()) + GetGenericParameters(tu.GenericParameters);
+            var TagName = GetEscapedIdentifier(tu.SimpleName() + "Tag");
             foreach (var _Line in Combine(Combine(Begin(), "public enum "), TagName))
             {
                 yield return _Line;
@@ -367,7 +367,7 @@ namespace Yuki.ObjectSchema.CSharp
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(a.Type)), " "), GetEscapedIdentifier(a.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(a.Type, tu.NamespaceName())), " "), GetEscapedIdentifier(a.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -375,7 +375,7 @@ namespace Yuki.ObjectSchema.CSharp
             yield return "";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches(RefName => RefName == "Unit"))
                 {
                     foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                     {
@@ -392,7 +392,7 @@ namespace Yuki.ObjectSchema.CSharp
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), Name), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetTypeString(a.Type)), " Value) { return new "), Name), " { _Tag = "), TagName), "."), GetEscapedIdentifier(a.Name)), ", "), GetEscapedIdentifier(a.Name)), " = Value }; }"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), Name), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetTypeString(a.Type, tu.NamespaceName())), " Value) { return new "), Name), " { _Tag = "), TagName), "."), GetEscapedIdentifier(a.Name)), ", "), GetEscapedIdentifier(a.Name)), " = Value }; }"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -414,9 +414,9 @@ namespace Yuki.ObjectSchema.CSharp
         }
         public IEnumerable<String> Enum(EnumDef e)
         {
-            var Name = GetEscapedIdentifier(e.TypeFriendlyName());
-            var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
-            var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
+            var Name = GetEscapedIdentifier(e.SimpleName());
+            var ParserName = GetEscapedIdentifier(e.SimpleName() + "Parser");
+            var WriterName = GetEscapedIdentifier(e.SimpleName() + "Writer");
             foreach (var _Line in Combine(Begin(), GetXmlComment(e.Description)))
             {
                 yield return _Line;
@@ -529,8 +529,8 @@ namespace Yuki.ObjectSchema.CSharp
         }
         public IEnumerable<String> ClientCommand(ClientCommandDef c)
         {
-            var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-            var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+            var Request = new RecordDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Request"), Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            var Reply = new TaggedUnionDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Reply"), Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
             foreach (var _Line in Combine(Begin(), Record(Request)))
             {
                 yield return _Line;
@@ -542,7 +542,7 @@ namespace Yuki.ObjectSchema.CSharp
         }
         public IEnumerable<String> ServerCommand(ServerCommandDef c)
         {
-            var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            var Event = new RecordDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Event"), Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
             foreach (var _Line in Combine(Begin(), Record(Event)))
             {
                 yield return _Line;
@@ -556,7 +556,7 @@ namespace Yuki.ObjectSchema.CSharp
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.SimpleName();
                     var Description = c.ClientCommand.Description;
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
@@ -583,7 +583,7 @@ namespace Yuki.ObjectSchema.CSharp
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
@@ -608,7 +608,7 @@ namespace Yuki.ObjectSchema.CSharp
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.SimpleName();
                     var Description = c.ClientCommand.Description;
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
@@ -621,7 +621,7 @@ namespace Yuki.ObjectSchema.CSharp
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
@@ -644,7 +644,7 @@ namespace Yuki.ObjectSchema.CSharp
                 if (c.OnServerCommand)
                 {
                     if (c.ServerCommand.Version != "") { continue; }
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
@@ -657,6 +657,29 @@ namespace Yuki.ObjectSchema.CSharp
                 }
             }
             yield return "}";
+        }
+        public IEnumerable<String> WrapNamespace(String NamespaceName, IEnumerable<String> Contents)
+        {
+            if (NamespaceName == "")
+            {
+                foreach (var _Line in Combine(Begin(), Contents))
+                {
+                    yield return _Line;
+                }
+            }
+            else
+            {
+                foreach (var _Line in Combine(Combine(Begin(), "namespace "), GetEscapedIdentifier(NamespaceName)))
+                {
+                    yield return _Line;
+                }
+                yield return "{";
+                foreach (var _Line in Combine(Combine(Begin(), "    "), Contents))
+                {
+                    yield return _Line;
+                }
+                yield return "}";
+            }
         }
         public IEnumerable<String> Main(Schema Schema, String NamespaceName)
         {
@@ -673,32 +696,9 @@ namespace Yuki.ObjectSchema.CSharp
             {
                 yield return _Line;
             }
-            var Primitives = GetPrimitives(Schema);
-            foreach (var _Line in Combine(Begin(), Primitives))
+            foreach (var _Line in Combine(Begin(), GetTypes(Schema, NamespaceName)))
             {
                 yield return _Line;
-            }
-            yield return "";
-            var ComplexTypes = GetComplexTypes(Schema);
-            if (NamespaceName == "")
-            {
-                foreach (var _Line in Combine(Begin(), ComplexTypes))
-                {
-                    yield return _Line;
-                }
-            }
-            else
-            {
-                foreach (var _Line in Combine(Combine(Begin(), "namespace "), GetEscapedIdentifier(NamespaceName)))
-                {
-                    yield return _Line;
-                }
-                yield return "{";
-                foreach (var _Line in Combine(Combine(Begin(), "    "), ComplexTypes))
-                {
-                    yield return _Line;
-                }
-                yield return "}";
             }
             yield return "";
         }

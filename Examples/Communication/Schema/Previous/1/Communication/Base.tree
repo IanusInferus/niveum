@@ -4,11 +4,13 @@
       File:        Base.tree
       Location:    Yuki.Examples <Tree>
       Description: 基础
-      Version:     2013.01.29.
+      Version:     2018.12.02.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
     ==========================================================================
+
+#Namespace Communication
 
 #ServerCommand Error                                错误
     Message             String                      错误信息

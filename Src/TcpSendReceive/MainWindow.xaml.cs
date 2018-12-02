@@ -623,7 +623,6 @@ namespace TcpSendReceive
                 }
             }
             var oslr = osl.GetResult();
-            oslr.Verify();
             os = oslr.Schema;
             return os;
         }
