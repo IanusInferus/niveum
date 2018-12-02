@@ -5,6 +5,7 @@ Yuki.Core:
 增加过渡版本Yuki.Core。
 Example:
 增加通讯代码对多命名空间的使用。
+修正序列化示例。
 
 2018.12.01
 Nivea:
