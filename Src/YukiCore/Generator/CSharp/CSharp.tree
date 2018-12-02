@@ -467,17 +467,17 @@
 
 #Template ClientCommand c:ClientCommandDef
     $$
-        var Request = new RecordDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Request"), Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-        var Reply = new TaggedUnionDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Reply"), Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+        var Request = new RecordDef { Name = c.Name.NameConcat("Request"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var Reply = new TaggedUnionDef { Name = c.Name.NameConcat("Reply"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
     ${Record(Request)}
     ${TaggedUnion(Reply)}
 
 #Template ServerCommand c:ServerCommandDef
     $$
-        var Event = new RecordDef { Name = c.Name.NameConcat((c.Version == "" ? "" : "At" + c.Version) + "Event"), Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var Event = new RecordDef { Name = c.Name.NameConcat("Event"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
     ${Record(Event)}
 
-#Template IApplicationServer Commands:List<TypeDef>
+#Template IApplicationServer Commands:List<TypeDef> NamespaceName:String
     public interface IApplicationServer
     {
         $$
@@ -487,31 +487,34 @@
                 {
                     var Name = c.ClientCommand.SimpleName();
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
                         ##
                             ${GetXmlComment(Description)}
-                            void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback, Action<Exception> OnFailure);
+                            void [[${Name}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback, Action<Exception> OnFailure);
                     }
                     else
                     {
                         ##
                             ${GetXmlComment(Description)}
-                            [[${Name}Reply]] [[${Name}]]([[${Name}Request]] r);
+                            ${ReplyTypeString} [[${Name}]]([[${RequestTypeString}]] r);
                     }
                 }
                 else if (c.OnServerCommand)
                 {
                     var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        event Action<[[${Name}Event]]> [[${Name}]];
+                        event Action<${EventTypeString}> [[${Name}]];
                 }
             }
     }
 
-#Template IApplicationClient Commands:List<TypeDef>
+#Template IApplicationClient Commands:List<TypeDef> NamespaceName:String
     public interface IApplicationClient
     {
         UInt64 Hash { get; }
@@ -524,22 +527,25 @@
                 {
                     var Name = c.ClientCommand.SimpleName();
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback);
+                        void [[${Name}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback);
                 }
                 else if (c.OnServerCommand)
                 {
                     var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        event Action<[[${Name}Event]]> [[${Name}]];
+                        event Action<${EventTypeString}> [[${Name}]];
                 }
             }
     }
 
-#Template IEventPump Commands:List<TypeDef>
+#Template IEventPump Commands:List<TypeDef> NamespaceName:String
     public interface IEventPump
     {
         $$
@@ -550,9 +556,10 @@
                     if (c.ServerCommand.Version != "") { continue; }
                     var Name = c.ServerCommand.SimpleName();
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        Action<[[${Name}Event]]> [[${Name}]] { get; }
+                        Action<${EventTypeString}> [[${Name}]] { get; }
                 }
             }
     }
