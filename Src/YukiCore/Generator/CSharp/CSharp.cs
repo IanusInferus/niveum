@@ -3,7 +3,7 @@
 //  File:        CSharp.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2016.10.03.
+//  Version:     2018.12.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -35,14 +35,14 @@ namespace Yuki.ObjectSchema.CSharp
         {
             foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
             {
-                if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && PrimitiveMapping.ContainsKey(gp.Type.TypeRef.Name) && gp.Type.TypeRef.Name == "Type"))
+                if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && gp.Type.TypeRef.NameMatches(Name => PrimitiveMapping.ContainsKey(Name) && Name == "Type")))
                 {
                     throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                 }
             }
 
-            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Unit").Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
-            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Boolean").Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
+            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.NameMatches(Name => Name == "Unit")).Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
+            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.NameMatches(Name => Name == "Boolean")).Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
         }
 
         private Regex rIdentifierPart = new Regex(@"[^\u0000-\u002F\u003A-\u0040\u005B-\u005E\u0060\u007B-\u007F]+");
@@ -65,19 +65,27 @@ namespace Yuki.ObjectSchema.CSharp
         {
             return "\"" + new String(s.SelectMany(c => c == '\\' ? "\\\\" : c == '\"' ? "\\\"" : c == '\r' ? "\\r" : c == '\n' ? "\\n" : new String(c, 1)).ToArray()) + "\"";
         }
-        public String GetTypeString(TypeSpec Type)
+        public String GetTypeString(TypeSpec Type, String NamespaceName)
         {
             if (Type.OnTypeRef)
             {
-                if (PrimitiveMapping.ContainsKey(Type.TypeRef.Name))
+                if (PrimitiveMapping.ContainsKey(Type.TypeRef.VersionedName()))
                 {
-                    var PlatformName = PrimitiveMapping[Type.TypeRef.Name];
+                    var PlatformName = PrimitiveMapping[Type.TypeRef.VersionedName()];
                     if (PlatformName.StartsWith("System.Collections.Generic."))
                     {
                         return new String(PlatformName.Skip("System.Collections.Generic.".Length).ToArray());
                     }
                 }
-                return GetEscapedIdentifier(Type.TypeFriendlyName());
+                var Ref = Type.TypeRef;
+                if ((Ref.NamespaceName() == NamespaceName) || (Ref.NamespaceName() == ""))
+                {
+                    return GetEscapedIdentifier(Type.SimpleName(NamespaceName));
+                }
+                else
+                {
+                    return GetEscapedIdentifier(Ref.NamespaceName() + "." + Type.SimpleName(NamespaceName));
+                }
             }
             else if (Type.OnGenericParameterRef)
             {
@@ -85,17 +93,17 @@ namespace Yuki.ObjectSchema.CSharp
             }
             else if (Type.OnTuple)
             {
-                return "Tuple<" + String.Join(", ", Type.Tuple.Select(t => GetTypeString(t))) + ">";
+                return "Tuple<" + String.Join(", ", Type.Tuple.Select(t => GetTypeString(t, NamespaceName))) + ">";
             }
             else if (Type.OnGenericTypeSpec)
             {
                 if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
                 {
-                    return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ">";
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p, NamespaceName))) + ">";
                 }
                 else
                 {
-                    return GetEscapedIdentifier(Type.TypeFriendlyName());
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName);
                 }
             }
             else
@@ -125,11 +133,11 @@ namespace Yuki.ObjectSchema.CSharp
             {
                 throw new InvalidOperationException();
             }
-            if ((Type.TypeRef.Version == "") && PrimitiveMappingEnum.ContainsKey(Type.TypeRef.Name))
+            if ((Type.TypeRef.Version == "") && PrimitiveMappingEnum.ContainsKey(Type.TypeRef.VersionedName()))
             {
-                return PrimitiveMappingEnum[Type.TypeRef.Name];
+                return PrimitiveMappingEnum[Type.TypeRef.VersionedName()];
             }
-            return GetEscapedIdentifier(Type.TypeRef.TypeFriendlyName());
+            throw new NotSupportedException("NonPrimitiveEnumUnderlyingType");
         }
         public String GetGenericParameters(List<VariableDef> GenericParameters)
         {
@@ -143,27 +151,31 @@ namespace Yuki.ObjectSchema.CSharp
             }
         }
 
-        public List<String> GetPrimitives(Schema Schema)
+        public List<String> GetTypes(Schema Schema, String NamespaceName)
         {
-            var l = new List<String>();
-
+            var Primitives = new List<String>();
             foreach (var p in Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnPrimitive).Select(c => c.Primitive))
             {
-                if (PrimitiveMapping.ContainsKey(p.Name))
+                if (PrimitiveMapping.ContainsKey(p.VersionedName()))
                 {
-                    var Name = p.TypeFriendlyName();
-                    var PlatformName = PrimitiveMapping[p.Name];
+                    var Name = p.SimpleName();
+                    var PlatformName = PrimitiveMapping[p.VersionedName()];
                     if ((Name != PlatformName) && (p.GenericParameters.Count() == 0))
                     {
-                        l.AddRange(Primitive(Name, PlatformName));
+                        Primitives.AddRange(Primitive(Name, PlatformName));
                     }
                 }
             }
-            return l;
-        }
-        public List<String> GetComplexTypes(Schema Schema)
-        {
-            var l = new List<String>();
+
+            var NamespaceToClasses = new Dictionary<String, List<List<String>>>();
+            void AddClass(String ClassNamespaceName, IEnumerable<String> ClassContent)
+            {
+                if (!NamespaceToClasses.ContainsKey(ClassNamespaceName))
+                {
+                    NamespaceToClasses.Add(ClassNamespaceName, new List<List<String>>());
+                }
+                NamespaceToClasses[ClassNamespaceName].Add(ClassContent.ToList());
+            }
 
             foreach (var c in Schema.Types)
             {
@@ -171,11 +183,11 @@ namespace Yuki.ObjectSchema.CSharp
                 {
                     if (c.VersionedName() == "Unit")
                     {
-                        l.AddRange(Primitive_Unit());
+                        AddClass(c.NamespaceName(), Primitive_Unit());
                     }
                     else if (c.VersionedName() == "Optional")
                     {
-                        l.AddRange(Primitive_Optional());
+                        AddClass(c.NamespaceName(), Primitive_Optional());
                     }
                     else
                     {
@@ -184,52 +196,45 @@ namespace Yuki.ObjectSchema.CSharp
                 }
                 else if (c.OnAlias)
                 {
-                    l.AddRange(Alias(c.Alias));
+                    AddClass(c.NamespaceName(), Alias(c.Alias));
                 }
                 else if (c.OnRecord)
                 {
-                    l.AddRange(Record(c.Record));
+                    AddClass(c.NamespaceName(), Record(c.Record));
                 }
                 else if (c.OnTaggedUnion)
                 {
-                    l.AddRange(TaggedUnion(c.TaggedUnion));
+                    AddClass(c.NamespaceName(), TaggedUnion(c.TaggedUnion));
                 }
                 else if (c.OnEnum)
                 {
-                    l.AddRange(Enum(c.Enum));
+                    AddClass(c.NamespaceName(), Enum(c.Enum));
                 }
                 else if (c.OnClientCommand)
                 {
-                    l.AddRange(ClientCommand(c.ClientCommand));
+                    AddClass(c.NamespaceName(), ClientCommand(c.ClientCommand));
                 }
                 else if (c.OnServerCommand)
                 {
-                    l.AddRange(ServerCommand(c.ServerCommand));
+                    AddClass(c.NamespaceName(), ServerCommand(c.ServerCommand));
                 }
                 else
                 {
                     throw new InvalidOperationException();
                 }
-                l.Add("");
             }
 
             var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
             if (Commands.Count > 0)
             {
-                l.AddRange(IApplicationServer(Commands));
-                l.Add("");
-                l.AddRange(IApplicationClient(Commands));
-                l.Add("");
-                l.AddRange(IEventPump(Commands));
-                l.Add("");
+                AddClass(NamespaceName, IApplicationServer(Commands));
+                AddClass(NamespaceName, IApplicationClient(Commands));
+                AddClass(NamespaceName, IEventPump(Commands));
             }
 
-            if (l.Count > 0)
-            {
-                l = l.Take(l.Count - 1).ToList();
-            }
+            var Classes = NamespaceToClasses.Select(p => WrapNamespace(p.Key, p.Value.Join(new String[] { "" })));
 
-            return l;
+            return (new List<List<String>> { Primitives }).Concat(Classes).Join(new String[] { "" }).ToList();
         }
     }
 }

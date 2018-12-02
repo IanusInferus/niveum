@@ -4,11 +4,13 @@
       File:        TestPerformance.tree
       Location:    Yuki.Examples <Tree>
       Description: 性能测试
-      Version:     2014.01.17.
+      Version:     2018.12.02.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
     ==========================================================================
+
+#Namespace Communication
 
 #ClientCommand TestAdd                              加法
     Operand1            Int                         操作数1

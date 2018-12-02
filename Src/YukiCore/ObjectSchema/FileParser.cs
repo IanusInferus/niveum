@@ -3,29 +3,33 @@
 //  File:        FileParser.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 文件解析器
-//  Version:     2016.08.26.
+//  Version:     2018.12.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Firefly;
 using Firefly.Mapping.TreeText;
 using Firefly.Texting.TreeFormat;
 using Firefly.Texting.TreeFormat.Syntax;
-using TreeFormat = Firefly.Texting.TreeFormat;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using TFSemantics = Firefly.Texting.TreeFormat.Semantics;
+using TreeFormat = Firefly.Texting.TreeFormat;
 
 namespace Yuki.ObjectSchema
 {
 
     public class FileParserResult
     {
-        public Schema Schema;
         public Text Text;
         public Dictionary<Object, TextRange> Positions;
+        public List<TypeDef> Types;
+        public List<TypeDef> TypeRefs;
+        public List<String> Imports;
+        public Dictionary<TypeDef, List<String>> TypeToNamespace;
+        public Dictionary<TypeDef, List<List<String>>> TypeToNamespaceImports;
     }
 
     public static class FileParser
@@ -33,13 +37,14 @@ namespace Yuki.ObjectSchema
         public static FileParserResult ParseFile(Text Text)
         {
             var TypeFunctions = new HashSet<String>() { "Primitive", "Alias", "Record", "TaggedUnion", "Enum", "ClientCommand", "ServerCommand" };
+            var Functions = new HashSet<String>(TypeFunctions.Concat(new List<String>() { "Namespace", "Import" }));
 
             var ps = new TreeFormatParseSetting()
             {
-                IsTableParameterFunction = Name => TypeFunctions.Contains(Name),
-                IsTableContentFunction = Name => TypeFunctions.Contains(Name),
-                IsTreeParameterFunction = Name => Name == "Namespace",
-                IsTreeContentFunction = Name => Name == "Namespace"
+                IsTableParameterFunction = Name => Functions.Contains(Name),
+                IsTableContentFunction = Name => Functions.Contains(Name),
+                IsTreeParameterFunction = Name => false,
+                IsTreeContentFunction = Name => false
             };
 
             var sp = new TreeFormatSyntaxParser(ps, Text);
@@ -49,6 +54,10 @@ namespace Yuki.ObjectSchema
             var Types = new List<TypeDef>();
             var TypeRefs = new List<TypeDef>();
             var Imports = new List<String>();
+            var TypeToNamespace = new Dictionary<TypeDef, List<String>>();
+            var TypeToNamespaceImports = new Dictionary<TypeDef, List<List<String>>>();
+            var CurrentNamespace = new List<String>();
+            var CurrentNamespaceImports = new List<List<String>>();
 
             var Positions = new Dictionary<Object, TextRange>();
 
@@ -76,13 +85,59 @@ namespace Yuki.ObjectSchema
                                 }
                             };
 
+                            Func<TFSemantics.Node, List<String>> ExtractNamespaceParts = Node =>
+                            {
+                                var Namespace = GetLeafNodeValue(Node, nm, "InvalidName");
+
+                                var NamespaceParts = new List<String>();
+                                int InvalidCharIndex;
+                                var osml = TokenParser.TrySplitSymbolMemberChain(Namespace, out InvalidCharIndex);
+                                if (osml.OnNotHasValue)
+                                {
+                                    var Range = nm.GetRange(Node);
+                                    var InvalidChar = Namespace.Substring(InvalidCharIndex, 1);
+                                    if (Range.OnHasValue)
+                                    {
+                                        Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, InvalidCharIndex), End = nm.Text.Calc(Range.Value.Start, InvalidCharIndex + 1) };
+                                    }
+                                    throw new InvalidTokenException("InvalidChar", new FileTextRange { Text = nm.Text, Range = Range }, InvalidChar);
+                                }
+                                foreach (var p in osml.Value)
+                                {
+                                    if (p.Parameters.Count > 0)
+                                    {
+                                        var Range = nm.GetRange(Node);
+                                        var Part = Namespace.Substring(p.SymbolStartIndex, p.SymbolEndIndex);
+                                        if (Range.OnHasValue)
+                                        {
+                                            Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, p.SymbolStartIndex), End = nm.Text.Calc(Range.Value.Start, p.SymbolEndIndex) };
+                                        }
+                                        throw new InvalidTokenException("InvalidNamespacePart", new FileTextRange { Text = nm.Text, Range = Range }, Part);
+                                    }
+                                    int LocalInvalidCharIndex;
+                                    var oName = TokenParser.TryUnescapeSymbolName(p.Name, out LocalInvalidCharIndex);
+                                    if (oName.OnNotHasValue)
+                                    {
+                                        InvalidCharIndex = p.NameStartIndex + LocalInvalidCharIndex;
+                                        var Range = nm.GetRange(Node);
+                                        var InvalidChar = Namespace.Substring(InvalidCharIndex, 1);
+                                        if (Range.OnHasValue)
+                                        {
+                                            Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, InvalidCharIndex), End = nm.Text.Calc(Range.Value.Start, InvalidCharIndex + 1) };
+                                        }
+                                        throw new InvalidTokenException("InvalidChar", new FileTextRange { Text = nm.Text, Range = Range }, InvalidChar);
+                                    }
+                                    NamespaceParts.Add(p.Name);
+                                }
+
+                                return NamespaceParts;
+                            };
+
                             if (TypeFunctions.Contains(f.Name.Text))
                             {
                                 if (f.Parameters.Count < 1 || f.Parameters.Count > 2) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
-                                var VersionedName = GetLeafNodeValue(f.Parameters[0], nm, "InvalidName");
-                                var TypeRef = ParseTypeRef(VersionedName);
-                                Mark(TypeRef, f.Parameters[0]);
+                                var TypeRef = ParseTypeRef(f.Parameters[0], nm, Positions);
                                 var Name = TypeRef.Name;
                                 var Version = TypeRef.Version;
 
@@ -162,6 +217,8 @@ namespace Yuki.ObjectSchema
                                             var t = TypeDef.CreatePrimitive(p);
                                             Mark(t, f);
                                             Types.Add(t);
+                                            TypeToNamespace.Add(t, CurrentNamespace);
+                                            TypeToNamespaceImports.Add(t, CurrentNamespaceImports);
                                             return new List<TFSemantics.Node> { };
                                         }
                                     case "Alias":
@@ -231,6 +288,8 @@ namespace Yuki.ObjectSchema
                                             var t = TypeDef.CreateAlias(a);
                                             Mark(t, f);
                                             Types.Add(t);
+                                            TypeToNamespace.Add(t, CurrentNamespace);
+                                            TypeToNamespaceImports.Add(t, CurrentNamespaceImports);
                                             return new List<TFSemantics.Node> { };
                                         }
                                     case "Record":
@@ -288,6 +347,8 @@ namespace Yuki.ObjectSchema
                                             var t = TypeDef.CreateRecord(r);
                                             Mark(t, f);
                                             Types.Add(t);
+                                            TypeToNamespace.Add(t, CurrentNamespace);
+                                            TypeToNamespaceImports.Add(t, CurrentNamespaceImports);
                                             return new List<TFSemantics.Node> { };
                                         }
                                     case "TaggedUnion":
@@ -345,6 +406,8 @@ namespace Yuki.ObjectSchema
                                             var t = TypeDef.CreateTaggedUnion(tu);
                                             Mark(t, f);
                                             Types.Add(t);
+                                            TypeToNamespace.Add(t, CurrentNamespace);
+                                            TypeToNamespaceImports.Add(t, CurrentNamespaceImports);
                                             return new List<TFSemantics.Node> { };
                                         }
                                     case "Enum":
@@ -393,7 +456,9 @@ namespace Yuki.ObjectSchema
                                                 Literals.Add(ltl);
                                             }
 
-                                            var r = new TypeRef { Name = "Int", Version = "" };
+                                            var IntTypeName = new List<String> { "Int" };
+                                            Mark(IntTypeName, f);
+                                            var r = new TypeRef { Name = IntTypeName, Version = "" };
                                             Mark(r, f);
                                             var UnderlyingType = TypeSpec.CreateTypeRef(r);
                                             Mark(UnderlyingType, f);
@@ -402,6 +467,8 @@ namespace Yuki.ObjectSchema
                                             var t = TypeDef.CreateEnum(ed);
                                             Mark(t, f);
                                             Types.Add(t);
+                                            TypeToNamespace.Add(t, CurrentNamespace);
+                                            TypeToNamespaceImports.Add(t, CurrentNamespaceImports);
                                             return new List<TFSemantics.Node> { };
                                         }
                                     case "ClientCommand":
@@ -469,6 +536,8 @@ namespace Yuki.ObjectSchema
                                             var t = TypeDef.CreateClientCommand(cc);
                                             Mark(t, f);
                                             Types.Add(t);
+                                            TypeToNamespace.Add(t, CurrentNamespace);
+                                            TypeToNamespaceImports.Add(t, CurrentNamespaceImports);
                                             return new List<TFSemantics.Node> { };
                                         }
                                     case "ServerCommand":
@@ -515,6 +584,8 @@ namespace Yuki.ObjectSchema
                                             var t = TypeDef.CreateServerCommand(sc);
                                             Mark(t, f);
                                             Types.Add(t);
+                                            TypeToNamespace.Add(t, CurrentNamespace);
+                                            TypeToNamespaceImports.Add(t, CurrentNamespaceImports);
                                             return new List<TFSemantics.Node> { };
                                         }
                                     default:
@@ -525,6 +596,47 @@ namespace Yuki.ObjectSchema
                             }
                             else if (f.Name.Text == "Namespace")
                             {
+                                if (f.Parameters.Count != 1) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+                                var NamespaceParts = ExtractNamespaceParts(f.Parameters[0]);
+
+                                Mark(NamespaceParts, f);
+                                CurrentNamespace = NamespaceParts;
+                                return new List<TFSemantics.Node> { };
+                            }
+                            else if (f.Name.Text == "Import")
+                            {
+                                if (f.Parameters.Count != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
+
+                                var ContentLines = new List<FunctionCallTableLine> { };
+                                if (f.Content.OnHasValue)
+                                {
+                                    var ContentValue = f.Content.Value;
+                                    if (!ContentValue.OnTableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
+                                    ContentLines = ContentValue.TableContent;
+                                }
+
+                                var NamespaceImports = new List<List<String>>();
+
+                                foreach (var Line in ContentLines)
+                                {
+                                    if (Line.Nodes.Count == 1)
+                                    {
+                                        var NamespaceParts = ExtractNamespaceParts(Line.Nodes[0]);
+                                        Mark(NamespaceParts, Line.Nodes[0]);
+                                        NamespaceImports.Add(NamespaceParts);
+                                    }
+                                    else if (Line.Nodes.Count == 0)
+                                    {
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        throw new InvalidEvaluationException("InvalidLineNodeCount", nm.GetFileRange(Line), Line);
+                                    }
+                                }
+
+                                CurrentNamespaceImports = CurrentNamespaceImports.Concat(NamespaceImports).ToList();
+
                                 return new List<TFSemantics.Node> { };
                             }
                             else
@@ -565,8 +677,7 @@ namespace Yuki.ObjectSchema
                 }
             }
 
-            var Schema = new Schema { Types = Types, TypeRefs = TypeRefs, Imports = Imports };
-            return new FileParserResult { Schema = Schema, Text = Text, Positions = Positions };
+            return new FileParserResult { Text = Text, Positions = Positions, Types = Types, TypeRefs = TypeRefs, Imports = Imports, TypeToNamespace = TypeToNamespace, TypeToNamespaceImports = TypeToNamespaceImports };
         }
 
         private static String GetLeafNodeValue(TFSemantics.Node n, ISemanticsNodeMaker nm, String ErrorCause)
@@ -575,9 +686,14 @@ namespace Yuki.ObjectSchema
             return n.Leaf;
         }
 
-        private static TypeRef ParseTypeRef(String TypeString)
+        private static TypeRef ParseTypeRef(TFSemantics.Node TypeNode, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
         {
-            return TypeParser.ParseTypeRef(TypeString);
+            var ts = ParseTypeSpec(TypeNode, nm, Positions);
+            if (!ts.OnTypeRef)
+            {
+                throw new InvalidEvaluationException("ExpectedTypeRef", nm.GetFileRange(ts), ts);
+            }
+            return ts.TypeRef;
         }
 
         private static TypeSpec ParseTypeSpec(TFSemantics.Node TypeNode, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)

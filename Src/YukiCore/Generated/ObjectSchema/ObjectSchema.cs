@@ -99,7 +99,7 @@ namespace Yuki.ObjectSchema
     public sealed class TypeRef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
     }
@@ -152,7 +152,7 @@ namespace Yuki.ObjectSchema
     public sealed class PrimitiveDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>泛型参数</summary>
         public List<VariableDef> GenericParameters;
         /// <summary>特性</summary>
@@ -165,7 +165,7 @@ namespace Yuki.ObjectSchema
     public sealed class AliasDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
         /// <summary>泛型参数</summary>
@@ -182,7 +182,7 @@ namespace Yuki.ObjectSchema
     public sealed class RecordDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
         /// <summary>泛型参数</summary>
@@ -199,7 +199,7 @@ namespace Yuki.ObjectSchema
     public sealed class TaggedUnionDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
         /// <summary>泛型参数</summary>
@@ -216,7 +216,7 @@ namespace Yuki.ObjectSchema
     public sealed class EnumDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
         /// <summary>基础类型</summary>
@@ -233,7 +233,7 @@ namespace Yuki.ObjectSchema
     public sealed class ClientCommandDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
         /// <summary>传出参数（客户端到服务端）</summary>
@@ -250,7 +250,7 @@ namespace Yuki.ObjectSchema
     public sealed class ServerCommandDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public List<String> Name;
         /// <summary>版本</summary>
         public String Version;
         /// <summary>传出参数（服务端到客户端）</summary>

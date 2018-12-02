@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2018.08.17.
+//  Version:     2018.12.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -24,6 +24,18 @@ using Firefly.Texting.TreeFormat.Syntax;
 
 namespace Yuki.ObjectSchema
 {
+    public class TypeMapConfiguration
+    {
+        public Func<TypeDef, TypeDef> MapTypeDefKernel = d => d;
+        public Func<TypeDef, TypeSpec, TypeSpec> MapTypeSpecKernel = (d, s) => s;
+        public Func<TypeDef, VariableDef, VariableDef> MapVariableKernel = (d, v) => v;
+        public Func<TypeDef, LiteralDef, LiteralDef> MapLiteralDefKernel = (d, l) => l;
+        public Func<TypeDef, TypeDef, TypeDef> TypeDefMarker = (tOld, tNew) => tNew;
+        public Func<TypeSpec, TypeSpec, TypeSpec> TypeSpecMarker = (tsOld, tsNew) => tsNew;
+        public Func<VariableDef, VariableDef, VariableDef> VariableDefMarker = (vOld, vNew) => vNew;
+        public Func<LiteralDef, LiteralDef, LiteralDef> LiteralDefMarker = (lOld, lNew) => lNew;
+    }
+
     public class SchemaClosure
     {
         public List<TypeDef> TypeDefs;
@@ -80,71 +92,55 @@ namespace Yuki.ObjectSchema
             }
         }
 
-        public static TypeDef MapType(this TypeDef d, Func<TypeDef, TypeDef> MapTypeDefKernel)
+        public static TypeDef MapType(this TypeDef d, TypeMapConfiguration conf)
         {
-            return MapType(d, MapTypeDefKernel, s => s, v => v, l => l);
-        }
-        public static TypeDef MapType(this TypeDef d, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel)
-        {
-            return MapType(d, MapTypeDefKernel, MapTypeSpecKernel, v => v, l => l);
-        }
-        public static TypeSpec MapType(this TypeSpec s, Func<TypeDef, TypeDef> MapTypeDefKernel)
-        {
-            return MapType(s, MapTypeDefKernel, ss => ss, v => v, l => l);
-        }
-        public static TypeSpec MapType(this TypeSpec s, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel)
-        {
-            return MapType(s, MapTypeDefKernel, MapTypeSpecKernel, v => v, l => l);
-        }
-        public static TypeDef MapType(this TypeDef d, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel, Func<VariableDef, VariableDef> MapVariableKernel, Func<LiteralDef, LiteralDef> MapLiteralDefKernel)
-        {
-            var t = MapTypeDefKernel(d);
+            var t = conf.MapTypeDefKernel(d);
             if (t.OnPrimitive)
             {
                 var p = t.Primitive;
-                return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Attributes = p.Attributes, Description = p.Description });
+                return conf.TypeDefMarker(d, TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters.Select(gp => MapType(d, gp, conf)).ToList(), Attributes = p.Attributes, Description = p.Description }));
             }
             else if (t.OnAlias)
             {
                 var a = t.Alias;
-                return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Type = MapType(a.Type, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), Attributes = a.Attributes, Description = a.Description });
+                return conf.TypeDefMarker(d, TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters.Select(gp => MapType(d, gp, conf)).ToList(), Type = MapType(d, a.Type, conf), Attributes = a.Attributes, Description = a.Description }));
             }
             else if (t.OnRecord)
             {
                 var r = t.Record;
-                return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Fields = r.Fields.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Attributes = r.Attributes, Description = r.Description });
+                return conf.TypeDefMarker(d, TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters.Select(gp => MapType(d, gp, conf)).ToList(), Fields = r.Fields.Select(gp => MapType(d, gp, conf)).ToList(), Attributes = r.Attributes, Description = r.Description }));
             }
             else if (t.OnTaggedUnion)
             {
                 var tu = t.TaggedUnion;
-                return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Alternatives = tu.Alternatives.Select(gp => MapType(gp, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Attributes = tu.Attributes, Description = tu.Description });
+                return conf.TypeDefMarker(d, TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters.Select(gp => MapType(d, gp, conf)).ToList(), Alternatives = tu.Alternatives.Select(gp => MapType(d, gp, conf)).ToList(), Attributes = tu.Attributes, Description = tu.Description }));
             }
             else if (t.OnEnum)
             {
                 var e = t.Enum;
-                return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = MapType(e.UnderlyingType, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), Literals = e.Literals.Select(l => MapLiteralDefKernel(l)).ToList(), Attributes = e.Attributes, Description = e.Description });
+                return conf.TypeDefMarker(d, TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = MapType(d, e.UnderlyingType, conf), Literals = e.Literals.Select(l => conf.LiteralDefMarker(l, conf.MapLiteralDefKernel(d, l))).ToList(), Attributes = e.Attributes, Description = e.Description }));
             }
             else if (t.OnClientCommand)
             {
                 var cc = t.ClientCommand;
-                return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), InParameters = cc.InParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Attributes = cc.Attributes, Description = cc.Description });
+                return conf.TypeDefMarker(d, TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters.Select(p => MapType(d, p, conf)).ToList(), InParameters = cc.InParameters.Select(p => MapType(d, p, conf)).ToList(), Attributes = cc.Attributes, Description = cc.Description }));
             }
             else if (t.OnServerCommand)
             {
                 var sc = t.ServerCommand;
-                return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters.Select(p => MapType(p, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList(), Attributes = sc.Attributes, Description = sc.Description });
+                return conf.TypeDefMarker(d, TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters.Select(p => MapType(d, p, conf)).ToList(), Attributes = sc.Attributes, Description = sc.Description }));
             }
             else
             {
                 throw new InvalidOperationException();
             }
         }
-        public static TypeSpec MapType(this TypeSpec s, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel, Func<VariableDef, VariableDef> MapVariableKernel, Func<LiteralDef, LiteralDef> MapLiteralDefKernel)
+        private static TypeSpec MapType(TypeDef d, TypeSpec s, TypeMapConfiguration conf)
         {
-            var t = MapTypeSpecKernel(s);
+            var t = conf.MapTypeSpecKernel(d, s);
             if (t.OnTypeRef)
             {
-                return TypeSpec.CreateTypeRef(new TypeRef { Name = t.TypeRef.Name, Version = t.TypeRef.Version });
+                return conf.TypeSpecMarker(s, TypeSpec.CreateTypeRef(new TypeRef { Name = t.TypeRef.Name, Version = t.TypeRef.Version }));
             }
             else if (t.OnGenericParameterRef)
             {
@@ -152,80 +148,79 @@ namespace Yuki.ObjectSchema
             }
             else if (t.OnTuple)
             {
-                return TypeSpec.CreateTuple(t.Tuple.Select(tt => MapType(tt, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList());
+                return conf.TypeSpecMarker(s, TypeSpec.CreateTuple(t.Tuple.Select(tt => MapType(d, tt, conf)).ToList()));
             }
             else if (t.OnGenericTypeSpec)
             {
                 var gts = t.GenericTypeSpec;
-                return TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = MapType(gts.TypeSpec, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), ParameterValues = gts.ParameterValues.Select(gpv => MapType(gpv, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel)).ToList() });
+                return conf.TypeSpecMarker(s, TypeSpec.CreateGenericTypeSpec(new GenericTypeSpec { TypeSpec = MapType(d, gts.TypeSpec, conf), ParameterValues = gts.ParameterValues.Select(gpv => MapType(d, gpv, conf)).ToList() }));
             }
             else
             {
                 throw new InvalidOperationException();
             }
         }
-        private static VariableDef MapType(VariableDef v, Func<TypeDef, TypeDef> MapTypeDefKernel, Func<TypeSpec, TypeSpec> MapTypeSpecKernel, Func<VariableDef, VariableDef> MapVariableKernel, Func<LiteralDef, LiteralDef> MapLiteralDefKernel)
+        private static VariableDef MapType(TypeDef d, VariableDef v, TypeMapConfiguration conf)
         {
-            var vv = MapVariableKernel(v);
-            return new VariableDef { Name = vv.Name, Type = MapType(vv.Type, MapTypeDefKernel, MapTypeSpecKernel, MapVariableKernel, MapLiteralDefKernel), Attributes = vv.Attributes, Description = vv.Description };
+            var vv = conf.MapVariableKernel(d, v);
+            return conf.VariableDefMarker(v, new VariableDef { Name = vv.Name, Type = MapType(d, vv.Type, conf), Attributes = vv.Attributes, Description = vv.Description });
         }
 
         private static TypeDef MapWithoutDescription(TypeDef d)
         {
-            Func<TypeDef, TypeDef> MapTypeDefKernel = t =>
+            return MapType(d, new TypeMapConfiguration
             {
-                if (t.OnPrimitive)
+                MapTypeDefKernel = t =>
                 {
-                    var p = t.Primitive;
-                    return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters, Attributes = p.Attributes, Description = "" });
-                }
-                else if (t.OnAlias)
-                {
-                    var a = t.Alias;
-                    return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters, Type = a.Type, Attributes = a.Attributes, Description = "" });
-                }
-                else if (t.OnRecord)
-                {
-                    var r = t.Record;
-                    return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters, Fields = r.Fields, Attributes = r.Attributes, Description = "" });
-                }
-                else if (t.OnTaggedUnion)
-                {
-                    var tu = t.TaggedUnion;
-                    return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters, Alternatives = tu.Alternatives, Attributes = tu.Attributes, Description = "" });
-                }
-                else if (t.OnEnum)
-                {
-                    var e = t.Enum;
-                    return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = e.UnderlyingType, Literals = e.Literals, Attributes = e.Attributes, Description = "" });
-                }
-                else if (t.OnClientCommand)
-                {
-                    var cc = t.ClientCommand;
-                    return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters, InParameters = cc.InParameters, Attributes = cc.Attributes, Description = "" });
-                }
-                else if (t.OnServerCommand)
-                {
-                    var sc = t.ServerCommand;
-                    return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters, Attributes = sc.Attributes, Description = "" });
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-            };
-
-            Func<VariableDef, VariableDef> MapVariableDefKernel = v =>
-            {
-                return new VariableDef { Name = v.Name, Type = v.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
-            };
-
-            Func<LiteralDef, LiteralDef> MapLiteralDefKernel = l =>
-            {
-                return new LiteralDef { Name = l.Name, Value = l.Value, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
-            };
-
-            return MapType(d, MapTypeDefKernel, s => s, MapVariableDefKernel, MapLiteralDefKernel);
+                    if (t.OnPrimitive)
+                    {
+                        var p = t.Primitive;
+                        return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters, Attributes = p.Attributes, Description = "" });
+                    }
+                    else if (t.OnAlias)
+                    {
+                        var a = t.Alias;
+                        return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters, Type = a.Type, Attributes = a.Attributes, Description = "" });
+                    }
+                    else if (t.OnRecord)
+                    {
+                        var r = t.Record;
+                        return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters, Fields = r.Fields, Attributes = r.Attributes, Description = "" });
+                    }
+                    else if (t.OnTaggedUnion)
+                    {
+                        var tu = t.TaggedUnion;
+                        return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters, Alternatives = tu.Alternatives, Attributes = tu.Attributes, Description = "" });
+                    }
+                    else if (t.OnEnum)
+                    {
+                        var e = t.Enum;
+                        return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = e.UnderlyingType, Literals = e.Literals, Attributes = e.Attributes, Description = "" });
+                    }
+                    else if (t.OnClientCommand)
+                    {
+                        var cc = t.ClientCommand;
+                        return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters, InParameters = cc.InParameters, Attributes = cc.Attributes, Description = "" });
+                    }
+                    else if (t.OnServerCommand)
+                    {
+                        var sc = t.ServerCommand;
+                        return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters, Attributes = sc.Attributes, Description = "" });
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                },
+                MapVariableKernel = (t, v) =>
+             {
+                 return new VariableDef { Name = v.Name, Type = v.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
+             },
+                MapLiteralDefKernel = (t, l) =>
+             {
+                 return new LiteralDef { Name = l.Name, Value = l.Value, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
+             }
+            });
         }
 
         public static Schema GetNonversioned(this Schema s)
@@ -254,166 +249,168 @@ namespace Yuki.ObjectSchema
             var Dict = Types.Concat(TypeRefs).ToDictionary(t => t.Original.VersionedName(), t => t.Current.VersionedName(), StringComparer.OrdinalIgnoreCase);
             return new Schema { Types = Types.Select(t => t.Current).ToList(), TypeRefs = TypeRefs.Select(t => t.Current).ToList(), Imports = s.Imports.ToList() };
         }
-        private static TypeDef MapWithVersion(TypeDef d, Func<String, String, String> GetVersionFromNameAndVersion)
+        private static TypeDef MapWithVersion(TypeDef d, Func<List<String>, String, String> GetVersionFromNameAndVersion)
         {
-            Func<TypeDef, TypeDef> MapTypeDefKernel = t =>
+            return MapType(d, new TypeMapConfiguration
             {
-                if (t.OnPrimitive)
+                MapTypeDefKernel = t =>
                 {
-                    var p = t.Primitive;
-                    return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters, Attributes = p.Attributes, Description = p.Description });
-                }
-                else if (t.OnAlias)
+                    if (t.OnPrimitive)
+                    {
+                        var p = t.Primitive;
+                        return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters, Attributes = p.Attributes, Description = p.Description });
+                    }
+                    else if (t.OnAlias)
+                    {
+                        var a = t.Alias;
+                        return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = GetVersionFromNameAndVersion(a.Name, a.Version), GenericParameters = a.GenericParameters, Type = a.Type, Attributes = a.Attributes, Description = a.Description });
+                    }
+                    else if (t.OnRecord)
+                    {
+                        var r = t.Record;
+                        return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = GetVersionFromNameAndVersion(r.Name, r.Version), GenericParameters = r.GenericParameters, Fields = r.Fields, Attributes = r.Attributes, Description = r.Description });
+                    }
+                    else if (t.OnTaggedUnion)
+                    {
+                        var tu = t.TaggedUnion;
+                        return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = GetVersionFromNameAndVersion(tu.Name, tu.Version), GenericParameters = tu.GenericParameters, Alternatives = tu.Alternatives, Attributes = tu.Attributes, Description = tu.Description });
+                    }
+                    else if (t.OnEnum)
+                    {
+                        var e = t.Enum;
+                        return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = GetVersionFromNameAndVersion(e.Name, e.Version), UnderlyingType = e.UnderlyingType, Literals = e.Literals, Attributes = e.Attributes, Description = e.Description });
+                    }
+                    else if (t.OnClientCommand)
+                    {
+                        var cc = t.ClientCommand;
+                        return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = GetVersionFromNameAndVersion(cc.Name, cc.Version), OutParameters = cc.OutParameters, InParameters = cc.InParameters, Attributes = cc.Attributes, Description = cc.Description });
+                    }
+                    else if (t.OnServerCommand)
+                    {
+                        var sc = t.ServerCommand;
+                        return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = GetVersionFromNameAndVersion(sc.Name, sc.Version), OutParameters = sc.OutParameters, Attributes = sc.Attributes, Description = sc.Description });
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                },
+                MapTypeSpecKernel = (t, ts) =>
                 {
-                    var a = t.Alias;
-                    return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = GetVersionFromNameAndVersion(a.Name, a.Version), GenericParameters = a.GenericParameters, Type = a.Type, Attributes = a.Attributes, Description = a.Description });
+                    if (ts.OnTypeRef)
+                    {
+                        return TypeSpec.CreateTypeRef(new TypeRef { Name = ts.TypeRef.Name, Version = GetVersionFromNameAndVersion(ts.TypeRef.Name, ts.TypeRef.Version) });
+                    }
+                    else if (ts.OnGenericParameterRef)
+                    {
+                        return ts;
+                    }
+                    else if (ts.OnTuple)
+                    {
+                        return ts;
+                    }
+                    else if (ts.OnGenericTypeSpec)
+                    {
+                        return ts;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
                 }
-                else if (t.OnRecord)
-                {
-                    var r = t.Record;
-                    return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = GetVersionFromNameAndVersion(r.Name, r.Version), GenericParameters = r.GenericParameters, Fields = r.Fields, Attributes = r.Attributes, Description = r.Description });
-                }
-                else if (t.OnTaggedUnion)
-                {
-                    var tu = t.TaggedUnion;
-                    return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = GetVersionFromNameAndVersion(tu.Name, tu.Version), GenericParameters = tu.GenericParameters, Alternatives = tu.Alternatives, Attributes = tu.Attributes, Description = tu.Description });
-                }
-                else if (t.OnEnum)
-                {
-                    var e = t.Enum;
-                    return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = GetVersionFromNameAndVersion(e.Name, e.Version), UnderlyingType = e.UnderlyingType, Literals = e.Literals, Attributes = e.Attributes, Description = e.Description });
-                }
-                else if (t.OnClientCommand)
-                {
-                    var cc = t.ClientCommand;
-                    return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = GetVersionFromNameAndVersion(cc.Name, cc.Version), OutParameters = cc.OutParameters, InParameters = cc.InParameters, Attributes = cc.Attributes, Description = cc.Description });
-                }
-                else if (t.OnServerCommand)
-                {
-                    var sc = t.ServerCommand;
-                    return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = GetVersionFromNameAndVersion(sc.Name, sc.Version), OutParameters = sc.OutParameters, Attributes = sc.Attributes, Description = sc.Description });
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-            };
-
-            Func<TypeSpec, TypeSpec> MapTypeSpecKernel = t =>
-            {
-                if (t.OnTypeRef)
-                {
-                    return TypeSpec.CreateTypeRef(new TypeRef { Name = t.TypeRef.Name, Version = GetVersionFromNameAndVersion(t.TypeRef.Name, t.TypeRef.Version) });
-                }
-                else if (t.OnGenericParameterRef)
-                {
-                    return t;
-                }
-                else if (t.OnTuple)
-                {
-                    return t;
-                }
-                else if (t.OnGenericTypeSpec)
-                {
-                    return t;
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-            };
-
-            return MapType(d, MapTypeDefKernel, MapTypeSpecKernel, v => v, l => l);
+            });
         }
         private static TypeDef MapAttributes(TypeDef d, Func<List<KeyValuePair<String, List<String>>>, List<KeyValuePair<String, List<String>>>> m)
         {
-            Func<TypeDef, TypeDef> MapTypeDefKernel = t =>
+            return MapType(d, new TypeMapConfiguration
             {
-                if (t.OnPrimitive)
+                MapTypeDefKernel = t =>
                 {
-                    var p = t.Primitive;
-                    return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters, Attributes = m(p.Attributes), Description = p.Description });
-                }
-                else if (t.OnAlias)
-                {
-                    var a = t.Alias;
-                    return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters, Type = a.Type, Attributes = m(a.Attributes), Description = a.Description });
-                }
-                else if (t.OnRecord)
-                {
-                    var r = t.Record;
-                    return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters, Fields = r.Fields, Attributes = m(r.Attributes), Description = r.Description });
-                }
-                else if (t.OnTaggedUnion)
-                {
-                    var tu = t.TaggedUnion;
-                    return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters, Alternatives = tu.Alternatives, Attributes = m(tu.Attributes), Description = tu.Description });
-                }
-                else if (t.OnEnum)
-                {
-                    var e = t.Enum;
-                    return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = e.UnderlyingType, Literals = e.Literals, Attributes = m(e.Attributes), Description = e.Description });
-                }
-                else if (t.OnClientCommand)
-                {
-                    var cc = t.ClientCommand;
-                    return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters, InParameters = cc.InParameters, Attributes = m(cc.Attributes), Description = cc.Description });
-                }
-                else if (t.OnServerCommand)
-                {
-                    var sc = t.ServerCommand;
-                    return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters, Attributes = m(sc.Attributes), Description = sc.Description });
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-            };
-
-            Func<TypeSpec, TypeSpec> MapTypeSpecKernel = t =>
-            {
-                if (t.OnTypeRef)
-                {
-                    return TypeSpec.CreateTypeRef(new TypeRef { Name = t.TypeRef.Name, Version = t.TypeRef.Version });
-                }
-                else if (t.OnGenericParameterRef)
-                {
-                    return t;
-                }
-                else if (t.OnTuple)
-                {
-                    return t;
-                }
-                else if (t.OnGenericTypeSpec)
-                {
-                    return t;
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-            };
-
-            return MapType(d, MapTypeDefKernel, MapTypeSpecKernel, v => v, l => l);
-        }
-
-        public static TypeDef MakeGenericType(this TypeDef d, String Name, List<TypeSpec> ParameterValues)
-        {
-            var gpvMap = d.GenericParameters().Zip(ParameterValues, (gp, gpv) => new { gp = gp, gpv = gpv }).ToDictionary(z => z.gp.Name, z => z.gpv);
-            Func<TypeSpec, TypeSpec> MapTypeSpecKernel = s =>
-            {
-                if (s.OnGenericParameterRef)
-                {
-                    var ParameterName = s.GenericParameterRef;
-                    if (gpvMap.ContainsKey(ParameterName))
+                    if (t.OnPrimitive)
                     {
-                        return gpvMap[ParameterName];
+                        var p = t.Primitive;
+                        return TypeDef.CreatePrimitive(new PrimitiveDef { Name = p.Name, GenericParameters = p.GenericParameters, Attributes = m(p.Attributes), Description = p.Description });
+                    }
+                    else if (t.OnAlias)
+                    {
+                        var a = t.Alias;
+                        return TypeDef.CreateAlias(new AliasDef { Name = a.Name, Version = a.Version, GenericParameters = a.GenericParameters, Type = a.Type, Attributes = m(a.Attributes), Description = a.Description });
+                    }
+                    else if (t.OnRecord)
+                    {
+                        var r = t.Record;
+                        return TypeDef.CreateRecord(new RecordDef { Name = r.Name, Version = r.Version, GenericParameters = r.GenericParameters, Fields = r.Fields, Attributes = m(r.Attributes), Description = r.Description });
+                    }
+                    else if (t.OnTaggedUnion)
+                    {
+                        var tu = t.TaggedUnion;
+                        return TypeDef.CreateTaggedUnion(new TaggedUnionDef { Name = tu.Name, Version = tu.Version, GenericParameters = tu.GenericParameters, Alternatives = tu.Alternatives, Attributes = m(tu.Attributes), Description = tu.Description });
+                    }
+                    else if (t.OnEnum)
+                    {
+                        var e = t.Enum;
+                        return TypeDef.CreateEnum(new EnumDef { Name = e.Name, Version = e.Version, UnderlyingType = e.UnderlyingType, Literals = e.Literals, Attributes = m(e.Attributes), Description = e.Description });
+                    }
+                    else if (t.OnClientCommand)
+                    {
+                        var cc = t.ClientCommand;
+                        return TypeDef.CreateClientCommand(new ClientCommandDef { Name = cc.Name, Version = cc.Version, OutParameters = cc.OutParameters, InParameters = cc.InParameters, Attributes = m(cc.Attributes), Description = cc.Description });
+                    }
+                    else if (t.OnServerCommand)
+                    {
+                        var sc = t.ServerCommand;
+                        return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters, Attributes = m(sc.Attributes), Description = sc.Description });
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                },
+                MapTypeSpecKernel = (t, ts) =>
+                {
+                    if (ts.OnTypeRef)
+                    {
+                        return TypeSpec.CreateTypeRef(new TypeRef { Name = ts.TypeRef.Name, Version = ts.TypeRef.Version });
+                    }
+                    else if (ts.OnGenericParameterRef)
+                    {
+                        return ts;
+                    }
+                    else if (ts.OnTuple)
+                    {
+                        return ts;
+                    }
+                    else if (ts.OnGenericTypeSpec)
+                    {
+                        return ts;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
                     }
                 }
-                return s;
-            };
+            });
+        }
 
-            var t = d.MapType(dd => dd, MapTypeSpecKernel);
+        public static TypeDef MakeGenericType(this TypeDef d, List<String> Name, List<TypeSpec> ParameterValues)
+        {
+            var gpvMap = d.GenericParameters().Zip(ParameterValues, (gp, gpv) => new { gp = gp, gpv = gpv }).ToDictionary(z => z.gp.Name, z => z.gpv);
+
+            var t = d.MapType(new TypeMapConfiguration
+            {
+                MapTypeSpecKernel = (tt, ts) =>
+                {
+                    if (ts.OnGenericParameterRef)
+                    {
+                        var ParameterName = ts.GenericParameterRef;
+                        if (gpvMap.ContainsKey(ParameterName))
+                        {
+                            return gpvMap[ParameterName];
+                        }
+                    }
+                    return ts;
+                }
+            });
             if (t.OnPrimitive)
             {
                 var p = t.Primitive;
@@ -745,7 +742,7 @@ namespace Yuki.ObjectSchema
             }
         }
 
-        public static String Name(this TypeDef t)
+        public static List<String> Name(this TypeDef t)
         {
             if (t.OnPrimitive)
             {
@@ -817,68 +814,328 @@ namespace Yuki.ObjectSchema
             }
         }
 
+        public static String FullName(this PrimitiveDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this AliasDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this RecordDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this TaggedUnionDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this EnumDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this ClientCommandDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this ServerCommandDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this TypeDef t)
+        {
+            return String.Join(".", t.Name());
+        }
+        public static String FullName(this TypeRef t)
+        {
+            return String.Join(".", t.Name);
+        }
+
         public static String VersionedName(this PrimitiveDef t)
         {
-            var Name = t.Name;
+            var Name = FullName(t);
             var Version = "";
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this AliasDef t)
         {
-            var Name = t.Name;
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this RecordDef t)
         {
-            var Name = t.Name;
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this TaggedUnionDef t)
         {
-            var Name = t.Name;
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this EnumDef t)
         {
-            var Name = t.Name;
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this ClientCommandDef t)
         {
-            var Name = t.Name;
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this ServerCommandDef t)
         {
-            var Name = t.Name;
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this TypeDef t)
         {
-            var Name = t.Name();
+            var Name = FullName(t);
             var Version = t.Version();
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this TypeRef t)
         {
-            var Name = t.Name;
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
+        }
+
+        public static String NamespaceName(this PrimitiveDef t)
+        {
+            return String.Join(".", t.Name.Take(t.Name.Count - 1));
+        }
+        public static String NamespaceName(this AliasDef t)
+        {
+            return String.Join(".", t.Name.Take(t.Name.Count - 1));
+        }
+        public static String NamespaceName(this RecordDef t)
+        {
+            return String.Join(".", t.Name.Take(t.Name.Count - 1));
+        }
+        public static String NamespaceName(this TaggedUnionDef t)
+        {
+            return String.Join(".", t.Name.Take(t.Name.Count - 1));
+        }
+        public static String NamespaceName(this EnumDef t)
+        {
+            return String.Join(".", t.Name.Take(t.Name.Count - 1));
+        }
+        public static String NamespaceName(this ClientCommandDef t)
+        {
+            return String.Join(".", t.Name.Take(t.Name.Count - 1));
+        }
+        public static String NamespaceName(this ServerCommandDef t)
+        {
+            return String.Join(".", t.Name.Take(t.Name.Count - 1));
+        }
+        public static String NamespaceName(this TypeDef t)
+        {
+            var Name = t.Name();
+            return String.Join(".", Name.Take(Name.Count - 1));
+        }
+        public static String NamespaceName(this TypeRef t)
+        {
+            return String.Join(".", t.Name.Take(t.Name.Count - 1));
+        }
+
+        public static String SimpleName(this PrimitiveDef t)
+        {
+            return t.Name.Last();
+        }
+        public static String SimpleName(this AliasDef t)
+        {
+            return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
+        }
+        public static String SimpleName(this RecordDef t)
+        {
+            return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
+        }
+        public static String SimpleName(this TaggedUnionDef t)
+        {
+            return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
+        }
+        public static String SimpleName(this EnumDef t)
+        {
+            return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
+        }
+        public static String SimpleName(this ClientCommandDef t)
+        {
+            return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
+        }
+        public static String SimpleName(this ServerCommandDef t)
+        {
+            return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
+        }
+        public static String SimpleName(this TypeDef t)
+        {
+            return t.Name().Last() + (t.Version() == "" ? "" : "At" + t.Version());
+        }
+        public static String SimpleName(this TypeRef t, String NamespaceName)
+        {
+            if (t.NamespaceName() == NamespaceName)
+            {
+                return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
+            }
+            else
+            {
+                return String.Join("Dot", t.Name) + (t.Version == "" ? "" : "At" + t.Version);
+            }
+        }
+        public static String SimpleName(this TypeSpec t, String NamespaceName)
+        {
+            return SimpleName(t, NamespaceName, gpr => gpr);
+        }
+        public static String SimpleName(this TypeSpec t, String NamespaceName, Func<String, String> EvaluateGenericParameterRef)
+        {
+            return SimpleName(t, NamespaceName, EvaluateGenericParameterRef, SimpleName);
+        }
+        public static String SimpleName(this TypeSpec Type, String NamespaceName, Func<String, String> EvaluateGenericParameterRef, Func<TypeSpec, String, Func<String, String>, String> Kernel)
+        {
+            if (Type.OnTypeRef)
+            {
+                return Type.TypeRef.SimpleName(NamespaceName);
+            }
+            else if (Type.OnGenericParameterRef)
+            {
+                return EvaluateGenericParameterRef(Type.GenericParameterRef);
+            }
+            else if (Type.OnTuple)
+            {
+                return "TupleOf" + String.Join("And", Type.Tuple.Select(t => Kernel(t, NamespaceName, EvaluateGenericParameterRef)));
+            }
+            else if (Type.OnGenericTypeSpec)
+            {
+                return Kernel(Type.GenericTypeSpec.TypeSpec, NamespaceName, EvaluateGenericParameterRef) + "Of" + String.Join("And", Type.GenericTypeSpec.ParameterValues.Select(t => SimpleName(t, NamespaceName, EvaluateGenericParameterRef, Kernel)));
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        public static String TypeString(this PrimitiveDef t)
+        {
+            return VersionedName(t);
+        }
+        public static String TypeString(this AliasDef t)
+        {
+            return VersionedName(t);
+        }
+        public static String TypeString(this RecordDef t)
+        {
+            return VersionedName(t);
+        }
+        public static String TypeString(this TaggedUnionDef t)
+        {
+            return VersionedName(t);
+        }
+        public static String TypeString(this EnumDef t)
+        {
+            return VersionedName(t);
+        }
+        public static String TypeString(this ClientCommandDef t)
+        {
+            return VersionedName(t);
+        }
+        public static String TypeString(this ServerCommandDef t)
+        {
+            return VersionedName(t);
+        }
+        public static String TypeString(this TypeDef t)
+        {
+            return VersionedName(t);
+        }
+        public static String TypeString(this TypeRef t)
+        {
+            return VersionedName(t);
+        }
+        public static String TypeString(this TypeSpec t)
+        {
+            return TypeString(t, gpr => "'" + gpr);
+        }
+        public static String TypeString(this TypeSpec t, Func<String, String> EvaluateGenericParameterRef)
+        {
+            return TypeString(t, EvaluateGenericParameterRef, TypeString);
+        }
+        public static String TypeString(this TypeSpec Type, Func<String, String> EvaluateGenericParameterRef, Func<TypeSpec, Func<String, String>, String> Kernel)
+        {
+            if (Type.OnTypeRef)
+            {
+                return Type.TypeRef.TypeString();
+            }
+            else if (Type.OnGenericParameterRef)
+            {
+                return EvaluateGenericParameterRef(Type.GenericParameterRef);
+            }
+            else if (Type.OnTuple)
+            {
+                return "Tuple<" + String.Join(", ", Type.Tuple.Select(t => Kernel(t, EvaluateGenericParameterRef))) + ">";
+            }
+            else if (Type.OnGenericTypeSpec)
+            {
+                return Kernel(Type.GenericTypeSpec.TypeSpec, EvaluateGenericParameterRef) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(t => TypeString(t, EvaluateGenericParameterRef, Kernel))) + ">";
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        public static Boolean NameMatches(this PrimitiveDef t, Func<String, Boolean> Predicate)
+        {
+            return Predicate(t.VersionedName());
+        }
+        public static Boolean NameMatches(this AliasDef t, Func<String, Boolean> Predicate)
+        {
+            return Predicate(t.VersionedName());
+        }
+        public static Boolean NameMatches(this RecordDef t, Func<String, Boolean> Predicate)
+        {
+            return Predicate(t.VersionedName());
+        }
+        public static Boolean NameMatches(this TaggedUnionDef t, Func<String, Boolean> Predicate)
+        {
+            return Predicate(t.VersionedName());
+        }
+        public static Boolean NameMatches(this EnumDef t, Func<String, Boolean> Predicate)
+        {
+            return Predicate(t.VersionedName());
+        }
+        public static Boolean NameMatches(this ClientCommandDef t, Func<String, Boolean> Predicate)
+        {
+            return Predicate(t.VersionedName());
+        }
+        public static Boolean NameMatches(this ServerCommandDef t, Func<String, Boolean> Predicate)
+        {
+            return Predicate(t.VersionedName());
+        }
+        public static Boolean NameMatches(this TypeDef t, Func<String, Boolean> Predicate)
+        {
+            return Predicate(t.VersionedName());
+        }
+        public static Boolean NameMatches(this TypeRef t, Func<String, Boolean> Predicate)
+        {
+            return Predicate(t.VersionedName());
+        }
+
+        public static List<String> NameConcat(this List<String> Name, String Suffix)
+        {
+            return Name.Take(Name.Count - 1).Concat(new List<String> { Name.Last() + Suffix }).ToList();
         }
 
         public static String Description(this TypeDef t)
@@ -953,194 +1210,29 @@ namespace Yuki.ObjectSchema
             }
         }
 
-        public static String TypeFriendlyName(this PrimitiveDef t)
+        public static IEnumerable<T> Join<T>(this IEnumerable<IEnumerable<T>> l, IEnumerable<T> Separator)
         {
-            var Name = t.Name;
-            var Version = "";
-            if (Version == "") { return Name; }
-            return Name + "At" + Version;
-        }
-        public static String TypeFriendlyName(this AliasDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "At" + Version;
-        }
-        public static String TypeFriendlyName(this RecordDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "At" + Version;
-        }
-        public static String TypeFriendlyName(this TaggedUnionDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "At" + Version;
-        }
-        public static String TypeFriendlyName(this EnumDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "At" + Version;
-        }
-        public static String TypeFriendlyName(this ClientCommandDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "At" + Version;
-        }
-        public static String TypeFriendlyName(this ServerCommandDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "At" + Version;
-        }
-        public static String TypeFriendlyName(this TypeDef t)
-        {
-            var Name = t.Name();
-            var Version = t.Version();
-            if (Version == "") { return Name; }
-            return Name + "At" + Version;
-        }
-        public static String TypeFriendlyName(this TypeRef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "At" + Version;
-        }
-        public static String TypeFriendlyName(this TypeSpec t)
-        {
-            return TypeFriendlyName(t, gpr => gpr);
-        }
-        public static String TypeFriendlyName(this TypeSpec t, Func<String, String> EvaluateGenericParameterRef)
-        {
-            return TypeFriendlyName(t, EvaluateGenericParameterRef, TypeFriendlyName);
-        }
-        public static String TypeFriendlyName(this TypeSpec Type, Func<String, String> EvaluateGenericParameterRef, Func<TypeSpec, Func<String, String>, String> Kernel)
-        {
-            if (Type.OnTypeRef)
+            IEnumerable<T> Output = null;
+            foreach (var v in l)
             {
-                return Type.TypeRef.TypeFriendlyName();
+                if (Output == null)
+                {
+                    Output = v;
+                }
+                else
+                {
+                    Output = Output.Concat(Separator).Concat(v);
+                }
             }
-            else if (Type.OnGenericParameterRef)
-            {
-                return EvaluateGenericParameterRef(Type.GenericParameterRef);
-            }
-            else if (Type.OnTuple)
-            {
-                return "TupleOf" + String.Join("And", Type.Tuple.Select(t => Kernel(t, EvaluateGenericParameterRef)));
-            }
-            else if (Type.OnGenericTypeSpec)
-            {
-                return Kernel(Type.GenericTypeSpec.TypeSpec, EvaluateGenericParameterRef) + "Of" + String.Join("And", Type.GenericTypeSpec.ParameterValues.Select(t => TypeFriendlyName(t, EvaluateGenericParameterRef, Kernel)));
-            }
-            else
-            {
-                throw new InvalidOperationException();
-            }
+            return Output ?? new T[] { };
         }
 
-        public static String TypeString(this PrimitiveDef t)
+        public static String GetDotNetFullNameFromVersionedName(String VersionedName)
         {
-            var Name = t.Name;
-            var Version = "";
-            if (Version == "") { return Name; }
-            return Name + "[" + Version + "]";
-        }
-        public static String TypeString(this AliasDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "[" + Version + "]";
-        }
-        public static String TypeString(this RecordDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "[" + Version + "]";
-        }
-        public static String TypeString(this TaggedUnionDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "[" + Version + "]";
-        }
-        public static String TypeString(this EnumDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "[" + Version + "]";
-        }
-        public static String TypeString(this ClientCommandDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "[" + Version + "]";
-        }
-        public static String TypeString(this ServerCommandDef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "[" + Version + "]";
-        }
-        public static String TypeString(this TypeDef t)
-        {
-            var Name = t.Name();
-            var Version = t.Version();
-            if (Version == "") { return Name; }
-            return Name + "[" + Version + "]";
-        }
-        public static String TypeString(this TypeRef t)
-        {
-            var Name = t.Name;
-            var Version = t.Version;
-            if (Version == "") { return Name; }
-            return Name + "[" + Version + "]";
-        }
-        public static String TypeString(this TypeSpec t)
-        {
-            return TypeString(t, gpr => "'" + gpr);
-        }
-        public static String TypeString(this TypeSpec t, Func<String, String> EvaluateGenericParameterRef)
-        {
-            return TypeString(t, EvaluateGenericParameterRef, TypeString);
-        }
-        public static String TypeString(this TypeSpec Type, Func<String, String> EvaluateGenericParameterRef, Func<TypeSpec, Func<String, String>, String> Kernel)
-        {
-            if (Type.OnTypeRef)
-            {
-                return Type.TypeRef.TypeString();
-            }
-            else if (Type.OnGenericParameterRef)
-            {
-                return EvaluateGenericParameterRef(Type.GenericParameterRef);
-            }
-            else if (Type.OnTuple)
-            {
-                return "Tuple<" + String.Join(", ", Type.Tuple.Select(t => Kernel(t, EvaluateGenericParameterRef))) + ">";
-            }
-            else if (Type.OnGenericTypeSpec)
-            {
-                return Kernel(Type.GenericTypeSpec.TypeSpec, EvaluateGenericParameterRef) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(t => TypeString(t, EvaluateGenericParameterRef, Kernel))) + ">";
-            }
-            else
-            {
-                throw new InvalidOperationException();
-            }
+            String Name;
+            String Version;
+            TypeParser.ParseNameAndVersion(VersionedName, out Name, out Version);
+            return Name + (Version == "" ? "" : "At" + Version);
         }
     }
 }

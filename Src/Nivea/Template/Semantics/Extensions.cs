@@ -1,4 +1,14 @@
-﻿using System;
+﻿//==========================================================================
+//
+//  File:        Extensions.cs
+//  Location:    Nivea <Visual C#>
+//  Description: 扩展
+//  Version:     2018.12.02.
+//  Copyright(C) F.R.C.
+//
+//==========================================================================
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -63,51 +73,80 @@ namespace Nivea.Template.Semantics
             }
         }
 
+        public static String FullName(this PrimitiveDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this AliasDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this RecordDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this TaggedUnionDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this EnumDef t)
+        {
+            return String.Join(".", t.Name);
+        }
+        public static String FullName(this TypeDef t)
+        {
+            return String.Join(".", t.Name());
+        }
+        public static String FullName(this TypeRef t)
+        {
+            return String.Join(".", t.Name);
+        }
+
         public static String VersionedName(this PrimitiveDef t)
         {
-            var Name = String.Join(".", t.Name);
+            var Name = FullName(t);
             var Version = "";
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this AliasDef t)
         {
-            var Name = String.Join(".", t.Name);
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this RecordDef t)
         {
-            var Name = String.Join(".", t.Name);
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this TaggedUnionDef t)
         {
-            var Name = String.Join(".", t.Name);
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this EnumDef t)
         {
-            var Name = String.Join(".", t.Name);
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this TypeDef t)
         {
-            var Name = String.Join(".", t.Name());
+            var Name = FullName(t);
             var Version = t.Version();
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
         }
         public static String VersionedName(this TypeRef t)
         {
-            var Name = String.Join(".", t.Name);
+            var Name = FullName(t);
             var Version = t.Version;
             if (Version == "") { return Name; }
             return Name + "[" + Version + "]";
