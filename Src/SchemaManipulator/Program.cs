@@ -8,38 +8,38 @@
 //
 //==========================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using System.Reflection;
-using System.CodeDom.Compiler;
 using Firefly;
 using Firefly.Mapping.TreeText;
 using Firefly.Streaming;
 using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
-using Yuki.ObjectSchema;
-using OS = Yuki.ObjectSchema;
-using Yuki.ObjectSchema.VB;
-using Yuki.ObjectSchema.CSharp;
-using Yuki.ObjectSchema.CSharpBinary;
-using Yuki.ObjectSchema.CSharpJson;
-using Yuki.ObjectSchema.CSharpCompatible;
-using Yuki.ObjectSchema.CSharpRetry;
-using Yuki.ObjectSchema.CSharpVersion;
-using Yuki.ObjectSchema.Java;
-using Yuki.ObjectSchema.JavaBinary;
+using Niveum.ObjectSchema;
+using Niveum.ObjectSchema.CSharp;
+using System;
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.CppCompatible;
 using Yuki.ObjectSchema.CppVersion;
+using Yuki.ObjectSchema.CSharpBinary;
+using Yuki.ObjectSchema.CSharpCompatible;
+using Yuki.ObjectSchema.CSharpJson;
+using Yuki.ObjectSchema.CSharpRetry;
+using Yuki.ObjectSchema.CSharpVersion;
 using Yuki.ObjectSchema.Haxe;
 using Yuki.ObjectSchema.HaxeJson;
+using Yuki.ObjectSchema.Java;
+using Yuki.ObjectSchema.JavaBinary;
 using Yuki.ObjectSchema.Python;
 using Yuki.ObjectSchema.PythonBinary;
+using Yuki.ObjectSchema.VB;
 using Yuki.ObjectSchema.Xhtml;
+using OS = Niveum.ObjectSchema;
 
 namespace Yuki.SchemaManipulator
 {
@@ -100,6 +100,13 @@ namespace Yuki.SchemaManipulator
                         var CookedObjectSchemaPath = args[0];
                         InvalidateSchema();
                         osl.LoadSchema(CookedObjectSchemaPath);
+                        try
+                        {
+                            oslLegacy.LoadSchema(CookedObjectSchemaPath);
+                        }
+                        catch (Exception)
+                        {
+                        }
                     }
                     else
                     {
@@ -113,7 +120,7 @@ namespace Yuki.SchemaManipulator
                     if (args.Length == 1)
                     {
                         var CookedObjectSchemaPath = args[0];
-                        var s = GetObjectSchema();
+                        var s = GetObjectSchemaLegacy();
                         var ts = new TreeSerializer();
                         var t = ts.Write(s);
                         TreeFile.WriteDirect(CookedObjectSchemaPath, t);
@@ -136,12 +143,26 @@ namespace Yuki.SchemaManipulator
                             {
                                 InvalidateSchema();
                                 osl.LoadTypeRef(f);
+                                try
+                                {
+                                    oslLegacy.LoadTypeRef(f);
+                                }
+                                catch (Exception)
+                                {
+                                }
                             }
                         }
                         else
                         {
                             InvalidateSchema();
                             osl.LoadTypeRef(ObjectSchemaPath);
+                            try
+                            {
+                                oslLegacy.LoadTypeRef(ObjectSchemaPath);
+                            }
+                            catch (Exception)
+                            {
+                            }
                         }
                     }
                     else
@@ -162,12 +183,26 @@ namespace Yuki.SchemaManipulator
                             {
                                 InvalidateSchema();
                                 osl.LoadType(f);
+                                try
+                                {
+                                    oslLegacy.LoadType(f);
+                                }
+                                catch (Exception)
+                                {
+                                }
                             }
                         }
                         else
                         {
                             InvalidateSchema();
                             osl.LoadType(ObjectSchemaPath);
+                            try
+                            {
+                                oslLegacy.LoadType(ObjectSchemaPath);
+                            }
+                            catch (Exception)
+                            {
+                            }
                         }
                     }
                     else
@@ -182,6 +217,7 @@ namespace Yuki.SchemaManipulator
                     if (args.Length == 1)
                     {
                         osl.AddImport(args[0]);
+                        oslLegacy.AddImport(args[0]);
                     }
                     else
                     {
@@ -666,6 +702,8 @@ namespace Yuki.SchemaManipulator
 
         private static ObjectSchemaLoader osl = new ObjectSchemaLoader();
         private static OS.ObjectSchemaLoaderResult oslr = null;
+        private static Yuki.ObjectSchema.ObjectSchemaLoader oslLegacy = new Yuki.ObjectSchema.ObjectSchemaLoader();
+        private static Yuki.ObjectSchema.ObjectSchemaLoaderResult oslrLegacy = null;
         private static Assembly osa = null;
         private static TreeBinaryConverter tbc = null;
         private static HashSet<String> AsyncCommands = new HashSet<String>();
@@ -690,9 +728,33 @@ namespace Yuki.SchemaManipulator
             }
             return oslr;
         }
+        private static Yuki.ObjectSchema.ObjectSchemaLoaderResult GetObjectSchemaLoaderResultLegacy()
+        {
+            if (oslrLegacy != null) { return oslrLegacy; }
+            oslrLegacy = oslLegacy.GetResult();
+            foreach (var t in oslrLegacy.Schema.Types)
+            {
+                if (t.OnClientCommand)
+                {
+                    var cc = t.ClientCommand;
+                    if (AsyncAll || AsyncCommands.Contains(cc.Name))
+                    {
+                        if (!cc.Attributes.Any(a => a.Key == "Async"))
+                        {
+                            cc.Attributes.Add(new KeyValuePair<String, List<String>>("Async", new List<String> { }));
+                        }
+                    }
+                }
+            }
+            return oslrLegacy;
+        }
         private static OS.Schema GetObjectSchema()
         {
             return GetObjectSchemaLoaderResult().Schema;
+        }
+        private static Yuki.ObjectSchema.Schema GetObjectSchemaLegacy()
+        {
+            return GetObjectSchemaLoaderResultLegacy().Schema;
         }
         private static Assembly SchemaAssembly()
         {
@@ -787,7 +849,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToVBCode(String VbCodePath, String NamespaceName, Boolean WithFirefly)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToVB(NamespaceName, WithFirefly);
             if (File.Exists(VbCodePath))
             {
@@ -821,7 +883,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCSharpBinaryCode(String CsCodePath, String NamespaceName, Boolean WithFirefly)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToCSharpBinary(NamespaceName, WithFirefly);
             if (File.Exists(CsCodePath))
             {
@@ -838,7 +900,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCSharpJsonCode(String CsCodePath, String NamespaceName)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToCSharpJson(NamespaceName);
             if (File.Exists(CsCodePath))
             {
@@ -855,7 +917,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCSharpCompatibleCode(String CsCodePath, String ClassName, String NamespaceName)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ClassName);
             if (File.Exists(CsCodePath))
             {
@@ -872,7 +934,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCSharpRetryCode(String CsCodePath, String NamespaceName)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToCSharpRetry(NamespaceName);
             if (File.Exists(CsCodePath))
             {
@@ -889,7 +951,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCSharpVersionCode(String CsCodePath, String NamespaceName, IEnumerable<String> TypeNames)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToCSharpVersion(NamespaceName, TypeNames);
             if (File.Exists(CsCodePath))
             {
@@ -906,7 +968,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToJavaCode(String JavaCodePath, String ClassName, String PackageName)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToJava(ClassName, PackageName);
             if (File.Exists(JavaCodePath))
             {
@@ -923,7 +985,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToJavaBinaryCode(String JavaCodePath, String ClassName, String PackageName)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToJavaBinary(ClassName, PackageName);
             if (File.Exists(JavaCodePath))
             {
@@ -940,7 +1002,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCppCode(String CppCodePath, String NamespaceName)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToCpp(NamespaceName);
             if (File.Exists(CppCodePath))
             {
@@ -957,7 +1019,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCppBinaryCode(String CppCodePath, String NamespaceName, Boolean WithServer, Boolean WithClient)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToCppBinary(NamespaceName, WithServer, WithClient);
             if (File.Exists(CppCodePath))
             {
@@ -974,7 +1036,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCppCompatibleCode(String CppCodePath, String ClassName, String NamespaceName)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToCppCompatible(NamespaceName, ClassName);
             if (File.Exists(CppCodePath))
             {
@@ -991,7 +1053,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCppVersionCode(String CppCodePath, String NamespaceName, IEnumerable<String> TypeNames)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToCppVersion(NamespaceName, TypeNames);
             if (File.Exists(CppCodePath))
             {
@@ -1008,7 +1070,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToHaxeCode(String HaxeCodePath, String NamespaceName)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToHaxe(NamespaceName);
             if (File.Exists(HaxeCodePath))
             {
@@ -1025,7 +1087,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToHaxeJsonCode(String HaxeCodePath, String NamespaceName)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToHaxeJson(NamespaceName);
             if (File.Exists(HaxeCodePath))
             {
@@ -1042,7 +1104,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToPythonCode(String PythonCodePath)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToPython();
             if (File.Exists(PythonCodePath))
             {
@@ -1059,7 +1121,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToPythonBinaryCode(String PythonCodePath)
         {
-            var ObjectSchema = GetObjectSchema();
+            var ObjectSchema = GetObjectSchemaLegacy();
             var Compiled = ObjectSchema.CompileToPythonBinary();
             if (File.Exists(PythonCodePath))
             {
@@ -1076,7 +1138,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToXhtml(String XhtmlDir, String Title, String CopyrightText)
         {
-            var oslr = GetObjectSchemaLoaderResult();
+            var oslr = GetObjectSchemaLoaderResultLegacy();
             var CompiledFiles = oslr.CompileToXhtml(Title, CopyrightText);
             foreach (var f in CompiledFiles)
             {
