@@ -4,7 +4,7 @@
       File:        CSharp.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C#模板
-      Version:     2018.12.02.
+      Version:     2018.12.04.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -374,7 +374,7 @@
         $$
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches(RefName => RefName == "Unit"))
+                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     ##
                         ${GetXmlComment(a.Description)}
@@ -467,14 +467,17 @@
 
 #Template ClientCommand c:ClientCommandDef
     $$
-        var Request = new RecordDef { Name = c.Name.NameConcat("Request"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-        var Reply = new TaggedUnionDef { Name = c.Name.NameConcat("Reply"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+        var RequestRef = GetSuffixedTypeRef(c.Name, c.Version, "Request");
+        var ReplyRef = GetSuffixedTypeRef(c.Name, c.Version, "Reply");
+        var Request = new RecordDef { Name = RequestRef.Name, Version = RequestRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var Reply = new TaggedUnionDef { Name = ReplyRef.Name, Version = ReplyRef.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
     ${Record(Request)}
     ${TaggedUnion(Reply)}
 
 #Template ServerCommand c:ServerCommandDef
     $$
-        var Event = new RecordDef { Name = c.Name.NameConcat("Event"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var EventRef = GetSuffixedTypeRef(c.Name, c.Version, "Event");
+        var Event = new RecordDef { Name = EventRef.Name, Version = EventRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
     ${Record(Event)}
 
 #Template IApplicationServer Commands:List<TypeDef> NamespaceName:String
