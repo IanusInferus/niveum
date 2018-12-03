@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2018.12.02.
+//  Version:     2018.12.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -1028,6 +1028,43 @@ namespace Niveum.ObjectSchema
             }
         }
 
+        public static TypeSpec GetTypeSpec(this PrimitiveDef t)
+        {
+            return TypeSpec.CreateTypeRef(new TypeRef { Name = t.Name, Version = "" });
+        }
+        public static TypeSpec GetTypeSpec(this AliasDef t)
+        {
+            return TypeSpec.CreateTypeRef(new TypeRef { Name = t.Name, Version = t.Version });
+        }
+        public static TypeSpec GetTypeSpec(this RecordDef t)
+        {
+            return TypeSpec.CreateTypeRef(new TypeRef { Name = t.Name, Version = t.Version });
+        }
+        public static TypeSpec GetTypeSpec(this TaggedUnionDef t)
+        {
+            return TypeSpec.CreateTypeRef(new TypeRef { Name = t.Name, Version = t.Version });
+        }
+        public static TypeSpec GetTypeSpec(this EnumDef t)
+        {
+            return TypeSpec.CreateTypeRef(new TypeRef { Name = t.Name, Version = t.Version });
+        }
+        public static TypeSpec GetTypeSpec(this ClientCommandDef t)
+        {
+            return TypeSpec.CreateTypeRef(new TypeRef { Name = t.Name, Version = t.Version });
+        }
+        public static TypeSpec GetTypeSpec(this ServerCommandDef t)
+        {
+            return TypeSpec.CreateTypeRef(new TypeRef { Name = t.Name, Version = t.Version });
+        }
+        public static TypeSpec GetTypeSpec(this TypeDef t)
+        {
+            return TypeSpec.CreateTypeRef(new TypeRef { Name = t.Name(), Version = t.Version() });
+        }
+        public static TypeSpec GetTypeSpec(this TypeRef t)
+        {
+            return TypeSpec.CreateTypeRef(t);
+        }
+
         public static String TypeString(this PrimitiveDef t)
         {
             return VersionedName(t);
@@ -1131,6 +1168,42 @@ namespace Niveum.ObjectSchema
         public static Boolean NameMatches(this TypeRef t, Func<String, Boolean> Predicate)
         {
             return Predicate(t.VersionedName());
+        }
+        public static Boolean NameMatches(this PrimitiveDef t, params String[] Chooses)
+        {
+            return Chooses.Any(Name => t.VersionedName() == Name);
+        }
+        public static Boolean NameMatches(this AliasDef t, params String[] Chooses)
+        {
+            return Chooses.Any(Name => t.VersionedName() == Name);
+        }
+        public static Boolean NameMatches(this RecordDef t, params String[] Chooses)
+        {
+            return Chooses.Any(Name => t.VersionedName() == Name);
+        }
+        public static Boolean NameMatches(this TaggedUnionDef t, params String[] Chooses)
+        {
+            return Chooses.Any(Name => t.VersionedName() == Name);
+        }
+        public static Boolean NameMatches(this EnumDef t, params String[] Chooses)
+        {
+            return Chooses.Any(Name => t.VersionedName() == Name);
+        }
+        public static Boolean NameMatches(this ClientCommandDef t, params String[] Chooses)
+        {
+            return Chooses.Any(Name => t.VersionedName() == Name);
+        }
+        public static Boolean NameMatches(this ServerCommandDef t, params String[] Chooses)
+        {
+            return Chooses.Any(Name => t.VersionedName() == Name);
+        }
+        public static Boolean NameMatches(this TypeDef t, params String[] Chooses)
+        {
+            return Chooses.Any(Name => t.VersionedName() == Name);
+        }
+        public static Boolean NameMatches(this TypeRef t, params String[] Chooses)
+        {
+            return Chooses.Any(Name => t.VersionedName() == Name);
         }
 
         public static List<String> NameConcat(this List<String> Name, String Suffix)

@@ -55,8 +55,10 @@
   <ItemGroup>
     <Compile Include="Generated\Common\Primitive.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharp.cs" />
+    <Compile Include="Generated\Generator\CSharp\CSharpBinary.cs" />
     <Compile Include="Generated\ObjectSchema\ObjectSchema.cs" />
     <Compile Include="Generator\CSharp\CSharp.cs" />
+    <Compile Include="Generator\CSharp\CSharpBinary.cs" />
     <Compile Include="ObjectSchema\FileParser.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaDiffGenerator.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaWriter.cs" />
@@ -70,6 +72,7 @@
   <ItemGroup>
     <None Include="Common\Primitive.tree" />
     <None Include="Generator\CSharp\CSharp.tree" />
+    <None Include="Generator\CSharp\CSharpBinary.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

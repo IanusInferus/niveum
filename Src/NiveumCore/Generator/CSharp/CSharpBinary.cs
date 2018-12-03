@@ -3,7 +3,7 @@
 //  File:        CSharpBinary.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C#二进制通讯代码生成器
-//  Version:     2017.04.22.
+//  Version:     2018.12.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -46,16 +46,28 @@ namespace Niveum.ObjectSchema.CSharpBinary
         {
             return Inner.GetEscapedStringLiteral(s);
         }
-        public String GetTypeString(TypeSpec Type)
+        public String GetTypeString(TypeSpec Type, String NamespaceName)
         {
-            return Inner.GetTypeString(Type);
+            return Inner.GetTypeString(Type, NamespaceName);
+        }
+        public TypeRef GetSuffixedTypeRef(List<String> Name, String Version, String Suffix)
+        {
+            return Inner.GetSuffixedTypeRef(Name, Version, Suffix);
+        }
+        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName)
+        {
+            return Inner.GetSuffixedTypeString(Name, Version, Suffix, NamespaceName);
+        }
+        public String GetSuffixedTypeName(List<String> Name, String Version, String Suffix, String NamespaceName)
+        {
+            return Inner.GetSuffixedTypeName(Name, Version, Suffix, NamespaceName);
         }
 
         public List<String> GetPrimitives(Schema Schema)
         {
             return Inner.GetPrimitives(Schema);
         }
-        public List<String> GetBinaryTranslatorSerializers(Schema Schema)
+        public List<String> GetBinaryTranslatorSerializers(Schema Schema, String NamespaceName)
         {
             var l = new List<String>();
 
@@ -88,9 +100,9 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 }
                 if (c.OnPrimitive)
                 {
-                    if (PrimitiveTranslators.ContainsKey(c.Primitive.Name))
+                    if (PrimitiveTranslators.ContainsKey(c.Primitive.VersionedName()))
                     {
-                        l.AddRange(PrimitiveTranslators[c.Primitive.Name]());
+                        l.AddRange(PrimitiveTranslators[c.Primitive.VersionedName()]());
                     }
                     else
                     {
@@ -99,27 +111,27 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 }
                 else if (c.OnAlias)
                 {
-                    l.AddRange(BinaryTranslator_Alias(c.Alias));
+                    l.AddRange(BinaryTranslator_Alias(c.Alias, NamespaceName));
                 }
                 else if (c.OnRecord)
                 {
-                    l.AddRange(BinaryTranslator_Record(c.Record));
+                    l.AddRange(BinaryTranslator_Record(c.Record, NamespaceName));
                 }
                 else if (c.OnTaggedUnion)
                 {
-                    l.AddRange(BinaryTranslator_TaggedUnion(c.TaggedUnion));
+                    l.AddRange(BinaryTranslator_TaggedUnion(c.TaggedUnion, NamespaceName));
                 }
                 else if (c.OnEnum)
                 {
-                    l.AddRange(BinaryTranslator_Enum(c.Enum));
+                    l.AddRange(BinaryTranslator_Enum(c.Enum, NamespaceName));
                 }
                 else if (c.OnClientCommand)
                 {
-                    l.AddRange(BinaryTranslator_ClientCommand(c.ClientCommand));
+                    l.AddRange(BinaryTranslator_ClientCommand(c.ClientCommand, NamespaceName));
                 }
                 else if (c.OnServerCommand)
                 {
-                    l.AddRange(BinaryTranslator_ServerCommand(c.ServerCommand));
+                    l.AddRange(BinaryTranslator_ServerCommand(c.ServerCommand, NamespaceName));
                 }
                 else
                 {
@@ -135,38 +147,38 @@ namespace Niveum.ObjectSchema.CSharpBinary
 
             foreach (var t in Tuples)
             {
-                l.AddRange(BinaryTranslator_Tuple(t));
+                l.AddRange(BinaryTranslator_Tuple(t, NamespaceName));
                 l.Add("");
             }
 
-            var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToList();
+            var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.NameMatches("Optional")).ToList();
             TaggedUnionDef GenericOptionalType = null;
             if (GenericOptionalTypes.Count > 0)
             {
-                GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
-                l.AddRange(BinaryTranslator_Enum("OptionalTag", "Int", "Int"));
+                GenericOptionalType = new TaggedUnionDef { Name = new List<String> { "TaggedUnion" }, Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Type" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
+                l.AddRange(BinaryTranslator_Enum("OptionalTag", "OptionalTag", "Int", "Int", NamespaceName));
                 l.Add("");
             }
             foreach (var gts in GenericTypeSpecs)
             {
-                if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Optional") && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(BinaryTranslator_Optional(gts, GenericOptionalType));
+                    l.AddRange(BinaryTranslator_Optional(gts, GenericOptionalType, NamespaceName));
                     l.Add("");
                 }
-                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("List") && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(BinaryTranslator_List(gts));
+                    l.AddRange(BinaryTranslator_List(gts, NamespaceName));
                     l.Add("");
                 }
-                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Set") && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(BinaryTranslator_Set(gts));
+                    l.AddRange(BinaryTranslator_Set(gts, NamespaceName));
                     l.Add("");
                 }
-                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gts.GenericTypeSpec.ParameterValues.Count == 2)
+                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Map") && gts.GenericTypeSpec.ParameterValues.Count == 2)
                 {
-                    l.AddRange(BinaryTranslator_Map(gts));
+                    l.AddRange(BinaryTranslator_Map(gts, NamespaceName));
                     l.Add("");
                 }
                 else
@@ -182,38 +194,41 @@ namespace Niveum.ObjectSchema.CSharpBinary
 
             return l;
         }
-        public List<String> GetComplexTypes(Schema Schema)
+
+        public List<String> GetTypes(Schema Schema, String NamespaceName)
         {
-            var l = new List<String>();
+            List<string> Primitives = GetPrimitives(Schema);
+
+            var NamespaceToClasses = new Dictionary<String, List<List<String>>>();
+            void AddClass(String ClassNamespaceName, IEnumerable<String> ClassContent)
+            {
+                if (!NamespaceToClasses.ContainsKey(ClassNamespaceName))
+                {
+                    NamespaceToClasses.Add(ClassNamespaceName, new List<List<String>>());
+                }
+                NamespaceToClasses[ClassNamespaceName].Add(ClassContent.ToList());
+            }
 
             var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
             if (Commands.Count > 0)
             {
                 var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 var Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).GetNonattributed().Hash();
-                l.AddRange(BinarySerializationServer(Hash, Commands, SchemaClosureGenerator));
-                l.Add("");
-                l.AddRange(IBinarySender());
-                l.Add("");
-                l.AddRange(BinarySerializationClient(Hash, Commands, SchemaClosureGenerator));
-                l.Add("");
+                AddClass(NamespaceName, BinarySerializationServer(Hash, Commands, SchemaClosureGenerator, NamespaceName));
+                AddClass(NamespaceName, IBinarySender());
+                AddClass(NamespaceName, BinarySerializationClient(Hash, Commands, SchemaClosureGenerator, NamespaceName));
             }
 
             if (!WithFirefly)
             {
-                l.AddRange(Streams());
-                l.Add("");
+                AddClass(NamespaceName, Streams());
             }
 
-            l.AddRange(BinaryTranslator(Schema));
-            l.Add("");
+            AddClass(NamespaceName, BinaryTranslator(Schema, NamespaceName));
 
-            if (l.Count > 0)
-            {
-                l = l.Take(l.Count - 1).ToList();
-            }
+            var Classes = NamespaceToClasses.Select(p => Inner.WrapNamespace(p.Key, p.Value.Join(new String[] { "" })));
 
-            return l;
+            return (new List<List<String>> { Primitives }).Concat(Classes).Join(new String[] { "" }).ToList();
         }
     }
 }

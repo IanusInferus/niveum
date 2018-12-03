@@ -3,7 +3,7 @@
 //  File:        CSharp.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2018.12.02.
+//  Version:     2018.12.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -111,10 +111,19 @@ namespace Niveum.ObjectSchema.CSharp
                 throw new InvalidOperationException();
             }
         }
+        public TypeRef GetSuffixedTypeRef(List<String> Name, String Version, String Suffix)
+        {
+            return new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" };
+        }
         public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName)
         {
-            var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = Name.NameConcat(Suffix), Version = Version });
+            var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" });
             return GetTypeString(ts, NamespaceName);
+        }
+        public String GetSuffixedTypeName(List<String> Name, String Version, String Suffix, String NamespaceName)
+        {
+            var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" });
+            return ts.SimpleName(NamespaceName);
         }
         public IEnumerable<String> GetXmlComment(String Description)
         {
@@ -156,7 +165,7 @@ namespace Niveum.ObjectSchema.CSharp
             }
         }
 
-        public List<String> GetTypes(Schema Schema, String NamespaceName)
+        public List<String> GetPrimitives(Schema Schema)
         {
             var Primitives = new List<String>();
             foreach (var p in Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnPrimitive).Select(c => c.Primitive))
@@ -171,6 +180,12 @@ namespace Niveum.ObjectSchema.CSharp
                     }
                 }
             }
+            return Primitives;
+        }
+
+        public List<String> GetTypes(Schema Schema, String NamespaceName)
+        {
+            List<string> Primitives = GetPrimitives(Schema);
 
             var NamespaceToClasses = new Dictionary<String, List<List<String>>>();
             void AddClass(String ClassNamespaceName, IEnumerable<String> ClassContent)

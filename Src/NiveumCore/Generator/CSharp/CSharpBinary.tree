@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板
-      Version:     2017.04.22.
+      Version:     2018.12.04.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -20,7 +20,7 @@
     System.Linq
     Firefly
 
-#Template BinarySerializationServer Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator
+#Template BinarySerializationServer Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
     public sealed class BinarySerializationServer
     {
         private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>> ClientCommands;
@@ -52,20 +52,24 @@
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandName = c.ClientCommand.Name;
-                        var Name = c.ClientCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                        var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var Name = c.ClientCommand.SimpleName();
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (WithFirefly)
                         {
                             if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                             {
                                 ##
-                                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}), (s, p, Callback, OnFailure) => s.[[${Name}]](BinaryTranslator.Deserialize<[[${Name}Request]]>(p), Reply => Callback(BinaryTranslator.Serialize(Reply)), OnFailure));
+                                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), (s, p, Callback, OnFailure) => s.[[${Name}]](BinaryTranslator.Deserialize<${RequestTypeString}>(p), Reply => Callback(BinaryTranslator.Serialize(Reply)), OnFailure));
                             }
                             else
                             {
                                 ##
-                                    ClientCommands.Add(new KeyValuePair<String, UInt32>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}), (s, p) => BinaryTranslator.Serialize(s.[[${Name}]](BinaryTranslator.Deserialize<[[${Name}Request]]>(p))));
+                                    ClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), (s, p) => BinaryTranslator.Serialize(s.[[${Name}]](BinaryTranslator.Deserialize<${RequestTypeString}>(p))));
                             }
                         }
                         else
@@ -73,12 +77,12 @@
                             if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                             {
                                 ##
-                                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}), (s, p, Callback, OnFailure) => s.[[${Name}]](BinaryTranslator.[[${Name}RequestFromBytes]](p), Reply => Callback(BinaryTranslator.[[${Name}ReplyToBytes]](Reply)), OnFailure));
+                                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), (s, p, Callback, OnFailure) => s.[[${Name}]](BinaryTranslator.[[${RequestName}FromBytes]](p), Reply => Callback(BinaryTranslator.[[${ReplyName}ToBytes]](Reply)), OnFailure));
                             }
                             else
                             {
                                 ##
-                                    ClientCommands.Add(new KeyValuePair<String, UInt32>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}), (s, p) => BinaryTranslator.[[${Name}ReplyToBytes]](s.[[${Name}]](BinaryTranslator.[[${Name}RequestFromBytes]](p))));
+                                    ClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), (s, p) => BinaryTranslator.[[${ReplyName}ToBytes]](s.[[${Name}]](BinaryTranslator.[[${RequestName}FromBytes]](p))));
                             }
                         }
                     }
@@ -122,18 +126,19 @@
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandName = c.ServerCommand.Name;
-                        var Name = c.ServerCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.SimpleName();
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (WithFirefly)
                         {
                             ##
-                                s.${Name} += e => OnServerEvent(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, BinaryTranslator.Serialize(e));
+                                s.${Name} += e => OnServerEvent(${CommandNameString}, 0x${CommandHash}, BinaryTranslator.Serialize(e));
                         }
                         else
                         {
                             ##
-                                s.${Name} += e => OnServerEvent(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, BinaryTranslator.[[${Name}EventToBytes]](e));
+                                s.${Name} += e => OnServerEvent(${CommandNameString}, 0x${CommandHash}, BinaryTranslator.[[${EventName}ToBytes]](e));
                         }
                     }
                 }
@@ -153,7 +158,7 @@
         void Send(String CommandName, UInt32 CommandHash, Byte[] Parameters);
     }
 
-#Template BinarySerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator
+#Template BinarySerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
     public sealed class BinarySerializationClient
     {
         private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>
@@ -210,36 +215,41 @@
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandName = c.ClientCommand.Name;
-                        var Name = c.ClientCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                        var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var Name = c.ClientCommand.SimpleName();
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (WithFirefly)
                         {
                             ##
-                                public void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback)
+                                public void [[${Name}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback)
                                 {
                                     var Request = BinaryTranslator.Serialize(r);
-                                    AddCallback(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, Parameters => Callback(BinaryTranslator.Deserialize<[[${Name}Reply]]>(Parameters)));
-                                    s.Send(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, Request);
+                                    AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Callback(BinaryTranslator.Deserialize<${ReplyTypeString}>(Parameters)));
+                                    s.Send(${CommandNameString}, 0x${CommandHash}, Request);
                                 }
                         }
                         else
                         {
                             ##
-                                public void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback)
+                                public void [[${Name}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback)
                                 {
-                                    var Request = BinaryTranslator.[[${Name}RequestToBytes]](r);
-                                    AddCallback(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, Parameters => Callback(BinaryTranslator.[[${Name}ReplyFromBytes]](Parameters)));
-                                    s.Send(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, Request);
+                                    var Request = BinaryTranslator.[[${RequestName}ToBytes]](r);
+                                    AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Callback(BinaryTranslator.[[${ReplyName}FromBytes]](Parameters)));
+                                    s.Send(${CommandNameString}, 0x${CommandHash}, Request);
                                 }
                         }
                     }
                     else if (c.OnServerCommand)
                     {
-                        var Name = c.ServerCommand.TypeFriendlyName();
+                        var Name = c.ServerCommand.SimpleName();
+                        var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                         ##
-                            public event Action<[[${Name}Event]]> [[${Name}]];
-                            public void [[Raise${Name}]]([[${Name}Event]] e) { if ([[${Name}]] != null) { [[${Name}]](e); } }
+                            public event Action<${EventTypeString}> [[${Name}]];
+                            public void [[Raise${Name}]](${EventTypeString} e) { if ([[${Name}]] != null) { [[${Name}]](e); } }
                     }
                 }
         }
@@ -258,18 +268,20 @@
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandName = c.ServerCommand.Name;
-                        var Name = c.ServerCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.SimpleName();
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (WithFirefly)
                         {
                             ##
-                                ServerCommands.Add(new KeyValuePair<String, UInt32>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}), Parameters => c.[[Raise${Name}]](BinaryTranslator.Deserialize<[[${Name}Event]]>(Parameters)));
+                                ServerCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), Parameters => c.[[Raise${Name}]](BinaryTranslator.Deserialize<${EventTypeString}>(Parameters)));
                         }
                         else
                         {
                             ##
-                                ServerCommands.Add(new KeyValuePair<String, UInt32>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}), Parameters => c.[[Raise${Name}]](BinaryTranslator.[[${Name}EventFromBytes]](Parameters)));
+                                ServerCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), Parameters => c.[[Raise${Name}]](BinaryTranslator.[[${EventName}FromBytes]](Parameters)));
                         }
                     }
                 }
@@ -642,7 +654,7 @@
         }
     }
 
-#Template BinaryTranslator Schema:Schema
+#Template BinaryTranslator Schema:Schema NamespaceName:String
     public static class BinaryTranslator
     {
         $$
@@ -740,7 +752,7 @@
             else
             {
                 ##
-                    ${GetBinaryTranslatorSerializers(Schema)}
+                    ${GetBinaryTranslatorSerializers(Schema, NamespaceName)}
             }
     }
 
@@ -1220,21 +1232,22 @@
         }
     }
 
-#Template BinaryTranslator_Alias a:AliasDef
+#Template BinaryTranslator_Alias a:AliasDef NamespaceName:String
     $$
-        var Name = a.TypeFriendlyName();
-        var ValueTypeFriendlyName = a.Type.TypeFriendlyName();
-    public static [[${Name}]] [[${Name}FromBinary]](IReadableStream s)
+        var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
+        var Name = a.GetTypeSpec().SimpleName(NamespaceName);
+        var ValueTypeSimpleName = a.Type.SimpleName(NamespaceName);
+    public static ${TypeString} [[${Name}FromBinary]](IReadableStream s)
     {
-        var o = new [[${Name}]]();
-        o.Value = [[${ValueTypeFriendlyName}FromBinary]](s);
+        var o = new ${TypeString}();
+        o.Value = [[${ValueTypeSimpleName}FromBinary]](s);
         return o;
     }
-    public static void [[${Name}ToBinary]](IWritableStream s, [[${Name}]] o)
+    public static void [[${Name}ToBinary]](IWritableStream s, ${TypeString} o)
     {
-        [[${ValueTypeFriendlyName}ToBinary]](s, o.Value);
+        [[${ValueTypeSimpleName}ToBinary]](s, o.Value);
     }
-    public static [[${Name}]] [[${Name}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${Name}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1243,7 +1256,7 @@
             return [[${Name}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${Name}ToBytes]]([[${Name}]] o)
+    public static Byte[] [[${Name}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1253,31 +1266,31 @@
         }
     }
 
-#Template BinaryTranslator_Record r:RecordDef
-    ${BinaryTranslator_Record(r.TypeFriendlyName(), r.Fields)}
+#Template BinaryTranslator_Record r:RecordDef NamespaceName:String
+    ${BinaryTranslator_Record(r.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(r.GetTypeSpec(), NamespaceName), r.Fields, NamespaceName)}
 
-#Template BinaryTranslator_Record Name:String Fields:List<VariableDef>
-    public static [[${Name}]] [[${Name}FromBinary]](IReadableStream s)
+#Template BinaryTranslator_Record Name:String TypeString:String Fields:List<VariableDef> NamespaceName:String
+    public static ${TypeString} [[${Name}FromBinary]](IReadableStream s)
     {
-        var o = new [[${Name}]]();
+        var o = new ${TypeString}();
         $$
             foreach (var a in Fields)
             {
                 ##
-                    o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromBinary]](s);
+                    o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
             }
         return o;
     }
-    public static void [[${Name}ToBinary]](IWritableStream s, [[${Name}]] o)
+    public static void [[${Name}ToBinary]](IWritableStream s, ${TypeString} o)
     {
         $$
             foreach (var a in Fields)
             {
                 ##
-                    [[${a.Type.TypeFriendlyName()}ToBinary]](s, o.[[${a.Name}]]);
+                    [[${a.Type.SimpleName(NamespaceName)}ToBinary]](s, o.[[${a.Name}]]);
             }
     }
-    public static [[${Name}]] [[${Name}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${Name}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1286,7 +1299,7 @@
             return [[${Name}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${Name}ToBytes]]([[${Name}]] o)
+    public static Byte[] [[${Name}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1296,43 +1309,43 @@
         }
     }
 
-#Template BinaryTranslator_TaggedUnion tu:TaggedUnionDef
-    ${BinaryTranslator_TaggedUnion(tu.TypeFriendlyName(), tu.Alternatives)}
+#Template BinaryTranslator_TaggedUnion tu:TaggedUnionDef NamespaceName:String
+    ${BinaryTranslator_TaggedUnion(tu.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(tu.GetTypeSpec(), NamespaceName), GetSuffixedTypeName(tu.Name, tu.Version, "Tag", NamespaceName), GetSuffixedTypeString(tu.Name, tu.Version, "Tag", NamespaceName), tu.Alternatives, NamespaceName)}
 
-#Template BinaryTranslator_TaggedUnion Name:String Alternatives:List<VariableDef>
-    ${BinaryTranslator_Enum(Name + "Tag", "Int", "Int")}
-    public static [[${Name}]] [[${Name}FromBinary]](IReadableStream s)
+#Template BinaryTranslator_TaggedUnion Name:String TypeString:String TagName:String TagTypeString:String Alternatives:List<VariableDef> NamespaceName:String
+    ${BinaryTranslator_Enum(TagName, TagTypeString, "Int", "Int", NamespaceName)}
+    public static ${TypeString} [[${Name}FromBinary]](IReadableStream s)
     {
-        var o = new [[${Name}]]();
-        o._Tag = [[${Name}TagFromBinary]](s);
+        var o = new ${TypeString}();
+        o._Tag = [[${TagName}FromBinary]](s);
         $$
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o._Tag == [[${Name}Tag.${a.Name}]])
+                    if (o._Tag == ${TagTypeString}.[[${a.Name}]])
                     {
-                        o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromBinary]](s);
+                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
                         return o;
                     }
             }
         throw new InvalidOperationException();
     }
-    public static void [[${Name}ToBinary]](IWritableStream s, [[${Name}]] o)
+    public static void [[${Name}ToBinary]](IWritableStream s, ${TypeString} o)
     {
-        [[${Name}TagToBinary]](s, o._Tag);
+        [[${TagName}ToBinary]](s, o._Tag);
         $$
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o._Tag == [[${Name}Tag.${a.Name}]])
+                    if (o._Tag == ${TagTypeString}.[[${a.Name}]])
                     {
-                        [[${a.Type.TypeFriendlyName()}ToBinary]](s, o.[[${a.Name}]]);
+                        [[${a.Type.SimpleName(NamespaceName)}ToBinary]](s, o.[[${a.Name}]]);
                         return;
                     }
             }
         throw new InvalidOperationException();
     }
-    public static [[${Name}]] [[${Name}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${Name}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1341,7 +1354,7 @@
             return [[${Name}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${Name}ToBytes]]([[${Name}]] o)
+    public static Byte[] [[${Name}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1351,19 +1364,19 @@
         }
     }
 
-#Template BinaryTranslator_Enum e:EnumDef
-    ${BinaryTranslator_Enum(e.TypeFriendlyName(), e.UnderlyingType.TypeFriendlyName(), GetTypeString(e.UnderlyingType))}
+#Template BinaryTranslator_Enum e:EnumDef NamespaceName:String
+    ${BinaryTranslator_Enum(e.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(e.GetTypeSpec(), NamespaceName), e.UnderlyingType.SimpleName(NamespaceName), GetTypeString(e.UnderlyingType, NamespaceName), NamespaceName)}
 
-#Template BinaryTranslator_Enum Name:String UnderlyingTypeFriendlyName:String UnderlyingType:String
-    public static [[${Name}]] [[${Name}FromBinary]](IReadableStream s)
+#Template BinaryTranslator_Enum Name:String TypeString:String UnderlyingTypeSimpleName:String UnderlyingType:String NamespaceName:String
+    public static ${TypeString} [[${Name}FromBinary]](IReadableStream s)
     {
-        return ([[${Name}]])([[${UnderlyingTypeFriendlyName}FromBinary]](s));
+        return (${TypeString})([[${UnderlyingTypeSimpleName}FromBinary]](s));
     }
-    public static void [[${Name}ToBinary]](IWritableStream s, [[${Name}]] o)
+    public static void [[${Name}ToBinary]](IWritableStream s, ${TypeString} o)
     {
-        [[${UnderlyingTypeFriendlyName}ToBinary]](s, (${UnderlyingType})(o));
+        [[${UnderlyingTypeSimpleName}ToBinary]](s, (${UnderlyingType})(o));
     }
-    public static [[${Name}]] [[${Name}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${Name}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1372,7 +1385,7 @@
             return [[${Name}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${Name}ToBytes]]([[${Name}]] o)
+    public static Byte[] [[${Name}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
@@ -1382,18 +1395,18 @@
         }
     }
 
-#Template BinaryTranslator_ClientCommand c:ClientCommandDef
-    ${BinaryTranslator_Record(c.TypeFriendlyName() + "Request", c.OutParameters)}
-    ${BinaryTranslator_TaggedUnion(c.TypeFriendlyName() + "Reply", c.InParameters)}
+#Template BinaryTranslator_ClientCommand c:ClientCommandDef NamespaceName:String
+    ${BinaryTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Request", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Request", NamespaceName), c.OutParameters, NamespaceName)}
+    ${BinaryTranslator_TaggedUnion(GetSuffixedTypeName(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeName(c.Name, c.Version, "ReplyTag", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "ReplyTag", NamespaceName), c.InParameters, NamespaceName)}
 
-#Template BinaryTranslator_ServerCommand c:ServerCommandDef
-    ${BinaryTranslator_Record(c.TypeFriendlyName() + "Event", c.OutParameters)}
+#Template BinaryTranslator_ServerCommand c:ServerCommandDef NamespaceName:String
+    ${BinaryTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName), c.OutParameters, NamespaceName)}
 
-#Template BinaryTranslator_Tuple tp:TypeSpec
+#Template BinaryTranslator_Tuple tp:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = tp.TypeFriendlyName();
-        var TypeString = GetTypeString(tp);
-    public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
+        var TypeSimpleName = tp.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(tp, NamespaceName);
+    public static ${TypeString} [[${TypeSimpleName}FromBinary]](IReadableStream s)
     {
         $$
             var ItemNames = new List<String>{};
@@ -1402,14 +1415,14 @@
                 foreach (var t in tp.Tuple)
                 {
                     ##
-                        var [[Item${k + 1}]] = [[${t.TypeFriendlyName()}FromBinary]](s);
+                        var [[Item${k + 1}]] = [[${t.SimpleName(NamespaceName)}FromBinary]](s);
                     ItemNames.Add("Item" + (k + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
                     k += 1;
                 }
             }
         return Tuple.Create(${String.Join(", ", ItemNames)});
     }
-    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, ${TypeString} t)
+    public static void [[${TypeSimpleName}ToBinary]](IWritableStream s, ${TypeString} t)
     {
         $$
             {
@@ -1417,38 +1430,37 @@
                 foreach (var t in tp.Tuple)
                 {
                     ##
-                        [[${t.TypeFriendlyName()}ToBinary]](s, t.[[Item${k + 1}]]);
+                        [[${t.SimpleName(NamespaceName)}ToBinary]](s, t.[[Item${k + 1}]]);
                     k += 1;
                 }
             }
     }
-    public static ${TypeString} [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${TypeSimpleName}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
             bas.WriteBytes(Bytes);
             bas.Position = 0;
-            return [[${TypeFriendlyName}FromBinary]](bas);
+            return [[${TypeSimpleName}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${TypeFriendlyName}ToBytes]](${TypeString} o)
+    public static Byte[] [[${TypeSimpleName}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
-            [[${TypeFriendlyName}ToBinary]](bas, o);
+            [[${TypeSimpleName}ToBinary]](bas, o);
             bas.Position = 0;
             return bas.ReadBytes(bas.Length);
         }
     }
 
-#Template BinaryTranslator_Optional o:TypeSpec GenericOptionalType:TaggedUnionDef
+#Template BinaryTranslator_Optional o:TypeSpec GenericOptionalType:TaggedUnionDef NamespaceName:String
     $$
         var ElementType = o.GenericTypeSpec.ParameterValues.Single();
         var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
-        var TypeFriendlyName = o.TypeFriendlyName();
-        var TypeString = GetTypeString(o);
-        var Name = "Optional";
-    public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
+        var SimpleName = o.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(o, NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
     {
         var o = new ${TypeString}();
         o._Tag = OptionalTagFromBinary(s);
@@ -1456,59 +1468,59 @@
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o._Tag == [[${Name}Tag.${a.Name}]])
+                    if (o._Tag == OptionalTag.[[${a.Name}]])
                     {
-                        o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromBinary]](s);
+                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
                         return o;
                     }
             }
         throw new InvalidOperationException();
     }
-    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, ${TypeString} o)
+    public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} o)
     {
         OptionalTagToBinary(s, o._Tag);
         $$
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o._Tag == [[${Name}Tag.${a.Name}]])
+                    if (o._Tag == OptionalTag.[[${a.Name}]])
                     {
-                        [[${a.Type.TypeFriendlyName()}ToBinary]](s, o.[[${a.Name}]]);
+                        [[${a.Type.SimpleName(NamespaceName)}ToBinary]](s, o.[[${a.Name}]]);
                         return;
                     }
             }
         throw new InvalidOperationException();
     }
-    public static ${TypeString} [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${SimpleName}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
             bas.WriteBytes(Bytes);
             bas.Position = 0;
-            return [[${TypeFriendlyName}FromBinary]](bas);
+            return [[${SimpleName}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${TypeFriendlyName}ToBytes]](${TypeString} o)
+    public static Byte[] [[${SimpleName}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
-            [[${TypeFriendlyName}ToBinary]](bas, o);
+            [[${SimpleName}ToBinary]](bas, o);
             bas.Position = 0;
             return bas.ReadBytes(bas.Length);
         }
     }
 
-#Template BinaryTranslator_List l:TypeSpec
+#Template BinaryTranslator_List l:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
         var ElementType = l.GenericTypeSpec.ParameterValues.Single();
-        var ElementTypeFriendlyName = ElementType.TypeFriendlyName();
-    public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
+        var ElementSimpleName = ElementType.SimpleName(NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
     {
         int Length = (int)(IntFromBinary(s));
         $$
-            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 ##
                     var l = new List<Byte>(s.ReadBytes(Length));
@@ -1519,17 +1531,17 @@
                     var l = new ${TypeString}(Length);
                     for (int k = 0; k < Length; k += 1)
                     {
-                        l.Add([[${ElementTypeFriendlyName}FromBinary]](s));
+                        l.Add([[${ElementSimpleName}FromBinary]](s));
                     }
             }
         return l;
     }
-    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, ${TypeString} l)
+    public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
         int Length = l.Count;
         IntToBinary(s, (Int)(Length));
         $$
-            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 ##
                     s.WriteBytes(l.ToArray());
@@ -1539,119 +1551,119 @@
                 ##
                     foreach (var e in l)
                     {
-                        [[${ElementTypeFriendlyName}ToBinary]](s, e);
+                        [[${ElementSimpleName}ToBinary]](s, e);
                     }
             }
     }
-    public static ${TypeString} [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${SimpleName}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
             bas.WriteBytes(Bytes);
             bas.Position = 0;
-            return [[${TypeFriendlyName}FromBinary]](bas);
+            return [[${SimpleName}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${TypeFriendlyName}ToBytes]](${TypeString} o)
+    public static Byte[] [[${SimpleName}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
-            [[${TypeFriendlyName}ToBinary]](bas, o);
+            [[${SimpleName}ToBinary]](bas, o);
             bas.Position = 0;
             return bas.ReadBytes(bas.Length);
         }
     }
 
-#Template BinaryTranslator_Set l:TypeSpec
+#Template BinaryTranslator_Set l:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var ElementTypeString = GetTypeString(l.GenericTypeSpec.ParameterValues.Single());
-        var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementTypeString = GetTypeString(l.GenericTypeSpec.ParameterValues.Single(), NamespaceName);
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
     {
         int Length = (int)(IntFromBinary(s));
         var l = new List<${ElementTypeString}>(Length);
         for (int k = 0; k < Length; k += 1)
         {
-            l.Add([[${ElementTypeFriendlyName}FromBinary]](s));
+            l.Add([[${ElementSimpleName}FromBinary]](s));
         }
         return new ${TypeString}(l);
     }
-    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, ${TypeString} l)
+    public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
         int Length = l.Count;
         IntToBinary(s, (Int)(Length));
         foreach (var e in l)
         {
-            [[${ElementTypeFriendlyName}ToBinary]](s, e);
+            [[${ElementSimpleName}ToBinary]](s, e);
         }
     }
-    public static ${TypeString} [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${SimpleName}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
             bas.WriteBytes(Bytes);
             bas.Position = 0;
-            return [[${TypeFriendlyName}FromBinary]](bas);
+            return [[${SimpleName}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${TypeFriendlyName}ToBytes]](${TypeString} o)
+    public static Byte[] [[${SimpleName}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
-            [[${TypeFriendlyName}ToBinary]](bas, o);
+            [[${SimpleName}ToBinary]](bas, o);
             bas.Position = 0;
             return bas.ReadBytes(bas.Length);
         }
     }
 
-#Template BinaryTranslator_Map l:TypeSpec
+#Template BinaryTranslator_Map l:TypeSpec NamespaceName:String
     $$
         var gp = l.GenericTypeSpec.ParameterValues;
         if (gp.Count != 2)
         {
             throw new ArgumentException();
         }
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
-        var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-    public static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream s)
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var KeySimpleName = gp[0].SimpleName(NamespaceName);
+        var ValueSimpleName = gp[1].SimpleName(NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
     {
         int Length = (Int)(IntFromBinary(s));
         var l = new ${TypeString}(Length);
         for (int k = 0; k < Length; k += 1)
         {
-            var Key = [[${KeyTypeFriendlyName}FromBinary]](s);
-            l.Add(Key, [[${ValueTypeFriendlyName}FromBinary]](s));
+            var Key = [[${KeySimpleName}FromBinary]](s);
+            l.Add(Key, [[${ValueSimpleName}FromBinary]](s));
         }
         return l;
     }
-    public static void [[${TypeFriendlyName}ToBinary]](IWritableStream s, ${TypeString} l)
+    public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
         int Length = l.Count;
         IntToBinary(s, (Int)(Length));
         foreach (var p in l)
         {
-            [[${KeyTypeFriendlyName}ToBinary]](s, p.Key);
-            [[${ValueTypeFriendlyName}ToBinary]](s, p.Value);
+            [[${KeySimpleName}ToBinary]](s, p.Key);
+            [[${ValueSimpleName}ToBinary]](s, p.Value);
         }
     }
-    public static ${TypeString} [[${TypeFriendlyName}FromBytes]](Byte[] Bytes)
+    public static ${TypeString} [[${SimpleName}FromBytes]](Byte[] Bytes)
     {
         using (var bas = new ByteArrayStream())
         {
             bas.WriteBytes(Bytes);
             bas.Position = 0;
-            return [[${TypeFriendlyName}FromBinary]](bas);
+            return [[${SimpleName}FromBinary]](bas);
         }
     }
-    public static Byte[] [[${TypeFriendlyName}ToBytes]](${TypeString} o)
+    public static Byte[] [[${SimpleName}ToBytes]](${TypeString} o)
     {
         using (var bas = new ByteArrayStream())
         {
-            [[${TypeFriendlyName}ToBinary]](bas, o);
+            [[${SimpleName}ToBinary]](bas, o);
             bas.Position = 0;
             return bas.ReadBytes(bas.Length);
         }
@@ -1678,24 +1690,6 @@
                 using Firefly.TextEncoding;
         }
     using ${Schema.Imports};
-    $$
-        var Primitives = GetPrimitives(Schema);
-    ${Primitives}
-
-    $$
-        var ComplexTypes = GetComplexTypes(Schema);
-        if (NamespaceName == "")
-        {
-            ##
-                ${ComplexTypes}
-        }
-        else
-        {
-            ##
-                namespace [[${NamespaceName}]]
-                {
-                    ${ComplexTypes}
-                }
-        }
+    ${GetTypes(Schema, NamespaceName)}
 
 $End

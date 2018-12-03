@@ -375,7 +375,7 @@ namespace Niveum.ObjectSchema.CSharp
             yield return "";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches(RefName => RefName == "Unit"))
+                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                     {
@@ -529,8 +529,10 @@ namespace Niveum.ObjectSchema.CSharp
         }
         public IEnumerable<String> ClientCommand(ClientCommandDef c)
         {
-            var Request = new RecordDef { Name = c.Name.NameConcat("Request"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-            var Reply = new TaggedUnionDef { Name = c.Name.NameConcat("Reply"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+            var RequestRef = GetSuffixedTypeRef(c.Name, c.Version, "Request");
+            var ReplyRef = GetSuffixedTypeRef(c.Name, c.Version, "Reply");
+            var Request = new RecordDef { Name = RequestRef.Name, Version = RequestRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            var Reply = new TaggedUnionDef { Name = ReplyRef.Name, Version = ReplyRef.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
             foreach (var _Line in Combine(Begin(), Record(Request)))
             {
                 yield return _Line;
@@ -542,7 +544,8 @@ namespace Niveum.ObjectSchema.CSharp
         }
         public IEnumerable<String> ServerCommand(ServerCommandDef c)
         {
-            var Event = new RecordDef { Name = c.Name.NameConcat("Event"), Version = c.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            var EventRef = GetSuffixedTypeRef(c.Name, c.Version, "Event");
+            var Event = new RecordDef { Name = EventRef.Name, Version = EventRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
             foreach (var _Line in Combine(Begin(), Record(Event)))
             {
                 yield return _Line;
