@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2018.12.04.
+//  Version:     2018.12.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,6 +17,7 @@ using Firefly.Texting.TreeFormat;
 using Niveum.ObjectSchema;
 using Niveum.ObjectSchema.CSharp;
 using Niveum.ObjectSchema.CSharpBinary;
+using Niveum.ObjectSchema.CSharpJson;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -28,7 +29,6 @@ using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.CppCompatible;
 using Yuki.ObjectSchema.CppVersion;
 using Yuki.ObjectSchema.CSharpCompatible;
-using Yuki.ObjectSchema.CSharpJson;
 using Yuki.ObjectSchema.CSharpRetry;
 using Yuki.ObjectSchema.CSharpVersion;
 using Yuki.ObjectSchema.Haxe;
@@ -900,7 +900,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCSharpJsonCode(String CsCodePath, String NamespaceName)
         {
-            var ObjectSchema = GetObjectSchemaLegacy();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCSharpJson(NamespaceName);
             if (File.Exists(CsCodePath))
             {
