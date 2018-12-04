@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板
-      Version:     2018.09.19.
+      Version:     2018.12.05.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -20,7 +20,7 @@
     System.Linq
     Firefly
 
-#Template JsonSerializationServer Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator
+#Template JsonSerializationServer Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
     public sealed class JsonSerializationServer
     {
         private Dictionary<String, Func<IApplicationServer, String, String>> ClientCommandsWithoutHash;
@@ -56,31 +56,35 @@
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandName = c.ClientCommand.Name;
-                        var Name = c.ClientCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                        var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var Name = c.ClientCommand.SimpleName();
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (c.ClientCommand.Version == "")
                         {
                             if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                             {
                                 ##
-                                    AsyncClientCommandsWithoutHash.Add(${GetEscapedStringLiteral(CommandName)}, (s, p, Callback, OnFailure) => s.[[${Name}]](JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)), Reply => Callback(JsonTranslator.[[${Name}ReplyToJson]](Reply).ToString(Formatting.None)), OnFailure));
+                                    AsyncClientCommandsWithoutHash.Add(${CommandNameString}, (s, p, Callback, OnFailure) => s.[[${Name}]](JsonTranslator.[[${RequestName}FromJson]](JToken.Parse(p)), Reply => Callback(JsonTranslator.[[${ReplyName}ToJson]](Reply).ToString(Formatting.None)), OnFailure));
                             }
                             else
                             {
                                 ##
-                                    ClientCommandsWithoutHash.Add(${GetEscapedStringLiteral(CommandName)}, (s, p) => JsonTranslator.[[${Name}ReplyToJson]](s.[[${Name}]](JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
+                                    ClientCommandsWithoutHash.Add(${CommandNameString}, (s, p) => JsonTranslator.[[${ReplyName}ToJson]](s.[[${Name}]](JsonTranslator.[[${RequestName}FromJson]](JToken.Parse(p)))).ToString(Formatting.None));
                             }
                         }
                         if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
                             ##
-                                AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}), (s, p, Callback, OnFailure) => s.[[${Name}]](JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)), Reply => Callback(JsonTranslator.[[${Name}ReplyToJson]](Reply).ToString(Formatting.None)), OnFailure));
+                                AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), (s, p, Callback, OnFailure) => s.[[${Name}]](JsonTranslator.[[${RequestName}FromJson]](JToken.Parse(p)), Reply => Callback(JsonTranslator.[[${ReplyName}ToJson]](Reply).ToString(Formatting.None)), OnFailure));
                         }
                         else
                         {
                             ##
-                                ClientCommands.Add(new KeyValuePair<String, UInt32>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}), (s, p) => JsonTranslator.[[${Name}ReplyToJson]](s.[[${Name}]](JsonTranslator.[[${Name}RequestFromJson]](JToken.Parse(p)))).ToString(Formatting.None));
+                                ClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), (s, p) => JsonTranslator.[[${ReplyName}ToJson]](s.[[${Name}]](JsonTranslator.[[${RequestName}FromJson]](JToken.Parse(p)))).ToString(Formatting.None));
                         }
                     }
                 }
@@ -143,11 +147,12 @@
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandName = c.ServerCommand.Name;
-                        var Name = c.ServerCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.SimpleName();
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
-                            s.${Name} += e => OnServerEvent(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, JsonTranslator.[[${Name}EventToJson]](e).ToString(Formatting.None));
+                            s.${Name} += e => OnServerEvent(${CommandNameString}, 0x${CommandHash}, JsonTranslator.[[${EventName}ToJson]](e).ToString(Formatting.None));
                     }
                 }
         }
@@ -166,7 +171,7 @@
         void Send(String CommandName, UInt32 CommandHash, String Parameters);
     }
 
-#Template JsonSerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator
+#Template JsonSerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
     public sealed class JsonSerializationClient
     {
         private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>
@@ -223,23 +228,28 @@
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandName = c.ClientCommand.Name;
-                        var Name = c.ClientCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                        var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var Name = c.ClientCommand.SimpleName();
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
-                            public void [[${Name}]]([[${Name}Request]] r, Action<[[${Name}Reply]]> Callback)
+                            public void [[${Name}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback)
                             {
-                                var Request = JsonTranslator.[[${Name}RequestToJson]](r).ToString(Formatting.None);
-                                AddCallback(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, Parameters => Callback(JsonTranslator.[[${Name}ReplyFromJson]](JToken.Parse(Parameters))));
-                                s.Send(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, Request);
+                                var Request = JsonTranslator.[[${RequestName}ToJson]](r).ToString(Formatting.None);
+                                AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Callback(JsonTranslator.[[${ReplyName}FromJson]](JToken.Parse(Parameters))));
+                                s.Send(${CommandNameString}, 0x${CommandHash}, Request);
                             }
                     }
                     else if (c.OnServerCommand)
                     {
-                        var Name = c.ServerCommand.TypeFriendlyName();
+                        var Name = c.ServerCommand.SimpleName();
+                        var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                         ##
-                            public event Action<[[${Name}Event]]> [[${Name}]];
-                            public void [[Raise${Name}]]([[${Name}Event]] e) { if ([[${Name}]] != null) { [[${Name}]](e); } }
+                            public event Action<${EventTypeString}> [[${Name}]];
+                            public void [[Raise${Name}]](${EventTypeString} e) { if ([[${Name}]] != null) { [[${Name}]](e); } }
                     }
                 }
         }
@@ -258,11 +268,13 @@
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandName = c.ServerCommand.Name;
-                        var Name = c.ServerCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.SimpleName();
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
-                            ServerCommands.Add(new KeyValuePair<String, UInt32>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}), Parameters => c.[[Raise${Name}]](JsonTranslator.[[${Name}EventFromJson]](JToken.Parse(Parameters))));
+                            ServerCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), Parameters => c.[[Raise${Name}]](JsonTranslator.[[${EventName}FromJson]](JToken.Parse(Parameters))));
                     }
                 }
         }
@@ -304,7 +316,7 @@
         }
     }
 
-#Template JsonLogAspectWrapper Commands:List<TypeDef>
+#Template JsonLogAspectWrapper Commands:List<TypeDef> NamespaceName:String
     public sealed class JsonLogAspectWrapper : IApplicationServer
     {
         private IApplicationServer Inner;
@@ -315,11 +327,14 @@
             $$
                 foreach (var c in Commands.Where(c => c.OnServerCommand))
                 {
-                    var Name = c.TypeFriendlyName();
+                    var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var Name = c.ServerCommand.SimpleName();
                     ##
                         Inner.[[${Name}]] += e =>
                         {
-                            if (ServerCommand != null) { ServerCommand(${GetEscapedStringLiteral(Name)}, JsonTranslator.[[${Name}EventToJson]](e).ToString(Formatting.None)); }
+                            if (ServerCommand != null) { ServerCommand(${CommandNameString}, JsonTranslator.[[${EventName}ToJson]](e).ToString(Formatting.None)); }
                             if ([[${Name}]] != null) { [[${Name}]](e); }
                         };
                 }
@@ -334,16 +349,21 @@
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var Name = c.ClientCommand.SimpleName();
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
                         ##
-                            public void [[${Name}]]([[${Name}Request]] Request, Action<[[${Name}Reply]]> Callback, Action<Exception> OnFailure)
+                            public void [[${Name}]](${RequestTypeString} Request, Action<${ReplyTypeString}> Callback, Action<Exception> OnFailure)
                             {
-                                if (ClientCommandIn != null) { ClientCommandIn(${GetEscapedStringLiteral(Name)}, JsonTranslator.[[${Name}RequestToJson]](Request).ToString(Formatting.None)); }
-                                Action<[[${Name}Reply]]> CallbackInner = Reply =>
+                                if (ClientCommandIn != null) { ClientCommandIn(${CommandNameString}, JsonTranslator.[[${RequestName}ToJson]](Request).ToString(Formatting.None)); }
+                                Action<${ReplyTypeString}> CallbackInner = Reply =>
                                 {
-                                    if (ClientCommandOut != null) { ClientCommandOut(${GetEscapedStringLiteral(Name)}, JsonTranslator.[[${Name}ReplyToJson]](Reply).ToString(Formatting.None)); }
+                                    if (ClientCommandOut != null) { ClientCommandOut(${CommandNameString}, JsonTranslator.[[${ReplyName}ToJson]](Reply).ToString(Formatting.None)); }
                                     Callback(Reply);
                                 };
                                 Inner.[[${Name}]](Request, CallbackInner, OnFailure);
@@ -352,28 +372,29 @@
                     else
                     {
                         ##
-                            public [[${Name}Reply]] [[${Name}]]([[${Name}Request]] Request)
+                            public ${ReplyTypeString} [[${Name}]](${RequestTypeString} Request)
                             {
-                                if (ClientCommandIn != null) { ClientCommandIn(${GetEscapedStringLiteral(Name)}, JsonTranslator.[[${Name}RequestToJson]](Request).ToString(Formatting.None)); }
+                                if (ClientCommandIn != null) { ClientCommandIn(${CommandNameString}, JsonTranslator.[[${RequestName}ToJson]](Request).ToString(Formatting.None)); }
                                 var Reply = Inner.[[${Name}]](Request);
-                                if (ClientCommandOut != null) { ClientCommandOut(${GetEscapedStringLiteral(Name)}, JsonTranslator.[[${Name}ReplyToJson]](Reply).ToString(Formatting.None)); }
+                                if (ClientCommandOut != null) { ClientCommandOut(${CommandNameString}, JsonTranslator.[[${ReplyName}ToJson]](Reply).ToString(Formatting.None)); }
                                 return Reply;
                             }
                     }
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var Name = c.ServerCommand.SimpleName();
                     ##
-                        public event Action<[[${Name}Event]]> [[${Name}]];
+                        public event Action<${EventTypeString}> [[${Name}]];
                 }
             }
     }
 
-#Template JsonTranslator Schema:Schema
+#Template JsonTranslator Schema:Schema NamespaceName:String
     public static class JsonTranslator
     {
-        ${GetJsonTranslatorSerializers(Schema)}
+        ${GetJsonTranslatorSerializers(Schema, NamespaceName)}
     }
 
 #Template JsonTranslator_Primitive_Unit
@@ -576,158 +597,56 @@
         throw new NotSupportedException();
     }
 
-#Template JsonTranslator_Alias a:AliasDef
+#Template JsonTranslator_Alias a:AliasDef NamespaceName:String
     $$
-        var Name = a.TypeFriendlyName();
-        var ValueTypeFriendlyName = a.Type.TypeFriendlyName();
-    public static [[${Name}]] [[${Name}FromJson]](JToken j)
+        var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
+        var Name = a.GetTypeSpec().SimpleName(NamespaceName);
+        var ValueTypeSimpleName = a.Type.SimpleName(NamespaceName);
+    public static ${TypeString} [[${Name}FromJson]](JToken j)
     {
-        return new [[${Name}]] { Value = [[${ValueTypeFriendlyName}FromJson]](j) };
+        return new ${TypeString} { Value = [[${ValueTypeSimpleName}FromJson]](j) };
     }
-    public static JToken [[${Name}ToJson]]([[${Name}]] o)
+    public static JToken [[${Name}ToJson]](${TypeString} o)
     {
-        return [[${ValueTypeFriendlyName}ToJson]](o.Value);
+        return [[${ValueTypeSimpleName}ToJson]](o.Value);
     }
 
-#Template JsonTranslator_Record r:RecordDef
-    ${JsonTranslator_Record(r.TypeFriendlyName(), r.Fields)}
+#Template JsonTranslator_Record r:RecordDef NamespaceName:String
+    ${JsonTranslator_Record(r.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(r.GetTypeSpec(), NamespaceName), r.Fields, NamespaceName)}
 
-#Template JsonTranslator_Record Name:String Fields:List<VariableDef>
-    public static [[${Name}]] [[${Name}FromJson]](JToken j)
+#Template JsonTranslator_Record Name:String TypeString:String Fields:List<VariableDef> NamespaceName:String
+    public static ${TypeString} [[${Name}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
         var jo = j as JObject;
         if (jo == null) { throw new InvalidOperationException(); }
-        var o = new [[${Name}]]();
+        var o = new ${TypeString}();
         $$
             foreach (var a in Fields)
             {
                 ##
-                    o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
+                    o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
             }
         return o;
     }
-    public static JObject [[${Name}ToJson]]([[${Name}]] o)
+    public static JObject [[${Name}ToJson]](${TypeString} o)
     {
         var jo = new JObject();
         $$
             foreach (var a in Fields)
             {
                 ##
-                    jo.Add(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${a.Type.TypeFriendlyName()}ToJson]](o.[[${a.Name}]]));
+                    jo.Add(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${a.Type.SimpleName(NamespaceName)}ToJson]](o.[[${a.Name}]]));
             }
         return jo;
     }
 
-#Template JsonTranslator_TaggedUnion tu:TaggedUnionDef
-    ${JsonTranslator_TaggedUnion(tu.TypeFriendlyName(), tu.Alternatives)}
+#Template JsonTranslator_TaggedUnion tu:TaggedUnionDef NamespaceName:String
+    ${JsonTranslator_TaggedUnion(tu.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(tu.GetTypeSpec(), NamespaceName), GetSuffixedTypeName(tu.Name, tu.Version, "Tag", NamespaceName), GetSuffixedTypeString(tu.Name, tu.Version, "Tag", NamespaceName), tu.Alternatives, NamespaceName)}
 
-#Template JsonTranslator_TaggedUnion Name:String Alternatives:List<VariableDef>
-    ${JsonTranslator_Enum(Name + "Tag")}
-    public static [[${Name}]] [[${Name}FromJson]](JToken j)
-    {
-        if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
-        var jo = j as JObject;
-        if (jo == null) { throw new InvalidOperationException(); }
-        var o = new [[${Name}]]();
-        var d = (IDictionary<string, JToken>)(jo);
-        $$
-            foreach (var a in Alternatives)
-            {
-                ##
-                    if (d.ContainsKey(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}))
-                    {
-                        o._Tag = [[${Name}Tag.${a.Name}]];
-                        o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
-                        return o;
-                    }
-            }
-        throw new InvalidOperationException();
-    }
-    public static JObject [[${Name}ToJson]]([[${Name}]] o)
-    {
-        var jo = new JObject();
-        $$
-            foreach (var a in Alternatives)
-            {
-                ##
-                    if (o._Tag == [[${Name}Tag.${a.Name}]])
-                    {
-                        jo.Add(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${a.Type.TypeFriendlyName()}ToJson]](o.[[${a.Name}]]));
-                        return jo;
-                    }
-            }
-        throw new InvalidOperationException();
-    }
-
-#Template JsonTranslator_Enum e:EnumDef
-    ${JsonTranslator_Enum(e.TypeFriendlyName())}
-
-#Template JsonTranslator_Enum Name:String
-    public static [[${Name}]] [[${Name}FromJson]](JToken j)
-    {
-        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
-        var jv = j as JValue;
-        return ([[${Name}]])(Convert.ToInt64(jv.Value));
-    }
-    public static JValue [[${Name}ToJson]]([[${Name}]] o)
-    {
-        return new JValue(Convert.ToInt64(o));
-    }
-
-#Template JsonTranslator_ClientCommand c:ClientCommandDef
-    ${JsonTranslator_Record(c.TypeFriendlyName() + "Request", c.OutParameters)}
-    ${JsonTranslator_TaggedUnion(c.TypeFriendlyName() + "Reply", c.InParameters)}
-
-#Template JsonTranslator_ServerCommand c:ServerCommandDef
-    ${JsonTranslator_Record(c.TypeFriendlyName() + "Event", c.OutParameters)}
-
-#Template JsonTranslator_Tuple tp:TypeSpec
-    $$
-        var TypeFriendlyName = tp.TypeFriendlyName();
-        var TypeString = GetTypeString(tp);
-    public static ${TypeString} [[${TypeFriendlyName}FromJson]](JToken j)
-    {
-        if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
-        var ja = j as JArray;
-        $$
-            var ItemNames = new List<String>{};
-            {
-                int k = 0;
-                foreach (var t in tp.Tuple)
-                {
-                    ##
-                        var [[Item${k + 1}]] = [[${t.TypeFriendlyName()}FromJson]](ja[${k}]);
-                    ItemNames.Add("Item" + (k + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
-                    k += 1;
-                }
-            }
-        return Tuple.Create(${String.Join(", ", ItemNames)});
-    }
-    public static JArray [[${TypeFriendlyName}ToJson]](${TypeString} t)
-    {
-        var ja = new JArray();
-        $$
-            {
-                int k = 0;
-                foreach (var t in tp.Tuple)
-                {
-                    ##
-                        ja.Add([[${t.TypeFriendlyName()}ToJson]](t.[[Item${k + 1}]]));
-                    k += 1;
-                }
-            }
-        return ja;
-    }
-
-#Template JsonTranslator_Optional o:TypeSpec GenericOptionalType:TaggedUnionDef
-    $$
-        var ElementType = o.GenericTypeSpec.ParameterValues.Single();
-        var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
-        var TypeFriendlyName = o.TypeFriendlyName();
-        var TypeString = GetTypeString(o);
-        var Name = "Optional";
-    public static ${TypeString} [[${TypeFriendlyName}FromJson]](JToken j)
+#Template JsonTranslator_TaggedUnion Name:String TypeString:String TagName:String TagTypeString:String Alternatives:List<VariableDef> NamespaceName:String
+    ${JsonTranslator_Enum(TagName, TagTypeString, NamespaceName)}
+    public static ${TypeString} [[${Name}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
         var jo = j as JObject;
@@ -740,113 +659,215 @@
                 ##
                     if (d.ContainsKey(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}))
                     {
-                        o._Tag = [[${Name}Tag.${a.Name}]];
-                        o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
+                        o._Tag = ${TagTypeString}.[[${a.Name}]];
+                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
                         return o;
                     }
             }
         throw new InvalidOperationException();
     }
-    public static JObject [[${TypeFriendlyName}ToJson]](${TypeString} o)
+    public static JObject [[${Name}ToJson]](${TypeString} o)
     {
         var jo = new JObject();
         $$
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o._Tag == [[${Name}Tag.${a.Name}]])
+                    if (o._Tag == ${TagTypeString}.[[${a.Name}]])
                     {
-                        jo.Add(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${a.Type.TypeFriendlyName()}ToJson]](o.[[${a.Name}]]));
+                        jo.Add(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${a.Type.SimpleName(NamespaceName)}ToJson]](o.[[${a.Name}]]));
                         return jo;
                     }
             }
         throw new InvalidOperationException();
     }
 
-#Template JsonTranslator_List l:TypeSpec
+#Template JsonTranslator_Enum e:EnumDef NamespaceName:String
+    ${JsonTranslator_Enum(e.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(e.GetTypeSpec(), NamespaceName), NamespaceName)}
+
+#Template JsonTranslator_Enum Name:String TypeString:String NamespaceName:String
+    public static ${TypeString} [[${Name}FromJson]](JToken j)
+    {
+        if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
+        var jv = j as JValue;
+        return (${TypeString})(Convert.ToInt64(jv.Value));
+    }
+    public static JValue [[${Name}ToJson]](${TypeString} o)
+    {
+        return new JValue(Convert.ToInt64(o));
+    }
+
+#Template JsonTranslator_ClientCommand c:ClientCommandDef NamespaceName:String
+    ${JsonTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Request", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Request", NamespaceName), c.OutParameters, NamespaceName)}
+    ${JsonTranslator_TaggedUnion(GetSuffixedTypeName(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeName(c.Name, c.Version, "ReplyTag", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "ReplyTag", NamespaceName), c.InParameters, NamespaceName)}
+
+#Template JsonTranslator_ServerCommand c:ServerCommandDef NamespaceName:String
+    ${JsonTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName), c.OutParameters, NamespaceName)}
+
+#Template JsonTranslator_Tuple tp:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    public static ${TypeString} [[${TypeFriendlyName}FromJson]](JToken j)
+        var TypeSimpleName = tp.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(tp, NamespaceName);
+    public static ${TypeString} [[${TypeSimpleName}FromJson]](JToken j)
+    {
+        if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
+        var ja = j as JArray;
+        $$
+            var ItemNames = new List<String>{};
+            {
+                int k = 0;
+                foreach (var t in tp.Tuple)
+                {
+                    ##
+                        var [[Item${k + 1}]] = [[${t.SimpleName(NamespaceName)}FromJson]](ja[${k}]);
+                    ItemNames.Add("Item" + (k + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    k += 1;
+                }
+            }
+        return Tuple.Create(${String.Join(", ", ItemNames)});
+    }
+    public static JArray [[${TypeSimpleName}ToJson]](${TypeString} t)
+    {
+        var ja = new JArray();
+        $$
+            {
+                int k = 0;
+                foreach (var t in tp.Tuple)
+                {
+                    ##
+                        ja.Add([[${t.SimpleName(NamespaceName)}ToJson]](t.[[Item${k + 1}]]));
+                    k += 1;
+                }
+            }
+        return ja;
+    }
+
+#Template JsonTranslator_Optional o:TypeSpec GenericOptionalType:TaggedUnionDef NamespaceName:String
+    $$
+        var ElementType = o.GenericTypeSpec.ParameterValues.Single();
+        var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
+        var TypeSimpleName = o.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(o, NamespaceName);
+    public static ${TypeString} [[${TypeSimpleName}FromJson]](JToken j)
+    {
+        if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
+        var jo = j as JObject;
+        if (jo == null) { throw new InvalidOperationException(); }
+        var o = new ${TypeString}();
+        var d = (IDictionary<string, JToken>)(jo);
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    if (d.ContainsKey(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}))
+                    {
+                        o._Tag = OptionalTag.[[${a.Name}]];
+                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
+                        return o;
+                    }
+            }
+        throw new InvalidOperationException();
+    }
+    public static JObject [[${TypeSimpleName}ToJson]](${TypeString} o)
+    {
+        var jo = new JObject();
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    if (o._Tag == OptionalTag.[[${a.Name}]])
+                    {
+                        jo.Add(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${a.Type.SimpleName(NamespaceName)}ToJson]](o.[[${a.Name}]]));
+                        return jo;
+                    }
+            }
+        throw new InvalidOperationException();
+    }
+
+#Template JsonTranslator_List l:TypeSpec NamespaceName:String
+    $$
+        var TypeSimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementTypeSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    public static ${TypeString} [[${TypeSimpleName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
         var a = new ${TypeString}();
         foreach (var e in ja.Children())
         {
-            a.Add([[${ElementTypeFriendlyName}FromJson]](e));
+            a.Add([[${ElementTypeSimpleName}FromJson]](e));
         }
         return a;
     }
-    public static JArray [[${TypeFriendlyName}ToJson]](${TypeString} c)
+    public static JArray [[${TypeSimpleName}ToJson]](${TypeString} c)
     {
         var ja = new JArray();
         foreach (var e in c)
         {
-            ja.Add([[${ElementTypeFriendlyName}ToJson]](e));
+            ja.Add([[${ElementTypeSimpleName}ToJson]](e));
         }
         return ja;
     }
 
-#Template JsonTranslator_Set l:TypeSpec
+#Template JsonTranslator_Set l:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    public static ${TypeString} [[${TypeFriendlyName}FromJson]](JToken j)
+        var TypeSimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementTypeSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    public static ${TypeString} [[${TypeSimpleName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
         var a = new ${TypeString}();
         foreach (var e in ja.Children())
         {
-            a.Add([[${ElementTypeFriendlyName}FromJson]](e));
+            a.Add([[${ElementTypeSimpleName}FromJson]](e));
         }
         return a;
     }
-    public static JArray [[${TypeFriendlyName}ToJson]](${TypeString} c)
+    public static JArray [[${TypeSimpleName}ToJson]](${TypeString} c)
     {
         var ja = new JArray();
         foreach (var e in c)
         {
-            ja.Add([[${ElementTypeFriendlyName}ToJson]](e));
+            ja.Add([[${ElementTypeSimpleName}ToJson]](e));
         }
         return ja;
     }
 
-#Template JsonTranslator_Map l:TypeSpec
+#Template JsonTranslator_Map l:TypeSpec NamespaceName:String
     $$
         var gp = l.GenericTypeSpec.ParameterValues;
         if (gp.Count != 2)
         {
             throw new ArgumentException();
         }
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
-        var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-    public static ${TypeString} [[${TypeFriendlyName}FromJson]](JToken j)
+        var TypeSimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var KeyTypeSimpleName = gp[0].SimpleName(NamespaceName);
+        var ValueTypeSimpleName = gp[1].SimpleName(NamespaceName);
+    public static ${TypeString} [[${TypeSimpleName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
         var a = new ${TypeString}();
         foreach (var e in ja.Children().OfType<JObject>())
         {
-            var Key = [[${KeyTypeFriendlyName}FromJson]](e["key"]);
-            var Value = [[${ValueTypeFriendlyName}FromJson]](e["value"]);
+            var Key = [[${KeyTypeSimpleName}FromJson]](e["key"]);
+            var Value = [[${ValueTypeSimpleName}FromJson]](e["value"]);
             a.Add(Key, Value);
         }
         return a;
     }
-    public static JArray [[${TypeFriendlyName}ToJson]](${TypeString} c)
+    public static JArray [[${TypeSimpleName}ToJson]](${TypeString} c)
     {
         var ja = new JArray();
         foreach (var e in c)
         {
             var je = new JObject();
-            je.Add("key", [[${KeyTypeFriendlyName}ToJson]](e.Key));
-            je.Add("value", [[${ValueTypeFriendlyName}ToJson]](e.Value));
+            je.Add("key", [[${KeyTypeSimpleName}ToJson]](e.Key));
+            je.Add("value", [[${ValueTypeSimpleName}ToJson]](e.Value));
             ja.Add(je);
         }
         return ja;
@@ -868,24 +889,6 @@
     using System.Linq;
     using Niveum.Json;
     using ${Schema.Imports};
-    $$
-        var Primitives = GetPrimitives(Schema);
-    ${Primitives}
-
-    $$
-        var ComplexTypes = GetComplexTypes(Schema);
-        if (NamespaceName == "")
-        {
-            ##
-                ${ComplexTypes}
-        }
-        else
-        {
-            ##
-                namespace [[${NamespaceName}]]
-                {
-                    ${ComplexTypes}
-                }
-        }
+    ${GetTypes(Schema, NamespaceName)}
 
 $End
