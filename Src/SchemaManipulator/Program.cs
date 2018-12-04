@@ -120,7 +120,7 @@ namespace Yuki.SchemaManipulator
                     if (args.Length == 1)
                     {
                         var CookedObjectSchemaPath = args[0];
-                        var s = GetObjectSchemaLegacy();
+                        var s = GetObjectSchema();
                         var ts = new TreeSerializer();
                         var t = ts.Write(s);
                         TreeFile.WriteDirect(CookedObjectSchemaPath, t);
