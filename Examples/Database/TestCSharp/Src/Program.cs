@@ -1,7 +1,7 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cs
-//  Location:    Yuki.Examples <Visual C#>
+//  Location:    Niveum.Examples <Visual C#>
 //  Description: 数据库示例程序
 //  Version:     2015.08.17.
 //  Author:      F.R.C.

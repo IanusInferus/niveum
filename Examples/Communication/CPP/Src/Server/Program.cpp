@@ -1,7 +1,7 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cpp
-//  Location:    Yuki.Examples <C++ 2011>
+//  Location:    Niveum.Examples <C++ 2011>
 //  Description: 聊天服务器
 //  Version:     2015.08.31.
 //  Author:      F.R.C.
