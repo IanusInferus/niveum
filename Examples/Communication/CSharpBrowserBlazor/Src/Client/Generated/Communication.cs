@@ -214,90 +214,6 @@ namespace Communication
         public String Content;
     }
 
-    public interface IApplicationServer
-    {
-        /// <summary>关闭服务器</summary>
-        ShutdownReply Shutdown(ShutdownRequest r);
-        /// <summary>错误</summary>
-        event Action<ErrorEvent> Error;
-        /// <summary>错误命令</summary>
-        event Action<ErrorCommandEvent> ErrorCommand;
-        /// <summary>服务器时间</summary>
-        ServerTimeReply ServerTime(ServerTimeRequest r);
-        /// <summary>退出</summary>
-        QuitReply Quit(QuitRequest r);
-        /// <summary>检测类型结构版本</summary>
-        CheckSchemaVersionReply CheckSchemaVersion(CheckSchemaVersionRequest r);
-        /// <summary>服务器关闭</summary>
-        event Action<ServerShutdownEvent> ServerShutdown;
-        /// <summary>发送消息</summary>
-        SendMessageReply SendMessage(SendMessageRequest r);
-        /// <summary>接收到消息</summary>
-        event Action<MessageReceivedEvent> MessageReceived;
-        /// <summary>加法</summary>
-        CommunicationPerformance.TestAddReply TestAdd(CommunicationPerformance.TestAddRequest r);
-        /// <summary>两百万次浮点乘法</summary>
-        CommunicationPerformance.TestMultiplyReply TestMultiply(CommunicationPerformance.TestMultiplyRequest r);
-        /// <summary>文本原样返回</summary>
-        CommunicationPerformance.TestTextReply TestText(CommunicationPerformance.TestTextRequest r);
-        /// <summary>群发消息</summary>
-        CommunicationPerformance.TestMessageReply TestMessage(CommunicationPerformance.TestMessageRequest r);
-        /// <summary>接到群发消息</summary>
-        event Action<CommunicationPerformance.TestMessageReceivedEvent> TestMessageReceived;
-    }
-
-    public interface IApplicationClient
-    {
-        UInt64 Hash { get; }
-        void DequeueCallback(String CommandName);
-
-        /// <summary>关闭服务器</summary>
-        void Shutdown(ShutdownRequest r, Action<ShutdownReply> Callback);
-        /// <summary>错误</summary>
-        event Action<ErrorEvent> Error;
-        /// <summary>错误命令</summary>
-        event Action<ErrorCommandEvent> ErrorCommand;
-        /// <summary>服务器时间</summary>
-        void ServerTime(ServerTimeRequest r, Action<ServerTimeReply> Callback);
-        /// <summary>退出</summary>
-        void Quit(QuitRequest r, Action<QuitReply> Callback);
-        /// <summary>检测类型结构版本</summary>
-        void CheckSchemaVersion(CheckSchemaVersionRequest r, Action<CheckSchemaVersionReply> Callback);
-        /// <summary>服务器关闭</summary>
-        event Action<ServerShutdownEvent> ServerShutdown;
-        /// <summary>发送消息</summary>
-        void SendMessage(SendMessageRequest r, Action<SendMessageReply> Callback);
-        /// <summary>接收到消息</summary>
-        event Action<MessageReceivedEvent> MessageReceived;
-        /// <summary>加法</summary>
-        void TestAdd(CommunicationPerformance.TestAddRequest r, Action<CommunicationPerformance.TestAddReply> Callback);
-        /// <summary>两百万次浮点乘法</summary>
-        void TestMultiply(CommunicationPerformance.TestMultiplyRequest r, Action<CommunicationPerformance.TestMultiplyReply> Callback);
-        /// <summary>文本原样返回</summary>
-        void TestText(CommunicationPerformance.TestTextRequest r, Action<CommunicationPerformance.TestTextReply> Callback);
-        /// <summary>群发消息</summary>
-        void TestMessage(CommunicationPerformance.TestMessageRequest r, Action<CommunicationPerformance.TestMessageReply> Callback);
-        /// <summary>接到群发消息</summary>
-        event Action<CommunicationPerformance.TestMessageReceivedEvent> TestMessageReceived;
-    }
-
-    public interface IEventPump
-    {
-        /// <summary>错误</summary>
-        Action<ErrorEvent> Error { get; }
-        /// <summary>错误命令</summary>
-        Action<ErrorCommandEvent> ErrorCommand { get; }
-        /// <summary>服务器关闭</summary>
-        Action<ServerShutdownEvent> ServerShutdown { get; }
-        /// <summary>接收到消息</summary>
-        Action<MessageReceivedEvent> MessageReceived { get; }
-        /// <summary>接到群发消息</summary>
-        Action<CommunicationPerformance.TestMessageReceivedEvent> TestMessageReceived { get; }
-    }
-}
-
-namespace CommunicationPerformance
-{
     /// <summary>加法</summary>
     [Record]
     public sealed class TestAddRequest
@@ -418,5 +334,133 @@ namespace CommunicationPerformance
     {
         /// <summary>消息</summary>
         public String Message;
+    }
+
+    public interface IApplicationServer
+    {
+        /// <summary>关闭服务器</summary>
+        ShutdownReply Shutdown(ShutdownRequest r);
+        /// <summary>错误</summary>
+        event Action<ErrorEvent> Error;
+        /// <summary>错误命令</summary>
+        event Action<ErrorCommandEvent> ErrorCommand;
+        /// <summary>服务器时间</summary>
+        ServerTimeReply ServerTime(ServerTimeRequest r);
+        /// <summary>退出</summary>
+        QuitReply Quit(QuitRequest r);
+        /// <summary>检测类型结构版本</summary>
+        CheckSchemaVersionReply CheckSchemaVersion(CheckSchemaVersionRequest r);
+        /// <summary>服务器关闭</summary>
+        event Action<ServerShutdownEvent> ServerShutdown;
+        /// <summary>发送消息</summary>
+        SendMessageReply SendMessage(SendMessageRequest r);
+        /// <summary>接收到消息</summary>
+        event Action<MessageReceivedEvent> MessageReceived;
+        /// <summary>错误</summary>
+        event Action<CommunicationDuplication.ErrorEvent> CommunicationDuplicationDotError;
+        /// <summary>服务器时间</summary>
+        CommunicationDuplication.ServerTimeReply CommunicationDuplicationDotServerTime(CommunicationDuplication.ServerTimeRequest r);
+        /// <summary>加法</summary>
+        TestAddReply TestAdd(TestAddRequest r);
+        /// <summary>两百万次浮点乘法</summary>
+        TestMultiplyReply TestMultiply(TestMultiplyRequest r);
+        /// <summary>文本原样返回</summary>
+        TestTextReply TestText(TestTextRequest r);
+        /// <summary>群发消息</summary>
+        TestMessageReply TestMessage(TestMessageRequest r);
+        /// <summary>接到群发消息</summary>
+        event Action<TestMessageReceivedEvent> TestMessageReceived;
+    }
+
+    public interface IApplicationClient
+    {
+        UInt64 Hash { get; }
+        void DequeueCallback(String CommandName);
+
+        /// <summary>关闭服务器</summary>
+        void Shutdown(ShutdownRequest r, Action<ShutdownReply> Callback);
+        /// <summary>错误</summary>
+        event Action<ErrorEvent> Error;
+        /// <summary>错误命令</summary>
+        event Action<ErrorCommandEvent> ErrorCommand;
+        /// <summary>服务器时间</summary>
+        void ServerTime(ServerTimeRequest r, Action<ServerTimeReply> Callback);
+        /// <summary>退出</summary>
+        void Quit(QuitRequest r, Action<QuitReply> Callback);
+        /// <summary>检测类型结构版本</summary>
+        void CheckSchemaVersion(CheckSchemaVersionRequest r, Action<CheckSchemaVersionReply> Callback);
+        /// <summary>服务器关闭</summary>
+        event Action<ServerShutdownEvent> ServerShutdown;
+        /// <summary>发送消息</summary>
+        void SendMessage(SendMessageRequest r, Action<SendMessageReply> Callback);
+        /// <summary>接收到消息</summary>
+        event Action<MessageReceivedEvent> MessageReceived;
+        /// <summary>错误</summary>
+        event Action<CommunicationDuplication.ErrorEvent> CommunicationDuplicationDotError;
+        /// <summary>服务器时间</summary>
+        void CommunicationDuplicationDotServerTime(CommunicationDuplication.ServerTimeRequest r, Action<CommunicationDuplication.ServerTimeReply> Callback);
+        /// <summary>加法</summary>
+        void TestAdd(TestAddRequest r, Action<TestAddReply> Callback);
+        /// <summary>两百万次浮点乘法</summary>
+        void TestMultiply(TestMultiplyRequest r, Action<TestMultiplyReply> Callback);
+        /// <summary>文本原样返回</summary>
+        void TestText(TestTextRequest r, Action<TestTextReply> Callback);
+        /// <summary>群发消息</summary>
+        void TestMessage(TestMessageRequest r, Action<TestMessageReply> Callback);
+        /// <summary>接到群发消息</summary>
+        event Action<TestMessageReceivedEvent> TestMessageReceived;
+    }
+
+    public interface IEventPump
+    {
+        /// <summary>错误</summary>
+        Action<ErrorEvent> Error { get; }
+        /// <summary>错误命令</summary>
+        Action<ErrorCommandEvent> ErrorCommand { get; }
+        /// <summary>服务器关闭</summary>
+        Action<ServerShutdownEvent> ServerShutdown { get; }
+        /// <summary>接收到消息</summary>
+        Action<MessageReceivedEvent> MessageReceived { get; }
+        /// <summary>错误</summary>
+        Action<CommunicationDuplication.ErrorEvent> CommunicationDuplicationDotError { get; }
+        /// <summary>接到群发消息</summary>
+        Action<TestMessageReceivedEvent> TestMessageReceived { get; }
+    }
+}
+
+namespace CommunicationDuplication
+{
+    /// <summary>错误</summary>
+    [Record]
+    public sealed class ErrorEvent
+    {
+        /// <summary>错误信息</summary>
+        public String Message;
+    }
+
+    /// <summary>服务器时间</summary>
+    [Record]
+    public sealed class ServerTimeRequest
+    {
+    }
+    public enum ServerTimeReplyTag
+    {
+        /// <summary>服务器时间</summary>
+        Success = 0
+    }
+    /// <summary>服务器时间</summary>
+    [TaggedUnion]
+    public sealed class ServerTimeReply
+    {
+        [Tag] public ServerTimeReplyTag _Tag;
+
+        /// <summary>服务器时间</summary>
+        public String Success;
+
+        /// <summary>服务器时间</summary>
+        public static ServerTimeReply CreateSuccess(String Value) { return new ServerTimeReply { _Tag = ServerTimeReplyTag.Success, Success = Value }; }
+
+        /// <summary>服务器时间</summary>
+        public Boolean OnSuccess { get { return _Tag == ServerTimeReplyTag.Success; } }
     }
 }

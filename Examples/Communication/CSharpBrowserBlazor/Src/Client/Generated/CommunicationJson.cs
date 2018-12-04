@@ -61,31 +61,33 @@ namespace Communication.Json
             ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, String>>(new KeyValuePairEqualityComparer<String, UInt32>());
             AsyncClientCommandsWithoutHash = new Dictionary<String, Action<IApplicationServer, String, Action<String>, Action<Exception>>>(StringComparer.OrdinalIgnoreCase);
             AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, String, Action<String>, Action<Exception>>>(new KeyValuePairEqualityComparer<String, UInt32>());
-            ClientCommandsWithoutHash.Add("Shutdown", (s, p) => JsonTranslator.ShutdownReplyToJson(s.Shutdown(JsonTranslator.ShutdownRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommands.Add(new KeyValuePair<String, UInt32>("Shutdown", 0x9A7D9767), (s, p) => JsonTranslator.ShutdownReplyToJson(s.Shutdown(JsonTranslator.ShutdownRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommandsWithoutHash.Add("ServerTime", (s, p) => JsonTranslator.ServerTimeReplyToJson(s.ServerTime(JsonTranslator.ServerTimeRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommands.Add(new KeyValuePair<String, UInt32>("ServerTime", 0xF23902FC), (s, p) => JsonTranslator.ServerTimeReplyToJson(s.ServerTime(JsonTranslator.ServerTimeRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommandsWithoutHash.Add("Quit", (s, p) => JsonTranslator.QuitReplyToJson(s.Quit(JsonTranslator.QuitRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommands.Add(new KeyValuePair<String, UInt32>("Quit", 0x03EACC74), (s, p) => JsonTranslator.QuitReplyToJson(s.Quit(JsonTranslator.QuitRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommandsWithoutHash.Add("CheckSchemaVersion", (s, p) => JsonTranslator.CheckSchemaVersionReplyToJson(s.CheckSchemaVersion(JsonTranslator.CheckSchemaVersionRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommands.Add(new KeyValuePair<String, UInt32>("CheckSchemaVersion", 0x814EDA32), (s, p) => JsonTranslator.CheckSchemaVersionReplyToJson(s.CheckSchemaVersion(JsonTranslator.CheckSchemaVersionRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommandsWithoutHash.Add("SendMessage", (s, p) => JsonTranslator.SendMessageReplyToJson(s.SendMessage(JsonTranslator.SendMessageRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommands.Add(new KeyValuePair<String, UInt32>("SendMessage", 0x15FFA296), (s, p) => JsonTranslator.SendMessageReplyToJson(s.SendMessage(JsonTranslator.SendMessageRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommandsWithoutHash.Add("TestAdd", (s, p) => JsonTranslator.TestAddReplyToJson(s.TestAdd(JsonTranslator.TestAddRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommands.Add(new KeyValuePair<String, UInt32>("TestAdd", 0xC9C940C6), (s, p) => JsonTranslator.TestAddReplyToJson(s.TestAdd(JsonTranslator.TestAddRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommandsWithoutHash.Add("TestMultiply", (s, p) => JsonTranslator.TestMultiplyReplyToJson(s.TestMultiply(JsonTranslator.TestMultiplyRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommands.Add(new KeyValuePair<String, UInt32>("TestMultiply", 0x388B20D1), (s, p) => JsonTranslator.TestMultiplyReplyToJson(s.TestMultiply(JsonTranslator.TestMultiplyRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommandsWithoutHash.Add("TestText", (s, p) => JsonTranslator.TestTextReplyToJson(s.TestText(JsonTranslator.TestTextRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommands.Add(new KeyValuePair<String, UInt32>("TestText", 0xCCAC718E), (s, p) => JsonTranslator.TestTextReplyToJson(s.TestText(JsonTranslator.TestTextRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommandsWithoutHash.Add("TestMessage", (s, p) => JsonTranslator.TestMessageReplyToJson(s.TestMessage(JsonTranslator.TestMessageRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
-            ClientCommands.Add(new KeyValuePair<String, UInt32>("TestMessage", 0x2A540671), (s, p) => JsonTranslator.TestMessageReplyToJson(s.TestMessage(JsonTranslator.TestMessageRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommandsWithoutHash.Add("Communication.Shutdown", (s, p) => JsonTranslator.ShutdownReplyToJson(s.Shutdown(JsonTranslator.ShutdownRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommands.Add(new KeyValuePair<String, UInt32>("Communication.Shutdown", 0x56444A01), (s, p) => JsonTranslator.ShutdownReplyToJson(s.Shutdown(JsonTranslator.ShutdownRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommandsWithoutHash.Add("Communication.ServerTime", (s, p) => JsonTranslator.ServerTimeReplyToJson(s.ServerTime(JsonTranslator.ServerTimeRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommands.Add(new KeyValuePair<String, UInt32>("Communication.ServerTime", 0xDDDFF40A), (s, p) => JsonTranslator.ServerTimeReplyToJson(s.ServerTime(JsonTranslator.ServerTimeRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommandsWithoutHash.Add("Communication.Quit", (s, p) => JsonTranslator.QuitReplyToJson(s.Quit(JsonTranslator.QuitRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommands.Add(new KeyValuePair<String, UInt32>("Communication.Quit", 0x8914E331), (s, p) => JsonTranslator.QuitReplyToJson(s.Quit(JsonTranslator.QuitRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommandsWithoutHash.Add("Communication.CheckSchemaVersion", (s, p) => JsonTranslator.CheckSchemaVersionReplyToJson(s.CheckSchemaVersion(JsonTranslator.CheckSchemaVersionRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommands.Add(new KeyValuePair<String, UInt32>("Communication.CheckSchemaVersion", 0x82793035), (s, p) => JsonTranslator.CheckSchemaVersionReplyToJson(s.CheckSchemaVersion(JsonTranslator.CheckSchemaVersionRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommandsWithoutHash.Add("Communication.SendMessage", (s, p) => JsonTranslator.SendMessageReplyToJson(s.SendMessage(JsonTranslator.SendMessageRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommands.Add(new KeyValuePair<String, UInt32>("Communication.SendMessage", 0x3F9BDEC6), (s, p) => JsonTranslator.SendMessageReplyToJson(s.SendMessage(JsonTranslator.SendMessageRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommandsWithoutHash.Add("CommunicationDuplication.ServerTime", (s, p) => JsonTranslator.CommunicationDuplicationDotServerTimeReplyToJson(s.CommunicationDuplicationDotServerTime(JsonTranslator.CommunicationDuplicationDotServerTimeRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommands.Add(new KeyValuePair<String, UInt32>("CommunicationDuplication.ServerTime", 0xF6882D15), (s, p) => JsonTranslator.CommunicationDuplicationDotServerTimeReplyToJson(s.CommunicationDuplicationDotServerTime(JsonTranslator.CommunicationDuplicationDotServerTimeRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommandsWithoutHash.Add("Communication.TestAdd", (s, p) => JsonTranslator.TestAddReplyToJson(s.TestAdd(JsonTranslator.TestAddRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommands.Add(new KeyValuePair<String, UInt32>("Communication.TestAdd", 0xD53AFF14), (s, p) => JsonTranslator.TestAddReplyToJson(s.TestAdd(JsonTranslator.TestAddRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommandsWithoutHash.Add("Communication.TestMultiply", (s, p) => JsonTranslator.TestMultiplyReplyToJson(s.TestMultiply(JsonTranslator.TestMultiplyRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommands.Add(new KeyValuePair<String, UInt32>("Communication.TestMultiply", 0x333A57E1), (s, p) => JsonTranslator.TestMultiplyReplyToJson(s.TestMultiply(JsonTranslator.TestMultiplyRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommandsWithoutHash.Add("Communication.TestText", (s, p) => JsonTranslator.TestTextReplyToJson(s.TestText(JsonTranslator.TestTextRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommands.Add(new KeyValuePair<String, UInt32>("Communication.TestText", 0x941CCB97), (s, p) => JsonTranslator.TestTextReplyToJson(s.TestText(JsonTranslator.TestTextRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommandsWithoutHash.Add("Communication.TestMessage", (s, p) => JsonTranslator.TestMessageReplyToJson(s.TestMessage(JsonTranslator.TestMessageRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
+            ClientCommands.Add(new KeyValuePair<String, UInt32>("Communication.TestMessage", 0x1AFF04E1), (s, p) => JsonTranslator.TestMessageReplyToJson(s.TestMessage(JsonTranslator.TestMessageRequestFromJson(JToken.Parse(p)))).ToString(Formatting.None));
         }
 
         public UInt64 Hash
         {
             get
             {
-                return 0x46A50E7F1EF0A8D1;
+                return 0xCD1E9B9A41F01885;
             }
         }
 
@@ -133,11 +135,12 @@ namespace Communication.Json
     {
         public JsonSerializationServerEventDispatcher(IApplicationServer s)
         {
-            s.Error += e => OnServerEvent("Error", 0xEFF2E862, JsonTranslator.ErrorEventToJson(e).ToString(Formatting.None));
-            s.ErrorCommand += e => OnServerEvent("ErrorCommand", 0xF438AC9D, JsonTranslator.ErrorCommandEventToJson(e).ToString(Formatting.None));
-            s.ServerShutdown += e => OnServerEvent("ServerShutdown", 0x0C558D6B, JsonTranslator.ServerShutdownEventToJson(e).ToString(Formatting.None));
-            s.MessageReceived += e => OnServerEvent("MessageReceived", 0x5E823C51, JsonTranslator.MessageReceivedEventToJson(e).ToString(Formatting.None));
-            s.TestMessageReceived += e => OnServerEvent("TestMessageReceived", 0xBD9BCD00, JsonTranslator.TestMessageReceivedEventToJson(e).ToString(Formatting.None));
+            s.Error += e => OnServerEvent("Communication.Error", 0x0951108A, JsonTranslator.ErrorEventToJson(e).ToString(Formatting.None));
+            s.ErrorCommand += e => OnServerEvent("Communication.ErrorCommand", 0x33E10C9C, JsonTranslator.ErrorCommandEventToJson(e).ToString(Formatting.None));
+            s.ServerShutdown += e => OnServerEvent("Communication.ServerShutdown", 0x7EA7BC85, JsonTranslator.ServerShutdownEventToJson(e).ToString(Formatting.None));
+            s.MessageReceived += e => OnServerEvent("Communication.MessageReceived", 0x9B94AC93, JsonTranslator.MessageReceivedEventToJson(e).ToString(Formatting.None));
+            s.CommunicationDuplicationDotError += e => OnServerEvent("CommunicationDuplication.Error", 0x0792E785, JsonTranslator.CommunicationDuplicationDotErrorEventToJson(e).ToString(Formatting.None));
+            s.TestMessageReceived += e => OnServerEvent("Communication.TestMessageReceived", 0xA2D24892, JsonTranslator.TestMessageReceivedEventToJson(e).ToString(Formatting.None));
         }
 
         public delegate void ServerEventDelegate(String CommandName, UInt32 CommandHash, String Parameters);
@@ -181,7 +184,7 @@ namespace Communication.Json
             {
                 get
                 {
-                    return 0x46A50E7F1EF0A8D1;
+                    return 0xCD1E9B9A41F01885;
                 }
             }
 
@@ -204,70 +207,78 @@ namespace Communication.Json
                 }
             }
 
-            public void Shutdown(ShutdownRequest r, Action<ShutdownReply> Callback)
+            public void Shutdown(Communication.ShutdownRequest r, Action<Communication.ShutdownReply> Callback)
             {
                 var Request = JsonTranslator.ShutdownRequestToJson(r).ToString(Formatting.None);
-                AddCallback("Shutdown", 0x9A7D9767, Parameters => Callback(JsonTranslator.ShutdownReplyFromJson(JToken.Parse(Parameters))));
-                s.Send("Shutdown", 0x9A7D9767, Request);
+                AddCallback("Communication.Shutdown", 0x56444A01, Parameters => Callback(JsonTranslator.ShutdownReplyFromJson(JToken.Parse(Parameters))));
+                s.Send("Communication.Shutdown", 0x56444A01, Request);
             }
-            public event Action<ErrorEvent> Error;
-            public void RaiseError(ErrorEvent e) { if (Error != null) { Error(e); } }
-            public event Action<ErrorCommandEvent> ErrorCommand;
-            public void RaiseErrorCommand(ErrorCommandEvent e) { if (ErrorCommand != null) { ErrorCommand(e); } }
-            public void ServerTime(ServerTimeRequest r, Action<ServerTimeReply> Callback)
+            public event Action<Communication.ErrorEvent> Error;
+            public void RaiseError(Communication.ErrorEvent e) { if (Error != null) { Error(e); } }
+            public event Action<Communication.ErrorCommandEvent> ErrorCommand;
+            public void RaiseErrorCommand(Communication.ErrorCommandEvent e) { if (ErrorCommand != null) { ErrorCommand(e); } }
+            public void ServerTime(Communication.ServerTimeRequest r, Action<Communication.ServerTimeReply> Callback)
             {
                 var Request = JsonTranslator.ServerTimeRequestToJson(r).ToString(Formatting.None);
-                AddCallback("ServerTime", 0xF23902FC, Parameters => Callback(JsonTranslator.ServerTimeReplyFromJson(JToken.Parse(Parameters))));
-                s.Send("ServerTime", 0xF23902FC, Request);
+                AddCallback("Communication.ServerTime", 0xDDDFF40A, Parameters => Callback(JsonTranslator.ServerTimeReplyFromJson(JToken.Parse(Parameters))));
+                s.Send("Communication.ServerTime", 0xDDDFF40A, Request);
             }
-            public void Quit(QuitRequest r, Action<QuitReply> Callback)
+            public void Quit(Communication.QuitRequest r, Action<Communication.QuitReply> Callback)
             {
                 var Request = JsonTranslator.QuitRequestToJson(r).ToString(Formatting.None);
-                AddCallback("Quit", 0x03EACC74, Parameters => Callback(JsonTranslator.QuitReplyFromJson(JToken.Parse(Parameters))));
-                s.Send("Quit", 0x03EACC74, Request);
+                AddCallback("Communication.Quit", 0x8914E331, Parameters => Callback(JsonTranslator.QuitReplyFromJson(JToken.Parse(Parameters))));
+                s.Send("Communication.Quit", 0x8914E331, Request);
             }
-            public void CheckSchemaVersion(CheckSchemaVersionRequest r, Action<CheckSchemaVersionReply> Callback)
+            public void CheckSchemaVersion(Communication.CheckSchemaVersionRequest r, Action<Communication.CheckSchemaVersionReply> Callback)
             {
                 var Request = JsonTranslator.CheckSchemaVersionRequestToJson(r).ToString(Formatting.None);
-                AddCallback("CheckSchemaVersion", 0x814EDA32, Parameters => Callback(JsonTranslator.CheckSchemaVersionReplyFromJson(JToken.Parse(Parameters))));
-                s.Send("CheckSchemaVersion", 0x814EDA32, Request);
+                AddCallback("Communication.CheckSchemaVersion", 0x82793035, Parameters => Callback(JsonTranslator.CheckSchemaVersionReplyFromJson(JToken.Parse(Parameters))));
+                s.Send("Communication.CheckSchemaVersion", 0x82793035, Request);
             }
-            public event Action<ServerShutdownEvent> ServerShutdown;
-            public void RaiseServerShutdown(ServerShutdownEvent e) { if (ServerShutdown != null) { ServerShutdown(e); } }
-            public void SendMessage(SendMessageRequest r, Action<SendMessageReply> Callback)
+            public event Action<Communication.ServerShutdownEvent> ServerShutdown;
+            public void RaiseServerShutdown(Communication.ServerShutdownEvent e) { if (ServerShutdown != null) { ServerShutdown(e); } }
+            public void SendMessage(Communication.SendMessageRequest r, Action<Communication.SendMessageReply> Callback)
             {
                 var Request = JsonTranslator.SendMessageRequestToJson(r).ToString(Formatting.None);
-                AddCallback("SendMessage", 0x15FFA296, Parameters => Callback(JsonTranslator.SendMessageReplyFromJson(JToken.Parse(Parameters))));
-                s.Send("SendMessage", 0x15FFA296, Request);
+                AddCallback("Communication.SendMessage", 0x3F9BDEC6, Parameters => Callback(JsonTranslator.SendMessageReplyFromJson(JToken.Parse(Parameters))));
+                s.Send("Communication.SendMessage", 0x3F9BDEC6, Request);
             }
-            public event Action<MessageReceivedEvent> MessageReceived;
-            public void RaiseMessageReceived(MessageReceivedEvent e) { if (MessageReceived != null) { MessageReceived(e); } }
-            public void TestAdd(TestAddRequest r, Action<TestAddReply> Callback)
+            public event Action<Communication.MessageReceivedEvent> MessageReceived;
+            public void RaiseMessageReceived(Communication.MessageReceivedEvent e) { if (MessageReceived != null) { MessageReceived(e); } }
+            public event Action<CommunicationDuplication.ErrorEvent> CommunicationDuplicationDotError;
+            public void RaiseCommunicationDuplicationDotError(CommunicationDuplication.ErrorEvent e) { if (CommunicationDuplicationDotError != null) { CommunicationDuplicationDotError(e); } }
+            public void CommunicationDuplicationDotServerTime(CommunicationDuplication.ServerTimeRequest r, Action<CommunicationDuplication.ServerTimeReply> Callback)
+            {
+                var Request = JsonTranslator.CommunicationDuplicationDotServerTimeRequestToJson(r).ToString(Formatting.None);
+                AddCallback("CommunicationDuplication.ServerTime", 0xF6882D15, Parameters => Callback(JsonTranslator.CommunicationDuplicationDotServerTimeReplyFromJson(JToken.Parse(Parameters))));
+                s.Send("CommunicationDuplication.ServerTime", 0xF6882D15, Request);
+            }
+            public void TestAdd(Communication.TestAddRequest r, Action<Communication.TestAddReply> Callback)
             {
                 var Request = JsonTranslator.TestAddRequestToJson(r).ToString(Formatting.None);
-                AddCallback("TestAdd", 0xC9C940C6, Parameters => Callback(JsonTranslator.TestAddReplyFromJson(JToken.Parse(Parameters))));
-                s.Send("TestAdd", 0xC9C940C6, Request);
+                AddCallback("Communication.TestAdd", 0xD53AFF14, Parameters => Callback(JsonTranslator.TestAddReplyFromJson(JToken.Parse(Parameters))));
+                s.Send("Communication.TestAdd", 0xD53AFF14, Request);
             }
-            public void TestMultiply(TestMultiplyRequest r, Action<TestMultiplyReply> Callback)
+            public void TestMultiply(Communication.TestMultiplyRequest r, Action<Communication.TestMultiplyReply> Callback)
             {
                 var Request = JsonTranslator.TestMultiplyRequestToJson(r).ToString(Formatting.None);
-                AddCallback("TestMultiply", 0x388B20D1, Parameters => Callback(JsonTranslator.TestMultiplyReplyFromJson(JToken.Parse(Parameters))));
-                s.Send("TestMultiply", 0x388B20D1, Request);
+                AddCallback("Communication.TestMultiply", 0x333A57E1, Parameters => Callback(JsonTranslator.TestMultiplyReplyFromJson(JToken.Parse(Parameters))));
+                s.Send("Communication.TestMultiply", 0x333A57E1, Request);
             }
-            public void TestText(TestTextRequest r, Action<TestTextReply> Callback)
+            public void TestText(Communication.TestTextRequest r, Action<Communication.TestTextReply> Callback)
             {
                 var Request = JsonTranslator.TestTextRequestToJson(r).ToString(Formatting.None);
-                AddCallback("TestText", 0xCCAC718E, Parameters => Callback(JsonTranslator.TestTextReplyFromJson(JToken.Parse(Parameters))));
-                s.Send("TestText", 0xCCAC718E, Request);
+                AddCallback("Communication.TestText", 0x941CCB97, Parameters => Callback(JsonTranslator.TestTextReplyFromJson(JToken.Parse(Parameters))));
+                s.Send("Communication.TestText", 0x941CCB97, Request);
             }
-            public void TestMessage(TestMessageRequest r, Action<TestMessageReply> Callback)
+            public void TestMessage(Communication.TestMessageRequest r, Action<Communication.TestMessageReply> Callback)
             {
                 var Request = JsonTranslator.TestMessageRequestToJson(r).ToString(Formatting.None);
-                AddCallback("TestMessage", 0x2A540671, Parameters => Callback(JsonTranslator.TestMessageReplyFromJson(JToken.Parse(Parameters))));
-                s.Send("TestMessage", 0x2A540671, Request);
+                AddCallback("Communication.TestMessage", 0x1AFF04E1, Parameters => Callback(JsonTranslator.TestMessageReplyFromJson(JToken.Parse(Parameters))));
+                s.Send("Communication.TestMessage", 0x1AFF04E1, Request);
             }
-            public event Action<TestMessageReceivedEvent> TestMessageReceived;
-            public void RaiseTestMessageReceived(TestMessageReceivedEvent e) { if (TestMessageReceived != null) { TestMessageReceived(e); } }
+            public event Action<Communication.TestMessageReceivedEvent> TestMessageReceived;
+            public void RaiseTestMessageReceived(Communication.TestMessageReceivedEvent e) { if (TestMessageReceived != null) { TestMessageReceived(e); } }
         }
 
         private ApplicationClient c;
@@ -279,11 +290,12 @@ namespace Communication.Json
             c.s = s;
             c.ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>>();
             ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<String>>(new KeyValuePairEqualityComparer<String, UInt32>());
-            ServerCommands.Add(new KeyValuePair<String, UInt32>("Error", 0xEFF2E862), Parameters => c.RaiseError(JsonTranslator.ErrorEventFromJson(JToken.Parse(Parameters))));
-            ServerCommands.Add(new KeyValuePair<String, UInt32>("ErrorCommand", 0xF438AC9D), Parameters => c.RaiseErrorCommand(JsonTranslator.ErrorCommandEventFromJson(JToken.Parse(Parameters))));
-            ServerCommands.Add(new KeyValuePair<String, UInt32>("ServerShutdown", 0x0C558D6B), Parameters => c.RaiseServerShutdown(JsonTranslator.ServerShutdownEventFromJson(JToken.Parse(Parameters))));
-            ServerCommands.Add(new KeyValuePair<String, UInt32>("MessageReceived", 0x5E823C51), Parameters => c.RaiseMessageReceived(JsonTranslator.MessageReceivedEventFromJson(JToken.Parse(Parameters))));
-            ServerCommands.Add(new KeyValuePair<String, UInt32>("TestMessageReceived", 0xBD9BCD00), Parameters => c.RaiseTestMessageReceived(JsonTranslator.TestMessageReceivedEventFromJson(JToken.Parse(Parameters))));
+            ServerCommands.Add(new KeyValuePair<String, UInt32>("Communication.Error", 0x0951108A), Parameters => c.RaiseError(JsonTranslator.ErrorEventFromJson(JToken.Parse(Parameters))));
+            ServerCommands.Add(new KeyValuePair<String, UInt32>("Communication.ErrorCommand", 0x33E10C9C), Parameters => c.RaiseErrorCommand(JsonTranslator.ErrorCommandEventFromJson(JToken.Parse(Parameters))));
+            ServerCommands.Add(new KeyValuePair<String, UInt32>("Communication.ServerShutdown", 0x7EA7BC85), Parameters => c.RaiseServerShutdown(JsonTranslator.ServerShutdownEventFromJson(JToken.Parse(Parameters))));
+            ServerCommands.Add(new KeyValuePair<String, UInt32>("Communication.MessageReceived", 0x9B94AC93), Parameters => c.RaiseMessageReceived(JsonTranslator.MessageReceivedEventFromJson(JToken.Parse(Parameters))));
+            ServerCommands.Add(new KeyValuePair<String, UInt32>("CommunicationDuplication.Error", 0x0792E785), Parameters => c.RaiseCommunicationDuplicationDotError(JsonTranslator.CommunicationDuplicationDotErrorEventFromJson(JToken.Parse(Parameters))));
+            ServerCommands.Add(new KeyValuePair<String, UInt32>("Communication.TestMessageReceived", 0xA2D24892), Parameters => c.RaiseTestMessageReceived(JsonTranslator.TestMessageReceivedEventFromJson(JToken.Parse(Parameters))));
         }
 
         public IApplicationClient GetApplicationClient()
@@ -332,27 +344,32 @@ namespace Communication.Json
             this.Inner = Inner;
             Inner.Error += e =>
             {
-                if (ServerCommand != null) { ServerCommand("Error", JsonTranslator.ErrorEventToJson(e).ToString(Formatting.None)); }
+                if (ServerCommand != null) { ServerCommand("Communication.Error", JsonTranslator.ErrorEventToJson(e).ToString(Formatting.None)); }
                 if (Error != null) { Error(e); }
             };
             Inner.ErrorCommand += e =>
             {
-                if (ServerCommand != null) { ServerCommand("ErrorCommand", JsonTranslator.ErrorCommandEventToJson(e).ToString(Formatting.None)); }
+                if (ServerCommand != null) { ServerCommand("Communication.ErrorCommand", JsonTranslator.ErrorCommandEventToJson(e).ToString(Formatting.None)); }
                 if (ErrorCommand != null) { ErrorCommand(e); }
             };
             Inner.ServerShutdown += e =>
             {
-                if (ServerCommand != null) { ServerCommand("ServerShutdown", JsonTranslator.ServerShutdownEventToJson(e).ToString(Formatting.None)); }
+                if (ServerCommand != null) { ServerCommand("Communication.ServerShutdown", JsonTranslator.ServerShutdownEventToJson(e).ToString(Formatting.None)); }
                 if (ServerShutdown != null) { ServerShutdown(e); }
             };
             Inner.MessageReceived += e =>
             {
-                if (ServerCommand != null) { ServerCommand("MessageReceived", JsonTranslator.MessageReceivedEventToJson(e).ToString(Formatting.None)); }
+                if (ServerCommand != null) { ServerCommand("Communication.MessageReceived", JsonTranslator.MessageReceivedEventToJson(e).ToString(Formatting.None)); }
                 if (MessageReceived != null) { MessageReceived(e); }
+            };
+            Inner.CommunicationDuplicationDotError += e =>
+            {
+                if (ServerCommand != null) { ServerCommand("CommunicationDuplication.Error", JsonTranslator.CommunicationDuplicationDotErrorEventToJson(e).ToString(Formatting.None)); }
+                if (CommunicationDuplicationDotError != null) { CommunicationDuplicationDotError(e); }
             };
             Inner.TestMessageReceived += e =>
             {
-                if (ServerCommand != null) { ServerCommand("TestMessageReceived", JsonTranslator.TestMessageReceivedEventToJson(e).ToString(Formatting.None)); }
+                if (ServerCommand != null) { ServerCommand("Communication.TestMessageReceived", JsonTranslator.TestMessageReceivedEventToJson(e).ToString(Formatting.None)); }
                 if (TestMessageReceived != null) { TestMessageReceived(e); }
             };
         }
@@ -361,74 +378,82 @@ namespace Communication.Json
         public event Action<String, String> ClientCommandOut;
         public event Action<String, String> ServerCommand;
 
-        public ShutdownReply Shutdown(ShutdownRequest Request)
+        public Communication.ShutdownReply Shutdown(Communication.ShutdownRequest Request)
         {
-            if (ClientCommandIn != null) { ClientCommandIn("Shutdown", JsonTranslator.ShutdownRequestToJson(Request).ToString(Formatting.None)); }
+            if (ClientCommandIn != null) { ClientCommandIn("Communication.Shutdown", JsonTranslator.ShutdownRequestToJson(Request).ToString(Formatting.None)); }
             var Reply = Inner.Shutdown(Request);
-            if (ClientCommandOut != null) { ClientCommandOut("Shutdown", JsonTranslator.ShutdownReplyToJson(Reply).ToString(Formatting.None)); }
+            if (ClientCommandOut != null) { ClientCommandOut("Communication.Shutdown", JsonTranslator.ShutdownReplyToJson(Reply).ToString(Formatting.None)); }
             return Reply;
         }
-        public event Action<ErrorEvent> Error;
-        public event Action<ErrorCommandEvent> ErrorCommand;
-        public ServerTimeReply ServerTime(ServerTimeRequest Request)
+        public event Action<Communication.ErrorEvent> Error;
+        public event Action<Communication.ErrorCommandEvent> ErrorCommand;
+        public Communication.ServerTimeReply ServerTime(Communication.ServerTimeRequest Request)
         {
-            if (ClientCommandIn != null) { ClientCommandIn("ServerTime", JsonTranslator.ServerTimeRequestToJson(Request).ToString(Formatting.None)); }
+            if (ClientCommandIn != null) { ClientCommandIn("Communication.ServerTime", JsonTranslator.ServerTimeRequestToJson(Request).ToString(Formatting.None)); }
             var Reply = Inner.ServerTime(Request);
-            if (ClientCommandOut != null) { ClientCommandOut("ServerTime", JsonTranslator.ServerTimeReplyToJson(Reply).ToString(Formatting.None)); }
+            if (ClientCommandOut != null) { ClientCommandOut("Communication.ServerTime", JsonTranslator.ServerTimeReplyToJson(Reply).ToString(Formatting.None)); }
             return Reply;
         }
-        public QuitReply Quit(QuitRequest Request)
+        public Communication.QuitReply Quit(Communication.QuitRequest Request)
         {
-            if (ClientCommandIn != null) { ClientCommandIn("Quit", JsonTranslator.QuitRequestToJson(Request).ToString(Formatting.None)); }
+            if (ClientCommandIn != null) { ClientCommandIn("Communication.Quit", JsonTranslator.QuitRequestToJson(Request).ToString(Formatting.None)); }
             var Reply = Inner.Quit(Request);
-            if (ClientCommandOut != null) { ClientCommandOut("Quit", JsonTranslator.QuitReplyToJson(Reply).ToString(Formatting.None)); }
+            if (ClientCommandOut != null) { ClientCommandOut("Communication.Quit", JsonTranslator.QuitReplyToJson(Reply).ToString(Formatting.None)); }
             return Reply;
         }
-        public CheckSchemaVersionReply CheckSchemaVersion(CheckSchemaVersionRequest Request)
+        public Communication.CheckSchemaVersionReply CheckSchemaVersion(Communication.CheckSchemaVersionRequest Request)
         {
-            if (ClientCommandIn != null) { ClientCommandIn("CheckSchemaVersion", JsonTranslator.CheckSchemaVersionRequestToJson(Request).ToString(Formatting.None)); }
+            if (ClientCommandIn != null) { ClientCommandIn("Communication.CheckSchemaVersion", JsonTranslator.CheckSchemaVersionRequestToJson(Request).ToString(Formatting.None)); }
             var Reply = Inner.CheckSchemaVersion(Request);
-            if (ClientCommandOut != null) { ClientCommandOut("CheckSchemaVersion", JsonTranslator.CheckSchemaVersionReplyToJson(Reply).ToString(Formatting.None)); }
+            if (ClientCommandOut != null) { ClientCommandOut("Communication.CheckSchemaVersion", JsonTranslator.CheckSchemaVersionReplyToJson(Reply).ToString(Formatting.None)); }
             return Reply;
         }
-        public event Action<ServerShutdownEvent> ServerShutdown;
-        public SendMessageReply SendMessage(SendMessageRequest Request)
+        public event Action<Communication.ServerShutdownEvent> ServerShutdown;
+        public Communication.SendMessageReply SendMessage(Communication.SendMessageRequest Request)
         {
-            if (ClientCommandIn != null) { ClientCommandIn("SendMessage", JsonTranslator.SendMessageRequestToJson(Request).ToString(Formatting.None)); }
+            if (ClientCommandIn != null) { ClientCommandIn("Communication.SendMessage", JsonTranslator.SendMessageRequestToJson(Request).ToString(Formatting.None)); }
             var Reply = Inner.SendMessage(Request);
-            if (ClientCommandOut != null) { ClientCommandOut("SendMessage", JsonTranslator.SendMessageReplyToJson(Reply).ToString(Formatting.None)); }
+            if (ClientCommandOut != null) { ClientCommandOut("Communication.SendMessage", JsonTranslator.SendMessageReplyToJson(Reply).ToString(Formatting.None)); }
             return Reply;
         }
-        public event Action<MessageReceivedEvent> MessageReceived;
-        public TestAddReply TestAdd(TestAddRequest Request)
+        public event Action<Communication.MessageReceivedEvent> MessageReceived;
+        public event Action<CommunicationDuplication.ErrorEvent> CommunicationDuplicationDotError;
+        public CommunicationDuplication.ServerTimeReply CommunicationDuplicationDotServerTime(CommunicationDuplication.ServerTimeRequest Request)
         {
-            if (ClientCommandIn != null) { ClientCommandIn("TestAdd", JsonTranslator.TestAddRequestToJson(Request).ToString(Formatting.None)); }
+            if (ClientCommandIn != null) { ClientCommandIn("CommunicationDuplication.ServerTime", JsonTranslator.CommunicationDuplicationDotServerTimeRequestToJson(Request).ToString(Formatting.None)); }
+            var Reply = Inner.CommunicationDuplicationDotServerTime(Request);
+            if (ClientCommandOut != null) { ClientCommandOut("CommunicationDuplication.ServerTime", JsonTranslator.CommunicationDuplicationDotServerTimeReplyToJson(Reply).ToString(Formatting.None)); }
+            return Reply;
+        }
+        public Communication.TestAddReply TestAdd(Communication.TestAddRequest Request)
+        {
+            if (ClientCommandIn != null) { ClientCommandIn("Communication.TestAdd", JsonTranslator.TestAddRequestToJson(Request).ToString(Formatting.None)); }
             var Reply = Inner.TestAdd(Request);
-            if (ClientCommandOut != null) { ClientCommandOut("TestAdd", JsonTranslator.TestAddReplyToJson(Reply).ToString(Formatting.None)); }
+            if (ClientCommandOut != null) { ClientCommandOut("Communication.TestAdd", JsonTranslator.TestAddReplyToJson(Reply).ToString(Formatting.None)); }
             return Reply;
         }
-        public TestMultiplyReply TestMultiply(TestMultiplyRequest Request)
+        public Communication.TestMultiplyReply TestMultiply(Communication.TestMultiplyRequest Request)
         {
-            if (ClientCommandIn != null) { ClientCommandIn("TestMultiply", JsonTranslator.TestMultiplyRequestToJson(Request).ToString(Formatting.None)); }
+            if (ClientCommandIn != null) { ClientCommandIn("Communication.TestMultiply", JsonTranslator.TestMultiplyRequestToJson(Request).ToString(Formatting.None)); }
             var Reply = Inner.TestMultiply(Request);
-            if (ClientCommandOut != null) { ClientCommandOut("TestMultiply", JsonTranslator.TestMultiplyReplyToJson(Reply).ToString(Formatting.None)); }
+            if (ClientCommandOut != null) { ClientCommandOut("Communication.TestMultiply", JsonTranslator.TestMultiplyReplyToJson(Reply).ToString(Formatting.None)); }
             return Reply;
         }
-        public TestTextReply TestText(TestTextRequest Request)
+        public Communication.TestTextReply TestText(Communication.TestTextRequest Request)
         {
-            if (ClientCommandIn != null) { ClientCommandIn("TestText", JsonTranslator.TestTextRequestToJson(Request).ToString(Formatting.None)); }
+            if (ClientCommandIn != null) { ClientCommandIn("Communication.TestText", JsonTranslator.TestTextRequestToJson(Request).ToString(Formatting.None)); }
             var Reply = Inner.TestText(Request);
-            if (ClientCommandOut != null) { ClientCommandOut("TestText", JsonTranslator.TestTextReplyToJson(Reply).ToString(Formatting.None)); }
+            if (ClientCommandOut != null) { ClientCommandOut("Communication.TestText", JsonTranslator.TestTextReplyToJson(Reply).ToString(Formatting.None)); }
             return Reply;
         }
-        public TestMessageReply TestMessage(TestMessageRequest Request)
+        public Communication.TestMessageReply TestMessage(Communication.TestMessageRequest Request)
         {
-            if (ClientCommandIn != null) { ClientCommandIn("TestMessage", JsonTranslator.TestMessageRequestToJson(Request).ToString(Formatting.None)); }
+            if (ClientCommandIn != null) { ClientCommandIn("Communication.TestMessage", JsonTranslator.TestMessageRequestToJson(Request).ToString(Formatting.None)); }
             var Reply = Inner.TestMessage(Request);
-            if (ClientCommandOut != null) { ClientCommandOut("TestMessage", JsonTranslator.TestMessageReplyToJson(Reply).ToString(Formatting.None)); }
+            if (ClientCommandOut != null) { ClientCommandOut("Communication.TestMessage", JsonTranslator.TestMessageReplyToJson(Reply).ToString(Formatting.None)); }
             return Reply;
         }
-        public event Action<TestMessageReceivedEvent> TestMessageReceived;
+        public event Action<Communication.TestMessageReceivedEvent> TestMessageReceived;
     }
 
     public static class JsonTranslator
@@ -616,48 +641,48 @@ namespace Communication.Json
             return new JValue(v);
         }
 
-        public static ShutdownRequest ShutdownRequestFromJson(JToken j)
+        public static Communication.ShutdownRequest ShutdownRequestFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new ShutdownRequest();
+            var o = new Communication.ShutdownRequest();
             return o;
         }
-        public static JObject ShutdownRequestToJson(ShutdownRequest o)
+        public static JObject ShutdownRequestToJson(Communication.ShutdownRequest o)
         {
             var jo = new JObject();
             return jo;
         }
-        public static ShutdownReplyTag ShutdownReplyTagFromJson(JToken j)
+        public static Communication.ShutdownReplyTag ShutdownReplyTagFromJson(JToken j)
         {
             if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
             var jv = j as JValue;
-            return (ShutdownReplyTag)(Convert.ToInt64(jv.Value));
+            return (Communication.ShutdownReplyTag)(Convert.ToInt64(jv.Value));
         }
-        public static JValue ShutdownReplyTagToJson(ShutdownReplyTag o)
+        public static JValue ShutdownReplyTagToJson(Communication.ShutdownReplyTag o)
         {
             return new JValue(Convert.ToInt64(o));
         }
-        public static ShutdownReply ShutdownReplyFromJson(JToken j)
+        public static Communication.ShutdownReply ShutdownReplyFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new ShutdownReply();
+            var o = new Communication.ShutdownReply();
             var d = (IDictionary<string, JToken>)(jo);
             if (d.ContainsKey("success"))
             {
-                o._Tag = ShutdownReplyTag.Success;
+                o._Tag = Communication.ShutdownReplyTag.Success;
                 o.Success = UnitFromJson(jo["success"]);
                 return o;
             }
             throw new InvalidOperationException();
         }
-        public static JObject ShutdownReplyToJson(ShutdownReply o)
+        public static JObject ShutdownReplyToJson(Communication.ShutdownReply o)
         {
             var jo = new JObject();
-            if (o._Tag == ShutdownReplyTag.Success)
+            if (o._Tag == Communication.ShutdownReplyTag.Success)
             {
                 jo.Add("success", UnitToJson(o.Success));
                 return jo;
@@ -665,80 +690,80 @@ namespace Communication.Json
             throw new InvalidOperationException();
         }
 
-        public static ErrorEvent ErrorEventFromJson(JToken j)
+        public static Communication.ErrorEvent ErrorEventFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new ErrorEvent();
+            var o = new Communication.ErrorEvent();
             o.Message = StringFromJson(jo["message"]);
             return o;
         }
-        public static JObject ErrorEventToJson(ErrorEvent o)
+        public static JObject ErrorEventToJson(Communication.ErrorEvent o)
         {
             var jo = new JObject();
             jo.Add("message", StringToJson(o.Message));
             return jo;
         }
 
-        public static ErrorCommandEvent ErrorCommandEventFromJson(JToken j)
+        public static Communication.ErrorCommandEvent ErrorCommandEventFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new ErrorCommandEvent();
+            var o = new Communication.ErrorCommandEvent();
             o.CommandName = StringFromJson(jo["commandName"]);
             return o;
         }
-        public static JObject ErrorCommandEventToJson(ErrorCommandEvent o)
+        public static JObject ErrorCommandEventToJson(Communication.ErrorCommandEvent o)
         {
             var jo = new JObject();
             jo.Add("commandName", StringToJson(o.CommandName));
             return jo;
         }
 
-        public static ServerTimeRequest ServerTimeRequestFromJson(JToken j)
+        public static Communication.ServerTimeRequest ServerTimeRequestFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new ServerTimeRequest();
+            var o = new Communication.ServerTimeRequest();
             return o;
         }
-        public static JObject ServerTimeRequestToJson(ServerTimeRequest o)
+        public static JObject ServerTimeRequestToJson(Communication.ServerTimeRequest o)
         {
             var jo = new JObject();
             return jo;
         }
-        public static ServerTimeReplyTag ServerTimeReplyTagFromJson(JToken j)
+        public static Communication.ServerTimeReplyTag ServerTimeReplyTagFromJson(JToken j)
         {
             if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
             var jv = j as JValue;
-            return (ServerTimeReplyTag)(Convert.ToInt64(jv.Value));
+            return (Communication.ServerTimeReplyTag)(Convert.ToInt64(jv.Value));
         }
-        public static JValue ServerTimeReplyTagToJson(ServerTimeReplyTag o)
+        public static JValue ServerTimeReplyTagToJson(Communication.ServerTimeReplyTag o)
         {
             return new JValue(Convert.ToInt64(o));
         }
-        public static ServerTimeReply ServerTimeReplyFromJson(JToken j)
+        public static Communication.ServerTimeReply ServerTimeReplyFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new ServerTimeReply();
+            var o = new Communication.ServerTimeReply();
             var d = (IDictionary<string, JToken>)(jo);
             if (d.ContainsKey("success"))
             {
-                o._Tag = ServerTimeReplyTag.Success;
+                o._Tag = Communication.ServerTimeReplyTag.Success;
                 o.Success = StringFromJson(jo["success"]);
                 return o;
             }
             throw new InvalidOperationException();
         }
-        public static JObject ServerTimeReplyToJson(ServerTimeReply o)
+        public static JObject ServerTimeReplyToJson(Communication.ServerTimeReply o)
         {
             var jo = new JObject();
-            if (o._Tag == ServerTimeReplyTag.Success)
+            if (o._Tag == Communication.ServerTimeReplyTag.Success)
             {
                 jo.Add("success", StringToJson(o.Success));
                 return jo;
@@ -746,48 +771,48 @@ namespace Communication.Json
             throw new InvalidOperationException();
         }
 
-        public static QuitRequest QuitRequestFromJson(JToken j)
+        public static Communication.QuitRequest QuitRequestFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new QuitRequest();
+            var o = new Communication.QuitRequest();
             return o;
         }
-        public static JObject QuitRequestToJson(QuitRequest o)
+        public static JObject QuitRequestToJson(Communication.QuitRequest o)
         {
             var jo = new JObject();
             return jo;
         }
-        public static QuitReplyTag QuitReplyTagFromJson(JToken j)
+        public static Communication.QuitReplyTag QuitReplyTagFromJson(JToken j)
         {
             if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
             var jv = j as JValue;
-            return (QuitReplyTag)(Convert.ToInt64(jv.Value));
+            return (Communication.QuitReplyTag)(Convert.ToInt64(jv.Value));
         }
-        public static JValue QuitReplyTagToJson(QuitReplyTag o)
+        public static JValue QuitReplyTagToJson(Communication.QuitReplyTag o)
         {
             return new JValue(Convert.ToInt64(o));
         }
-        public static QuitReply QuitReplyFromJson(JToken j)
+        public static Communication.QuitReply QuitReplyFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new QuitReply();
+            var o = new Communication.QuitReply();
             var d = (IDictionary<string, JToken>)(jo);
             if (d.ContainsKey("success"))
             {
-                o._Tag = QuitReplyTag.Success;
+                o._Tag = Communication.QuitReplyTag.Success;
                 o.Success = UnitFromJson(jo["success"]);
                 return o;
             }
             throw new InvalidOperationException();
         }
-        public static JObject QuitReplyToJson(QuitReply o)
+        public static JObject QuitReplyToJson(Communication.QuitReply o)
         {
             var jo = new JObject();
-            if (o._Tag == QuitReplyTag.Success)
+            if (o._Tag == Communication.QuitReplyTag.Success)
             {
                 jo.Add("success", UnitToJson(o.Success));
                 return jo;
@@ -795,72 +820,72 @@ namespace Communication.Json
             throw new InvalidOperationException();
         }
 
-        public static CheckSchemaVersionRequest CheckSchemaVersionRequestFromJson(JToken j)
+        public static Communication.CheckSchemaVersionRequest CheckSchemaVersionRequestFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new CheckSchemaVersionRequest();
+            var o = new Communication.CheckSchemaVersionRequest();
             o.Hash = StringFromJson(jo["hash"]);
             return o;
         }
-        public static JObject CheckSchemaVersionRequestToJson(CheckSchemaVersionRequest o)
+        public static JObject CheckSchemaVersionRequestToJson(Communication.CheckSchemaVersionRequest o)
         {
             var jo = new JObject();
             jo.Add("hash", StringToJson(o.Hash));
             return jo;
         }
-        public static CheckSchemaVersionReplyTag CheckSchemaVersionReplyTagFromJson(JToken j)
+        public static Communication.CheckSchemaVersionReplyTag CheckSchemaVersionReplyTagFromJson(JToken j)
         {
             if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
             var jv = j as JValue;
-            return (CheckSchemaVersionReplyTag)(Convert.ToInt64(jv.Value));
+            return (Communication.CheckSchemaVersionReplyTag)(Convert.ToInt64(jv.Value));
         }
-        public static JValue CheckSchemaVersionReplyTagToJson(CheckSchemaVersionReplyTag o)
+        public static JValue CheckSchemaVersionReplyTagToJson(Communication.CheckSchemaVersionReplyTag o)
         {
             return new JValue(Convert.ToInt64(o));
         }
-        public static CheckSchemaVersionReply CheckSchemaVersionReplyFromJson(JToken j)
+        public static Communication.CheckSchemaVersionReply CheckSchemaVersionReplyFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new CheckSchemaVersionReply();
+            var o = new Communication.CheckSchemaVersionReply();
             var d = (IDictionary<string, JToken>)(jo);
             if (d.ContainsKey("head"))
             {
-                o._Tag = CheckSchemaVersionReplyTag.Head;
+                o._Tag = Communication.CheckSchemaVersionReplyTag.Head;
                 o.Head = UnitFromJson(jo["head"]);
                 return o;
             }
             if (d.ContainsKey("supported"))
             {
-                o._Tag = CheckSchemaVersionReplyTag.Supported;
+                o._Tag = Communication.CheckSchemaVersionReplyTag.Supported;
                 o.Supported = UnitFromJson(jo["supported"]);
                 return o;
             }
             if (d.ContainsKey("notSupported"))
             {
-                o._Tag = CheckSchemaVersionReplyTag.NotSupported;
+                o._Tag = Communication.CheckSchemaVersionReplyTag.NotSupported;
                 o.NotSupported = UnitFromJson(jo["notSupported"]);
                 return o;
             }
             throw new InvalidOperationException();
         }
-        public static JObject CheckSchemaVersionReplyToJson(CheckSchemaVersionReply o)
+        public static JObject CheckSchemaVersionReplyToJson(Communication.CheckSchemaVersionReply o)
         {
             var jo = new JObject();
-            if (o._Tag == CheckSchemaVersionReplyTag.Head)
+            if (o._Tag == Communication.CheckSchemaVersionReplyTag.Head)
             {
                 jo.Add("head", UnitToJson(o.Head));
                 return jo;
             }
-            if (o._Tag == CheckSchemaVersionReplyTag.Supported)
+            if (o._Tag == Communication.CheckSchemaVersionReplyTag.Supported)
             {
                 jo.Add("supported", UnitToJson(o.Supported));
                 return jo;
             }
-            if (o._Tag == CheckSchemaVersionReplyTag.NotSupported)
+            if (o._Tag == Communication.CheckSchemaVersionReplyTag.NotSupported)
             {
                 jo.Add("notSupported", UnitToJson(o.NotSupported));
                 return jo;
@@ -868,75 +893,75 @@ namespace Communication.Json
             throw new InvalidOperationException();
         }
 
-        public static ServerShutdownEvent ServerShutdownEventFromJson(JToken j)
+        public static Communication.ServerShutdownEvent ServerShutdownEventFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new ServerShutdownEvent();
+            var o = new Communication.ServerShutdownEvent();
             return o;
         }
-        public static JObject ServerShutdownEventToJson(ServerShutdownEvent o)
+        public static JObject ServerShutdownEventToJson(Communication.ServerShutdownEvent o)
         {
             var jo = new JObject();
             return jo;
         }
 
-        public static SendMessageRequest SendMessageRequestFromJson(JToken j)
+        public static Communication.SendMessageRequest SendMessageRequestFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new SendMessageRequest();
+            var o = new Communication.SendMessageRequest();
             o.Content = StringFromJson(jo["content"]);
             return o;
         }
-        public static JObject SendMessageRequestToJson(SendMessageRequest o)
+        public static JObject SendMessageRequestToJson(Communication.SendMessageRequest o)
         {
             var jo = new JObject();
             jo.Add("content", StringToJson(o.Content));
             return jo;
         }
-        public static SendMessageReplyTag SendMessageReplyTagFromJson(JToken j)
+        public static Communication.SendMessageReplyTag SendMessageReplyTagFromJson(JToken j)
         {
             if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
             var jv = j as JValue;
-            return (SendMessageReplyTag)(Convert.ToInt64(jv.Value));
+            return (Communication.SendMessageReplyTag)(Convert.ToInt64(jv.Value));
         }
-        public static JValue SendMessageReplyTagToJson(SendMessageReplyTag o)
+        public static JValue SendMessageReplyTagToJson(Communication.SendMessageReplyTag o)
         {
             return new JValue(Convert.ToInt64(o));
         }
-        public static SendMessageReply SendMessageReplyFromJson(JToken j)
+        public static Communication.SendMessageReply SendMessageReplyFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new SendMessageReply();
+            var o = new Communication.SendMessageReply();
             var d = (IDictionary<string, JToken>)(jo);
             if (d.ContainsKey("success"))
             {
-                o._Tag = SendMessageReplyTag.Success;
+                o._Tag = Communication.SendMessageReplyTag.Success;
                 o.Success = UnitFromJson(jo["success"]);
                 return o;
             }
             if (d.ContainsKey("tooLong"))
             {
-                o._Tag = SendMessageReplyTag.TooLong;
+                o._Tag = Communication.SendMessageReplyTag.TooLong;
                 o.TooLong = UnitFromJson(jo["tooLong"]);
                 return o;
             }
             throw new InvalidOperationException();
         }
-        public static JObject SendMessageReplyToJson(SendMessageReply o)
+        public static JObject SendMessageReplyToJson(Communication.SendMessageReply o)
         {
             var jo = new JObject();
-            if (o._Tag == SendMessageReplyTag.Success)
+            if (o._Tag == Communication.SendMessageReplyTag.Success)
             {
                 jo.Add("success", UnitToJson(o.Success));
                 return jo;
             }
-            if (o._Tag == SendMessageReplyTag.TooLong)
+            if (o._Tag == Communication.SendMessageReplyTag.TooLong)
             {
                 jo.Add("tooLong", UnitToJson(o.TooLong));
                 return jo;
@@ -944,68 +969,133 @@ namespace Communication.Json
             throw new InvalidOperationException();
         }
 
-        public static MessageReceivedEvent MessageReceivedEventFromJson(JToken j)
+        public static Communication.MessageReceivedEvent MessageReceivedEventFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new MessageReceivedEvent();
+            var o = new Communication.MessageReceivedEvent();
             o.Content = StringFromJson(jo["content"]);
             return o;
         }
-        public static JObject MessageReceivedEventToJson(MessageReceivedEvent o)
+        public static JObject MessageReceivedEventToJson(Communication.MessageReceivedEvent o)
         {
             var jo = new JObject();
             jo.Add("content", StringToJson(o.Content));
             return jo;
         }
 
-        public static TestAddRequest TestAddRequestFromJson(JToken j)
+        public static CommunicationDuplication.ErrorEvent CommunicationDuplicationDotErrorEventFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new TestAddRequest();
+            var o = new CommunicationDuplication.ErrorEvent();
+            o.Message = StringFromJson(jo["message"]);
+            return o;
+        }
+        public static JObject CommunicationDuplicationDotErrorEventToJson(CommunicationDuplication.ErrorEvent o)
+        {
+            var jo = new JObject();
+            jo.Add("message", StringToJson(o.Message));
+            return jo;
+        }
+
+        public static CommunicationDuplication.ServerTimeRequest CommunicationDuplicationDotServerTimeRequestFromJson(JToken j)
+        {
+            if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
+            var jo = j as JObject;
+            if (jo == null) { throw new InvalidOperationException(); }
+            var o = new CommunicationDuplication.ServerTimeRequest();
+            return o;
+        }
+        public static JObject CommunicationDuplicationDotServerTimeRequestToJson(CommunicationDuplication.ServerTimeRequest o)
+        {
+            var jo = new JObject();
+            return jo;
+        }
+        public static CommunicationDuplication.ServerTimeReplyTag CommunicationDuplicationDotServerTimeReplyTagFromJson(JToken j)
+        {
+            if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
+            var jv = j as JValue;
+            return (CommunicationDuplication.ServerTimeReplyTag)(Convert.ToInt64(jv.Value));
+        }
+        public static JValue CommunicationDuplicationDotServerTimeReplyTagToJson(CommunicationDuplication.ServerTimeReplyTag o)
+        {
+            return new JValue(Convert.ToInt64(o));
+        }
+        public static CommunicationDuplication.ServerTimeReply CommunicationDuplicationDotServerTimeReplyFromJson(JToken j)
+        {
+            if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
+            var jo = j as JObject;
+            if (jo == null) { throw new InvalidOperationException(); }
+            var o = new CommunicationDuplication.ServerTimeReply();
+            var d = (IDictionary<string, JToken>)(jo);
+            if (d.ContainsKey("success"))
+            {
+                o._Tag = CommunicationDuplication.ServerTimeReplyTag.Success;
+                o.Success = StringFromJson(jo["success"]);
+                return o;
+            }
+            throw new InvalidOperationException();
+        }
+        public static JObject CommunicationDuplicationDotServerTimeReplyToJson(CommunicationDuplication.ServerTimeReply o)
+        {
+            var jo = new JObject();
+            if (o._Tag == CommunicationDuplication.ServerTimeReplyTag.Success)
+            {
+                jo.Add("success", StringToJson(o.Success));
+                return jo;
+            }
+            throw new InvalidOperationException();
+        }
+
+        public static Communication.TestAddRequest TestAddRequestFromJson(JToken j)
+        {
+            if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
+            var jo = j as JObject;
+            if (jo == null) { throw new InvalidOperationException(); }
+            var o = new Communication.TestAddRequest();
             o.Left = IntFromJson(jo["left"]);
             o.Right = IntFromJson(jo["right"]);
             return o;
         }
-        public static JObject TestAddRequestToJson(TestAddRequest o)
+        public static JObject TestAddRequestToJson(Communication.TestAddRequest o)
         {
             var jo = new JObject();
             jo.Add("left", IntToJson(o.Left));
             jo.Add("right", IntToJson(o.Right));
             return jo;
         }
-        public static TestAddReplyTag TestAddReplyTagFromJson(JToken j)
+        public static Communication.TestAddReplyTag TestAddReplyTagFromJson(JToken j)
         {
             if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
             var jv = j as JValue;
-            return (TestAddReplyTag)(Convert.ToInt64(jv.Value));
+            return (Communication.TestAddReplyTag)(Convert.ToInt64(jv.Value));
         }
-        public static JValue TestAddReplyTagToJson(TestAddReplyTag o)
+        public static JValue TestAddReplyTagToJson(Communication.TestAddReplyTag o)
         {
             return new JValue(Convert.ToInt64(o));
         }
-        public static TestAddReply TestAddReplyFromJson(JToken j)
+        public static Communication.TestAddReply TestAddReplyFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new TestAddReply();
+            var o = new Communication.TestAddReply();
             var d = (IDictionary<string, JToken>)(jo);
             if (d.ContainsKey("result"))
             {
-                o._Tag = TestAddReplyTag.Result;
+                o._Tag = Communication.TestAddReplyTag.Result;
                 o.Result = IntFromJson(jo["result"]);
                 return o;
             }
             throw new InvalidOperationException();
         }
-        public static JObject TestAddReplyToJson(TestAddReply o)
+        public static JObject TestAddReplyToJson(Communication.TestAddReply o)
         {
             var jo = new JObject();
-            if (o._Tag == TestAddReplyTag.Result)
+            if (o._Tag == Communication.TestAddReplyTag.Result)
             {
                 jo.Add("result", IntToJson(o.Result));
                 return jo;
@@ -1013,50 +1103,50 @@ namespace Communication.Json
             throw new InvalidOperationException();
         }
 
-        public static TestMultiplyRequest TestMultiplyRequestFromJson(JToken j)
+        public static Communication.TestMultiplyRequest TestMultiplyRequestFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new TestMultiplyRequest();
+            var o = new Communication.TestMultiplyRequest();
             o.Operand = RealFromJson(jo["operand"]);
             return o;
         }
-        public static JObject TestMultiplyRequestToJson(TestMultiplyRequest o)
+        public static JObject TestMultiplyRequestToJson(Communication.TestMultiplyRequest o)
         {
             var jo = new JObject();
             jo.Add("operand", RealToJson(o.Operand));
             return jo;
         }
-        public static TestMultiplyReplyTag TestMultiplyReplyTagFromJson(JToken j)
+        public static Communication.TestMultiplyReplyTag TestMultiplyReplyTagFromJson(JToken j)
         {
             if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
             var jv = j as JValue;
-            return (TestMultiplyReplyTag)(Convert.ToInt64(jv.Value));
+            return (Communication.TestMultiplyReplyTag)(Convert.ToInt64(jv.Value));
         }
-        public static JValue TestMultiplyReplyTagToJson(TestMultiplyReplyTag o)
+        public static JValue TestMultiplyReplyTagToJson(Communication.TestMultiplyReplyTag o)
         {
             return new JValue(Convert.ToInt64(o));
         }
-        public static TestMultiplyReply TestMultiplyReplyFromJson(JToken j)
+        public static Communication.TestMultiplyReply TestMultiplyReplyFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new TestMultiplyReply();
+            var o = new Communication.TestMultiplyReply();
             var d = (IDictionary<string, JToken>)(jo);
             if (d.ContainsKey("result"))
             {
-                o._Tag = TestMultiplyReplyTag.Result;
+                o._Tag = Communication.TestMultiplyReplyTag.Result;
                 o.Result = RealFromJson(jo["result"]);
                 return o;
             }
             throw new InvalidOperationException();
         }
-        public static JObject TestMultiplyReplyToJson(TestMultiplyReply o)
+        public static JObject TestMultiplyReplyToJson(Communication.TestMultiplyReply o)
         {
             var jo = new JObject();
-            if (o._Tag == TestMultiplyReplyTag.Result)
+            if (o._Tag == Communication.TestMultiplyReplyTag.Result)
             {
                 jo.Add("result", RealToJson(o.Result));
                 return jo;
@@ -1064,50 +1154,50 @@ namespace Communication.Json
             throw new InvalidOperationException();
         }
 
-        public static TestTextRequest TestTextRequestFromJson(JToken j)
+        public static Communication.TestTextRequest TestTextRequestFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new TestTextRequest();
+            var o = new Communication.TestTextRequest();
             o.Text = StringFromJson(jo["text"]);
             return o;
         }
-        public static JObject TestTextRequestToJson(TestTextRequest o)
+        public static JObject TestTextRequestToJson(Communication.TestTextRequest o)
         {
             var jo = new JObject();
             jo.Add("text", StringToJson(o.Text));
             return jo;
         }
-        public static TestTextReplyTag TestTextReplyTagFromJson(JToken j)
+        public static Communication.TestTextReplyTag TestTextReplyTagFromJson(JToken j)
         {
             if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
             var jv = j as JValue;
-            return (TestTextReplyTag)(Convert.ToInt64(jv.Value));
+            return (Communication.TestTextReplyTag)(Convert.ToInt64(jv.Value));
         }
-        public static JValue TestTextReplyTagToJson(TestTextReplyTag o)
+        public static JValue TestTextReplyTagToJson(Communication.TestTextReplyTag o)
         {
             return new JValue(Convert.ToInt64(o));
         }
-        public static TestTextReply TestTextReplyFromJson(JToken j)
+        public static Communication.TestTextReply TestTextReplyFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new TestTextReply();
+            var o = new Communication.TestTextReply();
             var d = (IDictionary<string, JToken>)(jo);
             if (d.ContainsKey("result"))
             {
-                o._Tag = TestTextReplyTag.Result;
+                o._Tag = Communication.TestTextReplyTag.Result;
                 o.Result = StringFromJson(jo["result"]);
                 return o;
             }
             throw new InvalidOperationException();
         }
-        public static JObject TestTextReplyToJson(TestTextReply o)
+        public static JObject TestTextReplyToJson(Communication.TestTextReply o)
         {
             var jo = new JObject();
-            if (o._Tag == TestTextReplyTag.Result)
+            if (o._Tag == Communication.TestTextReplyTag.Result)
             {
                 jo.Add("result", StringToJson(o.Result));
                 return jo;
@@ -1115,50 +1205,50 @@ namespace Communication.Json
             throw new InvalidOperationException();
         }
 
-        public static TestMessageRequest TestMessageRequestFromJson(JToken j)
+        public static Communication.TestMessageRequest TestMessageRequestFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new TestMessageRequest();
+            var o = new Communication.TestMessageRequest();
             o.Message = StringFromJson(jo["message"]);
             return o;
         }
-        public static JObject TestMessageRequestToJson(TestMessageRequest o)
+        public static JObject TestMessageRequestToJson(Communication.TestMessageRequest o)
         {
             var jo = new JObject();
             jo.Add("message", StringToJson(o.Message));
             return jo;
         }
-        public static TestMessageReplyTag TestMessageReplyTagFromJson(JToken j)
+        public static Communication.TestMessageReplyTag TestMessageReplyTagFromJson(JToken j)
         {
             if (j.Type != JTokenType.Number) { throw new InvalidOperationException(); }
             var jv = j as JValue;
-            return (TestMessageReplyTag)(Convert.ToInt64(jv.Value));
+            return (Communication.TestMessageReplyTag)(Convert.ToInt64(jv.Value));
         }
-        public static JValue TestMessageReplyTagToJson(TestMessageReplyTag o)
+        public static JValue TestMessageReplyTagToJson(Communication.TestMessageReplyTag o)
         {
             return new JValue(Convert.ToInt64(o));
         }
-        public static TestMessageReply TestMessageReplyFromJson(JToken j)
+        public static Communication.TestMessageReply TestMessageReplyFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new TestMessageReply();
+            var o = new Communication.TestMessageReply();
             var d = (IDictionary<string, JToken>)(jo);
             if (d.ContainsKey("success"))
             {
-                o._Tag = TestMessageReplyTag.Success;
+                o._Tag = Communication.TestMessageReplyTag.Success;
                 o.Success = IntFromJson(jo["success"]);
                 return o;
             }
             throw new InvalidOperationException();
         }
-        public static JObject TestMessageReplyToJson(TestMessageReply o)
+        public static JObject TestMessageReplyToJson(Communication.TestMessageReply o)
         {
             var jo = new JObject();
-            if (o._Tag == TestMessageReplyTag.Success)
+            if (o._Tag == Communication.TestMessageReplyTag.Success)
             {
                 jo.Add("success", IntToJson(o.Success));
                 return jo;
@@ -1166,16 +1256,16 @@ namespace Communication.Json
             throw new InvalidOperationException();
         }
 
-        public static TestMessageReceivedEvent TestMessageReceivedEventFromJson(JToken j)
+        public static Communication.TestMessageReceivedEvent TestMessageReceivedEventFromJson(JToken j)
         {
             if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
             var jo = j as JObject;
             if (jo == null) { throw new InvalidOperationException(); }
-            var o = new TestMessageReceivedEvent();
+            var o = new Communication.TestMessageReceivedEvent();
             o.Message = StringFromJson(jo["message"]);
             return o;
         }
-        public static JObject TestMessageReceivedEventToJson(TestMessageReceivedEvent o)
+        public static JObject TestMessageReceivedEventToJson(Communication.TestMessageReceivedEvent o)
         {
             var jo = new JObject();
             jo.Add("message", StringToJson(o.Message));
