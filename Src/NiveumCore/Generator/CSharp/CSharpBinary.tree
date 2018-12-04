@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板
-      Version:     2018.12.04.
+      Version:     2018.12.05.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -57,7 +57,7 @@
                         var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                         var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                         var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
-                        var Name = c.ClientCommand.SimpleName();
+                        var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (WithFirefly)
                         {
@@ -128,7 +128,7 @@
                     {
                         var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
                         var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                        var Name = c.ServerCommand.SimpleName();
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (WithFirefly)
                         {
@@ -220,7 +220,7 @@
                         var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                         var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                         var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
-                        var Name = c.ClientCommand.SimpleName();
+                        var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (WithFirefly)
                         {
@@ -245,7 +245,7 @@
                     }
                     else if (c.OnServerCommand)
                     {
-                        var Name = c.ServerCommand.SimpleName();
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                         ##
                             public event Action<${EventTypeString}> [[${Name}]];
@@ -271,7 +271,7 @@
                         var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
                         var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                         var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                        var Name = c.ServerCommand.SimpleName();
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (WithFirefly)
                         {

@@ -21,7 +21,7 @@
 #ServerCommand Communication.MessageReceived[1] 接收到消息
     Title                       String                      标题
     Lines                       List<String>                内容
-#ClientCommand CommunicationPerformance.TestAdd[1] 加法
+#ClientCommand Communication.TestAdd[1] 加法
     Operand1                    Int                         操作数1
     Operand2                    Int                         操作数2
     >

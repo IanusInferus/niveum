@@ -116,7 +116,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                     var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
-                    var Name = c.ClientCommand.SimpleName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (c.ClientCommand.Version == "")
                     {
@@ -214,7 +214,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                 {
                     var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
                     var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "s."), Name), " += e => OnServerEvent("), CommandNameString), ", 0x"), CommandHash), ", JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), EventName), "ToJson"))), "(e).ToString(Formatting.None));"))
                     {
@@ -304,7 +304,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                     var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
-                    var Name = c.ClientCommand.SimpleName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, Action<"), ReplyTypeString), "> Callback)"))
                     {
@@ -327,7 +327,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public event Action<"), EventTypeString), "> "), GetEscapedIdentifier(Name)), ";"))
                     {
@@ -357,7 +357,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                     var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ServerCommands.Add(new KeyValuePair<String, UInt32>("), CommandNameString), ", 0x"), CommandHash), "), Parameters => c."), GetEscapedIdentifier(Combine(Combine(Begin(), "Raise"), Name))), "(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), EventName), "FromJson"))), "(JToken.Parse(Parameters))));"))
                     {
@@ -418,7 +418,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                 var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
                 var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                 var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                var Name = c.ServerCommand.SimpleName();
+                var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                 foreach (var _Line in Combine(Combine(Combine(Begin(), "Inner."), GetEscapedIdentifier(Name)), " += e =>"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
@@ -449,7 +449,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                     var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
-                    var Name = c.ClientCommand.SimpleName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
                         foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " Request, Action<"), ReplyTypeString), "> Callback, Action<Exception> OnFailure)"))
@@ -504,7 +504,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                 else if (c.OnServerCommand)
                 {
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public event Action<"), EventTypeString), "> "), GetEscapedIdentifier(Name)), ";"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;

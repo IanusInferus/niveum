@@ -4,7 +4,7 @@
       File:        CSharp.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C#模板
-      Version:     2018.12.04.
+      Version:     2018.12.05.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -298,7 +298,7 @@
 
 #Template Alias a:AliasDef
     $$
-        var Name = GetEscapedIdentifier(a.SimpleName()) + GetGenericParameters(a.GenericParameters);
+        var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
         var Type = GetTypeString(a.Type, a.NamespaceName());
     ${GetXmlComment(a.Description)}
     [Alias]
@@ -318,7 +318,7 @@
 
 #Template Record r:RecordDef
     $$
-        var Name = GetEscapedIdentifier(r.SimpleName()) + GetGenericParameters(r.GenericParameters);
+        var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
     ${GetXmlComment(r.Description)}
     [Record]
     public sealed class ${Name}
@@ -334,8 +334,8 @@
 
 #Template TaggedUnion tu:TaggedUnionDef
     $$
-        var Name = GetEscapedIdentifier(tu.SimpleName()) + GetGenericParameters(tu.GenericParameters);
-        var TagName = GetEscapedIdentifier(tu.SimpleName() + "Tag");
+        var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
+        var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
     public enum ${TagName}
     {
         $$
@@ -399,9 +399,9 @@
 
 #Template Enum e:EnumDef
     $$
-        var Name = GetEscapedIdentifier(e.SimpleName());
-        var ParserName = GetEscapedIdentifier(e.SimpleName() + "Parser");
-        var WriterName = GetEscapedIdentifier(e.SimpleName() + "Writer");
+        var Name = GetEscapedIdentifier(e.DefinitionName());
+        var ParserName = GetEscapedIdentifier(GetSuffixedTypeName(e.Name, e.Version, "Parser", e.NamespaceName()));
+        var WriterName = GetEscapedIdentifier(GetSuffixedTypeName(e.Name, e.Version, "Writer", e.NamespaceName()));
     ${GetXmlComment(e.Description)}
     public enum ${Name} : ${GetEnumTypeString(e.UnderlyingType)}
     {
@@ -488,7 +488,7 @@
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.SimpleName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
                     var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
@@ -507,7 +507,7 @@
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
@@ -528,7 +528,7 @@
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.SimpleName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
                     var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
@@ -538,7 +538,7 @@
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
@@ -557,7 +557,7 @@
                 if (c.OnServerCommand)
                 {
                     if (c.ServerCommand.Version != "") { continue; }
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##

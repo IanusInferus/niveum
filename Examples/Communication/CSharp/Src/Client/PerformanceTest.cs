@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
 using Communication;
-using CommunicationPerformance;
 using BaseSystem;
 
 namespace Client

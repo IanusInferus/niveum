@@ -247,7 +247,7 @@ namespace Niveum.ObjectSchema.CSharp
         }
         public IEnumerable<String> Alias(AliasDef a)
         {
-            var Name = GetEscapedIdentifier(a.SimpleName()) + GetGenericParameters(a.GenericParameters);
+            var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
             var Type = GetTypeString(a.Type, a.NamespaceName());
             foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
             {
@@ -285,7 +285,7 @@ namespace Niveum.ObjectSchema.CSharp
         }
         public IEnumerable<String> Record(RecordDef r)
         {
-            var Name = GetEscapedIdentifier(r.SimpleName()) + GetGenericParameters(r.GenericParameters);
+            var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
             foreach (var _Line in Combine(Begin(), GetXmlComment(r.Description)))
             {
                 yield return _Line;
@@ -311,8 +311,8 @@ namespace Niveum.ObjectSchema.CSharp
         }
         public IEnumerable<String> TaggedUnion(TaggedUnionDef tu)
         {
-            var Name = GetEscapedIdentifier(tu.SimpleName()) + GetGenericParameters(tu.GenericParameters);
-            var TagName = GetEscapedIdentifier(tu.SimpleName() + "Tag");
+            var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
+            var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
             foreach (var _Line in Combine(Combine(Begin(), "public enum "), TagName))
             {
                 yield return _Line;
@@ -414,9 +414,9 @@ namespace Niveum.ObjectSchema.CSharp
         }
         public IEnumerable<String> Enum(EnumDef e)
         {
-            var Name = GetEscapedIdentifier(e.SimpleName());
-            var ParserName = GetEscapedIdentifier(e.SimpleName() + "Parser");
-            var WriterName = GetEscapedIdentifier(e.SimpleName() + "Writer");
+            var Name = GetEscapedIdentifier(e.DefinitionName());
+            var ParserName = GetEscapedIdentifier(GetSuffixedTypeName(e.Name, e.Version, "Parser", e.NamespaceName()));
+            var WriterName = GetEscapedIdentifier(GetSuffixedTypeName(e.Name, e.Version, "Writer", e.NamespaceName()));
             foreach (var _Line in Combine(Begin(), GetXmlComment(e.Description)))
             {
                 yield return _Line;
@@ -559,7 +559,7 @@ namespace Niveum.ObjectSchema.CSharp
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.SimpleName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
                     var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
@@ -588,7 +588,7 @@ namespace Niveum.ObjectSchema.CSharp
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
@@ -614,7 +614,7 @@ namespace Niveum.ObjectSchema.CSharp
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.SimpleName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
                     var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
@@ -629,7 +629,7 @@ namespace Niveum.ObjectSchema.CSharp
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
@@ -653,7 +653,7 @@ namespace Niveum.ObjectSchema.CSharp
                 if (c.OnServerCommand)
                 {
                     if (c.ServerCommand.Version != "") { continue; }
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))

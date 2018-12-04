@@ -1,0 +1,20 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        TestDuplication.tree
+      Location:    Yuki.Examples <Tree>
+      Description: 重复命令名测试
+      Version:     2018.12.05.
+      Author:      F.R.C.
+      Copyright(C) Public Domain
+
+    ==========================================================================
+
+#Namespace CommunicationDuplication
+
+#ServerCommand Error                                错误
+    Message             String                      错误信息
+
+#ClientCommand ServerTime                           服务器时间
+    >
+    Success             String                      服务器时间

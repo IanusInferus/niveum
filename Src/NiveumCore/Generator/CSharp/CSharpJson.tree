@@ -61,7 +61,7 @@
                         var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                         var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                         var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
-                        var Name = c.ClientCommand.SimpleName();
+                        var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (c.ClientCommand.Version == "")
                         {
@@ -149,7 +149,7 @@
                     {
                         var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
                         var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                        var Name = c.ServerCommand.SimpleName();
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
                             s.${Name} += e => OnServerEvent(${CommandNameString}, 0x${CommandHash}, JsonTranslator.[[${EventName}ToJson]](e).ToString(Formatting.None));
@@ -233,7 +233,7 @@
                         var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                         var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                         var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
-                        var Name = c.ClientCommand.SimpleName();
+                        var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
                             public void [[${Name}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback)
@@ -245,7 +245,7 @@
                     }
                     else if (c.OnServerCommand)
                     {
-                        var Name = c.ServerCommand.SimpleName();
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                         ##
                             public event Action<${EventTypeString}> [[${Name}]];
@@ -271,7 +271,7 @@
                         var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
                         var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                         var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                        var Name = c.ServerCommand.SimpleName();
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
                             ServerCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), Parameters => c.[[Raise${Name}]](JsonTranslator.[[${EventName}FromJson]](JToken.Parse(Parameters))));
@@ -330,7 +330,7 @@
                     var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     ##
                         Inner.[[${Name}]] += e =>
                         {
@@ -354,7 +354,7 @@
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                     var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
-                    var Name = c.ClientCommand.SimpleName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
                         ##
@@ -384,7 +384,7 @@
                 else if (c.OnServerCommand)
                 {
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     ##
                         public event Action<${EventTypeString}> [[${Name}]];
                 }

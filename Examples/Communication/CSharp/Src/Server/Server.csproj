@@ -78,6 +78,7 @@
     <Compile Include="Servers\UdpServer.cs" />
     <Compile Include="Servers\UdpSession.cs" />
     <Compile Include="Services\Admin.cs" />
+    <Compile Include="Services\TestDuplication.cs" />
     <Compile Include="Services\Compatibility_1.cs" />
     <Compile Include="Services\CrossSessionEvent.cs" />
     <Compile Include="Services\TestPerformance.cs" />

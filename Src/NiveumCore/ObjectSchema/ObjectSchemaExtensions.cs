@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2018.12.04.
+//  Version:     2018.12.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -953,41 +953,42 @@ namespace Niveum.ObjectSchema
             return String.Join(".", t.Name.Take(t.Name.Count - 1));
         }
 
-        public static String SimpleName(this PrimitiveDef t)
+        public static String DefinitionName(this PrimitiveDef t)
         {
             return t.Name.Last();
         }
-        public static String SimpleName(this AliasDef t)
+        public static String DefinitionName(this AliasDef t)
         {
             return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
         }
-        public static String SimpleName(this RecordDef t)
+        public static String DefinitionName(this RecordDef t)
         {
             return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
         }
-        public static String SimpleName(this TaggedUnionDef t)
+        public static String DefinitionName(this TaggedUnionDef t)
         {
             return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
         }
-        public static String SimpleName(this EnumDef t)
+        public static String DefinitionName(this EnumDef t)
         {
             return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
         }
-        public static String SimpleName(this ClientCommandDef t)
+        public static String DefinitionName(this ClientCommandDef t)
         {
             return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
         }
-        public static String SimpleName(this ServerCommandDef t)
+        public static String DefinitionName(this ServerCommandDef t)
         {
             return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
         }
-        public static String SimpleName(this TypeDef t)
+        public static String DefinitionName(this TypeDef t)
         {
             return t.Name().Last() + (t.Version() == "" ? "" : "At" + t.Version());
         }
+
         public static String SimpleName(this TypeRef t, String NamespaceName)
         {
-            if (t.NamespaceName() == NamespaceName)
+            if ((t.NamespaceName() == NamespaceName) || (NamespaceName.StartsWith(t.NamespaceName() + ".")))
             {
                 return t.Name.Last() + (t.Version == "" ? "" : "At" + t.Version);
             }

@@ -112,7 +112,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                     var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
-                    var Name = c.ClientCommand.SimpleName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (WithFirefly)
                     {
@@ -193,7 +193,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 {
                     var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
                     var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (WithFirefly)
                     {
@@ -293,7 +293,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
                     var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
-                    var Name = c.ClientCommand.SimpleName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (WithFirefly)
                     {
@@ -337,7 +337,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public event Action<"), EventTypeString), "> "), GetEscapedIdentifier(Name)), ";"))
                     {
@@ -367,7 +367,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                     var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
                     var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
-                    var Name = c.ServerCommand.SimpleName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (WithFirefly)
                     {
