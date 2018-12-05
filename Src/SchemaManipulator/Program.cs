@@ -29,7 +29,6 @@ using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.CppCompatible;
 using Yuki.ObjectSchema.CppVersion;
-using Yuki.ObjectSchema.CSharpRetry;
 using Yuki.ObjectSchema.CSharpVersion;
 using Yuki.ObjectSchema.Haxe;
 using Yuki.ObjectSchema.HaxeJson;
@@ -358,23 +357,6 @@ namespace Yuki.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (optNameLower == "t2csr")
-                {
-                    var args = opt.Arguments;
-                    if (args.Length == 1)
-                    {
-                        ObjectSchemaToCSharpRetryCode(args[0], "");
-                    }
-                    else if (args.Length == 2)
-                    {
-                        ObjectSchemaToCSharpRetryCode(args[0], args[1]);
-                    }
-                    else
-                    {
-                        DisplayInfo();
-                        return -1;
-                    }
-                }
                 else if (optNameLower == "t2csv")
                 {
                     var args = opt.Arguments;
@@ -635,8 +617,6 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"/t2csj:<CsCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C#兼容类型");
             Console.WriteLine(@"/t2csc:<CsCodePath>,<NamespaceName>,<ImplementationNamespaceName>,<ImplementationClassName>");
-            Console.WriteLine(@"生成C#重试循环类型");
-            Console.WriteLine(@"/t2csr:<CsCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C#版本类型");
             Console.WriteLine(@"/t2csv:<CsCodePath>,<NamespaceName>,<TypeName>*");
             Console.WriteLine(@"生成Java类型");
@@ -915,23 +895,6 @@ namespace Yuki.SchemaManipulator
         {
             var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ImplementationNamespaceName, ImplementationClassName);
-            if (File.Exists(CsCodePath))
-            {
-                var Original = Txt.ReadFile(CsCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var Dir = FileNameHandling.GetFileDirectory(CsCodePath);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(CsCodePath, Compiled);
-        }
-
-        public static void ObjectSchemaToCSharpRetryCode(String CsCodePath, String NamespaceName)
-        {
-            var ObjectSchema = GetObjectSchemaLegacy();
-            var Compiled = ObjectSchema.CompileToCSharpRetry(NamespaceName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
