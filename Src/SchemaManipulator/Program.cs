@@ -3,11 +3,17 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2018.12.05.
+//  Version:     2018.12.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
+using System;
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using Firefly;
 using Firefly.Mapping.TreeText;
 using Firefly.Streaming;
@@ -18,17 +24,11 @@ using Niveum.ObjectSchema;
 using Niveum.ObjectSchema.CSharp;
 using Niveum.ObjectSchema.CSharpBinary;
 using Niveum.ObjectSchema.CSharpJson;
-using System;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+using Niveum.ObjectSchema.CSharpCompatible;
 using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.CppCompatible;
 using Yuki.ObjectSchema.CppVersion;
-using Yuki.ObjectSchema.CSharpCompatible;
 using Yuki.ObjectSchema.CSharpRetry;
 using Yuki.ObjectSchema.CSharpVersion;
 using Yuki.ObjectSchema.Haxe;
@@ -348,13 +348,9 @@ namespace Yuki.SchemaManipulator
                 else if (optNameLower == "t2csc")
                 {
                     var args = opt.Arguments;
-                    if (args.Length == 2)
+                    if (args.Length == 4)
                     {
-                        ObjectSchemaToCSharpCompatibleCode(args[0], args[1], "");
-                    }
-                    else if (args.Length == 3)
-                    {
-                        ObjectSchemaToCSharpCompatibleCode(args[0], args[1], args[2]);
+                        ObjectSchemaToCSharpCompatibleCode(args[0], args[1], args[2], args[3]);
                     }
                     else
                     {
@@ -638,7 +634,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"生成C# JSON通讯类型");
             Console.WriteLine(@"/t2csj:<CsCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C#兼容类型");
-            Console.WriteLine(@"/t2csc:<CsCodePath>,<ClassName>[,<NamespaceName>]");
+            Console.WriteLine(@"/t2csc:<CsCodePath>,<NamespaceName>,<ImplementationNamespaceName>,<ImplementationClassName>");
             Console.WriteLine(@"生成C#重试循环类型");
             Console.WriteLine(@"/t2csr:<CsCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C#版本类型");
@@ -915,10 +911,10 @@ namespace Yuki.SchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpCompatibleCode(String CsCodePath, String ClassName, String NamespaceName)
+        public static void ObjectSchemaToCSharpCompatibleCode(String CsCodePath, String NamespaceName, String ImplementationNamespaceName, String ImplementationClassName)
         {
-            var ObjectSchema = GetObjectSchemaLegacy();
-            var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ClassName);
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ImplementationNamespaceName, ImplementationClassName);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);

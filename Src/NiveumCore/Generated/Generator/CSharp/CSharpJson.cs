@@ -744,13 +744,13 @@ namespace Niveum.ObjectSchema.CSharpJson
         {
             var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
             var Name = a.GetTypeSpec().SimpleName(NamespaceName);
-            var ValueTypeSimpleName = a.Type.SimpleName(NamespaceName);
+            var ValueSimpleName = a.Type.SimpleName(NamespaceName);
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "FromJson"))), "(JToken j)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), TypeString), " { Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSimpleName), "FromJson"))), "(j) };"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return new "), TypeString), " { Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueSimpleName), "FromJson"))), "(j) };"))
             {
                 yield return _Line;
             }
@@ -760,7 +760,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSimpleName), "ToJson"))), "(o.Value);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueSimpleName), "ToJson"))), "(o.Value);"))
             {
                 yield return _Line;
             }
@@ -930,9 +930,9 @@ namespace Niveum.ObjectSchema.CSharpJson
         }
         public IEnumerable<String> JsonTranslator_Tuple(TypeSpec tp, String NamespaceName)
         {
-            var TypeSimpleName = tp.SimpleName(NamespaceName);
+            var SimpleName = tp.SimpleName(NamespaceName);
             var TypeString = GetTypeString(tp, NamespaceName);
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeSimpleName), "FromJson"))), "(JToken j)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromJson"))), "(JToken j)"))
             {
                 yield return _Line;
             }
@@ -957,7 +957,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                 yield return _Line;
             }
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeSimpleName), "ToJson"))), "("), TypeString), " t)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToJson"))), "("), TypeString), " t)"))
             {
                 yield return _Line;
             }
@@ -981,9 +981,9 @@ namespace Niveum.ObjectSchema.CSharpJson
         {
             var ElementType = o.GenericTypeSpec.ParameterValues.Single();
             var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
-            var TypeSimpleName = o.SimpleName(NamespaceName);
+            var SimpleName = o.SimpleName(NamespaceName);
             var TypeString = GetTypeString(o, NamespaceName);
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeSimpleName), "FromJson"))), "(JToken j)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromJson"))), "(JToken j)"))
             {
                 yield return _Line;
             }
@@ -1016,7 +1016,7 @@ namespace Niveum.ObjectSchema.CSharpJson
             }
             yield return "    throw new InvalidOperationException();";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JObject "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeSimpleName), "ToJson"))), "("), TypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JObject "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToJson"))), "("), TypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -1041,10 +1041,10 @@ namespace Niveum.ObjectSchema.CSharpJson
         }
         public IEnumerable<String> JsonTranslator_List(TypeSpec l, String NamespaceName)
         {
-            var TypeSimpleName = l.SimpleName(NamespaceName);
+            var SimpleName = l.SimpleName(NamespaceName);
             var TypeString = GetTypeString(l, NamespaceName);
-            var ElementTypeSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeSimpleName), "FromJson"))), "(JToken j)"))
+            var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromJson"))), "(JToken j)"))
             {
                 yield return _Line;
             }
@@ -1057,14 +1057,14 @@ namespace Niveum.ObjectSchema.CSharpJson
             }
             yield return "    foreach (var e in ja.Children())";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        a.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeSimpleName), "FromJson"))), "(e));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        a.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromJson"))), "(e));"))
             {
                 yield return _Line;
             }
             yield return "    }";
             yield return "    return a;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeSimpleName), "ToJson"))), "("), TypeString), " c)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToJson"))), "("), TypeString), " c)"))
             {
                 yield return _Line;
             }
@@ -1072,7 +1072,7 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "    var ja = new JArray();";
             yield return "    foreach (var e in c)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        ja.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeSimpleName), "ToJson"))), "(e));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        ja.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "ToJson"))), "(e));"))
             {
                 yield return _Line;
             }
@@ -1082,10 +1082,10 @@ namespace Niveum.ObjectSchema.CSharpJson
         }
         public IEnumerable<String> JsonTranslator_Set(TypeSpec l, String NamespaceName)
         {
-            var TypeSimpleName = l.SimpleName(NamespaceName);
+            var SimpleName = l.SimpleName(NamespaceName);
             var TypeString = GetTypeString(l, NamespaceName);
-            var ElementTypeSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeSimpleName), "FromJson"))), "(JToken j)"))
+            var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromJson"))), "(JToken j)"))
             {
                 yield return _Line;
             }
@@ -1098,14 +1098,14 @@ namespace Niveum.ObjectSchema.CSharpJson
             }
             yield return "    foreach (var e in ja.Children())";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        a.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeSimpleName), "FromJson"))), "(e));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        a.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromJson"))), "(e));"))
             {
                 yield return _Line;
             }
             yield return "    }";
             yield return "    return a;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeSimpleName), "ToJson"))), "("), TypeString), " c)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToJson"))), "("), TypeString), " c)"))
             {
                 yield return _Line;
             }
@@ -1113,7 +1113,7 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "    var ja = new JArray();";
             yield return "    foreach (var e in c)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        ja.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeSimpleName), "ToJson"))), "(e));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        ja.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "ToJson"))), "(e));"))
             {
                 yield return _Line;
             }
@@ -1128,11 +1128,11 @@ namespace Niveum.ObjectSchema.CSharpJson
             {
                 throw new ArgumentException();
             }
-            var TypeSimpleName = l.SimpleName(NamespaceName);
+            var SimpleName = l.SimpleName(NamespaceName);
             var TypeString = GetTypeString(l, NamespaceName);
-            var KeyTypeSimpleName = gp[0].SimpleName(NamespaceName);
-            var ValueTypeSimpleName = gp[1].SimpleName(NamespaceName);
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeSimpleName), "FromJson"))), "(JToken j)"))
+            var KeySimpleName = gp[0].SimpleName(NamespaceName);
+            var ValueSimpleName = gp[1].SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromJson"))), "(JToken j)"))
             {
                 yield return _Line;
             }
@@ -1145,11 +1145,11 @@ namespace Niveum.ObjectSchema.CSharpJson
             }
             yield return "    foreach (var e in ja.Children().OfType<JObject>())";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeSimpleName), "FromJson"))), "(e[\"key\"]);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "FromJson"))), "(e[\"key\"]);"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSimpleName), "FromJson"))), "(e[\"value\"]);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueSimpleName), "FromJson"))), "(e[\"value\"]);"))
             {
                 yield return _Line;
             }
@@ -1157,7 +1157,7 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "    }";
             yield return "    return a;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeSimpleName), "ToJson"))), "("), TypeString), " c)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static JArray "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToJson"))), "("), TypeString), " c)"))
             {
                 yield return _Line;
             }
@@ -1166,11 +1166,11 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "    foreach (var e in c)";
             yield return "    {";
             yield return "        var je = new JObject();";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        je.Add(\"key\", "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeSimpleName), "ToJson"))), "(e.Key));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        je.Add(\"key\", "), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "ToJson"))), "(e.Key));"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        je.Add(\"value\", "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSimpleName), "ToJson"))), "(e.Value));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        je.Add(\"value\", "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueSimpleName), "ToJson"))), "(e.Value));"))
             {
                 yield return _Line;
             }

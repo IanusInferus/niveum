@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板
-      Version:     2018.12.05.
+      Version:     2018.12.06.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -601,14 +601,14 @@
     $$
         var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
         var Name = a.GetTypeSpec().SimpleName(NamespaceName);
-        var ValueTypeSimpleName = a.Type.SimpleName(NamespaceName);
+        var ValueSimpleName = a.Type.SimpleName(NamespaceName);
     public static ${TypeString} [[${Name}FromJson]](JToken j)
     {
-        return new ${TypeString} { Value = [[${ValueTypeSimpleName}FromJson]](j) };
+        return new ${TypeString} { Value = [[${ValueSimpleName}FromJson]](j) };
     }
     public static JToken [[${Name}ToJson]](${TypeString} o)
     {
-        return [[${ValueTypeSimpleName}ToJson]](o.Value);
+        return [[${ValueSimpleName}ToJson]](o.Value);
     }
 
 #Template JsonTranslator_Record r:RecordDef NamespaceName:String
@@ -706,9 +706,9 @@
 
 #Template JsonTranslator_Tuple tp:TypeSpec NamespaceName:String
     $$
-        var TypeSimpleName = tp.SimpleName(NamespaceName);
+        var SimpleName = tp.SimpleName(NamespaceName);
         var TypeString = GetTypeString(tp, NamespaceName);
-    public static ${TypeString} [[${TypeSimpleName}FromJson]](JToken j)
+    public static ${TypeString} [[${SimpleName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
@@ -726,7 +726,7 @@
             }
         return Tuple.Create(${String.Join(", ", ItemNames)});
     }
-    public static JArray [[${TypeSimpleName}ToJson]](${TypeString} t)
+    public static JArray [[${SimpleName}ToJson]](${TypeString} t)
     {
         var ja = new JArray();
         $$
@@ -746,9 +746,9 @@
     $$
         var ElementType = o.GenericTypeSpec.ParameterValues.Single();
         var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
-        var TypeSimpleName = o.SimpleName(NamespaceName);
+        var SimpleName = o.SimpleName(NamespaceName);
         var TypeString = GetTypeString(o, NamespaceName);
-    public static ${TypeString} [[${TypeSimpleName}FromJson]](JToken j)
+    public static ${TypeString} [[${SimpleName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
         var jo = j as JObject;
@@ -768,7 +768,7 @@
             }
         throw new InvalidOperationException();
     }
-    public static JObject [[${TypeSimpleName}ToJson]](${TypeString} o)
+    public static JObject [[${SimpleName}ToJson]](${TypeString} o)
     {
         var jo = new JObject();
         $$
@@ -786,52 +786,52 @@
 
 #Template JsonTranslator_List l:TypeSpec NamespaceName:String
     $$
-        var TypeSimpleName = l.SimpleName(NamespaceName);
+        var SimpleName = l.SimpleName(NamespaceName);
         var TypeString = GetTypeString(l, NamespaceName);
-        var ElementTypeSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
-    public static ${TypeString} [[${TypeSimpleName}FromJson]](JToken j)
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
         var a = new ${TypeString}();
         foreach (var e in ja.Children())
         {
-            a.Add([[${ElementTypeSimpleName}FromJson]](e));
+            a.Add([[${ElementSimpleName}FromJson]](e));
         }
         return a;
     }
-    public static JArray [[${TypeSimpleName}ToJson]](${TypeString} c)
+    public static JArray [[${SimpleName}ToJson]](${TypeString} c)
     {
         var ja = new JArray();
         foreach (var e in c)
         {
-            ja.Add([[${ElementTypeSimpleName}ToJson]](e));
+            ja.Add([[${ElementSimpleName}ToJson]](e));
         }
         return ja;
     }
 
 #Template JsonTranslator_Set l:TypeSpec NamespaceName:String
     $$
-        var TypeSimpleName = l.SimpleName(NamespaceName);
+        var SimpleName = l.SimpleName(NamespaceName);
         var TypeString = GetTypeString(l, NamespaceName);
-        var ElementTypeSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
-    public static ${TypeString} [[${TypeSimpleName}FromJson]](JToken j)
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
         var a = new ${TypeString}();
         foreach (var e in ja.Children())
         {
-            a.Add([[${ElementTypeSimpleName}FromJson]](e));
+            a.Add([[${ElementSimpleName}FromJson]](e));
         }
         return a;
     }
-    public static JArray [[${TypeSimpleName}ToJson]](${TypeString} c)
+    public static JArray [[${SimpleName}ToJson]](${TypeString} c)
     {
         var ja = new JArray();
         foreach (var e in c)
         {
-            ja.Add([[${ElementTypeSimpleName}ToJson]](e));
+            ja.Add([[${ElementSimpleName}ToJson]](e));
         }
         return ja;
     }
@@ -843,31 +843,31 @@
         {
             throw new ArgumentException();
         }
-        var TypeSimpleName = l.SimpleName(NamespaceName);
+        var SimpleName = l.SimpleName(NamespaceName);
         var TypeString = GetTypeString(l, NamespaceName);
-        var KeyTypeSimpleName = gp[0].SimpleName(NamespaceName);
-        var ValueTypeSimpleName = gp[1].SimpleName(NamespaceName);
-    public static ${TypeString} [[${TypeSimpleName}FromJson]](JToken j)
+        var KeySimpleName = gp[0].SimpleName(NamespaceName);
+        var ValueSimpleName = gp[1].SimpleName(NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromJson]](JToken j)
     {
         if (j.Type != JTokenType.Array) { throw new InvalidOperationException(); }
         var ja = j as JArray;
         var a = new ${TypeString}();
         foreach (var e in ja.Children().OfType<JObject>())
         {
-            var Key = [[${KeyTypeSimpleName}FromJson]](e["key"]);
-            var Value = [[${ValueTypeSimpleName}FromJson]](e["value"]);
+            var Key = [[${KeySimpleName}FromJson]](e["key"]);
+            var Value = [[${ValueSimpleName}FromJson]](e["value"]);
             a.Add(Key, Value);
         }
         return a;
     }
-    public static JArray [[${TypeSimpleName}ToJson]](${TypeString} c)
+    public static JArray [[${SimpleName}ToJson]](${TypeString} c)
     {
         var ja = new JArray();
         foreach (var e in c)
         {
             var je = new JObject();
-            je.Add("key", [[${KeyTypeSimpleName}ToJson]](e.Key));
-            je.Add("value", [[${ValueTypeSimpleName}ToJson]](e.Value));
+            je.Add("key", [[${KeySimpleName}ToJson]](e.Key));
+            je.Add("value", [[${ValueSimpleName}ToJson]](e.Value));
             ja.Add(je);
         }
         return ja;
