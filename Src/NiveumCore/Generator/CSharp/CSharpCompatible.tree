@@ -4,7 +4,7 @@
       File:        CSharpCompatible.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C#通讯兼容模板
-      Version:     2018.08.16.
+      Version:     2018.12.06.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -20,17 +20,19 @@
     System.Linq
     Firefly
 
-#Template EventPump ServerCommands:List<ServerCommandDef>
+#Template EventPump ServerCommands:List<ServerCommandDef> NamespaceName:String
     $$
-        var ServerCommandGroups = ServerCommands.GroupBy(sc => sc.Name).Where(g => g.Any(sc => sc.Version == "")).ToList();
+        var ServerCommandGroups = ServerCommands.GroupBy(sc => sc.FullName()).Where(g => g.Any(sc => sc.Version == "")).ToList();
     private class EventPump : IEventPump
     {
         $$
             foreach (var g in ServerCommandGroups)
             {
-                var Name = g.Key;
+                var c = g.Where(sc => sc.Version == "").First();
+                var Name = c.GetTypeSpec().SimpleName(NamespaceName);
+                var EventTypeString = GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName);
                 ##
-                    public Action<[[${Name}Event]]> [[${Name}]] { get; set; }
+                    public Action<${EventTypeString}> [[${Name}]] { get; set; }
             }
     }
     private IEventPump CreateEventPump(Func<String> GetVersion)
@@ -39,7 +41,8 @@
         $$
             foreach (var g in ServerCommandGroups)
             {
-                var Name = g.Key;
+                var c = g.Where(sc => sc.Version == "").First();
+                var Name = c.GetTypeSpec().SimpleName(NamespaceName);
                 var GroupCommands = g.ToList();
                 if (GroupCommands.Count == 1)
                 {
@@ -61,12 +64,12 @@
                             $$
                                 foreach (var sc in SortedGroupCommands)
                                 {
-                                    var VersionedTypeFriendlyName = sc.TypeFriendlyName();
+                                    var VersionedSimpleName = sc.GetTypeSpec().SimpleName(NamespaceName);
                                     ##
                                         if (Version == "${sc.Version}")
                                         {
-                                            var e = [[${VersionedTypeFriendlyName}EventFromHead]](eHead);
-                                            if ([[${VersionedTypeFriendlyName}]] != null) { [[${VersionedTypeFriendlyName}]](e); }
+                                            var e = [[${VersionedSimpleName}EventFromHead]](eHead);
+                                            if ([[${VersionedSimpleName}]] != null) { [[${VersionedSimpleName}]](e); }
                                             return;
                                         }
                                 }
@@ -77,25 +80,25 @@
         return ep;
     }
 
-#Template Translator_RecordFrom Name:String VersionedName:String Fields:List<VariableDef> HeadFields:List<VariableDef> InitialHasError:Boolean
+#Template Translator_RecordFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String Fields:List<VariableDef> HeadFields:List<VariableDef> InitialHasError:Boolean NamespaceName:String
     $$
         var d = HeadFields.ToDictionary(f => f.Name);
         var HasError = InitialHasError || !Fields.All(f => IsNullType(f.Type) || (d.ContainsKey(f.Name) && (IsSameType(f.Type, d[f.Name].Type, false) || IsSameType(f.Type, d[f.Name].Type, true))));
         if (HasError)
         {
             ##
-                //${Translator_RecordFrom(Name, VersionedName, Fields, HeadFields)}
+                //${Translator_RecordFrom(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)}
         }
         else
         {
             ##
-                ${Translator_RecordFrom(Name, VersionedName, Fields, HeadFields)}
+                ${Translator_RecordFrom(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)}
         }
 
-#Template Translator_RecordFrom Name:String VersionedName:String Fields:List<VariableDef> HeadFields:List<VariableDef>
-    public [[${VersionedName}]] [[${VersionedName}FromHead]]([[${Name}]] ho)
+#Template Translator_RecordFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String Fields:List<VariableDef> HeadFields:List<VariableDef> NamespaceName:String
+    public ${VersionedTypeString} [[${VersionedSimpleName}FromHead]](${TypeString} ho)
     {
-        var o = new [[${VersionedName}]]();
+        var o = new ${VersionedTypeString}();
         $$
             var d = HeadFields.ToDictionary(f => f.Name);
             foreach (var f in Fields)
@@ -118,7 +121,7 @@
                     else if (IsSameType(f.Type, fHead.Type, true))
                     {
                         ##
-                            o.[[${f.Name}]] = [[${f.Type.TypeFriendlyName()}FromHead]](ho.[[${f.Name}]]);
+                            o.[[${f.Name}]] = [[${f.Type.SimpleName(NamespaceName)}FromHead]](ho.[[${f.Name}]]);
                         continue;
                     }
                 }
@@ -128,25 +131,25 @@
         return o;
     }
 
-#Template Translator_RecordTo Name:String VersionedName:String Fields:List<VariableDef> HeadFields:List<VariableDef> InitialHasError:Boolean
+#Template Translator_RecordTo VersionedSimpleName:String TypeString:String VersionedTypeString:String Fields:List<VariableDef> HeadFields:List<VariableDef> InitialHasError:Boolean NamespaceName:String
     $$
         var d = Fields.ToDictionary(f => f.Name);
         var HasError = InitialHasError || !HeadFields.All(fHead => IsNullType(fHead.Type) || (d.ContainsKey(fHead.Name) && (IsSameType(d[fHead.Name].Type, fHead.Type, false) || IsSameType(d[fHead.Name].Type, fHead.Type, true))));
         if (HasError)
         {
             ##
-                //${Translator_RecordTo(Name, VersionedName, Fields, HeadFields)}
+                //${Translator_RecordTo(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)}
         }
         else
         {
             ##
-                ${Translator_RecordTo(Name, VersionedName, Fields, HeadFields)}
+                ${Translator_RecordTo(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)}
         }
 
-#Template Translator_RecordTo Name:String VersionedName:String Fields:List<VariableDef> HeadFields:List<VariableDef>
-    public [[${Name}]] [[${VersionedName}ToHead]]([[${VersionedName}]] o)
+#Template Translator_RecordTo VersionedSimpleName:String TypeString:String VersionedTypeString:String Fields:List<VariableDef> HeadFields:List<VariableDef> NamespaceName:String
+    public ${TypeString} [[${VersionedSimpleName}ToHead]](${VersionedTypeString} o)
     {
-        var ho = new [[${Name}]]();
+        var ho = new ${TypeString}();
         $$
             var d = Fields.ToDictionary(f => f.Name);
             foreach (var fHead in HeadFields)
@@ -169,7 +172,7 @@
                     else if (IsSameType(f.Type, fHead.Type, true))
                     {
                         ##
-                            ho.[[${f.Name}]] = [[${f.Type.TypeFriendlyName()}ToHead]](o.[[${f.Name}]]);
+                            ho.[[${f.Name}]] = [[${f.Type.SimpleName(NamespaceName)}ToHead]](o.[[${f.Name}]]);
                         continue;
                     }
                 }
@@ -179,23 +182,23 @@
         return ho;
     }
 
-#Template Translator_TaggedUnionFrom VersionedName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef> InitialHasError:Boolean
+#Template Translator_TaggedUnionFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef> InitialHasError:Boolean NamespaceName:String
     $$
         var d = Alternatives.ToDictionary(a => a.Name);
         var HasError = InitialHasError || !HeadAlternatives.All(aHead => d.ContainsKey(aHead.Name) && (IsNullType(d[aHead.Name].Type) || IsSameType(d[aHead.Name].Type, aHead.Type, false) || IsSameType(d[aHead.Name].Type, aHead.Type, true)));
         if (HasError)
         {
             ##
-                //${Translator_TaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives)}
+                //${Translator_TaggedUnionFrom(VersionedSimpleName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, NamespaceName)}
         }
         else
         {
             ##
-                ${Translator_TaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives)}
+                ${Translator_TaggedUnionFrom(VersionedSimpleName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, NamespaceName)}
         }
 
-#Template Translator_TaggedUnionFrom VersionedName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef>
-    public ${VersionedTypeString} [[${VersionedName}FromHead]](${TypeString} ho)
+#Template Translator_TaggedUnionFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef> NamespaceName:String
+    public ${VersionedTypeString} [[${VersionedSimpleName}FromHead]](${TypeString} ho)
     {
         $$
             var d = Alternatives.ToDictionary(a => a.Name);
@@ -227,7 +230,7 @@
                         ##
                             if (ho.[[On${a.Name}]])
                             {
-                                return [[${VersionedTypeString}.Create${a.Name}]]([[${a.Type.TypeFriendlyName()}FromHead]](ho.[[${a.Name}]]));
+                                return [[${VersionedTypeString}.Create${a.Name}]]([[${a.Type.SimpleName(NamespaceName)}FromHead]](ho.[[${a.Name}]]));
                             }
                         continue;
                     }
@@ -241,23 +244,23 @@
         throw new InvalidOperationException();
     }
 
-#Template Translator_TaggedUnionTo VersionedName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef> InitialHasError:Boolean
+#Template Translator_TaggedUnionTo VersionedSimpleName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef> InitialHasError:Boolean NamespaceName:String
     $$
         var d = Alternatives.ToDictionary(a => a.Name);
         var HasError = InitialHasError || !HeadAlternatives.All(aHead => d.ContainsKey(aHead.Name) && (IsNullType(aHead.Type) || IsSameType(d[aHead.Name].Type, aHead.Type, false) || IsSameType(d[aHead.Name].Type, aHead.Type, true)));
         if (HasError)
         {
             ##
-                //${Translator_TaggedUnionTo(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives)}
+                //${Translator_TaggedUnionTo(VersionedSimpleName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, NamespaceName)}
         }
         else
         {
             ##
-                ${Translator_TaggedUnionTo(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives)}
+                ${Translator_TaggedUnionTo(VersionedSimpleName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, NamespaceName)}
         }
 
-#Template Translator_TaggedUnionTo VersionedName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef>
-    public ${TypeString} [[${VersionedName}ToHead]](${VersionedTypeString} o)
+#Template Translator_TaggedUnionTo VersionedSimpleName:String TypeString:String VersionedTypeString:String Alternatives:List<VariableDef> HeadAlternatives:List<VariableDef> NamespaceName:String
+    public ${TypeString} [[${VersionedSimpleName}ToHead]](${VersionedTypeString} o)
     {
         $$
             var d = Alternatives.ToDictionary(a => a.Name);
@@ -289,7 +292,7 @@
                         ##
                             if (o.[[On${a.Name}]])
                             {
-                                return [[${TypeString}.Create${a.Name}]]([[${a.Type.TypeFriendlyName()}ToHead]](o.[[${a.Name}]]));
+                                return [[${TypeString}.Create${a.Name}]]([[${a.Type.SimpleName(NamespaceName)}ToHead]](o.[[${a.Name}]]));
                             }
                         continue;
                     }
@@ -303,71 +306,71 @@
         throw new InvalidOperationException();
     }
 
-#Template Translator_EnumFrom Name:String VersionedName:String Literals:List<LiteralDef> HeadLiterals:List<LiteralDef>
-    public [[${VersionedName}]] [[${VersionedName}FromHead]]([[${Name}]] ho)
+#Template Translator_EnumFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String Literals:List<LiteralDef> HeadLiterals:List<LiteralDef> NamespaceName:String
+    public ${VersionedTypeString} [[${VersionedSimpleName}FromHead]](${TypeString} ho)
     {
         $$
             foreach (var ltl in HeadLiterals)
             {
                 ##
-                    if (ho == [[${Name}.${ltl.Name}]])
+                    if (ho == ${TypeString}.[[${ltl.Name}]])
                     {
-                        return [[${VersionedName}.${ltl.Name}]];
+                        return ${VersionedTypeString}.[[${ltl.Name}]];
                     }
             }
         throw new InvalidOperationException();
     }
 
-#Template Translator_EnumTo Name:String VersionedName:String Literals:List<LiteralDef> HeadLiterals:List<LiteralDef>
-    public [[${Name}]] [[${VersionedName}ToHead]]([[${VersionedName}]] o)
+#Template Translator_EnumTo VersionedSimpleName:String TypeString:String VersionedTypeString:String Literals:List<LiteralDef> HeadLiterals:List<LiteralDef> NamespaceName:String
+    public ${TypeString} [[${VersionedSimpleName}ToHead]](${VersionedTypeString} o)
     {
         $$
             foreach (var ltl in Literals)
             {
                 ##
-                    if (o == [[${VersionedName}.${ltl.Name}]])
+                    if (o == ${VersionedTypeString}.[[${ltl.Name}]])
                     {
-                        return [[${Name}.${ltl.Name}]];
+                        return ${TypeString}.[[${ltl.Name}]];
                     }
             }
         throw new InvalidOperationException();
     }
 
-#Template Translator_ClientCommand Name:String VersionedName:String
-    public [[${VersionedName}Reply]] [[${VersionedName}]]([[${VersionedName}Request]] r)
+#Template Translator_ClientCommand SimpleName:String VersionedSimpleName:String RequestTypeString:String ReplyTypeString:String NamespaceName:String
+    public ${ReplyTypeString} [[${VersionedSimpleName}]](${RequestTypeString} r)
     {
-        var HeadRequest = [[${VersionedName}RequestToHead]](r);
-        var HeadReply = [[${Name}]](HeadRequest);
-        var Reply = [[${VersionedName}ReplyFromHead]](HeadReply);
+        var HeadRequest = [[${VersionedSimpleName}RequestToHead]](r);
+        var HeadReply = [[${SimpleName}]](HeadRequest);
+        var Reply = [[${VersionedSimpleName}ReplyFromHead]](HeadReply);
         return Reply;
     }
 
-#Template Translator_ClientCommandAsync Name:String VersionedName:String
-    public void [[${VersionedName}]]([[${VersionedName}Request]] r, Action<[[${VersionedName}Reply]]> Callback, Action<Exception> OnFailure)
+#Template Translator_ClientCommandAsync SimpleName:String VersionedSimpleName:String RequestTypeString:String ReplyTypeString:String NamespaceName:String
+    public void [[${VersionedSimpleName}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback, Action<Exception> OnFailure)
     {
-        var HeadRequest = [[${VersionedName}RequestToHead]](r);
-        [[${Name}]](HeadRequest, HeadReply => Callback([[${VersionedName}ReplyFromHead]](HeadReply)), OnFailure);
+        var HeadRequest = [[${VersionedSimpleName}RequestToHead]](r);
+        [[${SimpleName}]](HeadRequest, HeadReply => Callback([[${VersionedSimpleName}ReplyFromHead]](HeadReply)), OnFailure);
     }
 
-#Template Translator_ServerCommand VersionedName:String
-    public event Action<[[${VersionedName}Event]]> [[${VersionedName}]];
+#Template Translator_ServerCommand VersionedSimpleName:String EventTypeString:String NamespaceName:String
+    public event Action<${EventTypeString}> [[${VersionedSimpleName}]];
 
-#Template Translator_TupleFrom VersionedName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec> InitialHasError:Boolean
+#Template Translator_TupleFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec> InitialHasError:Boolean NamespaceName:String
     $$
         var HasError = InitialHasError || (Elements.Count != HeadElements.Count) || !Elements.Zip(HeadElements, (e, eHead) => IsNullType(e) || IsSameType(e, eHead, false) || IsSameType(e, eHead, true)).All(b => b);
         if (HasError)
         {
             ##
-                //${Translator_TupleFrom(VersionedName, TypeString, VersionedTypeString, Elements, HeadElements)}
+                //${Translator_TupleFrom(VersionedSimpleName, TypeString, VersionedTypeString, Elements, HeadElements, NamespaceName)}
         }
         else
         {
             ##
-                ${Translator_TupleFrom(VersionedName, TypeString, VersionedTypeString, Elements, HeadElements)}
+                ${Translator_TupleFrom(VersionedSimpleName, TypeString, VersionedTypeString, Elements, HeadElements, NamespaceName)}
         }
 
-#Template Translator_TupleFrom VersionedName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec>
-    public ${VersionedTypeString} [[${VersionedName}FromHead]](${TypeString} ho)
+#Template Translator_TupleFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec> NamespaceName:String
+    public ${VersionedTypeString} [[${VersionedSimpleName}FromHead]](${TypeString} ho)
     {
         $$
             var k = 0;
@@ -393,7 +396,7 @@
                     else if (IsSameType(e, eHead, true))
                     {
                         ##
-                            var Item${k + 1} = [[${e.TypeFriendlyName()}FromHead]](ho.Item${k + 1});
+                            var Item${k + 1} = [[${e.SimpleName(NamespaceName)}FromHead]](ho.Item${k + 1});
                         k += 1;
                         continue;
                     }
@@ -405,22 +408,22 @@
         return new ${VersionedTypeString}(${String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))});
     }
 
-#Template Translator_TupleTo VersionedName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec> InitialHasError:Boolean
+#Template Translator_TupleTo VersionedSimpleName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec> InitialHasError:Boolean NamespaceName:String
     $$
         var HasError = InitialHasError || (Elements.Count != HeadElements.Count) || !Elements.Zip(HeadElements, (e, eHead) => IsNullType(e) || IsSameType(e, eHead, false) || IsSameType(e, eHead, true)).All(b => b);
         if (HasError)
         {
             ##
-                //${Translator_TupleTo(VersionedName, TypeString, VersionedTypeString, Elements, HeadElements)}
+                //${Translator_TupleTo(VersionedSimpleName, TypeString, VersionedTypeString, Elements, HeadElements, NamespaceName)}
         }
         else
         {
             ##
-                ${Translator_TupleTo(VersionedName, TypeString, VersionedTypeString, Elements, HeadElements)}
+                ${Translator_TupleTo(VersionedSimpleName, TypeString, VersionedTypeString, Elements, HeadElements, NamespaceName)}
         }
 
-#Template Translator_TupleTo VersionedName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec>
-    public ${TypeString} [[${VersionedName}ToHead]](${VersionedTypeString} o)
+#Template Translator_TupleTo VersionedSimpleName:String TypeString:String VersionedTypeString:String Elements:List<TypeSpec> HeadElements:List<TypeSpec> NamespaceName:String
+    public ${TypeString} [[${VersionedSimpleName}ToHead]](${VersionedTypeString} o)
     {
         $$
             var k = 0;
@@ -446,7 +449,7 @@
                     else if (IsSameType(e, eHead, true))
                     {
                         ##
-                            var Item${k + 1} = [[${e.TypeFriendlyName()}ToHead]](o.Item${k + 1});
+                            var Item${k + 1} = [[${e.SimpleName(NamespaceName)}ToHead]](o.Item${k + 1});
                         k += 1;
                         continue;
                     }
@@ -458,32 +461,32 @@
         return new ${TypeString}(${String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + (i + 1).ToInvariantString()))});
     }
 
-#Template Translator_ListFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public ${VersionedTypeString} [[${VersionedTypeFriendlyName}FromHead]](${TypeString} ho)
+#Template Translator_ListFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String VersionedElementSimpleName:String NamespaceName:String
+    public ${VersionedTypeString} [[${VersionedSimpleName}FromHead]](${TypeString} ho)
     {
-        return ho.Select(he => [[${VersionedElementTypeFriendlyName}FromHead]](he)).ToList();
+        return ho.Select(he => [[${VersionedElementSimpleName}FromHead]](he)).ToList();
     }
 
-#Template Translator_ListTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public ${TypeString} [[${VersionedTypeFriendlyName}ToHead]](${VersionedTypeString} o)
+#Template Translator_ListTo VersionedSimpleName:String TypeString:String VersionedTypeString:String VersionedElementSimpleName:String NamespaceName:String
+    public ${TypeString} [[${VersionedSimpleName}ToHead]](${VersionedTypeString} o)
     {
-        return o.Select(e => [[${VersionedElementTypeFriendlyName}ToHead]](e)).ToList();
+        return o.Select(e => [[${VersionedElementSimpleName}ToHead]](e)).ToList();
     }
 
-#Template Translator_SetFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public ${VersionedTypeString} [[${VersionedTypeFriendlyName}FromHead]](${TypeString} ho)
+#Template Translator_SetFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String VersionedElementSimpleName:String NamespaceName:String
+    public ${VersionedTypeString} [[${VersionedSimpleName}FromHead]](${TypeString} ho)
     {
-        return new ${VersionedTypeString}(ho.Select(he => [[${VersionedElementTypeFriendlyName}FromHead]](he)));
+        return new ${VersionedTypeString}(ho.Select(he => [[${VersionedElementSimpleName}FromHead]](he)));
     }
 
-#Template Translator_SetTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String VersionedElementTypeFriendlyName:String
-    public ${TypeString} [[${VersionedTypeFriendlyName}ToHead]](${VersionedTypeString} o)
+#Template Translator_SetTo VersionedSimpleName:String TypeString:String VersionedTypeString:String VersionedElementSimpleName:String NamespaceName:String
+    public ${TypeString} [[${VersionedSimpleName}ToHead]](${VersionedTypeString} o)
     {
-        return new ${TypeString}(o.Select(e => [[${VersionedElementTypeFriendlyName}ToHead]](e)));
+        return new ${TypeString}(o.Select(e => [[${VersionedElementSimpleName}ToHead]](e)));
     }
 
-#Template Translator_MapFrom VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String KeyTypeSpec:TypeSpec HeadKeyTypeSpec:TypeSpec ValueTypeSpec:TypeSpec HeadValueTypeSpec:TypeSpec
-    public ${VersionedTypeString} [[${VersionedTypeFriendlyName}FromHead]](${TypeString} ho)
+#Template Translator_MapFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String KeyTypeSpec:TypeSpec HeadKeyTypeSpec:TypeSpec ValueTypeSpec:TypeSpec HeadValueTypeSpec:TypeSpec NamespaceName:String
+    public ${VersionedTypeString} [[${VersionedSimpleName}FromHead]](${TypeString} ho)
     {
         var o = new ${VersionedTypeString}();
         foreach (var hp in ho)
@@ -497,7 +500,7 @@
                 else
                 {
                     ##
-                        var Key = [[${KeyTypeSpec.TypeFriendlyName()}FromHead]](hp.Key);
+                        var Key = [[${KeyTypeSpec.SimpleName(NamespaceName)}FromHead]](hp.Key);
                 }
                 if (IsSameType(ValueTypeSpec, HeadValueTypeSpec, false))
                 {
@@ -507,15 +510,15 @@
                 else
                 {
                     ##
-                        var Value = [[${ValueTypeSpec.TypeFriendlyName()}FromHead]](hp.Value);
+                        var Value = [[${ValueTypeSpec.SimpleName(NamespaceName)}FromHead]](hp.Value);
                 }
             o.Add(Key, Value);
         }
         return o;
     }
 
-#Template Translator_MapTo VersionedTypeFriendlyName:String TypeString:String VersionedTypeString:String KeyTypeSpec:TypeSpec HeadKeyTypeSpec:TypeSpec ValueTypeSpec:TypeSpec HeadValueTypeSpec:TypeSpec
-    public ${TypeString} [[${VersionedTypeFriendlyName}ToHead]](${VersionedTypeString} o)
+#Template Translator_MapTo VersionedSimpleName:String TypeString:String VersionedTypeString:String KeyTypeSpec:TypeSpec HeadKeyTypeSpec:TypeSpec ValueTypeSpec:TypeSpec HeadValueTypeSpec:TypeSpec NamespaceName:String
+    public ${TypeString} [[${VersionedSimpleName}ToHead]](${VersionedTypeString} o)
     {
         var ho = new ${TypeString}();
         foreach (var p in o)
@@ -529,7 +532,7 @@
                 else
                 {
                     ##
-                        var Key = [[${KeyTypeSpec.TypeFriendlyName()}ToHead]](p.Key);
+                        var Key = [[${KeyTypeSpec.SimpleName(NamespaceName)}ToHead]](p.Key);
                 }
                 if (IsSameType(ValueTypeSpec, HeadValueTypeSpec, false))
                 {
@@ -539,14 +542,20 @@
                 else
                 {
                     ##
-                        var Value = [[${ValueTypeSpec.TypeFriendlyName()}ToHead]](p.Value);
+                        var Value = [[${ValueTypeSpec.SimpleName(NamespaceName)}ToHead]](p.Value);
                 }
             ho.Add(Key, Value);
         }
         return ho;
     }
 
-#Template Main Schema:Schema NamespaceName:String ClassName:String
+#Template WrapPartialClass ClassName:String Contents:IEnumerable<String>
+    public partial class [[${ClassName}]]
+    {
+        ${Contents}
+    }
+
+#Template Main Schema:Schema NamespaceName:String ImplementationNamespaceName:String ImplementationClassName:String
     //==========================================================================
     //
     //  Notice:      This file is automatically generated.
@@ -557,31 +566,13 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    $$
+        if (NamespaceName != "")
+        {
+            ##
+                using ${NamespaceName};
+        }
     using ${Schema.Imports};
-    $$
-        var Primitives = GetPrimitives(Schema);
-    ${Primitives}
-
-    $$
-        var ComplexTypes = GetComplexTypes(Schema);
-        if (NamespaceName == "")
-        {
-            ##
-                public partial class [[${ClassName}]]
-                {
-                    ${ComplexTypes}
-                }
-        }
-        else
-        {
-            ##
-                namespace [[${NamespaceName}]]
-                {
-                    public partial class [[${ClassName}]]
-                    {
-                        ${ComplexTypes}
-                    }
-                }
-        }
+    ${GetTypes(Schema, NamespaceName, ImplementationNamespaceName, ImplementationClassName)}
 
 $End
