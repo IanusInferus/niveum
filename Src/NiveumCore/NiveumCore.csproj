@@ -58,11 +58,13 @@
     <Compile Include="Generated\Generator\CSharp\CSharpBinary.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharpCompatible.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharpJson.cs" />
+    <Compile Include="Generated\Generator\CSharp\CSharpVersion.cs" />
     <Compile Include="Generated\ObjectSchema\ObjectSchema.cs" />
     <Compile Include="Generator\CSharp\CSharp.cs" />
     <Compile Include="Generator\CSharp\CSharpBinary.cs" />
     <Compile Include="Generator\CSharp\CSharpCompatible.cs" />
     <Compile Include="Generator\CSharp\CSharpJson.cs" />
+    <Compile Include="Generator\CSharp\CSharpVersion.cs" />
     <Compile Include="ObjectSchema\FileParser.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaDiffGenerator.cs" />
     <Compile Include="ObjectSchema\ObjectSchemaWriter.cs" />
@@ -79,6 +81,7 @@
     <None Include="Generator\CSharp\CSharpBinary.tree" />
     <None Include="Generator\CSharp\CSharpCompatible.tree" />
     <None Include="Generator\CSharp\CSharpJson.tree" />
+    <None Include="Generator\CSharp\CSharpVersion.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

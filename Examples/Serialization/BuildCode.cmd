@@ -10,7 +10,7 @@ SchemaManipulator.exe /loadtype:Schema /t2cs:CSharp\Src\World.cs,World,True
 SchemaManipulator.exe /loadtype:Schema /t2csb:CSharp\Src\WorldBinary.cs,World.Binary,True
 SchemaManipulator.exe /loadtype:Schema /t2csb:CSharp\Src\WorldBinaryWithoutFirefly.cs,World.BinaryWithoutFirefly,False
 SchemaManipulator.exe /loadtype:Schema /t2csj:CSharp\Src\WorldJson.cs,World.Json
-SchemaManipulator.exe /loadtype:Schema /t2csv:CSharp\Src\WorldVersions.cs,World,World
+SchemaManipulator.exe /loadtype:Schema /t2csv:CSharp\Src\WorldVersions.cs,World,World.World
 
 :: Java
 @if not exist Java\src @md Java\src

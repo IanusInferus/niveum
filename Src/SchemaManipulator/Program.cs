@@ -25,11 +25,11 @@ using Niveum.ObjectSchema.CSharp;
 using Niveum.ObjectSchema.CSharpBinary;
 using Niveum.ObjectSchema.CSharpJson;
 using Niveum.ObjectSchema.CSharpCompatible;
+using Niveum.ObjectSchema.CSharpVersion;
 using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.CppCompatible;
 using Yuki.ObjectSchema.CppVersion;
-using Yuki.ObjectSchema.CSharpVersion;
 using Yuki.ObjectSchema.Haxe;
 using Yuki.ObjectSchema.HaxeJson;
 using Yuki.ObjectSchema.Java;
@@ -630,7 +630,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"生成C++兼容类型");
             Console.WriteLine(@"/t2cppc:<CsCodePath>,<ClassName>[,<NamespaceName>]");
             Console.WriteLine(@"生成C++版本类型");
-            Console.WriteLine(@"/t2cppv:<CsCodePath>,<NamespaceName>,<TypeName>*");
+            Console.WriteLine(@"/t2cppv:<CsCodePath>,<NamespaceName>,<FullTypeName>*");
             Console.WriteLine(@"生成Haxe类型");
             Console.WriteLine(@"/t2hx:<HaxeCodePath>,<PackageName>");
             Console.WriteLine(@"生成Haxe JSON通讯类型");
@@ -652,6 +652,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"BinaryFile 二进制文件路径。");
             Console.WriteLine(@"MainType 主类型。");
             Console.WriteLine(@"NamespaceName C#文件中的命名空间名称。");
+            Console.WriteLine(@"FullTypeName 类型带命名空间但不带版本号名称。");
             Console.WriteLine(@"PackageName Java文件中的包名。");
             Console.WriteLine(@"ClassName Java文件中的类名。");
             Console.WriteLine(@"VbCodePath VB代码文件路径。");
@@ -910,7 +911,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCSharpVersionCode(String CsCodePath, String NamespaceName, IEnumerable<String> TypeNames)
         {
-            var ObjectSchema = GetObjectSchemaLegacy();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCSharpVersion(NamespaceName, TypeNames);
             if (File.Exists(CsCodePath))
             {

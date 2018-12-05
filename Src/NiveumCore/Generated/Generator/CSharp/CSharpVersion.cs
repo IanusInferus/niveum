@@ -74,9 +74,9 @@ namespace Niveum.ObjectSchema.CSharpVersion
                 yield return GetEscapedIdentifier(Identifier);
             }
         }
-        public IEnumerable<String> GetTypeVersion(String TypeFriendlyName, UInt64 Hash)
+        public IEnumerable<String> GetTypeVersion(String SimpleName, UInt64 Hash)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public const UInt64 "), GetEscapedIdentifier(TypeFriendlyName)), " = 0x"), Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)), ";"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public const UInt64 "), GetEscapedIdentifier(SimpleName)), " = 0x"), Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)), ";"))
             {
                 yield return _Line;
             }
@@ -92,7 +92,7 @@ namespace Niveum.ObjectSchema.CSharpVersion
             yield return "";
             yield return "using System;";
             yield return "";
-            var TypeVersions = GetTypeVersions(Schema, TypeNames);
+            var TypeVersions = GetTypeVersions(Schema, TypeNames, NamespaceName);
             if (NamespaceName == "")
             {
                 yield return "public sealed class Versions";
