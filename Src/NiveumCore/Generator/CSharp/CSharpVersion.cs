@@ -3,7 +3,7 @@
 //  File:        CSharpVersion.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C#版本代码生成器
-//  Version:     2018.08.17.
+//  Version:     2018.12.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -41,7 +41,7 @@ namespace Niveum.ObjectSchema.CSharpVersion
             return Inner.GetEscapedIdentifier(Identifier);
         }
 
-        public List<String> GetTypeVersions(Schema Schema, IEnumerable<String> TypeNames)
+        public List<String> GetTypeVersions(Schema Schema, IEnumerable<String> TypeNames, String NamespaceName)
         {
             var l = new List<String>();
 
@@ -57,13 +57,13 @@ namespace Niveum.ObjectSchema.CSharpVersion
             }
             foreach (var t in Schema.Types)
             {
-                var TypeName = t.Name();
+                var TypeName = t.FullName();
                 if (TypeNameSet.Contains(TypeName))
                 {
-                    var TypeFriendlyName = t.TypeFriendlyName();
+                    var SimpleName = t.GetTypeSpec().SimpleName(NamespaceName);
                     var SubSchema = SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { t }, new List<TypeSpec> { });
                     var Hash = SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { t }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash();
-                    l.AddRange(GetTypeVersion(TypeFriendlyName, Hash));
+                    l.AddRange(GetTypeVersion(SimpleName, Hash));
                 }
             }
 

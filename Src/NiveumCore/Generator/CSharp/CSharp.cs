@@ -78,7 +78,7 @@ namespace Niveum.ObjectSchema.CSharp
                     }
                 }
                 var Ref = Type.TypeRef;
-                if ((Ref.NamespaceName() == NamespaceName) || (Ref.NamespaceName() == ""))
+                if ((Ref.NamespaceName() == NamespaceName) || NamespaceName.StartsWith(Ref.NamespaceName() + ".") || (Ref.NamespaceName() == ""))
                 {
                     return GetEscapedIdentifier(Ref.SimpleName(Ref.NamespaceName()));
                 }
