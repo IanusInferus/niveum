@@ -1,8 +1,3 @@
-@for /d %%a in (*) do @(
-  @if exist %%a\obj @(
-    @rd %%a\obj /S /Q
-  )
-)
 @cd..
 @if exist Bin (
   @cd Bin

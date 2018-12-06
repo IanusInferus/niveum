@@ -1,4 +1,3 @@
-rd obj /S /Q
 cd..
 cd Bin
 del *.pdb /F /Q

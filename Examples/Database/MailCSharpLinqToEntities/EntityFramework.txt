@@ -1,3 +1,3 @@
-﻿复制Entity Framework 5.0 for .Net Framework 4.5的下列文件到YUKI\Bin文件夹下。
+﻿复制Entity Framework 5.0 for .Net Framework 4.5的下列文件到Niveum\Bin文件夹下。
 EntityFramework.dll
 EntityFramework.xml
