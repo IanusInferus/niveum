@@ -378,8 +378,8 @@ namespace Client
                     var Verification = 0;
                     if (SecureContext != null)
                     {
-                        var Key = SecureContext.ClientToken.Concat(Cryptography.SHA1(Buffer.Skip(4).Take(4)));
-                        var HMACBytes = Cryptography.HMACSHA1Simple(Key, Buffer).Take(4).ToArray();
+                        var Key = SecureContext.ClientToken.Concat(Cryptography.SHA256(Buffer.Skip(4).Take(4)));
+                        var HMACBytes = Cryptography.HMACSHA256Simple(Key, Buffer).Take(4).ToArray();
                         Verification = HMACBytes[0] | ((Int32)(HMACBytes[1]) << 8) | ((Int32)(HMACBytes[2]) << 16) | ((Int32)(HMACBytes[3]) << 24);
                     }
                     else
@@ -527,8 +527,8 @@ namespace Client
                     var Verification = 0;
                     if (SecureContext != null)
                     {
-                        var Key = SecureContext.ClientToken.Concat(Cryptography.SHA1(Buffer.Skip(4).Take(4)));
-                        var HMACBytes = Cryptography.HMACSHA1Simple(Key, Buffer).Take(4).ToArray();
+                        var Key = SecureContext.ClientToken.Concat(Cryptography.SHA256(Buffer.Skip(4).Take(4)));
+                        var HMACBytes = Cryptography.HMACSHA256Simple(Key, Buffer).Take(4).ToArray();
                         Verification = HMACBytes[0] | ((Int32)(HMACBytes[1]) << 8) | ((Int32)(HMACBytes[2]) << 16) | ((Int32)(HMACBytes[3]) << 24);
                     }
                     else
@@ -659,8 +659,8 @@ namespace Client
 
                     if (IsEncrypted)
                     {
-                        var Key = SecureContext.ServerToken.Concat(Cryptography.SHA1(Buffer.Skip(4).Take(4)));
-                        var HMACBytes = Cryptography.HMACSHA1Simple(Key, Buffer).Take(4).ToArray();
+                        var Key = SecureContext.ServerToken.Concat(Cryptography.SHA256(Buffer.Skip(4).Take(4)));
+                        var HMACBytes = Cryptography.HMACSHA256Simple(Key, Buffer).Take(4).ToArray();
                         var HMAC = HMACBytes[0] | ((Int32)(HMACBytes[1]) << 8) | ((Int32)(HMACBytes[2]) << 16) | ((Int32)(HMACBytes[3]) << 24);
                         if (HMAC != Verification) { return; }
                     }

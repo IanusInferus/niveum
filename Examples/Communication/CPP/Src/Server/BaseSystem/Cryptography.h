@@ -8,8 +8,8 @@ namespace Algorithms
     namespace Cryptography
     {
         std::int32_t CRC32(const std::vector<std::uint8_t> &Bytes);
-        std::vector<std::uint8_t> SHA1(const std::vector<std::uint8_t> &Bytes);
-        std::vector<std::uint8_t> HMACSHA1Simple(const std::vector<std::uint8_t> &Key, const std::vector<std::uint8_t> &Bytes);
+        std::vector<std::uint8_t> SHA256(const std::vector<std::uint8_t> &Bytes);
+        std::vector<std::uint8_t> HMACSHA256Simple(const std::vector<std::uint8_t> &Key, const std::vector<std::uint8_t> &Bytes);
     }
 
     class RC4
