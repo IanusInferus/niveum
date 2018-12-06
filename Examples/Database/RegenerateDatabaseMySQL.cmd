@@ -1,7 +1,7 @@
 @PATH ..\..\Bin;%PATH%
 
 @if not exist ..\..\Bin\MySql.Data.dll (
-  @echo YUKI\Bin中不存在MySql.Data.dll。
+  @echo Niveum\Bin中不存在MySql.Data.dll。
   @pause
   @exit
 )
