@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2018.12.06.
+//  Version:     2018.12.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -26,6 +26,7 @@ using Niveum.ObjectSchema.CSharpBinary;
 using Niveum.ObjectSchema.CSharpJson;
 using Niveum.ObjectSchema.CSharpCompatible;
 using Niveum.ObjectSchema.CSharpVersion;
+using Niveum.ObjectSchema.Xhtml;
 using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.CppCompatible;
@@ -37,7 +38,6 @@ using Yuki.ObjectSchema.JavaBinary;
 using Yuki.ObjectSchema.Python;
 using Yuki.ObjectSchema.PythonBinary;
 using Yuki.ObjectSchema.VB;
-using Yuki.ObjectSchema.Xhtml;
 using OS = Niveum.ObjectSchema;
 
 namespace Yuki.SchemaManipulator
@@ -795,6 +795,7 @@ namespace Yuki.SchemaManipulator
             var TypeName = ObjectSchemaExtensions.GetDotNetFullNameFromVersionedName(MainType);
             var a = SchemaAssembly();
             var t = a.GetType(TypeName);
+            if (t == null) { throw new InvalidOperationException("TypeNotExist: " + TypeName); }
             var tbc = TreeBinaryConverter();
 
             var Data = TreeFile.ReadFile(TreePath);
@@ -811,6 +812,7 @@ namespace Yuki.SchemaManipulator
             var TypeName = ObjectSchemaExtensions.GetDotNetFullNameFromVersionedName(MainType);
             var a = SchemaAssembly();
             var t = a.GetType(TypeName);
+            if (t == null) { throw new InvalidOperationException("TypeNotExist: " + TypeName); }
             var tbc = TreeBinaryConverter();
 
             Byte[] Data;
@@ -1098,7 +1100,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToXhtml(String XhtmlDir, String Title, String CopyrightText)
         {
-            var oslr = GetObjectSchemaLoaderResultLegacy();
+            var oslr = GetObjectSchemaLoaderResult();
             var CompiledFiles = oslr.CompileToXhtml(Title, CopyrightText);
             foreach (var f in CompiledFiles)
             {

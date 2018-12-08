@@ -2,7 +2,7 @@
 
 :: SchemaManipulator
 @if not exist SchemaManipulator\Data @md SchemaManipulator\Data
-SchemaManipulator.exe /loadtype:Schema /t2b:Data\WorldData.tree,SchemaManipulator\Data\WorldData.bin,World /b2t:SchemaManipulator\Data\WorldData.bin,SchemaManipulator\Data\WorldData.Binary.tree,World /t2b:SchemaManipulator\Data\WorldData.Binary.tree,SchemaManipulator\Data\WorldData.Binary.bin,World
+SchemaManipulator.exe /loadtype:Schema /t2b:Data\WorldData.tree,SchemaManipulator\Data\WorldData.bin,World.World /b2t:SchemaManipulator\Data\WorldData.bin,SchemaManipulator\Data\WorldData.Binary.tree,World.World /t2b:SchemaManipulator\Data\WorldData.Binary.tree,SchemaManipulator\Data\WorldData.Binary.bin,World.World
 
 :: VB.Net
 @if not exist VB\Data @md VB\Data
