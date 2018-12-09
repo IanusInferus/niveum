@@ -4,7 +4,7 @@
       File:        VB.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构VB.Net模板
-      Version:     2017.04.23.
+      Version:     2018.12.09.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -335,15 +335,15 @@
 
 #Template Alias a:AliasDef
     $$
-        var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-        var Type = GetTypeString(a.Type);
+        var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
+        var Type = GetTypeString(a.Type, a.NamespaceName());
     ${GetXmlComment(a.Description)}
     <[Alias]()>
     Public NotInheritable Class ${Name}
         Public Value As ${Type}
 
         Public Shared Widening Operator CType(ByVal o As ${Type}) As ${Name}
-            Return New [[${Name}]] With {.Value = o}
+            Return New ${Name} With {.Value = o}
         End Operator
         Public Shared Widening Operator CType(ByVal c As ${Name}) As ${Type}
             Return c.Value
@@ -352,7 +352,7 @@
 
 #Template Record r:RecordDef
     $$
-        var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+        var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
     ${GetXmlComment(r.Description)}
     <Record()>
     Public NotInheritable Class ${Name}
@@ -361,14 +361,14 @@
             {
                 ##
                     ${GetXmlComment(f.Description)}
-                    Public [[${f.Name}]] As ${GetTypeString(f.Type)}
+                    Public [[${f.Name}]] As ${GetTypeString(f.Type, r.NamespaceName())}
             }
     End Class
 
 #Template TaggedUnion tu:TaggedUnionDef
     $$
-        var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
-        var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+        var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
+        var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
     Public Enum ${TagName}
         $$
             var k = 0;
@@ -390,13 +390,13 @@
             {
                 ##
                     ${GetXmlComment(a.Description)}
-                    Public [[${a.Name}]] As ${GetTypeString(a.Type)}
+                    Public [[${a.Name}]] As ${GetTypeString(a.Type, tu.NamespaceName())}
             }
 
         $$
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     ##
                         ${GetXmlComment(a.Description)}
@@ -408,7 +408,7 @@
                 {
                     ##
                         ${GetXmlComment(a.Description)}
-                        Public Shared Function [[Create${a.Name}]](Value As ${GetTypeString(a.Type)}) As ${Name}
+                        Public Shared Function [[Create${a.Name}]](Value As ${GetTypeString(a.Type, tu.NamespaceName())}) As ${Name}
                             Return New ${Name} With {._Tag = ${TagName}.[[${a.Name}]], .[[${a.Name}]] = Value}
                         End Function
                 }
@@ -429,11 +429,11 @@
 
 #Template Enum e:EnumDef
     $$
-        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
-        var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
-        var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
+        var Name = GetEscapedIdentifier(e.DefinitionName());
+        var ParserName = GetEscapedIdentifier(GetSuffixedTypeName(e.Name, e.Version, "Parser", e.NamespaceName()));
+        var WriterName = GetEscapedIdentifier(GetSuffixedTypeName(e.Name, e.Version, "Writer", e.NamespaceName()));
     ${GetXmlComment(e.Description)}
-    Public Enum ${Name} As ${GetEnumTypeString(e.UnderlyingType)}
+    Public Enum ${Name} As ${GetEnumTypeString(e.UnderlyingType, e.NamespaceName())}
         $$
             var k = 0;
             foreach (var l in e.Literals)
@@ -465,7 +465,7 @@
     End Class
     ${GetXmlComment(e.Description)}
     Public NotInheritable Class ${WriterName}
-        Private Shared d As New Dictionary(Of [[${Name}]], String)
+        Private Shared d As New Dictionary(Of ${Name}, String)
         Shared Sub ${WriterName}()
             $$
                 foreach (var l in e.Literals)
@@ -474,57 +474,63 @@
                         If Not d.ContainsKey(${Name}.[[${l.Name}]])) Then d.Add(${Name}.[[${l.Name}]], ${GetEscapedStringLiteral(l.Description)})
                 }
         End Sub
-        Public Shared Function GetDescription(ByVal Value As [[${Name}]]) As String
+        Public Shared Function GetDescription(ByVal Value As ${Name}) As String
             Return d(Value)
         End Function
     End Class
 
 #Template ClientCommand c:ClientCommandDef
     $$
-        var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-        var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+        var RequestRef = GetSuffixedTypeRef(c.Name, c.Version, "Request");
+        var ReplyRef = GetSuffixedTypeRef(c.Name, c.Version, "Reply");
+        var Request = new RecordDef { Name = RequestRef.Name, Version = RequestRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var Reply = new TaggedUnionDef { Name = ReplyRef.Name, Version = ReplyRef.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
     ${Record(Request)}
     ${TaggedUnion(Reply)}
 
 #Template ServerCommand c:ServerCommandDef
     $$
-        var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var EventRef = GetSuffixedTypeRef(c.Name, c.Version, "Event");
+        var Event = new RecordDef { Name = EventRef.Name, Version = EventRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
     ${Record(Event)}
 
-#Template IApplicationServer Commands:List<TypeDef>
+#Template IApplicationServer Commands:List<TypeDef> NamespaceName:String
     Public Interface IApplicationServer
         $$
             foreach (var c in Commands)
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
                         ##
                             ${GetXmlComment(Description)}
-                            Sub [[${Name}]](ByVal r As [[${Name}Request]], ByVal Callback As Action(Of [[${Name}Reply]]), ByVal OnFailure As Action(Of Exception))
+                            Sub [[${Name}]](ByVal r As ${RequestTypeString}, ByVal Callback As Action(Of ${ReplyTypeString}), ByVal OnFailure As Action(Of Exception))
                     }
                     else
                     {
                         ##
                             ${GetXmlComment(Description)}
-                            Function [[${Name}]](ByVal r As [[${Name}Request]]) As [[${Name}Reply]]
+                            Function [[${Name}]](ByVal r As [[${RequestTypeString}]]) As ${ReplyTypeString}
                     }
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        Event [[${Name}]] As Action(Of [[${Name}Event]])
+                        Event [[${Name}]] As Action(Of ${EventTypeString})
                 }
             }
     End Interface
 
-#Template IApplicationClient Commands:List<TypeDef>
+#Template IApplicationClient Commands:List<TypeDef> NamespaceName:String
     Public Interface IApplicationClient
         ReadOnly Property Hash As UInt64
         Sub DequeueCallback(ByVal CommandName As String)
@@ -534,24 +540,27 @@
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        Sub [[${Name}]](ByVal r As [[${Name}Request]], ByVal Callback As Action(Of [[${Name}Reply]]))
+                        Sub [[${Name}]](ByVal r As ${RequestTypeString}, ByVal Callback As Action(Of ${ReplyTypeString}))
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        Event [[${Name}]] As Action(Of [[${Name}Event]])
+                        Event [[${Name}]] As Action(Of ${EventTypeString})
                 }
             }
     End Interface
 
-#Template IEventPump Commands:List<TypeDef>
+#Template IEventPump Commands:List<TypeDef> NamespaceName:String
     Public Interface IEventPump
         $$
             foreach (var c in Commands)
@@ -559,14 +568,30 @@
                 if (c.OnServerCommand)
                 {
                     if (c.ServerCommand.Version != "") { continue; }
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        ReadOnly Property [[${Name}]] As Action(Of [[${Name}Event]])
+                        ReadOnly Property [[${Name}]] As Action(Of ${EventTypeString})
                 }
             }
     End Interface
+
+#Template WrapNamespace NamespaceName:String Contents:IEnumerable<String>
+    $$
+        if (NamespaceName == "")
+        {
+            ##
+                ${Contents}
+        }
+        else
+        {
+            ##
+                Namespace [[${NamespaceName}]]
+                    ${Contents}
+                End Namespace
+        }
 
 #Template Main Schema:Schema NamespaceName:String
     '==========================================================================
@@ -579,23 +604,6 @@
     Imports System
     Imports System.Collections.Generic
     Imports ${Schema.Imports}
-    $$
-        var Primitives = GetPrimitives(Schema);
-    ${Primitives}
-
-    $$
-        var ComplexTypes = GetComplexTypes(Schema);
-        if (NamespaceName == "")
-        {
-            ##
-                ${ComplexTypes}
-        }
-        else
-        {
-            ##
-                Namespace [[${NamespaceName}]]
-                    ${ComplexTypes}
-                End Namespace
-        }
+    ${GetTypes(Schema, NamespaceName)}
 
 $End

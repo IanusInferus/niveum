@@ -227,8 +227,8 @@ namespace Niveum.ObjectSchema.VB
         }
         public IEnumerable<String> Alias(AliasDef a)
         {
-            var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-            var Type = GetTypeString(a.Type);
+            var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
+            var Type = GetTypeString(a.Type, a.NamespaceName());
             foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
             {
                 yield return _Line;
@@ -247,7 +247,7 @@ namespace Niveum.ObjectSchema.VB
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        Return New "), GetEscapedIdentifier(Name)), " With {.Value = o}"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        Return New "), Name), " With {.Value = o}"))
             {
                 yield return _Line;
             }
@@ -262,7 +262,7 @@ namespace Niveum.ObjectSchema.VB
         }
         public IEnumerable<String> Record(RecordDef r)
         {
-            var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+            var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
             foreach (var _Line in Combine(Begin(), GetXmlComment(r.Description)))
             {
                 yield return _Line;
@@ -278,7 +278,7 @@ namespace Niveum.ObjectSchema.VB
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "Public "), GetEscapedIdentifier(f.Name)), " As "), GetTypeString(f.Type)))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "Public "), GetEscapedIdentifier(f.Name)), " As "), GetTypeString(f.Type, r.NamespaceName())))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -287,8 +287,8 @@ namespace Niveum.ObjectSchema.VB
         }
         public IEnumerable<String> TaggedUnion(TaggedUnionDef tu)
         {
-            var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
-            var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+            var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
+            var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
             foreach (var _Line in Combine(Combine(Begin(), "Public Enum "), TagName))
             {
                 yield return _Line;
@@ -327,7 +327,7 @@ namespace Niveum.ObjectSchema.VB
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "Public "), GetEscapedIdentifier(a.Name)), " As "), GetTypeString(a.Type)))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "Public "), GetEscapedIdentifier(a.Name)), " As "), GetTypeString(a.Type, tu.NamespaceName())))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -335,7 +335,7 @@ namespace Niveum.ObjectSchema.VB
             yield return "";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                     {
@@ -357,7 +357,7 @@ namespace Niveum.ObjectSchema.VB
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "Public Shared Function "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "(Value As "), GetTypeString(a.Type)), ") As "), Name))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "Public Shared Function "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "(Value As "), GetTypeString(a.Type, tu.NamespaceName())), ") As "), Name))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -391,14 +391,14 @@ namespace Niveum.ObjectSchema.VB
         }
         public IEnumerable<String> Enum(EnumDef e)
         {
-            var Name = GetEscapedIdentifier(e.TypeFriendlyName());
-            var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
-            var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
+            var Name = GetEscapedIdentifier(e.DefinitionName());
+            var ParserName = GetEscapedIdentifier(GetSuffixedTypeName(e.Name, e.Version, "Parser", e.NamespaceName()));
+            var WriterName = GetEscapedIdentifier(GetSuffixedTypeName(e.Name, e.Version, "Writer", e.NamespaceName()));
             foreach (var _Line in Combine(Begin(), GetXmlComment(e.Description)))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "Public Enum "), Name), " As "), GetEnumTypeString(e.UnderlyingType)))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "Public Enum "), Name), " As "), GetEnumTypeString(e.UnderlyingType, e.NamespaceName())))
             {
                 yield return _Line;
             }
@@ -459,7 +459,7 @@ namespace Niveum.ObjectSchema.VB
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    Private Shared d As New Dictionary(Of "), GetEscapedIdentifier(Name)), ", String)"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    Private Shared d As New Dictionary(Of "), Name), ", String)"))
             {
                 yield return _Line;
             }
@@ -475,7 +475,7 @@ namespace Niveum.ObjectSchema.VB
                 }
             }
             yield return "    End Sub";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    Public Shared Function GetDescription(ByVal Value As "), GetEscapedIdentifier(Name)), ") As String"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    Public Shared Function GetDescription(ByVal Value As "), Name), ") As String"))
             {
                 yield return _Line;
             }
@@ -485,8 +485,10 @@ namespace Niveum.ObjectSchema.VB
         }
         public IEnumerable<String> ClientCommand(ClientCommandDef c)
         {
-            var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-            var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+            var RequestRef = GetSuffixedTypeRef(c.Name, c.Version, "Request");
+            var ReplyRef = GetSuffixedTypeRef(c.Name, c.Version, "Reply");
+            var Request = new RecordDef { Name = RequestRef.Name, Version = RequestRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            var Reply = new TaggedUnionDef { Name = ReplyRef.Name, Version = ReplyRef.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
             foreach (var _Line in Combine(Begin(), Record(Request)))
             {
                 yield return _Line;
@@ -498,28 +500,31 @@ namespace Niveum.ObjectSchema.VB
         }
         public IEnumerable<String> ServerCommand(ServerCommandDef c)
         {
-            var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            var EventRef = GetSuffixedTypeRef(c.Name, c.Version, "Event");
+            var Event = new RecordDef { Name = EventRef.Name, Version = EventRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
             foreach (var _Line in Combine(Begin(), Record(Event)))
             {
                 yield return _Line;
             }
         }
-        public IEnumerable<String> IApplicationServer(List<TypeDef> Commands)
+        public IEnumerable<String> IApplicationServer(List<TypeDef> Commands, String NamespaceName)
         {
             yield return "Public Interface IApplicationServer";
             foreach (var c in Commands)
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
                         foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "Sub "), GetEscapedIdentifier(Name)), "(ByVal r As "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), ", ByVal Callback As Action(Of "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), "), ByVal OnFailure As Action(Of Exception))"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "Sub "), GetEscapedIdentifier(Name)), "(ByVal r As "), RequestTypeString), ", ByVal Callback As Action(Of "), ReplyTypeString), "), ByVal OnFailure As Action(Of Exception))"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -530,7 +535,7 @@ namespace Niveum.ObjectSchema.VB
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "Function "), GetEscapedIdentifier(Name)), "(ByVal r As "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), ") As "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "Function "), GetEscapedIdentifier(Name)), "(ByVal r As "), GetEscapedIdentifier(RequestTypeString)), ") As "), ReplyTypeString))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -538,13 +543,14 @@ namespace Niveum.ObjectSchema.VB
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "Event "), GetEscapedIdentifier(Name)), " As Action(Of "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), ")"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "Event "), GetEscapedIdentifier(Name)), " As Action(Of "), EventTypeString), ")"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -552,7 +558,7 @@ namespace Niveum.ObjectSchema.VB
             }
             yield return "End Interface";
         }
-        public IEnumerable<String> IApplicationClient(List<TypeDef> Commands)
+        public IEnumerable<String> IApplicationClient(List<TypeDef> Commands, String NamespaceName)
         {
             yield return "Public Interface IApplicationClient";
             yield return "    ReadOnly Property Hash As UInt64";
@@ -562,26 +568,29 @@ namespace Niveum.ObjectSchema.VB
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "Sub "), GetEscapedIdentifier(Name)), "(ByVal r As "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), ", ByVal Callback As Action(Of "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), "))"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "Sub "), GetEscapedIdentifier(Name)), "(ByVal r As "), RequestTypeString), ", ByVal Callback As Action(Of "), ReplyTypeString), "))"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "Event "), GetEscapedIdentifier(Name)), " As Action(Of "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), ")"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "Event "), GetEscapedIdentifier(Name)), " As Action(Of "), EventTypeString), ")"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -589,7 +598,7 @@ namespace Niveum.ObjectSchema.VB
             }
             yield return "End Interface";
         }
-        public IEnumerable<String> IEventPump(List<TypeDef> Commands)
+        public IEnumerable<String> IEventPump(List<TypeDef> Commands, String NamespaceName)
         {
             yield return "Public Interface IEventPump";
             foreach (var c in Commands)
@@ -597,19 +606,42 @@ namespace Niveum.ObjectSchema.VB
                 if (c.OnServerCommand)
                 {
                     if (c.ServerCommand.Version != "") { continue; }
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ReadOnly Property "), GetEscapedIdentifier(Name)), " As Action(Of "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), ")"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ReadOnly Property "), GetEscapedIdentifier(Name)), " As Action(Of "), EventTypeString), ")"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                 }
             }
             yield return "End Interface";
+        }
+        public IEnumerable<String> WrapNamespace(String NamespaceName, IEnumerable<String> Contents)
+        {
+            if (NamespaceName == "")
+            {
+                foreach (var _Line in Combine(Begin(), Contents))
+                {
+                    yield return _Line;
+                }
+            }
+            else
+            {
+                foreach (var _Line in Combine(Combine(Begin(), "Namespace "), GetEscapedIdentifier(NamespaceName)))
+                {
+                    yield return _Line;
+                }
+                foreach (var _Line in Combine(Combine(Begin(), "    "), Contents))
+                {
+                    yield return _Line;
+                }
+                yield return "End Namespace";
+            }
         }
         public IEnumerable<String> Main(Schema Schema, String NamespaceName)
         {
@@ -626,31 +658,9 @@ namespace Niveum.ObjectSchema.VB
             {
                 yield return _Line;
             }
-            var Primitives = GetPrimitives(Schema);
-            foreach (var _Line in Combine(Begin(), Primitives))
+            foreach (var _Line in Combine(Begin(), GetTypes(Schema, NamespaceName)))
             {
                 yield return _Line;
-            }
-            yield return "";
-            var ComplexTypes = GetComplexTypes(Schema);
-            if (NamespaceName == "")
-            {
-                foreach (var _Line in Combine(Begin(), ComplexTypes))
-                {
-                    yield return _Line;
-                }
-            }
-            else
-            {
-                foreach (var _Line in Combine(Combine(Begin(), "Namespace "), GetEscapedIdentifier(NamespaceName)))
-                {
-                    yield return _Line;
-                }
-                foreach (var _Line in Combine(Combine(Begin(), "    "), ComplexTypes))
-                {
-                    yield return _Line;
-                }
-                yield return "End Namespace";
             }
             yield return "";
         }

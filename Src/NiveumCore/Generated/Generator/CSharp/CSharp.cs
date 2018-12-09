@@ -518,7 +518,7 @@ namespace Niveum.ObjectSchema.CSharp
                 }
             }
             yield return "    }";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    public static String GetDescription("), GetEscapedIdentifier(Name)), " Value)"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    public static String GetDescription("), Name), " Value)"))
             {
                 yield return _Line;
             }
