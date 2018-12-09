@@ -35,14 +35,14 @@ namespace Niveum.ObjectSchema.VB
         {
             foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
             {
-                if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && PrimitiveMapping.ContainsKey(gp.Type.TypeRef.Name) && gp.Type.TypeRef.Name == "Type"))
+                if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && gp.Type.TypeRef.NameMatches(Name => PrimitiveMapping.ContainsKey(Name) && Name == "Type")))
                 {
                     throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                 }
             }
 
-            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Unit").Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
-            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Boolean").Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
+            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.NameMatches(Name => Name == "Unit")).Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
+            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.NameMatches(Name => Name == "Boolean")).Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
         }
 
         private Regex rIdentifierPart = new Regex(@"[^\u0000-\u002F\u003A-\u0040\u005B-\u005E\u0060\u007B-\u007F]+");
@@ -65,19 +65,27 @@ namespace Niveum.ObjectSchema.VB
         {
             return "\"" + new String(s.SelectMany(c => c == '\"' ? "\"\"" : c == '\r' ? "\" + Microsoft.VisualBasic.ChrW(13) + \"" : c == '\n' ? "\" + Microsoft.VisualBasic.ChrW(10) + \"" : new String(c, 1)).ToArray()) + "\"";
         }
-        public String GetTypeString(TypeSpec Type)
+        public String GetTypeString(TypeSpec Type, String NamespaceName)
         {
             if (Type.OnTypeRef)
             {
-                if (PrimitiveMapping.ContainsKey(Type.TypeRef.Name))
+                if (PrimitiveMapping.ContainsKey(Type.TypeRef.VersionedName()))
                 {
-                    var PlatformName = PrimitiveMapping[Type.TypeRef.Name];
+                    var PlatformName = PrimitiveMapping[Type.TypeRef.VersionedName()];
                     if (PlatformName.StartsWith("System.Collections.Generic."))
                     {
                         return new String(PlatformName.Skip("System.Collections.Generic.".Length).ToArray());
                     }
                 }
-                return GetEscapedIdentifier(Type.TypeFriendlyName());
+                var Ref = Type.TypeRef;
+                if ((Ref.NamespaceName() == NamespaceName) || NamespaceName.StartsWith(Ref.NamespaceName() + ".") || (Ref.NamespaceName() == ""))
+                {
+                    return GetEscapedIdentifier(Ref.SimpleName(Ref.NamespaceName()));
+                }
+                else
+                {
+                    return GetEscapedIdentifier(Ref.NamespaceName() + "." + Ref.SimpleName(Ref.NamespaceName()));
+                }
             }
             else if (Type.OnGenericParameterRef)
             {
@@ -85,23 +93,37 @@ namespace Niveum.ObjectSchema.VB
             }
             else if (Type.OnTuple)
             {
-                return "Tuple(Of " + String.Join(", ", Type.Tuple.Select(t => GetTypeString(t))) + ")";
+                return "Tuple(Of " + String.Join(", ", Type.Tuple.Select(t => GetTypeString(t, NamespaceName))) + ")";
             }
             else if (Type.OnGenericTypeSpec)
             {
                 if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
                 {
-                    return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "(Of " + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p))) + ")";
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName) + "(Of " + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p, NamespaceName))) + ")";
                 }
                 else
                 {
-                    return GetEscapedIdentifier(Type.TypeFriendlyName());
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName);
                 }
             }
             else
             {
                 throw new InvalidOperationException();
             }
+        }
+        public TypeRef GetSuffixedTypeRef(List<String> Name, String Version, String Suffix)
+        {
+            return new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" };
+        }
+        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName)
+        {
+            var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" });
+            return GetTypeString(ts, NamespaceName);
+        }
+        public String GetSuffixedTypeName(List<String> Name, String Version, String Suffix, String NamespaceName)
+        {
+            var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" });
+            return ts.SimpleName(NamespaceName);
         }
         public IEnumerable<String> GetXmlComment(String Description)
         {
@@ -119,9 +141,9 @@ namespace Niveum.ObjectSchema.VB
                 return MultiLineXmlComment(Lines);
             }
         }
-        public String GetEnumTypeString(TypeSpec Type)
+        public String GetEnumTypeString(TypeSpec Type, String NamespaceName)
         {
-            return GetTypeString(Type);
+            return GetTypeString(Type, NamespaceName);
         }
         public String GetGenericParameters(List<VariableDef> GenericParameters)
         {
@@ -141,10 +163,10 @@ namespace Niveum.ObjectSchema.VB
 
             foreach (var p in Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnPrimitive).Select(c => c.Primitive))
             {
-                if (PrimitiveMapping.ContainsKey(p.Name))
+                if (PrimitiveMapping.ContainsKey(p.VersionedName()))
                 {
-                    var Name = p.TypeFriendlyName();
-                    var PlatformName = PrimitiveMapping[p.Name];
+                    var Name = p.DefinitionName();
+                    var PlatformName = PrimitiveMapping[p.VersionedName()];
                     if ((Name != PlatformName) && (p.GenericParameters.Count() == 0))
                     {
                         l.AddRange(Primitive(Name, PlatformName));
@@ -153,11 +175,19 @@ namespace Niveum.ObjectSchema.VB
             }
             return l;
         }
-        public List<String> GetComplexTypes(Schema Schema)
+        public List<String> GetTypes(Schema Schema, String NamespaceName)
         {
-            var l = new List<String>();
+            List<string> Primitives = GetPrimitives(Schema);
 
-            List<TypeDef> cl = new List<TypeDef>();
+            var NamespaceToClasses = new Dictionary<String, List<List<String>>>();
+            void AddClass(String ClassNamespaceName, IEnumerable<String> ClassContent)
+            {
+                if (!NamespaceToClasses.ContainsKey(ClassNamespaceName))
+                {
+                    NamespaceToClasses.Add(ClassNamespaceName, new List<List<String>>());
+                }
+                NamespaceToClasses[ClassNamespaceName].Add(ClassContent.ToList());
+            }
 
             foreach (var c in Schema.Types)
             {
@@ -165,11 +195,11 @@ namespace Niveum.ObjectSchema.VB
                 {
                     if (c.VersionedName() == "Unit")
                     {
-                        l.AddRange(Primitive_Unit());
+                        AddClass(c.NamespaceName(), Primitive_Unit());
                     }
                     else if (c.VersionedName() == "Optional")
                     {
-                        l.AddRange(Primitive_Optional());
+                        AddClass(c.NamespaceName(), Primitive_Optional());
                     }
                     else
                     {
@@ -178,53 +208,45 @@ namespace Niveum.ObjectSchema.VB
                 }
                 else if (c.OnAlias)
                 {
-                    l.AddRange(Alias(c.Alias));
+                    AddClass(c.NamespaceName(), Alias(c.Alias));
                 }
                 else if (c.OnRecord)
                 {
-                    l.AddRange(Record(c.Record));
+                    AddClass(c.NamespaceName(), Record(c.Record));
                 }
                 else if (c.OnTaggedUnion)
                 {
-                    l.AddRange(TaggedUnion(c.TaggedUnion));
+                    AddClass(c.NamespaceName(), TaggedUnion(c.TaggedUnion));
                 }
                 else if (c.OnEnum)
                 {
-                    l.AddRange(Enum(c.Enum));
+                    AddClass(c.NamespaceName(), Enum(c.Enum));
                 }
                 else if (c.OnClientCommand)
                 {
-                    l.AddRange(ClientCommand(c.ClientCommand));
-                    cl.Add(c);
+                    AddClass(c.NamespaceName(), ClientCommand(c.ClientCommand));
                 }
                 else if (c.OnServerCommand)
                 {
-                    l.AddRange(ServerCommand(c.ServerCommand));
-                    cl.Add(c);
+                    AddClass(c.NamespaceName(), ServerCommand(c.ServerCommand));
                 }
                 else
                 {
                     throw new InvalidOperationException();
                 }
-                l.Add("");
             }
 
-            if (cl.Count > 0)
+            var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+            if (Commands.Count > 0)
             {
-                l.AddRange(IApplicationServer(cl));
-                l.Add("");
-                l.AddRange(IApplicationClient(cl));
-                l.Add("");
-                l.AddRange(IEventPump(cl));
-                l.Add("");
+                AddClass(NamespaceName, IApplicationServer(Commands, NamespaceName));
+                AddClass(NamespaceName, IApplicationClient(Commands, NamespaceName));
+                AddClass(NamespaceName, IEventPump(Commands, NamespaceName));
             }
 
-            if (l.Count > 0)
-            {
-                l = l.Take(l.Count - 1).ToList();
-            }
+            var Classes = NamespaceToClasses.Select(p => WrapNamespace(p.Key, p.Value.Join(new String[] { "" })));
 
-            return l;
+            return (new List<List<String>> { Primitives }).Concat(Classes).Join(new String[] { "" }).ToList();
         }
     }
 }
