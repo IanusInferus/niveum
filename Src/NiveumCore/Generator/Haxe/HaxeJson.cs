@@ -3,7 +3,7 @@
 //  File:        HaxeJson.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2017.04.22.
+//  Version:     2018.12.12.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -16,15 +16,11 @@ namespace Niveum.ObjectSchema.HaxeJson
 {
     public static class CodeGenerator
     {
-        public static String CompileToHaxeJson(this Schema Schema, String PackageName)
+        public static Dictionary<String, String> CompileToHaxeJson(this Schema Schema, String PackageName)
         {
             var t = new Templates(Schema);
-            var Lines = t.Main(Schema, PackageName).Select(Line => Line.TrimEnd(' '));
-            return String.Join("\r\n", Lines);
-        }
-        public static String CompileToHaxeJson(this Schema Schema)
-        {
-            return CompileToHaxeJson(Schema, "");
+            var Files = t.GetPackageFiles(Schema, PackageName).ToDictionary(p => p.Key + ".hx", p => String.Join("\r\n", p.Value.Select(Line => Line.TrimEnd(' '))));
+            return Files;
         }
     }
 
@@ -48,12 +44,24 @@ namespace Niveum.ObjectSchema.HaxeJson
         {
             return Inner.GetEscapedStringLiteral(s);
         }
-        public String GetTypeString(TypeSpec Type)
+        public String GetTypeString(TypeSpec Type, String NamespaceName)
         {
-            return Inner.GetTypeString(Type);
+            return Inner.GetTypeString(Type, NamespaceName);
+        }
+        public TypeRef GetSuffixedTypeRef(List<String> Name, String Version, String Suffix)
+        {
+            return Inner.GetSuffixedTypeRef(Name, Version, Suffix);
+        }
+        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName)
+        {
+            return Inner.GetSuffixedTypeString(Name, Version, Suffix, NamespaceName);
+        }
+        public String GetSuffixedTypeName(List<String> Name, String Version, String Suffix, String NamespaceName)
+        {
+            return Inner.GetSuffixedTypeName(Name, Version, Suffix, NamespaceName);
         }
 
-        public List<String> GetJsonTranslatorSerializers(Schema Schema)
+        public List<String> GetJsonTranslatorSerializers(Schema Schema, String NamespaceName)
         {
             var l = new List<String>();
 
@@ -86,9 +94,9 @@ namespace Niveum.ObjectSchema.HaxeJson
                 }
                 if (c.OnPrimitive)
                 {
-                    if (PrimitiveTranslators.ContainsKey(c.Primitive.Name))
+                    if (PrimitiveTranslators.ContainsKey(c.Primitive.VersionedName()))
                     {
-                        l.AddRange(PrimitiveTranslators[c.Primitive.Name]());
+                        l.AddRange(PrimitiveTranslators[c.Primitive.VersionedName()]());
                     }
                     else
                     {
@@ -97,27 +105,27 @@ namespace Niveum.ObjectSchema.HaxeJson
                 }
                 else if (c.OnAlias)
                 {
-                    l.AddRange(JsonTranslator_Alias(c.Alias));
+                    l.AddRange(JsonTranslator_Alias(c.Alias, NamespaceName));
                 }
                 else if (c.OnRecord)
                 {
-                    l.AddRange(JsonTranslator_Record(c.Record));
+                    l.AddRange(JsonTranslator_Record(c.Record, NamespaceName));
                 }
                 else if (c.OnTaggedUnion)
                 {
-                    l.AddRange(JsonTranslator_TaggedUnion(c.TaggedUnion));
+                    l.AddRange(JsonTranslator_TaggedUnion(c.TaggedUnion, NamespaceName));
                 }
                 else if (c.OnEnum)
                 {
-                    l.AddRange(JsonTranslator_Enum(c.Enum));
+                    l.AddRange(JsonTranslator_Enum(c.Enum, NamespaceName));
                 }
                 else if (c.OnClientCommand)
                 {
-                    l.AddRange(JsonTranslator_ClientCommand(c.ClientCommand));
+                    l.AddRange(JsonTranslator_ClientCommand(c.ClientCommand, NamespaceName));
                 }
                 else if (c.OnServerCommand)
                 {
-                    l.AddRange(JsonTranslator_ServerCommand(c.ServerCommand));
+                    l.AddRange(JsonTranslator_ServerCommand(c.ServerCommand, NamespaceName));
                 }
                 else
                 {
@@ -133,30 +141,30 @@ namespace Niveum.ObjectSchema.HaxeJson
 
             foreach (var t in Tuples)
             {
-                l.AddRange(JsonTranslator_Tuple(t));
+                l.AddRange(JsonTranslator_Tuple(t, NamespaceName));
                 l.Add("");
             }
 
             foreach (var gts in GenericTypeSpecs)
             {
-                if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Optional") && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(JsonTranslator_Optional(gts));
+                    l.AddRange(JsonTranslator_Optional(gts, NamespaceName));
                     l.Add("");
                 }
-                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("List") && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(JsonTranslator_List(gts));
+                    l.AddRange(JsonTranslator_List(gts, NamespaceName));
                     l.Add("");
                 }
-                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Set" && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Set") && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(JsonTranslator_Set(gts));
+                    l.AddRange(JsonTranslator_Set(gts, NamespaceName));
                     l.Add("");
                 }
-                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Map" && gts.GenericTypeSpec.ParameterValues.Count == 2)
+                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Map") && gts.GenericTypeSpec.ParameterValues.Count == 2)
                 {
-                    l.AddRange(JsonTranslator_Map(gts));
+                    l.AddRange(JsonTranslator_Map(gts, NamespaceName));
                     l.Add("");
                 }
                 else
@@ -172,30 +180,30 @@ namespace Niveum.ObjectSchema.HaxeJson
 
             return l;
         }
-        public List<String> GetTypes(Schema Schema)
+        public Dictionary<String, IEnumerable<String>> GetPackageFiles(Schema Schema, String NamespaceName)
         {
-            var l = new List<String>();
+            var NamespaceToClasses = new Dictionary<String, List<KeyValuePair<String, List<String>>>>();
+            void AddClass(String ClassNamespaceName, String ClassName, IEnumerable<String> ClassContent)
+            {
+                if (!NamespaceToClasses.ContainsKey(ClassNamespaceName))
+                {
+                    NamespaceToClasses.Add(ClassNamespaceName, new List<KeyValuePair<String, List<String>>>());
+                }
+                NamespaceToClasses[ClassNamespaceName].Add(new KeyValuePair<String, List<String>>(ClassName, ClassContent.ToList()));
+            }
 
             var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Where(t => t.Version() == "").ToList();
             if (Commands.Count > 0)
             {
                 var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 var Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).GetNonattributed().Hash();
-                l.AddRange(IJsonSender());
-                l.Add("");
-                l.AddRange(JsonSerializationClient(Hash, Commands, SchemaClosureGenerator));
-                l.Add("");
+                AddClass(NamespaceName, "IJsonSender", IJsonSender());
+                AddClass(NamespaceName, "JsonSerializationClient", JsonSerializationClient(Hash, Commands, SchemaClosureGenerator, NamespaceName));
             }
 
-            l.AddRange(JsonTranslator(Schema));
-            l.Add("");
+            AddClass(NamespaceName, "JsonTranslator", JsonTranslator(Schema, NamespaceName));
 
-            if (l.Count > 0)
-            {
-                l = l.Take(l.Count - 1).ToList();
-            }
-
-            return l;
+            return NamespaceToClasses.SelectMany(p => p.Value.Select(v => new KeyValuePair<String, IEnumerable<String>>(String.Join("/", p.Key.Split('.').Where(NamespacePart => NamespacePart != "").Select(NamespacePart => LowercaseCamelize(NamespacePart)).Concat(new String[] { v.Key })), WrapModule(p.Key, Schema.Imports, v.Value)))).ToDictionary(p => p.Key, p => p.Value);
         }
     }
 }

@@ -4,7 +4,7 @@
       File:        HaxeJson.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构Haxe JSON通讯模板
-      Version:     2017.04.22.
+      Version:     2018.12.12.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -26,7 +26,7 @@
         function send(commandName : String, commandHash : String, parameters : String) : Void;
     }
 
-#Template JsonSerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator
+#Template JsonSerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
     private class ApplicationClient implements IApplicationClient
     {
         public var s : IJsonSender;
@@ -66,23 +66,28 @@
             {
                 if (c.OnClientCommand)
                 {
-                    var CommandName = c.ClientCommand.Name;
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     ##
-                        public function [[${LowercaseCamelize(Name)}]](r : [[${Name}Request]], _callback : [[${Name}Reply]] -> Void) : Void
+                        public function [[${LowercaseCamelize(Name)}]](r : ${RequestTypeString}, _callback : ${ReplyTypeString} -> Void) : Void
                         {
-                            var request = Json.stringify(JsonTranslator.[[${LowercaseCamelize(Name)}RequestToJson]](r));
-                            addCallback(${GetEscapedStringLiteral(CommandName)}, "${CommandHash}", function(parameters) { return _callback(JsonTranslator.[[${LowercaseCamelize(Name)}ReplyFromJson]](Json.parse(parameters))); });
-                            s.send(${GetEscapedStringLiteral(CommandName)}, "${CommandHash}", request);
+                            var request = Json.stringify(JsonTranslator.[[${LowercaseCamelize(RequestName)}ToJson]](r));
+                            addCallback(${CommandNameString}, "${CommandHash}", function(parameters) { return _callback(JsonTranslator.[[${LowercaseCamelize(ReplyName)}FromJson]](Json.parse(parameters))); });
+                            s.send(${CommandNameString}, "${CommandHash}", request);
                         }
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
-                        public var [[${LowercaseCamelize(Name)}]] : [[${Name}Event]] -> Void;
-                        public function [[raise${Name}]](e : [[${Name}Event]]) : Void { if ([[${LowercaseCamelize(Name)}]] != null) { [[${LowercaseCamelize(Name)}]](e); } }
+                        public var [[${LowercaseCamelize(Name)}]] : ${EventTypeString} -> Void;
+                        public function [[raise${Name}]](e : ${EventTypeString}) : Void { if ([[${LowercaseCamelize(Name)}]] != null) { [[${LowercaseCamelize(Name)}]](e); } }
                 }
             }
     }
@@ -109,11 +114,13 @@
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandName = c.ServerCommand.Name;
-                        var Name = c.ServerCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
-                            serverCommands.set(${GetEscapedStringLiteral(CommandName)}, {commandHash : "${CommandHash}", _callback : function(parameters) { c.[[raise${Name}]](JsonTranslator.[[${LowercaseCamelize(Name)}EventFromJson]](Json.parse(parameters))); }});
+                            serverCommands.set(${CommandNameString}, {commandHash : "${CommandHash}", _callback : function(parameters) { c.[[raise${Name}]](JsonTranslator.[[${LowercaseCamelize(EventName)}FromJson]](Json.parse(parameters))); }});
                     }
                 }
         }
@@ -154,7 +161,7 @@
         }
     }
 
-#Template JsonTranslator Schema:Schema
+#Template JsonTranslator Schema:Schema NamespaceName:String
     @:final
     class JsonTranslator /* static */
     {
@@ -172,7 +179,7 @@
             Reflect.setField(o, field, value);
         }
 
-        ${GetJsonTranslatorSerializers(Schema)}
+        ${GetJsonTranslatorSerializers(Schema, NamespaceName)}
     }
 
 #Template JsonTranslator_Primitive_Unit
@@ -345,24 +352,25 @@
         throw "NotSupportedException";
     }
 
-#Template JsonTranslator_Alias a:AliasDef
+#Template JsonTranslator_Alias a:AliasDef NamespaceName:String
     $$
-        var Name = a.TypeFriendlyName();
-        var ValueTypeFriendlyName = a.Type.TypeFriendlyName();
-    public static function [[${LowercaseCamelize(Name)}FromJson]](j : Dynamic) : [[${Name}]]
+        var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
+        var Name = a.GetTypeSpec().SimpleName(NamespaceName);
+        var ValueSimpleName = a.Type.SimpleName(NamespaceName);
+    public static function [[${LowercaseCamelize(Name)}FromJson]](j : Dynamic) : ${TypeString}
     {
-        return [[${LowercaseCamelize(ValueTypeFriendlyName)}FromJson]](j);
+        return [[${LowercaseCamelize(ValueSimpleName)}FromJson]](j);
     }
-    public static function [[${LowercaseCamelize(Name)}ToJson]](o : [[${Name}]]) : Dynamic
+    public static function [[${LowercaseCamelize(Name)}ToJson]](o : ${TypeString}) : Dynamic
     {
-        return [[${LowercaseCamelize(ValueTypeFriendlyName)}ToJson]](o);
+        return [[${LowercaseCamelize(ValueSimpleName)}ToJson]](o);
     }
 
-#Template JsonTranslator_Record r:RecordDef
-    ${JsonTranslator_Record(r.TypeFriendlyName(), r.Fields)}
+#Template JsonTranslator_Record r:RecordDef NamespaceName:String
+    ${JsonTranslator_Record(r.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(r.GetTypeSpec(), NamespaceName), r.Fields, NamespaceName)}
 
-#Template JsonTranslator_Record Name:String Fields:List<VariableDef>
-    public static function [[${LowercaseCamelize(Name)}FromJson]](j : Dynamic) : [[${Name}]]
+#Template JsonTranslator_Record Name:String TypeString:String Fields:List<VariableDef> NamespaceName:String
+    public static function [[${LowercaseCamelize(Name)}FromJson]](j : Dynamic) : ${TypeString}
     {
         return
         {
@@ -370,37 +378,37 @@
                 foreach (var a in Fields)
                 {
                     ##
-                        [[${LowercaseCamelize(a.Name)}]] : [[${LowercaseCamelize(a.Type.TypeFriendlyName())}FromJson]](getField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))})),
+                        [[${LowercaseCamelize(a.Name)}]] : [[${LowercaseCamelize(a.Type.SimpleName(NamespaceName))}FromJson]](getField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))})),
                 }
         };
     }
-    public static function [[${LowercaseCamelize(Name)}ToJson]](o : [[${Name}]]) : Dynamic
+    public static function [[${LowercaseCamelize(Name)}ToJson]](o : ${TypeString}) : Dynamic
     {
         var j : Dynamic = {};
         $$
             foreach (var a in Fields)
             {
                 ##
-                    setField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${LowercaseCamelize(a.Type.TypeFriendlyName())}ToJson]](o.[[${LowercaseCamelize(a.Name)}]]));
+                    setField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${LowercaseCamelize(a.Type.SimpleName(NamespaceName))}ToJson]](o.[[${LowercaseCamelize(a.Name)}]]));
             }
         return j;
     }
 
-#Template JsonTranslator_TaggedUnion tu:TaggedUnionDef
-    ${JsonTranslator_TaggedUnion(tu.TypeFriendlyName(), tu.Alternatives)}
+#Template JsonTranslator_TaggedUnion tu:TaggedUnionDef NamespaceName:String
+    ${JsonTranslator_TaggedUnion(tu.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(tu.GetTypeSpec(), NamespaceName), tu.Alternatives, NamespaceName)}
 
-#Template JsonTranslator_TaggedUnion Name:String Alternatives:List<VariableDef>
-    public static function [[${LowercaseCamelize(Name)}FromJson]](j : Dynamic) : [[${Name}]]
+#Template JsonTranslator_TaggedUnion Name:String TypeString:String Alternatives:List<VariableDef> NamespaceName:String
+    public static function [[${LowercaseCamelize(Name)}FromJson]](j : Dynamic) : ${TypeString}
     {
         $$
             foreach (var a in Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     ##
                         if (hasField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}))
                         {
-                            return [[${Name}.${LowercaseCamelize(a.Name)}]];
+                            return ${TypeString}.[[${LowercaseCamelize(a.Name)}]];
                         }
                 }
                 else
@@ -408,14 +416,14 @@
                     ##
                         if (hasField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}))
                         {
-                            var v = [[${LowercaseCamelize(a.Type.TypeFriendlyName())}FromJson]](getField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}));
-                            return [[${Name}.${LowercaseCamelize(a.Name)}]](v);
+                            var v = [[${LowercaseCamelize(a.Type.SimpleName(NamespaceName))}FromJson]](getField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}));
+                            return ${TypeString}.[[${LowercaseCamelize(a.Name)}]](v);
                         }
                 }
             }
         throw "InvalidOperation";
     }
-    public static function [[${LowercaseCamelize(Name)}ToJson]](o : [[${Name}]]) : Dynamic
+    public static function [[${LowercaseCamelize(Name)}ToJson]](o : ${TypeString}) : Dynamic
     {
         var j : Dynamic = {};
         switch (o)
@@ -423,7 +431,7 @@
         $$
             foreach (var a in Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     ##
                         case [[${LowercaseCamelize(a.Name)}]]:
@@ -433,37 +441,37 @@
                 {
                     ##
                         case [[${LowercaseCamelize(a.Name)}]](v):
-                            setField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${LowercaseCamelize(a.Type.TypeFriendlyName())}ToJson]](v));
+                            setField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${LowercaseCamelize(a.Type.SimpleName(NamespaceName))}ToJson]](v));
                 }
             }
         }
         return j;
     }
 
-#Template JsonTranslator_Enum e:EnumDef
+#Template JsonTranslator_Enum e:EnumDef NamespaceName:String
     $$
-        var Name = e.TypeFriendlyName();
-    public static function [[${LowercaseCamelize(Name)}FromJson]](j : Dynamic) : ${GetTypeString(e.UnderlyingType)}
+        var Name = e.GetTypeSpec().SimpleName(NamespaceName);
+    public static function [[${LowercaseCamelize(Name)}FromJson]](j : Dynamic) : ${GetTypeString(e.UnderlyingType, NamespaceName)}
     {
-        return cast(j, ${GetTypeString(e.UnderlyingType)});
+        return cast(j, ${GetTypeString(e.UnderlyingType, NamespaceName)});
     }
-    public static function [[${LowercaseCamelize(Name)}ToJson]](o : ${GetTypeString(e.UnderlyingType)}) : Dynamic
+    public static function [[${LowercaseCamelize(Name)}ToJson]](o : ${GetTypeString(e.UnderlyingType, NamespaceName)}) : Dynamic
     {
         return o;
     }
 
-#Template JsonTranslator_ClientCommand c:ClientCommandDef
-    ${JsonTranslator_Record(c.TypeFriendlyName() + "Request", c.OutParameters)}
-    ${JsonTranslator_TaggedUnion(c.TypeFriendlyName() + "Reply", c.InParameters)}
+#Template JsonTranslator_ClientCommand c:ClientCommandDef NamespaceName:String
+    ${JsonTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Request", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Request", NamespaceName), c.OutParameters, NamespaceName)}
+    ${JsonTranslator_TaggedUnion(GetSuffixedTypeName(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName), c.InParameters, NamespaceName)}
 
-#Template JsonTranslator_ServerCommand c:ServerCommandDef
-    ${JsonTranslator_Record(c.TypeFriendlyName() + "Event", c.OutParameters)}
+#Template JsonTranslator_ServerCommand c:ServerCommandDef NamespaceName:String
+    ${JsonTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName), c.OutParameters, NamespaceName)}
 
-#Template JsonTranslator_Tuple tp:TypeSpec
+#Template JsonTranslator_Tuple tp:TypeSpec NamespaceName:String
     $$
-        var Name = tp.TypeFriendlyName();
-        var TypeString = GetTypeString(tp);
-    public static function [[${LowercaseCamelize(Name)}FromJson]](j : Dynamic) : [[${Name}]]
+        var SimpleName = tp.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(tp, NamespaceName);
+    public static function [[${LowercaseCamelize(SimpleName)}FromJson]](j : Dynamic) : ${TypeString}
     {
         var ja = cast(j, Array<Dynamic>);
         return
@@ -474,13 +482,13 @@
                     foreach (var t in tp.Tuple)
                     {
                         ##
-                            [[item${k}]] : [[${LowercaseCamelize(t.TypeFriendlyName())}FromJson]](ja[${k}]),
+                            [[item${k}]] : [[${LowercaseCamelize(t.SimpleName(NamespaceName))}FromJson]](ja[${k}]),
                         k += 1;
                     }
                 }
         };
     }
-    public static function [[${LowercaseCamelize(Name)}ToJson]](t : [[${Name}]]) : Dynamic
+    public static function [[${LowercaseCamelize(SimpleName)}ToJson]](t : ${TypeString}) : Dynamic
     {
         var ja = new Array<Dynamic>();
         $$
@@ -489,19 +497,19 @@
                 foreach (var t in tp.Tuple)
                 {
                     ##
-                        ja.push([[${LowercaseCamelize(t.TypeFriendlyName())}ToJson]](t.[[item${k}]]));
+                        ja.push([[${LowercaseCamelize(t.SimpleName(NamespaceName))}ToJson]](t.[[item${k}]]));
                     k += 1;
                 }
             }
         return ja;
     }
 
-#Template JsonTranslator_Optional o:TypeSpec
+#Template JsonTranslator_Optional o:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = o.TypeFriendlyName();
-        var TypeString = GetTypeString(o);
-        var ElementTypeFriendlyName = o.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    public static function [[${LowercaseCamelize(TypeFriendlyName)}FromJson]](j : Dynamic) : ${TypeString}
+        var SimpleName = o.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(o, NamespaceName);
+        var ElementSimpleName = o.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    public static function [[${LowercaseCamelize(SimpleName)}FromJson]](j : Dynamic) : ${TypeString}
     {
         if (hasField(j, "notHasValue"))
         {
@@ -509,12 +517,12 @@
         }
         if (hasField(j, "hasValue"))
         {
-            var v = [[${LowercaseCamelize(ElementTypeFriendlyName)}FromJson]](getField(j, "hasValue"));
+            var v = [[${LowercaseCamelize(ElementSimpleName)}FromJson]](getField(j, "hasValue"));
             return v;
         }
         throw "InvalidOperation";
     }
-    public static function [[${LowercaseCamelize(TypeFriendlyName)}ToJson]](o : ${TypeString}) : Dynamic
+    public static function [[${LowercaseCamelize(SimpleName)}ToJson]](o : ${TypeString}) : Dynamic
     {
         var j : Dynamic = {};
         if (o == null)
@@ -523,99 +531,99 @@
         }
         else
         {
-            setField(j, "hasValue", [[${LowercaseCamelize(ElementTypeFriendlyName)}ToJson]](o));
+            setField(j, "hasValue", [[${LowercaseCamelize(ElementSimpleName)}ToJson]](o));
         }
         return j;
     }
 
-#Template JsonTranslator_List l:TypeSpec
+#Template JsonTranslator_List l:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    public static function [[${LowercaseCamelize(TypeFriendlyName)}FromJson]](j : Dynamic) : ${TypeString}
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    public static function [[${LowercaseCamelize(SimpleName)}FromJson]](j : Dynamic) : ${TypeString}
     {
         var ja = cast(j, Array<Dynamic>);
         var a = new ${TypeString}();
         for (e in ja)
         {
-            a.push([[${LowercaseCamelize(ElementTypeFriendlyName)}FromJson]](e));
+            a.push([[${LowercaseCamelize(ElementSimpleName)}FromJson]](e));
         }
         return a;
     }
-    public static function [[${LowercaseCamelize(TypeFriendlyName)}ToJson]](c : ${TypeString}) : Dynamic
+    public static function [[${LowercaseCamelize(SimpleName)}ToJson]](c : ${TypeString}) : Dynamic
     {
         var ja = new Array<Dynamic>();
         for (e in c)
         {
-            ja.push([[${LowercaseCamelize(ElementTypeFriendlyName)}ToJson]](e));
+            ja.push([[${LowercaseCamelize(ElementSimpleName)}ToJson]](e));
         }
         return ja;
     }
 
-#Template JsonTranslator_Set l:TypeSpec
+#Template JsonTranslator_Set l:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    public static function [[${LowercaseCamelize(TypeFriendlyName)}FromJson]](j : Dynamic) : ${TypeString}
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    public static function [[${LowercaseCamelize(SimpleName)}FromJson]](j : Dynamic) : ${TypeString}
     {
         var ja = cast(j, Array<Dynamic>);
         var a = new ${TypeString}();
         for (e in ja)
         {
-            a.set([[${LowercaseCamelize(ElementTypeFriendlyName)}FromJson]](e), {});
+            a.set([[${LowercaseCamelize(ElementSimpleName)}FromJson]](e), {});
         }
         return a;
     }
-    public static function [[${LowercaseCamelize(TypeFriendlyName)}ToJson]](c : ${TypeString}) : Dynamic
+    public static function [[${LowercaseCamelize(SimpleName)}ToJson]](c : ${TypeString}) : Dynamic
     {
         var ja = new Array<Dynamic>();
         for (e in c.keys())
         {
-            ja.push([[${LowercaseCamelize(ElementTypeFriendlyName)}ToJson]](e));
+            ja.push([[${LowercaseCamelize(ElementSimpleName)}ToJson]](e));
         }
         return ja;
     }
 
-#Template JsonTranslator_Map l:TypeSpec
+#Template JsonTranslator_Map l:TypeSpec NamespaceName:String
     $$
         var gp = l.GenericTypeSpec.ParameterValues;
         if (gp.Count != 2)
         {
             throw new ArgumentException();
         }
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
-        var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-    public static function [[${LowercaseCamelize(TypeFriendlyName)}FromJson]](j : Dynamic) : ${TypeString}
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var KeySimpleName = gp[0].SimpleName(NamespaceName);
+        var ValueSimpleName = gp[1].SimpleName(NamespaceName);
+    public static function [[${LowercaseCamelize(SimpleName)}FromJson]](j : Dynamic) : ${TypeString}
     {
         var ja = cast(j, Array<Dynamic>);
         var a = new ${TypeString}();
         for (e in ja)
         {
-            var key = [[${LowercaseCamelize(KeyTypeFriendlyName)}FromJson]](getField(e, "key"));
-            var value = [[${LowercaseCamelize(ValueTypeFriendlyName)}FromJson]](getField(e, "value"));
+            var key = [[${LowercaseCamelize(KeySimpleName)}FromJson]](getField(e, "key"));
+            var value = [[${LowercaseCamelize(ValueSimpleName)}FromJson]](getField(e, "value"));
             a.set(key, value);
         }
         return a;
     }
-    public static function [[${LowercaseCamelize(TypeFriendlyName)}ToJson]](c : ${TypeString}) : Dynamic
+    public static function [[${LowercaseCamelize(SimpleName)}ToJson]](c : ${TypeString}) : Dynamic
     {
         var ja = new Array<Dynamic>();
         for (key in c.keys())
         {
             var value = c.get(key);
             var jp : Dynamic = {};
-            setField(jp, "key", [[${LowercaseCamelize(KeyTypeFriendlyName)}ToJson]](key));
-            setField(jp, "value", [[${LowercaseCamelize(ValueTypeFriendlyName)}ToJson]](value));
+            setField(jp, "key", [[${LowercaseCamelize(KeySimpleName)}ToJson]](key));
+            setField(jp, "value", [[${LowercaseCamelize(ValueSimpleName)}ToJson]](value));
             ja.push(jp);
         }
         return ja;
     }
 
-#Template Main Schema:Schema PackageName:String
+#Template WrapModule NamespaceName:String Imports:List<String> Contents:IEnumerable<String>
     //==========================================================================
     //
     //  Notice:      This file is automatically generated.
@@ -624,14 +632,17 @@
     //==========================================================================
 
     $$
-        if (PackageName != "")
+        if (NamespaceName != "")
         {
+            var n = String.Join(".", NamespaceName.Split('.').Select(NamespacePart => LowercaseCamelize(NamespacePart)));
             ##
-                package [[${PackageName}]];
+                package ${n};
+
+            $End
         }
     import haxe.Json;
-    import ${Schema.Imports};
+    import ${Imports};
 
-    ${GetTypes(Schema)}
+    ${Contents}
 
 $End

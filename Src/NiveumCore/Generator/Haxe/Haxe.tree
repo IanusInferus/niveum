@@ -4,7 +4,7 @@
       File:        Haxe.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构Haxe模板
-      Version:     2016.10.06.
+      Version:     2018.12.12.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -112,36 +112,36 @@
 
 #Template Alias a:AliasDef
     $$
-        var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-        var Type = GetTypeString(a.Type);
+        var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
+        var Type = GetTypeString(a.Type, a.NamespaceName());
     ${GetXmlComment(a.Description)}
     typedef ${Name} = ${Type}
 
 #Template Record r:RecordDef
     $$
-        var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+        var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
     ${GetXmlComment(r.Description)}
-    typedef [[${Name}]] =
+    typedef ${Name} =
     {
         $$
             foreach (var f in r.Fields)
             {
                 ##
                     ${GetXmlComment(f.Description)}
-                    var [[${LowercaseCamelize(f.Name)}]] : ${GetTypeString(f.Type)};
+                    var [[${LowercaseCamelize(f.Name)}]] : ${GetTypeString(f.Type, r.NamespaceName())};
             }
     }
 
 #Template TaggedUnion tu:TaggedUnionDef
     $$
-        var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
+        var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
     ${GetXmlComment(tu.Description)}
     enum ${Name}
     {
         $$
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     ##
                         ${GetXmlComment(a.Description)}
@@ -151,16 +151,16 @@
                 {
                     ##
                         ${GetXmlComment(a.Description)}
-                        [[${LowercaseCamelize(a.Name)}]](v : ${GetTypeString(a.Type)});
+                        [[${LowercaseCamelize(a.Name)}]](v : ${GetTypeString(a.Type, tu.NamespaceName())});
                 }
             }
     }
 
 #Template Enum e:EnumDef
     $$
-        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+        var Name = GetEscapedIdentifier(e.DefinitionName());
     ${GetXmlComment(e.Description)}
-    class ${Name} /* ${GetEnumTypeString(e.UnderlyingType)} */
+    class ${Name} /* ${GetEnumTypeString(e.UnderlyingType, e.NamespaceName())} */
     {
         $$
             var k = 0;
@@ -168,26 +168,14 @@
             {
                 ##
                     ${GetXmlComment(l.Description)}
-                    public static inline var [[${l.Name.ToUpperInvariant()}]] : ${GetTypeString(e.UnderlyingType)} = ${l.Value};
+                    public static inline var [[${l.Name.ToUpperInvariant()}]] : ${GetTypeString(e.UnderlyingType, e.NamespaceName())} = ${l.Value};
                 k += 1;
             }
     }
 
-#Template ClientCommand c:ClientCommandDef
+#Template Tuple tp:TypeSpec NamespaceName:String
     $$
-        var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-        var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
-    ${Record(Request)}
-    ${TaggedUnion(Reply)}
-
-#Template ServerCommand c:ServerCommandDef
-    $$
-        var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-    ${Record(Event)}
-
-#Template Tuple tp:TypeSpec
-    $$
-        var Name = GetEscapedIdentifier(tp.TypeFriendlyName());
+        var Name = GetEscapedIdentifier(tp.SimpleName(NamespaceName));
         var Types = tp.Tuple;
     /* Tuple */
     typedef ${Name} =
@@ -197,12 +185,12 @@
             foreach (var e in Types)
             {
                 ##
-                    var [[item${k}]] : ${GetTypeString(e)};
+                    var [[item${k}]] : ${GetTypeString(e, NamespaceName)};
                 k += 1;
             }
     }
 
-#Template IApplicationClient Commands:List<TypeDef>
+#Template IApplicationClient Commands:List<TypeDef> NamespaceName:String
     interface IApplicationClient
     {
         var hash(get, null) : String;
@@ -213,24 +201,27 @@
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        function [[${LowercaseCamelize(Name)}]](r : [[${Name}Request]], _callback : [[${Name}Reply]] -> Void) : Void;
+                        function [[${LowercaseCamelize(Name)}]](r : ${RequestTypeString}, _callback : ${ReplyTypeString} -> Void) : Void;
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        var [[${LowercaseCamelize(Name)}]] : [[${Name}Event]] -> Void;
+                        var [[${LowercaseCamelize(Name)}]] : ${EventTypeString} -> Void;
                 }
             }
     }
 
-#Template Main Schema:Schema PackageName:String
+#Template WrapModule NamespaceName:String Imports:List<String> Contents:IEnumerable<String>
     //==========================================================================
     //
     //  Notice:      This file is automatically generated.
@@ -239,13 +230,16 @@
     //==========================================================================
 
     $$
-        if (PackageName != "")
+        if (NamespaceName != "")
         {
+            var n = String.Join(".", NamespaceName.Split('.').Select(NamespacePart => LowercaseCamelize(NamespacePart)));
             ##
-                package [[${PackageName}]];
-        }
-    import ${Schema.Imports};
+                package ${n};
 
-    ${GetTypes(Schema)}
+            $End
+        }
+    import ${Imports};
+
+    ${Contents}
 
 $End

@@ -3,7 +3,7 @@
 //  File:        CSharp.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2018.12.05.
+//  Version:     2018.12.10.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -141,7 +141,7 @@ namespace Niveum.ObjectSchema.CSharp
                 return MultiLineXmlComment(Lines);
             }
         }
-        public String GetEnumTypeString(TypeSpec Type)
+        public String GetEnumTypeString(TypeSpec Type, String NamespaceName)
         {
             if (!Type.OnTypeRef)
             {

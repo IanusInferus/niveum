@@ -59,6 +59,8 @@
     <Compile Include="Generated\Generator\CSharp\CSharpCompatible.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharpJson.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharpVersion.cs" />
+    <Compile Include="Generated\Generator\Haxe\Haxe.cs" />
+    <Compile Include="Generated\Generator\Haxe\HaxeJson.cs" />
     <Compile Include="Generated\Generator\VB\VB.cs" />
     <Compile Include="Generated\Generator\Xhtml\Xhtml.cs" />
     <Compile Include="Generated\ObjectSchema\ObjectSchema.cs" />
@@ -67,6 +69,8 @@
     <Compile Include="Generator\CSharp\CSharpCompatible.cs" />
     <Compile Include="Generator\CSharp\CSharpJson.cs" />
     <Compile Include="Generator\CSharp\CSharpVersion.cs" />
+    <Compile Include="Generator\Haxe\Haxe.cs" />
+    <Compile Include="Generator\Haxe\HaxeJson.cs" />
     <Compile Include="Generator\VB\VB.cs" />
     <Compile Include="Generator\Xhtml\Xhtml.cs" />
     <Compile Include="ObjectSchema\FileParser.cs" />
@@ -86,6 +90,8 @@
     <None Include="Generator\CSharp\CSharpCompatible.tree" />
     <None Include="Generator\CSharp\CSharpJson.tree" />
     <None Include="Generator\CSharp\CSharpVersion.tree" />
+    <None Include="Generator\Haxe\Haxe.tree" />
+    <None Include="Generator\Haxe\HaxeJson.tree" />
     <None Include="Generator\VB\VB.tree" />
     <None Include="Generator\Xhtml\Xhtml.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
