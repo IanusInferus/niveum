@@ -7,8 +7,7 @@ import js.Browser.alert;
 
 import jQuery.JQuery;
 
-import Common;
-import communication.Communication;
+import communication.*;
 import context.SerializationClientAdapter;
 import clients.JsonHttpClient;
 

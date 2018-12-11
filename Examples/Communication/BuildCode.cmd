@@ -31,9 +31,8 @@ SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /import:"""Communication.h""" /import:"""Workaround.h""" /t2cppb:CPP\Src\Client\CommunicationBinary.h,Communication.Binary
 
 ::Haxe
-SchemaManipulator.exe /loadtype:Schema\Common /t2hx:Haxe\src\Common.hx
-SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /import:Common /t2hx:Haxe\src\communication\Communication.hx,communication
-SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /import:Common /import:communication.Communication /t2hxj:Haxe\src\communication\CommunicationJson.hx,communication
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2hx:Haxe\generated,Communication
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2hxj:Haxe\generated,Communication.Json
 
 :: Xhtml
 @if not exist XHTML @md XHTML

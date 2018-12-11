@@ -109,8 +109,8 @@ namespace Niveum.ObjectSchema.Haxe
         }
         public IEnumerable<String> Alias(AliasDef a)
         {
-            var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-            var Type = GetTypeString(a.Type);
+            var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
+            var Type = GetTypeString(a.Type, a.NamespaceName());
             foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
             {
                 yield return _Line;
@@ -122,12 +122,12 @@ namespace Niveum.ObjectSchema.Haxe
         }
         public IEnumerable<String> Record(RecordDef r)
         {
-            var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+            var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
             foreach (var _Line in Combine(Begin(), GetXmlComment(r.Description)))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "typedef "), GetEscapedIdentifier(Name)), " ="))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "typedef "), Name), " ="))
             {
                 yield return _Line;
             }
@@ -138,7 +138,7 @@ namespace Niveum.ObjectSchema.Haxe
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "var "), GetEscapedIdentifier(LowercaseCamelize(f.Name))), " : "), GetTypeString(f.Type)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "var "), GetEscapedIdentifier(LowercaseCamelize(f.Name))), " : "), GetTypeString(f.Type, r.NamespaceName())), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -147,7 +147,7 @@ namespace Niveum.ObjectSchema.Haxe
         }
         public IEnumerable<String> TaggedUnion(TaggedUnionDef tu)
         {
-            var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
+            var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
             foreach (var _Line in Combine(Begin(), GetXmlComment(tu.Description)))
             {
                 yield return _Line;
@@ -159,7 +159,7 @@ namespace Niveum.ObjectSchema.Haxe
             yield return "{";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                     {
@@ -176,7 +176,7 @@ namespace Niveum.ObjectSchema.Haxe
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(LowercaseCamelize(a.Name))), "(v : "), GetTypeString(a.Type)), ");"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(LowercaseCamelize(a.Name))), "(v : "), GetTypeString(a.Type, tu.NamespaceName())), ");"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -186,12 +186,12 @@ namespace Niveum.ObjectSchema.Haxe
         }
         public IEnumerable<String> Enum(EnumDef e)
         {
-            var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+            var Name = GetEscapedIdentifier(e.DefinitionName());
             foreach (var _Line in Combine(Begin(), GetXmlComment(e.Description)))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "class "), Name), " /* "), GetEnumTypeString(e.UnderlyingType)), " */"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "class "), Name), " /* "), GetEnumTypeString(e.UnderlyingType, e.NamespaceName())), " */"))
             {
                 yield return _Line;
             }
@@ -203,7 +203,7 @@ namespace Niveum.ObjectSchema.Haxe
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static inline var "), GetEscapedIdentifier(l.Name.ToUpperInvariant())), " : "), GetTypeString(e.UnderlyingType)), " = "), l.Value), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static inline var "), GetEscapedIdentifier(l.Name.ToUpperInvariant())), " : "), GetTypeString(e.UnderlyingType, e.NamespaceName())), " = "), l.Value), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -211,30 +211,9 @@ namespace Niveum.ObjectSchema.Haxe
             }
             yield return "}";
         }
-        public IEnumerable<String> ClientCommand(ClientCommandDef c)
+        public IEnumerable<String> Tuple(TypeSpec tp, String NamespaceName)
         {
-            var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-            var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
-            foreach (var _Line in Combine(Begin(), Record(Request)))
-            {
-                yield return _Line;
-            }
-            foreach (var _Line in Combine(Begin(), TaggedUnion(Reply)))
-            {
-                yield return _Line;
-            }
-        }
-        public IEnumerable<String> ServerCommand(ServerCommandDef c)
-        {
-            var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-            foreach (var _Line in Combine(Begin(), Record(Event)))
-            {
-                yield return _Line;
-            }
-        }
-        public IEnumerable<String> Tuple(TypeSpec tp)
-        {
-            var Name = GetEscapedIdentifier(tp.TypeFriendlyName());
+            var Name = GetEscapedIdentifier(tp.SimpleName(NamespaceName));
             var Types = tp.Tuple;
             yield return "/* Tuple */";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "typedef "), Name), " ="))
@@ -245,7 +224,7 @@ namespace Niveum.ObjectSchema.Haxe
             var k = 0;
             foreach (var e in Types)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "var "), GetEscapedIdentifier(Combine(Combine(Begin(), "item"), k))), " : "), GetTypeString(e)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "var "), GetEscapedIdentifier(Combine(Combine(Begin(), "item"), k))), " : "), GetTypeString(e, NamespaceName)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -253,7 +232,7 @@ namespace Niveum.ObjectSchema.Haxe
             }
             yield return "}";
         }
-        public IEnumerable<String> IApplicationClient(List<TypeDef> Commands)
+        public IEnumerable<String> IApplicationClient(List<TypeDef> Commands, String NamespaceName)
         {
             yield return "interface IApplicationClient";
             yield return "{";
@@ -264,26 +243,29 @@ namespace Niveum.ObjectSchema.Haxe
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "function "), GetEscapedIdentifier(LowercaseCamelize(Name))), "(r : "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), ", _callback : "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), " -> Void) : Void;"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "function "), GetEscapedIdentifier(LowercaseCamelize(Name))), "(r : "), RequestTypeString), ", _callback : "), ReplyTypeString), " -> Void) : Void;"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "var "), GetEscapedIdentifier(LowercaseCamelize(Name))), " : "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), " -> Void;"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "var "), GetEscapedIdentifier(LowercaseCamelize(Name))), " : "), EventTypeString), " -> Void;"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -291,7 +273,7 @@ namespace Niveum.ObjectSchema.Haxe
             }
             yield return "}";
         }
-        public IEnumerable<String> Main(Schema Schema, String PackageName)
+        public IEnumerable<String> WrapModule(String NamespaceName, List<String> Imports, IEnumerable<String> Contents)
         {
             yield return "//==========================================================================";
             yield return "//";
@@ -300,19 +282,21 @@ namespace Niveum.ObjectSchema.Haxe
             yield return "//";
             yield return "//==========================================================================";
             yield return "";
-            if (PackageName != "")
+            if (NamespaceName != "")
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "package "), GetEscapedIdentifier(PackageName)), ";"))
+                var n = String.Join(".", NamespaceName.Split('.').Select(NamespacePart => LowercaseCamelize(NamespacePart)));
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "package "), n), ";"))
                 {
                     yield return _Line;
                 }
+                yield return "";
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "import "), Schema.Imports), ";"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "import "), Imports), ";"))
             {
                 yield return _Line;
             }
             yield return "";
-            foreach (var _Line in Combine(Begin(), GetTypes(Schema)))
+            foreach (var _Line in Combine(Begin(), Contents))
             {
                 yield return _Line;
             }

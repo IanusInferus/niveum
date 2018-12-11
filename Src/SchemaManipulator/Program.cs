@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2018.12.09.
+//  Version:     2018.12.12.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -26,14 +26,14 @@ using Niveum.ObjectSchema.CSharpBinary;
 using Niveum.ObjectSchema.CSharpJson;
 using Niveum.ObjectSchema.CSharpCompatible;
 using Niveum.ObjectSchema.CSharpVersion;
+using Niveum.ObjectSchema.Haxe;
+using Niveum.ObjectSchema.HaxeJson;
 using Niveum.ObjectSchema.VB;
 using Niveum.ObjectSchema.Xhtml;
 using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.CppCompatible;
 using Yuki.ObjectSchema.CppVersion;
-using Yuki.ObjectSchema.Haxe;
-using Yuki.ObjectSchema.HaxeJson;
 using Yuki.ObjectSchema.Java;
 using Yuki.ObjectSchema.JavaBinary;
 using Yuki.ObjectSchema.Python;
@@ -475,11 +475,7 @@ namespace Yuki.SchemaManipulator
                 else if (optNameLower == "t2hx")
                 {
                     var args = opt.Arguments;
-                    if (args.Length == 1)
-                    {
-                        ObjectSchemaToHaxeCode(args[0], "");
-                    }
-                    else if (args.Length == 2)
+                    if (args.Length == 2)
                     {
                         ObjectSchemaToHaxeCode(args[0], args[1]);
                     }
@@ -492,11 +488,7 @@ namespace Yuki.SchemaManipulator
                 else if (optNameLower == "t2hxj")
                 {
                     var args = opt.Arguments;
-                    if (args.Length == 1)
-                    {
-                        ObjectSchemaToHaxeJsonCode(args[0], "");
-                    }
-                    else if (args.Length == 2)
+                    if (args.Length == 2)
                     {
                         ObjectSchemaToHaxeJsonCode(args[0], args[1]);
                     }
@@ -632,9 +624,9 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"生成C++版本类型");
             Console.WriteLine(@"/t2cppv:<CsCodePath>,<NamespaceName>,<FullTypeName>*");
             Console.WriteLine(@"生成Haxe类型");
-            Console.WriteLine(@"/t2hx:<HaxeCodePath>,<PackageName>");
+            Console.WriteLine(@"/t2hx:<HaxeCodeDirPath>,<PackageName>");
             Console.WriteLine(@"生成Haxe JSON通讯类型");
-            Console.WriteLine(@"/t2hxj:<HaxeCodePath>,<PackageName>");
+            Console.WriteLine(@"/t2hxj:<HaxeCodeDirPath>,<PackageName>");
             Console.WriteLine(@"生成Python类型");
             Console.WriteLine(@"/t2py:<PythonCodePath>");
             Console.WriteLine(@"生成Python二进制类型");
@@ -662,7 +654,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"WithServer 是否生成服务器代码。");
             Console.WriteLine(@"WithClient 是否生成客户端代码。");
             Console.WriteLine(@"JavaCodePath Java代码文件路径。");
-            Console.WriteLine(@"HaxeCodePath Haxe代码文件路径。");
+            Console.WriteLine(@"HaxeCodeDirPath Haxe代码文件目录路径。");
             Console.WriteLine(@"PythonCodePath Python代码文件路径。");
             Console.WriteLine(@"XhtmlDir XHTML文件夹路径。");
             Console.WriteLine(@"Title 标题。");
@@ -1030,38 +1022,48 @@ namespace Yuki.SchemaManipulator
             Txt.WriteFile(CppCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToHaxeCode(String HaxeCodePath, String NamespaceName)
+        public static void ObjectSchemaToHaxeCode(String HaxeCodeDirPath, String NamespaceName)
         {
-            var ObjectSchema = GetObjectSchemaLegacy();
-            var Compiled = ObjectSchema.CompileToHaxe(NamespaceName);
-            if (File.Exists(HaxeCodePath))
+            var ObjectSchema = GetObjectSchema();
+            var CompiledFiles = ObjectSchema.CompileToHaxe(NamespaceName);
+            foreach (var f in CompiledFiles)
             {
-                var Original = Txt.ReadFile(HaxeCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                var FilePath = FileNameHandling.GetPath(HaxeCodeDirPath, f.Key.Replace('/', Path.DirectorySeparatorChar));
+                var Compiled = f.Value;
+                if (File.Exists(FilePath))
                 {
-                    return;
+                    var Original = Txt.ReadFile(FilePath);
+                    if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
                 }
+                var Dir = FileNameHandling.GetFileDirectory(FilePath);
+                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+                Txt.WriteFile(FilePath, Compiled);
             }
-            var Dir = FileNameHandling.GetFileDirectory(HaxeCodePath);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(HaxeCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToHaxeJsonCode(String HaxeCodePath, String NamespaceName)
+        public static void ObjectSchemaToHaxeJsonCode(String HaxeCodeDirPath, String NamespaceName)
         {
-            var ObjectSchema = GetObjectSchemaLegacy();
-            var Compiled = ObjectSchema.CompileToHaxeJson(NamespaceName);
-            if (File.Exists(HaxeCodePath))
+            var ObjectSchema = GetObjectSchema();
+            var CompiledFiles = ObjectSchema.CompileToHaxeJson(NamespaceName);
+            foreach (var f in CompiledFiles)
             {
-                var Original = Txt.ReadFile(HaxeCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                var FilePath = FileNameHandling.GetPath(HaxeCodeDirPath, f.Key.Replace('/', Path.DirectorySeparatorChar));
+                var Compiled = f.Value;
+                if (File.Exists(FilePath))
                 {
-                    return;
+                    var Original = Txt.ReadFile(FilePath);
+                    if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
                 }
+                var Dir = FileNameHandling.GetFileDirectory(FilePath);
+                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+                Txt.WriteFile(FilePath, Compiled);
             }
-            var Dir = FileNameHandling.GetFileDirectory(HaxeCodePath);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(HaxeCodePath, Compiled);
         }
 
         public static void ObjectSchemaToPythonCode(String PythonCodePath)

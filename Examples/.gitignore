@@ -9,9 +9,7 @@ Generated
 /Communication/CPP/Src/Client/CommunicationBinary.h
 /Communication/CPP/Src/Server/Communication.h
 /Communication/CPP/Src/Server/CommunicationBinary.h
-/Communication/Haxe/src/Common.hx
-/Communication/Haxe/src/communication/Communication.hx
-/Communication/Haxe/src/communication/CommunicationJson.hx
+/Communication/Haxe/generated
 /Communication/XHTML
 /Database/MailCSharp/Src/Database.cs
 /Database/MailCSharp/Src/Krustallos/KrustallosDataAccess.cs
@@ -41,8 +39,7 @@ Generated
 /Serialization/CSharp/Src/WorldJson.cs
 /Serialization/CSharp/Src/WorldVersions.cs
 /Serialization/Haxe/Data
-/Serialization/Haxe/src/World.hx
-/Serialization/Haxe/src/WorldJson.hx
+/Serialization/Haxe/generated
 /Serialization/Java/Data
 /Serialization/Java/src/WorldBinary.java
 /Serialization/Python/Data

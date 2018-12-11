@@ -3,8 +3,6 @@ package clients;
 import haxe.Json;
 import jQuery.JQuery;
 
-import Common;
-
 import clients.ISerializationClient;
 
 class JsonHttpClient

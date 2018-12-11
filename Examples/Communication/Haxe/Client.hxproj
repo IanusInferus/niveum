@@ -16,6 +16,7 @@
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
     <class path="src" />
+    <class path="generated" />
   </classpaths>
   <!-- Build options -->
   <build>
@@ -39,9 +40,9 @@
     <hidden path="obj" />
   </hiddenPaths>
   <!-- Executed before build -->
-  <preBuildCommand>haxe build.hxml
+  <preBuildCommand>"$(CompilerPath)\haxe.exe" $(ProjectDir)\build.hxml
 xcopy /E /Y jslib\*.* bin\
-xcopy /S /Y src\*.xhtml bin\
+xcopy /S /Y src\*.html bin\
 xcopy /S /Y src\*.json bin\</preBuildCommand>
   <!-- Executed after build -->
   <postBuildCommand alwaysRun="False" />

@@ -2,8 +2,8 @@
 import haxe.io.Bytes;
 import sys.io.File;
 
-import World;
-import WorldJson;
+import world.*;
+import world.json.*;
 
 using Lambda;
 

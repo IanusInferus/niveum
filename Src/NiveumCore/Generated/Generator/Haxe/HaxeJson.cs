@@ -82,7 +82,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    function send(commandName : String, commandHash : String, parameters : String) : Void;";
             yield return "}";
         }
-        public IEnumerable<String> JsonSerializationClient(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator)
+        public IEnumerable<String> JsonSerializationClient(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator, String NamespaceName)
         {
             yield return "private class ApplicationClient implements IApplicationClient";
             yield return "{";
@@ -125,23 +125,27 @@ namespace Niveum.ObjectSchema.HaxeJson
             {
                 if (c.OnClientCommand)
                 {
-                    var CommandName = c.ClientCommand.Name;
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public function "), GetEscapedIdentifier(LowercaseCamelize(Name))), "(r : "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), ", _callback : "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), " -> Void) : Void"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public function "), GetEscapedIdentifier(LowercaseCamelize(Name))), "(r : "), RequestTypeString), ", _callback : "), ReplyTypeString), " -> Void) : Void"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                     yield return "    " + "{";
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    var request = Json.stringify(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "RequestToJson"))), "(r));"))
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    var request = Json.stringify(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(RequestName)), "ToJson"))), "(r));"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    addCallback("), GetEscapedStringLiteral(CommandName)), ", \""), CommandHash), "\", function(parameters) { return _callback(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "ReplyFromJson"))), "(Json.parse(parameters))); });"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    addCallback("), CommandNameString), ", \""), CommandHash), "\", function(parameters) { return _callback(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ReplyName)), "FromJson"))), "(Json.parse(parameters))); });"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s.send("), GetEscapedStringLiteral(CommandName)), ", \""), CommandHash), "\", request);"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s.send("), CommandNameString), ", \""), CommandHash), "\", request);"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -149,12 +153,13 @@ namespace Niveum.ObjectSchema.HaxeJson
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public var "), GetEscapedIdentifier(LowercaseCamelize(Name))), " : "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), " -> Void;"))
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public var "), GetEscapedIdentifier(LowercaseCamelize(Name))), " : "), EventTypeString), " -> Void;"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public function "), GetEscapedIdentifier(Combine(Combine(Begin(), "raise"), Name))), "(e : "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), ") : Void { if ("), GetEscapedIdentifier(LowercaseCamelize(Name))), " != null) { "), GetEscapedIdentifier(LowercaseCamelize(Name))), "(e); } }"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public function "), GetEscapedIdentifier(Combine(Combine(Begin(), "raise"), Name))), "(e : "), EventTypeString), ") : Void { if ("), GetEscapedIdentifier(LowercaseCamelize(Name))), " != null) { "), GetEscapedIdentifier(LowercaseCamelize(Name))), "(e); } }"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -183,10 +188,12 @@ namespace Niveum.ObjectSchema.HaxeJson
             {
                 if (c.OnServerCommand)
                 {
-                    var CommandName = c.ServerCommand.Name;
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "serverCommands.set("), GetEscapedStringLiteral(CommandName)), ", {commandHash : \""), CommandHash), "\", _callback : function(parameters) { c."), GetEscapedIdentifier(Combine(Combine(Begin(), "raise"), Name))), "(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "EventFromJson"))), "(Json.parse(parameters))); }});"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "serverCommands.set("), CommandNameString), ", {commandHash : \""), CommandHash), "\", _callback : function(parameters) { c."), GetEscapedIdentifier(Combine(Combine(Begin(), "raise"), Name))), "(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(EventName)), "FromJson"))), "(Json.parse(parameters))); }});"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -230,7 +237,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    }";
             yield return "}";
         }
-        public IEnumerable<String> JsonTranslator(Schema Schema)
+        public IEnumerable<String> JsonTranslator(Schema Schema, String NamespaceName)
         {
             yield return "@:final";
             yield return "class JsonTranslator /* static */";
@@ -249,7 +256,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "        Reflect.setField(o, field, value);";
             yield return "    }";
             yield return "";
-            foreach (var _Line in Combine(Combine(Begin(), "    "), GetJsonTranslatorSerializers(Schema)))
+            foreach (var _Line in Combine(Combine(Begin(), "    "), GetJsonTranslatorSerializers(Schema, NamespaceName)))
             {
                 yield return _Line;
             }
@@ -442,41 +449,42 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    throw \"NotSupportedException\";";
             yield return "}";
         }
-        public IEnumerable<String> JsonTranslator_Alias(AliasDef a)
+        public IEnumerable<String> JsonTranslator_Alias(AliasDef a, String NamespaceName)
         {
-            var Name = a.TypeFriendlyName();
-            var ValueTypeFriendlyName = a.Type.TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "FromJson"))), "(j : Dynamic) : "), GetEscapedIdentifier(Name)))
+            var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
+            var Name = a.GetTypeSpec().SimpleName(NamespaceName);
+            var ValueSimpleName = a.Type.SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "FromJson"))), "(j : Dynamic) : "), TypeString))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ValueTypeFriendlyName)), "FromJson"))), "(j);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ValueSimpleName)), "FromJson"))), "(j);"))
             {
                 yield return _Line;
             }
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "ToJson"))), "(o : "), GetEscapedIdentifier(Name)), ") : Dynamic"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "ToJson"))), "(o : "), TypeString), ") : Dynamic"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ValueTypeFriendlyName)), "ToJson"))), "(o);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ValueSimpleName)), "ToJson"))), "(o);"))
             {
                 yield return _Line;
             }
             yield return "}";
         }
-        public IEnumerable<String> JsonTranslator_Record(RecordDef r)
+        public IEnumerable<String> JsonTranslator_Record(RecordDef r, String NamespaceName)
         {
-            foreach (var _Line in Combine(Begin(), JsonTranslator_Record(r.TypeFriendlyName(), r.Fields)))
+            foreach (var _Line in Combine(Begin(), JsonTranslator_Record(r.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(r.GetTypeSpec(), NamespaceName), r.Fields, NamespaceName)))
             {
                 yield return _Line;
             }
         }
-        public IEnumerable<String> JsonTranslator_Record(String Name, List<VariableDef> Fields)
+        public IEnumerable<String> JsonTranslator_Record(String Name, String TypeString, List<VariableDef> Fields, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "FromJson"))), "(j : Dynamic) : "), GetEscapedIdentifier(Name)))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "FromJson"))), "(j : Dynamic) : "), TypeString))
             {
                 yield return _Line;
             }
@@ -485,14 +493,14 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    {";
             foreach (var a in Fields)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(LowercaseCamelize(a.Name))), " : "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(a.Type.TypeFriendlyName())), "FromJson"))), "(getField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ")),"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(LowercaseCamelize(a.Name))), " : "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(a.Type.SimpleName(NamespaceName))), "FromJson"))), "(getField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ")),"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
             }
             yield return "    };";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "ToJson"))), "(o : "), GetEscapedIdentifier(Name)), ") : Dynamic"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "ToJson"))), "(o : "), TypeString), ") : Dynamic"))
             {
                 yield return _Line;
             }
@@ -500,7 +508,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    var j : Dynamic = {};";
             foreach (var a in Fields)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "setField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(a.Type.TypeFriendlyName())), "ToJson"))), "(o."), GetEscapedIdentifier(LowercaseCamelize(a.Name))), "));"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "setField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(a.Type.SimpleName(NamespaceName))), "ToJson"))), "(o."), GetEscapedIdentifier(LowercaseCamelize(a.Name))), "));"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -508,30 +516,30 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    return j;";
             yield return "}";
         }
-        public IEnumerable<String> JsonTranslator_TaggedUnion(TaggedUnionDef tu)
+        public IEnumerable<String> JsonTranslator_TaggedUnion(TaggedUnionDef tu, String NamespaceName)
         {
-            foreach (var _Line in Combine(Begin(), JsonTranslator_TaggedUnion(tu.TypeFriendlyName(), tu.Alternatives)))
+            foreach (var _Line in Combine(Begin(), JsonTranslator_TaggedUnion(tu.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(tu.GetTypeSpec(), NamespaceName), tu.Alternatives, NamespaceName)))
             {
                 yield return _Line;
             }
         }
-        public IEnumerable<String> JsonTranslator_TaggedUnion(String Name, List<VariableDef> Alternatives)
+        public IEnumerable<String> JsonTranslator_TaggedUnion(String Name, String TypeString, List<VariableDef> Alternatives, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "FromJson"))), "(j : Dynamic) : "), GetEscapedIdentifier(Name)))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "FromJson"))), "(j : Dynamic) : "), TypeString))
             {
                 yield return _Line;
             }
             yield return "{";
             foreach (var a in Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     foreach (var _Line in Combine(Combine(Combine(Begin(), "if (hasField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "))"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                     yield return "    " + "{";
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "."), LowercaseCamelize(a.Name)))), ";"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), TypeString), "."), GetEscapedIdentifier(LowercaseCamelize(a.Name))), ";"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -544,11 +552,11 @@ namespace Niveum.ObjectSchema.HaxeJson
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                     yield return "    " + "{";
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    var v = "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(a.Type.TypeFriendlyName())), "FromJson"))), "(getField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "));"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    var v = "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(a.Type.SimpleName(NamespaceName))), "FromJson"))), "(getField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "));"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "."), LowercaseCamelize(a.Name)))), "(v);"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), TypeString), "."), GetEscapedIdentifier(LowercaseCamelize(a.Name))), "(v);"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -557,7 +565,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             }
             yield return "    throw \"InvalidOperation\";";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "ToJson"))), "(o : "), GetEscapedIdentifier(Name)), ") : Dynamic"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "ToJson"))), "(o : "), TypeString), ") : Dynamic"))
             {
                 yield return _Line;
             }
@@ -567,7 +575,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    {";
             foreach (var a in Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     foreach (var _Line in Combine(Combine(Combine(Begin(), "case "), GetEscapedIdentifier(LowercaseCamelize(a.Name))), ":"))
                     {
@@ -584,7 +592,7 @@ namespace Niveum.ObjectSchema.HaxeJson
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    setField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(a.Type.TypeFriendlyName())), "ToJson"))), "(v));"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    setField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(a.Type.SimpleName(NamespaceName))), "ToJson"))), "(v));"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -594,20 +602,20 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    return j;";
             yield return "}";
         }
-        public IEnumerable<String> JsonTranslator_Enum(EnumDef e)
+        public IEnumerable<String> JsonTranslator_Enum(EnumDef e, String NamespaceName)
         {
-            var Name = e.TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "FromJson"))), "(j : Dynamic) : "), GetTypeString(e.UnderlyingType)))
+            var Name = e.GetTypeSpec().SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "FromJson"))), "(j : Dynamic) : "), GetTypeString(e.UnderlyingType, NamespaceName)))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return cast(j, "), GetTypeString(e.UnderlyingType)), ");"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    return cast(j, "), GetTypeString(e.UnderlyingType, NamespaceName)), ");"))
             {
                 yield return _Line;
             }
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "ToJson"))), "(o : "), GetTypeString(e.UnderlyingType)), ") : Dynamic"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "ToJson"))), "(o : "), GetTypeString(e.UnderlyingType, NamespaceName)), ") : Dynamic"))
             {
                 yield return _Line;
             }
@@ -615,29 +623,29 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    return o;";
             yield return "}";
         }
-        public IEnumerable<String> JsonTranslator_ClientCommand(ClientCommandDef c)
+        public IEnumerable<String> JsonTranslator_ClientCommand(ClientCommandDef c, String NamespaceName)
         {
-            foreach (var _Line in Combine(Begin(), JsonTranslator_Record(c.TypeFriendlyName() + "Request", c.OutParameters)))
+            foreach (var _Line in Combine(Begin(), JsonTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Request", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Request", NamespaceName), c.OutParameters, NamespaceName)))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Begin(), JsonTranslator_TaggedUnion(c.TypeFriendlyName() + "Reply", c.InParameters)))
-            {
-                yield return _Line;
-            }
-        }
-        public IEnumerable<String> JsonTranslator_ServerCommand(ServerCommandDef c)
-        {
-            foreach (var _Line in Combine(Begin(), JsonTranslator_Record(c.TypeFriendlyName() + "Event", c.OutParameters)))
+            foreach (var _Line in Combine(Begin(), JsonTranslator_TaggedUnion(GetSuffixedTypeName(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName), c.InParameters, NamespaceName)))
             {
                 yield return _Line;
             }
         }
-        public IEnumerable<String> JsonTranslator_Tuple(TypeSpec tp)
+        public IEnumerable<String> JsonTranslator_ServerCommand(ServerCommandDef c, String NamespaceName)
         {
-            var Name = tp.TypeFriendlyName();
-            var TypeString = GetTypeString(tp);
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "FromJson"))), "(j : Dynamic) : "), GetEscapedIdentifier(Name)))
+            foreach (var _Line in Combine(Begin(), JsonTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName), c.OutParameters, NamespaceName)))
+            {
+                yield return _Line;
+            }
+        }
+        public IEnumerable<String> JsonTranslator_Tuple(TypeSpec tp, String NamespaceName)
+        {
+            var SimpleName = tp.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(tp, NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(SimpleName)), "FromJson"))), "(j : Dynamic) : "), TypeString))
             {
                 yield return _Line;
             }
@@ -649,7 +657,7 @@ namespace Niveum.ObjectSchema.HaxeJson
                 int k = 0;
                 foreach (var t in tp.Tuple)
                 {
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(Combine(Combine(Begin(), "item"), k))), " : "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(t.TypeFriendlyName())), "FromJson"))), "(ja["), k), "]),"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(Combine(Combine(Begin(), "item"), k))), " : "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(t.SimpleName(NamespaceName))), "FromJson"))), "(ja["), k), "]),"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -658,7 +666,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             }
             yield return "    };";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "ToJson"))), "(t : "), GetEscapedIdentifier(Name)), ") : Dynamic"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(SimpleName)), "ToJson"))), "(t : "), TypeString), ") : Dynamic"))
             {
                 yield return _Line;
             }
@@ -668,7 +676,7 @@ namespace Niveum.ObjectSchema.HaxeJson
                 int k = 0;
                 foreach (var t in tp.Tuple)
                 {
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ja.push("), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(t.TypeFriendlyName())), "ToJson"))), "(t."), GetEscapedIdentifier(Combine(Combine(Begin(), "item"), k))), "));"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ja.push("), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(t.SimpleName(NamespaceName))), "ToJson"))), "(t."), GetEscapedIdentifier(Combine(Combine(Begin(), "item"), k))), "));"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -678,12 +686,12 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    return ja;";
             yield return "}";
         }
-        public IEnumerable<String> JsonTranslator_Optional(TypeSpec o)
+        public IEnumerable<String> JsonTranslator_Optional(TypeSpec o, String NamespaceName)
         {
-            var TypeFriendlyName = o.TypeFriendlyName();
-            var TypeString = GetTypeString(o);
-            var ElementTypeFriendlyName = o.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(TypeFriendlyName)), "FromJson"))), "(j : Dynamic) : "), TypeString))
+            var SimpleName = o.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(o, NamespaceName);
+            var ElementSimpleName = o.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(SimpleName)), "FromJson"))), "(j : Dynamic) : "), TypeString))
             {
                 yield return _Line;
             }
@@ -694,7 +702,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    }";
             yield return "    if (hasField(j, \"hasValue\"))";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var v = "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementTypeFriendlyName)), "FromJson"))), "(getField(j, \"hasValue\"));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var v = "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementSimpleName)), "FromJson"))), "(getField(j, \"hasValue\"));"))
             {
                 yield return _Line;
             }
@@ -702,7 +710,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    }";
             yield return "    throw \"InvalidOperation\";";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(TypeFriendlyName)), "ToJson"))), "(o : "), TypeString), ") : Dynamic"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(SimpleName)), "ToJson"))), "(o : "), TypeString), ") : Dynamic"))
             {
                 yield return _Line;
             }
@@ -714,7 +722,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    }";
             yield return "    else";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        setField(j, \"hasValue\", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementTypeFriendlyName)), "ToJson"))), "(o));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        setField(j, \"hasValue\", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementSimpleName)), "ToJson"))), "(o));"))
             {
                 yield return _Line;
             }
@@ -722,12 +730,12 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    return j;";
             yield return "}";
         }
-        public IEnumerable<String> JsonTranslator_List(TypeSpec l)
+        public IEnumerable<String> JsonTranslator_List(TypeSpec l, String NamespaceName)
         {
-            var TypeFriendlyName = l.TypeFriendlyName();
-            var TypeString = GetTypeString(l);
-            var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(TypeFriendlyName)), "FromJson"))), "(j : Dynamic) : "), TypeString))
+            var SimpleName = l.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(l, NamespaceName);
+            var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(SimpleName)), "FromJson"))), "(j : Dynamic) : "), TypeString))
             {
                 yield return _Line;
             }
@@ -739,14 +747,14 @@ namespace Niveum.ObjectSchema.HaxeJson
             }
             yield return "    for (e in ja)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        a.push("), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementTypeFriendlyName)), "FromJson"))), "(e));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        a.push("), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementSimpleName)), "FromJson"))), "(e));"))
             {
                 yield return _Line;
             }
             yield return "    }";
             yield return "    return a;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(TypeFriendlyName)), "ToJson"))), "(c : "), TypeString), ") : Dynamic"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(SimpleName)), "ToJson"))), "(c : "), TypeString), ") : Dynamic"))
             {
                 yield return _Line;
             }
@@ -754,7 +762,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    var ja = new Array<Dynamic>();";
             yield return "    for (e in c)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        ja.push("), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementTypeFriendlyName)), "ToJson"))), "(e));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        ja.push("), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementSimpleName)), "ToJson"))), "(e));"))
             {
                 yield return _Line;
             }
@@ -762,12 +770,12 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    return ja;";
             yield return "}";
         }
-        public IEnumerable<String> JsonTranslator_Set(TypeSpec l)
+        public IEnumerable<String> JsonTranslator_Set(TypeSpec l, String NamespaceName)
         {
-            var TypeFriendlyName = l.TypeFriendlyName();
-            var TypeString = GetTypeString(l);
-            var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(TypeFriendlyName)), "FromJson"))), "(j : Dynamic) : "), TypeString))
+            var SimpleName = l.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(l, NamespaceName);
+            var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(SimpleName)), "FromJson"))), "(j : Dynamic) : "), TypeString))
             {
                 yield return _Line;
             }
@@ -779,14 +787,14 @@ namespace Niveum.ObjectSchema.HaxeJson
             }
             yield return "    for (e in ja)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        a.set("), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementTypeFriendlyName)), "FromJson"))), "(e), {});"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        a.set("), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementSimpleName)), "FromJson"))), "(e), {});"))
             {
                 yield return _Line;
             }
             yield return "    }";
             yield return "    return a;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(TypeFriendlyName)), "ToJson"))), "(c : "), TypeString), ") : Dynamic"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(SimpleName)), "ToJson"))), "(c : "), TypeString), ") : Dynamic"))
             {
                 yield return _Line;
             }
@@ -794,7 +802,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    var ja = new Array<Dynamic>();";
             yield return "    for (e in c.keys())";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        ja.push("), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementTypeFriendlyName)), "ToJson"))), "(e));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        ja.push("), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementSimpleName)), "ToJson"))), "(e));"))
             {
                 yield return _Line;
             }
@@ -802,18 +810,18 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    return ja;";
             yield return "}";
         }
-        public IEnumerable<String> JsonTranslator_Map(TypeSpec l)
+        public IEnumerable<String> JsonTranslator_Map(TypeSpec l, String NamespaceName)
         {
             var gp = l.GenericTypeSpec.ParameterValues;
             if (gp.Count != 2)
             {
                 throw new ArgumentException();
             }
-            var TypeFriendlyName = l.TypeFriendlyName();
-            var TypeString = GetTypeString(l);
-            var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
-            var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(TypeFriendlyName)), "FromJson"))), "(j : Dynamic) : "), TypeString))
+            var SimpleName = l.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(l, NamespaceName);
+            var KeySimpleName = gp[0].SimpleName(NamespaceName);
+            var ValueSimpleName = gp[1].SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(SimpleName)), "FromJson"))), "(j : Dynamic) : "), TypeString))
             {
                 yield return _Line;
             }
@@ -825,11 +833,11 @@ namespace Niveum.ObjectSchema.HaxeJson
             }
             yield return "    for (e in ja)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var key = "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(KeyTypeFriendlyName)), "FromJson"))), "(getField(e, \"key\"));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var key = "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(KeySimpleName)), "FromJson"))), "(getField(e, \"key\"));"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var value = "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ValueTypeFriendlyName)), "FromJson"))), "(getField(e, \"value\"));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var value = "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ValueSimpleName)), "FromJson"))), "(getField(e, \"value\"));"))
             {
                 yield return _Line;
             }
@@ -837,7 +845,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    }";
             yield return "    return a;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(TypeFriendlyName)), "ToJson"))), "(c : "), TypeString), ") : Dynamic"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(SimpleName)), "ToJson"))), "(c : "), TypeString), ") : Dynamic"))
             {
                 yield return _Line;
             }
@@ -847,11 +855,11 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    {";
             yield return "        var value = c.get(key);";
             yield return "        var jp : Dynamic = {};";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        setField(jp, \"key\", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(KeyTypeFriendlyName)), "ToJson"))), "(key));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        setField(jp, \"key\", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(KeySimpleName)), "ToJson"))), "(key));"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        setField(jp, \"value\", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ValueTypeFriendlyName)), "ToJson"))), "(value));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        setField(jp, \"value\", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ValueSimpleName)), "ToJson"))), "(value));"))
             {
                 yield return _Line;
             }
@@ -860,7 +868,7 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    return ja;";
             yield return "}";
         }
-        public IEnumerable<String> Main(Schema Schema, String PackageName)
+        public IEnumerable<String> WrapModule(String NamespaceName, List<String> Imports, IEnumerable<String> Contents)
         {
             yield return "//==========================================================================";
             yield return "//";
@@ -869,20 +877,22 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "//";
             yield return "//==========================================================================";
             yield return "";
-            if (PackageName != "")
+            if (NamespaceName != "")
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "package "), GetEscapedIdentifier(PackageName)), ";"))
+                var n = String.Join(".", NamespaceName.Split('.').Select(NamespacePart => LowercaseCamelize(NamespacePart)));
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "package "), n), ";"))
                 {
                     yield return _Line;
                 }
+                yield return "";
             }
             yield return "import haxe.Json;";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "import "), Schema.Imports), ";"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "import "), Imports), ";"))
             {
                 yield return _Line;
             }
             yield return "";
-            foreach (var _Line in Combine(Begin(), GetTypes(Schema)))
+            foreach (var _Line in Combine(Begin(), Contents))
             {
                 yield return _Line;
             }

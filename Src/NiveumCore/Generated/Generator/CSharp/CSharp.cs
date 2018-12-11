@@ -421,7 +421,7 @@ namespace Niveum.ObjectSchema.CSharp
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public enum "), Name), " : "), GetEnumTypeString(e.UnderlyingType)))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public enum "), Name), " : "), GetEnumTypeString(e.UnderlyingType, e.NamespaceName())))
             {
                 yield return _Line;
             }
