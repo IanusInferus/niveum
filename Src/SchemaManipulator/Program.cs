@@ -27,13 +27,13 @@ using Niveum.ObjectSchema.CSharpJson;
 using Niveum.ObjectSchema.CSharpCompatible;
 using Niveum.ObjectSchema.CSharpVersion;
 using Niveum.ObjectSchema.Cpp;
+using Niveum.ObjectSchema.CppVersion;
 using Niveum.ObjectSchema.Haxe;
 using Niveum.ObjectSchema.HaxeJson;
 using Niveum.ObjectSchema.VB;
 using Niveum.ObjectSchema.Xhtml;
 using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.CppCompatible;
-using Yuki.ObjectSchema.CppVersion;
 using Yuki.ObjectSchema.Java;
 using Yuki.ObjectSchema.JavaBinary;
 using Yuki.ObjectSchema.Python;
@@ -1007,7 +1007,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCppVersionCode(String CppCodePath, String NamespaceName, IEnumerable<String> TypeNames)
         {
-            var ObjectSchema = GetObjectSchemaLegacy();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCppVersion(NamespaceName, TypeNames);
             if (File.Exists(CppCodePath))
             {

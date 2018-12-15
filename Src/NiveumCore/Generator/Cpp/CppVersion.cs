@@ -3,7 +3,7 @@
 //  File:        CppVersion.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C++版本代码生成器
-//  Version:     2018.08.17.
+//  Version:     2018.12.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -41,7 +41,7 @@ namespace Niveum.ObjectSchema.CppVersion
             return Inner.GetEscapedIdentifier(Identifier);
         }
 
-        public List<String> GetTypeVersions(Schema Schema, IEnumerable<String> TypeNames)
+        public List<String> GetTypeVersions(Schema Schema, IEnumerable<String> TypeNames, String NamespaceName)
         {
             var l = new List<String>();
 
@@ -57,22 +57,22 @@ namespace Niveum.ObjectSchema.CppVersion
             }
             foreach (var t in Schema.Types)
             {
-                var TypeName = t.Name();
+                var TypeName = t.FullName();
                 if (TypeNameSet.Contains(TypeName))
                 {
-                    var TypeFriendlyName = t.TypeFriendlyName();
+                    var SimpleName = t.GetTypeSpec().SimpleName(NamespaceName);
                     var SubSchema = SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { t }, new List<TypeSpec> { });
                     var Hash = SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { t }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash();
-                    l.AddRange(GetTypeVersion(TypeFriendlyName, Hash));
+                    l.AddRange(GetTypeVersion(SimpleName, Hash));
                 }
             }
 
             return l;
         }
 
-        public List<String> WrapContents(String Namespace, List<String> Contents)
+        public IEnumerable<String> WrapNamespace(String Namespace, IEnumerable<String> Contents)
         {
-            return Inner.WrapContents(Namespace, Contents);
+            return Inner.WrapNamespace(Namespace, Contents);
         }
     }
 }
