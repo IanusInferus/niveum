@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="Generated\Common\Primitive.cs" />
     <Compile Include="Generated\Generator\Cpp\Cpp.cs" />
+    <Compile Include="Generated\Generator\Cpp\CppVersion.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharp.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharpBinary.cs" />
     <Compile Include="Generated\Generator\CSharp\CSharpCompatible.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="Generated\Generator\Xhtml\Xhtml.cs" />
     <Compile Include="Generated\ObjectSchema\ObjectSchema.cs" />
     <Compile Include="Generator\Cpp\Cpp.cs" />
+    <Compile Include="Generator\Cpp\CppVersion.cs" />
     <Compile Include="Generator\CSharp\CSharp.cs" />
     <Compile Include="Generator\CSharp\CSharpBinary.cs" />
     <Compile Include="Generator\CSharp\CSharpCompatible.cs" />
@@ -88,6 +90,7 @@
   <ItemGroup>
     <None Include="Common\Primitive.tree" />
     <None Include="Generator\Cpp\Cpp.tree" />
+    <None Include="Generator\Cpp\CppVersion.tree" />
     <None Include="Generator\CSharp\CSharp.tree" />
     <None Include="Generator\CSharp\CSharpBinary.tree" />
     <None Include="Generator\CSharp\CSharpCompatible.tree" />

@@ -74,25 +74,12 @@ namespace Niveum.ObjectSchema.CppVersion
                 yield return GetEscapedIdentifier(Identifier);
             }
         }
-        public IEnumerable<String> GetTypeVersion(String TypeFriendlyName, UInt64 Hash)
+        public IEnumerable<String> GetTypeVersion(String SimpleName, UInt64 Hash)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "constexpr static std::uint64_t "), GetEscapedIdentifier(TypeFriendlyName)), " = 0x"), Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)), "ull;"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "constexpr static std::uint64_t "), GetEscapedIdentifier(SimpleName)), " = 0x"), Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)), "ull;"))
             {
                 yield return _Line;
             }
-        }
-        public IEnumerable<String> WrapNamespace(String NamespacePart, IEnumerable<String> Contents)
-        {
-            foreach (var _Line in Combine(Combine(Begin(), "namespace "), GetEscapedIdentifier(NamespacePart)))
-            {
-                yield return _Line;
-            }
-            yield return "{";
-            foreach (var _Line in Combine(Combine(Begin(), "    "), Contents))
-            {
-                yield return _Line;
-            }
-            yield return "}";
         }
         public IEnumerable<String> WrapClass(String ClassName, IEnumerable<String> Contents)
         {
@@ -121,8 +108,8 @@ namespace Niveum.ObjectSchema.CppVersion
             yield return "";
             yield return "#include <cstdint>";
             yield return "";
-            var TypeVersions = GetTypeVersions(Schema, TypeNames);
-            foreach (var _Line in Combine(Begin(), WrapContents(NamespaceName, WrapClass("Versions", TypeVersions).ToList())))
+            var TypeVersions = GetTypeVersions(Schema, TypeNames, NamespaceName);
+            foreach (var _Line in Combine(Begin(), WrapNamespace(NamespaceName, WrapClass("Versions", TypeVersions).ToList())))
             {
                 yield return _Line;
             }

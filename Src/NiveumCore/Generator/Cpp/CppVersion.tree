@@ -4,7 +4,7 @@
       File:        CppVersion.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C++版本模板
-      Version:     2018.08.17.
+      Version:     2018.12.15.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -19,14 +19,8 @@
     System.Collections.Generic
     System.Linq
 
-#Template GetTypeVersion TypeFriendlyName:String Hash:UInt64
-    constexpr static std::uint64_t [[${TypeFriendlyName}]] = 0x${Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)}ull;
-
-#Template WrapNamespace NamespacePart:String Contents:IEnumerable<String>
-    namespace [[${NamespacePart}]]
-    {
-        ${Contents}
-    }
+#Template GetTypeVersion SimpleName:String Hash:UInt64
+    constexpr static std::uint64_t [[${SimpleName}]] = 0x${Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)}ull;
 
 #Template WrapClass ClassName:String Contents:IEnumerable<String>
     class [[${ClassName}]] final
@@ -48,7 +42,7 @@
     #include <cstdint>
 
     $$
-        var TypeVersions = GetTypeVersions(Schema, TypeNames);
-    ${WrapContents(NamespaceName, WrapClass("Versions", TypeVersions).ToList())}
+        var TypeVersions = GetTypeVersions(Schema, TypeNames, NamespaceName);
+    ${WrapNamespace(NamespaceName, WrapClass("Versions", TypeVersions).ToList())}
 
 $End
