@@ -283,8 +283,8 @@ namespace Niveum.ObjectSchema.Cpp
         }
         public IEnumerable<String> Alias(AliasDef a)
         {
-            var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-            var Type = GetTypeString(a.Type);
+            var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
+            var Type = GetTypeString(a.Type, a.NamespaceName());
             foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
             {
                 yield return _Line;
@@ -330,7 +330,7 @@ namespace Niveum.ObjectSchema.Cpp
         }
         public IEnumerable<String> Record(RecordDef r)
         {
-            var Name = GetEscapedIdentifier(r.TypeFriendlyName());
+            var Name = GetEscapedIdentifier(r.DefinitionName());
             foreach (var _Line in Combine(Begin(), GetXmlComment(r.Description)))
             {
                 yield return _Line;
@@ -352,7 +352,7 @@ namespace Niveum.ObjectSchema.Cpp
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetTypeString(f.Type)), " "), GetEscapedIdentifier(f.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetTypeString(f.Type, r.NamespaceName())), " "), GetEscapedIdentifier(f.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -361,8 +361,8 @@ namespace Niveum.ObjectSchema.Cpp
         }
         public IEnumerable<String> TaggedUnion(TaggedUnionDef tu)
         {
-            var Name = GetEscapedIdentifier(tu.TypeFriendlyName());
-            var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+            var Name = GetEscapedIdentifier(tu.DefinitionName());
+            var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
             foreach (var _Line in Combine(Combine(Begin(), "enum class "), TagName))
             {
                 yield return _Line;
@@ -422,7 +422,7 @@ namespace Niveum.ObjectSchema.Cpp
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetTypeString(a.Type)), " "), GetEscapedIdentifier(a.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetTypeString(a.Type, tu.NamespaceName())), " "), GetEscapedIdentifier(a.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -430,7 +430,7 @@ namespace Niveum.ObjectSchema.Cpp
             yield return "";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                     {
@@ -462,7 +462,7 @@ namespace Niveum.ObjectSchema.Cpp
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "static std::shared_ptr<class "), Name), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetTypeString(a.Type)), " Value)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "static std::shared_ptr<class "), Name), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetTypeString(a.Type, tu.NamespaceName())), " Value)"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -505,12 +505,12 @@ namespace Niveum.ObjectSchema.Cpp
         }
         public IEnumerable<String> Enum(EnumDef e)
         {
-            var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+            var Name = GetEscapedIdentifier(e.DefinitionName());
             foreach (var _Line in Combine(Begin(), GetXmlComment(e.Description)))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "enum class "), Name), " : "), GetEnumTypeString(e.UnderlyingType)))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "enum class "), Name), " : "), GetEnumTypeString(e.UnderlyingType, e.NamespaceName())))
             {
                 yield return _Line;
             }
@@ -544,42 +544,38 @@ namespace Niveum.ObjectSchema.Cpp
             }
             yield return "};";
         }
-        public IEnumerable<String> EnumFunctor(EnumDef e, String NamespaceName)
+        public IEnumerable<String> EnumFunctor(EnumDef e)
         {
-            var Name = GetEscapedIdentifier(e.TypeFriendlyName());
-            if (NamespaceName != "")
-            {
-                Name = NamespaceName.Replace(".", "::") + "::" + Name;
-            }
+            var TypeString = GetTypeString(e.GetTypeSpec(), "std");
             yield return "template <>";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "struct hash<"), Name), ">"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "struct hash<"), TypeString), ">"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    size_t operator()(const "), Name), " &x) const"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    size_t operator()(const "), TypeString), " &x) const"))
             {
                 yield return _Line;
             }
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "        return hash<"), GetTypeString(e.UnderlyingType)), ">()(static_cast<"), GetTypeString(e.UnderlyingType)), ">(x));"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "        return hash<"), GetTypeString(e.UnderlyingType, e.NamespaceName())), ">()(static_cast<"), GetTypeString(e.UnderlyingType, e.NamespaceName())), ">(x));"))
             {
                 yield return _Line;
             }
             yield return "    }";
             yield return "};";
             yield return "template <>";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "struct less<"), Name), ">"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "struct less<"), TypeString), ">"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    bool operator()(const "), Name), " &x, const "), Name), " &y) const"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    bool operator()(const "), TypeString), " &x, const "), TypeString), " &y) const"))
             {
                 yield return _Line;
             }
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "        return less<"), GetTypeString(e.UnderlyingType)), ">()(static_cast<"), GetTypeString(e.UnderlyingType)), ">(x), static_cast<"), GetTypeString(e.UnderlyingType)), ">(y));"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "        return less<"), GetTypeString(e.UnderlyingType, "std")), ">()(static_cast<"), GetTypeString(e.UnderlyingType, "std")), ">(x), static_cast<"), GetTypeString(e.UnderlyingType, "std")), ">(y));"))
             {
                 yield return _Line;
             }
@@ -588,8 +584,10 @@ namespace Niveum.ObjectSchema.Cpp
         }
         public IEnumerable<String> ClientCommand(ClientCommandDef c)
         {
-            var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-            var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+            var RequestRef = GetSuffixedTypeRef(c.Name, c.Version, "Request");
+            var ReplyRef = GetSuffixedTypeRef(c.Name, c.Version, "Reply");
+            var Request = new RecordDef { Name = RequestRef.Name, Version = RequestRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            var Reply = new TaggedUnionDef { Name = ReplyRef.Name, Version = ReplyRef.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
             foreach (var _Line in Combine(Begin(), Record(Request)))
             {
                 yield return _Line;
@@ -601,13 +599,14 @@ namespace Niveum.ObjectSchema.Cpp
         }
         public IEnumerable<String> ServerCommand(ServerCommandDef c)
         {
-            var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            var EventRef = GetSuffixedTypeRef(c.Name, c.Version, "Event");
+            var Event = new RecordDef { Name = EventRef.Name, Version = EventRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
             foreach (var _Line in Combine(Begin(), Record(Event)))
             {
                 yield return _Line;
             }
         }
-        public IEnumerable<String> IApplicationServer(List<TypeDef> Commands)
+        public IEnumerable<String> IApplicationServer(List<TypeDef> Commands, String NamespaceName)
         {
             yield return "class IApplicationServer";
             yield return "{";
@@ -618,15 +617,17 @@ namespace Niveum.ObjectSchema.Cpp
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
                         foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "virtual void "), GetEscapedIdentifier(Name)), "(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), "> r, std::function<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), ">)> Callback, std::function<void(const std::exception &)> OnFailure) = 0;"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "virtual void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback, std::function<void(const std::exception &)> OnFailure) = 0;"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -637,7 +638,7 @@ namespace Niveum.ObjectSchema.Cpp
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "virtual std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), "> "), GetEscapedIdentifier(Name)), "(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), "> r) = 0;"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "virtual "), ReplyTypeString), " "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r) = 0;"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -645,13 +646,14 @@ namespace Niveum.ObjectSchema.Cpp
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "std::function<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), ">)> "), GetEscapedIdentifier(Name)), ";"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "std::function<void("), EventTypeString), ")> "), GetEscapedIdentifier(Name)), ";"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -659,7 +661,7 @@ namespace Niveum.ObjectSchema.Cpp
             }
             yield return "};";
         }
-        public IEnumerable<String> IApplicationClient(List<TypeDef> Commands)
+        public IEnumerable<String> IApplicationClient(List<TypeDef> Commands, String NamespaceName)
         {
             yield return "class IApplicationClient";
             yield return "{";
@@ -673,26 +675,29 @@ namespace Niveum.ObjectSchema.Cpp
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "virtual void "), GetEscapedIdentifier(Name)), "(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), "> r, std::function<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), ">)> Callback) = 0;"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "virtual void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback) = 0;"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "std::function<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), ">)> "), GetEscapedIdentifier(Name)), ";"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "std::function<void("), EventTypeString), ")> "), GetEscapedIdentifier(Name)), ";"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -700,7 +705,7 @@ namespace Niveum.ObjectSchema.Cpp
             }
             yield return "};";
         }
-        public IEnumerable<String> IEventPump(List<TypeDef> Commands)
+        public IEnumerable<String> IEventPump(List<TypeDef> Commands, String NamespaceName)
         {
             yield return "class IEventPump";
             yield return "{";
@@ -712,13 +717,14 @@ namespace Niveum.ObjectSchema.Cpp
                 if (c.OnServerCommand)
                 {
                     if (c.ServerCommand.Version != "") { continue; }
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     foreach (var _Line in Combine(Begin(), GetXmlComment(Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "std::function<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), ">)> "), GetEscapedIdentifier(Name)), ";"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "std::function<void("), EventTypeString), ")> "), GetEscapedIdentifier(Name)), ";"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -726,7 +732,7 @@ namespace Niveum.ObjectSchema.Cpp
             }
             yield return "};";
         }
-        public IEnumerable<String> WrapNamespace(String NamespacePart, IEnumerable<String> Contents)
+        public IEnumerable<String> WrapNamespacePart(String NamespacePart, IEnumerable<String> Contents)
         {
             foreach (var _Line in Combine(Combine(Begin(), "namespace "), GetEscapedIdentifier(NamespacePart)))
             {
@@ -774,23 +780,7 @@ namespace Niveum.ObjectSchema.Cpp
             yield return "#   endif";
             yield return "#endif";
             yield return "";
-            var Primitives = GetPrimitives(Schema);
-            var SimpleTypes = GetSimpleTypes(Schema);
-            var EnumFunctors = GetEnumFunctors(Schema, NamespaceName);
-            var ComplexTypes = GetComplexTypes(Schema);
-            foreach (var _Line in Combine(Begin(), Primitives))
-            {
-                yield return _Line;
-            }
-            foreach (var _Line in Combine(Begin(), WrapContents(NamespaceName, SimpleTypes)))
-            {
-                yield return _Line;
-            }
-            foreach (var _Line in Combine(Begin(), WrapContents("std", EnumFunctors)))
-            {
-                yield return _Line;
-            }
-            foreach (var _Line in Combine(Begin(), WrapContents(NamespaceName, ComplexTypes)))
+            foreach (var _Line in Combine(Begin(), GetTypes(Schema, NamespaceName)))
             {
                 yield return _Line;
             }

@@ -4,7 +4,7 @@
       File:        VB.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构VB.Net模板
-      Version:     2018.12.09.
+      Version:     2018.12.15.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -396,7 +396,7 @@
         $$
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches("Unit"))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     ##
                         ${GetXmlComment(a.Description)}
@@ -604,6 +604,7 @@
     Imports System
     Imports System.Collections.Generic
     Imports ${Schema.Imports}
+
     ${GetTypes(Schema, NamespaceName)}
 
 $End

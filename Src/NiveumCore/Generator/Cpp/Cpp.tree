@@ -4,7 +4,7 @@
       File:        Cpp.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C++模板
-      Version:     2018.08.17.
+      Version:     2018.12.15.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -378,8 +378,8 @@
 
 #Template Alias a:AliasDef
     $$
-        var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-        var Type = GetTypeString(a.Type);
+        var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
+        var Type = GetTypeString(a.Type, a.NamespaceName());
     ${GetXmlComment(a.Description)}
     /* Alias */
     ${GetGenericParameterLine(a.GenericParameters)}
@@ -404,7 +404,7 @@
 
 #Template Record r:RecordDef
     $$
-        var Name = GetEscapedIdentifier(r.TypeFriendlyName());
+        var Name = GetEscapedIdentifier(r.DefinitionName());
     ${GetXmlComment(r.Description)}
     /* Record */
     ${GetGenericParameterLine(r.GenericParameters)}
@@ -416,14 +416,14 @@
             {
                 ##
                     ${GetXmlComment(f.Description)}
-                    ${GetTypeString(f.Type)} [[${f.Name}]];
+                    ${GetTypeString(f.Type, r.NamespaceName())} [[${f.Name}]];
             }
     };
 
 #Template TaggedUnion tu:TaggedUnionDef
     $$
-        var Name = GetEscapedIdentifier(tu.TypeFriendlyName());
-        var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+        var Name = GetEscapedIdentifier(tu.DefinitionName());
+        var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
     enum class ${TagName}
     {
         $$
@@ -458,13 +458,13 @@
             {
                 ##
                     ${GetXmlComment(a.Description)}
-                    ${GetTypeString(a.Type)} [[${a.Name}]];
+                    ${GetTypeString(a.Type, tu.NamespaceName())} [[${a.Name}]];
             }
 
         $$
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     ##
                         ${GetXmlComment(a.Description)}
@@ -480,7 +480,7 @@
                 {
                     ##
                         ${GetXmlComment(a.Description)}
-                        static std::shared_ptr<class ${Name}> [[Create${a.Name}]](${GetTypeString(a.Type)} Value)
+                        static std::shared_ptr<class ${Name}> [[Create${a.Name}]](${GetTypeString(a.Type, tu.NamespaceName())} Value)
                         {
                             auto r = std::make_shared<${Name}>();
                             r->_Tag = ${TagName}::[[${a.Name}]];
@@ -504,9 +504,9 @@
 
 #Template Enum e:EnumDef
     $$
-        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+        var Name = GetEscapedIdentifier(e.DefinitionName());
     ${GetXmlComment(e.Description)}
-    enum class ${Name} : ${GetEnumTypeString(e.UnderlyingType)}
+    enum class ${Name} : ${GetEnumTypeString(e.UnderlyingType, e.NamespaceName())}
     {
         $$
             var k = 0;
@@ -528,43 +528,42 @@
             }
     };
 
-#Template EnumFunctor e:EnumDef NamespaceName:String
+#Template EnumFunctor e:EnumDef
     $$
-        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
-        if (NamespaceName != "")
-        {
-            Name = NamespaceName.Replace(".", "::") + "::" + Name;
-        }
+        var TypeString = GetTypeString(e.GetTypeSpec(), "std");
     template <>
-    struct hash<${Name}>
+    struct hash<${TypeString}>
     {
-        size_t operator()(const ${Name} &x) const
+        size_t operator()(const ${TypeString} &x) const
         {
-            return hash<${GetTypeString(e.UnderlyingType)}>()(static_cast<${GetTypeString(e.UnderlyingType)}>(x));
+            return hash<${GetTypeString(e.UnderlyingType, e.NamespaceName())}>()(static_cast<${GetTypeString(e.UnderlyingType, e.NamespaceName())}>(x));
         }
     };
     template <>
-    struct less<${Name}>
+    struct less<${TypeString}>
     {
-        bool operator()(const ${Name} &x, const ${Name} &y) const
+        bool operator()(const ${TypeString} &x, const ${TypeString} &y) const
         {
-            return less<${GetTypeString(e.UnderlyingType)}>()(static_cast<${GetTypeString(e.UnderlyingType)}>(x), static_cast<${GetTypeString(e.UnderlyingType)}>(y));
+            return less<${GetTypeString(e.UnderlyingType, "std")}>()(static_cast<${GetTypeString(e.UnderlyingType, "std")}>(x), static_cast<${GetTypeString(e.UnderlyingType, "std")}>(y));
         }
     };
 
 #Template ClientCommand c:ClientCommandDef
     $$
-        var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-        var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+        var RequestRef = GetSuffixedTypeRef(c.Name, c.Version, "Request");
+        var ReplyRef = GetSuffixedTypeRef(c.Name, c.Version, "Reply");
+        var Request = new RecordDef { Name = RequestRef.Name, Version = RequestRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var Reply = new TaggedUnionDef { Name = ReplyRef.Name, Version = ReplyRef.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
     ${Record(Request)}
     ${TaggedUnion(Reply)}
 
 #Template ServerCommand c:ServerCommandDef
     $$
-        var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var EventRef = GetSuffixedTypeRef(c.Name, c.Version, "Event");
+        var Event = new RecordDef { Name = EventRef.Name, Version = EventRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
     ${Record(Event)}
 
-#Template IApplicationServer Commands:List<TypeDef>
+#Template IApplicationServer Commands:List<TypeDef> NamespaceName:String
     class IApplicationServer
     {
     public:
@@ -575,33 +574,36 @@
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
                         ##
                             ${GetXmlComment(Description)}
-                            virtual void [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r, std::function<void(std::shared_ptr<class [[${Name}Reply]]>)> Callback, std::function<void(const std::exception &)> OnFailure) = 0;
+                            virtual void [[${Name}]](${RequestTypeString} r, std::function<void(${ReplyTypeString})> Callback, std::function<void(const std::exception &)> OnFailure) = 0;
                     }
                     else
                     {
                         ##
                             ${GetXmlComment(Description)}
-                            virtual std::shared_ptr<class [[${Name}Reply]]> [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r) = 0;
+                            virtual ${ReplyTypeString} [[${Name}]](${RequestTypeString} r) = 0;
                     }
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        std::function<void(std::shared_ptr<class [[${Name}Event]]>)> [[${Name}]];
+                        std::function<void(${EventTypeString})> [[${Name}]];
                 }
             }
     };
 
-#Template IApplicationClient Commands:List<TypeDef>
+#Template IApplicationClient Commands:List<TypeDef> NamespaceName:String
     class IApplicationClient
     {
     public:
@@ -615,24 +617,27 @@
             {
                 if (c.OnClientCommand)
                 {
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        virtual void [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r, std::function<void(std::shared_ptr<class [[${Name}Reply]]>)> Callback) = 0;
+                        virtual void [[${Name}]](${RequestTypeString} r, std::function<void(${ReplyTypeString})> Callback) = 0;
                 }
                 else if (c.OnServerCommand)
                 {
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        std::function<void(std::shared_ptr<class [[${Name}Event]]>)> [[${Name}]];
+                        std::function<void(${EventTypeString})> [[${Name}]];
                 }
             }
     };
 
-#Template IEventPump Commands:List<TypeDef>
+#Template IEventPump Commands:List<TypeDef> NamespaceName:String
     class IEventPump
     {
     public:
@@ -644,16 +649,17 @@
                 if (c.OnServerCommand)
                 {
                     if (c.ServerCommand.Version != "") { continue; }
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        std::function<void(std::shared_ptr<class [[${Name}Event]]>)> [[${Name}]];
+                        std::function<void(${EventTypeString})> [[${Name}]];
                 }
             }
     };
 
-#Template WrapNamespace NamespacePart:String Contents:IEnumerable<String>
+#Template WrapNamespacePart NamespacePart:String Contents:IEnumerable<String>
     namespace [[${NamespacePart}]]
     {
         ${Contents}
@@ -690,14 +696,6 @@
     #   endif
     #endif
 
-    $$
-        var Primitives = GetPrimitives(Schema);
-        var SimpleTypes = GetSimpleTypes(Schema);
-        var EnumFunctors = GetEnumFunctors(Schema, NamespaceName);
-        var ComplexTypes = GetComplexTypes(Schema);
-    ${Primitives}
-    ${WrapContents(NamespaceName, SimpleTypes)}
-    ${WrapContents("std", EnumFunctors)}
-    ${WrapContents(NamespaceName, ComplexTypes)}
+    ${GetTypes(Schema, NamespaceName)}
 
 $End

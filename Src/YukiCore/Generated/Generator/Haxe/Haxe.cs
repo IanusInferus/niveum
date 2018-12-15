@@ -159,7 +159,7 @@ namespace Yuki.ObjectSchema.Haxe
             yield return "{";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
                 {
                     foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                     {

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2018.12.12.
+//  Version:     2018.12.15.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -26,11 +26,11 @@ using Niveum.ObjectSchema.CSharpBinary;
 using Niveum.ObjectSchema.CSharpJson;
 using Niveum.ObjectSchema.CSharpCompatible;
 using Niveum.ObjectSchema.CSharpVersion;
+using Niveum.ObjectSchema.Cpp;
 using Niveum.ObjectSchema.Haxe;
 using Niveum.ObjectSchema.HaxeJson;
 using Niveum.ObjectSchema.VB;
 using Niveum.ObjectSchema.Xhtml;
-using Yuki.ObjectSchema.Cpp;
 using Yuki.ObjectSchema.CppBinary;
 using Yuki.ObjectSchema.CppCompatible;
 using Yuki.ObjectSchema.CppVersion;
@@ -956,7 +956,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToCppCode(String CppCodePath, String NamespaceName)
         {
-            var ObjectSchema = GetObjectSchemaLegacy();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToCpp(NamespaceName);
             if (File.Exists(CppCodePath))
             {

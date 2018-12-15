@@ -395,7 +395,7 @@
         $$
             foreach (var a in Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
                 {
                     ##
                         if (hasField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}))
@@ -423,7 +423,7 @@
         $$
             foreach (var a in Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
                 {
                     ##
                         case [[${LowercaseCamelize(a.Name)}]]:

@@ -524,7 +524,7 @@ namespace Yuki.ObjectSchema.HaxeJson
             yield return "{";
             foreach (var a in Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
                 {
                     foreach (var _Line in Combine(Combine(Combine(Begin(), "if (hasField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "))"))
                     {
@@ -567,7 +567,7 @@ namespace Yuki.ObjectSchema.HaxeJson
             yield return "    {";
             foreach (var a in Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
                 {
                     foreach (var _Line in Combine(Combine(Combine(Begin(), "case "), GetEscapedIdentifier(LowercaseCamelize(a.Name))), ":"))
                     {

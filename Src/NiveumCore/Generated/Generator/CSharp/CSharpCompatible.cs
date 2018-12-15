@@ -867,6 +867,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
             {
                 yield return _Line;
             }
+            yield return "";
             foreach (var _Line in Combine(Begin(), GetTypes(Schema, NamespaceName, ImplementationNamespaceName, ImplementationClassName)))
             {
                 yield return _Line;

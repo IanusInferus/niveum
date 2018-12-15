@@ -159,7 +159,7 @@ namespace Niveum.ObjectSchema.Haxe
             yield return "{";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches("Unit"))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                     {

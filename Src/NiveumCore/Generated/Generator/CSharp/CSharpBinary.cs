@@ -2085,6 +2085,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
             {
                 yield return _Line;
             }
+            yield return "";
             foreach (var _Line in Combine(Begin(), GetTypes(Schema, NamespaceName)))
             {
                 yield return _Line;
