@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板
-      Version:     2018.12.06.
+      Version:     2018.12.15.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -889,6 +889,7 @@
     using System.Linq;
     using Niveum.Json;
     using ${Schema.Imports};
+
     ${GetTypes(Schema, NamespaceName)}
 
 $End

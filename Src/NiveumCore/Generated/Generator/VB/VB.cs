@@ -335,7 +335,7 @@ namespace Niveum.ObjectSchema.VB
             yield return "";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && a.Type.TypeRef.NameMatches("Unit"))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                     {
@@ -658,6 +658,7 @@ namespace Niveum.ObjectSchema.VB
             {
                 yield return _Line;
             }
+            yield return "";
             foreach (var _Line in Combine(Begin(), GetTypes(Schema, NamespaceName)))
             {
                 yield return _Line;

@@ -202,7 +202,7 @@ namespace Yuki.ObjectSchema.Python
             yield return "";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
                 {
                     yield return "    " + "@staticmethod";
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "def "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "() -> '"), Name), "':"))
