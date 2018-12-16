@@ -326,7 +326,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), ".Create"), a.Name))), "();"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), VersionedTypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "();"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -340,7 +340,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), ".Create"), a.Name))), "(ho."), GetEscapedIdentifier(a.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), VersionedTypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "(ho."), GetEscapedIdentifier(a.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -354,7 +354,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), ".Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromHead"))), "(ho."), GetEscapedIdentifier(a.Name)), "));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), VersionedTypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromHead"))), "(ho."), GetEscapedIdentifier(a.Name)), "));"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -367,7 +367,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), ".Create"), aHead.Name))), "(ho."), GetEscapedIdentifier(aHead.Name)), ");"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), VersionedTypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), aHead.Name))), "(ho."), GetEscapedIdentifier(aHead.Name)), ");"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -415,7 +415,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), ".Create"), a.Name))), "();"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "();"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -429,7 +429,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), ".Create"), a.Name))), "(o."), GetEscapedIdentifier(a.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "(o."), GetEscapedIdentifier(a.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -443,7 +443,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), ".Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "ToHead"))), "(o."), GetEscapedIdentifier(a.Name)), "));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "ToHead"))), "(o."), GetEscapedIdentifier(a.Name)), "));"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -456,7 +456,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), ".Create"), aHead.Name))), "(o."), GetEscapedIdentifier(aHead.Name)), ");"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), aHead.Name))), "(o."), GetEscapedIdentifier(aHead.Name)), ");"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }

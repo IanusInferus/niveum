@@ -48,9 +48,9 @@ namespace Niveum.ObjectSchema.CppBinary
         {
             return Inner.GetEscapedStringLiteral(s);
         }
-        public String GetTypeString(TypeSpec Type, String NamespaceName, Boolean ForceAsEnum = false, Boolean ForceAsValue = false)
+        public String GetTypeString(TypeSpec Type, String NamespaceName, Boolean NoElaboratedTypeSpecifier = false, Boolean ForceAsEnum = false, Boolean ForceAsValue = false)
         {
-            return Inner.GetTypeString(Type, NamespaceName, ForceAsEnum, ForceAsValue);
+            return Inner.GetTypeString(Type, NamespaceName, NoElaboratedTypeSpecifier, ForceAsEnum, ForceAsValue);
         }
         public TypeRef GetSuffixedTypeRef(List<String> Name, String Version, String Suffix)
         {

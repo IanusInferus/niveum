@@ -41,11 +41,11 @@ std::shared_ptr<SendMessageReply> ServerImplementation::SendMessage(std::shared_
         {
             auto Lock = rc->WriterLock();
             rc->ReceivedMessageCount += 1;
-            if (rc->MessageReceived != nullptr)
+            if (rc->EventPump != nullptr)
             {
                 auto e = std::make_shared<MessageReceivedEvent>();
                 e->Content = r->Content;
-                rc->MessageReceived(e);
+                rc->EventPump->MessageReceived(e);
             }
         }
     }

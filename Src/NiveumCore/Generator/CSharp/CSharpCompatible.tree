@@ -212,7 +212,7 @@
                         ##
                             if (ho.[[On${a.Name}]])
                             {
-                                return [[${VersionedTypeString}.Create${a.Name}]]();
+                                return ${VersionedTypeString}.[[Create${a.Name}]]();
                             }
                         continue;
                     }
@@ -221,7 +221,7 @@
                         ##
                             if (ho.[[On${a.Name}]])
                             {
-                                return [[${VersionedTypeString}.Create${a.Name}]](ho.[[${a.Name}]]);
+                                return ${VersionedTypeString}.[[Create${a.Name}]](ho.[[${a.Name}]]);
                             }
                         continue;
                     }
@@ -230,7 +230,7 @@
                         ##
                             if (ho.[[On${a.Name}]])
                             {
-                                return [[${VersionedTypeString}.Create${a.Name}]]([[${a.Type.SimpleName(NamespaceName)}FromHead]](ho.[[${a.Name}]]));
+                                return ${VersionedTypeString}.[[Create${a.Name}]]([[${a.Type.SimpleName(NamespaceName)}FromHead]](ho.[[${a.Name}]]));
                             }
                         continue;
                     }
@@ -238,7 +238,7 @@
                 ##
                     if (ho.[[On${aHead.Name}]])
                     {
-                        return [[${VersionedTypeString}.Create${aHead.Name}]](ho.[[${aHead.Name}]]);
+                        return ${VersionedTypeString}.[[Create${aHead.Name}]](ho.[[${aHead.Name}]]);
                     }
             }
         throw new InvalidOperationException();
@@ -274,7 +274,7 @@
                         ##
                             if (o.[[On${a.Name}]])
                             {
-                                return [[${TypeString}.Create${a.Name}]]();
+                                return ${TypeString}.[[Create${a.Name}]]();
                             }
                         continue;
                     }
@@ -283,7 +283,7 @@
                         ##
                             if (o.[[On${a.Name}]])
                             {
-                                return [[${TypeString}.Create${a.Name}]](o.[[${a.Name}]]);
+                                return ${TypeString}.[[Create${a.Name}]](o.[[${a.Name}]]);
                             }
                         continue;
                     }
@@ -292,7 +292,7 @@
                         ##
                             if (o.[[On${a.Name}]])
                             {
-                                return [[${TypeString}.Create${a.Name}]]([[${a.Type.SimpleName(NamespaceName)}ToHead]](o.[[${a.Name}]]));
+                                return ${TypeString}.[[Create${a.Name}]]([[${a.Type.SimpleName(NamespaceName)}ToHead]](o.[[${a.Name}]]));
                             }
                         continue;
                     }
@@ -300,7 +300,7 @@
                 ##
                     if (o.[[On${aHead.Name}]])
                     {
-                        return [[${TypeString}.Create${aHead.Name}]](o.[[${aHead.Name}]]);
+                        return ${TypeString}.[[Create${aHead.Name}]](o.[[${aHead.Name}]]);
                     }
             }
         throw new InvalidOperationException();

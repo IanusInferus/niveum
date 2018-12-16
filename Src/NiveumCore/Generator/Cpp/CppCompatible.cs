@@ -3,7 +3,7 @@
 //  File:        CppCompatible.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2018.08.20.
+//  Version:     2018.12.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,15 +17,15 @@ namespace Niveum.ObjectSchema.CppCompatible
 {
     public static class CodeGenerator
     {
-        public static String CompileToCppCompatible(this Schema Schema, String NamespaceName, String ClassName)
+        public static String CompileToCppCompatible(this Schema Schema, String NamespaceName, String ImplementationNamespaceName, String ImplementationClassName)
         {
             var t = new Templates(Schema);
-            var Lines = t.Main(Schema, NamespaceName, ClassName).Select(Line => Line.TrimEnd(' '));
+            var Lines = t.Main(Schema, NamespaceName, ImplementationNamespaceName, ImplementationClassName).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
-        public static String CompileToCppCompatible(this Schema Schema, String ClassName)
+        public static String CompileToCppCompatible(this Schema Schema, String ImplementationNamespaceName, String ImplementationClassName)
         {
-            return CompileToCppCompatible(Schema, "", ClassName);
+            return CompileToCppCompatible(Schema, "", ImplementationNamespaceName, ImplementationClassName);
         }
     }
 
@@ -45,9 +45,21 @@ namespace Niveum.ObjectSchema.CppCompatible
         {
             return Inner.GetEscapedStringLiteral(s);
         }
-        public String GetTypeString(TypeSpec Type, Boolean ForceAsValue = false)
+        public String GetTypeString(TypeSpec Type, String NamespaceName, Boolean NoElaboratedTypeSpecifier = false, Boolean ForceAsEnum = false, Boolean ForceAsValue = false)
         {
-            return Inner.GetTypeString(Type, ForceAsValue);
+            return Inner.GetTypeString(Type, NamespaceName, NoElaboratedTypeSpecifier, ForceAsEnum, ForceAsValue);
+        }
+        public TypeRef GetSuffixedTypeRef(List<String> Name, String Version, String Suffix)
+        {
+            return Inner.GetSuffixedTypeRef(Name, Version, Suffix);
+        }
+        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName, Boolean NoElaboratedTypeSpecifier = false, Boolean ForceAsEnum = false, Boolean ForceAsValue = false)
+        {
+            return Inner.GetSuffixedTypeString(Name, Version, Suffix, NamespaceName, NoElaboratedTypeSpecifier, ForceAsEnum, ForceAsValue);
+        }
+        public String GetSuffixedTypeName(List<String> Name, String Version, String Suffix, String NamespaceName)
+        {
+            return Inner.GetSuffixedTypeName(Name, Version, Suffix, NamespaceName);
         }
 
         public List<String> GetPrimitives(Schema Schema)
@@ -123,7 +135,7 @@ namespace Niveum.ObjectSchema.CppCompatible
 
         private Boolean IsNullType(TypeSpec ts)
         {
-            return ts.OnTypeRef && (ts.TypeRef.Name == "Unit") && (ts.TypeRef.Version == "");
+            return ts.OnTypeRef && ts.TypeRef.NameMatches("Unit");
         }
         private Boolean IsSameType(TypeSpec Left, TypeSpec Right, Boolean IgnoreVersion)
         {
@@ -131,13 +143,13 @@ namespace Niveum.ObjectSchema.CppCompatible
             {
                 var LeftTypeRef = Left.TypeRef;
                 var RightTypeRef = Right.TypeRef;
-                if (LeftTypeRef.Name.Equals(RightTypeRef.Name, StringComparison.OrdinalIgnoreCase))
+                if (LeftTypeRef.Name.SequenceEqual(RightTypeRef.Name))
                 {
                     if (IgnoreVersion)
                     {
                         return true;
                     }
-                    else if (LeftTypeRef.Version.Equals(RightTypeRef.Version, StringComparison.OrdinalIgnoreCase))
+                    else if (LeftTypeRef.Version.SequenceEqual(RightTypeRef.Version))
                     {
                         return true;
                     }
@@ -145,7 +157,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             else if (Left.OnGenericParameterRef && Right.OnGenericParameterRef)
             {
-                if (Left.GenericParameterRef.Equals(Right.GenericParameterRef, StringComparison.OrdinalIgnoreCase))
+                if (Left.GenericParameterRef.SequenceEqual(Right.GenericParameterRef))
                 {
                     return true;
                 }
@@ -232,9 +244,9 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
         }
 
-        public void FillTranslatorAliasFrom(Dictionary<String, TypeDef> VersionedNameToType, AliasDef a, List<String> l)
+        public void FillTranslatorAliasFrom(Dictionary<String, TypeDef> VersionedNameToType, AliasDef a, List<String> l, String NamespaceName)
         {
-            var Name = a.Name;
+            var Name = a.FullName();
             AliasDef aHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
@@ -244,23 +256,25 @@ namespace Niveum.ObjectSchema.CppCompatible
                     aHead = tHead.Alias;
                 }
             }
-            var VersionedName = a.TypeFriendlyName();
+            var VersionedSimpleName = a.GetTypeSpec().SimpleName(NamespaceName);
+            var TypeString = GetTypeString(Nonversioned(a.GetTypeSpec()), NamespaceName);
+            var VersionedTypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
             if (aHead == null)
             {
-                FillTranslatorAliasFrom(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { }, l, true);
+                FillTranslatorAliasFrom(VersionedSimpleName, TypeString, VersionedTypeString, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { }, l, true, NamespaceName);
             }
             else
             {
-                FillTranslatorAliasFrom(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, l, false);
+                FillTranslatorAliasFrom(VersionedSimpleName, TypeString, VersionedTypeString, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, l, false, NamespaceName);
             }
         }
-        public void FillTranslatorAliasFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, List<String> l, Boolean InitialHasError)
+        public void FillTranslatorAliasFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, List<String> l, Boolean InitialHasError, String NamespaceName)
         {
-            l.AddRange(Translator_AliasFrom(Name, VersionedName, Fields, HeadFields, InitialHasError));
+            l.AddRange(Translator_AliasFrom(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, InitialHasError, NamespaceName));
         }
-        public void FillTranslatorAliasTo(Dictionary<String, TypeDef> VersionedNameToType, AliasDef a, List<String> l)
+        public void FillTranslatorAliasTo(Dictionary<String, TypeDef> VersionedNameToType, AliasDef a, List<String> l, String NamespaceName)
         {
-            var Name = a.Name;
+            var Name = a.FullName();
             AliasDef aHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
@@ -270,23 +284,25 @@ namespace Niveum.ObjectSchema.CppCompatible
                     aHead = tHead.Alias;
                 }
             }
-            var VersionedName = a.TypeFriendlyName();
+            var VersionedSimpleName = a.GetTypeSpec().SimpleName(NamespaceName);
+            var TypeString = GetTypeString(Nonversioned(a.GetTypeSpec()), NamespaceName);
+            var VersionedTypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
             if (aHead == null)
             {
-                FillTranslatorAliasTo(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { }, l, true);
+                FillTranslatorAliasTo(VersionedSimpleName, TypeString, VersionedTypeString, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { }, l, true, NamespaceName);
             }
             else
             {
-                FillTranslatorAliasTo(Name, VersionedName, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, l, false);
+                FillTranslatorAliasTo(VersionedSimpleName, TypeString, VersionedTypeString, new List<VariableDef> { new VariableDef { Name = "Value", Type = a.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, new List<VariableDef> { new VariableDef { Name = "Value", Type = aHead.Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, l, false, NamespaceName);
             }
         }
-        public void FillTranslatorAliasTo(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, List<String> l, Boolean InitialHasError)
+        public void FillTranslatorAliasTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, List<String> l, Boolean InitialHasError, String NamespaceName)
         {
-            l.AddRange(Translator_AliasTo(Name, VersionedName, Fields, HeadFields, InitialHasError));
+            l.AddRange(Translator_AliasTo(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, InitialHasError, NamespaceName));
         }
-        public void FillTranslatorRecordFrom(Dictionary<String, TypeDef> VersionedNameToType, RecordDef r, List<String> l)
+        public void FillTranslatorRecordFrom(Dictionary<String, TypeDef> VersionedNameToType, RecordDef r, List<String> l, String NamespaceName)
         {
-            var Name = r.Name;
+            var Name = r.FullName();
             RecordDef aHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
@@ -296,23 +312,25 @@ namespace Niveum.ObjectSchema.CppCompatible
                     aHead = tHead.Record;
                 }
             }
-            var VersionedName = r.TypeFriendlyName();
+            var VersionedSimpleName = r.GetTypeSpec().SimpleName(NamespaceName);
+            var TypeString = GetTypeString(Nonversioned(r.GetTypeSpec()), NamespaceName);
+            var VersionedTypeString = GetTypeString(r.GetTypeSpec(), NamespaceName);
             if (aHead == null)
             {
-                FillTranslatorRecordFrom(Name, VersionedName, r.Fields, new List<VariableDef> { }, l, true);
+                FillTranslatorRecordFrom(VersionedSimpleName, TypeString, VersionedTypeString, r.Fields, new List<VariableDef> { }, l, true, NamespaceName);
             }
             else
             {
-                FillTranslatorRecordFrom(Name, VersionedName, r.Fields, aHead.Fields, l, false);
+                FillTranslatorRecordFrom(VersionedSimpleName, TypeString, VersionedTypeString, r.Fields, aHead.Fields, l, false, NamespaceName);
             }
         }
-        public void FillTranslatorRecordFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, List<String> l, Boolean InitialHasError)
+        public void FillTranslatorRecordFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, List<String> l, Boolean InitialHasError, String NamespaceName)
         {
-            l.AddRange(Translator_RecordFrom(Name, VersionedName, Fields, HeadFields, InitialHasError));
+            l.AddRange(Translator_RecordFrom(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, InitialHasError, NamespaceName));
         }
-        public void FillTranslatorRecordTo(Dictionary<String, TypeDef> VersionedNameToType, RecordDef r, List<String> l)
+        public void FillTranslatorRecordTo(Dictionary<String, TypeDef> VersionedNameToType, RecordDef r, List<String> l, String NamespaceName)
         {
-            var Name = r.Name;
+            var Name = r.FullName();
             RecordDef aHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
@@ -322,23 +340,25 @@ namespace Niveum.ObjectSchema.CppCompatible
                     aHead = tHead.Record;
                 }
             }
-            var VersionedName = r.TypeFriendlyName();
+            var VersionedSimpleName = r.GetTypeSpec().SimpleName(NamespaceName);
+            var TypeString = GetTypeString(Nonversioned(r.GetTypeSpec()), NamespaceName);
+            var VersionedTypeString = GetTypeString(r.GetTypeSpec(), NamespaceName);
             if (aHead == null)
             {
-                FillTranslatorRecordTo(Name, VersionedName, r.Fields, new List<VariableDef> { }, l, true);
+                FillTranslatorRecordTo(VersionedSimpleName, TypeString, VersionedTypeString, r.Fields, new List<VariableDef> { }, l, true, NamespaceName);
             }
             else
             {
-                FillTranslatorRecordTo(Name, VersionedName, r.Fields, aHead.Fields, l, false);
+                FillTranslatorRecordTo(VersionedSimpleName, TypeString, VersionedTypeString, r.Fields, aHead.Fields, l, false, NamespaceName);
             }
         }
-        public void FillTranslatorRecordTo(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, List<String> l, Boolean InitialHasError)
+        public void FillTranslatorRecordTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, List<String> l, Boolean InitialHasError, String NamespaceName)
         {
-            l.AddRange(Translator_RecordTo(Name, VersionedName, Fields, HeadFields, InitialHasError));
+            l.AddRange(Translator_RecordTo(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, InitialHasError, NamespaceName));
         }
-        public void FillTranslatorTaggedUnionFrom(Dictionary<String, TypeDef> VersionedNameToType, TaggedUnionDef tu, List<String> l)
+        public void FillTranslatorTaggedUnionFrom(Dictionary<String, TypeDef> VersionedNameToType, TaggedUnionDef tu, List<String> l, String NamespaceName)
         {
-            var Name = tu.Name;
+            var Name = tu.FullName();
             TaggedUnionDef tuHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
@@ -348,23 +368,26 @@ namespace Niveum.ObjectSchema.CppCompatible
                     tuHead = tHead.TaggedUnion;
                 }
             }
-            var VersionedName = tu.TypeFriendlyName();
+            var VersionedSimpleName = tu.GetTypeSpec().SimpleName(NamespaceName);
+            var TypeString = GetTypeString(Nonversioned(tu.GetTypeSpec()), NamespaceName);
+            var VersionedTypeString = GetTypeString(tu.GetTypeSpec(), NamespaceName);
+            var RawVersionedTypeString = GetTypeString(tu.GetTypeSpec(), NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
             if (tuHead == null)
             {
-                FillTranslatorTaggedUnionFrom(VersionedName, GetEscapedIdentifier(Name), GetEscapedIdentifier(VersionedName), tu.Alternatives, new List<VariableDef> { }, l, true);
+                FillTranslatorTaggedUnionFrom(VersionedSimpleName, TypeString, VersionedTypeString, RawVersionedTypeString, tu.Alternatives, new List<VariableDef> { }, l, true, NamespaceName);
             }
             else
             {
-                FillTranslatorTaggedUnionFrom(VersionedName, GetEscapedIdentifier(Name), GetEscapedIdentifier(VersionedName), tu.Alternatives, tuHead.Alternatives, l, false);
+                FillTranslatorTaggedUnionFrom(VersionedSimpleName, TypeString, VersionedTypeString, RawVersionedTypeString, tu.Alternatives, tuHead.Alternatives, l, false, NamespaceName);
             }
         }
-        public void FillTranslatorTaggedUnionFrom(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, List<String> l, Boolean InitialHasError)
+        public void FillTranslatorTaggedUnionFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, String RawVersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, List<String> l, Boolean InitialHasError, String NamespaceName)
         {
-            l.AddRange(Translator_TaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, InitialHasError));
+            l.AddRange(Translator_TaggedUnionFrom(VersionedSimpleName, TypeString, VersionedTypeString, RawVersionedTypeString, Alternatives, HeadAlternatives, InitialHasError, NamespaceName));
         }
-        public void FillTranslatorTaggedUnionTo(Dictionary<String, TypeDef> VersionedNameToType, TaggedUnionDef tu, List<String> l)
+        public void FillTranslatorTaggedUnionTo(Dictionary<String, TypeDef> VersionedNameToType, TaggedUnionDef tu, List<String> l, String NamespaceName)
         {
-            var Name = tu.Name;
+            var Name = tu.FullName();
             TaggedUnionDef tuHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
@@ -374,23 +397,26 @@ namespace Niveum.ObjectSchema.CppCompatible
                     tuHead = tHead.TaggedUnion;
                 }
             }
-            var VersionedName = tu.TypeFriendlyName();
+            var VersionedSimpleName = tu.GetTypeSpec().SimpleName(NamespaceName);
+            var TypeString = GetTypeString(Nonversioned(tu.GetTypeSpec()), NamespaceName);
+            var VersionedTypeString = GetTypeString(tu.GetTypeSpec(), NamespaceName);
+            var RawTypeString = GetTypeString(Nonversioned(tu.GetTypeSpec()), NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
             if (tuHead == null)
             {
-                FillTranslatorTaggedUnionTo(VersionedName, GetEscapedIdentifier(Name), GetEscapedIdentifier(VersionedName), tu.Alternatives, new List<VariableDef> { }, l, true);
+                FillTranslatorTaggedUnionTo(VersionedSimpleName, TypeString, VersionedTypeString, RawTypeString, tu.Alternatives, new List<VariableDef> { }, l, true, NamespaceName);
             }
             else
             {
-                FillTranslatorTaggedUnionTo(VersionedName, GetEscapedIdentifier(Name), GetEscapedIdentifier(VersionedName), tu.Alternatives, tuHead.Alternatives, l, false);
+                FillTranslatorTaggedUnionTo(VersionedSimpleName, TypeString, VersionedTypeString, RawTypeString, tu.Alternatives, tuHead.Alternatives, l, false, NamespaceName);
             }
         }
-        public void FillTranslatorTaggedUnionTo(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, List<String> l, Boolean InitialHasError)
+        public void FillTranslatorTaggedUnionTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, String RawTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, List<String> l, Boolean InitialHasError, String NamespaceName)
         {
-            l.AddRange(Translator_TaggedUnionTo(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, InitialHasError));
+            l.AddRange(Translator_TaggedUnionTo(VersionedSimpleName, TypeString, VersionedTypeString, RawTypeString, Alternatives, HeadAlternatives, InitialHasError, NamespaceName));
         }
-        public void FillTranslatorEnumFrom(Dictionary<String, TypeDef> VersionedNameToType, EnumDef e, List<String> l)
+        public void FillTranslatorEnumFrom(Dictionary<String, TypeDef> VersionedNameToType, EnumDef e, List<String> l, String NamespaceName)
         {
-            var Name = e.Name;
+            var Name = e.FullName();
             EnumDef eHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
@@ -400,23 +426,27 @@ namespace Niveum.ObjectSchema.CppCompatible
                     eHead = tHead.Enum;
                 }
             }
-            var VersionedName = e.TypeFriendlyName();
+            var VersionedSimpleName = e.GetTypeSpec().SimpleName(NamespaceName);
+            var TypeString = GetTypeString(Nonversioned(e.GetTypeSpec()), NamespaceName);
+            var VersionedTypeString = GetTypeString(e.GetTypeSpec(), NamespaceName);
+            var RawTypeString = GetTypeString(Nonversioned(e.GetTypeSpec()), NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
+            var RawVersionedTypeString = GetTypeString(e.GetTypeSpec(), NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
             if (eHead == null)
             {
-                FillTranslatorEnumFrom(Name, VersionedName, e.Literals, new List<LiteralDef> { }, l);
+                FillTranslatorEnumFrom(VersionedSimpleName, TypeString, VersionedTypeString, RawTypeString, RawVersionedTypeString, e.Literals, new List<LiteralDef> { }, l, NamespaceName);
             }
             else
             {
-                FillTranslatorEnumFrom(Name, VersionedName, e.Literals, eHead.Literals, l);
+                FillTranslatorEnumFrom(VersionedSimpleName, TypeString, VersionedTypeString, RawTypeString, RawVersionedTypeString, e.Literals, eHead.Literals, l, NamespaceName);
             }
         }
-        public void FillTranslatorEnumFrom(String Name, String VersionedName, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals, List<String> l)
+        public void FillTranslatorEnumFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, String RawTypeString, String RawVersionedTypeString, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals, List<String> l, String NamespaceName)
         {
-            l.AddRange(Translator_EnumFrom(Name, VersionedName, Literals, HeadLiterals).Select(Line => "//" + Line));
+            l.AddRange(Translator_EnumFrom(VersionedSimpleName, TypeString, VersionedTypeString, RawTypeString, RawVersionedTypeString, Literals, HeadLiterals, NamespaceName).Select(Line => "//" + Line));
         }
-        public void FillTranslatorEnumTo(Dictionary<String, TypeDef> VersionedNameToType, EnumDef e, List<String> l)
+        public void FillTranslatorEnumTo(Dictionary<String, TypeDef> VersionedNameToType, EnumDef e, List<String> l, String NamespaceName)
         {
-            var Name = e.Name;
+            var Name = e.FullName();
             EnumDef eHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
@@ -426,23 +456,27 @@ namespace Niveum.ObjectSchema.CppCompatible
                     eHead = tHead.Enum;
                 }
             }
-            var VersionedName = e.TypeFriendlyName();
+            var VersionedSimpleName = e.GetTypeSpec().SimpleName(NamespaceName);
+            var TypeString = GetTypeString(Nonversioned(e.GetTypeSpec()), NamespaceName);
+            var VersionedTypeString = GetTypeString(e.GetTypeSpec(), NamespaceName);
+            var RawTypeString = GetTypeString(Nonversioned(e.GetTypeSpec()), NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
+            var RawVersionedTypeString = GetTypeString(e.GetTypeSpec(), NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
             if (eHead == null)
             {
-                FillTranslatorEnumTo(Name, VersionedName, e.Literals, new List<LiteralDef> { }, l);
+                FillTranslatorEnumTo(VersionedSimpleName, TypeString, VersionedTypeString, RawTypeString, RawVersionedTypeString, e.Literals, new List<LiteralDef> { }, l, NamespaceName);
             }
             else
             {
-                FillTranslatorEnumTo(Name, VersionedName, e.Literals, eHead.Literals, l);
+                FillTranslatorEnumTo(VersionedSimpleName, TypeString, VersionedTypeString, RawTypeString, RawVersionedTypeString, e.Literals, eHead.Literals, l, NamespaceName);
             }
         }
-        public void FillTranslatorEnumTo(String Name, String VersionedName, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals, List<String> l)
+        public void FillTranslatorEnumTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, String RawTypeString, String RawVersionedTypeString, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals, List<String> l, String NamespaceName)
         {
-            l.AddRange(Translator_EnumTo(Name, VersionedName, Literals, HeadLiterals).Select(Line => "//" + Line));
+            l.AddRange(Translator_EnumTo(VersionedSimpleName, TypeString, VersionedTypeString, RawTypeString, RawVersionedTypeString, Literals, HeadLiterals, NamespaceName).Select(Line => "//" + Line));
         }
-        public void FillTranslatorClientCommand(Dictionary<String, TypeDef> VersionedNameToType, ClientCommandDef c, List<String> l)
+        public void FillTranslatorClientCommand(Dictionary<String, TypeDef> VersionedNameToType, ClientCommandDef c, List<String> l, String NamespaceName)
         {
-            var Name = c.Name;
+            var Name = c.FullName();
             ClientCommandDef cHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
@@ -452,29 +486,38 @@ namespace Niveum.ObjectSchema.CppCompatible
                     cHead = tHead.ClientCommand;
                 }
             }
-            var VersionedName = c.TypeFriendlyName();
+            var cHeadTypeRef = Nonversioned(c.GetTypeSpec()).TypeRef;
+            var SimpleName = cHeadTypeRef.SimpleName(NamespaceName);
+            var VersionedSimpleName = c.GetTypeSpec().SimpleName(NamespaceName);
+            var RequestTypeString = GetSuffixedTypeString(c.Name, c.Version, "Request", NamespaceName);
+            var ReplyTypeString = GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName);
+            var RequestName = GetSuffixedTypeName(c.Name, c.Version, "Request", NamespaceName);
+            var ReplyName = GetSuffixedTypeName(c.Name, c.Version, "Reply", NamespaceName);
+            var UnversionedRequestTypeString = GetSuffixedTypeString(cHeadTypeRef.Name, cHeadTypeRef.Version, "Request", NamespaceName);
+            var UnversionedReplyTypeString = GetSuffixedTypeString(cHeadTypeRef.Name, cHeadTypeRef.Version, "Reply", NamespaceName);
+            var RawReplyTypeString = GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
             if (c.Attributes.Any(a => a.Key == "Async"))
             {
-                l.AddRange(Translator_ClientCommandAsync(Name, VersionedName));
+                l.AddRange(Translator_ClientCommandAsync(SimpleName, VersionedSimpleName, RequestTypeString, ReplyTypeString, UnversionedReplyTypeString, NamespaceName));
             }
             else
             {
-                l.AddRange(Translator_ClientCommand(Name, VersionedName));
+                l.AddRange(Translator_ClientCommand(SimpleName, VersionedSimpleName, RequestTypeString, ReplyTypeString, NamespaceName));
             }
             if (cHead != null)
             {
-                FillTranslatorRecordTo(Name + "Request", VersionedName + "Request", c.OutParameters, cHead.OutParameters, l, false);
-                FillTranslatorTaggedUnionFrom(VersionedName + "Reply", Name + "Reply", VersionedName + "Reply", c.InParameters, cHead.InParameters, l, false);
+                FillTranslatorRecordTo(RequestName, UnversionedRequestTypeString, RequestTypeString, c.OutParameters, cHead.OutParameters, l, false, NamespaceName);
+                FillTranslatorTaggedUnionFrom(ReplyName, UnversionedReplyTypeString, ReplyTypeString, RawReplyTypeString, c.InParameters, cHead.InParameters, l, false, NamespaceName);
             }
             else
             {
-                FillTranslatorRecordTo(Name + "Request", VersionedName + "Request", c.OutParameters, new List<VariableDef> { }, l, true);
-                FillTranslatorTaggedUnionFrom(VersionedName + "Reply", Name + "Reply", VersionedName + "Reply", c.InParameters, new List<VariableDef> { }, l, true);
+                FillTranslatorRecordTo(RequestName, UnversionedRequestTypeString, RequestTypeString, c.OutParameters, new List<VariableDef> { }, l, true, NamespaceName);
+                FillTranslatorTaggedUnionFrom(ReplyName, UnversionedReplyTypeString, ReplyTypeString, RawReplyTypeString, c.InParameters, new List<VariableDef> { }, l, true, NamespaceName);
             }
         }
-        public void FillTranslatorServerCommand(Dictionary<String, TypeDef> VersionedNameToType, ServerCommandDef c, List<String> l)
+        public void FillTranslatorServerCommand(Dictionary<String, TypeDef> VersionedNameToType, ServerCommandDef c, List<String> l, String NamespaceName)
         {
-            var Name = c.Name;
+            var Name = c.FullName();
             ServerCommandDef cHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
@@ -484,173 +527,178 @@ namespace Niveum.ObjectSchema.CppCompatible
                     cHead = tHead.ServerCommand;
                 }
             }
-            var VersionedName = c.TypeFriendlyName();
-            l.AddRange(Translator_ServerCommand(VersionedName));
+            var cHeadTypeRef = Nonversioned(c.GetTypeSpec()).TypeRef;
+            var VersionedSimpleName = c.GetTypeSpec().SimpleName(NamespaceName);
+            var EventTypeString = GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName);
+            var EventName = GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName);
+            var UnversionedEventTypeString = GetSuffixedTypeString(cHeadTypeRef.Name, cHeadTypeRef.Version, "Event", NamespaceName);
             if (cHead != null)
             {
-                FillTranslatorRecordFrom(Name + "Event", VersionedName + "Event", c.OutParameters, cHead.OutParameters, l, false);
+                FillTranslatorRecordFrom(EventName, UnversionedEventTypeString, EventTypeString, c.OutParameters, cHead.OutParameters, l, false, NamespaceName);
             }
             else
             {
-                FillTranslatorRecordFrom(Name + "Event", VersionedName + "Event", c.OutParameters, new List<VariableDef> { }, l, true);
+                FillTranslatorRecordFrom(EventName, UnversionedEventTypeString, EventTypeString, c.OutParameters, new List<VariableDef> { }, l, true, NamespaceName);
             }
         }
-        public void FillTranslatorTupleFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l)
+        public void FillTranslatorTupleFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            l.AddRange(Translator_TupleFrom(ts.TypeFriendlyName(), GetTypeString(nts), GetTypeString(ts), ts.Tuple, nts.Tuple));
+            l.AddRange(Translator_TupleFrom(ts.SimpleName(NamespaceName), GetTypeString(nts, NamespaceName), GetTypeString(ts, NamespaceName), ts.Tuple, nts.Tuple, NamespaceName));
         }
-        public void FillTranslatorTupleTo(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l)
+        public void FillTranslatorTupleTo(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            l.AddRange(Translator_TupleTo(ts.TypeFriendlyName(), GetTypeString(nts), GetTypeString(ts), ts.Tuple, nts.Tuple));
+            l.AddRange(Translator_TupleTo(ts.SimpleName(NamespaceName), GetTypeString(nts, NamespaceName), GetTypeString(ts, NamespaceName), ts.Tuple, nts.Tuple, NamespaceName));
         }
-        public void FillTranslatorOptionalFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l)
+        public void FillTranslatorOptionalFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            var VersionedName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts, true);
-            var VersionedTypeString = GetTypeString(ts, true);
+            var VersionedName = ts.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(nts, NamespaceName);
+            var VersionedTypeString = GetTypeString(ts, NamespaceName);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
+            var RawVersionedTypeString = GetTypeString(ts, NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
             var Alternatives = new List<VariableDef>
             {
-                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
                 new VariableDef { Name = "HasValue", Type = ElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
             };
             var HeadAlternatives = new List<VariableDef>
             {
-                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
                 new VariableDef { Name = "HasValue", Type = HeadElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
             };
             if (!IsExistentType(VersionedNameToType, HeadElementTypeSpec))
             {
-                FillTranslatorTaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, l, true);
+                FillTranslatorTaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, RawVersionedTypeString, Alternatives, HeadAlternatives, l, true, NamespaceName);
             }
             else
             {
-                FillTranslatorTaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, l, false);
+                FillTranslatorTaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, RawVersionedTypeString, Alternatives, HeadAlternatives, l, false, NamespaceName);
             }
         }
-        public void FillTranslatorOptionalTo(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l)
+        public void FillTranslatorOptionalTo(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            var VersionedName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts, true);
-            var VersionedTypeString = GetTypeString(ts, true);
+            var VersionedName = ts.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(nts, NamespaceName);
+            var VersionedTypeString = GetTypeString(ts, NamespaceName);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
+            var RawVersionedTypeString = GetTypeString(ts, NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
             var Alternatives = new List<VariableDef>
             {
-                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
                 new VariableDef { Name = "HasValue", Type = ElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
             };
             var HeadAlternatives = new List<VariableDef>
             {
-                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
                 new VariableDef { Name = "HasValue", Type = HeadElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
             };
             if (!IsExistentType(VersionedNameToType, HeadElementTypeSpec))
             {
-                FillTranslatorTaggedUnionTo(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, l, true);
+                FillTranslatorTaggedUnionTo(VersionedName, TypeString, VersionedTypeString, RawVersionedTypeString, Alternatives, HeadAlternatives, l, true, NamespaceName);
             }
             else
             {
-                FillTranslatorTaggedUnionTo(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives, l, false);
+                FillTranslatorTaggedUnionTo(VersionedName, TypeString, VersionedTypeString, RawVersionedTypeString, Alternatives, HeadAlternatives, l, false, NamespaceName);
             }
         }
-        public void FillTranslatorListFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l)
+        public void FillTranslatorListFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts, true);
-            var VersionedTypeString = GetTypeString(ts, true);
+            var VersionedSimpleName = ts.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(nts, NamespaceName);
+            var VersionedTypeString = GetTypeString(ts, NamespaceName);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
-            var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
-            var Result = Translator_ListFrom(VersionedTypeFriendlyName, TypeString, VersionedTypeString, VersionedElementTypeFriendlyName);
+            var VersionedElementSimpleName = ElementTypeSpec.SimpleName(NamespaceName);
+            var Result = Translator_ListFrom(VersionedSimpleName, TypeString, VersionedTypeString, VersionedElementSimpleName, NamespaceName);
             if (!IsExistentType(VersionedNameToType, HeadElementTypeSpec))
             {
                 Result = Result.Select(Line => "//" + Line);
             }
             l.AddRange(Result);
         }
-        public void FillTranslatorListTo(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l)
+        public void FillTranslatorListTo(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts, true);
-            var VersionedTypeString = GetTypeString(ts, true);
+            var VersionedSimpleName = ts.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(nts, NamespaceName);
+            var VersionedTypeString = GetTypeString(ts, NamespaceName);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
-            var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
-            var Result = Translator_ListTo(VersionedTypeFriendlyName, TypeString, VersionedTypeString, VersionedElementTypeFriendlyName);
+            var VersionedElementSimpleName = ElementTypeSpec.SimpleName(NamespaceName);
+            var Result = Translator_ListTo(VersionedSimpleName, TypeString, VersionedTypeString, VersionedElementSimpleName, NamespaceName);
             if (!IsExistentType(VersionedNameToType, HeadElementTypeSpec))
             {
                 Result = Result.Select(Line => "//" + Line);
             }
             l.AddRange(Result);
         }
-        public void FillTranslatorSetFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l)
+        public void FillTranslatorSetFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts, true);
-            var VersionedTypeString = GetTypeString(ts, true);
+            var VersionedSimpleName = ts.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(nts, NamespaceName);
+            var VersionedTypeString = GetTypeString(ts, NamespaceName);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
-            var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
-            var Result = Translator_SetFrom(VersionedTypeFriendlyName, TypeString, VersionedTypeString, VersionedElementTypeFriendlyName);
+            var VersionedElementSimpleName = ElementTypeSpec.SimpleName(NamespaceName);
+            var Result = Translator_SetFrom(VersionedSimpleName, TypeString, VersionedTypeString, VersionedElementSimpleName, NamespaceName);
             if (!IsExistentType(VersionedNameToType, HeadElementTypeSpec))
             {
                 Result = Result.Select(Line => "//" + Line);
             }
             l.AddRange(Result);
         }
-        public void FillTranslatorSetTo(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l)
+        public void FillTranslatorSetTo(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts, true);
-            var VersionedTypeString = GetTypeString(ts, true);
+            var VersionedSimpleName = ts.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(nts, NamespaceName);
+            var VersionedTypeString = GetTypeString(ts, NamespaceName);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
-            var VersionedElementTypeFriendlyName = ElementTypeSpec.TypeFriendlyName();
-            var Result = Translator_SetTo(VersionedTypeFriendlyName, TypeString, VersionedTypeString, VersionedElementTypeFriendlyName);
+            var VersionedElementSimpleName = ElementTypeSpec.SimpleName(NamespaceName);
+            var Result = Translator_SetTo(VersionedSimpleName, TypeString, VersionedTypeString, VersionedElementSimpleName, NamespaceName);
             if (!IsExistentType(VersionedNameToType, HeadElementTypeSpec))
             {
                 Result = Result.Select(Line => "//" + Line);
             }
             l.AddRange(Result);
         }
-        public void FillTranslatorMapFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l)
+        public void FillTranslatorMapFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts, true);
-            var VersionedTypeString = GetTypeString(ts, true);
+            var VersionedSimpleName = ts.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(nts, NamespaceName);
+            var VersionedTypeString = GetTypeString(ts, NamespaceName);
             var KeyTypeSpec = ts.GenericTypeSpec.ParameterValues[0];
             var ValueTypeSpec = ts.GenericTypeSpec.ParameterValues[1];
             var HeadKeyTypeSpec = nts.GenericTypeSpec.ParameterValues[0];
             var HeadValueTypeSpec = nts.GenericTypeSpec.ParameterValues[1];
-            var Result = Translator_MapFrom(VersionedTypeFriendlyName, TypeString, VersionedTypeString, KeyTypeSpec, HeadKeyTypeSpec, ValueTypeSpec, HeadValueTypeSpec);
+            var Result = Translator_MapFrom(VersionedSimpleName, TypeString, VersionedTypeString, KeyTypeSpec, HeadKeyTypeSpec, ValueTypeSpec, HeadValueTypeSpec, NamespaceName);
             if (!(IsExistentType(VersionedNameToType, HeadKeyTypeSpec) && IsExistentType(VersionedNameToType, HeadValueTypeSpec)))
             {
                 Result = Result.Select(Line => "//" + Line);
             }
             l.AddRange(Result);
         }
-        public void FillTranslatorMapTo(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l)
+        public void FillTranslatorMapTo(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            var VersionedTypeFriendlyName = ts.TypeFriendlyName();
-            var TypeString = GetTypeString(nts, true);
-            var VersionedTypeString = GetTypeString(ts, true);
+            var VersionedSimpleName = ts.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(nts, NamespaceName);
+            var VersionedTypeString = GetTypeString(ts, NamespaceName);
             var KeyTypeSpec = ts.GenericTypeSpec.ParameterValues[0];
             var ValueTypeSpec = ts.GenericTypeSpec.ParameterValues[1];
             var HeadKeyTypeSpec = nts.GenericTypeSpec.ParameterValues[0];
             var HeadValueTypeSpec = nts.GenericTypeSpec.ParameterValues[1];
-            var Result = Translator_MapTo(VersionedTypeFriendlyName, TypeString, VersionedTypeString, KeyTypeSpec, HeadKeyTypeSpec, ValueTypeSpec, HeadValueTypeSpec);
+            var Result = Translator_MapTo(VersionedSimpleName, TypeString, VersionedTypeString, KeyTypeSpec, HeadKeyTypeSpec, ValueTypeSpec, HeadValueTypeSpec, NamespaceName);
             if (!(IsExistentType(VersionedNameToType, HeadKeyTypeSpec) && IsExistentType(VersionedNameToType, HeadValueTypeSpec)))
             {
                 Result = Result.Select(Line => "//" + Line);
@@ -662,7 +710,7 @@ namespace Niveum.ObjectSchema.CppCompatible
         private HashSet<String> TranslatedTypeTos = new HashSet<String>();
         private HashSet<String> TranslatedTypeSpecFroms = new HashSet<String>();
         private HashSet<String> TranslatedTypeSpecTos = new HashSet<String>();
-        public List<String> GetTranslator(ISchemaClosureGenerator SchemaClosureGenerator, Dictionary<String, TypeDef> VersionedNameToType, TypeDef t)
+        public List<String> GetTranslator(ISchemaClosureGenerator SchemaClosureGenerator, Dictionary<String, TypeDef> VersionedNameToType, TypeDef t, String NamespaceName)
         {
             var l = new List<String>();
             var FromTypeDefs = new List<TypeDef> { };
@@ -672,7 +720,7 @@ namespace Niveum.ObjectSchema.CppCompatible
 
             if (t.OnClientCommand)
             {
-                FillTranslatorClientCommand(VersionedNameToType, t.ClientCommand, l);
+                FillTranslatorClientCommand(VersionedNameToType, t.ClientCommand, l, NamespaceName);
                 var ToTypeClosure = SchemaClosureGenerator.GetClosure(new List<TypeDef> { }, t.ClientCommand.OutParameters.Select(p => p.Type));
                 var FromTypeClosure = SchemaClosureGenerator.GetClosure(new List<TypeDef> { }, t.ClientCommand.InParameters.Select(p => p.Type));
                 ToTypeDefs = ToTypeClosure.TypeDefs;
@@ -682,7 +730,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             else if (t.OnServerCommand)
             {
-                FillTranslatorServerCommand(VersionedNameToType, t.ServerCommand, l);
+                FillTranslatorServerCommand(VersionedNameToType, t.ServerCommand, l, NamespaceName);
                 var FromTypeClosure = SchemaClosureGenerator.GetClosure(new List<TypeDef> { }, t.ServerCommand.OutParameters.Select(p => p.Type));
                 FromTypeDefs = FromTypeClosure.TypeDefs;
                 FromTypeSpecs = FromTypeClosure.TypeSpecs;
@@ -700,19 +748,19 @@ namespace Niveum.ObjectSchema.CppCompatible
                 TranslatedTypeFroms.Add(td.VersionedName());
                 if (td.OnAlias)
                 {
-                    FillTranslatorAliasFrom(VersionedNameToType, td.Alias, l);
+                    FillTranslatorAliasFrom(VersionedNameToType, td.Alias, l, NamespaceName);
                 }
                 else if (td.OnRecord)
                 {
-                    FillTranslatorRecordFrom(VersionedNameToType, td.Record, l);
+                    FillTranslatorRecordFrom(VersionedNameToType, td.Record, l, NamespaceName);
                 }
                 else if (td.OnTaggedUnion)
                 {
-                    FillTranslatorTaggedUnionFrom(VersionedNameToType, td.TaggedUnion, l);
+                    FillTranslatorTaggedUnionFrom(VersionedNameToType, td.TaggedUnion, l, NamespaceName);
                 }
                 else if (td.OnEnum)
                 {
-                    FillTranslatorEnumFrom(VersionedNameToType, td.Enum, l);
+                    FillTranslatorEnumFrom(VersionedNameToType, td.Enum, l, NamespaceName);
                 }
                 else
                 {
@@ -726,19 +774,19 @@ namespace Niveum.ObjectSchema.CppCompatible
                 TranslatedTypeTos.Add(td.VersionedName());
                 if (td.OnAlias)
                 {
-                    FillTranslatorAliasTo(VersionedNameToType, td.Alias, l);
+                    FillTranslatorAliasTo(VersionedNameToType, td.Alias, l, NamespaceName);
                 }
                 else if (td.OnRecord)
                 {
-                    FillTranslatorRecordTo(VersionedNameToType, td.Record, l);
+                    FillTranslatorRecordTo(VersionedNameToType, td.Record, l, NamespaceName);
                 }
                 else if (td.OnTaggedUnion)
                 {
-                    FillTranslatorTaggedUnionTo(VersionedNameToType, td.TaggedUnion, l);
+                    FillTranslatorTaggedUnionTo(VersionedNameToType, td.TaggedUnion, l, NamespaceName);
                 }
                 else if (td.OnEnum)
                 {
-                    FillTranslatorEnumTo(VersionedNameToType, td.Enum, l);
+                    FillTranslatorEnumTo(VersionedNameToType, td.Enum, l, NamespaceName);
                 }
                 else
                 {
@@ -748,30 +796,30 @@ namespace Niveum.ObjectSchema.CppCompatible
             foreach (var ts in FromTypeSpecs)
             {
                 if (IsSameType(ts, Nonversioned(ts), false)) { continue; }
-                if (TranslatedTypeSpecFroms.Contains(ts.TypeFriendlyName())) { continue; }
-                TranslatedTypeSpecFroms.Add(ts.TypeFriendlyName());
+                if (TranslatedTypeSpecFroms.Contains(ts.SimpleName(NamespaceName))) { continue; }
+                TranslatedTypeSpecFroms.Add(ts.SimpleName(NamespaceName));
                 if (ts.OnTuple)
                 {
-                    FillTranslatorTupleFrom(VersionedNameToType, ts, l);
+                    FillTranslatorTupleFrom(VersionedNameToType, ts, l, NamespaceName);
                 }
                 else if (ts.OnGenericTypeSpec)
                 {
                     var gts = ts.GenericTypeSpec;
-                    if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Optional" && gts.ParameterValues.Count == 1)
+                    if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.NameMatches("Optional") && gts.ParameterValues.Count == 1)
                     {
-                        FillTranslatorOptionalFrom(VersionedNameToType, ts, l);
+                        FillTranslatorOptionalFrom(VersionedNameToType, ts, l, NamespaceName);
                     }
-                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "List" && gts.ParameterValues.Count == 1)
+                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.NameMatches("List") && gts.ParameterValues.Count == 1)
                     {
-                        FillTranslatorListFrom(VersionedNameToType, ts, l);
+                        FillTranslatorListFrom(VersionedNameToType, ts, l, NamespaceName);
                     }
-                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Set" && gts.ParameterValues.Count == 1)
+                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.NameMatches("Set") && gts.ParameterValues.Count == 1)
                     {
-                        FillTranslatorSetFrom(VersionedNameToType, ts, l);
+                        FillTranslatorSetFrom(VersionedNameToType, ts, l, NamespaceName);
                     }
-                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Map" && gts.ParameterValues.Count == 2)
+                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.NameMatches("Map") && gts.ParameterValues.Count == 2)
                     {
-                        FillTranslatorMapFrom(VersionedNameToType, ts, l);
+                        FillTranslatorMapFrom(VersionedNameToType, ts, l, NamespaceName);
                     }
                     else
                     {
@@ -782,30 +830,30 @@ namespace Niveum.ObjectSchema.CppCompatible
             foreach (var ts in ToTypeSpecs)
             {
                 if (IsSameType(ts, Nonversioned(ts), false)) { continue; }
-                if (TranslatedTypeSpecTos.Contains(ts.TypeFriendlyName())) { continue; }
-                TranslatedTypeSpecTos.Add(ts.TypeFriendlyName());
+                if (TranslatedTypeSpecTos.Contains(ts.SimpleName(NamespaceName))) { continue; }
+                TranslatedTypeSpecTos.Add(ts.SimpleName(NamespaceName));
                 if (ts.OnTuple)
                 {
-                    FillTranslatorTupleTo(VersionedNameToType, ts, l);
+                    FillTranslatorTupleTo(VersionedNameToType, ts, l, NamespaceName);
                 }
                 else if (ts.OnGenericTypeSpec)
                 {
                     var gts = ts.GenericTypeSpec;
-                    if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Optional" && gts.ParameterValues.Count == 1)
+                    if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.NameMatches("Optional") && gts.ParameterValues.Count == 1)
                     {
-                        FillTranslatorOptionalTo(VersionedNameToType, ts, l);
+                        FillTranslatorOptionalTo(VersionedNameToType, ts, l, NamespaceName);
                     }
-                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "List" && gts.ParameterValues.Count == 1)
+                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.NameMatches("List") && gts.ParameterValues.Count == 1)
                     {
-                        FillTranslatorListTo(VersionedNameToType, ts, l);
+                        FillTranslatorListTo(VersionedNameToType, ts, l, NamespaceName);
                     }
-                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Set" && gts.ParameterValues.Count == 1)
+                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.NameMatches("Set") && gts.ParameterValues.Count == 1)
                     {
-                        FillTranslatorSetTo(VersionedNameToType, ts, l);
+                        FillTranslatorSetTo(VersionedNameToType, ts, l, NamespaceName);
                     }
-                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.Name == "Map" && gts.ParameterValues.Count == 2)
+                    else if (gts.TypeSpec.OnTypeRef && gts.TypeSpec.TypeRef.NameMatches("Map") && gts.ParameterValues.Count == 2)
                     {
-                        FillTranslatorMapTo(VersionedNameToType, ts, l);
+                        FillTranslatorMapTo(VersionedNameToType, ts, l, NamespaceName);
                     }
                     else
                     {
@@ -815,15 +863,14 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             return l;
         }
-        public List<String> GetComplexTypes(Schema Schema)
+        public List<String> GetTranslators(Schema Schema, String NamespaceName)
         {
-            var l = new List<String>();
+            var Blocks = new List<IEnumerable<String>>();
 
             if (Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).Any())
             {
                 var ServerCommands = Schema.Types.Where(t => t.OnServerCommand).Select(t => t.ServerCommand).ToList();
-                l.AddRange(EventPump(ServerCommands));
-                l.Add("");
+                Blocks.Add(EventPump(ServerCommands, NamespaceName));
 
                 var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
                 var VersionedNameToType = Schema.GetMap().ToDictionary(t => t.Key, t => t.Value);
@@ -844,9 +891,8 @@ namespace Niveum.ObjectSchema.CppCompatible
                     }
                     if (c.OnClientCommand || c.OnServerCommand)
                     {
-                        var Translator = GetTranslator(SchemaClosureGenerator, VersionedNameToType, c);
-                        l.AddRange(Translator);
-                        l.Add("");
+                        var Translator = GetTranslator(SchemaClosureGenerator, VersionedNameToType, c, NamespaceName);
+                        Blocks.Add(Translator);
                     }
                 }
             }
@@ -869,26 +915,24 @@ namespace Niveum.ObjectSchema.CppCompatible
                     {
                         continue;
                     }
-                    var Translator = GetTranslator(SchemaClosureGenerator, VersionedNameToType, c);
+                    var Translator = GetTranslator(SchemaClosureGenerator, VersionedNameToType, c, NamespaceName);
                     if (Translator.Count > 0)
                     {
-                        l.AddRange(Translator);
-                        l.Add("");
+                        Blocks.Add(Translator);
                     }
                 }
             }
 
-            if (l.Count > 0)
-            {
-                l = l.Take(l.Count - 1).ToList();
-            }
-
-            return l;
+            return Blocks.Join(new String[] { "" }).ToList();
+        }
+        public List<String> GetTypes(Schema Schema, String NamespaceName, String ImplementationNamespaceName, String ImplementationClassName)
+        {
+            return Inner.WrapNamespace(ImplementationNamespaceName, WrapPartialClass(ImplementationClassName, GetTranslators(Schema, NamespaceName))).ToList();
         }
 
-        public List<String> WrapContents(String Namespace, List<String> Contents)
+        public IEnumerable<String> WrapNamespace(String Namespace, IEnumerable<String> Contents)
         {
-            return Inner.WrapContents(Namespace, Contents);
+            return Inner.WrapNamespace(Namespace, Contents);
         }
 
         public Boolean IsInclude(String s)

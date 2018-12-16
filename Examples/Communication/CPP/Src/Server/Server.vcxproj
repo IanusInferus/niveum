@@ -28,6 +28,7 @@
     <ClInclude Include="Context\SessionContext.h" />
     <ClInclude Include="Generated\Communication.h" />
     <ClInclude Include="Generated\CommunicationBinary.h" />
+    <ClInclude Include="Generated\CommunicationCompatibility.h" />
     <ClInclude Include="Servers\BinaryCountPacketServer.h" />
     <ClInclude Include="Servers\Concept.h" />
     <ClInclude Include="Servers\IContext.h" />

@@ -115,6 +115,9 @@
     <ClInclude Include="Generated\CommunicationBinary.h">
       <Filter>Generated</Filter>
     </ClInclude>
+    <ClInclude Include="Generated\CommunicationCompatibility.h">
+      <Filter>Generated</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />

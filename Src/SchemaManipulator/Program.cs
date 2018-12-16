@@ -28,12 +28,12 @@ using Niveum.ObjectSchema.CSharpCompatible;
 using Niveum.ObjectSchema.CSharpVersion;
 using Niveum.ObjectSchema.Cpp;
 using Niveum.ObjectSchema.CppBinary;
+using Niveum.ObjectSchema.CppCompatible;
 using Niveum.ObjectSchema.CppVersion;
 using Niveum.ObjectSchema.Haxe;
 using Niveum.ObjectSchema.HaxeJson;
 using Niveum.ObjectSchema.VB;
 using Niveum.ObjectSchema.Xhtml;
-using Yuki.ObjectSchema.CppCompatible;
 using Yuki.ObjectSchema.Java;
 using Yuki.ObjectSchema.JavaBinary;
 using Yuki.ObjectSchema.Python;
@@ -445,13 +445,9 @@ namespace Yuki.SchemaManipulator
                 else if (optNameLower == "t2cppc")
                 {
                     var args = opt.Arguments;
-                    if (args.Length == 2)
+                    if (args.Length == 4)
                     {
-                        ObjectSchemaToCppCompatibleCode(args[0], args[1], "");
-                    }
-                    else if (args.Length == 3)
-                    {
-                        ObjectSchemaToCppCompatibleCode(args[0], args[1], args[2]);
+                        ObjectSchemaToCppCompatibleCode(args[0], args[1], args[2], args[3]);
                     }
                     else
                     {
@@ -620,7 +616,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"生成C++2011二进制通讯类型");
             Console.WriteLine(@"/t2cppb:<CppCodePath>[,<NamespaceName>[,<WithServer=true>,<WithClient=true>]]");
             Console.WriteLine(@"生成C++兼容类型");
-            Console.WriteLine(@"/t2cppc:<CsCodePath>,<ClassName>[,<NamespaceName>]");
+            Console.WriteLine(@"/t2cppc:<CsCodePath>,<NamespaceName>,<ImplementationNamespaceName>,<ImplementationClassName>");
             Console.WriteLine(@"生成C++版本类型");
             Console.WriteLine(@"/t2cppv:<CsCodePath>,<NamespaceName>,<FullTypeName>*");
             Console.WriteLine(@"生成Haxe类型");
@@ -650,6 +646,8 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"VbCodePath VB代码文件路径。");
             Console.WriteLine(@"CsCodePath C#代码文件路径。");
             Console.WriteLine(@"WithFirefly 是否使用Firefly库。");
+            Console.WriteLine(@"ImplementationNamespaceName 实现所在的命名空间。");
+            Console.WriteLine(@"ImplementationClassName 实现的类名。");
             Console.WriteLine(@"CppCodePath C++代码文件路径。");
             Console.WriteLine(@"WithServer 是否生成服务器代码。");
             Console.WriteLine(@"WithClient 是否生成客户端代码。");
@@ -988,10 +986,10 @@ namespace Yuki.SchemaManipulator
             Txt.WriteFile(CppCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCppCompatibleCode(String CppCodePath, String ClassName, String NamespaceName)
+        public static void ObjectSchemaToCppCompatibleCode(String CppCodePath, String NamespaceName, String ImplementationNamespaceName, String ImplementationClassName)
         {
-            var ObjectSchema = GetObjectSchemaLegacy();
-            var Compiled = ObjectSchema.CompileToCppCompatible(NamespaceName, ClassName);
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToCppCompatible(NamespaceName, ImplementationNamespaceName, ImplementationClassName);
             if (File.Exists(CppCodePath))
             {
                 var Original = Txt.ReadFile(CppCodePath);

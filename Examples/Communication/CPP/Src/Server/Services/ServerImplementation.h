@@ -38,18 +38,20 @@ namespace Server
                 UnregisterCrossSessionEvents();
             }
 
+            class EventPump : public Communication::IEventPump
+            {
+            };
+            std::shared_ptr<Communication::IEventPump> CreateEventPump(std::function<std::wstring()> GetVersion);
             void RegisterCrossSessionEvents()
             {
                 auto Lock = SessionContext->WriterLock();
-                SessionContext->MessageReceived = [=](std::shared_ptr<Communication::MessageReceivedEvent> e) { if (this->MessageReceived != nullptr) { this->MessageReceived(e); } };
-                SessionContext->TestMessageReceived = [=](std::shared_ptr<Communication::TestMessageReceivedEvent> e) { if (this->TestMessageReceived != nullptr) { this->TestMessageReceived(e); } };
+                SessionContext->EventPump = CreateEventPump([this]() { return SessionContext->Version; });
             }
 
             void UnregisterCrossSessionEvents()
             {
                 auto Lock = SessionContext->WriterLock();
-                SessionContext->MessageReceived = nullptr;
-                SessionContext->TestMessageReceived = nullptr;
+                SessionContext->EventPump = nullptr;
             }
 
             void RaiseError(std::wstring CommandName, std::wstring Message)
@@ -90,8 +92,6 @@ namespace Server
             std::shared_ptr<Communication::CheckSchemaVersionReply> CheckSchemaVersion(std::shared_ptr<Communication::CheckSchemaVersionRequest> r) override;
             /// <summary>发送消息</summary>
             std::shared_ptr<Communication::SendMessageReply> SendMessage(std::shared_ptr<Communication::SendMessageRequest> r) override;
-            /// <summary>发送消息</summary>
-            std::shared_ptr<Communication::SendMessageAt1Reply> SendMessageAt1(std::shared_ptr<Communication::SendMessageAt1Request> r) override;
             /// <summary>加法</summary>
             void TestAdd(std::shared_ptr<Communication::TestAddRequest> r, std::function<void(std::shared_ptr<Communication::TestAddReply>)> Callback, std::function<void(const std::exception &)> OnFailure) override;
             /// <summary>两百万次浮点乘法</summary>
@@ -100,10 +100,18 @@ namespace Server
             std::shared_ptr<Communication::TestTextReply> TestText(std::shared_ptr<Communication::TestTextRequest> r) override;
             /// <summary>群发消息</summary>
             std::shared_ptr<Communication::TestMessageReply> TestMessage(std::shared_ptr<Communication::TestMessageRequest> r) override;
-            /// <summary>加法</summary>
-            void TestAddAt1(std::shared_ptr<Communication::TestAddAt1Request> r, std::function<void(std::shared_ptr<Communication::TestAddAt1Reply>)> Callback, std::function<void(const std::exception &)> OnFailure) override;
             /// <summary>服务器时间</summary>
             std::shared_ptr<class CommunicationDuplication::ServerTimeReply> CommunicationDuplicationDotServerTime(std::shared_ptr<class CommunicationDuplication::ServerTimeRequest> r) override;
+
+            /// <summary>发送消息</summary>
+            std::shared_ptr<Communication::SendMessageAt1Reply> SendMessageAt1(std::shared_ptr<Communication::SendMessageAt1Request> r) override;
+            std::shared_ptr<Communication::SendMessageRequest> SendMessageAt1RequestToHead(std::shared_ptr<Communication::SendMessageAt1Request> o);
+            std::shared_ptr<Communication::SendMessageAt1Reply> SendMessageAt1ReplyFromHead(std::shared_ptr<Communication::SendMessageReply> ho);
+            std::shared_ptr<Communication::MessageReceivedAt1Event> MessageReceivedAt1EventFromHead(std::shared_ptr<Communication::MessageReceivedEvent> ho);
+            /// <summary>加法</summary>
+            void TestAddAt1(std::shared_ptr<Communication::TestAddAt1Request> r, std::function<void(std::shared_ptr<Communication::TestAddAt1Reply>)> Callback, std::function<void(const std::exception &)> OnFailure) override;
+            std::shared_ptr<Communication::TestAddRequest> TestAddAt1RequestToHead(std::shared_ptr<Communication::TestAddAt1Request> o);
+            std::shared_ptr<Communication::TestAddAt1Reply> TestAddAt1ReplyFromHead(std::shared_ptr<Communication::TestAddReply> ho);
         };
     }
 }

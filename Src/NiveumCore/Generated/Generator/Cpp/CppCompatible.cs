@@ -75,22 +75,24 @@ namespace Niveum.ObjectSchema.CppCompatible
                 yield return GetEscapedIdentifier(Identifier);
             }
         }
-        public IEnumerable<String> EventPump(List<ServerCommandDef> ServerCommands)
+        public IEnumerable<String> EventPump(List<ServerCommandDef> ServerCommands, String NamespaceName)
         {
-            var ServerCommandGroups = ServerCommands.GroupBy(sc => sc.Name).Where(g => g.Any(sc => sc.Version == "")).ToList();
+            var ServerCommandGroups = ServerCommands.GroupBy(sc => sc.FullName()).Where(g => g.Any(sc => sc.Version == "")).ToList();
             yield return "class EventPump : public IEventPump";
             yield return "{";
             yield return "};";
-            yield return "IEventPump CreateEventPump(std::function<std::wstring()> GetVersion)";
+            yield return "std::shared_ptr<IEventPump> CreateEventPump(std::function<std::wstring()> GetVersion)";
             yield return "{";
             yield return "    auto ep = std::make_shared<EventPump>();";
             foreach (var g in ServerCommandGroups)
             {
-                var Name = g.Key;
+                var c = g.Where(sc => sc.Version == "").First();
+                var Name = c.GetTypeSpec().SimpleName(NamespaceName);
+                var EventTypeString = GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName);
                 var GroupCommands = g.ToList();
                 if (GroupCommands.Count == 1)
                 {
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ep->"), GetEscapedIdentifier(Name)), " = [](std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), "> e) { if ("), GetEscapedIdentifier(Name)), " != nullptr) { "), GetEscapedIdentifier(Name)), "(e); } };"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ep->"), GetEscapedIdentifier(Name)), " = [=]("), EventTypeString), " e) { if ("), GetEscapedIdentifier(Name)), " != nullptr) { "), GetEscapedIdentifier(Name)), "(e); } };"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -98,7 +100,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                 else
                 {
                     var SortedGroupCommands = GroupCommands.Where(sc => sc.Version != "").OrderByDescending(sc => new NumericString(sc.Version)).ToList();
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ep->"), GetEscapedIdentifier(Name)), " = [](std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), "> eHead)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ep->"), GetEscapedIdentifier(Name)), " = [=]("), EventTypeString), " eHead)"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -114,17 +116,17 @@ namespace Niveum.ObjectSchema.CppCompatible
                     yield return "    " + "    }";
                     foreach (var sc in SortedGroupCommands)
                     {
-                        var VersionedTypeFriendlyName = sc.TypeFriendlyName();
+                        var VersionedSimpleName = sc.GetTypeSpec().SimpleName(NamespaceName);
                         foreach (var _Line in Combine(Combine(Combine(Begin(), "if (Version == L\""), sc.Version), "\")"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
                         yield return "        " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto e = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "EventFromHead"))), "(eHead);"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto e = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "EventFromHead"))), "(eHead);"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    if ("), GetEscapedIdentifier(VersionedTypeFriendlyName)), " != nullptr) { "), GetEscapedIdentifier(VersionedTypeFriendlyName)), "(e); }"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    if ("), GetEscapedIdentifier(VersionedSimpleName)), " != nullptr) { "), GetEscapedIdentifier(VersionedSimpleName)), "(e); }"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -138,33 +140,33 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    return ep;";
             yield return "}";
         }
-        public IEnumerable<String> Translator_AliasFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, Boolean InitialHasError)
+        public IEnumerable<String> Translator_AliasFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, Boolean InitialHasError, String NamespaceName)
         {
             var d = HeadFields.ToDictionary(f => f.Name);
             var HasError = InitialHasError || !Fields.All(f => IsNullType(f.Type) || (d.ContainsKey(f.Name) && (IsSameType(f.Type, d[f.Name].Type, false) || IsSameType(f.Type, d[f.Name].Type, true))));
             if (HasError)
             {
-                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_AliasFrom(Name, VersionedName, Fields, HeadFields)))
+                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_AliasFrom(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
             else
             {
-                foreach (var _Line in Combine(Begin(), Translator_AliasFrom(Name, VersionedName, Fields, HeadFields)))
+                foreach (var _Line in Combine(Begin(), Translator_AliasFrom(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
         }
-        public IEnumerable<String> Translator_AliasFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields)
+        public IEnumerable<String> Translator_AliasFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "class "), GetEscapedIdentifier(VersionedName)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "(class "), GetEscapedIdentifier(Name)), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    class "), GetEscapedIdentifier(VersionedName)), " o;"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), VersionedTypeString), " o;"))
             {
                 yield return _Line;
             }
@@ -192,7 +194,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                     }
                     else if (IsSameType(f.Type, fHead.Type, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.TypeFriendlyName()), "FromHead"))), "(ho."), GetEscapedIdentifier(f.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.SimpleName(NamespaceName)), "FromHead"))), "(ho."), GetEscapedIdentifier(f.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -207,33 +209,33 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    return o;";
             yield return "}";
         }
-        public IEnumerable<String> Translator_AliasTo(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, Boolean InitialHasError)
+        public IEnumerable<String> Translator_AliasTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, Boolean InitialHasError, String NamespaceName)
         {
             var d = Fields.ToDictionary(f => f.Name);
             var HasError = InitialHasError || !HeadFields.All(fHead => IsNullType(fHead.Type) || (d.ContainsKey(fHead.Name) && (IsSameType(d[fHead.Name].Type, fHead.Type, false) || IsSameType(d[fHead.Name].Type, fHead.Type, true))));
             if (HasError)
             {
-                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_AliasTo(Name, VersionedName, Fields, HeadFields)))
+                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_AliasTo(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
             else
             {
-                foreach (var _Line in Combine(Begin(), Translator_AliasTo(Name, VersionedName, Fields, HeadFields)))
+                foreach (var _Line in Combine(Begin(), Translator_AliasTo(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
         }
-        public IEnumerable<String> Translator_AliasTo(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields)
+        public IEnumerable<String> Translator_AliasTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "class "), GetEscapedIdentifier(Name)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "(class "), GetEscapedIdentifier(VersionedName)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    class "), GetEscapedIdentifier(Name)), " ho;"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), TypeString), " ho;"))
             {
                 yield return _Line;
             }
@@ -261,7 +263,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                     }
                     else if (IsSameType(f.Type, fHead.Type, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ho."), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.TypeFriendlyName()), "ToHead"))), "(o."), GetEscapedIdentifier(f.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ho."), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.SimpleName(NamespaceName)), "ToHead"))), "(o."), GetEscapedIdentifier(f.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -276,33 +278,33 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    return ho;";
             yield return "}";
         }
-        public IEnumerable<String> Translator_RecordFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, Boolean InitialHasError)
+        public IEnumerable<String> Translator_RecordFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, Boolean InitialHasError, String NamespaceName)
         {
             var d = HeadFields.ToDictionary(f => f.Name);
             var HasError = InitialHasError || !Fields.All(f => IsNullType(f.Type) || (d.ContainsKey(f.Name) && (IsSameType(f.Type, d[f.Name].Type, false) || IsSameType(f.Type, d[f.Name].Type, true))));
             if (HasError)
             {
-                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_RecordFrom(Name, VersionedName, Fields, HeadFields)))
+                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_RecordFrom(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
             else
             {
-                foreach (var _Line in Combine(Begin(), Translator_RecordFrom(Name, VersionedName, Fields, HeadFields)))
+                foreach (var _Line in Combine(Begin(), Translator_RecordFrom(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
         }
-        public IEnumerable<String> Translator_RecordFrom(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields)
+        public IEnumerable<String> Translator_RecordFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "(std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = std::make_shared<class "), GetEscapedIdentifier(VersionedName)), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = std::make_shared<"), VersionedTypeString), "::element_type>();"))
             {
                 yield return _Line;
             }
@@ -330,7 +332,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                     }
                     else if (IsSameType(f.Type, fHead.Type, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "o->"), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.TypeFriendlyName()), "FromHead"))), "(ho->"), GetEscapedIdentifier(f.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "o->"), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.SimpleName(NamespaceName)), "FromHead"))), "(ho->"), GetEscapedIdentifier(f.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -345,33 +347,33 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    return o;";
             yield return "}";
         }
-        public IEnumerable<String> Translator_RecordTo(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields, Boolean InitialHasError)
+        public IEnumerable<String> Translator_RecordTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, Boolean InitialHasError, String NamespaceName)
         {
             var d = Fields.ToDictionary(f => f.Name);
             var HasError = InitialHasError || !HeadFields.All(fHead => IsNullType(fHead.Type) || (d.ContainsKey(fHead.Name) && (IsSameType(d[fHead.Name].Type, fHead.Type, false) || IsSameType(d[fHead.Name].Type, fHead.Type, true))));
             if (HasError)
             {
-                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_RecordTo(Name, VersionedName, Fields, HeadFields)))
+                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_RecordTo(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
             else
             {
-                foreach (var _Line in Combine(Begin(), Translator_RecordTo(Name, VersionedName, Fields, HeadFields)))
+                foreach (var _Line in Combine(Begin(), Translator_RecordTo(VersionedSimpleName, TypeString, VersionedTypeString, Fields, HeadFields, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
         }
-        public IEnumerable<String> Translator_RecordTo(String Name, String VersionedName, List<VariableDef> Fields, List<VariableDef> HeadFields)
+        public IEnumerable<String> Translator_RecordTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<VariableDef> Fields, List<VariableDef> HeadFields, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "(std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), "> o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto ho = std::make_shared<class "), GetEscapedIdentifier(Name)), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto ho = std::make_shared<"), TypeString), "::element_type>();"))
             {
                 yield return _Line;
             }
@@ -399,7 +401,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                     }
                     else if (IsSameType(f.Type, fHead.Type, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ho->"), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.TypeFriendlyName()), "ToHead"))), "(o->"), GetEscapedIdentifier(f.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "ho->"), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.SimpleName(NamespaceName)), "ToHead"))), "(o->"), GetEscapedIdentifier(f.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -414,28 +416,28 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    return ho;";
             yield return "}";
         }
-        public IEnumerable<String> Translator_TaggedUnionFrom(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, Boolean InitialHasError)
+        public IEnumerable<String> Translator_TaggedUnionFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, String RawVersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, Boolean InitialHasError, String NamespaceName)
         {
             var d = Alternatives.ToDictionary(a => a.Name);
             var HasError = InitialHasError || !HeadAlternatives.All(aHead => d.ContainsKey(aHead.Name) && (IsNullType(d[aHead.Name].Type) || IsSameType(d[aHead.Name].Type, aHead.Type, false) || IsSameType(d[aHead.Name].Type, aHead.Type, true)));
             if (HasError)
             {
-                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_TaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives)))
+                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_TaggedUnionFrom(VersionedSimpleName, TypeString, VersionedTypeString, RawVersionedTypeString, Alternatives, HeadAlternatives, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
             else
             {
-                foreach (var _Line in Combine(Begin(), Translator_TaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives)))
+                foreach (var _Line in Combine(Begin(), Translator_TaggedUnionFrom(VersionedSimpleName, TypeString, VersionedTypeString, RawVersionedTypeString, Alternatives, HeadAlternatives, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
         }
-        public IEnumerable<String> Translator_TaggedUnionFrom(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives)
+        public IEnumerable<String> Translator_TaggedUnionFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, String RawVersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), VersionedTypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "(std::shared_ptr<class "), TypeString), "> ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
@@ -453,7 +455,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), "::Create"), a.Name))), "();"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), RawVersionedTypeString), "::"), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "();"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -467,7 +469,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), "::Create"), a.Name))), "(ho->"), GetEscapedIdentifier(a.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), RawVersionedTypeString), "::"), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "(ho->"), GetEscapedIdentifier(a.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -481,7 +483,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), "::Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromHead"))), "(ho->"), GetEscapedIdentifier(a.Name)), "));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), RawVersionedTypeString), "::"), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromHead"))), "(ho->"), GetEscapedIdentifier(a.Name)), "));"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -494,7 +496,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedTypeString), "::Create"), aHead.Name))), "(ho->"), GetEscapedIdentifier(aHead.Name)), ");"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), RawVersionedTypeString), "::"), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), aHead.Name))), "(ho->"), GetEscapedIdentifier(aHead.Name)), ");"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -503,28 +505,28 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
         }
-        public IEnumerable<String> Translator_TaggedUnionTo(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, Boolean InitialHasError)
+        public IEnumerable<String> Translator_TaggedUnionTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, String RawTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, Boolean InitialHasError, String NamespaceName)
         {
             var d = Alternatives.ToDictionary(a => a.Name);
             var HasError = InitialHasError || !HeadAlternatives.All(aHead => d.ContainsKey(aHead.Name) && (IsNullType(aHead.Type) || IsSameType(d[aHead.Name].Type, aHead.Type, false) || IsSameType(d[aHead.Name].Type, aHead.Type, true)));
             if (HasError)
             {
-                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_TaggedUnionTo(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives)))
+                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_TaggedUnionTo(VersionedSimpleName, TypeString, VersionedTypeString, RawTypeString, Alternatives, HeadAlternatives, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
             else
             {
-                foreach (var _Line in Combine(Begin(), Translator_TaggedUnionTo(VersionedName, TypeString, VersionedTypeString, Alternatives, HeadAlternatives)))
+                foreach (var _Line in Combine(Begin(), Translator_TaggedUnionTo(VersionedSimpleName, TypeString, VersionedTypeString, RawTypeString, Alternatives, HeadAlternatives, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
         }
-        public IEnumerable<String> Translator_TaggedUnionTo(String VersionedName, String TypeString, String VersionedTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives)
+        public IEnumerable<String> Translator_TaggedUnionTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, String RawTypeString, List<VariableDef> Alternatives, List<VariableDef> HeadAlternatives, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), TypeString), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "(std::shared_ptr<class "), VersionedTypeString), "> o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -542,7 +544,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), "::Create"), a.Name))), "();"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), RawTypeString), "::"), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "();"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -556,7 +558,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), "::Create"), a.Name))), "(o->"), GetEscapedIdentifier(a.Name)), ");"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), RawTypeString), "::"), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "(o->"), GetEscapedIdentifier(a.Name)), ");"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -570,7 +572,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
                         yield return "    " + "{";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), "::Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToHead"))), "(o->"), GetEscapedIdentifier(a.Name)), "));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), RawTypeString), "::"), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "ToHead"))), "(o->"), GetEscapedIdentifier(a.Name)), "));"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -583,7 +585,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), TypeString), "::Create"), aHead.Name))), "(o->"), GetEscapedIdentifier(aHead.Name)), ");"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), RawTypeString), "::"), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), aHead.Name))), "(o->"), GetEscapedIdentifier(aHead.Name)), ");"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -592,21 +594,21 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
         }
-        public IEnumerable<String> Translator_EnumFrom(String Name, String VersionedName, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals)
+        public IEnumerable<String> Translator_EnumFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, String RawTypeString, String RawVersionedTypeString, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(VersionedName)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), GetEscapedIdentifier(Name)), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
             yield return "{";
             foreach (var ltl in HeadLiterals)
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (ho == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "::"), ltl.Name))), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "if (ho == "), RawTypeString), "::"), GetEscapedIdentifier(ltl.Name)), ")"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedName), "::"), ltl.Name))), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), RawVersionedTypeString), "::"), GetEscapedIdentifier(ltl.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -615,21 +617,21 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
         }
-        public IEnumerable<String> Translator_EnumTo(String Name, String VersionedName, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals)
+        public IEnumerable<String> Translator_EnumTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, String RawTypeString, String RawVersionedTypeString, List<LiteralDef> Literals, List<LiteralDef> HeadLiterals, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(Name)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), GetEscapedIdentifier(VersionedName)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
             foreach (var ltl in Literals)
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), VersionedName), "::"), ltl.Name))), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "if (o == "), VersionedTypeString), "::"), GetEscapedIdentifier(ltl.Name)), ")"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "    return "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "::"), ltl.Name))), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), TypeString), "::"), GetEscapedIdentifier(ltl.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -638,73 +640,66 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
         }
-        public IEnumerable<String> Translator_ClientCommand(String Name, String VersionedName)
+        public IEnumerable<String> Translator_ClientCommand(String SimpleName, String VersionedSimpleName, String RequestTypeString, String ReplyTypeString, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), "> "), GetEscapedIdentifier(VersionedName)), "(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Request"))), "> r)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), ReplyTypeString), " "), GetEscapedIdentifier(VersionedSimpleName)), "("), RequestTypeString), " r)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto HeadRequest = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "RequestToHead"))), "(r);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto HeadRequest = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "RequestToHead"))), "(r);"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto HeadReply = "), GetEscapedIdentifier(Name)), "(HeadRequest);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto HeadReply = "), GetEscapedIdentifier(SimpleName)), "(HeadRequest);"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto Reply = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ReplyFromHead"))), "(HeadReply);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto Reply = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ReplyFromHead"))), "(HeadReply);"))
             {
                 yield return _Line;
             }
             yield return "    return Reply;";
             yield return "}";
         }
-        public IEnumerable<String> Translator_ClientCommandAsync(String Name, String VersionedName)
+        public IEnumerable<String> Translator_ClientCommandAsync(String SimpleName, String VersionedSimpleName, String RequestTypeString, String ReplyTypeString, String UnversionedReplyTypeString, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void std::shared_ptr<class "), GetEscapedIdentifier(VersionedName)), ">(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Request"))), "> r, std::functional<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), ">)> Callback, std::functional<void(std::wstring)> OnFailure)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(VersionedSimpleName)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback, std::function<void(const std::exception &)> OnFailure)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto HeadRequest = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "RequestToHead"))), "(r);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto HeadRequest = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "RequestToHead"))), "(r);"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Name)), "(HeadRequest, [](std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Reply"))), "> HeadReply) { Callback("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ReplyFromHead"))), "(HeadReply)); }, OnFailure);"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(SimpleName)), "(HeadRequest, [=]("), UnversionedReplyTypeString), " HeadReply) { Callback("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ReplyFromHead"))), "(HeadReply)); }, OnFailure);"))
             {
                 yield return _Line;
             }
             yield return "}";
         }
-        public IEnumerable<String> Translator_ServerCommand(String VersionedName)
-        {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "std::function<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "Event"))), ">)> "), GetEscapedIdentifier(VersionedName)), ";"))
-            {
-                yield return _Line;
-            }
-        }
-        public IEnumerable<String> Translator_TupleFrom(String VersionedName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements, Boolean InitialHasError)
+        public IEnumerable<String> Translator_TupleFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements, Boolean InitialHasError, String NamespaceName)
         {
             var HasError = InitialHasError || (Elements.Count != HeadElements.Count) || !Elements.Zip(HeadElements, (e, eHead) => IsNullType(e) || IsSameType(e, eHead, false) || IsSameType(e, eHead, true)).All(b => b);
             if (HasError)
             {
-                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_TupleFrom(VersionedName, TypeString, VersionedTypeString, Elements, HeadElements)))
+                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_TupleFrom(VersionedSimpleName, TypeString, VersionedTypeString, Elements, HeadElements, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
             else
             {
-                foreach (var _Line in Combine(Begin(), Translator_TupleFrom(VersionedName, TypeString, VersionedTypeString, Elements, HeadElements)))
+                foreach (var _Line in Combine(Begin(), Translator_TupleFrom(VersionedSimpleName, TypeString, VersionedTypeString, Elements, HeadElements, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
         }
-        public IEnumerable<String> Translator_TupleFrom(String VersionedName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements)
+        public IEnumerable<String> Translator_TupleFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "FromHead"))), "("), TypeString), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
@@ -735,7 +730,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                     }
                     else if (IsSameType(e, eHead, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "auto Item"), k), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), e.TypeFriendlyName()), "FromHead"))), "(std::get<"), k), ">(ho));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "auto Item"), k), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), e.SimpleName(NamespaceName)), "FromHead"))), "(std::get<"), k), ">(ho));"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -755,27 +750,27 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             yield return "}";
         }
-        public IEnumerable<String> Translator_TupleTo(String VersionedName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements, Boolean InitialHasError)
+        public IEnumerable<String> Translator_TupleTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements, Boolean InitialHasError, String NamespaceName)
         {
             var HasError = InitialHasError || (Elements.Count != HeadElements.Count) || !Elements.Zip(HeadElements, (e, eHead) => IsNullType(e) || IsSameType(e, eHead, false) || IsSameType(e, eHead, true)).All(b => b);
             if (HasError)
             {
-                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_TupleTo(VersionedName, TypeString, VersionedTypeString, Elements, HeadElements)))
+                foreach (var _Line in Combine(Combine(Begin(), "//"), Translator_TupleTo(VersionedSimpleName, TypeString, VersionedTypeString, Elements, HeadElements, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
             else
             {
-                foreach (var _Line in Combine(Begin(), Translator_TupleTo(VersionedName, TypeString, VersionedTypeString, Elements, HeadElements)))
+                foreach (var _Line in Combine(Begin(), Translator_TupleTo(VersionedSimpleName, TypeString, VersionedTypeString, Elements, HeadElements, NamespaceName)))
                 {
                     yield return _Line;
                 }
             }
         }
-        public IEnumerable<String> Translator_TupleTo(String VersionedName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements)
+        public IEnumerable<String> Translator_TupleTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, List<TypeSpec> Elements, List<TypeSpec> HeadElements, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedName), "ToHead"))), "("), VersionedTypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -806,7 +801,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                     }
                     else if (IsSameType(e, eHead, true))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "auto Item"), k), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), e.TypeFriendlyName()), "ToHead"))), "(std::get<"), k), ">(o));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "auto Item"), k), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), e.SimpleName(NamespaceName)), "ToHead"))), "(std::get<"), k), ">(o));"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -826,9 +821,9 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             yield return "}";
         }
-        public IEnumerable<String> Translator_ListFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
+        public IEnumerable<String> Translator_ListFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, String VersionedElementSimpleName, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
@@ -839,7 +834,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             yield return "    for (auto he : ho)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementSimpleName), "FromHead"))), "(he));"))
             {
                 yield return _Line;
             }
@@ -847,9 +842,9 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    return l;";
             yield return "}";
         }
-        public IEnumerable<String> Translator_ListTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
+        public IEnumerable<String> Translator_ListTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, String VersionedElementSimpleName, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -860,7 +855,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             yield return "    for (auto e : o)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementSimpleName), "ToHead"))), "(e));"))
             {
                 yield return _Line;
             }
@@ -868,9 +863,9 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    return l;";
             yield return "}";
         }
-        public IEnumerable<String> Translator_SetFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
+        public IEnumerable<String> Translator_SetFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, String VersionedElementSimpleName, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
@@ -881,7 +876,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             yield return "    for (auto he : ho)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        s.insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "FromHead"))), "(he));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        s.insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementSimpleName), "FromHead"))), "(he));"))
             {
                 yield return _Line;
             }
@@ -889,9 +884,9 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    return s;";
             yield return "}";
         }
-        public IEnumerable<String> Translator_SetTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, String VersionedElementTypeFriendlyName)
+        public IEnumerable<String> Translator_SetTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, String VersionedElementSimpleName, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -902,7 +897,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             yield return "    for (auto e : o)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        s.insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementTypeFriendlyName), "ToHead"))), "(e));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        s.insert("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementSimpleName), "ToHead"))), "(e));"))
             {
                 yield return _Line;
             }
@@ -910,9 +905,9 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    return s;";
             yield return "}";
         }
-        public IEnumerable<String> Translator_MapFrom(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec)
+        public IEnumerable<String> Translator_MapFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "FromHead"))), "("), TypeString), " ho)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "FromHead"))), "("), TypeString), " ho)"))
             {
                 yield return _Line;
             }
@@ -929,7 +924,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             else
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeSpec.TypeFriendlyName()), "FromHead"))), "(std::get<0>(hp));"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeSpec.SimpleName(NamespaceName)), "FromHead"))), "(std::get<0>(hp));"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
@@ -940,7 +935,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             else
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSpec.TypeFriendlyName()), "FromHead"))), "(std::get<1>(hp));"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSpec.SimpleName(NamespaceName)), "FromHead"))), "(std::get<1>(hp));"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
@@ -950,9 +945,9 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    return o;";
             yield return "}";
         }
-        public IEnumerable<String> Translator_MapTo(String VersionedTypeFriendlyName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec)
+        public IEnumerable<String> Translator_MapTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, TypeSpec KeyTypeSpec, TypeSpec HeadKeyTypeSpec, TypeSpec ValueTypeSpec, TypeSpec HeadValueTypeSpec, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedTypeFriendlyName), "ToHead"))), "("), VersionedTypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ToHead"))), "("), VersionedTypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -969,7 +964,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             else
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeSpec.TypeFriendlyName()), "ToHead"))), "(std::get<0>(p));"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeSpec.SimpleName(NamespaceName)), "ToHead"))), "(std::get<0>(p));"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
@@ -980,7 +975,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             else
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSpec.TypeFriendlyName()), "ToHead"))), "(std::get<1>(p));"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "auto Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeSpec.SimpleName(NamespaceName)), "ToHead"))), "(std::get<1>(p));"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
@@ -990,20 +985,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "    return ho;";
             yield return "}";
         }
-        public IEnumerable<String> WrapNamespace(String NamespacePart, IEnumerable<String> Contents)
-        {
-            foreach (var _Line in Combine(Combine(Begin(), "namespace "), GetEscapedIdentifier(NamespacePart)))
-            {
-                yield return _Line;
-            }
-            yield return "{";
-            foreach (var _Line in Combine(Combine(Begin(), "    "), Contents))
-            {
-                yield return _Line;
-            }
-            yield return "}";
-        }
-        public IEnumerable<String> WrapClass(String ClassName, IEnumerable<String> Contents)
+        public IEnumerable<String> WrapPartialClass(String ClassName, IEnumerable<String> Contents)
         {
             foreach (var _Line in Combine(Combine(Begin(), "/* partial */ class "), GetEscapedIdentifier(ClassName)))
             {
@@ -1017,7 +999,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             yield return "};";
         }
-        public IEnumerable<String> Main(Schema Schema, String NamespaceName, String ClassName)
+        public IEnumerable<String> Main(Schema Schema, String NamespaceName, String ImplementationNamespaceName, String ImplementationClassName)
         {
             yield return "//==========================================================================";
             yield return "//";
@@ -1043,14 +1025,15 @@ namespace Niveum.ObjectSchema.CppCompatible
             {
                 yield return _Line;
             }
-            yield return "";
-            var Primitives = GetPrimitives(Schema);
-            var ComplexTypes = GetComplexTypes(Schema);
-            foreach (var _Line in Combine(Begin(), Primitives))
+            if (NamespaceName != "")
             {
-                yield return _Line;
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "using namespace "), NamespaceName), ";"))
+                {
+                    yield return _Line;
+                }
             }
-            foreach (var _Line in Combine(Begin(), WrapContents(NamespaceName, WrapClass(ClassName, ComplexTypes).ToList())))
+            yield return "";
+            foreach (var _Line in Combine(Begin(), GetTypes(Schema, NamespaceName, ImplementationNamespaceName, ImplementationClassName)))
             {
                 yield return _Line;
             }
