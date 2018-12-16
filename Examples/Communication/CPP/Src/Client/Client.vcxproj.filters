@@ -1,8 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="Communication.h" />
-    <ClInclude Include="CommunicationBinary.h" />
     <ClInclude Include="Clients\ISerializationClient.h">
       <Filter>Clients</Filter>
     </ClInclude>
@@ -46,6 +44,12 @@
       <Filter>BaseSystem</Filter>
     </ClInclude>
     <ClInclude Include="Workaround.h" />
+    <ClInclude Include="Generated\Communication.h">
+      <Filter>Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="Generated\CommunicationBinary.h">
+      <Filter>Generated</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
@@ -71,6 +75,9 @@
     </Filter>
     <Filter Include="BaseSystem">
       <UniqueIdentifier>{0df3184a-89a6-4c00-9409-d95e57aa69f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Generated">
+      <UniqueIdentifier>{ae9d68d3-e86a-4bbe-88f6-a7ee10f8d084}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

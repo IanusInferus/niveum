@@ -57,7 +57,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Generated;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_UNICODE;UNICODE;FMT_HEADER_ONLY;ASIO_STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -71,7 +71,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Generated;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -102,8 +102,8 @@
     <ClInclude Include="Clients\UdpClient.h" />
     <ClInclude Include="Context\SerializationClientAdapter.h" />
     <ClInclude Include="Clients\TcpClient.h" />
-    <ClInclude Include="Communication.h" />
-    <ClInclude Include="CommunicationBinary.h" />
+    <ClInclude Include="Generated\Communication.h" />
+    <ClInclude Include="Generated\CommunicationBinary.h" />
     <ClInclude Include="Workaround.h" />
   </ItemGroup>
   <ItemGroup>

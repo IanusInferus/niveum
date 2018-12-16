@@ -23,12 +23,13 @@ SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication 
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csj:CSharpBrowserBlazor\Src\Client\Generated\CommunicationJson.cs,Communication.Json
 
 :: C++2011
-@if not exist CPP\Src\Server @md CPP\Src\Server
-@if not exist CPP\Src\Client @md CPP\Src\Client
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /async:CPP\Src\CommunicationAsync.lst /t2cpp:CPP\Src\Server\Communication.h,Communication
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /async:CPP\Src\CommunicationAsync.lst /import:"""Communication.h""" /import:"""Workaround.h""" /t2cppb:CPP\Src\Server\CommunicationBinary.h,Communication.Binary
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2cpp:CPP\Src\Client\Communication.h,Communication
-SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /import:"""Communication.h""" /import:"""Workaround.h""" /t2cppb:CPP\Src\Client\CommunicationBinary.h,Communication.Binary
+@if not exist CPP\Src\Server\Generated @md CPP\Src\Server\Generated
+@if not exist CPP\Src\Client\Generated @md CPP\Src\Client\Generated
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /async:CPP\Src\CommunicationAsync.lst /t2cpp:CPP\Src\Server\Generated\Communication.h,Communication
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /async:CPP\Src\CommunicationAsync.lst /import:"""Communication.h""" /import:"""Workaround.h""" /t2cppb:CPP\Src\Server\Generated\CommunicationBinary.h,Communication.Binary
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility /async:CPP\Src\CommunicationAsync.lst /import:"""Communication.h""" /import:"""Workaround.h""" /t2cppc:CPP\Src\Server\Generated\CommunicationCompatibility.h,Communication,Server.Services,ServerImplementation
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2cpp:CPP\Src\Client\Generated\Communication.h,Communication
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /import:"""Communication.h""" /import:"""Workaround.h""" /t2cppb:CPP\Src\Client\Generated\CommunicationBinary.h,Communication.Binary
 
 ::Haxe
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2hx:Haxe\generated,Communication

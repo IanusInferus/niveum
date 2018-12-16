@@ -4,7 +4,7 @@
 #include <string>
 
 using namespace Communication;
-using namespace Server;
+using namespace Server::Services;
 
 /// <summary>发送消息</summary>
 std::shared_ptr<SendMessageReply> ServerImplementation::SendMessage(std::shared_ptr<SendMessageRequest> r)
@@ -35,7 +35,7 @@ std::shared_ptr<SendMessageReply> ServerImplementation::SendMessage(std::shared_
     }
     SessionContext->SendMessageCount += 1;
     auto Sessions = ServerContext->Sessions();
-    for (int k = 0; k < (int)(Sessions->size()); k += 1)
+    for (int k = 0; k < static_cast<int>(Sessions->size()); k += 1)
     {
         auto rc = (*Sessions)[k];
         {
