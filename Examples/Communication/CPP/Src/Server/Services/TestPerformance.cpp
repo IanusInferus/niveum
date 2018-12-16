@@ -44,9 +44,9 @@ std::shared_ptr<TestMessageReply> ServerImplementation::TestMessage(std::shared_
         {
             auto Lock = rc->WriterLock();
             rc->ReceivedMessageCount += 1;
-            if (rc->TestMessageReceived != nullptr)
+            if (rc->EventPump != nullptr)
             {
-                rc->TestMessageReceived(m);
+                rc->EventPump->TestMessageReceived(m);
             }
         }
     }

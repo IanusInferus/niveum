@@ -27,10 +27,16 @@ std::shared_ptr<CheckSchemaVersionReply> ServerImplementation::CheckSchemaVersio
 {
     if (r->Hash == ServerContext->HeadCommunicationSchemaHash)
     {
+        auto Lock = SessionContext->WriterLock();
+        SessionContext->Version = L"";
         return CheckSchemaVersionReply::CreateHead();
     }
-    else
+    auto ov = ServerContext->CommunicationSchemaHashToVersion(r->Hash);
+    if (ov.OnHasValue())
     {
-        return CheckSchemaVersionReply::CreateNotSupported();
+        auto Lock = SessionContext->WriterLock();
+        SessionContext->Version = ov.Value();
+        return CheckSchemaVersionReply::CreateSupported();
     }
+    return CheckSchemaVersionReply::CreateNotSupported();
 }
