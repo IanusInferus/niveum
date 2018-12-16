@@ -345,12 +345,12 @@ namespace Server
                                 std::shared_ptr<std::vector<int>> Indices = nullptr;
                                 if ((Flag & 1) != 0)
                                 {
-                                    if (Buffer->size() < 14)
+                                    if (static_cast<int>(Buffer->size()) < 14)
                                     {
                                         return;
                                     }
                                     auto NumIndex = (*Buffer)[Offset] | (static_cast<std::int32_t>((*Buffer)[Offset + 1]) << 8);
-                                    if (Buffer->size() < 14 + NumIndex * 2)
+                                    if (static_cast<int>(Buffer->size()) < 14 + NumIndex * 2)
                                     {
                                         return;
                                     }

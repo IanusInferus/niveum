@@ -610,7 +610,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"生成C#兼容类型");
             Console.WriteLine(@"/t2csc:<CsCodePath>,<NamespaceName>,<ImplementationNamespaceName>,<ImplementationClassName>");
             Console.WriteLine(@"生成C#版本类型");
-            Console.WriteLine(@"/t2csv:<CsCodePath>,<NamespaceName>,<TypeName>*");
+            Console.WriteLine(@"/t2csv:<CsCodePath>,<NamespaceName>,<FullTypeName>*");
             Console.WriteLine(@"生成Java类型");
             Console.WriteLine(@"/t2jv:<JavaCodePath>,<ClassName>[,<PackageName>]");
             Console.WriteLine(@"生成Java二进制类型");

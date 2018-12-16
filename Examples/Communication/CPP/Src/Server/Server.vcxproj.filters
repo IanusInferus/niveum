@@ -16,6 +16,9 @@
     <Filter Include="Util">
       <UniqueIdentifier>{c0b87016-8ebf-4a4d-8408-1ddc70c37728}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Generated">
+      <UniqueIdentifier>{b5e088f6-8671-46e7-b7dd-5738e6d8b30b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Context\ServerContext.h">
@@ -24,8 +27,6 @@
     <ClInclude Include="Context\SessionContext.h">
       <Filter>Context</Filter>
     </ClInclude>
-    <ClInclude Include="Communication.h" />
-    <ClInclude Include="CommunicationBinary.h" />
     <ClInclude Include="Services\ServerImplementation.h">
       <Filter>Services</Filter>
     </ClInclude>
@@ -108,6 +109,12 @@
       <Filter>BaseSystem</Filter>
     </ClInclude>
     <ClInclude Include="Workaround.h" />
+    <ClInclude Include="Generated\Communication.h">
+      <Filter>Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="Generated\CommunicationBinary.h">
+      <Filter>Generated</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />

@@ -1,7 +1,7 @@
 ﻿#include "Services/ServerImplementation.h"
 
 using namespace Communication;
-using namespace Server;
+using namespace Server::Services;
 
 /// <summary>发送消息</summary>
 std::shared_ptr<SendMessageAt1Reply> ServerImplementation::SendMessageAt1(std::shared_ptr<SendMessageAt1Request> r)
