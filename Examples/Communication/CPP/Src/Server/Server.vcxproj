@@ -61,6 +61,7 @@
     <ClCompile Include="Services\Base.cpp" />
     <ClCompile Include="Services\Compatibility.cpp" />
     <ClCompile Include="Services\Message.cpp" />
+    <ClCompile Include="Services\TestDuplication.cpp" />
     <ClCompile Include="Services\TestPerformance.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

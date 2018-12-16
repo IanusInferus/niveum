@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2018.06.19.
+//  Version:     2018.12.05.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //

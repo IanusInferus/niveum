@@ -104,6 +104,8 @@ namespace Server
             std::shared_ptr<TestMessageReply> TestMessage(std::shared_ptr<TestMessageRequest> r) override;
             /// <summary>加法</summary>
             void TestAddAt1(std::shared_ptr<TestAddAt1Request> r, std::function<void(std::shared_ptr<TestAddAt1Reply>)> Callback, std::function<void(const std::exception &)> OnFailure) override;
+            /// <summary>服务器时间</summary>
+            std::shared_ptr<class CommunicationDuplication::ServerTimeReply> CommunicationDuplicationDotServerTime(std::shared_ptr<class CommunicationDuplication::ServerTimeRequest> r) override;
         };
     }
     typedef _Impl::ServerImplementation ServerImplementation;

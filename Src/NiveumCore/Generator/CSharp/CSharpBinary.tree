@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板
-      Version:     2018.12.15.
+      Version:     2018.12.16.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -133,12 +133,12 @@
                         if (WithFirefly)
                         {
                             ##
-                                s.${Name} += e => OnServerEvent(${CommandNameString}, 0x${CommandHash}, BinaryTranslator.Serialize(e));
+                                s.[[${Name}]] += e => OnServerEvent(${CommandNameString}, 0x${CommandHash}, BinaryTranslator.Serialize(e));
                         }
                         else
                         {
                             ##
-                                s.${Name} += e => OnServerEvent(${CommandNameString}, 0x${CommandHash}, BinaryTranslator.[[${EventName}ToBytes]](e));
+                                s.[[${Name}]] += e => OnServerEvent(${CommandNameString}, 0x${CommandHash}, BinaryTranslator.[[${EventName}ToBytes]](e));
                         }
                     }
                 }
@@ -1274,20 +1274,20 @@
     {
         var o = new ${TypeString}();
         $$
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
                 ##
-                    o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
+                    o.[[${f.Name}]] = [[${f.Type.SimpleName(NamespaceName)}FromBinary]](s);
             }
         return o;
     }
     public static void [[${Name}ToBinary]](IWritableStream s, ${TypeString} o)
     {
         $$
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
                 ##
-                    [[${a.Type.SimpleName(NamespaceName)}ToBinary]](s, o.[[${a.Name}]]);
+                    [[${f.Type.SimpleName(NamespaceName)}ToBinary]](s, o.[[${f.Name}]]);
             }
     }
     public static ${TypeString} [[${Name}FromBytes]](Byte[] Bytes)

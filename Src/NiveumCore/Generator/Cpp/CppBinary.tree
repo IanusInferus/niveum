@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C++二进制通讯模板
-      Version:     2018.08.20.
+      Version:     2018.12.16.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -20,7 +20,7 @@
     System.Linq
     Firefly
 
-#Template BinarySerializationServer Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator
+#Template BinarySerializationServer Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
     class BinarySerializationServer final
     {
     private:
@@ -42,24 +42,28 @@
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandName = c.ClientCommand.Name;
-                        var Name = c.ClientCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                        var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
                             ##
-                                AsyncClientCommands[std::pair<std::wstring, std::uint32_t>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void
+                                AsyncClientCommands[std::pair<std::wstring, std::uint32_t>(${CommandNameString}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void
                                 {
                                     ByteArrayStream bas;
                                     bas.WriteBytes(p);
                                     bas.SetPosition(0);
-                                    auto Request = BinaryTranslator::[[${Name}RequestFromBinary]](bas);
-                                    s->[[${Name}]](Request, [=](std::shared_ptr<class [[${Name}Reply]]> Reply)
+                                    auto Request = BinaryTranslator::[[${RequestName}FromBinary]](bas);
+                                    s->[[${Name}]](Request, [=](${ReplyTypeString} Reply)
                                     {
                                         ByteArrayStream bas;
                                         bas.SetPosition(0);
                                         bas.SetLength(0);
-                                        BinaryTranslator::[[${Name}ReplyToBinary]](bas, Reply);
+                                        BinaryTranslator::[[${ReplyName}ToBinary]](bas, Reply);
                                         bas.SetPosition(0);
                                         Callback(bas.ReadBytes(bas.GetLength()));
                                     }, OnFailure);
@@ -68,16 +72,16 @@
                         else
                         {
                             ##
-                                ClientCommands[std::pair<std::wstring, std::uint32_t>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p) -> std::vector<std::uint8_t>
+                                ClientCommands[std::pair<std::wstring, std::uint32_t>(${CommandNameString}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p) -> std::vector<std::uint8_t>
                                 {
                                     ByteArrayStream bas;
                                     bas.WriteBytes(p);
                                     bas.SetPosition(0);
-                                    auto Request = BinaryTranslator::[[${Name}RequestFromBinary]](bas);
+                                    auto Request = BinaryTranslator::[[${RequestName}FromBinary]](bas);
                                     auto Reply = s->[[${Name}]](Request);
                                     bas.SetPosition(0);
                                     bas.SetLength(0);
-                                    BinaryTranslator::[[${Name}ReplyToBinary]](bas, Reply);
+                                    BinaryTranslator::[[${ReplyName}ToBinary]](bas, Reply);
                                     bas.SetPosition(0);
                                     return bas.ReadBytes(bas.GetLength());
                                 };
@@ -121,16 +125,18 @@
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandName = c.ServerCommand.Name;
-                        var Name = c.ServerCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
-                            s->${Name} = [=](std::shared_ptr<class [[${Name}Event]]> e)
+                            s->[[${Name}]] = [=](${EventTypeString} e)
                             {
                                 ByteArrayStream bas;
-                                BinaryTranslator::[[${Name}EventToBinary]](bas, e);
+                                BinaryTranslator::[[${EventName}ToBinary]](bas, e);
                                 bas.SetPosition(0);
-                                if (ServerEvent != nullptr) { ServerEvent(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, bas.ReadBytes(bas.GetLength())); }
+                                if (ServerEvent != nullptr) { ServerEvent(${CommandNameString}, 0x${CommandHash}, bas.ReadBytes(bas.GetLength())); }
                             };
                     }
                 }
@@ -150,7 +156,7 @@
         virtual void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) = 0;
     };
 
-#Template BinarySerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator
+#Template BinarySerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
     class BinarySerializationClient final
     {
     private:
@@ -201,25 +207,29 @@
                 {
                     if (c.OnClientCommand)
                     {
-                        var CommandName = c.ClientCommand.Name;
-                        var Name = c.ClientCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                        var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
-                            void [[${Name}]](std::shared_ptr<class [[${Name}Request]]> r, std::function<void(std::shared_ptr<class [[${Name}Reply]]>)> Callback)
+                            void [[${Name}]](${RequestTypeString} r, std::function<void(${ReplyTypeString})> Callback)
                             {
                                 ByteArrayStream bas;
-                                BinaryTranslator::[[${Name}RequestToBinary]](bas, r);
+                                BinaryTranslator::[[${RequestName}ToBinary]](bas, r);
                                 bas.SetPosition(0);
                                 auto Request = bas.ReadBytes(bas.GetLength());
-                                AddCallback(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, [=](std::vector<std::uint8_t> Parameters)
+                                AddCallback(${CommandNameString}, 0x${CommandHash}, [=](std::vector<std::uint8_t> Parameters)
                                 {
                                     ByteArrayStream bas;
                                     bas.WriteBytes(Parameters);
                                     bas.SetPosition(0);
-                                    auto Reply = BinaryTranslator::[[${Name}ReplyFromBinary]](bas);
+                                    auto Reply = BinaryTranslator::[[${ReplyName}FromBinary]](bas);
                                     Callback(Reply);
                                 });
-                                s->Send(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash}, Request);
+                                s->Send(${CommandNameString}, 0x${CommandHash}, Request);
                             }
                     }
                 }
@@ -249,16 +259,18 @@
                 {
                     if (c.OnServerCommand)
                     {
-                        var CommandName = c.ServerCommand.Name;
-                        var Name = c.ServerCommand.TypeFriendlyName();
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
-                            ServerCommands[std::pair<String, std::uint32_t>(${GetEscapedStringLiteral(CommandName)}, 0x${CommandHash})] = [&](std::vector<std::uint8_t> Parameters)
+                            ServerCommands[std::pair<String, std::uint32_t>(${CommandNameString}, 0x${CommandHash})] = [&](std::vector<std::uint8_t> Parameters)
                             {
                                 ByteArrayStream bas;
                                 bas.WriteBytes(Parameters);
                                 bas.SetPosition(0);
-                                auto e = BinaryTranslator::[[${Name}EventFromBinary]](bas);
+                                auto e = BinaryTranslator::[[${EventName}FromBinary]](bas);
                                 if (c->[[${Name}]] != nullptr)
                                 {
                                     c->[[${Name}]](e);
@@ -585,11 +597,11 @@
         }
     };
 
-#Template BinaryTranslator Schema:Schema
+#Template BinaryTranslator Schema:Schema NamespaceName:String
     class BinaryTranslator final
     {
     public:
-        ${GetBinaryTranslatorSerializers(Schema)}
+        ${GetBinaryTranslatorSerializers(Schema, NamespaceName)}
     };
 
 #Template BinaryTranslator_Primitive_Unit
@@ -762,108 +774,109 @@
         throw std::logic_error("NotSupported");
     }
 
-#Template BinaryTranslator_Alias a:AliasDef
+#Template BinaryTranslator_Alias a:AliasDef NamespaceName:String
     $$
-        var Name = a.TypeFriendlyName();
-        var ValueTypeFriendlyName = a.Type.TypeFriendlyName();
-    static class [[${Name}]] [[${Name}FromBinary]](IReadableStream &s)
+        var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
+        var Name = a.GetTypeSpec().SimpleName(NamespaceName);
+        var ValueSimpleName = a.Type.SimpleName(NamespaceName);
+    static ${TypeString} [[${Name}FromBinary]](IReadableStream &s)
     {
         class [[${Name}]] o;
-        o.Value = [[${ValueTypeFriendlyName}FromBinary]](s);
+        o.Value = [[${ValueSimpleName}FromBinary]](s);
         return o;
     }
-    static void [[${Name}ToBinary]](IWritableStream &s, class [[${Name}]] o)
+    static void [[${Name}ToBinary]](IWritableStream &s, ${TypeString} o)
     {
-        [[${ValueTypeFriendlyName}ToBinary]](s, o.Value);
+        [[${ValueSimpleName}ToBinary]](s, o.Value);
     }
 
-#Template BinaryTranslator_Record r:RecordDef
-    ${BinaryTranslator_Record(r.TypeFriendlyName(), r.Fields)}
+#Template BinaryTranslator_Record r:RecordDef NamespaceName:String
+    ${BinaryTranslator_Record(r.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(r.GetTypeSpec(), NamespaceName), r.Fields, NamespaceName)}
 
-#Template BinaryTranslator_Record Name:String Fields:List<VariableDef>
-    static std::shared_ptr<class [[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
+#Template BinaryTranslator_Record Name:String TypeString:String Fields:List<VariableDef> NamespaceName:String
+    static ${TypeString} [[${Name}FromBinary]](IReadableStream &s)
     {
-        auto o = std::make_shared<[[${Name}]]>();
+        auto o = std::make_shared<${TypeString}::element_type>();
         $$
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
                 ##
-                    o->[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromBinary]](s);
+                    o->[[${f.Name}]] = [[${f.Type.SimpleName(NamespaceName)}FromBinary]](s);
             }
         return o;
     }
-    static void [[${Name}ToBinary]](IWritableStream &s, std::shared_ptr<class [[${Name}]]> o)
+    static void [[${Name}ToBinary]](IWritableStream &s, ${TypeString} o)
     {
         $$
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
                 ##
-                    [[${a.Type.TypeFriendlyName()}ToBinary]](s, o->[[${a.Name}]]);
+                    [[${f.Type.SimpleName(NamespaceName)}ToBinary]](s, o->[[${f.Name}]]);
             }
     }
 
-#Template BinaryTranslator_TaggedUnion tu:TaggedUnionDef
-    ${BinaryTranslator_TaggedUnion(tu.TypeFriendlyName(), tu.Alternatives)}
+#Template BinaryTranslator_TaggedUnion tu:TaggedUnionDef NamespaceName:String
+    ${BinaryTranslator_TaggedUnion(tu.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(tu.GetTypeSpec(), NamespaceName), GetSuffixedTypeName(tu.Name, tu.Version, "Tag", NamespaceName), GetSuffixedTypeString(tu.Name, tu.Version, "Tag", NamespaceName, ForceAsEnum: true), GetSuffixedTypeString(tu.Name, tu.Version, "Tag", NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsEnum: true), tu.Alternatives, NamespaceName)}
 
-#Template BinaryTranslator_TaggedUnion Name:String Alternatives:List<VariableDef>
-    ${BinaryTranslator_Enum(Name + "Tag", "Int", "Int")}
-    static std::shared_ptr<class [[${Name}]]> [[${Name}FromBinary]](IReadableStream &s)
+#Template BinaryTranslator_TaggedUnion Name:String TypeString:String TagName:String TagTypeString:String SimpleTagTypeString:String Alternatives:List<VariableDef> NamespaceName:String
+    ${BinaryTranslator_Enum(TagName, TagTypeString, "Int", "Int", NamespaceName)}
+    static ${TypeString} [[${Name}FromBinary]](IReadableStream &s)
     {
-        auto o = std::make_shared<[[${Name}]]>();
-        o->_Tag = [[${Name}TagFromBinary]](s);
+        auto o = std::make_shared<${TypeString}::element_type>();
+        o->_Tag = [[${TagName}FromBinary]](s);
         $$
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o->_Tag == [[${Name}Tag::${a.Name}]])
+                    if (o->_Tag == ${SimpleTagTypeString}::[[${a.Name}]])
                     {
-                        o->[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromBinary]](s);
+                        o->[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
                         return o;
                     }
             }
         throw std::logic_error("InvalidOperation");
     }
-    static void [[${Name}ToBinary]](IWritableStream &s, std::shared_ptr<class [[${Name}]]> o)
+    static void [[${Name}ToBinary]](IWritableStream &s, ${TypeString} o)
     {
-        [[${Name}TagToBinary]](s, o->_Tag);
+        [[${TagName}ToBinary]](s, o->_Tag);
         $$
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o->_Tag == [[${Name}Tag::${a.Name}]])
+                    if (o->_Tag == ${SimpleTagTypeString}::[[${a.Name}]])
                     {
-                        [[${a.Type.TypeFriendlyName()}ToBinary]](s, o->[[${a.Name}]]);
+                        [[${a.Type.SimpleName(NamespaceName)}ToBinary]](s, o->[[${a.Name}]]);
                         return;
                     }
             }
         throw std::logic_error("InvalidOperation");
     }
 
-#Template BinaryTranslator_Enum e:EnumDef
-    ${BinaryTranslator_Enum(e.TypeFriendlyName(), e.UnderlyingType.TypeFriendlyName(), GetTypeString(e.UnderlyingType))}
+#Template BinaryTranslator_Enum e:EnumDef NamespaceName:String
+    ${BinaryTranslator_Enum(e.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(e.GetTypeSpec(), NamespaceName), e.UnderlyingType.SimpleName(NamespaceName), GetTypeString(e.UnderlyingType, NamespaceName), NamespaceName)}
 
-#Template BinaryTranslator_Enum Name:String UnderlyingTypeFriendlyName:String UnderlyingType:String
-    static [[${Name}]] [[${Name}FromBinary]](IReadableStream &s)
+#Template BinaryTranslator_Enum Name:String TypeString:String UnderlyingSimpleName:String UnderlyingType:String NamespaceName:String
+    static ${TypeString} [[${Name}FromBinary]](IReadableStream &s)
     {
-        return static_cast<[[${Name}]]>([[${UnderlyingTypeFriendlyName}FromBinary]](s));
+        return static_cast<${TypeString}>([[${UnderlyingSimpleName}FromBinary]](s));
     }
-    static void [[${Name}ToBinary]](IWritableStream &s, [[${Name}]] o)
+    static void [[${Name}ToBinary]](IWritableStream &s, ${TypeString} o)
     {
-        [[${UnderlyingTypeFriendlyName}ToBinary]](s, static_cast<${UnderlyingType}>(o));
+        [[${UnderlyingSimpleName}ToBinary]](s, static_cast<${UnderlyingType}>(o));
     }
 
-#Template BinaryTranslator_ClientCommand c:ClientCommandDef
-    ${BinaryTranslator_Record(c.TypeFriendlyName() + "Request", c.OutParameters)}
-    ${BinaryTranslator_TaggedUnion(c.TypeFriendlyName() + "Reply", c.InParameters)}
+#Template BinaryTranslator_ClientCommand c:ClientCommandDef NamespaceName:String
+    ${BinaryTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Request", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Request", NamespaceName), c.OutParameters, NamespaceName)}
+    ${BinaryTranslator_TaggedUnion(GetSuffixedTypeName(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeName(c.Name, c.Version, "ReplyTag", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "ReplyTag", NamespaceName, ForceAsEnum: true), GetSuffixedTypeString(c.Name, c.Version, "ReplyTag", NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsEnum: true), c.InParameters, NamespaceName)}
 
-#Template BinaryTranslator_ServerCommand c:ServerCommandDef
-    ${BinaryTranslator_Record(c.TypeFriendlyName() + "Event", c.OutParameters)}
+#Template BinaryTranslator_ServerCommand c:ServerCommandDef NamespaceName:String
+    ${BinaryTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName), c.OutParameters, NamespaceName)}
 
-#Template BinaryTranslator_Tuple tp:TypeSpec
+#Template BinaryTranslator_Tuple tp:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = tp.TypeFriendlyName();
-        var TypeString = GetTypeString(tp);
-    static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+        var SimpleName = tp.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(tp, NamespaceName);
+    static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
         $$
             var ItemNames = new List<String>{};
@@ -872,14 +885,14 @@
                 foreach (var t in tp.Tuple)
                 {
                     ##
-                        auto [[Item${k}]] = [[${t.TypeFriendlyName()}FromBinary]](s);
+                        auto [[Item${k}]] = [[${t.SimpleName(NamespaceName)}FromBinary]](s);
                     ItemNames.Add("Item" + (k).ToString(System.Globalization.CultureInfo.InvariantCulture));
                     k += 1;
                 }
             }
         return std::make_tuple(${String.Join(", ", ItemNames)});
     }
-    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, ${TypeString} t)
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, ${TypeString} t)
     {
         $$
             {
@@ -887,20 +900,19 @@
                 foreach (var t in tp.Tuple)
                 {
                     ##
-                        [[${t.TypeFriendlyName()}ToBinary]](s, std::get<${k}>(t));
+                        [[${t.SimpleName(NamespaceName)}ToBinary]](s, std::get<${k}>(t));
                     k += 1;
                 }
             }
     }
 
-#Template BinaryTranslator_Optional o:TypeSpec GenericOptionalType:TaggedUnionDef
+#Template BinaryTranslator_Optional o:TypeSpec GenericOptionalType:TaggedUnionDef NamespaceName:String
     $$
         var ElementType = o.GenericTypeSpec.ParameterValues.Single();
         var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
-        var TypeFriendlyName = o.TypeFriendlyName();
-        var TypeString = GetTypeString(o);
-        var Name = "Optional";
-    static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+        var SimpleName = o.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(o, NamespaceName);
+    static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
         auto o = ${TypeString}();
         o._Tag = OptionalTagFromBinary(s);
@@ -908,41 +920,41 @@
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o._Tag == [[${Name}Tag::${a.Name}]])
+                    if (o._Tag == OptionalTag::[[${a.Name}]])
                     {
-                        o.[[${a.Name}]] = [[${a.Type.TypeFriendlyName()}FromBinary]](s);
+                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
                         return o;
                     }
             }
         throw std::logic_error("InvalidOperation");
     }
-    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, ${TypeString} o)
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, ${TypeString} o)
     {
         OptionalTagToBinary(s, o._Tag);
         $$
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o._Tag == [[${Name}Tag::${a.Name}]])
+                    if (o._Tag == OptionalTag::[[${a.Name}]])
                     {
-                        [[${a.Type.TypeFriendlyName()}ToBinary]](s, o.[[${a.Name}]]);
+                        [[${a.Type.SimpleName(NamespaceName)}ToBinary]](s, o.[[${a.Name}]]);
                         return;
                     }
             }
         throw std::logic_error("InvalidOperation");
     }
 
-#Template BinaryTranslator_List l:TypeSpec
+#Template BinaryTranslator_List l:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
         var ElementType = l.GenericTypeSpec.ParameterValues.Single();
-        var ElementTypeFriendlyName = ElementType.TypeFriendlyName();
-    static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+        var ElementSimpleName = ElementType.SimpleName(NamespaceName);
+    static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
         int Length = static_cast<int>(IntFromBinary(s));
         $$
-            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 ##
                     auto l = s.ReadBytes(Length);
@@ -954,17 +966,17 @@
                     l.reserve(static_cast<std::size_t>(Length));
                     for (int k = 0; k < Length; k += 1)
                     {
-                        l.push_back([[${ElementTypeFriendlyName}FromBinary]](s));
+                        l.push_back([[${ElementSimpleName}FromBinary]](s));
                     }
             }
         return l;
     }
-    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, ${TypeString} l)
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, ${TypeString} l)
     {
         int Length = static_cast<int>(l.size());
         IntToBinary(s, static_cast<Int>(Length));
         $$
-            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 ##
                     s.WriteBytes(l);
@@ -974,68 +986,68 @@
                 ##
                     for (auto e : l)
                     {
-                        [[${ElementTypeFriendlyName}ToBinary]](s, e);
+                        [[${ElementSimpleName}ToBinary]](s, e);
                     }
             }
     }
 
-#Template BinaryTranslator_Set l:TypeSpec
+#Template BinaryTranslator_Set l:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-    static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
         int Length = static_cast<int>(IntFromBinary(s));
         ${TypeString} l;
         l.reserve(static_cast<std::size_t>(Length));
         for (int k = 0; k < Length; k += 1)
         {
-            l.insert([[${ElementTypeFriendlyName}FromBinary]](s));
+            l.insert([[${ElementSimpleName}FromBinary]](s));
         }
         return l;
     }
-    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, ${TypeString} l)
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, ${TypeString} l)
     {
         int Length = static_cast<int>(l.size());
         IntToBinary(s, static_cast<Int>(Length));
         for (auto e : l)
         {
-            [[${ElementTypeFriendlyName}ToBinary]](s, e);
+            [[${ElementSimpleName}ToBinary]](s, e);
         }
     }
 
-#Template BinaryTranslator_Map l:TypeSpec
+#Template BinaryTranslator_Map l:TypeSpec NamespaceName:String
     $$
         var gp = l.GenericTypeSpec.ParameterValues;
         if (gp.Count != 2)
         {
             throw new ArgumentException();
         }
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
-        var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-    static ${TypeString} [[${TypeFriendlyName}FromBinary]](IReadableStream &s)
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var KeySimpleName = gp[0].SimpleName(NamespaceName);
+        var ValueSimpleName = gp[1].SimpleName(NamespaceName);
+    static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
         int Length = static_cast<int>(IntFromBinary(s));
         ${TypeString} l;
         l.reserve(static_cast<std::size_t>(Length));
         for (int k = 0; k < Length; k += 1)
         {
-            auto Key = [[${KeyTypeFriendlyName}FromBinary]](s);
-            l[Key] = [[${ValueTypeFriendlyName}FromBinary]](s);
+            auto Key = [[${KeySimpleName}FromBinary]](s);
+            l[Key] = [[${ValueSimpleName}FromBinary]](s);
         }
         return l;
     }
-    static void [[${TypeFriendlyName}ToBinary]](IWritableStream &s, ${TypeString} l)
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, ${TypeString} l)
     {
         int Length = static_cast<int>(l.size());
         IntToBinary(s, static_cast<Int>(Length));
         for (auto p : l)
         {
-            [[${KeyTypeFriendlyName}ToBinary]](s, std::get<0>(p));
-            [[${ValueTypeFriendlyName}ToBinary]](s, std::get<1>(p));
+            [[${KeySimpleName}ToBinary]](s, std::get<0>(p));
+            [[${ValueSimpleName}ToBinary]](s, std::get<1>(p));
         }
     }
 
@@ -1074,10 +1086,6 @@
     #   endif
     #endif
 
-    $$
-        var Primitives = GetPrimitives(Schema);
-        var ComplexTypes = GetComplexTypes(Schema);
-    ${Primitives}
-    ${WrapContents(NamespaceName, ComplexTypes)}
+    ${GetTypes(Schema, NamespaceName)}
 
 $End
