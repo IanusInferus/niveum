@@ -159,5 +159,8 @@
     <ClCompile Include="BaseSystem\ExceptionStackTrace.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
+    <ClCompile Include="Services\TestDuplication.cpp">
+      <Filter>Services</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

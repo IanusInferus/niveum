@@ -177,7 +177,7 @@ namespace Niveum.ObjectSchema.VB
         }
         public List<String> GetTypes(Schema Schema, String NamespaceName)
         {
-            List<string> Primitives = GetPrimitives(Schema);
+            var Primitives = GetPrimitives(Schema);
 
             var NamespaceToClasses = new Dictionary<String, List<List<String>>>();
             void AddClass(String ClassNamespaceName, IEnumerable<String> ClassContent)

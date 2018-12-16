@@ -75,7 +75,7 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return GetEscapedIdentifier(Identifier);
             }
         }
-        public IEnumerable<String> BinarySerializationServer(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator)
+        public IEnumerable<String> BinarySerializationServer(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator, String NamespaceName)
         {
             yield return "class BinarySerializationServer final";
             yield return "{";
@@ -97,12 +97,16 @@ namespace Niveum.ObjectSchema.CppBinary
             {
                 if (c.OnClientCommand)
                 {
-                    var CommandName = c.ClientCommand.Name;
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands[std::pair<std::wstring, std::uint32_t>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands[std::pair<std::wstring, std::uint32_t>("), CommandNameString), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -110,11 +114,11 @@ namespace Niveum.ObjectSchema.CppBinary
                         yield return "        " + "    ByteArrayStream bas;";
                         yield return "        " + "    bas.WriteBytes(p);";
                         yield return "        " + "    bas.SetPosition(0);";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto Request = BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "RequestFromBinary"))), "(bas);"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto Request = BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "FromBinary"))), "(bas);"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s->"), GetEscapedIdentifier(Name)), "(Request, [=](std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), "> Reply)"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s->"), GetEscapedIdentifier(Name)), "(Request, [=]("), ReplyTypeString), " Reply)"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -122,7 +126,7 @@ namespace Niveum.ObjectSchema.CppBinary
                         yield return "        " + "        ByteArrayStream bas;";
                         yield return "        " + "        bas.SetPosition(0);";
                         yield return "        " + "        bas.SetLength(0);";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ReplyToBinary"))), "(bas, Reply);"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "ToBinary"))), "(bas, Reply);"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -133,7 +137,7 @@ namespace Niveum.ObjectSchema.CppBinary
                     }
                     else
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ClientCommands[std::pair<std::wstring, std::uint32_t>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p) -> std::vector<std::uint8_t>"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ClientCommands[std::pair<std::wstring, std::uint32_t>("), CommandNameString), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p) -> std::vector<std::uint8_t>"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -141,7 +145,7 @@ namespace Niveum.ObjectSchema.CppBinary
                         yield return "        " + "    ByteArrayStream bas;";
                         yield return "        " + "    bas.WriteBytes(p);";
                         yield return "        " + "    bas.SetPosition(0);";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto Request = BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "RequestFromBinary"))), "(bas);"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto Request = BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "FromBinary"))), "(bas);"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -151,7 +155,7 @@ namespace Niveum.ObjectSchema.CppBinary
                         }
                         yield return "        " + "    bas.SetPosition(0);";
                         yield return "        " + "    bas.SetLength(0);";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ReplyToBinary"))), "(bas, Reply);"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "ToBinary"))), "(bas, Reply);"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -200,21 +204,23 @@ namespace Niveum.ObjectSchema.CppBinary
             {
                 if (c.OnServerCommand)
                 {
-                    var CommandName = c.ServerCommand.Name;
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "s->"), Name), " = [=](std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Event"))), "> e)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "s->"), GetEscapedIdentifier(Name)), " = [=]("), EventTypeString), " e)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
                     yield return "        " + "{";
                     yield return "        " + "    ByteArrayStream bas;";
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "EventToBinary"))), "(bas, e);"))
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), EventName), "ToBinary"))), "(bas, e);"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
                     yield return "        " + "    bas.SetPosition(0);";
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    if (ServerEvent != nullptr) { ServerEvent("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ", bas.ReadBytes(bas.GetLength())); }"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    if (ServerEvent != nullptr) { ServerEvent("), CommandNameString), ", 0x"), CommandHash), ", bas.ReadBytes(bas.GetLength())); }"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -238,7 +244,7 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    virtual void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) = 0;";
             yield return "};";
         }
-        public IEnumerable<String> BinarySerializationClient(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator)
+        public IEnumerable<String> BinarySerializationClient(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator, String NamespaceName)
         {
             yield return "class BinarySerializationClient final";
             yield return "{";
@@ -292,22 +298,26 @@ namespace Niveum.ObjectSchema.CppBinary
             {
                 if (c.OnClientCommand)
                 {
-                    var CommandName = c.ClientCommand.Name;
-                    var Name = c.ClientCommand.TypeFriendlyName();
+                    var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Request"))), "> r, std::function<void(std::shared_ptr<class "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Reply"))), ">)> Callback)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
                     yield return "        " + "{";
                     yield return "        " + "    ByteArrayStream bas;";
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "RequestToBinary"))), "(bas, r);"))
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "ToBinary"))), "(bas, r);"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
                     yield return "        " + "    bas.SetPosition(0);";
                     yield return "        " + "    auto Request = bas.ReadBytes(bas.GetLength());";
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ", [=](std::vector<std::uint8_t> Parameters)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", [=](std::vector<std::uint8_t> Parameters)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -315,13 +325,13 @@ namespace Niveum.ObjectSchema.CppBinary
                     yield return "        " + "        ByteArrayStream bas;";
                     yield return "        " + "        bas.WriteBytes(Parameters);";
                     yield return "        " + "        bas.SetPosition(0);";
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "        auto Reply = BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ReplyFromBinary"))), "(bas);"))
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "        auto Reply = BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "FromBinary"))), "(bas);"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
                     yield return "        " + "        Callback(Reply);";
                     yield return "        " + "    });";
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s->Send("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ", Request);"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s->Send("), CommandNameString), ", 0x"), CommandHash), ", Request);"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -353,10 +363,12 @@ namespace Niveum.ObjectSchema.CppBinary
             {
                 if (c.OnServerCommand)
                 {
-                    var CommandName = c.ServerCommand.Name;
-                    var Name = c.ServerCommand.TypeFriendlyName();
+                    var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ServerCommands[std::pair<String, std::uint32_t>("), GetEscapedStringLiteral(CommandName)), ", 0x"), CommandHash), ")] = [&](std::vector<std::uint8_t> Parameters)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ServerCommands[std::pair<String, std::uint32_t>("), CommandNameString), ", 0x"), CommandHash), ")] = [&](std::vector<std::uint8_t> Parameters)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -364,7 +376,7 @@ namespace Niveum.ObjectSchema.CppBinary
                     yield return "        " + "    ByteArrayStream bas;";
                     yield return "        " + "    bas.WriteBytes(Parameters);";
                     yield return "        " + "    bas.SetPosition(0);";
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto e = BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "EventFromBinary"))), "(bas);"))
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto e = BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), EventName), "FromBinary"))), "(bas);"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -701,12 +713,12 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    }";
             yield return "};";
         }
-        public IEnumerable<String> BinaryTranslator(Schema Schema)
+        public IEnumerable<String> BinaryTranslator(Schema Schema, String NamespaceName)
         {
             yield return "class BinaryTranslator final";
             yield return "{";
             yield return "public:";
-            foreach (var _Line in Combine(Combine(Begin(), "    "), GetBinaryTranslatorSerializers(Schema)))
+            foreach (var _Line in Combine(Combine(Begin(), "    "), GetBinaryTranslatorSerializers(Schema, NamespaceName)))
             {
                 yield return _Line;
             }
@@ -899,11 +911,12 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    throw std::logic_error(\"NotSupported\");";
             yield return "}";
         }
-        public IEnumerable<String> BinaryTranslator_Alias(AliasDef a)
+        public IEnumerable<String> BinaryTranslator_Alias(AliasDef a, String NamespaceName)
         {
-            var Name = a.TypeFriendlyName();
-            var ValueTypeFriendlyName = a.Type.TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static class "), GetEscapedIdentifier(Name)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "FromBinary"))), "(IReadableStream &s)"))
+            var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
+            var Name = a.GetTypeSpec().SimpleName(NamespaceName);
+            var ValueSimpleName = a.Type.SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
@@ -912,98 +925,98 @@ namespace Niveum.ObjectSchema.CppBinary
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    o.Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeFriendlyName), "FromBinary"))), "(s);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    o.Value = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueSimpleName), "FromBinary"))), "(s);"))
             {
                 yield return _Line;
             }
             yield return "    return o;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(IWritableStream &s, class "), GetEscapedIdentifier(Name)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(IWritableStream &s, "), TypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeFriendlyName), "ToBinary"))), "(s, o.Value);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueSimpleName), "ToBinary"))), "(s, o.Value);"))
             {
                 yield return _Line;
             }
             yield return "}";
         }
-        public IEnumerable<String> BinaryTranslator_Record(RecordDef r)
+        public IEnumerable<String> BinaryTranslator_Record(RecordDef r, String NamespaceName)
         {
-            foreach (var _Line in Combine(Begin(), BinaryTranslator_Record(r.TypeFriendlyName(), r.Fields)))
+            foreach (var _Line in Combine(Begin(), BinaryTranslator_Record(r.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(r.GetTypeSpec(), NamespaceName), r.Fields, NamespaceName)))
             {
                 yield return _Line;
             }
         }
-        public IEnumerable<String> BinaryTranslator_Record(String Name, List<VariableDef> Fields)
+        public IEnumerable<String> BinaryTranslator_Record(String Name, String TypeString, List<VariableDef> Fields, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "FromBinary"))), "(IReadableStream &s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = std::make_shared<"), GetEscapedIdentifier(Name)), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = std::make_shared<"), TypeString), "::element_type>();"))
             {
                 yield return _Line;
             }
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "o->"), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromBinary"))), "(s);"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "o->"), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.SimpleName(NamespaceName)), "FromBinary"))), "(s);"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
             }
             yield return "    return o;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(IWritableStream &s, std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(IWritableStream &s, "), TypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToBinary"))), "(s, o->"), GetEscapedIdentifier(a.Name)), ");"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.SimpleName(NamespaceName)), "ToBinary"))), "(s, o->"), GetEscapedIdentifier(f.Name)), ");"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
             }
             yield return "}";
         }
-        public IEnumerable<String> BinaryTranslator_TaggedUnion(TaggedUnionDef tu)
+        public IEnumerable<String> BinaryTranslator_TaggedUnion(TaggedUnionDef tu, String NamespaceName)
         {
-            foreach (var _Line in Combine(Begin(), BinaryTranslator_TaggedUnion(tu.TypeFriendlyName(), tu.Alternatives)))
+            foreach (var _Line in Combine(Begin(), BinaryTranslator_TaggedUnion(tu.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(tu.GetTypeSpec(), NamespaceName), GetSuffixedTypeName(tu.Name, tu.Version, "Tag", NamespaceName), GetSuffixedTypeString(tu.Name, tu.Version, "Tag", NamespaceName, ForceAsEnum: true), GetSuffixedTypeString(tu.Name, tu.Version, "Tag", NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsEnum: true), tu.Alternatives, NamespaceName)))
             {
                 yield return _Line;
             }
         }
-        public IEnumerable<String> BinaryTranslator_TaggedUnion(String Name, List<VariableDef> Alternatives)
+        public IEnumerable<String> BinaryTranslator_TaggedUnion(String Name, String TypeString, String TagName, String TagTypeString, String SimpleTagTypeString, List<VariableDef> Alternatives, String NamespaceName)
         {
-            foreach (var _Line in Combine(Begin(), BinaryTranslator_Enum(Name + "Tag", "Int", "Int")))
+            foreach (var _Line in Combine(Begin(), BinaryTranslator_Enum(TagName, TagTypeString, "Int", "Int", NamespaceName)))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "FromBinary"))), "(IReadableStream &s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = std::make_shared<"), GetEscapedIdentifier(Name)), ">();"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = std::make_shared<"), TypeString), "::element_type>();"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    o->_Tag = "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "TagFromBinary"))), "(s);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    o->_Tag = "), GetEscapedIdentifier(Combine(Combine(Begin(), TagName), "FromBinary"))), "(s);"))
             {
                 yield return _Line;
             }
             foreach (var a in Alternatives)
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o->_Tag == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "Tag::"), a.Name))), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "if (o->_Tag == "), SimpleTagTypeString), "::"), GetEscapedIdentifier(a.Name)), ")"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    o->"), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromBinary"))), "(s);"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    o->"), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromBinary"))), "(s);"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -1012,23 +1025,23 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(IWritableStream &s, std::shared_ptr<class "), GetEscapedIdentifier(Name)), "> o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(IWritableStream &s, "), TypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "TagToBinary"))), "(s, o->_Tag);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), TagName), "ToBinary"))), "(s, o->_Tag);"))
             {
                 yield return _Line;
             }
             foreach (var a in Alternatives)
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o->_Tag == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "Tag::"), a.Name))), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "if (o->_Tag == "), SimpleTagTypeString), "::"), GetEscapedIdentifier(a.Name)), ")"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToBinary"))), "(s, o->"), GetEscapedIdentifier(a.Name)), ");"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "ToBinary"))), "(s, o->"), GetEscapedIdentifier(a.Name)), ");"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -1038,59 +1051,59 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
         }
-        public IEnumerable<String> BinaryTranslator_Enum(EnumDef e)
+        public IEnumerable<String> BinaryTranslator_Enum(EnumDef e, String NamespaceName)
         {
-            foreach (var _Line in Combine(Begin(), BinaryTranslator_Enum(e.TypeFriendlyName(), e.UnderlyingType.TypeFriendlyName(), GetTypeString(e.UnderlyingType))))
+            foreach (var _Line in Combine(Begin(), BinaryTranslator_Enum(e.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(e.GetTypeSpec(), NamespaceName), e.UnderlyingType.SimpleName(NamespaceName), GetTypeString(e.UnderlyingType, NamespaceName), NamespaceName)))
             {
                 yield return _Line;
             }
         }
-        public IEnumerable<String> BinaryTranslator_Enum(String Name, String UnderlyingTypeFriendlyName, String UnderlyingType)
+        public IEnumerable<String> BinaryTranslator_Enum(String Name, String TypeString, String UnderlyingSimpleName, String UnderlyingType, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), GetEscapedIdentifier(Name)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "FromBinary"))), "(IReadableStream &s)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return static_cast<"), GetEscapedIdentifier(Name)), ">("), GetEscapedIdentifier(Combine(Combine(Begin(), UnderlyingTypeFriendlyName), "FromBinary"))), "(s));"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return static_cast<"), TypeString), ">("), GetEscapedIdentifier(Combine(Combine(Begin(), UnderlyingSimpleName), "FromBinary"))), "(s));"))
             {
                 yield return _Line;
             }
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(IWritableStream &s, "), GetEscapedIdentifier(Name)), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(IWritableStream &s, "), TypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), UnderlyingTypeFriendlyName), "ToBinary"))), "(s, static_cast<"), UnderlyingType), ">(o));"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), UnderlyingSimpleName), "ToBinary"))), "(s, static_cast<"), UnderlyingType), ">(o));"))
             {
                 yield return _Line;
             }
             yield return "}";
         }
-        public IEnumerable<String> BinaryTranslator_ClientCommand(ClientCommandDef c)
+        public IEnumerable<String> BinaryTranslator_ClientCommand(ClientCommandDef c, String NamespaceName)
         {
-            foreach (var _Line in Combine(Begin(), BinaryTranslator_Record(c.TypeFriendlyName() + "Request", c.OutParameters)))
+            foreach (var _Line in Combine(Begin(), BinaryTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Request", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Request", NamespaceName), c.OutParameters, NamespaceName)))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Begin(), BinaryTranslator_TaggedUnion(c.TypeFriendlyName() + "Reply", c.InParameters)))
-            {
-                yield return _Line;
-            }
-        }
-        public IEnumerable<String> BinaryTranslator_ServerCommand(ServerCommandDef c)
-        {
-            foreach (var _Line in Combine(Begin(), BinaryTranslator_Record(c.TypeFriendlyName() + "Event", c.OutParameters)))
+            foreach (var _Line in Combine(Begin(), BinaryTranslator_TaggedUnion(GetSuffixedTypeName(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeName(c.Name, c.Version, "ReplyTag", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "ReplyTag", NamespaceName, ForceAsEnum: true), GetSuffixedTypeString(c.Name, c.Version, "ReplyTag", NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsEnum: true), c.InParameters, NamespaceName)))
             {
                 yield return _Line;
             }
         }
-        public IEnumerable<String> BinaryTranslator_Tuple(TypeSpec tp)
+        public IEnumerable<String> BinaryTranslator_ServerCommand(ServerCommandDef c, String NamespaceName)
         {
-            var TypeFriendlyName = tp.TypeFriendlyName();
-            var TypeString = GetTypeString(tp);
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
+            foreach (var _Line in Combine(Begin(), BinaryTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName), c.OutParameters, NamespaceName)))
+            {
+                yield return _Line;
+            }
+        }
+        public IEnumerable<String> BinaryTranslator_Tuple(TypeSpec tp, String NamespaceName)
+        {
+            var SimpleName = tp.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(tp, NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
@@ -1100,7 +1113,7 @@ namespace Niveum.ObjectSchema.CppBinary
                 int k = 0;
                 foreach (var t in tp.Tuple)
                 {
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "auto "), GetEscapedIdentifier(Combine(Combine(Begin(), "Item"), k))), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), t.TypeFriendlyName()), "FromBinary"))), "(s);"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "auto "), GetEscapedIdentifier(Combine(Combine(Begin(), "Item"), k))), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), t.SimpleName(NamespaceName)), "FromBinary"))), "(s);"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -1113,7 +1126,7 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " t)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " t)"))
             {
                 yield return _Line;
             }
@@ -1122,7 +1135,7 @@ namespace Niveum.ObjectSchema.CppBinary
                 int k = 0;
                 foreach (var t in tp.Tuple)
                 {
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(Combine(Combine(Begin(), t.TypeFriendlyName()), "ToBinary"))), "(s, std::get<"), k), ">(t));"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(Combine(Combine(Begin(), t.SimpleName(NamespaceName)), "ToBinary"))), "(s, std::get<"), k), ">(t));"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -1131,14 +1144,13 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "}";
         }
-        public IEnumerable<String> BinaryTranslator_Optional(TypeSpec o, TaggedUnionDef GenericOptionalType)
+        public IEnumerable<String> BinaryTranslator_Optional(TypeSpec o, TaggedUnionDef GenericOptionalType, String NamespaceName)
         {
             var ElementType = o.GenericTypeSpec.ParameterValues.Single();
             var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
-            var TypeFriendlyName = o.TypeFriendlyName();
-            var TypeString = GetTypeString(o);
-            var Name = "Optional";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
+            var SimpleName = o.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(o, NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
@@ -1150,12 +1162,12 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    o._Tag = OptionalTagFromBinary(s);";
             foreach (var a in Alternatives)
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o._Tag == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "Tag::"), a.Name))), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o._Tag == OptionalTag::"), GetEscapedIdentifier(a.Name)), ")"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "FromBinary"))), "(s);"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromBinary"))), "(s);"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -1164,7 +1176,7 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " o)"))
             {
                 yield return _Line;
             }
@@ -1172,12 +1184,12 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    OptionalTagToBinary(s, o._Tag);";
             foreach (var a in Alternatives)
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o._Tag == "), GetEscapedIdentifier(Combine(Combine(Combine(Begin(), Name), "Tag::"), a.Name))), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o._Tag == OptionalTag::"), GetEscapedIdentifier(a.Name)), ")"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.TypeFriendlyName()), "ToBinary"))), "(s, o."), GetEscapedIdentifier(a.Name)), ");"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "ToBinary"))), "(s, o."), GetEscapedIdentifier(a.Name)), ");"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -1187,19 +1199,19 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    throw std::logic_error(\"InvalidOperation\");";
             yield return "}";
         }
-        public IEnumerable<String> BinaryTranslator_List(TypeSpec l)
+        public IEnumerable<String> BinaryTranslator_List(TypeSpec l, String NamespaceName)
         {
-            var TypeFriendlyName = l.TypeFriendlyName();
-            var TypeString = GetTypeString(l);
+            var SimpleName = l.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(l, NamespaceName);
             var ElementType = l.GenericTypeSpec.ParameterValues.Single();
-            var ElementTypeFriendlyName = ElementType.TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
+            var ElementSimpleName = ElementType.SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
             yield return "{";
             yield return "    int Length = static_cast<int>(IntFromBinary(s));";
-            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 yield return "    " + "auto l = s.ReadBytes(Length);";
             }
@@ -1212,7 +1224,7 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return "    " + "l.reserve(static_cast<std::size_t>(Length));";
                 yield return "    " + "for (int k = 0; k < Length; k += 1)";
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "    l.push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "    l.push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromBinary"))), "(s));"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -1220,14 +1232,14 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " l)"))
             {
                 yield return _Line;
             }
             yield return "{";
             yield return "    int Length = static_cast<int>(l.size());";
             yield return "    IntToBinary(s, static_cast<Int>(Length));";
-            if (ElementType.OnTypeRef && ((ElementType.TypeRef.Name == "Byte") || (ElementType.TypeRef.Name == "UInt8")))
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 yield return "    " + "s.WriteBytes(l);";
             }
@@ -1235,7 +1247,7 @@ namespace Niveum.ObjectSchema.CppBinary
             {
                 yield return "    " + "for (auto e : l)";
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, e);"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "ToBinary"))), "(s, e);"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -1243,12 +1255,12 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "}";
         }
-        public IEnumerable<String> BinaryTranslator_Set(TypeSpec l)
+        public IEnumerable<String> BinaryTranslator_Set(TypeSpec l, String NamespaceName)
         {
-            var TypeFriendlyName = l.TypeFriendlyName();
-            var TypeString = GetTypeString(l);
-            var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
+            var SimpleName = l.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(l, NamespaceName);
+            var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
@@ -1261,14 +1273,14 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    l.reserve(static_cast<std::size_t>(Length));";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.insert("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "FromBinary"))), "(s));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.insert("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromBinary"))), "(s));"))
             {
                 yield return _Line;
             }
             yield return "    }";
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " l)"))
             {
                 yield return _Line;
             }
@@ -1277,25 +1289,25 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    IntToBinary(s, static_cast<Int>(Length));";
             yield return "    for (auto e : l)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementTypeFriendlyName), "ToBinary"))), "(s, e);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "ToBinary"))), "(s, e);"))
             {
                 yield return _Line;
             }
             yield return "    }";
             yield return "}";
         }
-        public IEnumerable<String> BinaryTranslator_Map(TypeSpec l)
+        public IEnumerable<String> BinaryTranslator_Map(TypeSpec l, String NamespaceName)
         {
             var gp = l.GenericTypeSpec.ParameterValues;
             if (gp.Count != 2)
             {
                 throw new ArgumentException();
             }
-            var TypeFriendlyName = l.TypeFriendlyName();
-            var TypeString = GetTypeString(l);
-            var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
-            var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "FromBinary"))), "(IReadableStream &s)"))
+            var SimpleName = l.SimpleName(NamespaceName);
+            var TypeString = GetTypeString(l, NamespaceName);
+            var KeySimpleName = gp[0].SimpleName(NamespaceName);
+            var ValueSimpleName = gp[1].SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
             }
@@ -1308,18 +1320,18 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    l.reserve(static_cast<std::size_t>(Length));";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        auto Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeFriendlyName), "FromBinary"))), "(s);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        auto Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "FromBinary"))), "(s);"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l[Key] = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeFriendlyName), "FromBinary"))), "(s);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l[Key] = "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueSimpleName), "FromBinary"))), "(s);"))
             {
                 yield return _Line;
             }
             yield return "    }";
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), TypeFriendlyName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " l)"))
             {
                 yield return _Line;
             }
@@ -1328,11 +1340,11 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    IntToBinary(s, static_cast<Int>(Length));";
             yield return "    for (auto p : l)";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), KeyTypeFriendlyName), "ToBinary"))), "(s, std::get<0>(p));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "ToBinary"))), "(s, std::get<0>(p));"))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueTypeFriendlyName), "ToBinary"))), "(s, std::get<1>(p));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ValueSimpleName), "ToBinary"))), "(s, std::get<1>(p));"))
             {
                 yield return _Line;
             }
@@ -1378,13 +1390,7 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "#   endif";
             yield return "#endif";
             yield return "";
-            var Primitives = GetPrimitives(Schema);
-            var ComplexTypes = GetComplexTypes(Schema);
-            foreach (var _Line in Combine(Begin(), Primitives))
-            {
-                yield return _Line;
-            }
-            foreach (var _Line in Combine(Begin(), WrapContents(NamespaceName, ComplexTypes)))
+            foreach (var _Line in Combine(Begin(), GetTypes(Schema, NamespaceName)))
             {
                 yield return _Line;
             }

@@ -81,7 +81,7 @@ namespace Niveum.ObjectSchema.Cpp
                 return GetEscapedIdentifier(Ref.NamespaceName().Replace(".", "::") + "::" + Ref.SimpleName(Ref.NamespaceName()));
             }
         }
-        public String GetTypeString(TypeSpec Type, String NamespaceName, Boolean ForceAsValue = false)
+        public String GetTypeString(TypeSpec Type, String NamespaceName, Boolean NoElaboratedTypeSpecifier = false, Boolean ForceAsEnum = false, Boolean ForceAsValue = false)
         {
             if (Type.OnTypeRef)
             {
@@ -99,15 +99,19 @@ namespace Niveum.ObjectSchema.Cpp
                 }
                 else if (AliasSet.Contains(Type.TypeRef.VersionedName()))
                 {
-                    return "class " + GetTypeString(Type.TypeRef, NamespaceName);
+                    return (NoElaboratedTypeSpecifier ? "" : "class ") + GetTypeString(Type.TypeRef, NamespaceName);
                 }
                 else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
                 {
-                    return "_ENUM_CLASS_ " + GetTypeString(Type.TypeRef, NamespaceName);
+                    return (NoElaboratedTypeSpecifier ? "" : "_ENUM_CLASS_ ") + GetTypeString(Type.TypeRef, NamespaceName);
                 }
-                if (ForceAsValue)
+                if (ForceAsEnum)
                 {
-                    return "class " + GetTypeString(Type.TypeRef, NamespaceName);
+                    return (NoElaboratedTypeSpecifier ? "" : "_ENUM_CLASS_ ") + GetTypeString(Type.TypeRef, NamespaceName);
+                }
+                else if (ForceAsValue)
+                {
+                    return (NoElaboratedTypeSpecifier ? "" : "class ") + GetTypeString(Type.TypeRef, NamespaceName);
                 }
                 return "std::shared_ptr<class " + GetTypeString(Type.TypeRef, NamespaceName) + ">";
             }
@@ -123,7 +127,7 @@ namespace Niveum.ObjectSchema.Cpp
             {
                 if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
                 {
-                    var TypeString = GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName, true) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p, NamespaceName))) + ">";
+                    var TypeString = GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName, ForceAsValue: true) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p, NamespaceName))) + ">";
                     if (ForceAsValue)
                     {
                         return TypeString;
@@ -148,7 +152,7 @@ namespace Niveum.ObjectSchema.Cpp
                 }
                 else
                 {
-                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName, ForceAsValue);
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName, ForceAsValue: ForceAsValue);
                 }
             }
             else
@@ -160,10 +164,10 @@ namespace Niveum.ObjectSchema.Cpp
         {
             return new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" };
         }
-        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName)
+        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName, Boolean NoElaboratedTypeSpecifier = false, Boolean ForceAsEnum = false, Boolean ForceAsValue = false)
         {
             var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" });
-            return GetTypeString(ts, NamespaceName);
+            return GetTypeString(ts, NamespaceName, NoElaboratedTypeSpecifier, ForceAsEnum, ForceAsValue);
         }
         public String GetSuffixedTypeName(List<String> Name, String Version, String Suffix, String NamespaceName)
         {
@@ -296,7 +300,7 @@ namespace Niveum.ObjectSchema.Cpp
 
         public List<String> GetTypes(Schema Schema, String NamespaceName)
         {
-            List<string> Primitives = GetPrimitives(Schema);
+            var Primitives = GetPrimitives(Schema);
 
             var NamespaceToClasses = new List<KeyValuePair<String, List<List<String>>>>();
             void AddClass(String ClassNamespaceName, IEnumerable<String> ClassContent)
@@ -307,7 +311,7 @@ namespace Niveum.ObjectSchema.Cpp
                 }
                 else
                 {
-                    NamespaceToClasses.Add(new KeyValuePair<String, List<List<String>>>( ClassNamespaceName, new List<List<String>> { ClassContent.ToList() }));
+                    NamespaceToClasses.Add(new KeyValuePair<String, List<List<String>>>(ClassNamespaceName, new List<List<String>> { ClassContent.ToList() }));
                 }
             }
 
@@ -409,7 +413,7 @@ namespace Niveum.ObjectSchema.Cpp
 
             return (new List<List<String>> { Primitives }).Concat(Classes).Join(new String[] { "" }).ToList();
         }
-        
+
         public IEnumerable<String> WrapNamespace(String Namespace, IEnumerable<String> Contents)
         {
             var c = Contents;

@@ -19,8 +19,8 @@ SchemaManipulator.exe /loadtype:Schema /t2jvb:Java\src\WorldBinary.java,WorldBin
 :: C++2011
 @if not exist CPP\Src @md CPP\Src
 SchemaManipulator.exe /loadtype:Schema /t2cpp:CPP\Src\World.h,World
-SchemaManipulator.exe /loadtyperef:Schema /t2cppb:CPP\Src\WorldBinary.h,World
-SchemaManipulator.exe /loadtype:Schema /t2cppv:CPP\Src\WorldVersions.h,World,World
+SchemaManipulator.exe /loadtype:Schema /t2cppb:CPP\Src\WorldBinary.h,World
+SchemaManipulator.exe /loadtype:Schema /t2cppv:CPP\Src\WorldVersions.h,World,World.World
 
 ::Haxe
 SchemaManipulator.exe /loadtype:Schema /t2hx:Haxe\generated,World
