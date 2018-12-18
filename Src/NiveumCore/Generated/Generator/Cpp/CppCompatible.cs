@@ -626,12 +626,12 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "{";
             foreach (var ltl in Literals)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "if (o == "), VersionedTypeString), "::"), GetEscapedIdentifier(ltl.Name)), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "if (o == "), RawVersionedTypeString), "::"), GetEscapedIdentifier(ltl.Name)), ")"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), TypeString), "::"), GetEscapedIdentifier(ltl.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return "), RawTypeString), "::"), GetEscapedIdentifier(ltl.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }

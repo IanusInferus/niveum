@@ -93,35 +93,38 @@ namespace Niveum.ObjectSchema.Java
             }
             yield return "  * */";
         }
-        public IEnumerable<String> Primitive(String Name, String PlatformName)
-        {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "// "), Name), " = "), PlatformName), ";"))
-            {
-                yield return _Line;
-            }
-        }
-        public IEnumerable<String> Primitive_Unit()
+        public IEnumerable<String> Attribute_Record()
         {
             yield return "public @interface Record";
             yield return "{";
             yield return "}";
-            yield return "";
+        }
+        public IEnumerable<String> Attribute_Alias()
+        {
             yield return "public @interface Alias";
             yield return "{";
             yield return "}";
-            yield return "";
+        }
+        public IEnumerable<String> Attribute_TaggedUnion()
+        {
             yield return "public @interface TaggedUnion";
             yield return "{";
             yield return "}";
-            yield return "";
+        }
+        public IEnumerable<String> Attribute_Tag()
+        {
             yield return "public @interface Tag";
             yield return "{";
             yield return "}";
-            yield return "";
+        }
+        public IEnumerable<String> Attribute_Tuple()
+        {
             yield return "public @interface Tuple";
             yield return "{";
             yield return "}";
-            yield return "";
+        }
+        public IEnumerable<String> Primitive_Unit()
+        {
             yield return "@Record";
             yield return "public static class Unit";
             yield return "{";
@@ -133,8 +136,8 @@ namespace Niveum.ObjectSchema.Java
         }
         public IEnumerable<String> Alias(AliasDef a)
         {
-            var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-            var Type = GetTypeString(a.Type);
+            var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
+            var Type = GetTypeString(a.Type, a.NamespaceName());
             foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
             {
                 yield return _Line;
@@ -166,13 +169,13 @@ namespace Niveum.ObjectSchema.Java
         }
         public IEnumerable<String> Record(RecordDef r)
         {
-            var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+            var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
             foreach (var _Line in Combine(Begin(), GetXmlComment(r.Description)))
             {
                 yield return _Line;
             }
             yield return "@Record";
-            foreach (var _Line in Combine(Combine(Begin(), "public static final class "), GetEscapedIdentifier(Name)))
+            foreach (var _Line in Combine(Combine(Begin(), "public static final class "), Name))
             {
                 yield return _Line;
             }
@@ -183,17 +186,16 @@ namespace Niveum.ObjectSchema.Java
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(f.Type)), " "), GetEscapedIdentifier(f.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(f.Type, r.NamespaceName())), " "), GetEscapedIdentifier(f.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
             }
             yield return "}";
         }
-        public IEnumerable<String> TaggedUnion(TaggedUnionDef tu)
+        public IEnumerable<String> TaggedUnionTag(TaggedUnionDef tu)
         {
-            var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
-            var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+            var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
             foreach (var _Line in Combine(Combine(Begin(), "public static final class "), TagName))
             {
                 yield return _Line;
@@ -213,6 +215,11 @@ namespace Niveum.ObjectSchema.Java
                 k += 1;
             }
             yield return "}";
+        }
+        public IEnumerable<String> TaggedUnion(TaggedUnionDef tu)
+        {
+            var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
+            var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
             foreach (var _Line in Combine(Begin(), GetXmlComment(tu.Description)))
             {
                 yield return _Line;
@@ -231,7 +238,7 @@ namespace Niveum.ObjectSchema.Java
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(a.Type)), " "), GetEscapedIdentifier(a.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(a.Type, tu.NamespaceName())), " "), GetEscapedIdentifier(a.Name)), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -239,7 +246,7 @@ namespace Niveum.ObjectSchema.Java
             yield return "";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                     {
@@ -271,7 +278,7 @@ namespace Niveum.ObjectSchema.Java
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), Name), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetTypeString(a.Type)), " Value)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), Name), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetTypeString(a.Type, tu.NamespaceName())), " Value)"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -308,14 +315,12 @@ namespace Niveum.ObjectSchema.Java
         }
         public IEnumerable<String> Enum(EnumDef e)
         {
-            var Name = GetEscapedIdentifier(e.TypeFriendlyName());
-            var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
-            var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
+            var Name = GetEscapedIdentifier(e.DefinitionName());
             foreach (var _Line in Combine(Begin(), GetXmlComment(e.Description)))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static final class "), Name), " // "), GetEnumTypeString(e.UnderlyingType)))
+            foreach (var _Line in Combine(Combine(Begin(), "public static final class "), Name))
             {
                 yield return _Line;
             }
@@ -327,7 +332,7 @@ namespace Niveum.ObjectSchema.Java
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static final "), GetTypeString(e.UnderlyingType)), " "), GetEscapedIdentifier(l.Name)), " = "), l.Value), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static final "), GetTypeString(e.UnderlyingType, e.NamespaceName())), " "), GetEscapedIdentifier(l.Name)), " = "), l.Value), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -335,30 +340,9 @@ namespace Niveum.ObjectSchema.Java
             }
             yield return "}";
         }
-        public IEnumerable<String> ClientCommand(ClientCommandDef c)
+        public IEnumerable<String> Tuple(TypeSpec tp, String NamespaceName)
         {
-            var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-            var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
-            foreach (var _Line in Combine(Begin(), Record(Request)))
-            {
-                yield return _Line;
-            }
-            foreach (var _Line in Combine(Begin(), TaggedUnion(Reply)))
-            {
-                yield return _Line;
-            }
-        }
-        public IEnumerable<String> ServerCommand(ServerCommandDef c)
-        {
-            var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-            foreach (var _Line in Combine(Begin(), Record(Event)))
-            {
-                yield return _Line;
-            }
-        }
-        public IEnumerable<String> Tuple(TypeSpec tp)
-        {
-            var Name = GetEscapedIdentifier(tp.TypeFriendlyName());
+            var Name = GetEscapedIdentifier(tp.SimpleName(NamespaceName));
             var Types = tp.Tuple;
             yield return "@Tuple";
             foreach (var _Line in Combine(Combine(Begin(), "public static final class "), Name))
@@ -369,7 +353,7 @@ namespace Niveum.ObjectSchema.Java
             var k = 0;
             foreach (var e in Types)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(e)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Item"), k))), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(e, NamespaceName)), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Item"), k))), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -377,7 +361,7 @@ namespace Niveum.ObjectSchema.Java
             }
             yield return "}";
         }
-        public IEnumerable<String> Main(Schema Schema, String ClassName, String PackageName)
+        public IEnumerable<String> WrapModule(String NamespaceName, List<String> Imports, IEnumerable<String> Contents)
         {
             yield return "//==========================================================================";
             yield return "//";
@@ -386,32 +370,27 @@ namespace Niveum.ObjectSchema.Java
             yield return "//";
             yield return "//==========================================================================";
             yield return "";
-            if (PackageName != "")
+            if (NamespaceName != "")
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "package "), PackageName), ";"))
+                var n = String.Join(".", NamespaceName.Split('.').Select(NamespacePart => LowercaseCamelize(NamespacePart)));
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "package "), n), ";"))
                 {
                     yield return _Line;
                 }
+                yield return "";
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "import "), Schema.Imports), ".*;"))
+            if (Imports.Count > 0)
+            {
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "import "), Imports), ";"))
+                {
+                    yield return _Line;
+                }
+                yield return "";
+            }
+            foreach (var _Line in Combine(Begin(), Contents))
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Begin(), GetPrimitives(Schema)))
-            {
-                yield return _Line;
-            }
-            yield return "";
-            foreach (var _Line in Combine(Combine(Begin(), "public class "), ClassName))
-            {
-                yield return _Line;
-            }
-            yield return "{";
-            foreach (var _Line in Combine(Combine(Begin(), "    "), GetComplexTypes(Schema)))
-            {
-                yield return _Line;
-            }
-            yield return "}";
             yield return "";
         }
     }
