@@ -291,11 +291,14 @@ namespace Niveum.ObjectSchema.Haxe
                 }
                 yield return "";
             }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "import "), Imports), ";"))
+            if (Imports.Count > 0)
             {
-                yield return _Line;
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "import "), Imports), ";"))
+                {
+                    yield return _Line;
+                }
+                yield return "";
             }
-            yield return "";
             foreach (var _Line in Combine(Begin(), Contents))
             {
                 yield return _Line;

@@ -4,7 +4,7 @@
       File:        Java.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构Java模板
-      Version:     2016.10.10.
+      Version:     2018.12.18.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -115,30 +115,31 @@
       * ${Description}
       * */
 
-#Template Primitive Name:String PlatformName:String
-    // ${Name} = ${PlatformName};
-
-#Template Primitive_Unit
+#Template Attribute_Record
     public @interface Record
     {
     }
 
+#Template Attribute_Alias
     public @interface Alias
     {
     }
 
+#Template Attribute_TaggedUnion
     public @interface TaggedUnion
     {
     }
 
+#Template Attribute_Tag
     public @interface Tag
     {
     }
-
+#Template Attribute_Tuple
     public @interface Tuple
     {
     }
 
+#Template Primitive_Unit
     @Record
     public static class Unit
     {
@@ -150,8 +151,8 @@
 
 #Template Alias a:AliasDef
     $$
-        var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-        var Type = GetTypeString(a.Type);
+        var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
+        var Type = GetTypeString(a.Type, a.NamespaceName());
     ${GetXmlComment(a.Description)}
     @Alias
     public static final class ${Name}
@@ -168,24 +169,23 @@
 
 #Template Record r:RecordDef
     $$
-        var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+        var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
     ${GetXmlComment(r.Description)}
     @Record
-    public static final class [[${Name}]]
+    public static final class ${Name}
     {
         $$
             foreach (var f in r.Fields)
             {
                 ##
                     ${GetXmlComment(f.Description, f.Type)}
-                    public ${GetTypeString(f.Type)} [[${f.Name}]];
+                    public ${GetTypeString(f.Type, r.NamespaceName())} [[${f.Name}]];
             }
     }
 
-#Template TaggedUnion tu:TaggedUnionDef
+#Template TaggedUnionTag tu:TaggedUnionDef
     $$
-        var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
-        var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+        var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
     public static final class ${TagName}
     {
         $$
@@ -198,6 +198,11 @@
                 k += 1;
             }
     }
+
+#Template TaggedUnion tu:TaggedUnionDef
+    $$
+        var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
+        var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
     ${GetXmlComment(tu.Description)}
     @TaggedUnion
     public static final class ${Name}
@@ -209,13 +214,13 @@
             {
                 ##
                     ${GetXmlComment(a.Description, a.Type)}
-                    public ${GetTypeString(a.Type)} [[${a.Name}]];
+                    public ${GetTypeString(a.Type, tu.NamespaceName())} [[${a.Name}]];
             }
 
         $$
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     ##
                         ${GetXmlComment(a.Description)}
@@ -231,7 +236,7 @@
                 {
                     ##
                         ${GetXmlComment(a.Description)}
-                        public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type)} Value)
+                        public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type, tu.NamespaceName())} Value)
                         {
                             ${Name} r = new ${Name}();
                             r._Tag = ${TagName}.[[${a.Name}]];
@@ -252,11 +257,9 @@
 
 #Template Enum e:EnumDef
     $$
-        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
-        var ParserName = GetEscapedIdentifier(e.TypeFriendlyName() + "Parser");
-        var WriterName = GetEscapedIdentifier(e.TypeFriendlyName() + "Writer");
+        var Name = GetEscapedIdentifier(e.DefinitionName());
     ${GetXmlComment(e.Description)}
-    public static final class ${Name} // ${GetEnumTypeString(e.UnderlyingType)}
+    public static final class ${Name}
     {
         $$
             var k = 0;
@@ -264,26 +267,14 @@
             {
                 ##
                     ${GetXmlComment(l.Description)}
-                    public static final ${GetTypeString(e.UnderlyingType)} [[${l.Name}]] = ${l.Value};
+                    public static final ${GetTypeString(e.UnderlyingType, e.NamespaceName())} [[${l.Name}]] = ${l.Value};
                 k += 1;
             }
     }
 
-#Template ClientCommand c:ClientCommandDef
+#Template Tuple tp:TypeSpec NamespaceName:String
     $$
-        var Request = new RecordDef { Name = c.TypeFriendlyName() + "Request", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-        var Reply = new TaggedUnionDef { Name = c.TypeFriendlyName() + "Reply", Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
-    ${Record(Request)}
-    ${TaggedUnion(Reply)}
-
-#Template ServerCommand c:ServerCommandDef
-    $$
-        var Event = new RecordDef { Name = c.TypeFriendlyName() + "Event", Version = "", GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
-    ${Record(Event)}
-
-#Template Tuple tp:TypeSpec
-    $$
-        var Name = GetEscapedIdentifier(tp.TypeFriendlyName());
+        var Name = GetEscapedIdentifier(tp.SimpleName(NamespaceName));
         var Types = tp.Tuple;
     @Tuple
     public static final class ${Name}
@@ -293,12 +284,12 @@
             foreach (var e in Types)
             {
                 ##
-                    public ${GetTypeString(e)} [[Item${k}]];
+                    public ${GetTypeString(e, NamespaceName)} [[Item${k}]];
                 k += 1;
             }
     }
 
-#Template Main Schema:Schema ClassName:String PackageName:String
+#Template WrapModule NamespaceName:String Imports:List<String> Contents:IEnumerable<String>
     //==========================================================================
     //
     //  Notice:      This file is automatically generated.
@@ -307,17 +298,21 @@
     //==========================================================================
 
     $$
-        if (PackageName != "")
+        if (NamespaceName != "")
+        {
+            var n = String.Join(".", NamespaceName.Split('.').Select(NamespacePart => LowercaseCamelize(NamespacePart)));
+            ##
+                package ${n};
+
+            $End
+        }
+        if (Imports.Count > 0)
         {
             ##
-                package ${PackageName};
-        }
-    import ${Schema.Imports}.*;
-    ${GetPrimitives(Schema)}
+                import ${Imports};
 
-    public class ${ClassName}
-    {
-        ${GetComplexTypes(Schema)}
-    }
+            $End
+        }
+    ${Contents}
 
 $End

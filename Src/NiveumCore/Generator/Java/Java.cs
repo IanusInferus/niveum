@@ -3,7 +3,7 @@
 //  File:        Java.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构Java代码生成器
-//  Version:     2016.10.10.
+//  Version:     2018.12.18.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,15 +17,11 @@ namespace Niveum.ObjectSchema.Java
 {
     public static class CodeGenerator
     {
-        public static String CompileToJava(this Schema Schema, String ClassName, String PackageName)
+        public static Dictionary<String, String> CompileToJava(this Schema Schema, String PackageName)
         {
             var t = new Templates(Schema);
-            var Lines = t.Main(Schema, ClassName, PackageName).Select(Line => Line.TrimEnd(' '));
-            return String.Join("\r\n", Lines);
-        }
-        public static String CompileToJava(this Schema Schema, String ClassName)
-        {
-            return CompileToJava(Schema, ClassName, "");
+            var Files = t.GetPackageFiles(Schema, PackageName).ToDictionary(p => p.Key + ".java", p => String.Join("\r\n", p.Value.Select(Line => Line.TrimEnd(' '))));
+            return Files;
         }
     }
 
@@ -35,15 +31,15 @@ namespace Niveum.ObjectSchema.Java
         {
             foreach (var t in Schema.TypeRefs.Concat(Schema.Types))
             {
-                if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && PrimitiveMapping.ContainsKey(gp.Type.TypeRef.Name) && gp.Type.TypeRef.Name == "Type"))
+                if (!t.GenericParameters().All(gp => gp.Type.OnTypeRef && gp.Type.TypeRef.NameMatches(Name => PrimitiveMapping.ContainsKey(Name) && Name == "Type")))
                 {
                     throw new InvalidOperationException(String.Format("GenericParametersNotAllTypeParameter: {0}", t.VersionedName()));
                 }
             }
 
-            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Unit").Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
-            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Boolean").Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
-            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Int").Any()) { throw new InvalidOperationException("PrimitiveMissing: Int"); }
+            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.NameMatches(Name => Name == "Unit")).Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
+            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.NameMatches(Name => Name == "Boolean")).Any()) { throw new InvalidOperationException("PrimitiveMissing: Boolean"); }
+            if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.NameMatches(Name => Name == "Int")).Any()) { throw new InvalidOperationException("PrimitiveMissing: Int"); }
 
             EnumDict = Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnEnum).ToDictionary(c => c.VersionedName(), c => c.Enum);
         }
@@ -64,25 +60,48 @@ namespace Niveum.ObjectSchema.Java
                 }
             });
         }
+        public String LowercaseCamelize(String PascalName)
+        {
+            var l = new List<Char>();
+            foreach (var c in PascalName)
+            {
+                if (Char.IsLower(c))
+                {
+                    break;
+                }
+
+                l.Add(Char.ToLower(c));
+            }
+
+            return new String(l.ToArray()) + PascalName.Substring(l.Count);
+        }
         public String GetEscapedStringLiteral(String s)
         {
             return "\"" + new String(s.SelectMany(c => c == '\\' ? "\\\\" : c == '\"' ? "\\\"" : c == '\r' ? "\\r" : c == '\n' ? "\\n" : new String(c, 1)).ToArray()) + "\"";
         }
         private Dictionary<String, EnumDef> EnumDict = new Dictionary<String, EnumDef>();
-        public String GetTypeString(TypeSpec Type)
+        public String GetTypeString(TypeSpec Type, String NamespaceName)
         {
             if (Type.OnTypeRef)
             {
-                if (PrimitiveMapping.ContainsKey(Type.TypeRef.Name))
+                if (PrimitiveMapping.ContainsKey(Type.TypeRef.VersionedName()))
                 {
-                    var PlatformName = PrimitiveMapping[Type.TypeRef.Name];
+                    var PlatformName = PrimitiveMapping[Type.TypeRef.VersionedName()];
                     return PlatformName;
                 }
                 else if (EnumDict.ContainsKey(Type.TypeRef.VersionedName()))
                 {
-                    return GetTypeString(EnumDict[Type.TypeRef.VersionedName()].UnderlyingType);
+                    return GetTypeString(EnumDict[Type.TypeRef.VersionedName()].UnderlyingType, NamespaceName);
                 }
-                return GetEscapedIdentifier(Type.TypeFriendlyName());
+                var Ref = Type.TypeRef;
+                if ((Ref.NamespaceName() == NamespaceName) || NamespaceName.StartsWith(Ref.NamespaceName() + ".") || (Ref.NamespaceName() == ""))
+                {
+                    return GetEscapedIdentifier(Ref.SimpleName(Ref.NamespaceName()));
+                }
+                else
+                {
+                    return GetEscapedIdentifier(String.Join(".", Ref.NamespaceName().Split('.').Select(NamespacePart => LowercaseCamelize(NamespacePart))) + "." + Ref.SimpleName(Ref.NamespaceName()));
+                }
             }
             else if (Type.OnGenericParameterRef)
             {
@@ -90,21 +109,21 @@ namespace Niveum.ObjectSchema.Java
             }
             else if (Type.OnTuple)
             {
-                return GetEscapedIdentifier(Type.TypeFriendlyName());
+                return GetEscapedIdentifier(Type.SimpleName(NamespaceName));
             }
             else if (Type.OnGenericTypeSpec)
             {
-                if (Type.GenericTypeSpec.ParameterValues.Count() == 1 && Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional")
+                if (Type.GenericTypeSpec.ParameterValues.Count() == 1 && Type.GenericTypeSpec.TypeSpec.OnTypeRef && Type.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Optional"))
                 {
-                    return GetEscapedIdentifier("Opt" + Type.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName());
+                    return GetEscapedIdentifier("Opt" + Type.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName));
                 }
                 if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
                 {
-                    return GetTypeString(Type.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => MapToReferenceType(GetTypeString(p)))) + ">";
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => MapToReferenceType(GetTypeString(p, NamespaceName)))) + ">";
                 }
                 else
                 {
-                    return GetEscapedIdentifier(Type.TypeFriendlyName());
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName);
                 }
             }
             else
@@ -115,6 +134,20 @@ namespace Niveum.ObjectSchema.Java
         private String MapToReferenceType(String TypeName)
         {
             return ReferenceTypeMapping.ContainsKey(TypeName) ? ReferenceTypeMapping[TypeName] : TypeName;
+        }
+        public TypeRef GetSuffixedTypeRef(List<String> Name, String Version, String Suffix)
+        {
+            return new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" };
+        }
+        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName)
+        {
+            var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" });
+            return GetTypeString(ts, NamespaceName);
+        }
+        public String GetSuffixedTypeName(List<String> Name, String Version, String Suffix, String NamespaceName)
+        {
+            var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" });
+            return ts.SimpleName(NamespaceName);
         }
         public IEnumerable<String> GetXmlComment(String Description)
         {
@@ -147,10 +180,6 @@ namespace Niveum.ObjectSchema.Java
             }
             return GetXmlComment(Description);
         }
-        public String GetEnumTypeString(TypeSpec Type)
-        {
-            return GetTypeString(Type);
-        }
         public String GetGenericParameters(List<VariableDef> GenericParameters)
         {
             if (GenericParameters.Count == 0)
@@ -163,70 +192,73 @@ namespace Niveum.ObjectSchema.Java
             }
         }
 
-        public List<String> GetPrimitives(Schema Schema)
+        public Dictionary<String, IEnumerable<String>> GetPackageFiles(Schema Schema, String NamespaceName)
         {
-            var l = new List<String>();
-
-            foreach (var p in Schema.TypeRefs.Concat(Schema.Types).Where(c => c.OnPrimitive).Select(c => c.Primitive))
+            var NamespaceToClasses = new Dictionary<String, List<KeyValuePair<String, List<String>>>>();
+            void AddClass(String ClassNamespaceName, String ClassName, IEnumerable<String> ClassContent)
             {
-                if (PrimitiveMapping.ContainsKey(p.Name))
+                if (!NamespaceToClasses.ContainsKey(ClassNamespaceName))
                 {
-                    var Name = p.TypeFriendlyName();
-                    var PlatformName = PrimitiveMapping[p.Name];
-                    if ((Name != PlatformName) && (p.GenericParameters.Count() == 0))
-                    {
-                        l.AddRange(Primitive(Name, PlatformName));
-                    }
+                    NamespaceToClasses.Add(ClassNamespaceName, new List<KeyValuePair<String, List<String>>>());
                 }
+                NamespaceToClasses[ClassNamespaceName].Add(new KeyValuePair<String, List<String>>(ClassName, ClassContent.ToList()));
             }
-            return l;
-        }
-        public List<String> GetComplexTypes(Schema Schema)
-        {
-            var l = new List<String>();
+
+            AddClass("", "Record", Attribute_Record());
+            AddClass("", "Alias", Attribute_Alias());
+            AddClass("", "TaggedUnion", Attribute_TaggedUnion());
+            AddClass("", "Tag", Attribute_Tag());
+            AddClass("", "Tuple", Attribute_Tuple());
+            AddClass("", "Unit", Primitive_Unit());
 
             foreach (var c in Schema.Types)
             {
                 if (c.OnPrimitive)
                 {
-                    if (c.VersionedName() == "Unit")
-                    {
-                        l.AddRange(Primitive_Unit());
-                    }
-                    else
-                    {
-                        continue;
-                    }
+                    continue;
                 }
                 else if (c.OnAlias)
                 {
-                    l.AddRange(Alias(c.Alias));
+                    AddClass(c.NamespaceName(), c.DefinitionName(), Alias(c.Alias));
                 }
                 else if (c.OnRecord)
                 {
-                    l.AddRange(Record(c.Record));
+                    AddClass(c.NamespaceName(), c.DefinitionName(), Record(c.Record));
                 }
                 else if (c.OnTaggedUnion)
                 {
-                    l.AddRange(TaggedUnion(c.TaggedUnion));
+                    var tu = c.TaggedUnion;
+                    var TagName = GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName());
+                    AddClass(c.NamespaceName(), TagName, TaggedUnionTag(c.TaggedUnion));
+                    AddClass(c.NamespaceName(), c.DefinitionName(), TaggedUnion(c.TaggedUnion));
                 }
                 else if (c.OnEnum)
                 {
-                    l.AddRange(Enum(c.Enum));
+                    AddClass(c.NamespaceName(), c.DefinitionName(), Enum(c.Enum));
                 }
                 else if (c.OnClientCommand)
                 {
-                    l.AddRange(ClientCommand(c.ClientCommand));
+                    var tc = c.ClientCommand;
+                    var RequestRef = GetSuffixedTypeRef(tc.Name, tc.Version, "Request");
+                    var Request = new RecordDef { Name = RequestRef.Name, Version = RequestRef.Version, GenericParameters = new List<VariableDef> { }, Fields = tc.OutParameters, Attributes = tc.Attributes, Description = tc.Description };
+                    var ReplyRef = GetSuffixedTypeRef(tc.Name, tc.Version, "Reply");
+                    var Reply = new TaggedUnionDef { Name = ReplyRef.Name, Version = ReplyRef.Version, GenericParameters = new List<VariableDef> { }, Alternatives = tc.InParameters, Attributes = tc.Attributes, Description = tc.Description };
+                    var ReplyTagName = GetSuffixedTypeName(Reply.Name, Reply.Version, "Tag", tc.NamespaceName());
+                    AddClass(c.NamespaceName(), Request.DefinitionName(), Record(Request));
+                    AddClass(c.NamespaceName(), ReplyTagName, TaggedUnionTag(Reply));
+                    AddClass(c.NamespaceName(), Reply.DefinitionName(), TaggedUnion(Reply));
                 }
                 else if (c.OnServerCommand)
                 {
-                    l.AddRange(ServerCommand(c.ServerCommand));
+                    var tc = c.ServerCommand;
+                    var EventRef = GetSuffixedTypeRef(tc.Name, tc.Version, "Event");
+                    var Event = new RecordDef { Name = EventRef.Name, Version = EventRef.Version, GenericParameters = new List<VariableDef> { }, Fields = tc.OutParameters, Attributes = tc.Attributes, Description = tc.Description };
+                    AddClass(c.NamespaceName(), Event.DefinitionName(), Record(Event));
                 }
                 else
                 {
                     throw new InvalidOperationException();
                 }
-                l.Add("");
             }
 
             var scg = Schema.GetSchemaClosureGenerator();
@@ -235,33 +267,26 @@ namespace Niveum.ObjectSchema.Java
             var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
             foreach (var t in Tuples)
             {
-                l.AddRange(Tuple(t));
-                l.Add("");
+                AddClass(NamespaceName, t.SimpleName(NamespaceName), Tuple(t, NamespaceName));
             }
 
-            var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.Name() == "Optional").ToList();
+            var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.NameMatches("Optional")).ToList();
             if (GenericOptionalTypes.Count > 0)
             {
-                var GenericOptionalType = new TaggedUnionDef { Name = "TaggedUnion", Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Type", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = "Unit", Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
+                var GenericOptionalType = new TaggedUnionDef { Name = new List<String> { "TaggedUnion" }, Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Type" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
                 foreach (var gts in GenericTypeSpecs)
                 {
-                    if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                    if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Optional") && gts.GenericTypeSpec.ParameterValues.Count == 1)
                     {
                         var ElementType = gts.GenericTypeSpec.ParameterValues.Single();
-                        var Name = "Opt" + ElementType.TypeFriendlyName();
+                        var Name = "Opt" + ElementType.SimpleName(NamespaceName);
                         var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
-                        l.AddRange(TaggedUnion(new TaggedUnionDef { Name = Name, Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = Alternatives, Attributes = GenericOptionalType.Attributes, Description = GenericOptionalType.Description }));
-                        l.Add("");
+                        AddClass(NamespaceName, Name, TaggedUnion(new TaggedUnionDef { Name = new List<String> { Name }, Version = "", GenericParameters = new List<VariableDef> { }, Alternatives = Alternatives, Attributes = GenericOptionalType.Attributes, Description = GenericOptionalType.Description }));
                     }
                 }
             }
 
-            if (l.Count > 0)
-            {
-                l = l.Take(l.Count - 1).ToList();
-            }
-
-            return l;
+            return NamespaceToClasses.SelectMany(p => p.Value.Select(v => new KeyValuePair<String, IEnumerable<String>>(String.Join("/", p.Key.Split('.').Where(NamespacePart => NamespacePart != "").Select(NamespacePart => LowercaseCamelize(NamespacePart)).Concat(new String[] { v.Key })), WrapModule(p.Key, Schema.Imports, v.Value)))).ToDictionary(p => p.Key, p => p.Value);
         }
     }
 }

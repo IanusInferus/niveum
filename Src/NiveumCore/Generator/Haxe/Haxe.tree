@@ -4,7 +4,7 @@
       File:        Haxe.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构Haxe模板
-      Version:     2018.12.15.
+      Version:     2018.12.18.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -238,8 +238,13 @@
 
             $End
         }
-    import ${Imports};
+        if (Imports.Count > 0)
+        {
+            ##
+                import ${Imports};
 
+            $End
+        }
     ${Contents}
 
 $End
