@@ -15,7 +15,7 @@ SchemaManipulator.exe /loadtype:Schema /t2csv:CSharp\Src\WorldVersions.cs,World,
 :: Java
 @if not exist Java\src @md Java\src
 SchemaManipulator.exe /loadtype:Schema /t2jv:Java\generated,World
-SchemaManipulator.exe /loadtype:Schema /t2jvb:Java\generated\WorldBinary.java,WorldBinary
+SchemaManipulator.exe /loadtype:Schema /t2jvb:Java\generated,World.Binary
 
 :: C++2011
 @if not exist CPP\Src @md CPP\Src
