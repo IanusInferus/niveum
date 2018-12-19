@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2018.12.18.
+//  Version:     2018.12.20.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -33,9 +33,9 @@ using Niveum.ObjectSchema.CppVersion;
 using Niveum.ObjectSchema.Haxe;
 using Niveum.ObjectSchema.HaxeJson;
 using Niveum.ObjectSchema.Java;
+using Niveum.ObjectSchema.JavaBinary;
 using Niveum.ObjectSchema.VB;
 using Niveum.ObjectSchema.Xhtml;
-using Yuki.ObjectSchema.JavaBinary;
 using Yuki.ObjectSchema.Python;
 using Yuki.ObjectSchema.PythonBinary;
 using OS = Niveum.ObjectSchema;
@@ -388,11 +388,7 @@ namespace Yuki.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 2)
                     {
-                        ObjectSchemaToJavaBinaryCode(args[0], args[1], "");
-                    }
-                    else if (args.Length == 3)
-                    {
-                        ObjectSchemaToJavaBinaryCode(args[0], args[1], args[2]);
+                        ObjectSchemaToJavaBinaryCode(args[0], args[1]);
                     }
                     else
                     {
@@ -606,7 +602,7 @@ namespace Yuki.SchemaManipulator
             Console.WriteLine(@"生成Java类型");
             Console.WriteLine(@"/t2jv:<JavaCodeDirPath>,<PackageName>");
             Console.WriteLine(@"生成Java二进制类型");
-            Console.WriteLine(@"/t2jvb:<JavaCodePath>,<ClassName>[,<PackageName>]");
+            Console.WriteLine(@"/t2jvb:<JavaCodeDirPath>,<PackageName>");
             Console.WriteLine(@"生成C++2011类型");
             Console.WriteLine(@"/t2cpp:<CppCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成C++2011二进制通讯类型");
@@ -936,21 +932,26 @@ namespace Yuki.SchemaManipulator
             }
         }
 
-        public static void ObjectSchemaToJavaBinaryCode(String JavaCodePath, String ClassName, String PackageName)
+        public static void ObjectSchemaToJavaBinaryCode(String JavaCodeDirPath, String PackageName)
         {
-            var ObjectSchema = GetObjectSchemaLegacy();
-            var Compiled = ObjectSchema.CompileToJavaBinary(ClassName, PackageName);
-            if (File.Exists(JavaCodePath))
+            var ObjectSchema = GetObjectSchema();
+            var CompiledFiles = ObjectSchema.CompileToJavaBinary(PackageName);
+            foreach (var f in CompiledFiles)
             {
-                var Original = Txt.ReadFile(JavaCodePath);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                var FilePath = FileNameHandling.GetPath(JavaCodeDirPath, f.Key.Replace('/', Path.DirectorySeparatorChar));
+                var Compiled = f.Value;
+                if (File.Exists(FilePath))
                 {
-                    return;
+                    var Original = Txt.ReadFile(FilePath);
+                    if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
                 }
+                var Dir = FileNameHandling.GetFileDirectory(FilePath);
+                if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+                Txt.WriteFile(FilePath, Compiled);
             }
-            var Dir = FileNameHandling.GetFileDirectory(JavaCodePath);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(JavaCodePath, Compiled);
         }
 
         public static void ObjectSchemaToCppCode(String CppCodePath, String NamespaceName)

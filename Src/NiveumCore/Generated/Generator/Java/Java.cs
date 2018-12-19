@@ -126,7 +126,7 @@ namespace Niveum.ObjectSchema.Java
         public IEnumerable<String> Primitive_Unit()
         {
             yield return "@Record";
-            yield return "public static class Unit";
+            yield return "public final class Unit";
             yield return "{";
             yield return "    public static final Unit Value = new Unit();";
             yield return "    private Unit()";
@@ -143,7 +143,7 @@ namespace Niveum.ObjectSchema.Java
                 yield return _Line;
             }
             yield return "@Alias";
-            foreach (var _Line in Combine(Combine(Begin(), "public static final class "), Name))
+            foreach (var _Line in Combine(Combine(Begin(), "public final class "), Name))
             {
                 yield return _Line;
             }
@@ -175,7 +175,7 @@ namespace Niveum.ObjectSchema.Java
                 yield return _Line;
             }
             yield return "@Record";
-            foreach (var _Line in Combine(Combine(Begin(), "public static final class "), Name))
+            foreach (var _Line in Combine(Combine(Begin(), "public final class "), Name))
             {
                 yield return _Line;
             }
@@ -196,7 +196,7 @@ namespace Niveum.ObjectSchema.Java
         public IEnumerable<String> TaggedUnionTag(TaggedUnionDef tu)
         {
             var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
-            foreach (var _Line in Combine(Combine(Begin(), "public static final class "), TagName))
+            foreach (var _Line in Combine(Combine(Begin(), "public final class "), TagName))
             {
                 yield return _Line;
             }
@@ -218,14 +218,21 @@ namespace Niveum.ObjectSchema.Java
         }
         public IEnumerable<String> TaggedUnion(TaggedUnionDef tu)
         {
+            var TagTypeString = GetSuffixedTypeString(tu.Name, tu.Version, "Tag", tu.NamespaceName());
+            foreach (var _Line in Combine(Begin(), TaggedUnion(tu, TagTypeString)))
+            {
+                yield return _Line;
+            }
+        }
+        public IEnumerable<String> TaggedUnion(TaggedUnionDef tu, String TagTypeString)
+        {
             var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
-            var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
             foreach (var _Line in Combine(Begin(), GetXmlComment(tu.Description)))
             {
                 yield return _Line;
             }
             yield return "@TaggedUnion";
-            foreach (var _Line in Combine(Combine(Begin(), "public static final class "), Name))
+            foreach (var _Line in Combine(Combine(Begin(), "public final class "), Name))
             {
                 yield return _Line;
             }
@@ -261,7 +268,7 @@ namespace Niveum.ObjectSchema.Java
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    r._Tag = "), TagName), "."), GetEscapedIdentifier(a.Name)), ";"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    r._Tag = "), TagTypeString), "."), GetEscapedIdentifier(a.Name)), ";"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -287,7 +294,7 @@ namespace Niveum.ObjectSchema.Java
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    r._Tag = "), TagName), "."), GetEscapedIdentifier(a.Name)), ";"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    r._Tag = "), TagTypeString), "."), GetEscapedIdentifier(a.Name)), ";"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -306,7 +313,7 @@ namespace Niveum.ObjectSchema.Java
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public boolean "), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), "() { return _Tag == "), TagName), "."), GetEscapedIdentifier(a.Name)), "; }"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public boolean "), GetEscapedIdentifier(Combine(Combine(Begin(), "On"), a.Name))), "() { return _Tag == "), TagTypeString), "."), GetEscapedIdentifier(a.Name)), "; }"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -320,7 +327,7 @@ namespace Niveum.ObjectSchema.Java
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Begin(), "public static final class "), Name))
+            foreach (var _Line in Combine(Combine(Begin(), "public final class "), Name))
             {
                 yield return _Line;
             }
@@ -345,7 +352,7 @@ namespace Niveum.ObjectSchema.Java
             var Name = GetEscapedIdentifier(tp.SimpleName(NamespaceName));
             var Types = tp.Tuple;
             yield return "@Tuple";
-            foreach (var _Line in Combine(Combine(Begin(), "public static final class "), Name))
+            foreach (var _Line in Combine(Combine(Begin(), "public final class "), Name))
             {
                 yield return _Line;
             }
@@ -379,14 +386,12 @@ namespace Niveum.ObjectSchema.Java
                 }
                 yield return "";
             }
-            if (Imports.Count > 0)
+            yield return "import niveum.lang.*;";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "import "), Imports), ";"))
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "import "), Imports), ";"))
-                {
-                    yield return _Line;
-                }
-                yield return "";
+                yield return _Line;
             }
+            yield return "";
             foreach (var _Line in Combine(Begin(), Contents))
             {
                 yield return _Line;

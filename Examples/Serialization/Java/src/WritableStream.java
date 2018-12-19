@@ -1,6 +1,6 @@
 ﻿import java.io.*;
 
-public class WritableStream extends WorldBinary.IWritableStream
+public class WritableStream extends world.binary.IWritableStream
 {
     private OutputStream s;
     private long Position;

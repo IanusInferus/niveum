@@ -24,7 +24,7 @@ popd
 
 if exist bin\classes rd /S /Q bin\classes
 md bin\classes
-javac -sourcepath bin\src\ -encoding utf-8 -d bin\classes\ bin\src\*.java bin\generated\*.java
+javac -sourcepath bin\generated\ -sourcepath bin\src\ -encoding utf-8 -d bin\classes\ bin\generated\niveum\lang\*.java bin\generated\world\*.java bin\generated\world\binary\*.java bin\src\*.java
 
 pushd bin\classes
 jar cvfe ..\DataConv.jar Program *

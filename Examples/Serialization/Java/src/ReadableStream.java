@@ -1,6 +1,6 @@
 ﻿import java.io.*;
 
-public class ReadableStream extends WorldBinary.IReadableStream
+public class ReadableStream extends world.binary.IReadableStream
 {
     private InputStream s;
     private long Position;

@@ -4,7 +4,7 @@
       File:        Java.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构Java模板
-      Version:     2018.12.18.
+      Version:     2018.12.20.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -141,7 +141,7 @@
 
 #Template Primitive_Unit
     @Record
-    public static class Unit
+    public final class Unit
     {
         public static final Unit Value = new Unit();
         private Unit()
@@ -155,7 +155,7 @@
         var Type = GetTypeString(a.Type, a.NamespaceName());
     ${GetXmlComment(a.Description)}
     @Alias
-    public static final class ${Name}
+    public final class ${Name}
     {
         public ${Type} Value;
 
@@ -172,7 +172,7 @@
         var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
     ${GetXmlComment(r.Description)}
     @Record
-    public static final class ${Name}
+    public final class ${Name}
     {
         $$
             foreach (var f in r.Fields)
@@ -186,7 +186,7 @@
 #Template TaggedUnionTag tu:TaggedUnionDef
     $$
         var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
-    public static final class ${TagName}
+    public final class ${TagName}
     {
         $$
             var k = 0;
@@ -201,11 +201,15 @@
 
 #Template TaggedUnion tu:TaggedUnionDef
     $$
+        var TagTypeString = GetSuffixedTypeString(tu.Name, tu.Version, "Tag", tu.NamespaceName());
+    ${TaggedUnion(tu, TagTypeString)}
+
+#Template TaggedUnion tu:TaggedUnionDef TagTypeString:String
+    $$
         var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
-        var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
     ${GetXmlComment(tu.Description)}
     @TaggedUnion
-    public static final class ${Name}
+    public final class ${Name}
     {
         @Tag public int _Tag;
 
@@ -227,7 +231,7 @@
                         public static ${Name} [[Create${a.Name}]]()
                         {
                             ${Name} r = new ${Name}();
-                            r._Tag = ${TagName}.[[${a.Name}]];
+                            r._Tag = ${TagTypeString}.[[${a.Name}]];
                             r.[[${a.Name}]] = Unit.Value;
                             return r;
                         }
@@ -239,7 +243,7 @@
                         public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type, tu.NamespaceName())} Value)
                         {
                             ${Name} r = new ${Name}();
-                            r._Tag = ${TagName}.[[${a.Name}]];
+                            r._Tag = ${TagTypeString}.[[${a.Name}]];
                             r.[[${a.Name}]] = Value;
                             return r;
                         }
@@ -251,7 +255,7 @@
             {
                 ##
                     ${GetXmlComment(a.Description)}
-                    public boolean [[On${a.Name}]]() { return _Tag == ${TagName}.[[${a.Name}]]; }
+                    public boolean [[On${a.Name}]]() { return _Tag == ${TagTypeString}.[[${a.Name}]]; }
             }
     }
 
@@ -259,7 +263,7 @@
     $$
         var Name = GetEscapedIdentifier(e.DefinitionName());
     ${GetXmlComment(e.Description)}
-    public static final class ${Name}
+    public final class ${Name}
     {
         $$
             var k = 0;
@@ -277,7 +281,7 @@
         var Name = GetEscapedIdentifier(tp.SimpleName(NamespaceName));
         var Types = tp.Tuple;
     @Tuple
-    public static final class ${Name}
+    public final class ${Name}
     {
         $$
             var k = 0;
@@ -306,13 +310,9 @@
 
             $End
         }
-        if (Imports.Count > 0)
-        {
-            ##
-                import ${Imports};
+    import niveum.lang.*;
+    import ${Imports};
 
-            $End
-        }
     ${Contents}
 
 $End
