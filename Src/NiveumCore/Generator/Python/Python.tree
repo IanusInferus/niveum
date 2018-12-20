@@ -4,7 +4,7 @@
       File:        Python.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构Python3模板
-      Version:     2017.05.08.
+      Version:     2018.12.21.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -92,14 +92,14 @@
 
 #Template Alias a:AliasDef
     $$
-        var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-        var Type = GetTypeString(a.Type);
+        var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
+        var Type = GetTypeString(a.Type, a.NamespaceName());
     ${GetXmlComment(a.Description)}
     ${Name} = ${Type}
 
 #Template Record r:RecordDef
     $$
-        var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+        var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
     #Record
     class ${Name}(NamedTuple):
         ${GetXmlComment(r.Description)}
@@ -109,7 +109,7 @@
             {
                 ##
                     ${GetXmlComment(f.Description)}
-                    [[${f.Name}]]: ${GetTypeString(f.Type)}
+                    [[${f.Name}]]: ${GetTypeString(f.Type, r.NamespaceName())}
             }
             if (r.Fields.Count == 0)
             {
@@ -119,8 +119,8 @@
 
 #Template TaggedUnion tu:TaggedUnionDef
     $$
-        var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
-        var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+        var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
+        var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
     class ${TagName}(IntEnum):
         $$
             var k = 0;
@@ -147,7 +147,7 @@
             foreach (var a in tu.Alternatives)
             {
                 ##
-                    def [[${a.Name}]](self) -> ${GetTypeString(a.Type)}:
+                    def [[${a.Name}]](self) -> ${GetTypeString(a.Type, tu.NamespaceName())}:
                         ${GetXmlComment(a.Description)}
                         if self.Tag_ != ${TagName}.[[${a.Name}]]:
                             raise TypeError('TagMismatch')
@@ -157,7 +157,7 @@
         $$
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     ##
                         @staticmethod
@@ -169,7 +169,7 @@
                 {
                     ##
                         @staticmethod
-                        def [[Create${a.Name}]](Value: ${GetTypeString(a.Type)}) -> '${Name}':
+                        def [[Create${a.Name}]](Value: ${GetTypeString(a.Type, tu.NamespaceName())}) -> '${Name}':
                             ${GetXmlComment(a.Description)}
                             return ${Name}(${TagName}.[[${a.Name}]], Value)
                 }
@@ -186,7 +186,7 @@
 
 #Template Enum e:EnumDef
     $$
-        var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+        var Name = GetEscapedIdentifier(e.DefinitionName());
     class ${Name}(IntFlag):
         ${GetXmlComment(e.Description)}
 
@@ -225,12 +225,7 @@
     from enum import IntEnum
     from enum import IntFlag
     from ${Schema.Imports} import *
-    $$
-        var Primitives = GetPrimitives(Schema);
-    ${Primitives}
 
-    $$
-        var ComplexTypes = GetComplexTypes(Schema);
-    ${ComplexTypes}
+    ${GetTypes(Schema)}
 
 $End

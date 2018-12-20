@@ -3,6 +3,7 @@ Bin
 Obj
 Intermediate
 Generated
+__pycache__
 /Communication/CPP/Lib/cppformat
 /Communication/CPP/Lib/asio
 /Communication/Haxe/generated
