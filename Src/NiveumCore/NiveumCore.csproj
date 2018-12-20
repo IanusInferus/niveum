@@ -67,6 +67,7 @@
     <Compile Include="Generated\Generator\Haxe\HaxeJson.cs" />
     <Compile Include="Generated\Generator\Java\Java.cs" />
     <Compile Include="Generated\Generator\Java\JavaBinary.cs" />
+    <Compile Include="Generated\Generator\Python\Python.cs" />
     <Compile Include="Generated\Generator\VB\VB.cs" />
     <Compile Include="Generated\Generator\Xhtml\Xhtml.cs" />
     <Compile Include="Generated\ObjectSchema\ObjectSchema.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="Generator\Haxe\HaxeJson.cs" />
     <Compile Include="Generator\Java\Java.cs" />
     <Compile Include="Generator\Java\JavaBinary.cs" />
+    <Compile Include="Generator\Python\Python.cs" />
     <Compile Include="Generator\VB\VB.cs" />
     <Compile Include="Generator\Xhtml\Xhtml.cs" />
     <Compile Include="ObjectSchema\FileParser.cs" />
@@ -110,6 +112,7 @@
     <None Include="Generator\Haxe\HaxeJson.tree" />
     <None Include="Generator\Java\Java.tree" />
     <None Include="Generator\Java\JavaBinary.tree" />
+    <None Include="Generator\Python\Python.tree" />
     <None Include="Generator\VB\VB.tree" />
     <None Include="Generator\Xhtml\Xhtml.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />

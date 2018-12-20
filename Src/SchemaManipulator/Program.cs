@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2018.12.20.
+//  Version:     2018.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -34,9 +34,9 @@ using Niveum.ObjectSchema.Haxe;
 using Niveum.ObjectSchema.HaxeJson;
 using Niveum.ObjectSchema.Java;
 using Niveum.ObjectSchema.JavaBinary;
+using Niveum.ObjectSchema.Python;
 using Niveum.ObjectSchema.VB;
 using Niveum.ObjectSchema.Xhtml;
-using Yuki.ObjectSchema.Python;
 using Yuki.ObjectSchema.PythonBinary;
 using OS = Niveum.ObjectSchema;
 
@@ -1068,7 +1068,7 @@ namespace Yuki.SchemaManipulator
 
         public static void ObjectSchemaToPythonCode(String PythonCodePath)
         {
-            var ObjectSchema = GetObjectSchemaLegacy();
+            var ObjectSchema = GetObjectSchema();
             var Compiled = ObjectSchema.CompileToPython();
             if (File.Exists(PythonCodePath))
             {

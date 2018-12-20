@@ -101,8 +101,8 @@ namespace Niveum.ObjectSchema.Python
         }
         public IEnumerable<String> Alias(AliasDef a)
         {
-            var Name = GetEscapedIdentifier(a.TypeFriendlyName()) + GetGenericParameters(a.GenericParameters);
-            var Type = GetTypeString(a.Type);
+            var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
+            var Type = GetTypeString(a.Type, a.NamespaceName());
             foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
             {
                 yield return _Line;
@@ -114,7 +114,7 @@ namespace Niveum.ObjectSchema.Python
         }
         public IEnumerable<String> Record(RecordDef r)
         {
-            var Name = GetEscapedIdentifier(r.TypeFriendlyName()) + GetGenericParameters(r.GenericParameters);
+            var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
             yield return "#Record";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "class "), Name), "(NamedTuple):"))
             {
@@ -131,7 +131,7 @@ namespace Niveum.ObjectSchema.Python
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Begin(), GetEscapedIdentifier(f.Name)), ": "), GetTypeString(f.Type)))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), GetEscapedIdentifier(f.Name)), ": "), GetTypeString(f.Type, r.NamespaceName())))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -143,8 +143,8 @@ namespace Niveum.ObjectSchema.Python
         }
         public IEnumerable<String> TaggedUnion(TaggedUnionDef tu)
         {
-            var Name = GetEscapedIdentifier(tu.TypeFriendlyName()) + GetGenericParameters(tu.GenericParameters);
-            var TagName = GetEscapedIdentifier(tu.TypeFriendlyName() + "Tag");
+            var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
+            var TagName = GetEscapedIdentifier(GetSuffixedTypeName(tu.Name, tu.Version, "Tag", tu.NamespaceName()));
             foreach (var _Line in Combine(Combine(Combine(Begin(), "class "), TagName), "(IntEnum):"))
             {
                 yield return _Line;
@@ -184,7 +184,7 @@ namespace Niveum.ObjectSchema.Python
             yield return "";
             foreach (var a in tu.Alternatives)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "def "), GetEscapedIdentifier(a.Name)), "(self) -> "), GetTypeString(a.Type)), ":"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "def "), GetEscapedIdentifier(a.Name)), "(self) -> "), GetTypeString(a.Type, tu.NamespaceName())), ":"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -202,7 +202,7 @@ namespace Niveum.ObjectSchema.Python
             yield return "";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
                     yield return "    " + "@staticmethod";
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "def "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "() -> '"), Name), "':"))
@@ -221,7 +221,7 @@ namespace Niveum.ObjectSchema.Python
                 else
                 {
                     yield return "    " + "@staticmethod";
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "def "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "(Value: "), GetTypeString(a.Type)), ") -> '"), Name), "':"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "def "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "(Value: "), GetTypeString(a.Type, tu.NamespaceName())), ") -> '"), Name), "':"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -254,7 +254,7 @@ namespace Niveum.ObjectSchema.Python
         }
         public IEnumerable<String> Enum(EnumDef e)
         {
-            var Name = GetEscapedIdentifier(e.TypeFriendlyName());
+            var Name = GetEscapedIdentifier(e.DefinitionName());
             foreach (var _Line in Combine(Combine(Combine(Begin(), "class "), Name), "(IntFlag):"))
             {
                 yield return _Line;
@@ -306,14 +306,8 @@ namespace Niveum.ObjectSchema.Python
             {
                 yield return _Line;
             }
-            var Primitives = GetPrimitives(Schema);
-            foreach (var _Line in Combine(Begin(), Primitives))
-            {
-                yield return _Line;
-            }
             yield return "";
-            var ComplexTypes = GetComplexTypes(Schema);
-            foreach (var _Line in Combine(Begin(), ComplexTypes))
+            foreach (var _Line in Combine(Begin(), GetTypes(Schema)))
             {
                 yield return _Line;
             }
