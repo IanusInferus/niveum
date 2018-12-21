@@ -65,7 +65,7 @@ namespace Niveum.ObjectSchema.Python
         {
             return "\"" + new String(s.SelectMany(c => c == '\\' ? "\\\\" : c == '\"' ? "\\\"" : c == '\r' ? "\\r" : c == '\n' ? "\\n" : new String(c, 1)).ToArray()) + "\"";
         }
-        public String GetTypeString(TypeSpec Type, String NamespaceName)
+        public String GetTypeString(TypeSpec Type, String NamespaceName, bool ForceNoQuote = false)
         {
             if (Type.OnTypeRef)
             {
@@ -76,7 +76,7 @@ namespace Niveum.ObjectSchema.Python
                 var Ref = Type.TypeRef;
                 if ((Ref.NamespaceName() == NamespaceName) || NamespaceName.StartsWith(Ref.NamespaceName() + ".") || (Ref.NamespaceName() == ""))
                 {
-                    return "'" + GetEscapedIdentifier(Ref.SimpleName(Ref.NamespaceName())) + "'";
+                    return (ForceNoQuote ? "" : "'") + GetEscapedIdentifier(Ref.SimpleName(Ref.NamespaceName())) + (ForceNoQuote ? "" : "'");
                 }
                 else
                 {
@@ -90,17 +90,17 @@ namespace Niveum.ObjectSchema.Python
             }
             else if (Type.OnTuple)
             {
-                return "Tuple[" + String.Join(", ", Type.Tuple.Select(t => GetTypeString(t, NamespaceName))) + "]";
+                return "Tuple[" + String.Join(", ", Type.Tuple.Select(t => GetTypeString(t, NamespaceName, ForceNoQuote))) + "]";
             }
             else if (Type.OnGenericTypeSpec)
             {
                 if (Type.GenericTypeSpec.ParameterValues.Count() > 0)
                 {
-                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName) + "[" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p, NamespaceName))) + "]";
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName, ForceNoQuote) + "[" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(p => GetTypeString(p, NamespaceName, ForceNoQuote))) + "]";
                 }
                 else
                 {
-                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName);
+                    return GetTypeString(Type.GenericTypeSpec.TypeSpec, NamespaceName, ForceNoQuote);
                 }
             }
             else
@@ -112,10 +112,10 @@ namespace Niveum.ObjectSchema.Python
         {
             return new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" };
         }
-        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName)
+        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName, bool ForceNoQuote = false)
         {
             var ts = TypeSpec.CreateTypeRef(new TypeRef { Name = Name.NameConcat((Version == "" ? "" : "At" + Version) + Suffix), Version = "" });
-            return GetTypeString(ts, NamespaceName);
+            return GetTypeString(ts, NamespaceName, ForceNoQuote);
         }
         public String GetSuffixedTypeName(List<String> Name, String Version, String Suffix, String NamespaceName)
         {
