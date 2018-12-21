@@ -3,11 +3,13 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 数据转换工具
-//  Version:     2018.08.17.
+//  Version:     2018.12.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
 //==========================================================================
+
+extern alias niveum;
 
 using System;
 using System.Collections.Generic;
@@ -19,8 +21,8 @@ using Firefly.Mapping.XmlText;
 using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
-using Yuki;
-using Yuki.ObjectSchema;
+using niveum::Niveum;
+using niveum::Niveum.ObjectSchema;
 
 namespace DataConv
 {

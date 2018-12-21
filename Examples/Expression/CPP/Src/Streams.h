@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <fstream>
 
-namespace Yuki
+namespace Niveum
 {
     namespace ExpressionSchema
     {

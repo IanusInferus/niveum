@@ -1,9 +1,9 @@
-//==========================================================================
+Ôªø//==========================================================================
 //
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
-//  Description: ±Ì¥Ô Ωº∆À„π§æﬂ
-//  Version:     2018.07.05.
+//  Description: Ë°®ËææÂºèËÆ°ÁÆóÂ∑•ÂÖ∑
+//  Version:     2018.12.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -20,7 +20,7 @@
 #include <cwchar>
 #include <cassert>
 
-using namespace Yuki::ExpressionSchema;
+using namespace Niveum::ExpressionSchema;
 
 namespace ExprTest
 {
@@ -38,7 +38,7 @@ namespace ExprTest
 
         static void DisplayInfo()
         {
-            std::wprintf(L"%ls\n", L"±Ì¥Ô Ω≤‚ ‘:");
+            std::wprintf(L"%ls\n", L"Ë°®ËææÂºèÊµãËØï:");
             std::wprintf(L"%ls\n", L"ExprTest, Public Domain");
             std::wprintf(L"%ls\n", L"F.R.C.");
         }
@@ -59,7 +59,7 @@ namespace ExprTest
 
         static void TestBasic(std::shared_ptr<Calculation> c)
         {
-            //µ»”⁄/≤ªµ»”⁄
+            //Á≠â‰∫é/‰∏çÁ≠â‰∫é
             assert(c->Test->CaseA01() == true);
             assert(c->Test->CaseA02() == false);
             assert(c->Test->CaseA03() == false);
@@ -73,7 +73,7 @@ namespace ExprTest
             assert(c->Test->CaseA11() == false);
             assert(c->Test->CaseA12() == true);
 
-            //Ãÿ ‚‘ÀÀ„∑˚
+            //ÁâπÊÆäËøêÁÆóÁ¨¶
             assert(c->Test->CaseB01());
             assert(c->Test->CaseB02());
             assert(c->Test->CaseB03());
@@ -119,7 +119,7 @@ namespace ExprTest
             assert(c->Test->CaseB19());
             assert(c->Test->CaseB20());
 
-            //À„ ı‘ÀÀ„
+            //ÁÆóÊúØËøêÁÆó
             assert(c->Test->CaseC01());
             assert(c->Test->CaseC02());
             assert(c->Test->CaseC03());
@@ -151,11 +151,11 @@ namespace ExprTest
             assert(c->Test->CaseC29());
             assert(c->Test->CaseC30());
 
-            //¬ﬂº≠‘ÀÀ„
+            //ÈÄªËæëËøêÁÆó
             assert(c->Test->CaseD01());
             assert(c->Test->CaseD02());
 
-            //πÿœµ‘ÀÀ„
+            //ÂÖ≥Á≥ªËøêÁÆó
             assert(c->Test->CaseE01());
             assert(c->Test->CaseE02());
             assert(c->Test->CaseE03());
@@ -181,7 +181,7 @@ namespace ExprTest
             assert(c->Test->CaseE23());
             assert(c->Test->CaseE24());
 
-            //»°’˚‘ÀÀ„
+            //ÂèñÊï¥ËøêÁÆó
             assert(c->Test->CaseF01());
             assert(c->Test->CaseF02());
             assert(c->Test->CaseF03());
@@ -297,7 +297,7 @@ namespace ExprTest
             assert(c->Test->CaseFB3());
             assert(c->Test->CaseFB4());
 
-            //∑∂Œßœﬁ÷∆‘ÀÀ„
+            //ËåÉÂõ¥ÈôêÂà∂ËøêÁÆó
             assert(c->Test->CaseG01());
             assert(c->Test->CaseG02());
             assert(c->Test->CaseG03());
@@ -323,7 +323,7 @@ namespace ExprTest
             assert(c->Test->CaseG23());
             assert(c->Test->CaseG24());
 
-            //∆‰À˚‘ÀÀ„
+            //ÂÖ∂‰ªñËøêÁÆó
             assert(c->Test->CaseH01());
             assert(c->Test->CaseH02());
             assert(c->Test->CaseH03());

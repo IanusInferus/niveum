@@ -3,7 +3,7 @@
 '  File:        Program.vb
 '  Location:    Niveum.Examples <Visual Basic .Net>
 '  Description: 数据转换工具
-'  Version:     2012.04.07.
+'  Version:     2018.12.22.
 '  Author:      F.R.C.
 '  Copyright(C) Public Domain
 '
@@ -17,8 +17,8 @@ Imports Firefly
 Imports Firefly.Streaming
 Imports Firefly.TextEncoding
 Imports Firefly.Texting.TreeFormat
-Imports Yuki
-Imports Yuki.ObjectSchema
+Imports Niveum
+Imports Niveum.ObjectSchema
 
 Public Module Program
     Public Function Main() As Integer

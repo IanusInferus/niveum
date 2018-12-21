@@ -3,6 +3,12 @@ Niveum.Core:
 完成Python二进制序列化代码生成的修改。
 Yuki.SchemaManipulator:
 重命名为Niveum.SchemaManipulator。
+Yuki.Expression:
+重命名为Niveum.Expression。
+Yuki.ExpressionManipulator:
+重命名为Niveum.ExpressionManipulator。
+Example:
+修正所有示例。
 
 2018.12.21
 Niveum.Core:
