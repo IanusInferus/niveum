@@ -9,6 +9,8 @@ Yuki.ExpressionManipulator:
 重命名为Niveum.ExpressionManipulator。
 Example:
 修正所有示例。
+Niveum.Core, Yuki.Relation:
+修正XHTML文档生成时有被引用的类型时会崩溃的问题。
 
 2018.12.21
 Niveum.Core:

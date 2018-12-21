@@ -3,7 +3,7 @@
 //  File:        Xhtml.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2016.10.12.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -175,7 +175,7 @@ namespace Niveum.ObjectSchema.Xhtml
         public List<FileResult> GetFiles(Schema Schema, String Title, String CopyrightText)
         {
             var Types = Schema.GetMap();
-            var Files = Types.GroupBy(Type => CollectionOperations.CreatePair(TypeInfoDict[Type.Key].FriendlyPath, TypeInfoDict[Type.Key].DocFilePath), (Pair, gt) => new { FriendlyPath = Pair.Key, DocFilePath = Pair.Value, Types = gt.Select(t => t.Value).ToList() }).ToList();
+            var Files = Types.Where(Type => TypeInfoDict.ContainsKey(Type.Key)).GroupBy(Type => CollectionOperations.CreatePair(TypeInfoDict[Type.Key].FriendlyPath, TypeInfoDict[Type.Key].DocFilePath), (Pair, gt) => new { FriendlyPath = Pair.Key, DocFilePath = Pair.Value, Types = gt.Select(t => t.Value).ToList() }).ToList();
 
             var l = new List<FileResult>();
 
