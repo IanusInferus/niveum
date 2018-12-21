@@ -1,7 +1,7 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cs
-//  Location:    Yuki.SchemaManipulator <Visual C#>
+//  Location:    Niveum.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
 //  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
@@ -40,7 +40,7 @@ using Niveum.ObjectSchema.VB;
 using Niveum.ObjectSchema.Xhtml;
 using OS = Niveum.ObjectSchema;
 
-namespace Yuki.SchemaManipulator
+namespace Niveum.SchemaManipulator
 {
     public static class Program
     {
@@ -99,13 +99,6 @@ namespace Yuki.SchemaManipulator
                         var CookedObjectSchemaPath = args[0];
                         InvalidateSchema();
                         osl.LoadSchema(CookedObjectSchemaPath);
-                        try
-                        {
-                            oslLegacy.LoadSchema(CookedObjectSchemaPath);
-                        }
-                        catch (Exception)
-                        {
-                        }
                     }
                     else
                     {
@@ -142,26 +135,12 @@ namespace Yuki.SchemaManipulator
                             {
                                 InvalidateSchema();
                                 osl.LoadTypeRef(f);
-                                try
-                                {
-                                    oslLegacy.LoadTypeRef(f);
-                                }
-                                catch (Exception)
-                                {
-                                }
                             }
                         }
                         else
                         {
                             InvalidateSchema();
                             osl.LoadTypeRef(ObjectSchemaPath);
-                            try
-                            {
-                                oslLegacy.LoadTypeRef(ObjectSchemaPath);
-                            }
-                            catch (Exception)
-                            {
-                            }
                         }
                     }
                     else
@@ -182,26 +161,12 @@ namespace Yuki.SchemaManipulator
                             {
                                 InvalidateSchema();
                                 osl.LoadType(f);
-                                try
-                                {
-                                    oslLegacy.LoadType(f);
-                                }
-                                catch (Exception)
-                                {
-                                }
                             }
                         }
                         else
                         {
                             InvalidateSchema();
                             osl.LoadType(ObjectSchemaPath);
-                            try
-                            {
-                                oslLegacy.LoadType(ObjectSchemaPath);
-                            }
-                            catch (Exception)
-                            {
-                            }
                         }
                     }
                     else
@@ -216,7 +181,6 @@ namespace Yuki.SchemaManipulator
                     if (args.Length == 1)
                     {
                         osl.AddImport(args[0]);
-                        oslLegacy.AddImport(args[0]);
                     }
                     else
                     {
@@ -661,8 +625,6 @@ namespace Yuki.SchemaManipulator
 
         private static ObjectSchemaLoader osl = new ObjectSchemaLoader();
         private static OS.ObjectSchemaLoaderResult oslr = null;
-        private static Yuki.ObjectSchema.ObjectSchemaLoader oslLegacy = new Yuki.ObjectSchema.ObjectSchemaLoader();
-        private static Yuki.ObjectSchema.ObjectSchemaLoaderResult oslrLegacy = null;
         private static Assembly osa = null;
         private static TreeBinaryConverter tbc = null;
         private static HashSet<String> AsyncCommands = new HashSet<String>();
@@ -687,33 +649,9 @@ namespace Yuki.SchemaManipulator
             }
             return oslr;
         }
-        private static Yuki.ObjectSchema.ObjectSchemaLoaderResult GetObjectSchemaLoaderResultLegacy()
-        {
-            if (oslrLegacy != null) { return oslrLegacy; }
-            oslrLegacy = oslLegacy.GetResult();
-            foreach (var t in oslrLegacy.Schema.Types)
-            {
-                if (t.OnClientCommand)
-                {
-                    var cc = t.ClientCommand;
-                    if (AsyncAll || AsyncCommands.Contains(cc.Name))
-                    {
-                        if (!cc.Attributes.Any(a => a.Key == "Async"))
-                        {
-                            cc.Attributes.Add(new KeyValuePair<String, List<String>>("Async", new List<String> { }));
-                        }
-                    }
-                }
-            }
-            return oslrLegacy;
-        }
         private static OS.Schema GetObjectSchema()
         {
             return GetObjectSchemaLoaderResult().Schema;
-        }
-        private static Yuki.ObjectSchema.Schema GetObjectSchemaLegacy()
-        {
-            return GetObjectSchemaLoaderResultLegacy().Schema;
         }
         private static Assembly SchemaAssembly()
         {
