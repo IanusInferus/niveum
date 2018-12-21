@@ -3,7 +3,7 @@
 //  File:        RelationSchemaLoader.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构加载器
-//  Version:     2016.08.06.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,7 +17,7 @@ using Firefly;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat.Syntax;
 using TreeFormat = Firefly.Texting.TreeFormat;
-using OS = Yuki.ObjectSchema;
+using OS = Niveum.ObjectSchema;
 
 namespace Yuki.RelationSchema
 {

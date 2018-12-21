@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构MySQL数据库代码生成器
-//  Version:     2016.05.13.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,7 +14,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
-using OS = Yuki.ObjectSchema;
+using OS = Niveum.ObjectSchema;
+using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
 
 namespace Yuki.RelationSchema.MySql
 {
@@ -30,7 +31,7 @@ namespace Yuki.RelationSchema.MySql
         private class Writer
         {
 
-            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
+            private static ObjectSchemaTemplateInfo TemplateInfo;
             private const int MaxNameLength = 64;
 
             private Schema Schema;
@@ -39,7 +40,7 @@ namespace Yuki.RelationSchema.MySql
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.MySql);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.MySql);
             }
 
             public Writer(Schema Schema, String DatabaseName, Boolean WithComment)
@@ -453,7 +454,7 @@ namespace Yuki.RelationSchema.MySql
         {
             return PascalName.ToLowerInvariant();
         }
-        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, IEnumerable<String> Value)
         {
             var l = new List<String>();
             foreach (var Line in Lines)

@@ -13,7 +13,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Firefly;
 using Firefly.TextEncoding;
-using OS = Yuki.ObjectSchema;
+using OS = Niveum.ObjectSchema;
+using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
 
 namespace Yuki.RelationSchema.Xhtml
 {
@@ -34,7 +35,7 @@ namespace Yuki.RelationSchema.Xhtml
 
         private class Writer
         {
-            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
+            private static ObjectSchemaTemplateInfo TemplateInfo;
 
             private Schema Schema;
             private String Title;
@@ -42,7 +43,7 @@ namespace Yuki.RelationSchema.Xhtml
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.Xhtml);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.Xhtml);
             }
 
             public Writer(RelationSchemaLoaderResult rslr, String Title, String CopyrightText)
@@ -331,7 +332,7 @@ namespace Yuki.RelationSchema.Xhtml
             }
             return l;
         }
-        public static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        public static List<String> Substitute(this List<String> Lines, String Parameter, IEnumerable<String> Value)
         {
             var l = new List<String>();
             foreach (var Line in Lines)
