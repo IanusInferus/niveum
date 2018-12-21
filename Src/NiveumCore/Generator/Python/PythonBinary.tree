@@ -4,7 +4,7 @@
       File:        PythonBinary.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构Python二进制通讯模板
-      Version:     2017.05.08.
+      Version:     2018.12.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -239,9 +239,9 @@
         def __exit__(self, exception_type, exception_value, traceback):
             pass
 
-#Template BinaryTranslator Schema:Schema
+#Template BinaryTranslator Schema:Schema NamespaceName:String
     class BinaryTranslator:
-        ${GetBinaryTranslatorSerializers(Schema)}
+        ${GetBinaryTranslatorSerializers(Schema, NamespaceName)}
 
 #Template BinaryTranslator_Primitive_Unit
     @staticmethod
@@ -583,159 +583,160 @@
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
-#Template BinaryTranslator_Alias a:AliasDef
+#Template BinaryTranslator_Alias a:AliasDef NamespaceName:String
     $$
-        var Name = a.TypeFriendlyName();
-        var ValueTypeFriendlyName = a.Type.TypeFriendlyName();
+        var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
+        var Name = a.GetTypeSpec().SimpleName(NamespaceName);
+        var ValueSimpleName = a.Type.SimpleName(NamespaceName);
     @staticmethod
-    def [[${Name}FromBinary]](s: IReadableStream) -> [[${Name}]]:
-        return BinaryTranslator.[[${ValueTypeFriendlyName}FromBinary]](s)
+    def [[${Name}FromBinary]](s: IReadableStream) -> ${TypeString}:
+        return BinaryTranslator.[[${ValueSimpleName}FromBinary]](s)
     @staticmethod
-    def [[${Name}ToBinary]](s: IWritableStream, o: [[${Name}]]) -> None:
-        BinaryTranslator.[[${ValueTypeFriendlyName}ToBinary]](s, o)
+    def [[${Name}ToBinary]](s: IWritableStream, o: ${TypeString}) -> None:
+        BinaryTranslator.[[${ValueSimpleName}ToBinary]](s, o)
     @staticmethod
-    def [[${Name}FromBytes]](Bytes: List[Byte]) -> [[${Name}]]:
+    def [[${Name}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
         with ByteArrayStream() as bas:
             bas.WriteBytes(Bytes)
             bas.Position = 0
             return BinaryTranslator.[[${Name}FromBinary]](bas)
     @staticmethod
-    def [[${Name}ToBytes]](o: [[${Name}]]) -> List[Byte]:
+    def [[${Name}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
             BinaryTranslator.[[${Name}ToBinary]](bas, v)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
-#Template BinaryTranslator_Record r:RecordDef
-    ${BinaryTranslator_Record(r.TypeFriendlyName(), r.Fields)}
+#Template BinaryTranslator_Record r:RecordDef NamespaceName:String
+    ${BinaryTranslator_Record(r.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(r.GetTypeSpec(), NamespaceName), r.Fields, NamespaceName)}
 
-#Template BinaryTranslator_Record Name:String Fields:List<VariableDef>
+#Template BinaryTranslator_Record Name:String TypeString:String Fields:List<VariableDef> NamespaceName:String
     @staticmethod
-    def [[${Name}FromBinary]](s: IReadableStream) -> [[${Name}]]:
-        return [[${Name}]](
+    def [[${Name}FromBinary]](s: IReadableStream) -> ${TypeString}:
+        return ${TypeString}(
             $$
                 int k = 0;
-                foreach (var a in Fields)
+                foreach (var f in Fields)
                 {
                     if (k == Fields.Count - 1)
                     {
                         ##
-                            [[${a.Name}]] = BinaryTranslator.[[${a.Type.TypeFriendlyName()}FromBinary]](s)
+                            [[${f.Name}]] = BinaryTranslator.[[${f.Type.SimpleName(NamespaceName)}FromBinary]](s)
                     }
                     else
                     {
                         ##
-                            [[${a.Name}]] = BinaryTranslator.[[${a.Type.TypeFriendlyName()}FromBinary]](s),
+                            [[${f.Name}]] = BinaryTranslator.[[${f.Type.SimpleName(NamespaceName)}FromBinary]](s),
                     }
                     k += 1;
                 }
         )
     @staticmethod
-    def [[${Name}ToBinary]](s: IWritableStream, o: [[${Name}]]) -> None:
+    def [[${Name}ToBinary]](s: IWritableStream, o: ${TypeString}) -> None:
         $$
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
                 ##
-                    BinaryTranslator.[[${a.Type.TypeFriendlyName()}ToBinary]](s, o.[[${a.Name}]])
+                    BinaryTranslator.[[${f.Type.SimpleName(NamespaceName)}ToBinary]](s, o.[[${f.Name}]])
             }
     @staticmethod
-    def [[${Name}FromBytes]](Bytes: List[Byte]) -> [[${Name}]]:
+    def [[${Name}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
         with ByteArrayStream() as bas:
             bas.WriteBytes(Bytes)
             bas.Position = 0
             return BinaryTranslator.[[${Name}FromBinary]](bas)
     @staticmethod
-    def [[${Name}ToBytes]](o: [[${Name}]]) -> List[Byte]:
+    def [[${Name}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
             BinaryTranslator.[[${Name}ToBinary]](bas, v)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
-#Template BinaryTranslator_TaggedUnion tu:TaggedUnionDef
-    ${BinaryTranslator_TaggedUnion(tu.TypeFriendlyName(), tu.Alternatives)}
+#Template BinaryTranslator_TaggedUnion tu:TaggedUnionDef NamespaceName:String
+    ${BinaryTranslator_TaggedUnion(tu.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(tu.GetTypeSpec(), NamespaceName), GetSuffixedTypeName(tu.Name, tu.Version, "Tag", NamespaceName), GetSuffixedTypeString(tu.Name, tu.Version, "Tag", NamespaceName), tu.Alternatives, NamespaceName)}
 
-#Template BinaryTranslator_TaggedUnion Name:String Alternatives:List<VariableDef>
-    ${BinaryTranslator_Enum(Name + "Tag", "Int", "Int")}
+#Template BinaryTranslator_TaggedUnion Name:String TypeString:String TagName:String TagTypeString:String Alternatives:List<VariableDef> NamespaceName:String
+    ${BinaryTranslator_Enum(TagName, TagTypeString, "Int", "Int", NamespaceName)}
     @staticmethod
-    def [[${Name}FromBinary]](s: IReadableStream) -> [[${Name}]]:
+    def [[${Name}FromBinary]](s: IReadableStream) -> ${TypeString}:
         Tag = BinaryTranslator.[[${Name}TagFromBinary]](s)
         Value = None
         $$
             foreach (var a in Alternatives)
             {
                 ##
-                    if (Tag == [[${Name}Tag.${a.Name}]]):
-                        Value = BinaryTranslator.[[${a.Type.TypeFriendlyName()}FromBinary]](s)
-                        return [[${Name}]](Tag, Value)
+                    if (Tag == ${TagTypeString}.[[${a.Name}]]):
+                        Value = BinaryTranslator.[[${a.Type.SimpleName(NamespaceName)}FromBinary]](s)
+                        return ${TypeString}(Tag, Value)
             }
         raise ValueError
     @staticmethod
-    def [[${Name}ToBinary]](s: IWritableStream, o: [[${Name}]]) -> None:
+    def [[${Name}ToBinary]](s: IWritableStream, o: ${TypeString}) -> None:
         BinaryTranslator.[[${Name}TagToBinary]](s, o.Tag_)
         $$
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o.Tag_ == [[${Name}Tag.${a.Name}]]):
-                        BinaryTranslator.[[${a.Type.TypeFriendlyName()}ToBinary]](s, o.Value_)
+                    if (o.Tag_ == ${TagTypeString}.[[${a.Name}]]):
+                        BinaryTranslator.[[${a.Type.SimpleName(NamespaceName)}ToBinary]](s, o.Value_)
                         return
             }
         raise ValueError
     @staticmethod
-    def [[${Name}FromBytes]](Bytes: List[Byte]) -> [[${Name}]]:
+    def [[${Name}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
         with ByteArrayStream() as bas:
             bas.WriteBytes(Bytes)
             bas.Position = 0
             return BinaryTranslator.[[${Name}FromBinary]](bas)
     @staticmethod
-    def [[${Name}ToBytes]](o: [[${Name}]]) -> List[Byte]:
+    def [[${Name}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
             BinaryTranslator.[[${Name}ToBinary]](bas, v)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
-#Template BinaryTranslator_Enum e:EnumDef
-    ${BinaryTranslator_Enum(e.TypeFriendlyName(), e.UnderlyingType.TypeFriendlyName(), GetTypeString(e.UnderlyingType))}
+#Template BinaryTranslator_Enum e:EnumDef NamespaceName:String
+    ${BinaryTranslator_Enum(e.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(e.GetTypeSpec(), NamespaceName), e.UnderlyingType.SimpleName(NamespaceName), GetTypeString(e.UnderlyingType, NamespaceName), NamespaceName)}
 
-#Template BinaryTranslator_Enum Name:String UnderlyingTypeFriendlyName:String UnderlyingType:String
+#Template BinaryTranslator_Enum Name:String TypeString:String UnderlyingSimpleName:String UnderlyingType:String NamespaceName:String
     @staticmethod
-    def [[${Name}FromBinary]](s: IReadableStream) -> [[${Name}]]:
-        return [[${Name}]](BinaryTranslator.[[${UnderlyingTypeFriendlyName}FromBinary]](s))
+    def [[${Name}FromBinary]](s: IReadableStream) -> ${TypeString}:
+        return ${TypeString}(BinaryTranslator.[[${UnderlyingSimpleName}FromBinary]](s))
     @staticmethod
-    def [[${Name}ToBinary]](s: IWritableStream, o: [[${Name}]]) -> None:
-        BinaryTranslator.[[${UnderlyingTypeFriendlyName}ToBinary]](s, ${UnderlyingType}(o))
+    def [[${Name}ToBinary]](s: IWritableStream, o: ${TypeString}) -> None:
+        BinaryTranslator.[[${UnderlyingSimpleName}ToBinary]](s, ${UnderlyingType}(o))
     @staticmethod
-    def [[${Name}FromBytes]](Bytes: List[Byte]) -> [[${Name}]]:
+    def [[${Name}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
         with ByteArrayStream() as bas:
             bas.WriteBytes(Bytes)
             bas.Position = 0
             return BinaryTranslator.[[${Name}FromBinary]](bas)
     @staticmethod
-    def [[${Name}ToBytes]](o: [[${Name}]]) -> List[Byte]:
+    def [[${Name}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
             BinaryTranslator.[[${Name}ToBinary]](bas, v)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
-#Template BinaryTranslator_Tuple tp:TypeSpec
+#Template BinaryTranslator_Tuple tp:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = tp.TypeFriendlyName();
-        var TypeString = GetTypeString(tp);
+        var SimpleName = tp.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(tp, NamespaceName);
     @staticmethod
-    def [[${TypeFriendlyName}FromBinary]](s: IReadableStream) -> ${TypeString}:
+    def [[${SimpleName}FromBinary]](s: IReadableStream) -> ${TypeString}:
         $$
             {
                 int k = 0;
                 foreach (var t in tp.Tuple)
                 {
                     ##
-                        [[Item${k}]] = BinaryTranslator.[[${t.TypeFriendlyName()}FromBinary]](s)
+                        [[Item${k}]] = BinaryTranslator.[[${t.SimpleName(NamespaceName)}FromBinary]](s)
                     k += 1;
                 }
             }
         return (${String.Join(", ", tp.Tuple.Select((t, k) => "Item" + k.ToString(System.Globalization.CultureInfo.InvariantCulture)))})
     @staticmethod
-    def [[${TypeFriendlyName}ToBinary]](s: IWritableStream, t: ${TypeString}) -> None:
+    def [[${SimpleName}ToBinary]](s: IWritableStream, t: ${TypeString}) -> None:
         (${String.Join(", ", tp.Tuple.Select((t, k) => "Item" + k.ToString(System.Globalization.CultureInfo.InvariantCulture)))}) = t
         $$
             {
@@ -743,152 +744,152 @@
                 foreach (var t in tp.Tuple)
                 {
                     ##
-                        BinaryTranslator.[[${t.TypeFriendlyName()}ToBinary]](s, [[Item${k}]])
+                        BinaryTranslator.[[${t.SimpleName(NamespaceName)}ToBinary]](s, [[Item${k}]])
                     k += 1;
                 }
             }
     @staticmethod
-    def [[${TypeFriendlyName}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
+    def [[${SimpleName}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
         with ByteArrayStream() as bas:
             bas.WriteBytes(Bytes)
             bas.Position = 0
-            return BinaryTranslator.[[${TypeFriendlyName}FromBinary]](bas)
+            return BinaryTranslator.[[${SimpleName}FromBinary]](bas)
     @staticmethod
-    def [[${TypeFriendlyName}ToBytes]](o: ${TypeString}) -> List[Byte]:
+    def [[${SimpleName}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${TypeFriendlyName}ToBinary]](bas, v)
+            BinaryTranslator.[[${SimpleName}ToBinary]](bas, v)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
-#Template BinaryTranslator_Optional o:TypeSpec GenericOptionalType:TaggedUnionDef
+#Template BinaryTranslator_Optional o:TypeSpec GenericOptionalType:TaggedUnionDef NamespaceName:String
     $$
         var ElementType = o.GenericTypeSpec.ParameterValues.Single();
-        var TypeFriendlyName = o.TypeFriendlyName();
-        var TypeString = GetTypeString(o);
+        var SimpleName = o.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(o, NamespaceName);
     @staticmethod
-    def [[${TypeFriendlyName}FromBinary]](s: IReadableStream) -> ${TypeString}:
+    def [[${SimpleName}FromBinary]](s: IReadableStream) -> ${TypeString}:
         Tag = BinaryTranslator.IntFromBinary(s)
         if (Tag == 0):
             return None
-        return BinaryTranslator.[[${ElementType.TypeFriendlyName()}FromBinary]](s)
+        return BinaryTranslator.[[${ElementType.SimpleName(NamespaceName)}FromBinary]](s)
     @staticmethod
-    def [[${TypeFriendlyName}ToBinary]](s: IWritableStream, o: ${TypeString}) -> None:
+    def [[${SimpleName}ToBinary]](s: IWritableStream, o: ${TypeString}) -> None:
         if (o == None):
             BinaryTranslator.IntToBinary(s, 0)
             return None
         BinaryTranslator.IntToBinary(s, 1)
-        BinaryTranslator.[[${ElementType.TypeFriendlyName()}ToBinary]](s, o)
+        BinaryTranslator.[[${ElementType.SimpleName(NamespaceName)}ToBinary]](s, o)
     @staticmethod
-    def [[${TypeFriendlyName}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
+    def [[${SimpleName}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
         with ByteArrayStream() as bas:
             bas.WriteBytes(Bytes)
             bas.Position = 0
-            return BinaryTranslator.[[${TypeFriendlyName}FromBinary]](bas)
+            return BinaryTranslator.[[${SimpleName}FromBinary]](bas)
     @staticmethod
-    def [[${TypeFriendlyName}ToBytes]](o: ${TypeString}) -> List[Byte]:
+    def [[${SimpleName}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${TypeFriendlyName}ToBinary]](bas, v)
+            BinaryTranslator.[[${SimpleName}ToBinary]](bas, v)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
-#Template BinaryTranslator_List l:TypeSpec
+#Template BinaryTranslator_List l:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
     @staticmethod
-    def [[${TypeFriendlyName}FromBinary]](s: IReadableStream) -> ${TypeString}:
+    def [[${SimpleName}FromBinary]](s: IReadableStream) -> ${TypeString}:
         l = []
         Length = BinaryTranslator.IntFromBinary(s)
         for k in range(Length):
-            l.append(BinaryTranslator.[[${ElementTypeFriendlyName}FromBinary]](s))
+            l.append(BinaryTranslator.[[${ElementSimpleName}FromBinary]](s))
         return l
     @staticmethod
-    def [[${TypeFriendlyName}ToBinary]](s: IWritableStream, l: ${TypeString}) -> None:
+    def [[${SimpleName}ToBinary]](s: IWritableStream, l: ${TypeString}) -> None:
         Length = len(l)
         BinaryTranslator.IntToBinary(s, Length)
         for k in range(Length):
-            BinaryTranslator.[[${ElementTypeFriendlyName}ToBinary]](s, l[k])
+            BinaryTranslator.[[${ElementSimpleName}ToBinary]](s, l[k])
     @staticmethod
-    def [[${TypeFriendlyName}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
+    def [[${SimpleName}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
         with ByteArrayStream() as bas:
             bas.WriteBytes(Bytes)
             bas.Position = 0
-            return BinaryTranslator.[[${TypeFriendlyName}FromBinary]](bas)
+            return BinaryTranslator.[[${SimpleName}FromBinary]](bas)
     @staticmethod
-    def [[${TypeFriendlyName}ToBytes]](o: ${TypeString}) -> List[Byte]:
+    def [[${SimpleName}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${TypeFriendlyName}ToBinary]](bas, v)
+            BinaryTranslator.[[${SimpleName}ToBinary]](bas, v)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
-#Template BinaryTranslator_Set l:TypeSpec
+#Template BinaryTranslator_Set l:TypeSpec NamespaceName:String
     $$
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var ElementTypeFriendlyName = l.GenericTypeSpec.ParameterValues.Single().TypeFriendlyName();
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
     @staticmethod
-    def [[${TypeFriendlyName}FromBinary]](s: IReadableStream) -> ${TypeString}:
+    def [[${SimpleName}FromBinary]](s: IReadableStream) -> ${TypeString}:
         l = set()
         Length = BinaryTranslator.IntFromBinary(s)
         for k in range(Length):
-            l.add(BinaryTranslator.[[${ElementTypeFriendlyName}FromBinary]](s))
+            l.add(BinaryTranslator.[[${ElementSimpleName}FromBinary]](s))
         return l
     @staticmethod
-    def [[${TypeFriendlyName}ToBinary]](s: IWritableStream, l: ${TypeString}) -> None:
+    def [[${SimpleName}ToBinary]](s: IWritableStream, l: ${TypeString}) -> None:
         Length = len(l)
         BinaryTranslator.IntToBinary(s, Length)
         for e in l:
-            BinaryTranslator.[[${ElementTypeFriendlyName}ToBinary]](s, e)
+            BinaryTranslator.[[${ElementSimpleName}ToBinary]](s, e)
     @staticmethod
-    def [[${TypeFriendlyName}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
+    def [[${SimpleName}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
         with ByteArrayStream() as bas:
             bas.WriteBytes(Bytes)
             bas.Position = 0
-            return BinaryTranslator.[[${TypeFriendlyName}FromBinary]](bas)
+            return BinaryTranslator.[[${SimpleName}FromBinary]](bas)
     @staticmethod
-    def [[${TypeFriendlyName}ToBytes]](o: ${TypeString}) -> List[Byte]:
+    def [[${SimpleName}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${TypeFriendlyName}ToBinary]](bas, v)
+            BinaryTranslator.[[${SimpleName}ToBinary]](bas, v)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
-#Template BinaryTranslator_Map l:TypeSpec
+#Template BinaryTranslator_Map l:TypeSpec NamespaceName:String
     $$
         var gp = l.GenericTypeSpec.ParameterValues;
         if (gp.Count != 2)
         {
             throw new ArgumentException();
         }
-        var TypeFriendlyName = l.TypeFriendlyName();
-        var TypeString = GetTypeString(l);
-        var KeyTypeFriendlyName = gp[0].TypeFriendlyName();
-        var ValueTypeFriendlyName = gp[1].TypeFriendlyName();
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var KeySimpleName = gp[0].SimpleName(NamespaceName);
+        var ValueSimpleName = gp[1].SimpleName(NamespaceName);
     @staticmethod
-    def [[${TypeFriendlyName}FromBinary]](s: IReadableStream) -> ${TypeString}:
+    def [[${SimpleName}FromBinary]](s: IReadableStream) -> ${TypeString}:
         l = {}
         Length = BinaryTranslator.IntFromBinary(s)
         for k in range(Length):
-            Key = BinaryTranslator.[[${KeyTypeFriendlyName}FromBinary]](s)
-            l[Key] = BinaryTranslator.[[${ValueTypeFriendlyName}FromBinary]](s)
+            Key = BinaryTranslator.[[${KeySimpleName}FromBinary]](s)
+            l[Key] = BinaryTranslator.[[${ValueSimpleName}FromBinary]](s)
         return l
     @staticmethod
-    def [[${TypeFriendlyName}ToBinary]](s: IWritableStream, l: ${TypeString}) -> None:
+    def [[${SimpleName}ToBinary]](s: IWritableStream, l: ${TypeString}) -> None:
         Length = len(l)
         BinaryTranslator.IntToBinary(s, (Int)(Length))
         for Key, Value in l.items():
-            BinaryTranslator.[[${KeyTypeFriendlyName}ToBinary]](s, Key)
-            BinaryTranslator.[[${ValueTypeFriendlyName}ToBinary]](s, Value)
+            BinaryTranslator.[[${KeySimpleName}ToBinary]](s, Key)
+            BinaryTranslator.[[${ValueSimpleName}ToBinary]](s, Value)
     @staticmethod
-    def [[${TypeFriendlyName}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
+    def [[${SimpleName}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
         with ByteArrayStream() as bas:
             bas.WriteBytes(Bytes)
             bas.Position = 0
-            return BinaryTranslator.[[${TypeFriendlyName}FromBinary]](bas)
+            return BinaryTranslator.[[${SimpleName}FromBinary]](bas)
     @staticmethod
-    def [[${TypeFriendlyName}ToBytes]](o: ${TypeString}) -> List[Byte]:
+    def [[${SimpleName}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${TypeFriendlyName}ToBinary]](bas, v)
+            BinaryTranslator.[[${SimpleName}ToBinary]](bas, v)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
@@ -906,8 +907,6 @@
     import struct
     from ${Schema.Imports} import *
 
-    $$
-        var ComplexTypes = GetComplexTypes(Schema);
-    ${ComplexTypes}
+    ${GetTypes(Schema)}
 
 $End

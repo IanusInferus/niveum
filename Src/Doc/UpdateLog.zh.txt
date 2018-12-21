@@ -1,4 +1,8 @@
-﻿2018.12.21
+﻿2018.12.22
+Niveum.Core:
+完成Python二进制序列化代码生成的修改。
+
+2018.12.21
 Niveum.Core:
 完成Python对象类型代码生成的修改。（由于Python不支持nested class import，无法支持多命名空间）
 
