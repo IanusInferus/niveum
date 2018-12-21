@@ -5,12 +5,12 @@
 #include <stdexcept>
 #include <cmath>
 
-using namespace Yuki::ExpressionSchema;
-using namespace Yuki::Expression;
+using namespace Niveum::ExpressionSchema;
+using namespace Niveum::Expression;
 
 static BaseSystem::ThreadLocalRandom RNG;
 
-namespace Yuki
+namespace Niveum
 {
     namespace Expression
     {
