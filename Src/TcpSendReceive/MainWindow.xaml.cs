@@ -16,11 +16,11 @@ using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Niveum.Json;
-using Yuki.ObjectSchema;
-using OS = Yuki.ObjectSchema;
-using Yuki.ObjectSchema.CSharp;
-using Yuki.ObjectSchema.CSharpBinary;
-using Yuki.ObjectSchema.CSharpJson;
+using Niveum.ObjectSchema;
+using OS = Niveum.ObjectSchema;
+using Niveum.ObjectSchema.CSharp;
+using Niveum.ObjectSchema.CSharpBinary;
+using Niveum.ObjectSchema.CSharpJson;
 using Communication.Net;
 
 namespace TcpSendReceive
@@ -235,7 +235,7 @@ namespace TcpSendReceive
                         var ma = r.Match(Line);
                         if (!ma.Success) { throw new InvalidOperationException("InvalidLine: " + Line); }
                         var CommandName = ma.Result("${CommandName}");
-                        var CommandDef = Sche.Types.Where(t => t.Name() == CommandName && t.Version() == "").Single();
+                        var CommandDef = Sche.Types.Where(t => t.FullName() == CommandName && t.Version() == "").Single();
                         var jParameters = JToken.Parse(ma.Result("${Params}"));
                         var tRequest = a.GetType(CommandName + "Request");
                         var oRequest = a.GetType("JsonTranslator").GetMethod(CommandName + "RequestFromJson").Invoke(null, new Object[] { jParameters });
@@ -490,7 +490,7 @@ namespace TcpSendReceive
                     var a = SchemaAssembly();
 
                     var CommandName = r.Command.CommandName;
-                    var CommandDef = Sche.Types.Where(t => t.Name() == CommandName && t.Version() == "").Single();
+                    var CommandDef = Sche.Types.Where(t => t.FullName() == CommandName && t.Version() == "").Single();
                     var CommandHash = (UInt32)(Sche.GetSubSchema(new TypeDef[] { CommandDef }, new TypeSpec[] { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0));
                     if (CommandHash != r.Command.CommandHash)
                     {
