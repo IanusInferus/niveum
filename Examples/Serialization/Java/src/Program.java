@@ -49,12 +49,12 @@ public class Program
 		{
 	        FileInputStream fis = new FileInputStream(BinaryPath1);
 	        ReadableStream rs = new ReadableStream(fis, fis.getChannel().size());
-	        WorldBinary.World Data = WorldBinary.BinaryTranslator.WorldFromBinary(rs);
+	        world.World Data = world.binary.BinaryTranslator.WorldFromBinary(rs);
 	        fis.close();
 
 	        FileOutputStream fos = new FileOutputStream(BinaryPath2);
 	        WritableStream ws = new WritableStream(fos);
-	        WorldBinary.BinaryTranslator.WorldToBinary(ws, Data);
+	        world.binary.BinaryTranslator.WorldToBinary(ws, Data);
 	        fos.close();
 		}
 		catch (IOException e)

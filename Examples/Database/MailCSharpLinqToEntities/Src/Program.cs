@@ -1,7 +1,7 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cs
-//  Location:    Yuki.Examples <Visual C#>
+//  Location:    Niveum.Examples <Visual C#>
 //  Description: 邮件管理程序
 //  Version:     2013.04.08.
 //  Author:      F.R.C.

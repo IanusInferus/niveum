@@ -13,11 +13,11 @@ namespace Algorithms
             auto c = crc32(0, Bytes.data(), Bytes.size());
             return static_cast<std::int32_t>(c);
         }
-        std::vector<std::uint8_t> SHA1(const std::vector<std::uint8_t> &Bytes)
+        std::vector<std::uint8_t> SHA256(const std::vector<std::uint8_t> &Bytes)
         {
             throw std::logic_error("NotImplemented");
         }
-        std::vector<std::uint8_t> HMACSHA1Simple(const std::vector<std::uint8_t> &Key, const std::vector<std::uint8_t> &Bytes)
+        std::vector<std::uint8_t> HMACSHA256Simple(const std::vector<std::uint8_t> &Key, const std::vector<std::uint8_t> &Bytes)
         {
             throw std::logic_error("NotImplemented");
         }

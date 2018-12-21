@@ -3,9 +3,8 @@ package context;
 import haxe.Json;
 import jQuery.JQuery;
 
-import Common;
-import communication.Communication;
-import communication.CommunicationJson;
+import communication.*;
+import communication.json.*;
 
 import clients.ISerializationClient;
 

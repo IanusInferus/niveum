@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C197CBAF-712C-4DA8-B7ED-FAE0CB9F77C3}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Niveum.ExpressionSchema</RootNamespace>
+    <AssemblyName>Niveum.Expression</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(FLTKey)</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" Exists('$(FLTKey)') ">
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\Bin\</OutputPath>
+    <DocumentationFile>..\..\Bin\Niveum.Expression.xml</DocumentationFile>
+    <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
+    <NoWarn>1591</NoWarn>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\Bin\</OutputPath>
+    <DocumentationFile>..\..\Bin\Niveum.Expression.xml</DocumentationFile>
+    <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
+    <NoWarn>1591</NoWarn>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Firefly.Lite">
+      <HintPath>..\Lib\Firefly\Firefly.Lite.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ExpressionSchema\ExpressionAssemblyLoader.cs" />
+    <Compile Include="ExpressionSchema\ExpressionParser.cs" />
+    <Compile Include="ExpressionSchema\ExpressionSchemaExtensions.cs" />
+    <Compile Include="ExpressionSchema\ExpressionSchemaLoader.cs" />
+    <Compile Include="ExpressionSchema\SemanticTranslator.cs" />
+    <Compile Include="ExpressionSchema\SyntaxParser.cs" />
+    <Compile Include="ExpressionSchema\TokenParser.cs" />
+    <Compile Include="ExpressionSchema\TypeBinder.cs" />
+    <Compile Include="Expression\ExpressionEvaluator.cs" />
+    <Compile Include="Expression\ExpressionRuntime.cs" />
+    <Compile Include="Expression\VariableContext.cs" />
+    <Compile Include="Generated\ExpressionSchema\Semantics.cs" />
+    <Compile Include="Generated\ExpressionSchema\Syntax.cs" />
+    <Compile Include="Generated\Generator\Cpp\CppBinaryLoader.cs" />
+    <Compile Include="Generated\Generator\CSharp\CSharpBinaryLoader.cs" />
+    <Compile Include="Generator\Cpp\CppBinaryLoader.cs" />
+    <Compile Include="Generator\CSharp\CSharpBinaryLoader.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ExpressionSchema\Semantics.tree" />
+    <None Include="ExpressionSchema\Syntax.tree" />
+    <None Include="Generator\Cpp\CppBinaryLoader.tree" />
+    <None Include="Generator\CSharp\CSharpBinaryLoader.tree" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NiveumCore\NiveumCore.csproj">
+      <Project>{23021296-4e59-4532-9b5f-cb3ced3a978e}</Project>
+      <Name>NiveumCore</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

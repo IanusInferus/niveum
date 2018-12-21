@@ -1,9 +1,9 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cs
-//  Location:    Yuki.ExpressionManipulator <Visual C#>
+//  Location:    Niveum.ExpressionManipulator <Visual C#>
 //  Description: 表达式结构处理工具
-//  Version:     2016.05.13.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,14 +21,14 @@ using Firefly.Streaming;
 using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
-using OS = Yuki.ObjectSchema;
-using ES = Yuki.ExpressionSchema;
-using Yuki.ObjectSchema;
-using Yuki.ExpressionSchema;
-using Yuki.ExpressionSchema.CSharpBinaryLoader;
-using Yuki.ExpressionSchema.CppBinaryLoader;
+using OS = Niveum.ObjectSchema;
+using ES = Niveum.ExpressionSchema;
+using Niveum.ObjectSchema;
+using Niveum.ExpressionSchema;
+using Niveum.ExpressionSchema.CSharpBinaryLoader;
+using Niveum.ExpressionSchema.CppBinaryLoader;
 
-namespace Yuki.ExpressionManipulator
+namespace Niveum.ExpressionManipulator
 {
     public static class Program
     {
@@ -168,7 +168,7 @@ namespace Yuki.ExpressionManipulator
         public static void DisplayInfo()
         {
             Console.WriteLine(@"表达式结构处理工具");
-            Console.WriteLine(@"Yuki.ExpressionManipulator，按BSD许可证分发");
+            Console.WriteLine(@"Niveum.ExpressionManipulator，按BSD许可证分发");
             Console.WriteLine(@"F.R.C.");
             Console.WriteLine(@"");
             Console.WriteLine(@"本工具用于从表达式结构生成代码。");

@@ -1,6 +1,6 @@
 if [ ! -f ../../Bin/MySql.Data.dll ];
 then
-  echo MySql.Data.dll does not exist in YUKI/Bin.
+  echo MySql.Data.dll does not exist in Niveum/Bin.
   exit
 fi
 

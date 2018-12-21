@@ -12,14 +12,12 @@
 
 namespace Server
 {
-    namespace _Impl
+    namespace Services
     {
-        using namespace Communication;
-
         /// <summary>
         /// 本类的所有公共成员均是线程安全的。
         /// </summary>
-        class ServerImplementation : public IApplicationServer, public IServerImplementation
+        class ServerImplementation : public Communication::IApplicationServer, public IServerImplementation
         {
         private:
             std::shared_ptr<class ServerContext> ServerContext;
@@ -40,18 +38,20 @@ namespace Server
                 UnregisterCrossSessionEvents();
             }
 
+            class EventPump : public Communication::IEventPump
+            {
+            };
+            std::shared_ptr<Communication::IEventPump> CreateEventPump(std::function<std::wstring()> GetVersion);
             void RegisterCrossSessionEvents()
             {
                 auto Lock = SessionContext->WriterLock();
-                SessionContext->MessageReceived = [=](std::shared_ptr<MessageReceivedEvent> e) { if (this->MessageReceived != nullptr) { this->MessageReceived(e); } };
-                SessionContext->TestMessageReceived = [=](std::shared_ptr<TestMessageReceivedEvent> e) { if (this->TestMessageReceived != nullptr) { this->TestMessageReceived(e); } };
+                SessionContext->EventPump = CreateEventPump([this]() { return SessionContext->Version; });
             }
 
             void UnregisterCrossSessionEvents()
             {
                 auto Lock = SessionContext->WriterLock();
-                SessionContext->MessageReceived = nullptr;
-                SessionContext->TestMessageReceived = nullptr;
+                SessionContext->EventPump = nullptr;
             }
 
             void RaiseError(std::wstring CommandName, std::wstring Message)
@@ -60,13 +60,13 @@ namespace Server
                 {
                     if (ErrorCommand != nullptr)
                     {
-                        auto e = std::make_shared<ErrorCommandEvent>();
+                        auto e = std::make_shared<Communication::ErrorCommandEvent>();
                         e->CommandName = CommandName;
                         ErrorCommand(e);
                     }
                     if (Error != nullptr)
                     {
-                        auto e = std::make_shared<ErrorEvent>();
+                        auto e = std::make_shared<Communication::ErrorEvent>();
                         e->Message = CommandName + L": " + Message;
                         Error(e);
                     }
@@ -75,7 +75,7 @@ namespace Server
                 {
                     if (Error != nullptr)
                     {
-                        auto e = std::make_shared<ErrorEvent>();
+                        auto e = std::make_shared<Communication::ErrorEvent>();
                         e->Message = Message;
                         Error(e);
                     }
@@ -83,28 +83,35 @@ namespace Server
             }
 
             /// <summary>关闭服务器</summary>
-            std::shared_ptr<ShutdownReply> Shutdown(std::shared_ptr<ShutdownRequest> r) override;
+            std::shared_ptr<Communication::ShutdownReply> Shutdown(std::shared_ptr<Communication::ShutdownRequest> r) override;
             /// <summary>服务器时间</summary>
-            std::shared_ptr<ServerTimeReply> ServerTime(std::shared_ptr<ServerTimeRequest> r) override;
+            std::shared_ptr<Communication::ServerTimeReply> ServerTime(std::shared_ptr<Communication::ServerTimeRequest> r) override;
             /// <summary>退出</summary>
-            std::shared_ptr<QuitReply> Quit(std::shared_ptr<QuitRequest> r) override;
+            std::shared_ptr<Communication::QuitReply> Quit(std::shared_ptr<Communication::QuitRequest> r) override;
             /// <summary>检测类型结构版本</summary>
-            std::shared_ptr<CheckSchemaVersionReply> CheckSchemaVersion(std::shared_ptr<CheckSchemaVersionRequest> r) override;
+            std::shared_ptr<Communication::CheckSchemaVersionReply> CheckSchemaVersion(std::shared_ptr<Communication::CheckSchemaVersionRequest> r) override;
             /// <summary>发送消息</summary>
-            std::shared_ptr<SendMessageReply> SendMessage(std::shared_ptr<SendMessageRequest> r) override;
-            /// <summary>发送消息</summary>
-            std::shared_ptr<SendMessageAt1Reply> SendMessageAt1(std::shared_ptr<SendMessageAt1Request> r) override;
+            std::shared_ptr<Communication::SendMessageReply> SendMessage(std::shared_ptr<Communication::SendMessageRequest> r) override;
             /// <summary>加法</summary>
-            void TestAdd(std::shared_ptr<TestAddRequest> r, std::function<void(std::shared_ptr<TestAddReply>)> Callback, std::function<void(const std::exception &)> OnFailure) override;
+            void TestAdd(std::shared_ptr<Communication::TestAddRequest> r, std::function<void(std::shared_ptr<Communication::TestAddReply>)> Callback, std::function<void(const std::exception &)> OnFailure) override;
             /// <summary>两百万次浮点乘法</summary>
-            std::shared_ptr<TestMultiplyReply> TestMultiply(std::shared_ptr<TestMultiplyRequest> r) override;
+            std::shared_ptr<Communication::TestMultiplyReply> TestMultiply(std::shared_ptr<Communication::TestMultiplyRequest> r) override;
             /// <summary>文本原样返回</summary>
-            std::shared_ptr<TestTextReply> TestText(std::shared_ptr<TestTextRequest> r) override;
+            std::shared_ptr<Communication::TestTextReply> TestText(std::shared_ptr<Communication::TestTextRequest> r) override;
             /// <summary>群发消息</summary>
-            std::shared_ptr<TestMessageReply> TestMessage(std::shared_ptr<TestMessageRequest> r) override;
+            std::shared_ptr<Communication::TestMessageReply> TestMessage(std::shared_ptr<Communication::TestMessageRequest> r) override;
+            /// <summary>服务器时间</summary>
+            std::shared_ptr<class CommunicationDuplication::ServerTimeReply> CommunicationDuplicationDotServerTime(std::shared_ptr<class CommunicationDuplication::ServerTimeRequest> r) override;
+
+            /// <summary>发送消息</summary>
+            std::shared_ptr<Communication::SendMessageAt1Reply> SendMessageAt1(std::shared_ptr<Communication::SendMessageAt1Request> r) override;
+            std::shared_ptr<Communication::SendMessageRequest> SendMessageAt1RequestToHead(std::shared_ptr<Communication::SendMessageAt1Request> o);
+            std::shared_ptr<Communication::SendMessageAt1Reply> SendMessageAt1ReplyFromHead(std::shared_ptr<Communication::SendMessageReply> ho);
+            std::shared_ptr<Communication::MessageReceivedAt1Event> MessageReceivedAt1EventFromHead(std::shared_ptr<Communication::MessageReceivedEvent> ho);
             /// <summary>加法</summary>
-            void TestAddAt1(std::shared_ptr<TestAddAt1Request> r, std::function<void(std::shared_ptr<TestAddAt1Reply>)> Callback, std::function<void(const std::exception &)> OnFailure) override;
+            void TestAddAt1(std::shared_ptr<Communication::TestAddAt1Request> r, std::function<void(std::shared_ptr<Communication::TestAddAt1Reply>)> Callback, std::function<void(const std::exception &)> OnFailure) override;
+            std::shared_ptr<Communication::TestAddRequest> TestAddAt1RequestToHead(std::shared_ptr<Communication::TestAddAt1Request> o);
+            std::shared_ptr<Communication::TestAddAt1Reply> TestAddAt1ReplyFromHead(std::shared_ptr<Communication::TestAddReply> ho);
         };
     }
-    typedef _Impl::ServerImplementation ServerImplementation;
 }

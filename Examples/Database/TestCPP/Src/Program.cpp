@@ -1,7 +1,7 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cpp
-//  Location:    Yuki.Examples <C++ 2011>
+//  Location:    Niveum.Examples <C++ 2011>
 //  Description: 数据库示例程序
 //  Version:     2018.08.21.
 //  Author:      F.R.C.

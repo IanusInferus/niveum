@@ -108,13 +108,13 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\NiveumCore\NiveumCore.csproj">
+      <Project>{23021296-4e59-4532-9b5f-cb3ced3a978e}</Project>
+      <Name>NiveumCore</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NiveumJson\NiveumJson.csproj">
       <Project>{0a2acebf-1c9e-497a-a996-3a5549a13710}</Project>
       <Name>NiveumJson</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\YukiCore\YukiCore.csproj">
-      <Project>{23021296-4E59-4532-9B5F-CB3CED3A978E}</Project>
-      <Name>YukiCore</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

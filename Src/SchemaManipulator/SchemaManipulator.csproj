@@ -8,7 +8,7 @@
     <ProjectGuid>{D9D1181E-2141-4CE7-80F5-73F3B8620247}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Yuki.SchemaManipulator</RootNamespace>
+    <RootNamespace>Niveum.SchemaManipulator</RootNamespace>
     <AssemblyName>SchemaManipulator</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -53,9 +53,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\YukiCore\YukiCore.csproj">
-      <Project>{23021296-4E59-4532-9B5F-CB3CED3A978E}</Project>
-      <Name>YukiCore</Name>
+    <ProjectReference Include="..\NiveumCore\NiveumCore.csproj">
+      <Project>{23021296-4e59-4532-9b5f-cb3ced3a978e}</Project>
+      <Name>NiveumCore</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

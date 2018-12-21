@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++简单类型代码生成器
-//  Version:     2016.10.06.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,7 +14,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
-using OS = Yuki.ObjectSchema;
+using OS = Niveum.ObjectSchema;
+using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
 
 namespace Yuki.RelationSchema.CppPlain
 {
@@ -29,7 +30,7 @@ namespace Yuki.RelationSchema.CppPlain
 
         public class Writer
         {
-            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
+            private static ObjectSchemaTemplateInfo TemplateInfo;
 
             private OS.Cpp.Templates InnerWriter;
 
@@ -40,15 +41,15 @@ namespace Yuki.RelationSchema.CppPlain
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CppPlain);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CppPlain);
             }
 
             public Writer(Schema Schema, String NamespaceName)
             {
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
-                InnerSchema = PlainObjectSchemaGenerator.Generate(Schema);
-                TypeDict = OS.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+                InnerSchema = PlainObjectSchemaGenerator.Generate(Schema, NamespaceName);
+                TypeDict = OS.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key.Split('.').Last(), p => p.Value, StringComparer.OrdinalIgnoreCase);
                 InnerWriter = new OS.Cpp.Templates(InnerSchema);
 
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Int").Any()) { throw new InvalidOperationException("PrimitiveMissing: Int"); }
@@ -57,21 +58,18 @@ namespace Yuki.RelationSchema.CppPlain
             public List<String> GetSchema()
             {
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToList();
-                var Primitives = GetPrimitives();
-                var SimpleTypes = GetSimpleTypes();
-                var EnumFunctors = GetEnumFunctors();
-                var ComplexTypes = GetComplexTypes();
-                return EvaluateEscapedIdentifiers(GetMain(Includes, Primitives, WrapContents(NamespaceName, SimpleTypes), WrapContents("std", EnumFunctors), WrapContents(NamespaceName, ComplexTypes))).Select(Line => Line.TrimEnd(' ')).ToList();
+                var Types = GetTypes();
+                return EvaluateEscapedIdentifiers(GetMain(Includes, Types)).Select(Line => Line.TrimEnd(' ')).ToList();
             }
 
-            public List<String> GetMain(List<String> Includes, List<String> Primitives, List<String> SimpleTypes, List<String> EnumFunctors, List<String> ComplexTypes)
+            public List<String> GetMain(IEnumerable<String> Includes, IEnumerable<String> Types)
             {
-                return GetTemplate("Main").Substitute("Includes", Includes).Substitute("Primitives", Primitives).Substitute("SimpleTypes", SimpleTypes).Substitute("EnumFunctors", EnumFunctors).Substitute("ComplexTypes", ComplexTypes);
+                return GetTemplate("Main").Substitute("Includes", Includes).Substitute("Types", Types);
             }
 
-            public List<String> WrapContents(String Namespace, List<String> Contents)
+            public IEnumerable<String> WrapNamespace(String Namespace, IEnumerable<String> Contents)
             {
-                return InnerWriter.WrapContents(Namespace, Contents);
+                return InnerWriter.WrapNamespace(Namespace, Contents);
             }
 
             public Boolean IsInclude(String s)
@@ -86,7 +84,7 @@ namespace Yuki.RelationSchema.CppPlain
 
             public String GetTypeString(OS.TypeSpec Type)
             {
-                return InnerWriter.GetTypeString(Type);
+                return InnerWriter.GetTypeString(Type, NamespaceName);
             }
 
             public String GetQuerySignature(QueryDef q)
@@ -174,21 +172,9 @@ namespace Yuki.RelationSchema.CppPlain
                 return GetTemplate("QuerySignature").Substitute("Name", Name).Substitute("ParameterList", ParameterList).Substitute("Type", Type).Single();
             }
 
-            public List<String> GetSimpleTypes()
-            {
-                return InnerWriter.GetSimpleTypes(InnerSchema);
-            }
-
-            public List<String> GetEnumFunctors()
-            {
-                return InnerWriter.GetEnumFunctors(InnerSchema, NamespaceName);
-            }
-
-            public List<String> GetComplexTypes()
+            public List<String> GetDataAccessTypes()
             {
                 var l = new List<String>();
-                l.AddRange(InnerWriter.GetComplexTypes(InnerSchema));
-                l.Add("");
 
                 var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToList();
                 if (Queries.Count > 0)
@@ -198,6 +184,23 @@ namespace Yuki.RelationSchema.CppPlain
                     l.AddRange(GetTemplate("IDataAccessPool"));
                     l.Add("");
                 }
+
+                if (l.Count > 0)
+                {
+                    l = l.Take(l.Count - 1).ToList();
+                }
+
+                return l;
+            }
+
+            public List<String> GetTypes()
+            {
+                var l = new List<String>();
+                l.AddRange(InnerWriter.GetTypes(InnerSchema, NamespaceName));
+                l.Add("");
+
+                l.AddRange(WrapNamespace(NamespaceName, GetDataAccessTypes()));
+                l.Add("");
 
                 if (l.Count > 0)
                 {
@@ -266,7 +269,7 @@ namespace Yuki.RelationSchema.CppPlain
 
             return new String(l.ToArray()) + new String(PascalName.Skip(l.Count).ToArray());
         }
-        public static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        public static List<String> Substitute(this List<String> Lines, String Parameter, IEnumerable<String> Value)
         {
             var l = new List<String>();
             foreach (var Line in Lines)

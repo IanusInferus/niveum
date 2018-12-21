@@ -25,14 +25,14 @@ namespace Server
 
     std::shared_ptr<IServerImplementation> ServerContext::CreateServerImplementation(std::shared_ptr<SessionContext> SessionContext)
     {
-        auto si = std::make_shared<ServerImplementation>(this->shared_from_this(), SessionContext);
+        auto si = std::make_shared<Server::Services::ServerImplementation>(this->shared_from_this(), SessionContext);
         return si;
     }
     std::pair<std::shared_ptr<IServerImplementation>, std::shared_ptr<IBinarySerializationServerAdapter>> ServerContext::CreateServerImplementationWithBinaryAdapter(std::shared_ptr<ISessionContext> SessionContext)
     {
         auto sc = std::dynamic_pointer_cast<class SessionContext>(SessionContext);
         if (sc == nullptr) { throw std::logic_error("InvalidOperationException"); }
-        auto si = std::dynamic_pointer_cast<ServerImplementation>(CreateServerImplementation(sc));
+        auto si = std::dynamic_pointer_cast<Server::Services::ServerImplementation>(CreateServerImplementation(sc));
         if (si == nullptr) { throw std::logic_error("InvalidOperationException"); }
         auto a = std::make_shared<BinarySerializationServerAdapter>(si);
         return std::make_pair(si, a);

@@ -1,9 +1,9 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cs
-//  Location:    Yuki.Examples <Visual C#>
+//  Location:    Niveum.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2015.08.13.
+//  Version:     2018.12.17.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -438,7 +438,7 @@ namespace Client
             };
             if (UseOld)
             {
-                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = "E0FF01B4A754245C" }, CheckSchemaVersionHandler);
+                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = "690E84A3D3914C38" }, CheckSchemaVersionHandler);
             }
             else
             {

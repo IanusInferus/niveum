@@ -1,0 +1,250 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Haxe.tree
+      Location:    Niveum.Core <Tree>
+      Description: 对象类型结构Haxe模板
+      Version:     2018.12.18.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Niveum.ObjectSchema.Haxe
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+
+#Constant Keywords:List<String>
+    $List String
+        abstract
+        break
+        callback
+        case
+        cast
+        catch
+        class
+        continue
+        default
+        do
+        dynamic
+        else
+        enum
+        extends
+        extern
+        false
+        for
+        function
+        here
+        if
+        implements
+        import
+        in
+        inline
+        interface
+        never
+        new
+        null
+        override
+        package
+        private
+        public
+        return
+        static
+        super
+        switch
+        this
+        throw
+        trace
+        true
+        try
+        typedef
+        untyped
+        using
+        var
+        while
+        Dynamic
+
+#Constant PrimitiveMapping:Map<String, String>
+    $Table KeyValuePairOfStringAndString Key Value
+        Unit                Unit
+        Boolean             Bool
+        String              String
+        Int                 Int
+        Real                Float
+        Byte                Int
+        UInt8               Int
+        UInt16              Int
+        UInt32              Int
+        UInt64              haxe.Int64
+        Int8                Int
+        Int16               Int
+        Int32               Int
+        Int64               haxe.Int64
+        Float32             Float
+        Float64             Float
+        Type                Error
+        Optional            Null
+        List                Array
+        Set                 Set
+        Map                 Map
+
+#Template SingleLineXmlComment Description:String
+    /** ${Description} */
+
+#Template MultiLineXmlComment Description:List<String>
+    /**
+      * ${Description}
+      * */
+
+#Template Primitive Name:String PlatformName:String
+    typedef [[${Name}]] = ${PlatformName}
+
+#Template Primitive_Unit
+    typedef Unit = {}
+
+#Template Primitive_Set
+    typedef Set<T> = Map<T, Unit>
+
+#Template Alias a:AliasDef
+    $$
+        var Name = GetEscapedIdentifier(a.DefinitionName()) + GetGenericParameters(a.GenericParameters);
+        var Type = GetTypeString(a.Type, a.NamespaceName());
+    ${GetXmlComment(a.Description)}
+    typedef ${Name} = ${Type}
+
+#Template Record r:RecordDef
+    $$
+        var Name = GetEscapedIdentifier(r.DefinitionName()) + GetGenericParameters(r.GenericParameters);
+    ${GetXmlComment(r.Description)}
+    typedef ${Name} =
+    {
+        $$
+            foreach (var f in r.Fields)
+            {
+                ##
+                    ${GetXmlComment(f.Description)}
+                    var [[${LowercaseCamelize(f.Name)}]] : ${GetTypeString(f.Type, r.NamespaceName())};
+            }
+    }
+
+#Template TaggedUnion tu:TaggedUnionDef
+    $$
+        var Name = GetEscapedIdentifier(tu.DefinitionName()) + GetGenericParameters(tu.GenericParameters);
+    ${GetXmlComment(tu.Description)}
+    enum ${Name}
+    {
+        $$
+            foreach (var a in tu.Alternatives)
+            {
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        [[${LowercaseCamelize(a.Name)}]];
+                }
+                else
+                {
+                    ##
+                        ${GetXmlComment(a.Description)}
+                        [[${LowercaseCamelize(a.Name)}]](v : ${GetTypeString(a.Type, tu.NamespaceName())});
+                }
+            }
+    }
+
+#Template Enum e:EnumDef
+    $$
+        var Name = GetEscapedIdentifier(e.DefinitionName());
+    ${GetXmlComment(e.Description)}
+    class ${Name} /* ${GetEnumTypeString(e.UnderlyingType, e.NamespaceName())} */
+    {
+        $$
+            var k = 0;
+            foreach (var l in e.Literals)
+            {
+                ##
+                    ${GetXmlComment(l.Description)}
+                    public static inline var [[${l.Name.ToUpperInvariant()}]] : ${GetTypeString(e.UnderlyingType, e.NamespaceName())} = ${l.Value};
+                k += 1;
+            }
+    }
+
+#Template Tuple tp:TypeSpec NamespaceName:String
+    $$
+        var Name = GetEscapedIdentifier(tp.SimpleName(NamespaceName));
+        var Types = tp.Tuple;
+    /* Tuple */
+    typedef ${Name} =
+    {
+        $$
+            var k = 0;
+            foreach (var e in Types)
+            {
+                ##
+                    var [[item${k}]] : ${GetTypeString(e, NamespaceName)};
+                k += 1;
+            }
+    }
+
+#Template IApplicationClient Commands:List<TypeDef> NamespaceName:String
+    interface IApplicationClient
+    {
+        var hash(get, null) : String;
+        function dequeueCallback(commandName : String) : Void;
+
+        $$
+            foreach (var c in Commands)
+            {
+                if (c.OnClientCommand)
+                {
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
+                    var Description = c.ClientCommand.Description;
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    ##
+                        ${GetXmlComment(Description)}
+                        function [[${LowercaseCamelize(Name)}]](r : ${RequestTypeString}, _callback : ${ReplyTypeString} -> Void) : Void;
+                }
+                else if (c.OnServerCommand)
+                {
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                    var Description = c.ServerCommand.Description;
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    ##
+                        ${GetXmlComment(Description)}
+                        var [[${LowercaseCamelize(Name)}]] : ${EventTypeString} -> Void;
+                }
+            }
+    }
+
+#Template WrapModule NamespaceName:String Imports:List<String> Contents:IEnumerable<String>
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    $$
+        if (NamespaceName != "")
+        {
+            var n = String.Join(".", NamespaceName.Split('.').Select(NamespacePart => LowercaseCamelize(NamespacePart)));
+            ##
+                package ${n};
+
+            $End
+        }
+        if (Imports.Count > 0)
+        {
+            ##
+                import ${Imports};
+
+            $End
+        }
+    ${Contents}
+
+$End

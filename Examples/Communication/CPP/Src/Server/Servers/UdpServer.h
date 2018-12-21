@@ -35,10 +35,10 @@ namespace Server
     /// Flag，标记，1 ACK，表示Inner中包含确认收到的包索引，2 ENC，表示数据已加密，4 INI，表示初始化，8 AUX，表示从客户端发到服务器的包为没有数据的辅助确认包
     /// Index，序列号，当AUX存在时，必须为LowerIndex
     /// Verification，当ENC存在时，为Inner的MAC验证码，否则为CRC32验证码，其中HMAC的验证码的计算方式为
-    ///     Key = SessionKey XOR SHA1(Flag :: Index)
+    ///     Key = SessionKey XOR SHA256(Flag :: Index)
     ///     MAC = HMAC(Key, SessionId :: Flag :: Index :: 0 :: Inner).Take(4)
     ///     HMAC = H((K XOR opad) :: H((K XOR ipad) :: Inner))
-    ///     H = SHA1
+    ///     H = SHA256
     ///     opad = 0x5C
     ///     ipad = 0x36
     /// Inner ::= NumIndex:UInt16 LowerIndex:UInt16 Index:UInt16{NumIndex - 1} Payload:Byte*，当ACK存在时

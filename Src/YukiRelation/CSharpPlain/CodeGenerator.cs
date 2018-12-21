@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C#简单类型代码生成器
-//  Version:     2016.10.06.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,7 +14,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
-using OS = Yuki.ObjectSchema;
+using OS = Niveum.ObjectSchema;
+using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
 
 namespace Yuki.RelationSchema.CSharpPlain
 {
@@ -29,7 +30,7 @@ namespace Yuki.RelationSchema.CSharpPlain
 
         public class Writer
         {
-            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
+            private static ObjectSchemaTemplateInfo TemplateInfo;
 
             private OS.CSharp.Templates InnerWriter;
 
@@ -40,15 +41,15 @@ namespace Yuki.RelationSchema.CSharpPlain
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpPlain);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpPlain);
             }
 
             public Writer(Schema Schema, String NamespaceName, Boolean WithFirefly = true)
             {
                 this.Schema = Schema;
                 this.NamespaceName = NamespaceName;
-                InnerSchema = PlainObjectSchemaGenerator.Generate(Schema);
-                TypeDict = OS.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+                InnerSchema = PlainObjectSchemaGenerator.Generate(Schema, NamespaceName);
+                TypeDict = OS.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key.Split('.').Last(), p => p.Value, StringComparer.OrdinalIgnoreCase);
                 InnerWriter = new OS.CSharp.Templates(InnerSchema);
 
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Int").Any()) { throw new InvalidOperationException("PrimitiveMissing: Int"); }
@@ -56,17 +57,9 @@ namespace Yuki.RelationSchema.CSharpPlain
 
             public List<String> GetSchema()
             {
-                var Primitives = GetPrimitives();
-                var ComplexTypes = GetComplexTypes();
+                var Types = GetTypes();
 
-                if (NamespaceName != "")
-                {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithNamespace").Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
-                }
-                else
-                {
-                    return EvaluateEscapedIdentifiers(GetTemplate("MainWithoutNamespace").Substitute("Imports", Schema.Imports).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes)).Select(Line => Line.TrimEnd(' ')).ToList();
-                }
+                return EvaluateEscapedIdentifiers(GetTemplate("Main").Substitute("NamespaceName", NamespaceName).Substitute("Imports", Schema.Imports).Substitute("Types", Types)).Select(Line => Line.TrimEnd(' ')).ToList();
             }
 
             public List<String> GetPrimitives()
@@ -76,7 +69,7 @@ namespace Yuki.RelationSchema.CSharpPlain
 
             public String GetTypeString(OS.TypeSpec Type)
             {
-                return InnerWriter.GetTypeString(Type);
+                return InnerWriter.GetTypeString(Type, NamespaceName);
             }
 
             public String GetQuerySignature(QueryDef q)
@@ -210,11 +203,9 @@ namespace Yuki.RelationSchema.CSharpPlain
                 return ParameterList;
             }
 
-            public List<String> GetComplexTypes()
+            public List<String> GetDataAccessTypes()
             {
                 var l = new List<String>();
-                l.AddRange(InnerWriter.GetComplexTypes(InnerSchema));
-                l.Add("");
 
                 var Queries = Schema.Types.Where(t => t.OnQueryList).SelectMany(t => t.QueryList.Queries).ToList();
                 if (Queries.Count > 0)
@@ -224,6 +215,23 @@ namespace Yuki.RelationSchema.CSharpPlain
                     l.AddRange(GetTemplate("ITransactionLock"));
                     l.Add("");
                 }
+
+                if (l.Count > 0)
+                {
+                    l = l.Take(l.Count - 1).ToList();
+                }
+
+                return l;
+            }
+
+            public List<String> GetTypes()
+            {
+                var l = new List<String>();
+                l.AddRange(InnerWriter.GetTypes(InnerSchema, NamespaceName));
+                l.Add("");
+
+                l.AddRange(InnerWriter.WrapNamespace(NamespaceName, GetDataAccessTypes()));
+                l.Add("");
 
                 if (l.Count > 0)
                 {
@@ -292,7 +300,7 @@ namespace Yuki.RelationSchema.CSharpPlain
 
             return new String(l.ToArray()) + new String(PascalName.Skip(l.Count).ToArray());
         }
-        public static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        public static List<String> Substitute(this List<String> Lines, String Parameter, IEnumerable<String> Value)
         {
             var l = new List<String>();
             foreach (var Line in Lines)

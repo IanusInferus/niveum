@@ -1,9 +1,9 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cs
-//  Location:    Yuki.TcpSendReceive <Visual C#>
+//  Location:    Niveum.TcpSendReceive <Visual C#>
 //  Description: TCP发送接收器
-//  Version:     2012.07.26.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================

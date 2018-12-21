@@ -2,13 +2,15 @@
     ==========================================================================
 
       File:        TestPerformance.tree
-      Location:    Yuki.Examples <Tree>
+      Location:    Niveum.Examples <Tree>
       Description: 性能测试
-      Version:     2012.05.02.
+      Version:     2018.12.05.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
     ==========================================================================
+
+#Namespace Communication
 
 #ClientCommand TestAdd                              加法
     Left                Int                         操作数1

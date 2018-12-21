@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2017.07.18.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,7 +14,8 @@ using System.Linq;
 using Firefly;
 using Firefly.Mapping.MetaSchema;
 using Firefly.TextEncoding;
-using OS = Yuki.ObjectSchema;
+using OS = Niveum.ObjectSchema;
+using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
 
 namespace Yuki.RelationSchema.CppMemory
 {
@@ -29,7 +30,7 @@ namespace Yuki.RelationSchema.CppMemory
 
         public class Writer
         {
-            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
+            private static ObjectSchemaTemplateInfo TemplateInfo;
 
             private CppPlain.CodeGenerator.Writer InnerWriter;
             private OS.CppBinary.Templates InnerBinaryWriter;
@@ -43,7 +44,7 @@ namespace Yuki.RelationSchema.CppMemory
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CppMemory);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CppMemory);
             }
 
             public Writer(Schema Schema, String EntityNamespaceName, String NamespaceName)
@@ -51,7 +52,7 @@ namespace Yuki.RelationSchema.CppMemory
                 this.Schema = Schema;
                 this.EntityNamespaceName = EntityNamespaceName;
                 this.NamespaceName = NamespaceName;
-                InnerSchema = PlainObjectSchemaGenerator.Generate(Schema);
+                InnerSchema = PlainObjectSchemaGenerator.Generate(Schema, EntityNamespaceName);
                 TypeDict = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
 
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Unit").Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
@@ -64,9 +65,10 @@ namespace Yuki.RelationSchema.CppMemory
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Optional").Any()) { throw new InvalidOperationException("PrimitiveMissing: Optional"); }
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "List").Any()) { throw new InvalidOperationException("PrimitiveMissing: List"); }
 
-                InnerWriter = new CppPlain.CodeGenerator.Writer(Schema, NamespaceName);
+                InnerWriter = new CppPlain.CodeGenerator.Writer(Schema, EntityNamespaceName);
                 var Types = new List<OS.TypeDef>();
                 Types.AddRange(InnerSchema.Types);
+                var EntityNamespaceParts = EntityNamespaceName.Split('.').ToList();
                 var TableFields = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).Select
                 (
                     e => new OS.VariableDef
@@ -76,18 +78,18 @@ namespace Yuki.RelationSchema.CppMemory
                         (
                             new OS.GenericTypeSpec
                             {
-                                TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = "List", Version = "" }),
+                                TypeSpec = OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = new List<String> { "List" }, Version = "" }),
                                 ParameterValues = new List<OS.TypeSpec>
                                 {
-                                    OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = e.Name , Version = ""})
+                                    OS.TypeSpec.CreateTypeRef(new OS.TypeRef { Name = EntityNamespaceParts.Concat(new List<String> { e.Name }).ToList(), Version = ""})
                                 }
                             }
                          )
                     }
                 ).ToList();
-                Types.Add(OS.TypeDef.CreateRecord(new OS.RecordDef { Name = "MemoryDataTables", Version = "", GenericParameters = new List<OS.VariableDef> { }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Fields = TableFields, Description = "" }));
+                Types.Add(OS.TypeDef.CreateRecord(new OS.RecordDef { Name = EntityNamespaceParts.Concat(new List <String> { "MemoryDataTables" }).ToList(), Version = "", GenericParameters = new List<OS.VariableDef> { }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Fields = TableFields, Description = "" }));
                 InnerSchema = new OS.Schema { Types = Types, TypeRefs = InnerSchema.TypeRefs, Imports = InnerSchema.Imports };
-                InnerTypeDict = Yuki.ObjectSchema.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+                InnerTypeDict = Niveum.ObjectSchema.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key.Split('.').Last(), p => p.Value, StringComparer.OrdinalIgnoreCase);
                 InnerBinaryWriter = new OS.CppBinary.Templates(InnerSchema, false, false);
             }
 
@@ -96,7 +98,7 @@ namespace Yuki.RelationSchema.CppMemory
                 var Includes = Schema.Imports.Where(i => IsInclude(i)).ToList();
                 var Primitives = GetPrimitives();
                 var ComplexTypes = GetComplexTypes();
-                var Contents = ComplexTypes;
+                IEnumerable<String> Contents = ComplexTypes;
                 if (EntityNamespaceName == NamespaceName || EntityNamespaceName == "")
                 {
                     Contents = GetTemplate("NamespaceImplementation").Substitute("EntityNamespaceName", new List<String> { }).Substitute("Contents", Contents);
@@ -105,19 +107,20 @@ namespace Yuki.RelationSchema.CppMemory
                 {
                     Contents = GetTemplate("NamespaceImplementation").Substitute("EntityNamespaceName", EntityNamespaceName.Replace(".", "::")).Substitute("Contents", Contents);
                 }
-                Contents = WrapContents(NamespaceName, Contents);
-                return EvaluateEscapedIdentifiers(GetMain(Includes, Primitives, new List<String> { }, new List<String> { }, Contents)).Select(Line => Line.TrimEnd(' ')).ToList();
+                Contents = WrapNamespace(NamespaceName, Contents);
+                return EvaluateEscapedIdentifiers(GetMain(Includes, Primitives, Contents)).Select(Line => Line.TrimEnd(' ')).ToList();
             }
 
-            public List<String> GetMain(List<String> Includes, List<String> Primitives, List<String> SimpleTypes, List<String> EnumFunctors, List<String> ComplexTypes)
+            public List<String> GetMain(IEnumerable<String> Includes, IEnumerable<String> Primitives, IEnumerable<String> ComplexTypes)
             {
-                return GetTemplate("Main").Substitute("Includes", Includes).Substitute("Primitives", Primitives).Substitute("SimpleTypes", SimpleTypes).Substitute("EnumFunctors", EnumFunctors).Substitute("ComplexTypes", ComplexTypes);
+                return GetTemplate("Main").Substitute("Includes", Includes).Substitute("Primitives", Primitives).Substitute("ComplexTypes", ComplexTypes);
             }
 
-            public List<String> WrapContents(String Namespace, List<String> Contents)
+            public IEnumerable<String> WrapNamespace(String Namespace, IEnumerable<String> Contents)
             {
-                return InnerWriter.WrapContents(Namespace, Contents);
+                return InnerWriter.WrapNamespace(Namespace, Contents);
             }
+
 
             public Boolean IsInclude(String s)
             {
@@ -396,7 +399,7 @@ namespace Yuki.RelationSchema.CppMemory
                 var Tables = GetTables();
                 var Indices = GetIndices();
                 var Streams = InnerBinaryWriter.Streams().ToList();
-                var BinaryTranslator = InnerBinaryWriter.BinaryTranslator(InnerSchema).ToList();
+                var BinaryTranslator = InnerBinaryWriter.BinaryTranslator(InnerSchema, EntityNamespaceName).ToList();
                 var Generates = GetGenerates();
                 var Hash = Schema.Hash().ToString("X16", System.Globalization.CultureInfo.InvariantCulture);
                 var Queries = GetQueries();
@@ -433,7 +436,7 @@ namespace Yuki.RelationSchema.CppMemory
         {
             return CppPlain.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
-        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, IEnumerable<String> Value)
         {
             return CppPlain.CodeGenerator.Substitute(Lines, Parameter, Value);
         }

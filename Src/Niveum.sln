@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchemaManipulator", "Schema
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseRegenerator", "DatabaseRegenerator\DatabaseRegenerator.csproj", "{8EA3C197-8B12-4A72-8C91-E22DB8039E51}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YukiCore", "YukiCore\YukiCore.csproj", "{23021296-4E59-4532-9B5F-CB3CED3A978E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NiveumCore", "NiveumCore\NiveumCore.csproj", "{23021296-4E59-4532-9B5F-CB3CED3A978E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YukiRelation", "YukiRelation\YukiRelation.csproj", "{7BD101DA-2049-4B20-A89F-D5C7D4384D8B}"
 EndProject
@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RelationSchemaManipulator",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpSendReceive", "TcpSendReceive\TcpSendReceive.csproj", "{44BAA95D-E876-44F9-B6E0-C7B87D00869D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YukiExpression", "YukiExpression\YukiExpression.csproj", "{C197CBAF-712C-4DA8-B7ED-FAE0CB9F77C3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NiveumExpression", "NiveumExpression\NiveumExpression.csproj", "{C197CBAF-712C-4DA8-B7ED-FAE0CB9F77C3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpressionManipulator", "ExpressionManipulator\ExpressionManipulator.csproj", "{31045E21-7CE2-46D4-9855-1575E290190B}"
 EndProject

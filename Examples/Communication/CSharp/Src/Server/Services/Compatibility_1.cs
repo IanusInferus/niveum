@@ -1,13 +1,4 @@
-﻿//==========================================================================
-//
-//  Notice:      This file is varmatically generated.
-//               Please don't modify this file.
-//
-//==========================================================================
-
-//Reference:
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Communication;

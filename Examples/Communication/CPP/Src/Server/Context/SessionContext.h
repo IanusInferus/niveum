@@ -113,10 +113,7 @@ namespace Server
         int ReceivedMessageCount; //跨线程变量
 
         std::wstring Version;
-
-        std::function<void(std::shared_ptr<Communication::MessageReceivedEvent>)> MessageReceived;
-
-        std::function<void(std::shared_ptr<Communication::TestMessageReceivedEvent>)> TestMessageReceived;
+        std::shared_ptr<Communication::IEventPump> EventPump;
 
         //单线程访问
 

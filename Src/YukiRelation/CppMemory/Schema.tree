@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C++ Memory代码模板数据
-      Version:     2018.08.20.
+      Version:     2018.12.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -238,7 +238,7 @@ ObjectSchemaTemplate
                     throw std::logic_error("NotSupportedException");
         Template
             Name Main
-            //Parameters: ${Includes}, ${Primitives}, ${SimpleTypes}, ${EnumFunctors}, ${ComplexTypes}
+            //Parameters: ${Includes}, ${Primitives}, ${ComplexTypes}
             Value
                 $String
                     //==========================================================================
@@ -261,8 +261,6 @@ ObjectSchemaTemplate
                     #include <cpplinq.hpp>
                     #include ${Includes}
                     ${Primitives}
-                    ${SimpleTypes}
-                    ${EnumFunctors}
                     ${ComplexTypes}
 
                 $End
