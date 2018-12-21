@@ -16,6 +16,8 @@ Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
 Yuki.TcpSendReceive:
 重命名为Niveum.TcpSendReceive。
 将所有对Yuki.Core的引用改为对Niveum.Core的引用。
+Yuki.Core:
+移除过渡版本Yuki.Core。
 
 2018.12.21
 Niveum.Core:
