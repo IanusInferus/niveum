@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# SQL Server代码生成器
-//  Version:     2016.10.06.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -12,7 +12,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Firefly;
-using OS = Yuki.ObjectSchema;
+using OS = Niveum.ObjectSchema;
+using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
 
 namespace Yuki.RelationSchema.CSharpSqlServer
 {
@@ -27,7 +28,7 @@ namespace Yuki.RelationSchema.CSharpSqlServer
 
         public class Writer
         {
-            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
+            private static ObjectSchemaTemplateInfo TemplateInfo;
 
             private CSharpPlain.CodeGenerator.Writer InnerWriter;
 
@@ -39,8 +40,8 @@ namespace Yuki.RelationSchema.CSharpSqlServer
 
             static Writer()
             {
-                var OriginalTemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpPlain);
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpSqlServer);
+                var OriginalTemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpPlain);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpSqlServer);
                 TemplateInfo.Keywords = OriginalTemplateInfo.Keywords;
                 TemplateInfo.PrimitiveMappings = OriginalTemplateInfo.PrimitiveMappings;
             }
@@ -50,7 +51,7 @@ namespace Yuki.RelationSchema.CSharpSqlServer
                 this.Schema = Schema;
                 this.EntityNamespaceName = EntityNamespaceName;
                 this.NamespaceName = NamespaceName;
-                InnerSchema = PlainObjectSchemaGenerator.Generate(Schema);
+                InnerSchema = PlainObjectSchemaGenerator.Generate(Schema, EntityNamespaceName);
                 TypeDict = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
 
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Unit").Any()) { throw new InvalidOperationException("PrimitiveMissing: Unit"); }
@@ -62,7 +63,7 @@ namespace Yuki.RelationSchema.CSharpSqlServer
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "Optional").Any()) { throw new InvalidOperationException("PrimitiveMissing: Optional"); }
                 if (!Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnPrimitive && t.Primitive.Name == "List").Any()) { throw new InvalidOperationException("PrimitiveMissing: List"); }
 
-                InnerWriter = new CSharpPlain.CodeGenerator.Writer(Schema, NamespaceName);
+                InnerWriter = new CSharpPlain.CodeGenerator.Writer(Schema, EntityNamespaceName);
             }
 
             public List<String> GetSchema()
@@ -466,7 +467,7 @@ namespace Yuki.RelationSchema.CSharpSqlServer
         {
             return CSharpPlain.CodeGenerator.Substitute(Lines, Parameter, Value);
         }
-        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, IEnumerable<String> Value)
         {
             return CSharpPlain.CodeGenerator.Substitute(Lines, Parameter, Value);
         }

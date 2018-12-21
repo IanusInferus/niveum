@@ -8,7 +8,7 @@
     <ProjectGuid>{31045E21-7CE2-46D4-9855-1575E290190B}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Yuki.ExpressionManipulator</RootNamespace>
+    <RootNamespace>Niveum.ExpressionManipulator</RootNamespace>
     <AssemblyName>ExpressionManipulator</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -53,13 +53,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\YukiCore\YukiCore.csproj">
-      <Project>{23021296-4E59-4532-9B5F-CB3CED3A978E}</Project>
-      <Name>YukiCore</Name>
+    <ProjectReference Include="..\NiveumCore\NiveumCore.csproj">
+      <Project>{23021296-4e59-4532-9b5f-cb3ced3a978e}</Project>
+      <Name>NiveumCore</Name>
     </ProjectReference>
-    <ProjectReference Include="..\YukiExpression\YukiExpression.csproj">
+    <ProjectReference Include="..\NiveumExpression\NiveumExpression.csproj">
       <Project>{c197cbaf-712c-4da8-b7ed-fae0cb9f77c3}</Project>
-      <Name>YukiExpression</Name>
+      <Name>NiveumExpression</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Yuki.ExpressionManipulator")]
+[assembly: AssemblyProduct("Niveum.ExpressionManipulator")]
 [assembly: AssemblyCopyright("Copyright(C) F.R.C., under BSD license")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include "BaseSystem/Any.h"
 
-namespace Yuki
+namespace Niveum
 {
     namespace Expression
     {
@@ -43,13 +43,13 @@ namespace Yuki
         class ExpressionParameterTypeProvider
         {
         public:
-            std::unordered_map<std::wstring, Yuki::ExpressionSchema::PrimitiveType> Parameters;
+            std::unordered_map<std::wstring, Niveum::ExpressionSchema::PrimitiveType> Parameters;
 
             ExpressionParameterTypeProvider()
             {
             }
 
-            ExpressionParameterTypeProvider(std::shared_ptr<std::vector<std::shared_ptr<Yuki::ExpressionSchema::VariableDef>>> ParameterDefs)
+            ExpressionParameterTypeProvider(std::shared_ptr<std::vector<std::shared_ptr<Niveum::ExpressionSchema::VariableDef>>> ParameterDefs)
             {
                 for (int k = 0; k < static_cast<int>(ParameterDefs->size()); k += 1)
                 {
@@ -67,14 +67,14 @@ namespace Yuki
             }
 
             template <typename T>
-            std::function<T(ExpressionParameterContext &)> BuildExpression(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Yuki::ExpressionSchema::Expr> e)
+            std::function<T(ExpressionParameterContext &)> BuildExpression(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Niveum::ExpressionSchema::Expr> e)
             {
                 auto f = BuildExpr(eptp, e);
                 return AnyCast<std::function<T(ExpressionParameterContext &)>>(f);
             }
 
         private:
-            Any BuildExpr(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Yuki::ExpressionSchema::Expr> e);
+            Any BuildExpr(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Niveum::ExpressionSchema::Expr> e);
         };
     }
 }

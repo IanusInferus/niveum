@@ -1,9 +1,9 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cpp
-//  Location:    Yuki.Examples <C++ 2011>
+//  Location:    Niveum.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2015.08.31.
+//  Version:     2018.12.17.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //

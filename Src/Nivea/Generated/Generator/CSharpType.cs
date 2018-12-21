@@ -373,7 +373,7 @@ namespace Nivea.Generator.CSharpType
             yield return "";
             foreach (var a in tu.Alternatives)
             {
-                if ((a.Type.OnTypeRef) && (a.Type.TypeRef.Name.Count == 1) && (a.Type.TypeRef.Name.Single() == "Unit") && (a.Type.TypeRef.Version == ""))
+                if (a.Type.OnTypeRef && (a.Type.TypeRef.Name.Count == 1) && (a.Type.TypeRef.Name.Single() == "Unit") && (a.Type.TypeRef.Version == ""))
                 {
                     foreach (var _Line in Combine(Begin(), GetXmlComment(a.Description)))
                     {

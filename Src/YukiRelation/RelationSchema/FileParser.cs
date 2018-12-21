@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 文件解析器
-//  Version:     2016.08.06.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,7 +17,8 @@ using Firefly.Texting.TreeFormat;
 using Firefly.Texting.TreeFormat.Syntax;
 using TreeFormat = Firefly.Texting.TreeFormat;
 using TFSemantics = Firefly.Texting.TreeFormat.Semantics;
-using OS = Yuki.ObjectSchema;
+using Niveum.ObjectSchema;
+using OS = Niveum.ObjectSchema;
 
 namespace Yuki.RelationSchema
 {
@@ -564,14 +565,14 @@ namespace Yuki.RelationSchema
         {
             if (t.OnTypeRef)
             {
-                var r = TypeSpec.CreateTypeRef((TypeRef)(t.TypeRef.Name));
+                var r = TypeSpec.CreateTypeRef((TypeRef)(t.TypeRef.VersionedName()));
                 if (InnerPositions.ContainsKey(t))
                 {
                     Positions.Add(r, InnerPositions[t]);
                 }
                 return r;
             }
-            else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "Optional" && t.GenericTypeSpec.ParameterValues.Count == 1)
+            else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Optional") && t.GenericTypeSpec.ParameterValues.Count == 1)
             {
                 var Parameter = t.GenericTypeSpec.ParameterValues.Single();
                 var InnerType = TranslateTypeSpec(Parameter, Text, InnerPositions, Positions);
@@ -585,10 +586,10 @@ namespace Yuki.RelationSchema
                     return r;
                 }
             }
-            else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.Name == "List" && t.GenericTypeSpec.ParameterValues.Count == 1)
+            else if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && t.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("List") && t.GenericTypeSpec.ParameterValues.Count == 1)
             {
                 var Parameter = t.GenericTypeSpec.ParameterValues.Single();
-                if (Parameter.OnTypeRef && Parameter.TypeRef.Name == "Byte")
+                if (Parameter.OnTypeRef && Parameter.TypeRef.NameMatches("Byte"))
                 {
                     var r = TypeSpec.CreateTypeRef((TypeRef)("Binary"));
                     if (InnerPositions.ContainsKey(t))

@@ -330,12 +330,12 @@ namespace Server
                                     std::vector<std::uint8_t> SHABuffer;
                                     SHABuffer.resize(4);
                                     ArrayCopy(*Buffer, 4, SHABuffer, 0, 4);
-                                    auto SHA1 = Algorithms::Cryptography::SHA1(SHABuffer);
+                                    auto SHA256 = Algorithms::Cryptography::SHA256(SHABuffer);
                                     std::vector<std::uint8_t> Key;
-                                    Key.resize(SecureContext->ClientToken.size() + SHA1.size());
+                                    Key.resize(SecureContext->ClientToken.size() + SHA256.size());
                                     ArrayCopy(SecureContext->ClientToken, 0, Key, 0, static_cast<int>(SecureContext->ClientToken.size()));
-                                    ArrayCopy(SHA1, 0, Key, SecureContext->ClientToken.size(), static_cast<int>(SHA1.size()));
-                                    auto HMACBytes = Algorithms::Cryptography::HMACSHA1Simple(Key, *Buffer);
+                                    ArrayCopy(SHA256, 0, Key, SecureContext->ClientToken.size(), static_cast<int>(SHA256.size()));
+                                    auto HMACBytes = Algorithms::Cryptography::HMACSHA256Simple(Key, *Buffer);
                                     HMACBytes.resize(4);
                                     auto HMAC = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
                                     if (HMAC != Verification) { return; }
@@ -345,12 +345,12 @@ namespace Server
                                 std::shared_ptr<std::vector<int>> Indices = nullptr;
                                 if ((Flag & 1) != 0)
                                 {
-                                    if (Buffer->size() < 14)
+                                    if (static_cast<int>(Buffer->size()) < 14)
                                     {
                                         return;
                                     }
                                     auto NumIndex = (*Buffer)[Offset] | (static_cast<std::int32_t>((*Buffer)[Offset + 1]) << 8);
-                                    if (Buffer->size() < 14 + NumIndex * 2)
+                                    if (static_cast<int>(Buffer->size()) < 14 + NumIndex * 2)
                                     {
                                         return;
                                     }

@@ -19,6 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\Bin\</OutputPath>
+    <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -29,6 +30,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\Bin\</OutputPath>
+    <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -51,13 +53,13 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration.cs" />
     <Compile Include="Context\SerializationServerAdapter.cs" />
     <Compile Include="Generated\Common.cs" />
     <Compile Include="Generated\Communication.cs" />
     <Compile Include="Generated\CommunicationBinary.cs" />
     <Compile Include="Generated\CommunicationCompatibility.cs" />
     <Compile Include="Generated\CommunicationJson.cs" />
+    <Compile Include="Generated\Configuration.cs" />
     <Compile Include="Servers\Concept.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -78,6 +80,7 @@
     <Compile Include="Servers\UdpServer.cs" />
     <Compile Include="Servers\UdpSession.cs" />
     <Compile Include="Services\Admin.cs" />
+    <Compile Include="Services\TestDuplication.cs" />
     <Compile Include="Services\Compatibility_1.cs" />
     <Compile Include="Services\CrossSessionEvent.cs" />
     <Compile Include="Services\TestPerformance.cs" />

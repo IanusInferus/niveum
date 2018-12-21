@@ -1,9 +1,9 @@
 ﻿//==========================================================================
 //
 //  File:        Program.cs
-//  Location:    Yuki.Examples <Visual C#>
+//  Location:    Niveum.Examples <Visual C#>
 //  Description: 表达式计算工具
-//  Version:     2016.07.26.
+//  Version:     2018.12.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -21,9 +21,9 @@ using Firefly.Mapping.MetaProgramming;
 using Firefly.Mapping.Binary;
 using Firefly.Texting.TreeFormat.Syntax;
 using Firefly.Streaming;
-using Yuki.ObjectSchema;
-using Yuki.ExpressionSchema;
-using Yuki.Expression;
+using Niveum.ObjectSchema;
+using Niveum.ExpressionSchema;
+using Niveum.Expression;
 
 namespace ExprCalc
 {

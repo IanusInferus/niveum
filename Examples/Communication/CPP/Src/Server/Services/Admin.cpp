@@ -3,7 +3,7 @@
 #include <memory>
 
 using namespace Communication;
-using namespace Server;
+using namespace Server::Services;
 
 /// <summary>关闭服务器</summary>
 std::shared_ptr<ShutdownReply> ServerImplementation::Shutdown(std::shared_ptr<ShutdownRequest> r)

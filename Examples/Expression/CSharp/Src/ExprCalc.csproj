@@ -19,6 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\Bin\</OutputPath>
+    <BaseIntermediateOutputPath>..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -28,6 +29,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\Bin\</OutputPath>
+    <BaseIntermediateOutputPath>..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -42,11 +44,11 @@
     <Reference Include="Firefly.Lite">
       <HintPath>..\..\..\..\Bin\Firefly.Lite.dll</HintPath>
     </Reference>
-    <Reference Include="Yuki.Core">
-      <HintPath>..\..\..\..\Bin\Yuki.Core.dll</HintPath>
+    <Reference Include="Niveum.Core">
+      <HintPath>..\..\..\..\Bin\Niveum.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Yuki.Expression">
-      <HintPath>..\..\..\..\Bin\Yuki.Expression.dll</HintPath>
+    <Reference Include="Niveum.Expression">
+      <HintPath>..\..\..\..\Bin\Niveum.Expression.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

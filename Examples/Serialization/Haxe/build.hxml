@@ -1,0 +1,5 @@
+-neko bin/DataCopy.n
+-cp src
+-cp generated
+-main Main
+-debug

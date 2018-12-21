@@ -6,8 +6,8 @@ ExpressionManipulator.exe /loadtype:Schema /t2b:Assembly,CSharp\Bin\Assembly.bin
 
 :: C++2011
 @if not exist CPP\Src @md CPP\Src
-SchemaManipulator.exe /loadtype:..\..\Src\YukiCore\Common /loadtype:..\..\Src\YukiExpression\ExpressionSchema /t2cpp:CPP\Src\ExpressionSchema.h,Yuki.ExpressionSchema
-SchemaManipulator.exe /loadtyperef:..\..\Src\YukiCore\Common /loadtype:..\..\Src\YukiExpression\ExpressionSchema /t2cppb:CPP\Src\ExpressionSchemaBinary.h,Yuki.ExpressionSchema
+SchemaManipulator.exe /loadtype:..\..\Src\NiveumCore\Common /loadtype:..\..\Src\NiveumExpression\ExpressionSchema /t2cpp:CPP\Src\ExpressionSchema.h,Niveum.ExpressionSchema
+SchemaManipulator.exe /loadtyperef:..\..\Src\NiveumCore\Common /loadtype:..\..\Src\NiveumExpression\ExpressionSchema /t2cppb:CPP\Src\ExpressionSchemaBinary.h,Niveum.ExpressionSchema
 ExpressionManipulator.exe /loadtype:Schema /t2b:Assembly,Cpp\Bin\Assembly.bin /import:""ExpressionCalculator.h"" /t2cppbl:Cpp\Src\Calculation.h,ExprTest
 
 @pause

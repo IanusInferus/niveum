@@ -8,7 +8,7 @@
                 Identifier
     EnableEmbeddedExpr False
 
-#Namespace Yuki.ObjectSchema.CSharp
+#Namespace Niveum.ObjectSchema.CSharp
 
 #Constant A:Map<String, Optional<Int>>
     Pair

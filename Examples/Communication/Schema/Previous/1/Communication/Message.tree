@@ -2,13 +2,15 @@
     ==========================================================================
 
       File:        Message.tree
-      Location:    Yuki.Examples <Tree>
+      Location:    Niveum.Examples <Tree>
       Description: 消息
-      Version:     2013.12.15.
+      Version:     2018.12.02.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
     ==========================================================================
+
+#Namespace Communication
 
 #ClientCommand SendMessage                          发送消息
     Title               String                      标题

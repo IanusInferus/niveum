@@ -10,13 +10,21 @@ if exist bin\src rd /S /Q bin\src
 md bin\src
 xcopy /E src bin\src\
 
+if exist bin\generated rd /S /Q bin\generated
+md bin\generated
+xcopy /E generated bin\generated\
+
 pushd bin\src\
+TransEncoding.exe ".*?\.java" UTF-8 /nobom
+popd
+
+pushd bin\generated\
 TransEncoding.exe ".*?\.java" UTF-8 /nobom
 popd
 
 if exist bin\classes rd /S /Q bin\classes
 md bin\classes
-javac -sourcepath bin\src\ -encoding utf-8 -d bin\classes\ bin\src\*.java
+javac -sourcepath bin\generated\ -sourcepath bin\src\ -encoding utf-8 -d bin\classes\ bin\generated\niveum\lang\*.java bin\generated\world\*.java bin\generated\world\binary\*.java bin\src\*.java
 
 pushd bin\classes
 jar cvfe ..\DataConv.jar Program *

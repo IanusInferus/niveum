@@ -39,48 +39,48 @@ namespace Algorithms
             return c.GetCRC32();
         }
 
-        public static Byte[] SHA1(Byte[] Bytes)
+        public static Byte[] SHA256(Byte[] Bytes)
         {
-            SHA1 sha = new SHA1Managed();
+            SHA256 sha = new SHA256Managed();
             return sha.ComputeHash(Bytes);
         }
-        public static Byte[] SHA1(IEnumerable<Byte> Bytes)
+        public static Byte[] SHA256(IEnumerable<Byte> Bytes)
         {
-            SHA1 sha = new SHA1Managed();
+            SHA256 sha = new SHA256Managed();
             return sha.ComputeHash(Bytes.ToArray());
         }
         /// <summary>
         /// HMAC = H((K XOR opad) :: H((K XOR ipad) :: Inner))
-        /// H = SHA1
+        /// H = SHA256
         /// opad = 0x5C
         /// ipad = 0x36
         /// </summary>
-        public static Byte[] HMACSHA1Simple(IEnumerable<Byte> Key, IEnumerable<Byte> Bytes)
+        public static Byte[] HMACSHA256Simple(IEnumerable<Byte> Key, IEnumerable<Byte> Bytes)
         {
-            var InnerHash = SHA1(Key.Select(k => unchecked((Byte)(k ^ 0x36))).Concat(Bytes));
-            var OuterHash = SHA1(Key.Select(k => unchecked((Byte)(k ^ 0x5C))).Concat(InnerHash));
+            var InnerHash = SHA256(Key.Select(k => unchecked((Byte)(k ^ 0x36))).Concat(Bytes));
+            var OuterHash = SHA256(Key.Select(k => unchecked((Byte)(k ^ 0x5C))).Concat(InnerHash));
             return OuterHash;
         }
         /// <summary>
         /// HMAC = H((K XOR opad) :: H((K XOR ipad) :: Inner))
-        /// H = SHA1
+        /// H = SHA256
         /// opad = 0x5C
         /// ipad = 0x36
         /// </summary>
-        public static Byte[] HMACSHA1(IEnumerable<Byte> Key, IEnumerable<Byte> Bytes)
+        public static Byte[] HMACSHA256(IEnumerable<Byte> Key, IEnumerable<Byte> Bytes)
         {
             const int BlockSize = 64;
             var KeyValue = Key.ToArray();
             if (KeyValue.Length > BlockSize)
             {
-                KeyValue = SHA1(KeyValue);
+                KeyValue = SHA256(KeyValue);
             }
             if (KeyValue.Length < BlockSize)
             {
                 KeyValue = KeyValue.Concat(Enumerable.Repeat((Byte)(0), BlockSize - KeyValue.Length)).ToArray();
             }
-            var InnerHash = SHA1(KeyValue.Select(k => unchecked((Byte)(k ^ 0x36))).Concat(Bytes));
-            var OuterHash = SHA1(KeyValue.Select(k => unchecked((Byte)(k ^ 0x5C))).Concat(InnerHash));
+            var InnerHash = SHA256(KeyValue.Select(k => unchecked((Byte)(k ^ 0x36))).Concat(Bytes));
+            var OuterHash = SHA256(KeyValue.Select(k => unchecked((Byte)(k ^ 0x5C))).Concat(InnerHash));
             return OuterHash;
         }
 

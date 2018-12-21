@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构XHTML代码生成器
-//  Version:     2016.08.06.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -13,7 +13,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Firefly;
 using Firefly.TextEncoding;
-using OS = Yuki.ObjectSchema;
+using OS = Niveum.ObjectSchema;
+using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
 
 namespace Yuki.RelationSchema.Xhtml
 {
@@ -34,7 +35,7 @@ namespace Yuki.RelationSchema.Xhtml
 
         private class Writer
         {
-            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
+            private static ObjectSchemaTemplateInfo TemplateInfo;
 
             private Schema Schema;
             private String Title;
@@ -42,7 +43,7 @@ namespace Yuki.RelationSchema.Xhtml
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.Xhtml);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.Xhtml);
             }
 
             public Writer(RelationSchemaLoaderResult rslr, String Title, String CopyrightText)
@@ -105,7 +106,7 @@ namespace Yuki.RelationSchema.Xhtml
             public List<FileResult> GetFiles()
             {
                 var Types = Schema.GetMap();
-                var Files = Types.GroupBy(Type => CollectionOperations.CreatePair(TypeInfoDict[Type.Key].FriendlyPath, TypeInfoDict[Type.Key].DocFilePath), (Pair, gt) => new { FriendlyPath = Pair.Key, DocFilePath = Pair.Value, Types = gt.Select(t => t.Value).ToArray() }).ToList();
+                var Files = Types.Where(Type => TypeInfoDict.ContainsKey(Type.Key)).GroupBy(Type => CollectionOperations.CreatePair(TypeInfoDict[Type.Key].FriendlyPath, TypeInfoDict[Type.Key].DocFilePath), (Pair, gt) => new { FriendlyPath = Pair.Key, DocFilePath = Pair.Value, Types = gt.Select(t => t.Value).ToArray() }).ToList();
 
                 List<FileResult> l = new List<FileResult>();
 
@@ -331,7 +332,7 @@ namespace Yuki.RelationSchema.Xhtml
             }
             return l;
         }
-        public static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        public static List<String> Substitute(this List<String> Lines, String Parameter, IEnumerable<String> Value)
         {
             var l = new List<String>();
             foreach (var Line in Lines)

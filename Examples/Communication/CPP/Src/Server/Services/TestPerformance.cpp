@@ -4,7 +4,7 @@
 #include <string>
 
 using namespace Communication;
-using namespace Server;
+using namespace Server::Services;
 
 /// <summary>加法</summary>
 void ServerImplementation::TestAdd(std::shared_ptr<TestAddRequest> r, std::function<void(std::shared_ptr<TestAddReply>)> Callback, std::function<void(const std::exception &)> OnFailure)
@@ -37,16 +37,16 @@ std::shared_ptr<TestMessageReply> ServerImplementation::TestMessage(std::shared_
     m->Message = r->Message;
     SessionContext->SendMessageCount += 1;
     auto Sessions = ServerContext->Sessions();
-    for (int k = 0; k < (int)(Sessions->size()); k += 1)
+    for (int k = 0; k < static_cast<int>(Sessions->size()); k += 1)
     {
         auto rc = (*Sessions)[k];
         if (rc == SessionContext->shared_from_this()) { continue; }
         {
             auto Lock = rc->WriterLock();
             rc->ReceivedMessageCount += 1;
-            if (rc->TestMessageReceived != nullptr)
+            if (rc->EventPump != nullptr)
             {
-                rc->TestMessageReceived(m);
+                rc->EventPump->TestMessageReceived(m);
             }
         }
     }
