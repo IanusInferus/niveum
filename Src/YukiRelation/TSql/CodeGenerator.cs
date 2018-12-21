@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构T-SQL(SQL Server)数据库代码生成器
-//  Version:     2016.05.13.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,7 +14,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
-using OS = Yuki.ObjectSchema;
+using OS = Niveum.ObjectSchema;
+using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
 
 namespace Yuki.RelationSchema.TSql
 {
@@ -30,7 +31,7 @@ namespace Yuki.RelationSchema.TSql
         private class Writer
         {
 
-            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
+            private static ObjectSchemaTemplateInfo TemplateInfo;
             private const int MaxNameLength = 128;
 
             private Schema Schema;
@@ -39,7 +40,7 @@ namespace Yuki.RelationSchema.TSql
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.TSql);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.TSql);
             }
 
             public Writer(Schema Schema, String DatabaseName, Boolean WithComment)
@@ -405,7 +406,7 @@ namespace Yuki.RelationSchema.TSql
 
             return new String(l.ToArray()) + new String(PascalName.Skip(l.Count).ToArray());
         }
-        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, IEnumerable<String> Value)
         {
             var l = new List<String>();
             foreach (var Line in Lines)

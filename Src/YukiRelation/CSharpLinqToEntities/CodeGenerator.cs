@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2016.10.06.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,7 +14,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
 using Firefly.TextEncoding;
-using OS = Yuki.ObjectSchema;
+using OS = Niveum.ObjectSchema;
+using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
 
 namespace Yuki.RelationSchema.CSharpLinqToEntities
 {
@@ -30,7 +31,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
         private class Writer
         {
 
-            private static OS.ObjectSchemaTemplateInfo TemplateInfo;
+            private static ObjectSchemaTemplateInfo TemplateInfo;
 
             private OS.CSharp.Templates InnerWriter;
 
@@ -42,7 +43,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
 
             static Writer()
             {
-                TemplateInfo = OS.ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpLinqToEntities);
+                TemplateInfo = ObjectSchemaTemplateInfo.FromBinary(Properties.Resources.CSharpLinqToEntities);
             }
 
             public Writer(Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
@@ -57,8 +58,8 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
                     Types = new List<OS.TypeDef> { },
                     TypeRefs = new List<OS.TypeDef>
                     {
-                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Unit", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } }),
-                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = "Boolean", GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } })
+                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = new List<String> { "Unit" }, GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } }),
+                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = new List<String> { "Boolean" }, GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } })
                     },
                     Imports = new List<String> { }
                 });
@@ -596,7 +597,7 @@ namespace Yuki.RelationSchema.CSharpLinqToEntities
 
             return new String(l.ToArray()) + new String(PascalName.Skip(l.Count).ToArray());
         }
-        private static List<String> Substitute(this List<String> Lines, String Parameter, List<String> Value)
+        private static List<String> Substitute(this List<String> Lines, String Parameter, IEnumerable<String> Value)
         {
             var l = new List<String>();
             foreach (var Line in Lines)

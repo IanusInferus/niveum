@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2016.10.27.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -584,7 +584,7 @@ namespace Yuki.DatabaseRegenerator
 
         public static void GenerateMemoryFileWithSchema(Schema s, String ConnectionString, String[] DataDirOrMemoryDatabaseFiles)
         {
-            var bs = ObjectSchema.BinarySerializerWithString.Create();
+            var bs = Niveum.ObjectSchema.BinarySerializerWithString.Create();
 
             var Value = LoadData(s, DataDirOrMemoryDatabaseFiles);
             SaveData(s, ConnectionString, Value, bs);
@@ -592,7 +592,7 @@ namespace Yuki.DatabaseRegenerator
 
         public static void ExportCollection(String ConnectionString, String DataDir, List<String> ExportEntityNames)
         {
-            var bs = ObjectSchema.BinarySerializerWithString.Create();
+            var bs = Niveum.ObjectSchema.BinarySerializerWithString.Create();
 
             var Pair = LoadData(ConnectionString, bs);
             var s = Pair.Key;
@@ -625,7 +625,7 @@ namespace Yuki.DatabaseRegenerator
         }
         public static void ImportCollection(String ConnectionString, String[] DataDirs)
         {
-            var bs = ObjectSchema.BinarySerializerWithString.Create();
+            var bs = Niveum.ObjectSchema.BinarySerializerWithString.Create();
 
             var Pair = LoadData(ConnectionString, bs);
             var s = Pair.Key;
@@ -806,7 +806,7 @@ namespace Yuki.DatabaseRegenerator
                 throw new InvalidOperationException("数据库名称没有指定。");
             }
 
-            var bs = ObjectSchema.BinarySerializerWithString.Create();
+            var bs = Niveum.ObjectSchema.BinarySerializerWithString.Create();
 
             var cf = GetConnectionFactory(DatabaseType.SqlServer);
 
@@ -841,7 +841,7 @@ namespace Yuki.DatabaseRegenerator
 
         public static void ExportPostgreSQL(Schema s, String ConnectionString, String DatabaseName, String MemoryDatabaseFile)
         {
-            var bs = ObjectSchema.BinarySerializerWithString.Create();
+            var bs = Niveum.ObjectSchema.BinarySerializerWithString.Create();
 
             var cf = GetConnectionFactory(DatabaseType.PostgreSQL);
 
@@ -876,7 +876,7 @@ namespace Yuki.DatabaseRegenerator
 
         public static void ExportMySQL(Schema s, String ConnectionString, String DatabaseName, String MemoryDatabaseFile)
         {
-            var bs = ObjectSchema.BinarySerializerWithString.Create();
+            var bs = Niveum.ObjectSchema.BinarySerializerWithString.Create();
 
             var cf = GetConnectionFactory(DatabaseType.MySQL);
 
@@ -950,7 +950,7 @@ namespace Yuki.DatabaseRegenerator
 
         public static void GenerateSchemaDiff(String MemoryDatabaseFileOld, String MemoryDatabaseFileNew, String SchemaDiffFile)
         {
-            var bs = ObjectSchema.BinarySerializerWithString.Create();
+            var bs = Niveum.ObjectSchema.BinarySerializerWithString.Create();
             var SchemaOld = LoadSchema(MemoryDatabaseFileOld, bs);
             var SchemaNew = LoadSchema(MemoryDatabaseFileNew, bs);
 
@@ -966,7 +966,7 @@ namespace Yuki.DatabaseRegenerator
         }
         public static void ApplySchemaDiff(String MemoryDatabaseFileOld, String MemoryDatabaseFileNew, String SchemaDiffFile, String MemoryDatabaseFileOutput)
         {
-            var bs = ObjectSchema.BinarySerializerWithString.Create();
+            var bs = Niveum.ObjectSchema.BinarySerializerWithString.Create();
             Schema SchemaOld;
             var SchemaNew = LoadSchema(MemoryDatabaseFileNew, bs);
 

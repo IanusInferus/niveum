@@ -26,7 +26,11 @@ RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2
 
 :: C++2011
 @if not exist TestCPP\Src @md TestCPP\Src
-RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /import:""Workaround.h"" /t2cppdp:TestCPP\Src\Database.h,Database.Database
-RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /import:""Database.h"" /t2cppm:TestCPP\Src\Memory\MemoryDataAccess.h,Database.Database,Database.Memory
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /import:"""Workaround.h""" /t2cppdp:TestCPP\Src\Database.h,Database.Database
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /import:"""Database.h""" /t2cppm:TestCPP\Src\Memory\MemoryDataAccess.h,Database.Database,Database.Memory
+
+:: Xhtml
+@if not exist XHTML @md XHTML
+RelationSchemaManipulator.exe /loadtype:CommonSchema /loadtype:TestSchema /t2xhtml:XHTML,"Database Example","Copyright Public Domain"
 
 @pause

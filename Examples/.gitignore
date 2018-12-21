@@ -16,11 +16,14 @@ __pycache__
 /Database/MailCSharpLinqToEntities/Src/DatabaseEntities.cs
 /Database/TestCPP/Src/Database.h
 /Database/TestCPP/Src/Memory/MemoryDataAccess.h
+/Database/TestCPP/Lib/mysql-connector-c
+/Database/TestCPP/Lib/mysql-connector-c++
 /Database/TestCSharp/Src/CountedDataAccessWrapper.cs
 /Database/TestCSharp/Src/Database.cs
 /Database/TestCSharp/Src/Krustallos/KrustallosDataAccess.cs
 /Database/TestCSharp/Src/MySql/MySqlDataAccess.cs
 /Database/TestCSharp/Src/SqlServer/SqlServerDataAccess.cs
+/Database/XHTML
 /Expression/CPP/Src/Calculation.h
 /Expression/CPP/Src/ExpressionSchema.h
 /Expression/CPP/Src/ExpressionSchemaBinary.h

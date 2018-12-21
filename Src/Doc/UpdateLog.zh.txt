@@ -11,6 +11,8 @@ Example:
 修正所有示例。
 Niveum.Core, Yuki.Relation:
 修正XHTML文档生成时有被引用的类型时会崩溃的问题。
+Yuki.Relation, Yuki.RelationSchemaManipulator, Yuki.DatabaseRegenerator:
+将所有对Yuki.Core的引用改为对Niveum.Core的引用。
 
 2018.12.21
 Niveum.Core:

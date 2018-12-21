@@ -3,7 +3,7 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2018.08.17.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -104,7 +104,7 @@ namespace Yuki.RelationSchema
         (
             () =>
             {
-                return Yuki.ObjectSchema.BinarySerializerWithString.Create();
+                return Niveum.ObjectSchema.BinarySerializerWithString.Create();
             }
         );
 

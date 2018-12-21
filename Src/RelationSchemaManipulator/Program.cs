@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 关系类型结构处理工具
-//  Version:     2016.10.27.
+//  Version:     2018.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -17,8 +17,8 @@ using Firefly.Mapping.XmlText;
 using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
+using OS = Niveum.ObjectSchema;
 using Yuki.RelationSchema;
-using OS = Yuki.ObjectSchema;
 using RS = Yuki.RelationSchema;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.MySql;
@@ -409,7 +409,6 @@ namespace Yuki.RelationSchemaManipulator
 
         private static RS.RelationSchemaLoader rsl = new RS.RelationSchemaLoader();
         private static RS.RelationSchemaLoaderResult rslr = null;
-        private static OS.Schema os = null;
         private static RS.RelationSchemaLoaderResult GetRelationSchemaLoaderResult()
         {
             if (rslr != null) { return rslr; }
@@ -421,16 +420,9 @@ namespace Yuki.RelationSchemaManipulator
         {
             return GetRelationSchemaLoaderResult().Schema;
         }
-        private static OS.Schema GetObjectSchema()
-        {
-            if (os != null) { return os; }
-            os = RS.PlainObjectSchemaGenerator.Generate(GetRelationSchema());
-            return os;
-        }
         private static void InvalidateSchema()
         {
             rslr = null;
-            os = null;
         }
 
         public static void RelationSchemaToTSqlCode(String SqlCodePath, String DatabaseName)
