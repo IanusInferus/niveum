@@ -1,4 +1,8 @@
-﻿2018.12.22
+﻿2018.12.23
+Example:
+升级C# Blazor浏览器通讯示例中Blazor和.Net Core SDK的版本。
+
+2018.12.22
 Niveum.Core:
 完成Python二进制序列化代码生成的修改。
 Yuki.SchemaManipulator:
