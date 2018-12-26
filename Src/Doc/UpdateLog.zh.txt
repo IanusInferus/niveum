@@ -1,4 +1,10 @@
-﻿2018.12.23
+﻿2018.12.27
+Niveum.Core:
+C#通讯、二进制、JSON代码生成从回调异步改为async/await异步。
+Example:
+修改C#通讯示例以支持async/await异步。
+
+2018.12.23
 Example:
 升级C# Blazor浏览器通讯示例中Blazor和.Net Core SDK的版本。
 

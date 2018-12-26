@@ -20,8 +20,9 @@ namespace Client
 
         public static void TestAdd(int NumUser, int n, ClientContext cc, IApplicationClient ic, Action Completed)
         {
-            ic.TestAdd(new TestAddRequest { Left = n - 1, Right = n + 1 }, r =>
+            ic.TestAdd(new TestAddRequest { Left = n - 1, Right = n + 1 }).ContinueWith(t =>
             {
+                var r = t.Result;
                 Trace.Assert(r.Result == 2 * n);
                 Completed();
             });
@@ -32,8 +33,9 @@ namespace Client
             double v = n;
             var o = v * 1000001 * 0.5;
 
-            ic.TestMultiply(new TestMultiplyRequest { Operand = n }, r =>
+            ic.TestMultiply(new TestMultiplyRequest { Operand = n }).ContinueWith(t =>
             {
+                var r = t.Result;
                 Trace.Assert(Math.Abs(r.Result - o) < 0.01);
                 Completed();
             });
@@ -44,8 +46,9 @@ namespace Client
             var ss = n.ToString();
             String s = String.Join("", Enumerable.Range(0, 10000 / ss.Length).Select(i => ss).ToArray()).Substring(0, 4096 - 256);
 
-            ic.TestText(new TestTextRequest { Text = s }, r =>
+            ic.TestText(new TestTextRequest { Text = s }).ContinueWith(t =>
             {
+                var r = t.Result;
                 Trace.Assert(String.Equals(r.Result, s));
                 Completed();
             });
@@ -121,7 +124,7 @@ namespace Client
                     },
                     UnknownFaulted
                 );
-                ac.ServerTime(new ServerTimeRequest { }, r =>
+                ac.ServerTime(new ServerTimeRequest { }).ContinueWith(tt =>
                 {
                     vConnected.Update(i => i + 1);
                     Check.Set();
@@ -268,7 +271,7 @@ namespace Client
                     },
                     UnknownFaulted
                 );
-                ac.ServerTime(new ServerTimeRequest { }, r =>
+                ac.ServerTime(new ServerTimeRequest { }).ContinueWith(tt =>
                 {
                     vConnected.Update(i => i + 1);
                     Check.Set();
@@ -299,7 +302,7 @@ namespace Client
                         tt.Start();
                         return;
                     }
-                    ac.Quit(new QuitRequest { }, r =>
+                    ac.Quit(new QuitRequest { }).ContinueWith(tt =>
                     {
                         vCompleted.Update(i => i + 1);
                         Check.Set();
@@ -396,7 +399,7 @@ namespace Client
                 };
                 try
                 {
-                    ac.ServerTime(new ServerTimeRequest { }, r =>
+                    ac.ServerTime(new ServerTimeRequest { }).ContinueWith(tt =>
                     {
                         vConnected.Update(i => i + 1);
                         Check.Set();
@@ -439,7 +442,7 @@ namespace Client
                         tt.Start();
                         return;
                     }
-                    ac.Quit(new QuitRequest { }, r =>
+                    ac.Quit(new QuitRequest { }).ContinueWith(tt =>
                     {
                         vCompleted.Update(i => i + 1);
                         Check.Set();

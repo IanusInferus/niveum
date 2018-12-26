@@ -569,7 +569,7 @@ namespace Niveum.ObjectSchema.CSharp
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, Action<"), ReplyTypeString), "> Callback, Action<Exception> OnFailure);"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "Task<"), ReplyTypeString), "> "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r);"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -622,7 +622,7 @@ namespace Niveum.ObjectSchema.CSharp
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, Action<"), ReplyTypeString), "> Callback);"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "Task<"), ReplyTypeString), "> "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r);"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -702,6 +702,11 @@ namespace Niveum.ObjectSchema.CSharp
             yield return "";
             yield return "using System;";
             yield return "using System.Collections.Generic;";
+            var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+            if (Commands.Count > 0)
+            {
+                yield return "using System.Threading.Tasks;";
+            }
             foreach (var _Line in Combine(Combine(Combine(Begin(), "using "), Schema.Imports), ";"))
             {
                 yield return _Line;

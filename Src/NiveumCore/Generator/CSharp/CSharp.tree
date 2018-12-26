@@ -4,7 +4,7 @@
       File:        CSharp.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C#模板
-      Version:     2018.12.15.
+      Version:     2018.12.26.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -496,7 +496,7 @@
                     {
                         ##
                             ${GetXmlComment(Description)}
-                            void [[${Name}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback, Action<Exception> OnFailure);
+                            Task<${ReplyTypeString}> [[${Name}]](${RequestTypeString} r);
                     }
                     else
                     {
@@ -534,7 +534,7 @@
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        void [[${Name}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback);
+                        Task<${ReplyTypeString}> [[${Name}]](${RequestTypeString} r);
                 }
                 else if (c.OnServerCommand)
                 {
@@ -593,6 +593,13 @@
 
     using System;
     using System.Collections.Generic;
+    $$
+        var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+        if (Commands.Count > 0)
+        {
+            ##
+                using System.Threading.Tasks;
+        }
     using ${Schema.Imports};
 
     ${GetTypes(Schema, NamespaceName)}

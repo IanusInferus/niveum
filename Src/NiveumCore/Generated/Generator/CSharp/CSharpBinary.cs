@@ -80,7 +80,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
             yield return "public sealed class BinarySerializationServer";
             yield return "{";
             yield return "    private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>> ClientCommands;";
-            yield return "    private Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, Byte[], Action<Byte[]>, Action<Exception>>> AsyncClientCommands;";
+            yield return "    private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Task<Byte[]>>> AsyncClientCommands;";
             yield return "";
             yield return "    private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>";
             yield return "    {";
@@ -102,7 +102,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
             yield return "    public BinarySerializationServer()";
             yield return "    {";
             yield return "        ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>>(new KeyValuePairEqualityComparer<String, UInt32>());";
-            yield return "        AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, UInt8[], Action<UInt8[]>, Action<Exception>>>(new KeyValuePairEqualityComparer<String, UInt32>());";
+            yield return "        AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, UInt8[], Task<UInt8[]>>>(new KeyValuePairEqualityComparer<String, UInt32>());";
             foreach (var c in Commands)
             {
                 if (c.OnClientCommand)
@@ -118,7 +118,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                     {
                         if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
-                            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands.Add(new KeyValuePair<String, UInt32>("), CommandNameString), ", 0x"), CommandHash), "), (s, p, Callback, OnFailure) => s."), GetEscapedIdentifier(Name)), "(BinaryTranslator.Deserialize<"), RequestTypeString), ">(p), Reply => Callback(BinaryTranslator.Serialize(Reply)), OnFailure));"))
+                            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands.Add(new KeyValuePair<String, UInt32>("), CommandNameString), ", 0x"), CommandHash), "), async (s, p) => BinaryTranslator.Serialize(await s."), GetEscapedIdentifier(Name)), "(BinaryTranslator.Deserialize<"), RequestTypeString), ">(p))));"))
                             {
                                 yield return _Line == "" ? "" : "        " + _Line;
                             }
@@ -135,7 +135,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                     {
                         if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
-                            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands.Add(new KeyValuePair<String, UInt32>("), CommandNameString), ", 0x"), CommandHash), "), (s, p, Callback, OnFailure) => s."), GetEscapedIdentifier(Name)), "(BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "FromBytes"))), "(p), Reply => Callback(BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "ToBytes"))), "(Reply)), OnFailure));"))
+                            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands.Add(new KeyValuePair<String, UInt32>("), CommandNameString), ", 0x"), CommandHash), "), async (s, p) => BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "ToBytes"))), "(await s."), GetEscapedIdentifier(Name)), "(BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "FromBytes"))), "(p))));"))
                             {
                                 yield return _Line == "" ? "" : "        " + _Line;
                             }
@@ -177,10 +177,10 @@ namespace Niveum.ObjectSchema.CSharpBinary
             yield return "        var cmd = ClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];";
             yield return "        return cmd(s, Parameters);";
             yield return "    }";
-            yield return "    public void ExecuteCommandAsync(IApplicationServer s, String CommandName, UInt32 CommandHash, Byte[] Parameters, Action<Byte[]> Callback, Action<Exception> OnFailure)";
+            yield return "    public async Task<Byte[]> ExecuteCommandAsync(IApplicationServer s, String CommandName, UInt32 CommandHash, Byte[] Parameters)";
             yield return "    {";
             yield return "        var cmd = AsyncClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];";
-            yield return "        cmd(s, Parameters, Callback, OnFailure);";
+            yield return "        return await cmd(s, Parameters);";
             yield return "    }";
             yield return "}";
             yield return "public sealed class BinarySerializationServerEventDispatcher";
@@ -297,13 +297,17 @@ namespace Niveum.ObjectSchema.CSharpBinary
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (WithFirefly)
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, Action<"), ReplyTypeString), "> Callback)"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public Task<"), ReplyTypeString), "> "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r)"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
                         yield return "        " + "{";
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    var Source = new TaskCompletionSource<"), ReplyTypeString), ">();"))
+                        {
+                            yield return _Line == "" ? "" : "        " + _Line;
+                        }
                         yield return "        " + "    var Request = BinaryTranslator.Serialize(r);";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Callback(BinaryTranslator.Deserialize<"), ReplyTypeString), ">(Parameters)));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Source.SetResult(BinaryTranslator.Deserialize<"), ReplyTypeString), ">(Parameters)));"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -311,20 +315,25 @@ namespace Niveum.ObjectSchema.CSharpBinary
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
+                        yield return "        " + "    return Source.Task;";
                         yield return "        " + "}";
                     }
                     else
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, Action<"), ReplyTypeString), "> Callback)"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public Task<"), ReplyTypeString), "> "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r)"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
                         yield return "        " + "{";
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    var Source = new TaskCompletionSource<"), ReplyTypeString), ">();"))
+                        {
+                            yield return _Line == "" ? "" : "        " + _Line;
+                        }
                         foreach (var _Line in Combine(Combine(Combine(Begin(), "    var Request = BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "ToBytes"))), "(r);"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Callback(BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "FromBytes"))), "(Parameters)));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Source.SetResult(BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "FromBytes"))), "(Parameters)));"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -332,6 +341,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
+                        yield return "        " + "    return Source.Task;";
                         yield return "        " + "}";
                     }
                 }
@@ -2073,6 +2083,11 @@ namespace Niveum.ObjectSchema.CSharpBinary
             yield return "";
             yield return "using System;";
             yield return "using System.Collections.Generic;";
+            var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+            if (Commands.Count > 0)
+            {
+                yield return "using System.Threading.Tasks;";
+            }
             if (WithFirefly)
             {
                 yield return "using Firefly;";

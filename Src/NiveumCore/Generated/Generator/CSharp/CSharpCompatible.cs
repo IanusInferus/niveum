@@ -535,7 +535,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
         }
         public IEnumerable<String> Translator_ClientCommandAsync(String SimpleName, String VersionedSimpleName, String RequestTypeString, String ReplyTypeString, String NamespaceName)
         {
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void "), GetEscapedIdentifier(VersionedSimpleName)), "("), RequestTypeString), " r, Action<"), ReplyTypeString), "> Callback, Action<Exception> OnFailure)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public async Task<"), ReplyTypeString), "> "), GetEscapedIdentifier(VersionedSimpleName)), "("), RequestTypeString), " r)"))
             {
                 yield return _Line;
             }
@@ -544,10 +544,15 @@ namespace Niveum.ObjectSchema.CSharpCompatible
             {
                 yield return _Line;
             }
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(SimpleName)), "(HeadRequest, HeadReply => Callback("), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ReplyFromHead"))), "(HeadReply)), OnFailure);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var HeadReply = await "), GetEscapedIdentifier(SimpleName)), "(HeadRequest);"))
             {
                 yield return _Line;
             }
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var Reply = "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ReplyFromHead"))), "(HeadReply);"))
+            {
+                yield return _Line;
+            }
+            yield return "    return Reply;";
             yield return "}";
         }
         public IEnumerable<String> Translator_ServerCommand(String VersionedSimpleName, String EventTypeString, String NamespaceName)
@@ -856,6 +861,11 @@ namespace Niveum.ObjectSchema.CSharpCompatible
             yield return "using System;";
             yield return "using System.Collections.Generic;";
             yield return "using System.Linq;";
+            var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+            if (Commands.Count > 0)
+            {
+                yield return "using System.Threading.Tasks;";
+            }
             if (NamespaceName != "")
             {
                 foreach (var _Line in Combine(Combine(Combine(Begin(), "using "), NamespaceName), ";"))
