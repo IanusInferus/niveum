@@ -81,8 +81,8 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "{";
             yield return "    private Dictionary<String, Func<IApplicationServer, String, String>> ClientCommandsWithoutHash;";
             yield return "    private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, String>> ClientCommands;";
-            yield return "    private Dictionary<String, Action<IApplicationServer, String, Action<String>, Action<Exception>>> AsyncClientCommandsWithoutHash;";
-            yield return "    private Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, String, Action<String>, Action<Exception>>> AsyncClientCommands;";
+            yield return "    private Dictionary<String, Func<IApplicationServer, String, Task<String>>> AsyncClientCommandsWithoutHash;";
+            yield return "    private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, Task<String>>> AsyncClientCommands;";
             yield return "";
             yield return "    private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>";
             yield return "    {";
@@ -105,8 +105,8 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "    {";
             yield return "        ClientCommandsWithoutHash = new Dictionary<String, Func<IApplicationServer, String, String>>(StringComparer.OrdinalIgnoreCase);";
             yield return "        ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, String>>(new KeyValuePairEqualityComparer<String, UInt32>());";
-            yield return "        AsyncClientCommandsWithoutHash = new Dictionary<String, Action<IApplicationServer, String, Action<String>, Action<Exception>>>(StringComparer.OrdinalIgnoreCase);";
-            yield return "        AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, String, Action<String>, Action<Exception>>>(new KeyValuePairEqualityComparer<String, UInt32>());";
+            yield return "        AsyncClientCommandsWithoutHash = new Dictionary<String, Func<IApplicationServer, String, Task<String>>>(StringComparer.OrdinalIgnoreCase);";
+            yield return "        AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, Task<String>>>(new KeyValuePairEqualityComparer<String, UInt32>());";
             foreach (var c in Commands)
             {
                 if (c.OnClientCommand)
@@ -122,7 +122,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                     {
                         if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
-                            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommandsWithoutHash.Add("), CommandNameString), ", (s, p, Callback, OnFailure) => s."), GetEscapedIdentifier(Name)), "(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "FromJson"))), "(JToken.Parse(p)), Reply => Callback(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "ToJson"))), "(Reply).ToString(Formatting.None)), OnFailure));"))
+                            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommandsWithoutHash.Add("), CommandNameString), ", async (s, p) => JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "ToJson"))), "(await s."), GetEscapedIdentifier(Name)), "(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "FromJson"))), "(JToken.Parse(p)))).ToString(Formatting.None));"))
                             {
                                 yield return _Line == "" ? "" : "        " + _Line;
                             }
@@ -137,7 +137,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                     }
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands.Add(new KeyValuePair<String, UInt32>("), CommandNameString), ", 0x"), CommandHash), "), (s, p, Callback, OnFailure) => s."), GetEscapedIdentifier(Name)), "(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "FromJson"))), "(JToken.Parse(p)), Reply => Callback(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "ToJson"))), "(Reply).ToString(Formatting.None)), OnFailure));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands.Add(new KeyValuePair<String, UInt32>("), CommandNameString), ", 0x"), CommandHash), "), async (s, p) => JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "ToJson"))), "(await s."), GetEscapedIdentifier(Name)), "(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "FromJson"))), "(JToken.Parse(p)))).ToString(Formatting.None));"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -187,10 +187,10 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "        var cmd = ClientCommandsWithoutHash[CommandName];";
             yield return "        return cmd(s, Parameters);";
             yield return "    }";
-            yield return "    public void ExecuteCommandAsync(IApplicationServer s, String CommandName, String Parameters, Action<String> Callback, Action<Exception> OnFailure)";
+            yield return "    public async Task<String> ExecuteCommandAsync(IApplicationServer s, String CommandName, String Parameters)";
             yield return "    {";
             yield return "        var cmd = AsyncClientCommandsWithoutHash[CommandName];";
-            yield return "        cmd(s, Parameters, Callback, OnFailure);";
+            yield return "        return await cmd(s, Parameters);";
             yield return "    }";
             yield return "";
             yield return "    public String ExecuteCommand(IApplicationServer s, String CommandName, UInt32 CommandHash, String Parameters)";
@@ -198,10 +198,10 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "        var cmd = ClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];";
             yield return "        return cmd(s, Parameters);";
             yield return "    }";
-            yield return "    public void ExecuteCommandAsync(IApplicationServer s, String CommandName, UInt32 CommandHash, String Parameters, Action<String> Callback, Action<Exception> OnFailure)";
+            yield return "    public async Task<String> ExecuteCommandAsync(IApplicationServer s, String CommandName, UInt32 CommandHash, String Parameters)";
             yield return "    {";
             yield return "        var cmd = AsyncClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];";
-            yield return "        cmd(s, Parameters, Callback, OnFailure);";
+            yield return "        return await cmd(s, Parameters);";
             yield return "    }";
             yield return "}";
             yield return "public sealed class JsonSerializationServerEventDispatcher";
@@ -306,16 +306,20 @@ namespace Niveum.ObjectSchema.CSharpJson
                     var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, Action<"), ReplyTypeString), "> Callback)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public Task<"), ReplyTypeString), "> "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
                     yield return "        " + "{";
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    var Source = new TaskCompletionSource<"), ReplyTypeString), ">();"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
                     foreach (var _Line in Combine(Combine(Combine(Begin(), "    var Request = JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "ToJson"))), "(r).ToString(Formatting.None);"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Callback(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "FromJson"))), "(JToken.Parse(Parameters))));"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Source.SetResult(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "FromJson"))), "(JToken.Parse(Parameters))));"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -323,6 +327,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
+                    yield return "        " + "    return Source.Task;";
                     yield return "        " + "}";
                 }
                 else if (c.OnServerCommand)
@@ -452,7 +457,7 @@ namespace Niveum.ObjectSchema.CSharpJson
                     var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " Request, Action<"), ReplyTypeString), "> Callback, Action<Exception> OnFailure)"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public async Task<"), ReplyTypeString), "> "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " Request)"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
@@ -461,21 +466,15 @@ namespace Niveum.ObjectSchema.CSharpJson
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    Action<"), ReplyTypeString), "> CallbackInner = Reply =>"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    var Reply = await Inner."), GetEscapedIdentifier(Name)), "(Request);"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
-                        yield return "    " + "    {";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "        if (ClientCommandOut != null) { ClientCommandOut("), CommandNameString), ", JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "ToJson"))), "(Reply).ToString(Formatting.None)); }"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    if (ClientCommandOut != null) { ClientCommandOut("), CommandNameString), ", JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "ToJson"))), "(Reply).ToString(Formatting.None)); }"))
                         {
                             yield return _Line == "" ? "" : "    " + _Line;
                         }
-                        yield return "    " + "        Callback(Reply);";
-                        yield return "    " + "    };";
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "    Inner."), GetEscapedIdentifier(Name)), "(Request, CallbackInner, OnFailure);"))
-                        {
-                            yield return _Line == "" ? "" : "    " + _Line;
-                        }
+                        yield return "    " + "    return Reply;";
                         yield return "    " + "}";
                     }
                     else
@@ -1194,6 +1193,11 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "using System;";
             yield return "using System.Collections.Generic;";
             yield return "using System.Linq;";
+            var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+            if (Commands.Count > 0)
+            {
+                yield return "using System.Threading.Tasks;";
+            }
             yield return "using Niveum.Json;";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "using "), Schema.Imports), ";"))
             {

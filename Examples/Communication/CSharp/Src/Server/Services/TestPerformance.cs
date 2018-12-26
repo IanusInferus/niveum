@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Communication;
 
 namespace Server.Services
 {
     public partial class ServerImplementation : IApplicationServer
     {
-        public void TestAdd(TestAddRequest r, Action<TestAddReply> Callback, Action<Exception> OnFailure)
+        public async Task<TestAddReply> TestAdd(TestAddRequest r)
         {
-            Callback(TestAddReply.CreateResult(r.Left + r.Right));
+            return await Task.Run(() => TestAddReply.CreateResult(r.Left + r.Right));
         }
 
         public TestMultiplyReply TestMultiply(TestMultiplyRequest r)

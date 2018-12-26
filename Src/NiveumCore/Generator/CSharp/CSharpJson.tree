@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板
-      Version:     2018.12.15.
+      Version:     2018.12.27.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -25,8 +25,8 @@
     {
         private Dictionary<String, Func<IApplicationServer, String, String>> ClientCommandsWithoutHash;
         private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, String>> ClientCommands;
-        private Dictionary<String, Action<IApplicationServer, String, Action<String>, Action<Exception>>> AsyncClientCommandsWithoutHash;
-        private Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, String, Action<String>, Action<Exception>>> AsyncClientCommands;
+        private Dictionary<String, Func<IApplicationServer, String, Task<String>>> AsyncClientCommandsWithoutHash;
+        private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, Task<String>>> AsyncClientCommands;
 
         private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>
         {
@@ -49,8 +49,8 @@
         {
             ClientCommandsWithoutHash = new Dictionary<String, Func<IApplicationServer, String, String>>(StringComparer.OrdinalIgnoreCase);
             ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, String>>(new KeyValuePairEqualityComparer<String, UInt32>());
-            AsyncClientCommandsWithoutHash = new Dictionary<String, Action<IApplicationServer, String, Action<String>, Action<Exception>>>(StringComparer.OrdinalIgnoreCase);
-            AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, String, Action<String>, Action<Exception>>>(new KeyValuePairEqualityComparer<String, UInt32>());
+            AsyncClientCommandsWithoutHash = new Dictionary<String, Func<IApplicationServer, String, Task<String>>>(StringComparer.OrdinalIgnoreCase);
+            AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, String, Task<String>>>(new KeyValuePairEqualityComparer<String, UInt32>());
             $$
                 foreach (var c in Commands)
                 {
@@ -68,7 +68,7 @@
                             if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                             {
                                 ##
-                                    AsyncClientCommandsWithoutHash.Add(${CommandNameString}, (s, p, Callback, OnFailure) => s.[[${Name}]](JsonTranslator.[[${RequestName}FromJson]](JToken.Parse(p)), Reply => Callback(JsonTranslator.[[${ReplyName}ToJson]](Reply).ToString(Formatting.None)), OnFailure));
+                                    AsyncClientCommandsWithoutHash.Add(${CommandNameString}, async (s, p) => JsonTranslator.[[${ReplyName}ToJson]](await s.[[${Name}]](JsonTranslator.[[${RequestName}FromJson]](JToken.Parse(p)))).ToString(Formatting.None));
                             }
                             else
                             {
@@ -79,7 +79,7 @@
                         if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
                             ##
-                                AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), (s, p, Callback, OnFailure) => s.[[${Name}]](JsonTranslator.[[${RequestName}FromJson]](JToken.Parse(p)), Reply => Callback(JsonTranslator.[[${ReplyName}ToJson]](Reply).ToString(Formatting.None)), OnFailure));
+                                AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), async (s, p) => JsonTranslator.[[${ReplyName}ToJson]](await s.[[${Name}]](JsonTranslator.[[${RequestName}FromJson]](JToken.Parse(p)))).ToString(Formatting.None));
                         }
                         else
                         {
@@ -121,10 +121,10 @@
             var cmd = ClientCommandsWithoutHash[CommandName];
             return cmd(s, Parameters);
         }
-        public void ExecuteCommandAsync(IApplicationServer s, String CommandName, String Parameters, Action<String> Callback, Action<Exception> OnFailure)
+        public async Task<String> ExecuteCommandAsync(IApplicationServer s, String CommandName, String Parameters)
         {
             var cmd = AsyncClientCommandsWithoutHash[CommandName];
-            cmd(s, Parameters, Callback, OnFailure);
+            return await cmd(s, Parameters);
         }
 
         public String ExecuteCommand(IApplicationServer s, String CommandName, UInt32 CommandHash, String Parameters)
@@ -132,10 +132,10 @@
             var cmd = ClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];
             return cmd(s, Parameters);
         }
-        public void ExecuteCommandAsync(IApplicationServer s, String CommandName, UInt32 CommandHash, String Parameters, Action<String> Callback, Action<Exception> OnFailure)
+        public async Task<String> ExecuteCommandAsync(IApplicationServer s, String CommandName, UInt32 CommandHash, String Parameters)
         {
             var cmd = AsyncClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];
-            cmd(s, Parameters, Callback, OnFailure);
+            return await cmd(s, Parameters);
         }
     }
     public sealed class JsonSerializationServerEventDispatcher
@@ -236,11 +236,13 @@
                         var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
-                            public void [[${Name}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback)
+                            public Task<${ReplyTypeString}> [[${Name}]](${RequestTypeString} r)
                             {
+                                var Source = new TaskCompletionSource<${ReplyTypeString}>();
                                 var Request = JsonTranslator.[[${RequestName}ToJson]](r).ToString(Formatting.None);
-                                AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Callback(JsonTranslator.[[${ReplyName}FromJson]](JToken.Parse(Parameters))));
+                                AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Source.SetResult(JsonTranslator.[[${ReplyName}FromJson]](JToken.Parse(Parameters))));
                                 s.Send(${CommandNameString}, 0x${CommandHash}, Request);
+                                return Source.Task;
                             }
                     }
                     else if (c.OnServerCommand)
@@ -358,15 +360,12 @@
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
                         ##
-                            public void [[${Name}]](${RequestTypeString} Request, Action<${ReplyTypeString}> Callback, Action<Exception> OnFailure)
+                            public async Task<${ReplyTypeString}> [[${Name}]](${RequestTypeString} Request)
                             {
                                 if (ClientCommandIn != null) { ClientCommandIn(${CommandNameString}, JsonTranslator.[[${RequestName}ToJson]](Request).ToString(Formatting.None)); }
-                                Action<${ReplyTypeString}> CallbackInner = Reply =>
-                                {
-                                    if (ClientCommandOut != null) { ClientCommandOut(${CommandNameString}, JsonTranslator.[[${ReplyName}ToJson]](Reply).ToString(Formatting.None)); }
-                                    Callback(Reply);
-                                };
-                                Inner.[[${Name}]](Request, CallbackInner, OnFailure);
+                                var Reply = await Inner.[[${Name}]](Request);
+                                if (ClientCommandOut != null) { ClientCommandOut(${CommandNameString}, JsonTranslator.[[${ReplyName}ToJson]](Reply).ToString(Formatting.None)); }
+                                return Reply;
                             }
                     }
                     else
@@ -887,6 +886,13 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    $$
+        var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+        if (Commands.Count > 0)
+        {
+            ##
+                using System.Threading.Tasks;
+        }
     using Niveum.Json;
     using ${Schema.Imports};
 

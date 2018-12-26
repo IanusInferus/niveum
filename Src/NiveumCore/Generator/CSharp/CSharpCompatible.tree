@@ -4,7 +4,7 @@
       File:        CSharpCompatible.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C#通讯兼容模板
-      Version:     2018.12.15.
+      Version:     2018.12.26.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -346,10 +346,12 @@
     }
 
 #Template Translator_ClientCommandAsync SimpleName:String VersionedSimpleName:String RequestTypeString:String ReplyTypeString:String NamespaceName:String
-    public void [[${VersionedSimpleName}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback, Action<Exception> OnFailure)
+    public async Task<${ReplyTypeString}> [[${VersionedSimpleName}]](${RequestTypeString} r)
     {
         var HeadRequest = [[${VersionedSimpleName}RequestToHead]](r);
-        [[${SimpleName}]](HeadRequest, HeadReply => Callback([[${VersionedSimpleName}ReplyFromHead]](HeadReply)), OnFailure);
+        var HeadReply = await [[${SimpleName}]](HeadRequest);
+        var Reply = [[${VersionedSimpleName}ReplyFromHead]](HeadReply);
+        return Reply;
     }
 
 #Template Translator_ServerCommand VersionedSimpleName:String EventTypeString:String NamespaceName:String
@@ -567,6 +569,12 @@
     using System.Collections.Generic;
     using System.Linq;
     $$
+        var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+        if (Commands.Count > 0)
+        {
+            ##
+                using System.Threading.Tasks;
+        }
         if (NamespaceName != "")
         {
             ##

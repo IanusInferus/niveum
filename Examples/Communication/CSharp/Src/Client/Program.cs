@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2018.12.17.
+//  Version:     2018.12.27.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -438,11 +438,11 @@ namespace Client
             };
             if (UseOld)
             {
-                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = "690E84A3D3914C38" }, CheckSchemaVersionHandler);
+                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = "690E84A3D3914C38" }).ContinueWith(t => CheckSchemaVersionHandler(t.Result));
             }
             else
             {
-                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = InnerClient.Hash.ToString("X16") }, CheckSchemaVersionHandler);
+                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = InnerClient.Hash.ToString("X16") }).ContinueWith(t => CheckSchemaVersionHandler(t.Result));
             }
             while (true)
             {
@@ -471,13 +471,14 @@ namespace Client
                 {
                     if (Line == "exit")
                     {
-                        InnerClient.Quit(new QuitRequest(), r => { });
+                        InnerClient.Quit(new QuitRequest());
                         break;
                     }
                     if (Line == "shutdown")
                     {
-                        InnerClient.Shutdown(new ShutdownRequest(), r =>
+                        InnerClient.Shutdown(new ShutdownRequest()).ContinueWith(t =>
                         {
+                            var r = t.Result;
                             if (r.OnSuccess)
                             {
                                 Console.WriteLine("服务器正在关闭。");
@@ -487,7 +488,7 @@ namespace Client
                     }
                     if (Line == "secure")
                     {
-                        InnerClient.SendMessage(new SendMessageRequest { Content = Line }, r =>
+                        InnerClient.SendMessage(new SendMessageRequest { Content = Line }).ContinueWith(t =>
                         {
                             //生成测试用确定Key
                             var ServerToken = Enumerable.Range(0, 41).Select(i => (Byte)(i)).ToArray();
@@ -498,8 +499,9 @@ namespace Client
                     }
                     if (UseOld)
                     {
-                        InnerClient.SendMessageAt1(new SendMessageAt1Request { Title = "", Lines = new List<String> { Line } }, r =>
+                        InnerClient.SendMessageAt1(new SendMessageAt1Request { Title = "", Lines = new List<String> { Line } }).ContinueWith(t =>
                         {
+                            var r = t.Result;
                             if (r.OnTitleTooLong || r.OnLinesTooLong || r.OnLineTooLong)
                             {
                                 Console.WriteLine("消息过长。");
@@ -508,8 +510,9 @@ namespace Client
                     }
                     else
                     {
-                        InnerClient.SendMessage(new SendMessageRequest { Content = Line }, r =>
+                        InnerClient.SendMessage(new SendMessageRequest { Content = Line }).ContinueWith(t =>
                         {
+                            var r = t.Result;
                             if (r.OnTooLong)
                             {
                                 Console.WriteLine("消息过长。");

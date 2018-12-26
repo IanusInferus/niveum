@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BaseSystem;
 using Algorithms;
 using Server.Services;
@@ -90,24 +91,24 @@ namespace Server
             return si;
         }
 
-        public KeyValuePair<IServerImplementation, IBinarySerializationServerAdapter> CreateServerImplementationWithBinaryAdapter(ISessionContext SessionContext)
+        public KeyValuePair<IServerImplementation, IBinarySerializationServerAdapter> CreateServerImplementationWithBinaryAdapter(TaskScheduler Scheduler, ISessionContext SessionContext)
         {
             var sc = (SessionContext)(SessionContext);
             if (sc == null) { throw new InvalidOperationException(); }
             var si = CreateServerImplementation(sc);
             var law = new JsonLogAspectWrapper(si);
             HookLog(sc, law);
-            var a = new BinarySerializationServerAdapter(law);
+            var a = new BinarySerializationServerAdapter(Scheduler, law);
             return new KeyValuePair<IServerImplementation, IBinarySerializationServerAdapter>(si, a);
         }
-        public KeyValuePair<IServerImplementation, IJsonSerializationServerAdapter> CreateServerImplementationWithJsonAdapter(ISessionContext SessionContext)
+        public KeyValuePair<IServerImplementation, IJsonSerializationServerAdapter> CreateServerImplementationWithJsonAdapter(TaskScheduler Scheduler, ISessionContext SessionContext)
         {
             var sc = (SessionContext)(SessionContext);
             if (sc == null) { throw new InvalidOperationException(); }
             var si = CreateServerImplementation(sc);
             var law = new JsonLogAspectWrapper(si);
             HookLog(sc, law);
-            var a = new JsonSerializationServerAdapter(law);
+            var a = new JsonSerializationServerAdapter(Scheduler, law);
             return new KeyValuePair<IServerImplementation, IJsonSerializationServerAdapter>(si, a);
         }
 

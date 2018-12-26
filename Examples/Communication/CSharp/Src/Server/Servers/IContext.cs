@@ -29,8 +29,6 @@ namespace Server
         Boolean TryUnregisterSession(ISessionContext SessionContext);
         
         ISessionContext CreateSessionContext();
-        KeyValuePair<IServerImplementation, IBinarySerializationServerAdapter> CreateServerImplementationWithBinaryAdapter(ISessionContext SessionContext);
-        KeyValuePair<IServerImplementation, IJsonSerializationServerAdapter> CreateServerImplementationWithJsonAdapter(ISessionContext SessionContext);
     }
 
     public class SecureContext

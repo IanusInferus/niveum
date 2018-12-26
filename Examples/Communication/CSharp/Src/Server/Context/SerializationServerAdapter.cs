@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Communication;
 using Communication.Binary;
 using Communication.Json;
@@ -10,13 +11,15 @@ namespace Server
 {
     public class BinarySerializationServerAdapter : IBinarySerializationServerAdapter
     {
+        private TaskScheduler Scheduler;
         private IApplicationServer s;
         private static ThreadLocal<BinarySerializationServer> sss = new ThreadLocal<BinarySerializationServer>(() => new BinarySerializationServer());
         private BinarySerializationServer ss = sss.Value;
         private BinarySerializationServerEventDispatcher ssed;
 
-        public BinarySerializationServerAdapter(IApplicationServer ApplicationServer)
+        public BinarySerializationServerAdapter(TaskScheduler Scheduler, IApplicationServer ApplicationServer)
         {
+            this.Scheduler = Scheduler;
             this.s = ApplicationServer;
             this.ssed = new BinarySerializationServerEventDispatcher(ApplicationServer);
             this.ssed.ServerEvent += (CommandName, CommandHash, Parameters) =>
@@ -56,13 +59,23 @@ namespace Server
             {
                 if (System.Diagnostics.Debugger.IsAttached)
                 {
-                    ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                    var t = Task.Factory.StartNew(() => ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters), CancellationToken.None, TaskCreationOptions.None, Scheduler);
+                    t.ContinueWith(tt => OnFailure(tt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                    t.ContinueWith((Task<Task<Byte[]>> tt) => {
+                        tt.Result.ContinueWith(ttt => OnFailure(ttt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                        tt.Result.ContinueWith(ttt => OnSuccess(ttt.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
+                    }, TaskContinuationOptions.OnlyOnRanToCompletion);
                 }
                 else
                 {
                     try
                     {
-                        ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                        var t = Task.Factory.StartNew(() => ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters), CancellationToken.None, TaskCreationOptions.None, Scheduler);
+                        t.ContinueWith(tt => OnFailure(tt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                        t.ContinueWith((Task<Task<Byte[]>> tt) => {
+                            tt.Result.ContinueWith(ttt => OnFailure(ttt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                            tt.Result.ContinueWith(ttt => OnSuccess(ttt.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
+                        }, TaskContinuationOptions.OnlyOnRanToCompletion);
                     }
                     catch (Exception ex)
                     {
@@ -80,13 +93,15 @@ namespace Server
 
     public class JsonSerializationServerAdapter : IJsonSerializationServerAdapter
     {
+        private TaskScheduler Scheduler;
         private IApplicationServer s;
         private static ThreadLocal<JsonSerializationServer> sss = new ThreadLocal<JsonSerializationServer>(() => new JsonSerializationServer());
         private JsonSerializationServer ss = sss.Value;
         private JsonSerializationServerEventDispatcher ssed;
 
-        public JsonSerializationServerAdapter(IApplicationServer ApplicationServer)
+        public JsonSerializationServerAdapter(TaskScheduler Scheduler, IApplicationServer ApplicationServer)
         {
+            this.Scheduler = Scheduler;
             this.s = ApplicationServer;
             this.ssed = new JsonSerializationServerEventDispatcher(ApplicationServer);
             this.ssed.ServerEvent += (CommandName, CommandHash, Parameters) =>
@@ -127,13 +142,23 @@ namespace Server
             {
                 if (System.Diagnostics.Debugger.IsAttached)
                 {
-                    ss.ExecuteCommandAsync(s, CommandName, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                    var t = Task.Factory.StartNew(() => ss.ExecuteCommandAsync(s, CommandName, Parameters), CancellationToken.None, TaskCreationOptions.None, Scheduler);
+                    t.ContinueWith(tt => OnFailure(tt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                    t.ContinueWith((Task<Task<String>> tt) => {
+                        tt.Result.ContinueWith(ttt => OnFailure(ttt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                        tt.Result.ContinueWith(ttt => OnSuccess(ttt.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
+                    }, TaskContinuationOptions.OnlyOnRanToCompletion);
                 }
                 else
                 {
                     try
                     {
-                        ss.ExecuteCommandAsync(s, CommandName, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                        var t = Task.Factory.StartNew(() => ss.ExecuteCommandAsync(s, CommandName, Parameters), CancellationToken.None, TaskCreationOptions.None, Scheduler);
+                        t.ContinueWith(tt => OnFailure(tt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                        t.ContinueWith((Task<Task<String>> tt) => {
+                            tt.Result.ContinueWith(ttt => OnFailure(ttt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                            tt.Result.ContinueWith(ttt => OnSuccess(ttt.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
+                        }, TaskContinuationOptions.OnlyOnRanToCompletion);
                     }
                     catch (Exception ex)
                     {
@@ -172,13 +197,23 @@ namespace Server
             {
                 if (System.Diagnostics.Debugger.IsAttached)
                 {
-                    ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                    var t = Task.Factory.StartNew(() => ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters), CancellationToken.None, TaskCreationOptions.None, Scheduler);
+                    t.ContinueWith(tt => OnFailure(tt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                    t.ContinueWith((Task<Task<String>> tt) => {
+                        tt.Result.ContinueWith(ttt => OnFailure(ttt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                        tt.Result.ContinueWith(ttt => OnSuccess(ttt.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
+                    }, TaskContinuationOptions.OnlyOnRanToCompletion);
                 }
                 else
                 {
                     try
                     {
-                        ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters, OutParameters => OnSuccess(OutParameters), OnFailure);
+                        var t = Task.Factory.StartNew(() => ss.ExecuteCommandAsync(s, CommandName, CommandHash, Parameters), CancellationToken.None, TaskCreationOptions.None, Scheduler);
+                        t.ContinueWith(tt => OnFailure(tt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                        t.ContinueWith((Task<Task<String>> tt) => {
+                            tt.Result.ContinueWith(ttt => OnFailure(ttt.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                            tt.Result.ContinueWith(ttt => OnSuccess(ttt.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
+                        }, TaskContinuationOptions.OnlyOnRanToCompletion);
                     }
                     catch (Exception ex)
                     {

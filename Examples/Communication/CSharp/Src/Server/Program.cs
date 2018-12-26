@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2018.12.17.
+//  Version:     2018.12.27.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -179,13 +179,13 @@ namespace Server
                             {
                                 if (System.Diagnostics.Debugger.IsAttached)
                                 {
-                                    Protocols.Add(StartProtocol(c, p, ServerContext, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
+                                    Protocols.Add(StartProtocol(c, p, ServerContext, tp, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
                                 }
                                 else
                                 {
                                     try
                                     {
-                                        Protocols.Add(StartProtocol(c, p, ServerContext, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
+                                        Protocols.Add(StartProtocol(c, p, ServerContext, tp, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
                                     }
                                     catch (Exception ex)
                                     {
@@ -266,7 +266,7 @@ namespace Server
             Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  服务器进程退出完成。");
         }
 
-        private static IServer StartProtocol(Configuration c, ChatProtocolConfiguration pc, ServerContext ServerContext, Action<Action> QueueUserWorkItem, Action<Action> PurifierQueueUserWorkItem)
+        private static IServer StartProtocol(Configuration c, ChatProtocolConfiguration pc, ServerContext ServerContext, TaskScheduler Scheduler, Action<Action> QueueUserWorkItem, Action<Action> PurifierQueueUserWorkItem)
         {
             if (pc.OnTcp)
             {
@@ -282,7 +282,7 @@ namespace Server
                 {
                     VirtualTransportServerFactory = (Context, t) =>
                     {
-                        var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Context);
+                        var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Scheduler, Context);
                         var si = p.Key;
                         var a = p.Value;
                         var bcps = new BinaryCountPacketServer(a, CommandName => true, t);
@@ -293,7 +293,7 @@ namespace Server
                 {
                     VirtualTransportServerFactory = (Context, t) =>
                     {
-                        var p = ServerContext.CreateServerImplementationWithJsonAdapter(Context);
+                        var p = ServerContext.CreateServerImplementationWithJsonAdapter(Scheduler, Context);
                         var si = p.Key;
                         var a = p.Value;
                         var bcps = new JsonLinePacketServer(a, CommandName => true, t);
@@ -348,7 +348,7 @@ namespace Server
                 {
                     VirtualTransportServerFactory = (Context, t) =>
                     {
-                        var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Context);
+                        var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Scheduler, Context);
                         var si = p.Key;
                         var a = p.Value;
                         var bcps = new BinaryCountPacketServer(a, CommandName => true, t);
@@ -359,7 +359,7 @@ namespace Server
                 {
                     VirtualTransportServerFactory = (Context, t) =>
                     {
-                        var p = ServerContext.CreateServerImplementationWithJsonAdapter(Context);
+                        var p = ServerContext.CreateServerImplementationWithJsonAdapter(Scheduler, Context);
                         var si = p.Key;
                         var a = p.Value;
                         var bcps = new JsonLinePacketServer(a, CommandName => true, t);
@@ -408,7 +408,7 @@ namespace Server
 
                 Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory = Context =>
                 {
-                    var p = ServerContext.CreateServerImplementationWithJsonAdapter(Context);
+                    var p = ServerContext.CreateServerImplementationWithJsonAdapter(Scheduler, Context);
                     var si = p.Key;
                     var a = p.Value;
                     var jhps = new JsonHttpPacketServer(a, CommandName => true);

@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C#二进制通讯模板
-      Version:     2018.12.16.
+      Version:     2018.12.27.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -24,7 +24,7 @@
     public sealed class BinarySerializationServer
     {
         private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>> ClientCommands;
-        private Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, Byte[], Action<Byte[]>, Action<Exception>>> AsyncClientCommands;
+        private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Task<Byte[]>>> AsyncClientCommands;
 
         private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>
         {
@@ -46,7 +46,7 @@
         public BinarySerializationServer()
         {
             ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>>(new KeyValuePairEqualityComparer<String, UInt32>());
-            AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<IApplicationServer, UInt8[], Action<UInt8[]>, Action<Exception>>>(new KeyValuePairEqualityComparer<String, UInt32>());
+            AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, UInt8[], Task<UInt8[]>>>(new KeyValuePairEqualityComparer<String, UInt32>());
             $$
                 foreach (var c in Commands)
                 {
@@ -64,7 +64,7 @@
                             if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                             {
                                 ##
-                                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), (s, p, Callback, OnFailure) => s.[[${Name}]](BinaryTranslator.Deserialize<${RequestTypeString}>(p), Reply => Callback(BinaryTranslator.Serialize(Reply)), OnFailure));
+                                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), async (s, p) => BinaryTranslator.Serialize(await s.[[${Name}]](BinaryTranslator.Deserialize<${RequestTypeString}>(p))));
                             }
                             else
                             {
@@ -77,7 +77,7 @@
                             if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                             {
                                 ##
-                                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), (s, p, Callback, OnFailure) => s.[[${Name}]](BinaryTranslator.[[${RequestName}FromBytes]](p), Reply => Callback(BinaryTranslator.[[${ReplyName}ToBytes]](Reply)), OnFailure));
+                                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), async (s, p) => BinaryTranslator.[[${ReplyName}ToBytes]](await s.[[${Name}]](BinaryTranslator.[[${RequestName}FromBytes]](p))));
                             }
                             else
                             {
@@ -111,10 +111,10 @@
             var cmd = ClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];
             return cmd(s, Parameters);
         }
-        public void ExecuteCommandAsync(IApplicationServer s, String CommandName, UInt32 CommandHash, Byte[] Parameters, Action<Byte[]> Callback, Action<Exception> OnFailure)
+        public async Task<Byte[]> ExecuteCommandAsync(IApplicationServer s, String CommandName, UInt32 CommandHash, Byte[] Parameters)
         {
             var cmd = AsyncClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];
-            cmd(s, Parameters, Callback, OnFailure);
+            return await cmd(s, Parameters);
         }
     }
     public sealed class BinarySerializationServerEventDispatcher
@@ -225,21 +225,25 @@
                         if (WithFirefly)
                         {
                             ##
-                                public void [[${Name}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback)
+                                public Task<${ReplyTypeString}> [[${Name}]](${RequestTypeString} r)
                                 {
+                                    var Source = new TaskCompletionSource<${ReplyTypeString}>();
                                     var Request = BinaryTranslator.Serialize(r);
-                                    AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Callback(BinaryTranslator.Deserialize<${ReplyTypeString}>(Parameters)));
+                                    AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Source.SetResult(BinaryTranslator.Deserialize<${ReplyTypeString}>(Parameters)));
                                     s.Send(${CommandNameString}, 0x${CommandHash}, Request);
+                                    return Source.Task;
                                 }
                         }
                         else
                         {
                             ##
-                                public void [[${Name}]](${RequestTypeString} r, Action<${ReplyTypeString}> Callback)
+                                public Task<${ReplyTypeString}> [[${Name}]](${RequestTypeString} r)
                                 {
+                                    var Source = new TaskCompletionSource<${ReplyTypeString}>();
                                     var Request = BinaryTranslator.[[${RequestName}ToBytes]](r);
-                                    AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Callback(BinaryTranslator.[[${ReplyName}FromBytes]](Parameters)));
+                                    AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Source.SetResult(BinaryTranslator.[[${ReplyName}FromBytes]](Parameters)));
                                     s.Send(${CommandNameString}, 0x${CommandHash}, Request);
+                                    return Source.Task;
                                 }
                         }
                     }
@@ -1680,6 +1684,12 @@
     using System;
     using System.Collections.Generic;
     $$
+        var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+        if (Commands.Count > 0)
+        {
+            ##
+                using System.Threading.Tasks;
+        }
         if (WithFirefly)
         {
             ##
