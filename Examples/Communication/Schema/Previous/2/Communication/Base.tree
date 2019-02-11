@@ -1,0 +1,27 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Base.tree
+      Location:    Niveum.Examples <Tree>
+      Description: 基础
+      Version:     2018.12.02.
+      Author:      F.R.C.
+      Copyright(C) Public Domain
+
+    ==========================================================================
+
+#Namespace Communication
+
+#ServerCommand Error                                错误
+    Message             String                      错误信息
+
+#ServerCommand ErrorCommand                         错误命令
+    CommandName         String                      客户端命令名称
+
+#ClientCommand ServerTime                           服务器时间
+    >
+    Success             String                      服务器时间
+
+#ClientCommand Quit                                 退出
+    >
+    Success             Unit                        成功

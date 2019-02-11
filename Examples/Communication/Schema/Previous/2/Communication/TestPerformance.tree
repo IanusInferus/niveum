@@ -1,0 +1,37 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        TestPerformance.tree
+      Location:    Niveum.Examples <Tree>
+      Description: 性能测试
+      Version:     2018.12.05.
+      Author:      F.R.C.
+      Copyright(C) Public Domain
+
+    ==========================================================================
+
+#Namespace Communication
+
+#ClientCommand TestAdd                              加法
+    Left                Int                         操作数1
+    Right               Int                         操作数2
+    >
+    Result              Int                         结果
+
+#ClientCommand TestMultiply                         两百万次浮点乘法
+    Operand             Real                        操作数
+    >
+    Result              Real                        结果
+
+#ClientCommand TestText                             文本原样返回
+    Text                String                      文本
+    >
+    Result              String                      文本
+
+#ClientCommand TestMessage                          群发消息
+    Message             String                      消息
+    >
+    Success             Int                         成功，在线人数
+
+#ServerCommand TestMessageReceived                  接到群发消息
+    Message             String                      消息

@@ -489,12 +489,17 @@ namespace Niveum.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (optNameLower == "gencom")
+                else if (optNameLower == "gentypecmpt")
                 {
                     var args = opt.Arguments;
-                    if (args.Length == 5)
+                    if (args.Length % 2 == 1)
                     {
-                        GenerateCommunicationCompatibilityTreeFile(args[0], args[1], args[2], args[3], args[4]);
+                        var ListOfObjectSchemaDirOrCookedObjectSchemaFileAndVersion = new List<KeyValuePair<String, String>>();
+                        for (int k = 0; k < args.Length - 1; k += 2)
+                        {
+                            ListOfObjectSchemaDirOrCookedObjectSchemaFileAndVersion.Add(new KeyValuePair<String, String>(args[k], args[k + 1]));
+                        }
+                        GenerateTypeCompatibilityTreeFile(ListOfObjectSchemaDirOrCookedObjectSchemaFileAndVersion, args[args.Length - 1]);
                     }
                     else
                     {
@@ -502,12 +507,17 @@ namespace Niveum.SchemaManipulator
                         return -1;
                     }
                 }
-                else if (optNameLower == "gentypecom")
+                else if (optNameLower == "gencomcmpt")
                 {
                     var args = opt.Arguments;
-                    if (args.Length == 5)
+                    if (args.Length % 2 == 1)
                     {
-                        GenerateTypeCompatibilityTreeFile(args[0], args[1], args[2], args[3], args[4]);
+                        var ListOfObjectSchemaDirOrCookedObjectSchemaFileAndVersion = new List<KeyValuePair<String, String>>();
+                        for (int k = 0; k < args.Length - 1; k += 2)
+                        {
+                            ListOfObjectSchemaDirOrCookedObjectSchemaFileAndVersion.Add(new KeyValuePair<String, String>(args[k], args[k + 1]));
+                        }
+                        GenerateTypeCompatibilityTreeFile(ListOfObjectSchemaDirOrCookedObjectSchemaFileAndVersion, args[args.Length - 1], true);
                     }
                     else
                     {
@@ -585,10 +595,10 @@ namespace Niveum.SchemaManipulator
             Console.WriteLine(@"/t2pyb:<PythonCodePath>");
             Console.WriteLine(@"生成XHTML文档");
             Console.WriteLine(@"/t2xhtml:<XhtmlDir>,<Title>,<CopyrightText>");
-            Console.WriteLine(@"生成通讯兼容类型结构Tree文件(当前加载的类型结构为Head，生成的兼容用对象类型结构为Old - New中的通讯命令 + Head中的类型)");
-            Console.WriteLine(@"/gencom:<OldCookedObjectSchemaFile>,<OldVersion>,<NewCookedObjectSchemaFile>,<NewVersion>,<CompatibilityObjectSchemaFile>");
-            Console.WriteLine(@"生成兼容类型结构Tree文件(当前加载的类型结构为Head，生成的兼容用对象类型结构为Old - New中的类型 + Head中的类型)");
-            Console.WriteLine(@"/gentypecom:<OldCookedObjectSchemaFile>,<OldVersion>,<NewCookedObjectSchemaFile>,<NewVersion>,<CompatibilityObjectSchemaFile>");
+            Console.WriteLine(@"生成兼容类型结构Tree文件(当前加载的类型结构为Head)");
+            Console.WriteLine(@"/gentypecmpt:[<ObjectSchemaDir|CookedObjectSchemaFile>,<Version>,]+<CompatibilityObjectSchemaFile>");
+            Console.WriteLine(@"生成通讯兼容类型结构Tree文件(当前加载的类型结构为Head)");
+            Console.WriteLine(@"/gencomcmpt:[<ObjectSchemaDir|CookedObjectSchemaFile>,<Version>,]+<CompatibilityObjectSchemaFile>");
             Console.WriteLine(@"CookedObjectSchemaFile 已编译过的对象类型结构Tree文件路径。");
             Console.WriteLine(@"ObjectSchemaDir|ObjectSchemaFile 对象类型结构Tree文件(夹)路径。");
             Console.WriteLine(@"AsyncCommandListFile 异步命令列表文件");
@@ -613,10 +623,7 @@ namespace Niveum.SchemaManipulator
             Console.WriteLine(@"XhtmlDir XHTML文件夹路径。");
             Console.WriteLine(@"Title 标题。");
             Console.WriteLine(@"CopyrightText 版权文本。");
-            Console.WriteLine(@"OldCookedObjectSchemaFile 旧的已编译过的对象类型结构Tree文件路径。");
-            Console.WriteLine(@"OldVersion 旧类型结构Tree中类型所用版本号。");
-            Console.WriteLine(@"NewCookedObjectSchemaFile 新的已编译过的对象类型结构Tree文件路径。");
-            Console.WriteLine(@"NewVersion 新类型结构Tree中类型所用版本号。");
+            Console.WriteLine(@"Version 类型结构Tree中类型所用版本号。");
             Console.WriteLine(@"CompatibilityObjectSchemaFile 兼容用对象类型结构Tree文件。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
@@ -1060,21 +1067,31 @@ namespace Niveum.SchemaManipulator
             }
         }
 
-        public static void GenerateTypeCompatibilityTreeFile(String OldCookedObjectSchemaFile, String OldVersion, String NewCookedObjectSchemaFile, String NewVersion, String CompatibilityObjectSchemaFile)
+        public static void GenerateTypeCompatibilityTreeFile(List<KeyValuePair<String, String>> ListOfObjectSchemaDirOrCookedObjectSchemaFileAndVersion, String CompatibilityObjectSchemaFile, bool CommunicationOnly = false)
         {
             var HeadObjectSchema = GetObjectSchema();
-            var oosl = new ObjectSchemaLoader();
-            oosl.LoadSchema(OldCookedObjectSchemaFile);
-            var OldObjectSchemaLoaderResult = oosl.GetResult();
-            var OldObjectSchema = OldObjectSchemaLoaderResult.Schema;
-            var nosl = new ObjectSchemaLoader();
-            nosl.LoadSchema(NewCookedObjectSchemaFile);
-            var NewObjectSchemaLoaderResult = nosl.GetResult();
-            var NewObjectSchema = NewObjectSchemaLoaderResult.Schema;
-
-            var HeadSchema = HeadObjectSchema.GetSubSchema(HeadObjectSchema.Types.Where(t => t.Version() == ""), new TypeSpec[] { });
-            var OldSchema = OldObjectSchema.GetSubSchema(OldObjectSchema.Types.Where(t => t.Version() == ""), new TypeSpec[] { });
-            var NewSchema = NewObjectSchema.GetSubSchema(NewObjectSchema.Types.Where(t => t.Version() == ""), new TypeSpec[] { });
+            var HeadSchema = HeadObjectSchema.GetSubSchema(HeadObjectSchema.Types.Where(t => (!CommunicationOnly || (t.OnPrimitive || t.OnClientCommand || t.OnServerCommand)) && (t.Version() == "")), new TypeSpec[] { });
+            var Versions = ListOfObjectSchemaDirOrCookedObjectSchemaFileAndVersion.Select(p =>
+            {
+                var vosl = new ObjectSchemaLoader();
+                if (File.Exists(p.Key))
+                {
+                    vosl.LoadSchema(p.Key);
+                }
+                else if (Directory.Exists(p.Key))
+                {
+                    foreach (var f in Directory.GetFiles(p.Key, "*.tree", SearchOption.AllDirectories).OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
+                    {
+                        vosl.LoadType(f);
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException("InvalidPath: " + p.Key);
+                }
+                var Schema = vosl.GetResult().Schema;
+                return new KeyValuePair<String, Schema>(p.Value, Schema.GetSubSchema(Schema.Types.Where(t => (!CommunicationOnly || (t.OnPrimitive || t.OnClientCommand || t.OnServerCommand)) && (t.Version() == "")), new TypeSpec[] { }));
+            }).ToList();
 
             var Comment = ""
                 + @"==========================================================================" + "\r\n"
@@ -1083,71 +1100,16 @@ namespace Niveum.SchemaManipulator
                 + @"               Please don't modify this file." + "\r\n"
                 + @"" + "\r\n"
                 + @"  SchemaHash: Head 0x" + HeadSchema.GetNonattributed().Hash().ToString("X16") + "\r\n"
-                + @"              " + NewVersion + " 0x" + NewSchema.GetNonattributed().Hash().ToString("X16") + "\r\n"
-                + @"              " + OldVersion + " 0x" + OldSchema.GetNonattributed().Hash().ToString("X16") + "\r\n"
+                + String.Join("", Versions.AsEnumerable().Reverse().Select(v => @"              " + v.Key + " 0x" + v.Value.GetNonattributed().Hash().ToString("X16") + "\r\n"))
                 + @"" + "\r\n"
                 + @"==========================================================================" + "\r\n"
                 ;
 
             var DiffGenerator = new ObjectSchemaDiffGenerator();
-            var OldNewDiff = DiffGenerator.Generate(NewSchema, OldSchema);
-            var ChangedTypes = new HashSet<String>(OldNewDiff.Patch.Types.Where(t => t.Version() == "").Select(t => t.VersionedName()), StringComparer.OrdinalIgnoreCase);
-            var Patch = DiffGenerator.Generate(HeadObjectSchema, OldSchema.GetSubSchema(OldSchema.Types.Where(t => ChangedTypes.Contains(t.VersionedName())).ToList(), new List<TypeSpec> { })).Patch;
-            var Result = Patch.GetTypesVersioned(OldVersion);
+            var Result = DiffGenerator.GetCompatibleTypes(Versions.Concat(new List<KeyValuePair<String, Schema>> { new KeyValuePair<String, Schema>("", HeadSchema) }).ToList());
 
             var osw = new ObjectSchemaWriter();
-            var Compiled = osw.Write(Result.Types, Comment);
-
-            if (File.Exists(CompatibilityObjectSchemaFile))
-            {
-                var Original = Txt.ReadFile(CompatibilityObjectSchemaFile);
-                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
-                {
-                    return;
-                }
-            }
-            var Dir = FileNameHandling.GetFileDirectory(CompatibilityObjectSchemaFile);
-            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(CompatibilityObjectSchemaFile, TextEncoding.UTF8, Compiled);
-        }
-
-        public static void GenerateCommunicationCompatibilityTreeFile(String OldCookedObjectSchemaFile, String OldVersion, String NewCookedObjectSchemaFile, String NewVersion, String CompatibilityObjectSchemaFile)
-        {
-            var HeadObjectSchema = GetObjectSchema();
-            var oosl = new ObjectSchemaLoader();
-            oosl.LoadSchema(OldCookedObjectSchemaFile);
-            var OldObjectSchemaLoaderResult = oosl.GetResult();
-            var OldObjectSchema = OldObjectSchemaLoaderResult.Schema;
-            var nosl = new ObjectSchemaLoader();
-            nosl.LoadSchema(NewCookedObjectSchemaFile);
-            var NewObjectSchemaLoaderResult = nosl.GetResult();
-            var NewObjectSchema = NewObjectSchemaLoaderResult.Schema;
-
-            var HeadCommandSchema = HeadObjectSchema.GetSubSchema(HeadObjectSchema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { });
-            var OldCommandSchema = OldObjectSchema.GetSubSchema(OldObjectSchema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { });
-            var NewCommandSchema = NewObjectSchema.GetSubSchema(NewObjectSchema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new TypeSpec[] { });
-
-            var Comment = ""
-                + @"==========================================================================" + "\r\n"
-                + @"" + "\r\n"
-                + @"  Notice:      This file is automatically generated." + "\r\n"
-                + @"               Please don't modify this file." + "\r\n"
-                + @"" + "\r\n"
-                + @"  SchemaHash: Head 0x" + HeadCommandSchema.GetNonattributed().Hash().ToString("X16") + "\r\n"
-                + @"              " + NewVersion + " 0x" + NewCommandSchema.GetNonattributed().Hash().ToString("X16") + "\r\n"
-                + @"              " + OldVersion + " 0x" + OldCommandSchema.GetNonattributed().Hash().ToString("X16") + "\r\n"
-                + @"" + "\r\n"
-                + @"==========================================================================" + "\r\n"
-                ;
-
-            var DiffGenerator = new ObjectSchemaDiffGenerator();
-            var OldNewDiff = DiffGenerator.Generate(NewCommandSchema, OldCommandSchema);
-            var ChangedCommands = new HashSet<String>(OldNewDiff.Patch.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == "").Select(t => t.VersionedName()), StringComparer.OrdinalIgnoreCase);
-            var Patch = DiffGenerator.Generate(HeadObjectSchema, OldCommandSchema.GetSubSchema(OldCommandSchema.Types.Where(t => ChangedCommands.Contains(t.VersionedName())).ToList(), new List<TypeSpec> { })).Patch;
-            var Result = Patch.GetTypesVersioned(OldVersion);
-
-            var osw = new ObjectSchemaWriter();
-            var Compiled = osw.Write(Result.Types, Comment);
+            var Compiled = osw.Write(Result, Comment);
 
             if (File.Exists(CompatibilityObjectSchemaFile))
             {

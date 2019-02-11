@@ -91,7 +91,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
                 }
             }
             yield return "}";
-            yield return "private IEventPump CreateEventPump(Func<String> GetVersion)";
+            yield return "private IEventPump CreateEventPump(Func<List<String>, Func<String>> GetVersionResolver)";
             yield return "{";
             yield return "    var ep = new EventPump();";
             foreach (var g in ServerCommandGroups)
@@ -109,12 +109,19 @@ namespace Niveum.ObjectSchema.CSharpCompatible
                 else
                 {
                     var SortedGroupCommands = GroupCommands.Where(sc => sc.Version != "").OrderByDescending(sc => new NumericString(sc.Version)).ToList();
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "var "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Resolver"))), " = GetVersionResolver(new List<String> { "), String.Join(", ", SortedGroupCommands.Select(sc => GetEscapedStringLiteral(sc.Version)))), " });"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
                     foreach (var _Line in Combine(Combine(Begin(), GetEscapedIdentifier(Combine(Combine(Begin(), "ep."), Name))), " = eHead =>"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                     yield return "    " + "{";
-                    yield return "    " + "    var Version = GetVersion();";
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    var Version = "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Resolver"))), "();"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
                     yield return "    " + "    if (Version == \"\")";
                     yield return "    " + "    {";
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "        if ("), GetEscapedIdentifier(Name)), " != null) { "), GetEscapedIdentifier(Name)), "(eHead); }"))
@@ -126,7 +133,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
                     foreach (var sc in SortedGroupCommands)
                     {
                         var VersionedSimpleName = sc.GetTypeSpec().SimpleName(NamespaceName);
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (Version == \""), sc.Version), "\")"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (Version == "), GetEscapedStringLiteral(sc.Version)), ")"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }

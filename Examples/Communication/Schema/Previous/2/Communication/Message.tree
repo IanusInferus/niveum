@@ -17,7 +17,6 @@
     Lines               List<String>                内容
 
 #ClientCommand SendMessage                          发送消息
-    Id                  Int                         消息ID
     Message             Message                     消息
     >
     Success             Unit                        成功
