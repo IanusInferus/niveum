@@ -11,7 +11,19 @@ namespace Server.Services
             SessionContext.SessionLock.EnterWriteLock();
             try
             {
-                SessionContext.EventPump = CreateEventPump(() => SessionContext.Version);
+                Func<List<String>, Func<String>> GetVersionResolver = Versions =>
+                {
+                    var Sorted = Versions.Select(v => int.Parse(v)).OrderBy(v => v).ToList();
+                    return () =>
+                    {
+                        var Version = SessionContext.Version;
+                        if (Version == "") { return ""; }
+                        if (Sorted.Count == 0) { return ""; }
+                        var cv = int.Parse(Version);
+                        return Sorted.TakeWhile(v => cv <= v).Last().ToString();
+                    };
+                };
+                SessionContext.EventPump = CreateEventPump(GetVersionResolver);
             }
             finally
             {

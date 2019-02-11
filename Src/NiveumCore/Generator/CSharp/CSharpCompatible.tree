@@ -4,7 +4,7 @@
       File:        CSharpCompatible.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C#通讯兼容模板
-      Version:     2018.12.26.
+      Version:     2019.02.11.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -35,7 +35,7 @@
                     public Action<${EventTypeString}> [[${Name}]] { get; set; }
             }
     }
-    private IEventPump CreateEventPump(Func<String> GetVersion)
+    private IEventPump CreateEventPump(Func<List<String>, Func<String>> GetVersionResolver)
     {
         var ep = new EventPump();
         $$
@@ -53,9 +53,10 @@
                 {
                     var SortedGroupCommands = GroupCommands.Where(sc => sc.Version != "").OrderByDescending(sc => new NumericString(sc.Version)).ToList();
                     ##
+                        var [[${Name}Resolver]] = GetVersionResolver(new List<String> { ${String.Join(", ", SortedGroupCommands.Select(sc => GetEscapedStringLiteral(sc.Version)))} });
                         [[ep.${Name}]] = eHead =>
                         {
-                            var Version = GetVersion();
+                            var Version = [[${Name}Resolver]]();
                             if (Version == "")
                             {
                                 if ([[${Name}]] != null) { [[${Name}]](eHead); }
@@ -66,7 +67,7 @@
                                 {
                                     var VersionedSimpleName = sc.GetTypeSpec().SimpleName(NamespaceName);
                                     ##
-                                        if (Version == "${sc.Version}")
+                                        if (Version == ${GetEscapedStringLiteral(sc.Version)})
                                         {
                                             var e = [[${VersionedSimpleName}EventFromHead]](eHead);
                                             if ([[${VersionedSimpleName}]] != null) { [[${VersionedSimpleName}]](e); }

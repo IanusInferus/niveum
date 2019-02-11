@@ -103,5 +103,30 @@ namespace Niveum.ObjectSchema
                 Revert = Revert
             };
         }
+
+        public List<TypeDef> GetCompatibleTypes(List<KeyValuePair<String, Schema>> VersionAndSchemaList)
+        {
+            var ResultTypes = new List<TypeDef> { };
+            foreach (var k in Enumerable.Range(0, VersionAndSchemaList.Count - 1))
+            {
+                var Old = VersionAndSchemaList[k];
+                var New = VersionAndSchemaList[k + 1];
+                var AddtionalTypesToBePreserved = Generate(Old.Value, New.Value).Revert;
+                var h = new HashSet<String>(AddtionalTypesToBePreserved.Types.Select(t => t.VersionedName()), StringComparer.OrdinalIgnoreCase);
+                var MapConf = new TypeMapConfiguration { MapTypeSpecKernel = (d, ts) =>
+                {
+                    if (ts.OnTypeRef && h.Contains(ts.TypeRef.VersionedName()))
+                    {
+                        return TypeSpec.CreateTypeRef(new TypeRef { Name = ts.TypeRef.Name, Version = Old.Key });
+                    }
+                    else
+                    {
+                        return ts;
+                    }
+                }};
+                ResultTypes = ResultTypes.Select(t => t.MapType(MapConf)).Concat(AddtionalTypesToBePreserved.GetTypesVersioned(Old.Key).Types).ToList();
+            }
+            return ResultTypes;
+        }
     }
 }

@@ -81,7 +81,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "class EventPump : public IEventPump";
             yield return "{";
             yield return "};";
-            yield return "std::shared_ptr<IEventPump> CreateEventPump(std::function<std::wstring()> GetVersion)";
+            yield return "std::shared_ptr<IEventPump> CreateEventPump(std::function<std::function<std::wstring()>(std::vector<std::wstring>)> GetVersionResolver)";
             yield return "{";
             yield return "    auto ep = std::make_shared<EventPump>();";
             foreach (var g in ServerCommandGroups)
@@ -100,12 +100,19 @@ namespace Niveum.ObjectSchema.CppCompatible
                 else
                 {
                     var SortedGroupCommands = GroupCommands.Where(sc => sc.Version != "").OrderByDescending(sc => new NumericString(sc.Version)).ToList();
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "auto "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Resolver"))), " = GetVersionResolver({ "), String.Join(", ", SortedGroupCommands.Select(sc => GetEscapedStringLiteral(sc.Version)))), " });"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ep->"), GetEscapedIdentifier(Name)), " = [=]("), EventTypeString), " eHead)"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
                     yield return "    " + "{";
-                    yield return "    " + "    auto Version = GetVersion();";
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto Version = "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "Resolver"))), "();"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
                     yield return "    " + "    if (Version == L\"\")";
                     yield return "    " + "    {";
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "        if ("), GetEscapedIdentifier(Name)), " != nullptr) { "), GetEscapedIdentifier(Name)), "(eHead); }"))

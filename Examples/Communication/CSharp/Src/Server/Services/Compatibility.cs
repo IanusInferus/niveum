@@ -12,7 +12,7 @@ namespace Server.Services
         public SendMessageRequest SendMessageAt1RequestToHead(SendMessageAt1Request o)
         {
             var ho = new SendMessageRequest();
-            ho.Content = (o.Title != "" ? o.Title + "\r\n" : "") + String.Join("\r\n", o.Lines);
+            ho.Content = (o.Message.Title != "" ? o.Message.Title + "\r\n" : "") + String.Join("\r\n", o.Message.Lines);
             return ho;
         }
         public SendMessageAt1Reply SendMessageAt1ReplyFromHead(SendMessageReply ho)
@@ -27,9 +27,27 @@ namespace Server.Services
             }
             throw new InvalidOperationException();
         }
-        public MessageReceivedAt1Event MessageReceivedAt1EventFromHead(MessageReceivedEvent ho)
+        public SendMessageRequest SendMessageAt2RequestToHead(SendMessageAt2Request o)
         {
-            var o = new MessageReceivedAt1Event();
+            var ho = new SendMessageRequest();
+            ho.Content = (o.Message.Title != "" ? o.Message.Title + "\r\n" : "") + String.Join("\r\n", o.Message.Lines);
+            return ho;
+        }
+        public SendMessageAt2Reply SendMessageAt2ReplyFromHead(SendMessageReply ho)
+        {
+            if (ho.OnSuccess)
+            {
+                return SendMessageAt2Reply.CreateSuccess();
+            }
+            if (ho.OnTooLong)
+            {
+                return SendMessageAt2Reply.CreateLinesTooLong();
+            }
+            throw new InvalidOperationException();
+        }
+        public MessageReceivedAt2Event MessageReceivedAt2EventFromHead(MessageReceivedEvent ho)
+        {
+            var o = new MessageReceivedAt2Event();
             o.Title = "";
             o.Lines = ho.Content.UnifyNewLineToLf().Split('\n').ToList();
             return o;

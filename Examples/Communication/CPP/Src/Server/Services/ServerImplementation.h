@@ -4,6 +4,7 @@
 #include "CommunicationBinary.h"
 #include "Context/ServerContext.h"
 #include "Context/SessionContext.h"
+#include "BaseSystem/StringUtilities.h"
 
 #include <memory>
 #include <string>
@@ -41,11 +42,40 @@ namespace Server
             class EventPump : public Communication::IEventPump
             {
             };
-            std::shared_ptr<Communication::IEventPump> CreateEventPump(std::function<std::wstring()> GetVersion);
+            std::shared_ptr<Communication::IEventPump> CreateEventPump(std::function<std::function<std::wstring()>(std::vector<std::wstring>)> GetVersionResolver);
             void RegisterCrossSessionEvents()
             {
                 auto Lock = SessionContext->WriterLock();
-                SessionContext->EventPump = CreateEventPump([this]() { return SessionContext->Version; });
+                auto GetVersionResolver = [this](std::vector<std::wstring> Versions)
+                {
+                    std::vector<int> Sorted;
+                    for (auto v : Versions)
+                    {
+                        Sorted.push_back(Parse<int>(v));
+                    }
+                    std::sort(Sorted.begin(), Sorted.end());
+                    return [this, Sorted]() -> std::wstring
+                    {
+                        auto Version = SessionContext->Version;
+                        if (Version == L"") { return L""; }
+                        if (Sorted.size() == 0) { return L""; }
+                        auto cv = Parse<int>(Version);
+                        auto vPrev = 0;
+                        for (auto v : Sorted)
+                        {
+                            if (cv <= v)
+                            {
+                                vPrev = v;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        return ToString(vPrev);
+                    };
+                };
+                SessionContext->EventPump = CreateEventPump(GetVersionResolver);
             }
 
             void UnregisterCrossSessionEvents()
@@ -107,7 +137,10 @@ namespace Server
             std::shared_ptr<Communication::SendMessageAt1Reply> SendMessageAt1(std::shared_ptr<Communication::SendMessageAt1Request> r) override;
             std::shared_ptr<Communication::SendMessageRequest> SendMessageAt1RequestToHead(std::shared_ptr<Communication::SendMessageAt1Request> o);
             std::shared_ptr<Communication::SendMessageAt1Reply> SendMessageAt1ReplyFromHead(std::shared_ptr<Communication::SendMessageReply> ho);
-            std::shared_ptr<Communication::MessageReceivedAt1Event> MessageReceivedAt1EventFromHead(std::shared_ptr<Communication::MessageReceivedEvent> ho);
+            std::shared_ptr<Communication::SendMessageAt2Reply> SendMessageAt2(std::shared_ptr<Communication::SendMessageAt2Request> r) override;
+            std::shared_ptr<Communication::SendMessageRequest> SendMessageAt2RequestToHead(std::shared_ptr<Communication::SendMessageAt2Request> o);
+            std::shared_ptr<Communication::SendMessageAt2Reply> SendMessageAt2ReplyFromHead(std::shared_ptr<Communication::SendMessageReply> ho);
+            std::shared_ptr<Communication::MessageReceivedAt2Event> MessageReceivedAt2EventFromHead(std::shared_ptr<Communication::MessageReceivedEvent> ho);
             /// <summary>加法</summary>
             void TestAddAt1(std::shared_ptr<Communication::TestAddAt1Request> r, std::function<void(std::shared_ptr<Communication::TestAddAt1Reply>)> Callback, std::function<void(const std::exception &)> OnFailure) override;
             std::shared_ptr<Communication::TestAddRequest> TestAddAt1RequestToHead(std::shared_ptr<Communication::TestAddAt1Request> o);

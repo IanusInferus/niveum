@@ -1,0 +1,17 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Admin.tree
+      Location:    Niveum.Examples <Tree>
+      Description: 管理
+      Version:     2018.12.02.
+      Author:      F.R.C.
+      Copyright(C) Public Domain
+
+    ==========================================================================
+
+#Namespace Communication
+
+#ClientCommand Shutdown                             关闭服务器
+    >
+    Success             Unit                        成功

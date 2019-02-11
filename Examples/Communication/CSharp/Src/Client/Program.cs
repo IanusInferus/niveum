@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2018.12.27.
+//  Version:     2019.02.11.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -402,7 +402,7 @@ namespace Client
                 Console.WriteLine(m);
             };
             InnerClient.MessageReceived += e => Console.WriteLine(e.Content);
-            InnerClient.MessageReceivedAt1 += e =>
+            InnerClient.MessageReceivedAt2 += e =>
             {
                 if (e.Title != "")
                 {
@@ -438,7 +438,7 @@ namespace Client
             };
             if (UseOld)
             {
-                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = "690E84A3D3914C38" }).ContinueWith(t => CheckSchemaVersionHandler(t.Result));
+                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = "D7FFBD0D2E5D7274" }).ContinueWith(t => CheckSchemaVersionHandler(t.Result));
             }
             else
             {
@@ -499,7 +499,7 @@ namespace Client
                     }
                     if (UseOld)
                     {
-                        InnerClient.SendMessageAt1(new SendMessageAt1Request { Title = "", Lines = new List<String> { Line } }).ContinueWith(t =>
+                        InnerClient.SendMessageAt1(new SendMessageAt1Request { Id = 1, Message = new MessageAt2 { Title = "", Lines = new List<String> { Line } } }).ContinueWith(t =>
                         {
                             var r = t.Result;
                             if (r.OnTitleTooLong || r.OnLinesTooLong || r.OnLineTooLong)
