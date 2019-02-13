@@ -1032,9 +1032,9 @@ namespace Niveum.ObjectSchema.CppCompatible
             {
                 yield return _Line;
             }
-            if (NamespaceName != "")
+            if ((NamespaceName != "") && (NamespaceName != ImplementationNamespaceName))
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "using namespace "), NamespaceName), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "using namespace "), NamespaceName.Replace(".", "::")), ";"))
                 {
                     yield return _Line;
                 }

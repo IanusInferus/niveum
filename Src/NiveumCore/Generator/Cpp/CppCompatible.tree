@@ -4,7 +4,7 @@
       File:        CppCompatible.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C++通讯兼容模板
-      Version:     2019.02.11.
+      Version:     2019.02.13.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -691,10 +691,10 @@
     #include <stdexcept>
     #include ${Schema.Imports.Where(i => IsInclude(i))}
     $$
-        if (NamespaceName != "")
+        if ((NamespaceName != "") && (NamespaceName != ImplementationNamespaceName))
         {
             ##
-                using namespace ${NamespaceName};
+                using namespace ${NamespaceName.Replace(".", "::")};
         }
 
     ${GetTypes(Schema, NamespaceName, ImplementationNamespaceName, ImplementationClassName)}

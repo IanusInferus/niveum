@@ -582,9 +582,9 @@ namespace Niveum.SchemaManipulator
             Console.WriteLine(@"生成C++2011二进制通讯类型");
             Console.WriteLine(@"/t2cppb:<CppCodePath>[,<NamespaceName>[,<WithServer=true>,<WithClient=true>]]");
             Console.WriteLine(@"生成C++兼容类型");
-            Console.WriteLine(@"/t2cppc:<CsCodePath>,<NamespaceName>,<ImplementationNamespaceName>,<ImplementationClassName>");
+            Console.WriteLine(@"/t2cppc:<CppCodePath>,<NamespaceName>,<ImplementationNamespaceName>,<ImplementationClassName>");
             Console.WriteLine(@"生成C++版本类型");
-            Console.WriteLine(@"/t2cppv:<CsCodePath>,<NamespaceName>,<FullTypeName>*");
+            Console.WriteLine(@"/t2cppv:<CppCodePath>,<NamespaceName>,<FullTypeName>*");
             Console.WriteLine(@"生成Haxe类型");
             Console.WriteLine(@"/t2hx:<HaxeCodeDirPath>,<PackageName>");
             Console.WriteLine(@"生成Haxe JSON通讯类型");
