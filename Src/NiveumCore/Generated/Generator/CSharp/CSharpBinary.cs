@@ -225,7 +225,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
         {
             yield return "public interface IBinarySender";
             yield return "{";
-            yield return "    void Send(String CommandName, UInt32 CommandHash, Byte[] Parameters);";
+            yield return "    void Send(String CommandName, UInt32 CommandHash, Byte[] Parameters, Action<Exception> OnError);";
             yield return "}";
         }
         public IEnumerable<String> BinarySerializationClient(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator, String NamespaceName)
@@ -249,10 +249,16 @@ namespace Niveum.ObjectSchema.CSharpBinary
             yield return "        }";
             yield return "    }";
             yield return "";
+            yield return "    private class ClientCommandTriple";
+            yield return "    {";
+            yield return "        public UInt32 Hash;";
+            yield return "        public Action<Byte[]> Callback;";
+            yield return "        public Action<Exception> OnError;";
+            yield return "    }";
             yield return "    private class ApplicationClient : IApplicationClient";
             yield return "    {";
             yield return "        public IBinarySender s;";
-            yield return "        public Dictionary<String, Queue<KeyValuePair<UInt32, Action<Byte[]>>>> ClientCommandCallbacks;";
+            yield return "        public Dictionary<String, Queue<ClientCommandTriple>> ClientCommandCallbacks;";
             yield return "";
             yield return "        public UInt64 Hash";
             yield return "        {";
@@ -265,21 +271,23 @@ namespace Niveum.ObjectSchema.CSharpBinary
             yield return "            }";
             yield return "        }";
             yield return "";
-            yield return "        public void DequeueCallback(String CommandName)";
+            yield return "        public void NotifyErrorCommand(String CommandName, String Message)";
             yield return "        {";
-            yield return "            ClientCommandCallbacks[CommandName].Dequeue();";
+            yield return "            var q = ClientCommandCallbacks[CommandName];";
+            yield return "            var t = q.Dequeue();";
+            yield return "            t.OnError(new InvalidOperationException(Message));";
             yield return "        }";
             yield return "";
-            yield return "        private void AddCallback(String CommandName, UInt32 CommandHash, Action<Byte[]> Callback)";
+            yield return "        private void AddCallback(String CommandName, UInt32 CommandHash, Action<Byte[]> Callback, Action<Exception> OnError)";
             yield return "        {";
             yield return "            if (ClientCommandCallbacks.ContainsKey(CommandName))";
             yield return "            {";
-            yield return "                ClientCommandCallbacks[CommandName].Enqueue(new KeyValuePair<UInt32, Action<Byte[]>>(CommandHash, Callback));";
+            yield return "                ClientCommandCallbacks[CommandName].Enqueue(new ClientCommandTriple { Hash = CommandHash, Callback = Callback, OnError = OnError });";
             yield return "            }";
             yield return "            else";
             yield return "            {";
-            yield return "                var q = new Queue<KeyValuePair<UInt32, Action<Byte[]>>>();";
-            yield return "                q.Enqueue(new KeyValuePair<UInt32, Action<Byte[]>>(CommandHash, Callback));";
+            yield return "                var q = new Queue<ClientCommandTriple>();";
+            yield return "                q.Enqueue(new ClientCommandTriple { Hash = CommandHash, Callback = Callback, OnError = OnError });";
             yield return "                ClientCommandCallbacks.Add(CommandName, q);";
             yield return "            }";
             yield return "        }";
@@ -307,11 +315,11 @@ namespace Niveum.ObjectSchema.CSharpBinary
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
                         yield return "        " + "    var Request = BinaryTranslator.Serialize(r);";
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Source.SetResult(BinaryTranslator.Deserialize<"), ReplyTypeString), ">(Parameters)));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Source.SetResult(BinaryTranslator.Deserialize<"), ReplyTypeString), ">(Parameters)), e => Source.SetException(e));"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s.Send("), CommandNameString), ", 0x"), CommandHash), ", Request);"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s.Send("), CommandNameString), ", 0x"), CommandHash), ", Request, e => Source.SetException(e));"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -333,11 +341,11 @@ namespace Niveum.ObjectSchema.CSharpBinary
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Source.SetResult(BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "FromBytes"))), "(Parameters)));"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Source.SetResult(BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "FromBytes"))), "(Parameters)), e => Source.SetException(e));"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s.Send("), CommandNameString), ", 0x"), CommandHash), ", Request);"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s.Send("), CommandNameString), ", 0x"), CommandHash), ", Request, e => Source.SetException(e));"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -368,7 +376,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
             yield return "    {";
             yield return "        c = new ApplicationClient();";
             yield return "        c.s = s;";
-            yield return "        c.ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<Byte[]>>>>();";
+            yield return "        c.ClientCommandCallbacks = new Dictionary<String, Queue<ClientCommandTriple>>();";
             yield return "        ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<Byte[]>>(new KeyValuePairEqualityComparer<String, UInt32>());";
             foreach (var c in Commands)
             {
@@ -411,13 +419,13 @@ namespace Niveum.ObjectSchema.CSharpBinary
             yield return "            {";
             yield return "                throw new InvalidOperationException(CommandName + \"@\" + CommandHash.ToString(\"X8\", System.Globalization.CultureInfo.InvariantCulture));";
             yield return "            }";
-            yield return "            var CallbackPair = q.Peek();";
-            yield return "            if (CallbackPair.Key != CommandHash)";
+            yield return "            var t = q.Peek();";
+            yield return "            if (t.Hash != CommandHash)";
             yield return "            {";
             yield return "                throw new InvalidOperationException(CommandName + \"@\" + CommandHash.ToString(\"X8\", System.Globalization.CultureInfo.InvariantCulture));";
             yield return "            }";
             yield return "            q.Dequeue();";
-            yield return "            var Callback = CallbackPair.Value;";
+            yield return "            var Callback = t.Callback;";
             yield return "            Callback(Parameters);";
             yield return "            return;";
             yield return "        }";

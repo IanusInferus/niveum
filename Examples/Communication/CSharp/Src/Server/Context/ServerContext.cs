@@ -19,8 +19,8 @@ namespace Server
             CommunicationSchemaHashToVersion = new Dictionary<String, String>()
             {
                 {HeadCommunicationSchemaHash, ""},
-                {"D7FFBD0D2E5D7274", "1"},
-                {"F4BFD5C0D1DB8B66", "2"}
+                {"2E43E8086311138C", "2"},
+                {"065DE60CA9210FC4", "1"}
             };
         }
         public void Dispose()

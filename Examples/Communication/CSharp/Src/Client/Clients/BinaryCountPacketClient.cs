@@ -38,7 +38,7 @@ namespace Client
             this.c = new Context(ReadBufferSize);
             this.bc = bc;
             this.Transformer = Transformer;
-            bc.ClientEvent += (String CommandName, UInt32 CommandHash, Byte[] Parameters) =>
+            bc.ClientEvent += (String CommandName, UInt32 CommandHash, Byte[] Parameters, Action<Exception> OnError) =>
             {
                 var CommandNameBytes = System.Text.Encoding.Unicode.GetBytes(CommandName);
                 Byte[] Bytes;
@@ -60,7 +60,7 @@ namespace Client
                     }
                     c.WriteBuffer.Add(Bytes);
                 }
-                if (this.ClientMethod != null) { ClientMethod(); }
+                if (this.ClientMethod != null) { ClientMethod(OnError); }
             };
         }
 
@@ -138,7 +138,7 @@ namespace Client
         }
 
         public UInt64 Hash { get { return bc.Hash; } }
-        public event Action ClientMethod;
+        public event Action<Action<Exception>> ClientMethod;
 
         private class Command
         {

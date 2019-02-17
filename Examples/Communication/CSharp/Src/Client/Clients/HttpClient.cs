@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
+using System.Threading.Tasks;
 using Niveum.Json;
 
 namespace Client
@@ -20,7 +21,7 @@ namespace Client
             JObject[] TakeWriteBuffer();
             HttpVirtualTransportClientHandleResultCommand Handle(JObject CommandObject);
             UInt64 Hash { get; }
-            event Action ClientMethod;
+            event Action<Action<Exception>> ClientMethod;
         }
 
         public sealed class HttpClient : IDisposable
@@ -33,61 +34,65 @@ namespace Client
             {
                 if (!Prefix.EndsWith("/")) { throw new InvalidOperationException(String.Format("PrefixNotEndWithSlash: '{0}'", Prefix)); }
                 this.VirtualTransportClient = VirtualTransportClient;
-                VirtualTransportClient.ClientMethod += () =>
+                VirtualTransportClient.ClientMethod += OnError =>
                 {
-                    var Bytes = System.Text.Encoding.UTF8.GetBytes((new JArray(VirtualTransportClient.TakeWriteBuffer())).ToString(Formatting.None));
-
-                    Uri u;
-                    if (SessionId == null)
+                    Func<Task> t = async () =>
                     {
-                        u = new Uri(Prefix + ServiceVirtualPath);
-                    }
-                    else
-                    {
-                        u = new Uri(Prefix + ServiceVirtualPath + "?sessionid=" + Uri.EscapeDataString(SessionId));
-                    }
+                        var Bytes = System.Text.Encoding.UTF8.GetBytes((new JArray(VirtualTransportClient.TakeWriteBuffer())).ToString(Formatting.None));
 
-                    var req = (HttpWebRequest)(WebRequest.Create(u));
-                    req.Method = "POST";
-                    req.ContentType = "application/json; charset=utf-8";
-                    req.ContentLength = Bytes.Length;
-                    req.MediaType = "application/json";
-                    req.Headers.Add("Accept-Charset", "utf-8");
-
-                    using (var OutputStream = req.GetRequestStream())
-                    {
-                        OutputStream.Write(Bytes, 0, Bytes.Length);
-                    }
-
-                    String ResultString;
-                    using (var resp = (HttpWebResponse)(req.GetResponse()))
-                    {
-                        var Length = (int)(resp.ContentLength);
-                        Encoding e;
-                        if (resp.CharacterSet == "")
+                        Uri u;
+                        if (SessionId == null)
                         {
-                            e = System.Text.Encoding.UTF8;
+                            u = new Uri(Prefix + ServiceVirtualPath);
                         }
                         else
                         {
-                            e = Encoding.GetEncoding(resp.CharacterSet);
+                            u = new Uri(Prefix + ServiceVirtualPath + "?sessionid=" + Uri.EscapeDataString(SessionId));
                         }
-                        using (var InputStream = resp.GetResponseStream())
+
+                        var req = (HttpWebRequest)(WebRequest.Create(u));
+                        req.Method = "POST";
+                        req.ContentType = "application/json; charset=utf-8";
+                        req.ContentLength = Bytes.Length;
+                        req.MediaType = "application/json";
+                        req.Headers.Add("Accept-Charset", "utf-8");
+
+                        using (var OutputStream = await req.GetRequestStreamAsync())
                         {
-                            var ResultBytes = Read(InputStream, Length);
-                            ResultString = e.GetString(ResultBytes);
+                            await OutputStream.WriteAsync(Bytes, 0, Bytes.Length);
                         }
-                    }
 
-                    var Result = (JObject)(JToken.Parse(ResultString));
-                    var Commands = (JArray)(Result["commands"]);
-                    SessionId = (String)((Result["sessionid"] as JValue).Value);
+                        String ResultString;
+                        using (var resp = (HttpWebResponse)(await req.GetResponseAsync()))
+                        {
+                            var Length = (int)(resp.ContentLength);
+                            Encoding e;
+                            if (resp.CharacterSet == "")
+                            {
+                                e = System.Text.Encoding.UTF8;
+                            }
+                            else
+                            {
+                                e = Encoding.GetEncoding(resp.CharacterSet);
+                            }
+                            using (var InputStream = resp.GetResponseStream())
+                            {
+                                var ResultBytes = Read(InputStream, Length);
+                                ResultString = e.GetString(ResultBytes);
+                            }
+                        }
 
-                    foreach (var co in Commands)
-                    {
-                        var r = VirtualTransportClient.Handle((JObject)(co));
-                        r.HandleResult();
-                    }
+                        var Result = (JObject)(JToken.Parse(ResultString));
+                        var Commands = (JArray)(Result["commands"]);
+                        SessionId = (String)((Result["sessionid"] as JValue).Value);
+
+                        foreach (var co in Commands)
+                        {
+                            var r = VirtualTransportClient.Handle((JObject)(co));
+                            r.HandleResult();
+                        }
+                    };
+                    t().ContinueWith(tt => OnError(tt.Exception), TaskContinuationOptions.OnlyOnFaulted);
                 };
             }
 

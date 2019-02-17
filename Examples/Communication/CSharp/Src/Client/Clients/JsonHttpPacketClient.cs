@@ -19,14 +19,14 @@ namespace Client
             {
                 this.c = new Context();
                 this.jc = jc;
-                jc.ClientEvent += (String CommandName, UInt32 CommandHash, String Parameters) =>
+                jc.ClientEvent += (String CommandName, UInt32 CommandHash, String Parameters, Action<Exception> OnError) =>
                 {
                     var jo = new JObject();
                     jo["commandName"] = new JValue(CommandName);
                     jo["commandHash"] = new JValue(CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
                     jo["parameters"] = new JValue(Parameters);
                     c.WriteBuffer.Add(jo);
-                    if (ClientMethod != null) { ClientMethod(); }
+                    if (ClientMethod != null) { ClientMethod(OnError); }
                 };
             }
 
@@ -59,7 +59,7 @@ namespace Client
             }
 
             public UInt64 Hash { get { return jc.Hash; } }
-            public event Action ClientMethod;
+            public event Action<Action<Exception>> ClientMethod;
         }
     }
 }

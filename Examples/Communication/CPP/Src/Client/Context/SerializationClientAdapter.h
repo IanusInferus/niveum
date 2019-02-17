@@ -39,7 +39,7 @@ namespace Client
             {
             }
 
-            void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
+            void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::wstring)> OnError)
             {
                 if (a.ClientCommandSent != nullptr)
                 {
@@ -176,7 +176,7 @@ namespace Client
                     RequestCount -= 1;
                     SendNotFlushedRequest();
                 }
-                this->bc->GetApplicationClient()->DequeueCallback(e->CommandName);
+                this->bc->GetApplicationClient()->NotifyErrorCommand(e->CommandName, e->Message);
             };
         }
 
