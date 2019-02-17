@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2019.02.11.
+//  Version:     2019.02.17.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -175,17 +175,19 @@ namespace Server
                             }
 
                             var Protocols = new List<IServer>();
+                            var Factory = new TaskFactory(tp);
+                            var PurifierFactory = new TaskFactory(tp);
                             foreach (var p in ss.Protocols)
                             {
                                 if (System.Diagnostics.Debugger.IsAttached)
                                 {
-                                    Protocols.Add(StartProtocol(c, p, ServerContext, tp, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
+                                    Protocols.Add(StartProtocol(c, p, ServerContext, Factory, PurifierFactory));
                                 }
                                 else
                                 {
                                     try
                                     {
-                                        Protocols.Add(StartProtocol(c, p, ServerContext, tp, tp.QueueUserWorkItem, tpPurifier.QueueUserWorkItem));
+                                        Protocols.Add(StartProtocol(c, p, ServerContext, Factory, PurifierFactory));
                                     }
                                     catch (Exception ex)
                                     {
@@ -266,7 +268,7 @@ namespace Server
             Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  服务器进程退出完成。");
         }
 
-        private static IServer StartProtocol(Configuration c, ChatProtocolConfiguration pc, ServerContext ServerContext, TaskScheduler Scheduler, Action<Action> QueueUserWorkItem, Action<Action> PurifierQueueUserWorkItem)
+        private static IServer StartProtocol(Configuration c, ChatProtocolConfiguration pc, ServerContext ServerContext, TaskFactory Factory, TaskFactory PurifierFactory)
         {
             if (pc.OnTcp)
             {
@@ -282,7 +284,7 @@ namespace Server
                 {
                     VirtualTransportServerFactory = (Context, t) =>
                     {
-                        var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Scheduler, Context);
+                        var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Factory, Context);
                         var si = p.Key;
                         var a = p.Value;
                         var bcps = new BinaryCountPacketServer(a, CommandName => true, t);
@@ -293,7 +295,7 @@ namespace Server
                 {
                     VirtualTransportServerFactory = (Context, t) =>
                     {
-                        var p = ServerContext.CreateServerImplementationWithJsonAdapter(Scheduler, Context);
+                        var p = ServerContext.CreateServerImplementationWithJsonAdapter(Factory, Context);
                         var si = p.Key;
                         var a = p.Value;
                         var bcps = new JsonLinePacketServer(a, CommandName => true, t);
@@ -305,7 +307,7 @@ namespace Server
                     throw new InvalidOperationException();
                 }
 
-                var Server = new TcpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
+                var Server = new TcpServer(ServerContext, VirtualTransportServerFactory, a => Factory.StartNew(a), a => PurifierFactory.StartNew(a));
                 var Success = false;
 
                 try
@@ -348,7 +350,7 @@ namespace Server
                 {
                     VirtualTransportServerFactory = (Context, t) =>
                     {
-                        var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Scheduler, Context);
+                        var p = ServerContext.CreateServerImplementationWithBinaryAdapter(Factory, Context);
                         var si = p.Key;
                         var a = p.Value;
                         var bcps = new BinaryCountPacketServer(a, CommandName => true, t);
@@ -359,7 +361,7 @@ namespace Server
                 {
                     VirtualTransportServerFactory = (Context, t) =>
                     {
-                        var p = ServerContext.CreateServerImplementationWithJsonAdapter(Scheduler, Context);
+                        var p = ServerContext.CreateServerImplementationWithJsonAdapter(Factory, Context);
                         var si = p.Key;
                         var a = p.Value;
                         var bcps = new JsonLinePacketServer(a, CommandName => true, t);
@@ -371,7 +373,7 @@ namespace Server
                     throw new InvalidOperationException();
                 }
 
-                var Server = new UdpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
+                var Server = new UdpServer(ServerContext, VirtualTransportServerFactory, a => Factory.StartNew(a), a => PurifierFactory.StartNew(a));
                 var Success = false;
 
                 try
@@ -408,14 +410,14 @@ namespace Server
 
                 Func<ISessionContext, KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>> VirtualTransportServerFactory = Context =>
                 {
-                    var p = ServerContext.CreateServerImplementationWithJsonAdapter(Scheduler, Context);
+                    var p = ServerContext.CreateServerImplementationWithJsonAdapter(Factory, Context);
                     var si = p.Key;
                     var a = p.Value;
                     var jhps = new JsonHttpPacketServer(a, CommandName => true);
                     return new KeyValuePair<IServerImplementation, IHttpVirtualTransportServer>(si, jhps);
                 };
 
-                var Server = new HttpServer(ServerContext, VirtualTransportServerFactory, QueueUserWorkItem, PurifierQueueUserWorkItem);
+                var Server = new HttpServer(ServerContext, VirtualTransportServerFactory, a => Factory.StartNew(a), a => PurifierFactory.StartNew(a));
                 var Success = false;
 
                 try
@@ -451,7 +453,7 @@ namespace Server
             {
                 var s = pc.HttpStatic;
 
-                var Server = new StaticHttpServer(ServerContext, QueueUserWorkItem, 8 * 1024);
+                var Server = new StaticHttpServer(ServerContext, a => Factory.StartNew(a), 8 * 1024);
                 var Success = false;
 
                 try

@@ -25,6 +25,7 @@ namespace BaseSystem
             Threads = Enumerable.Range(0, ThreadCount).Select((i, tt) => new Thread(() =>
             {
                 Thread.CurrentThread.Name = Name + "[" + i.ToString() + "]";
+                SynchronizationContext.SetSynchronizationContext(new CallbackSynchronizationContext(QueueUserWorkItem));
                 while (true)
                 {
                     if (Token.IsCancellationRequested) { return; }
