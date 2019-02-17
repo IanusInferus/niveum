@@ -10,7 +10,7 @@ namespace Server.Services
     {
         public async Task<TestAddReply> TestAdd(TestAddRequest r)
         {
-            return await Task.Run(() => TestAddReply.CreateResult(r.Left + r.Right));
+            return await Task.Factory.StartNew(() => TestAddReply.CreateResult(r.Left + r.Right));
         }
 
         public TestMultiplyReply TestMultiply(TestMultiplyRequest r)

@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Algorithms\Cryptography.cs" />
     <Compile Include="BaseSystem\AsyncConsumer.cs" />
+    <Compile Include="BaseSystem\CallbackSynchronizationContext.cs" />
     <Compile Include="BaseSystem\Functional.cs" />
     <Compile Include="BaseSystem\LockedVariable.cs" />
     <Compile Include="BaseSystem\ThreadLocalRandom.cs" />

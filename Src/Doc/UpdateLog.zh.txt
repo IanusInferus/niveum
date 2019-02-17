@@ -1,4 +1,8 @@
-﻿2019.02.13
+﻿2019.02.17
+Example:
+整理C#通讯示例。
+
+2019.02.13
 Niveum.Core:
 修正C++兼容代码生成中的命名空间。
 Niveum.SchemaManipulator:
