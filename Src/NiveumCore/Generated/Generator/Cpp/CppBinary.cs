@@ -241,7 +241,7 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "public:";
             yield return "    virtual ~IBinarySender() {}";
             yield return "";
-            yield return "    virtual void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) = 0;";
+            yield return "    virtual void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::wstring)> OnError) = 0;";
             yield return "};";
         }
         public IEnumerable<String> BinarySerializationClient(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator, String NamespaceName)
@@ -256,14 +256,19 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "            return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);";
             yield return "        }";
             yield return "    };";
-            yield return "    typedef std::function<void(std::vector<std::uint8_t>)> ClientCommandCallback;";
-            yield return "    typedef std::function<void(std::vector<std::uint8_t>)> ServerCommandCallback;";
             yield return "";
+            yield return "    class ClientCommandTriple";
+            yield return "    {";
+            yield return "    public:";
+            yield return "        std::uint32_t Hash;";
+            yield return "        std::function<void(std::vector<std::uint8_t>)> Callback;";
+            yield return "        std::function<void(std::wstring)> OnError;";
+            yield return "    };";
             yield return "    class ApplicationClient : public IApplicationClient";
             yield return "    {";
             yield return "    public:";
             yield return "        std::shared_ptr<IBinarySender> s;";
-            yield return "        std::unordered_map<std::wstring, std::shared_ptr<std::queue<std::pair<std::uint32_t, ClientCommandCallback>>>> ClientCommandCallbacks;";
+            yield return "        std::unordered_map<std::wstring, std::shared_ptr<std::queue<ClientCommandTriple>>> ClientCommandCallbacks;";
             yield return "";
             yield return "        std::uint64_t Hash()";
             yield return "        {";
@@ -277,18 +282,25 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "        {";
             yield return "            ClientCommandCallbacks[CommandName]->pop();";
             yield return "        }";
+            yield return "        void NotifyErrorCommand(std::wstring CommandName, std::wstring Message)";
+            yield return "        {";
+            yield return "            auto q = ClientCommandCallbacks[CommandName];";
+            yield return "            auto t = q->front();";
+            yield return "            q->pop();";
+            yield return "            t.OnError(Message);";
+            yield return "        }";
             yield return "";
             yield return "    private:";
-            yield return "        void AddCallback(std::wstring CommandName, std::uint32_t CommandHash, ClientCommandCallback Callback)";
+            yield return "        void AddCallback(std::wstring CommandName, std::uint32_t CommandHash, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(std::wstring)> OnError)";
             yield return "        {";
             yield return "            if (ClientCommandCallbacks.count(CommandName) > 0)";
             yield return "            {";
-            yield return "                ClientCommandCallbacks[CommandName]->push(std::pair<std::uint32_t, ClientCommandCallback>(CommandHash, Callback));";
+            yield return "                ClientCommandCallbacks[CommandName]->push({CommandHash, Callback, OnError});";
             yield return "            }";
             yield return "            else";
             yield return "            {";
-            yield return "                auto q = std::make_shared<std::queue<std::pair<std::uint32_t, ClientCommandCallback>>>();";
-            yield return "                q->push(std::pair<std::uint32_t, ClientCommandCallback>(CommandHash, Callback));";
+            yield return "                auto q = std::make_shared<std::queue<ClientCommandTriple>>();";
+            yield return "                q->push({CommandHash, Callback, OnError});";
             yield return "                ClientCommandCallbacks[CommandName] = q;";
             yield return "            }";
             yield return "        }";
@@ -305,11 +317,15 @@ namespace Niveum.ObjectSchema.CppBinary
                     var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback, std::function<void(std::wstring)> OnError = nullptr)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
                     yield return "        " + "{";
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    if (OnError == nullptr) { OnError = [GlobalErrorHandler = this->GlobalErrorHandler](std::wstring Message) { GlobalErrorHandler("), CommandNameString), ", Message); }; }"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
                     yield return "        " + "    ByteArrayStream bas;";
                     foreach (var _Line in Combine(Combine(Combine(Begin(), "    BinaryTranslator::"), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "ToBinary"))), "(bas, r);"))
                     {
@@ -330,8 +346,8 @@ namespace Niveum.ObjectSchema.CppBinary
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
                     yield return "        " + "        Callback(Reply);";
-                    yield return "        " + "    });";
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s->Send("), CommandNameString), ", 0x"), CommandHash), ", Request);"))
+                    yield return "        " + "    }, OnError);";
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s->Send("), CommandNameString), ", 0x"), CommandHash), ", Request, OnError);"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -341,10 +357,10 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    };";
             yield return "";
             yield return "    std::shared_ptr<ApplicationClient> c;";
-            yield return "    std::unordered_map<std::pair<std::wstring, std::uint32_t>, ServerCommandCallback, Hash> ServerCommands;";
+            yield return "    std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<void(std::vector<std::uint8_t>)>, Hash> ServerCommands;";
             yield return "";
             yield return "private:";
-            yield return "    std::string w2s(std::wstring ws)";
+            yield return "    static std::string w2s(std::wstring ws)";
             yield return "    {";
             yield return "        std::size_t n = std::wcstombs(nullptr, ws.c_str(), std::numeric_limits<std::size_t>::max());";
             yield return "        if (n == static_cast<std::size_t>(-1)) { throw std::logic_error(\"InvalidOperation\"); }";
@@ -358,6 +374,10 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    BinarySerializationClient(std::shared_ptr<IBinarySender> s)";
             yield return "    {";
             yield return "        c = std::make_shared<ApplicationClient>();";
+            yield return "        c->GlobalErrorHandler = [](std::wstring CommandName, std::wstring Message)";
+            yield return "        {";
+            yield return "            throw std::runtime_error(w2s(CommandName) + \": \" + w2s(Message));";
+            yield return "        };";
             yield return "        c->s = s;";
             foreach (var c in Commands)
             {
@@ -409,13 +429,13 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "            {";
             yield return "                throw std::logic_error(\"InvalidOperation: \" + w2s(CommandName));";
             yield return "            }";
-            yield return "            auto CallbackPair = q->front();";
-            yield return "            if (std::get<0>(CallbackPair) != CommandHash)";
+            yield return "            auto t = q->front();";
+            yield return "            if (t.Hash != CommandHash)";
             yield return "            {";
             yield return "                throw std::logic_error(\"InvalidOperation: \" + w2s(CommandName));";
             yield return "            }";
             yield return "            q->pop();";
-            yield return "            auto Callback = std::get<1>(CallbackPair);";
+            yield return "            auto Callback = t.Callback;";
             yield return "            Callback(Parameters);";
             yield return "            return;";
             yield return "        }";

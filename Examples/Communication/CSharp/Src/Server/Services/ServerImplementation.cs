@@ -24,12 +24,11 @@ namespace Server.Services
         {
             if (CommandName != "")
             {
-                if (ErrorCommand != null) { ErrorCommand(new ErrorCommandEvent { CommandName = CommandName }); }
-                if (Error != null) { Error(new ErrorEvent { Message = CommandName + ": " + Message }); }
+                SessionContext.EventPump.ErrorCommand(new ErrorCommandEvent { CommandName = CommandName, Message = Message });
             }
             else
             {
-                if (Error != null) { Error(new ErrorEvent { Message = Message }); }
+                SessionContext.EventPump.Error(new ErrorEvent { Message = Message });
             }
         }
 

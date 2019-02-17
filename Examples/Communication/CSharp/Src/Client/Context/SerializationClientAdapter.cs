@@ -12,7 +12,7 @@ namespace Client
         {
             this.bc = new BinarySerializationClient(this);
             var ac = bc.GetApplicationClient();
-            ac.ErrorCommand += e => ac.DequeueCallback(e.CommandName);
+            ac.ErrorCommand += e => ac.NotifyErrorCommand(e.CommandName, e.Message);
         }
 
         public IApplicationClient GetApplicationClient()
@@ -24,11 +24,11 @@ namespace Client
         public void HandleResult(String CommandName, UInt32 CommandHash, Byte[] Parameters) { bc.HandleResult(CommandName, CommandHash, Parameters); }
         public event BinaryClientEventDelegate ClientEvent;
 
-        void IBinarySender.Send(String CommandName, UInt32 CommandHash, Byte[] Parameters)
+        void IBinarySender.Send(String CommandName, UInt32 CommandHash, Byte[] Parameters, Action<Exception> OnError)
         {
             if (ClientEvent != null)
             {
-                ClientEvent(CommandName, CommandHash, Parameters);
+                ClientEvent(CommandName, CommandHash, Parameters, OnError);
             }
         }
     }
@@ -40,7 +40,7 @@ namespace Client
         {
             this.jc = new JsonSerializationClient(this);
             var ac = jc.GetApplicationClient();
-            ac.ErrorCommand += e => ac.DequeueCallback(e.CommandName);
+            ac.ErrorCommand += e => ac.NotifyErrorCommand(e.CommandName, e.Message);
         }
 
         public IApplicationClient GetApplicationClient()
@@ -52,11 +52,11 @@ namespace Client
         public void HandleResult(String CommandName, UInt32 CommandHash, String Parameters) { jc.HandleResult(CommandName, CommandHash, Parameters); }
         public event JsonClientEventDelegate ClientEvent;
 
-        void IJsonSender.Send(String CommandName, UInt32 CommandHash, String Parameters)
+        void IJsonSender.Send(String CommandName, UInt32 CommandHash, String Parameters, Action<Exception> OnError)
         {
             if (ClientEvent != null)
             {
-                ClientEvent(CommandName, CommandHash, Parameters);
+                ClientEvent(CommandName, CommandHash, Parameters, OnError);
             }
         }
     }

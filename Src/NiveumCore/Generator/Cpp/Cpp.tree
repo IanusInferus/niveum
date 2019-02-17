@@ -4,7 +4,7 @@
       File:        Cpp.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C++模板
-      Version:     2018.12.15.
+      Version:     2019.02.17.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -611,6 +611,8 @@
 
         virtual std::uint64_t Hash() = 0;
         virtual void DequeueCallback(std::wstring CommandName) = 0;
+        virtual void NotifyErrorCommand(std::wstring CommandName, std::wstring Message) = 0;
+        std::function<void(std::wstring CommandName, std::wstring Message)> GlobalErrorHandler;
 
         $$
             foreach (var c in Commands)
@@ -623,7 +625,7 @@
                     var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     ##
                         ${GetXmlComment(Description)}
-                        virtual void [[${Name}]](${RequestTypeString} r, std::function<void(${ReplyTypeString})> Callback) = 0;
+                        virtual void [[${Name}]](${RequestTypeString} r, std::function<void(${ReplyTypeString})> Callback, std::function<void(std::wstring)> OnError = nullptr) = 0;
                 }
                 else if (c.OnServerCommand)
                 {

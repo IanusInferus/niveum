@@ -236,7 +236,7 @@ namespace Niveum.ObjectSchema.CSharpJson
         {
             yield return "public interface IJsonSender";
             yield return "{";
-            yield return "    void Send(String CommandName, UInt32 CommandHash, String Parameters);";
+            yield return "    void Send(String CommandName, UInt32 CommandHash, String Parameters, Action<Exception> OnError);";
             yield return "}";
         }
         public IEnumerable<String> JsonSerializationClient(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator, String NamespaceName)
@@ -260,10 +260,16 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "        }";
             yield return "    }";
             yield return "";
+            yield return "    private class ClientCommandTriple";
+            yield return "    {";
+            yield return "        public UInt32 Hash;";
+            yield return "        public Action<String> Callback;";
+            yield return "        public Action<Exception> OnError;";
+            yield return "    }";
             yield return "    private class ApplicationClient : IApplicationClient";
             yield return "    {";
             yield return "        public IJsonSender s;";
-            yield return "        public Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>> ClientCommandCallbacks;";
+            yield return "        public Dictionary<String, Queue<ClientCommandTriple>> ClientCommandCallbacks;";
             yield return "";
             yield return "        public UInt64 Hash";
             yield return "        {";
@@ -276,21 +282,23 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "            }";
             yield return "        }";
             yield return "";
-            yield return "        public void DequeueCallback(String CommandName)";
+            yield return "        public void NotifyErrorCommand(String CommandName, String Message)";
             yield return "        {";
-            yield return "            ClientCommandCallbacks[CommandName].Dequeue();";
+            yield return "            var q = ClientCommandCallbacks[CommandName];";
+            yield return "            var t = q.Dequeue();";
+            yield return "            t.OnError(new InvalidOperationException(Message));";
             yield return "        }";
             yield return "";
-            yield return "        private void AddCallback(String CommandName, UInt32 CommandHash, Action<String> Callback)";
+            yield return "        private void AddCallback(String CommandName, UInt32 CommandHash, Action<String> Callback, Action<Exception> OnError)";
             yield return "        {";
             yield return "            if (ClientCommandCallbacks.ContainsKey(CommandName))";
             yield return "            {";
-            yield return "                ClientCommandCallbacks[CommandName].Enqueue(new KeyValuePair<UInt32, Action<String>>(CommandHash, Callback));";
+            yield return "                ClientCommandCallbacks[CommandName].Enqueue(new ClientCommandTriple { Hash = CommandHash, Callback = Callback, OnError = OnError });";
             yield return "            }";
             yield return "            else";
             yield return "            {";
-            yield return "                var q = new Queue<KeyValuePair<UInt32, Action<String>>>();";
-            yield return "                q.Enqueue(new KeyValuePair<UInt32, Action<String>>(CommandHash, Callback));";
+            yield return "                var q = new Queue<ClientCommandTriple>();";
+            yield return "                q.Enqueue(new ClientCommandTriple { Hash = CommandHash, Callback = Callback, OnError = OnError });";
             yield return "                ClientCommandCallbacks.Add(CommandName, q);";
             yield return "            }";
             yield return "        }";
@@ -319,11 +327,11 @@ namespace Niveum.ObjectSchema.CSharpJson
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Source.SetResult(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "FromJson"))), "(JToken.Parse(Parameters))));"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    AddCallback("), CommandNameString), ", 0x"), CommandHash), ", Parameters => Source.SetResult(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "FromJson"))), "(JToken.Parse(Parameters))), e => Source.SetException(e));"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s.Send("), CommandNameString), ", 0x"), CommandHash), ", Request);"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    s.Send("), CommandNameString), ", 0x"), CommandHash), ", Request, e => Source.SetException(e));"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -353,7 +361,7 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "    {";
             yield return "        c = new ApplicationClient();";
             yield return "        c.s = s;";
-            yield return "        c.ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>>();";
+            yield return "        c.ClientCommandCallbacks = new Dictionary<String, Queue<ClientCommandTriple>>();";
             yield return "        ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<String>>(new KeyValuePairEqualityComparer<String, UInt32>());";
             foreach (var c in Commands)
             {
@@ -386,13 +394,13 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "            {";
             yield return "                throw new InvalidOperationException(CommandName + \"@\" + CommandHash.ToString(\"X8\", System.Globalization.CultureInfo.InvariantCulture));";
             yield return "            }";
-            yield return "            var CallbackPair = q.Peek();";
-            yield return "            if (CallbackPair.Key != CommandHash)";
+            yield return "            var t = q.Peek();";
+            yield return "            if (t.Hash != CommandHash)";
             yield return "            {";
             yield return "                throw new InvalidOperationException(CommandName + \"@\" + CommandHash.ToString(\"X8\", System.Globalization.CultureInfo.InvariantCulture));";
             yield return "            }";
             yield return "            q.Dequeue();";
-            yield return "            var Callback = CallbackPair.Value;";
+            yield return "            var Callback = t.Callback;";
             yield return "            Callback(Parameters);";
             yield return "            return;";
             yield return "        }";

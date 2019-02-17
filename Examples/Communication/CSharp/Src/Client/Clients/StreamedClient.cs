@@ -34,6 +34,6 @@ namespace Client
         Byte[][] TakeWriteBuffer();
         StreamedVirtualTransportClientHandleResult Handle(int Count);
         UInt64 Hash { get; }
-        event Action ClientMethod;
+        event Action<Action<Exception>> ClientMethod;
     }
 }

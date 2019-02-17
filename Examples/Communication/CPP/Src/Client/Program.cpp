@@ -188,6 +188,10 @@ namespace Client
         {
             std::wprintf(L"%ls\n", L"输入login登录，输入secure启用安全连接。");
 
+            InnerClient->GlobalErrorHandler = [=](std::wstring CommandName, std::wstring Message)
+            {
+                wprintf(L"%ls: %ls\n", CommandName.c_str(), Message.c_str());
+            };
             InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
             {
                 auto m = e->Message;

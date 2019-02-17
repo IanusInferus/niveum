@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C# JSON通讯模板
-      Version:     2018.12.27.
+      Version:     2019.02.17.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -168,7 +168,7 @@
 #Template IJsonSender
     public interface IJsonSender
     {
-        void Send(String CommandName, UInt32 CommandHash, String Parameters);
+        void Send(String CommandName, UInt32 CommandHash, String Parameters, Action<Exception> OnError);
     }
 
 #Template JsonSerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
@@ -191,10 +191,16 @@
             }
         }
 
+        private class ClientCommandTriple
+        {
+            public UInt32 Hash;
+            public Action<String> Callback;
+            public Action<Exception> OnError;
+        }
         private class ApplicationClient : IApplicationClient
         {
             public IJsonSender s;
-            public Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>> ClientCommandCallbacks;
+            public Dictionary<String, Queue<ClientCommandTriple>> ClientCommandCallbacks;
 
             public UInt64 Hash
             {
@@ -204,21 +210,23 @@
                 }
             }
 
-            public void DequeueCallback(String CommandName)
+            public void NotifyErrorCommand(String CommandName, String Message)
             {
-                ClientCommandCallbacks[CommandName].Dequeue();
+                var q = ClientCommandCallbacks[CommandName];
+                var t = q.Dequeue();
+                t.OnError(new InvalidOperationException(Message));
             }
 
-            private void AddCallback(String CommandName, UInt32 CommandHash, Action<String> Callback)
+            private void AddCallback(String CommandName, UInt32 CommandHash, Action<String> Callback, Action<Exception> OnError)
             {
                 if (ClientCommandCallbacks.ContainsKey(CommandName))
                 {
-                    ClientCommandCallbacks[CommandName].Enqueue(new KeyValuePair<UInt32, Action<String>>(CommandHash, Callback));
+                    ClientCommandCallbacks[CommandName].Enqueue(new ClientCommandTriple { Hash = CommandHash, Callback = Callback, OnError = OnError });
                 }
                 else
                 {
-                    var q = new Queue<KeyValuePair<UInt32, Action<String>>>();
-                    q.Enqueue(new KeyValuePair<UInt32, Action<String>>(CommandHash, Callback));
+                    var q = new Queue<ClientCommandTriple>();
+                    q.Enqueue(new ClientCommandTriple { Hash = CommandHash, Callback = Callback, OnError = OnError });
                     ClientCommandCallbacks.Add(CommandName, q);
                 }
             }
@@ -240,8 +248,8 @@
                             {
                                 var Source = new TaskCompletionSource<${ReplyTypeString}>();
                                 var Request = JsonTranslator.[[${RequestName}ToJson]](r).ToString(Formatting.None);
-                                AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Source.SetResult(JsonTranslator.[[${ReplyName}FromJson]](JToken.Parse(Parameters))));
-                                s.Send(${CommandNameString}, 0x${CommandHash}, Request);
+                                AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Source.SetResult(JsonTranslator.[[${ReplyName}FromJson]](JToken.Parse(Parameters))), e => Source.SetException(e));
+                                s.Send(${CommandNameString}, 0x${CommandHash}, Request, e => Source.SetException(e));
                                 return Source.Task;
                             }
                     }
@@ -263,7 +271,7 @@
         {
             c = new ApplicationClient();
             c.s = s;
-            c.ClientCommandCallbacks = new Dictionary<String, Queue<KeyValuePair<UInt32, Action<String>>>>();
+            c.ClientCommandCallbacks = new Dictionary<String, Queue<ClientCommandTriple>>();
             ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<String>>(new KeyValuePairEqualityComparer<String, UInt32>());
             $$
                 foreach (var c in Commands)
@@ -295,13 +303,13 @@
                 {
                     throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
                 }
-                var CallbackPair = q.Peek();
-                if (CallbackPair.Key != CommandHash)
+                var t = q.Peek();
+                if (t.Hash != CommandHash)
                 {
                     throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
                 }
                 q.Dequeue();
-                var Callback = CallbackPair.Value;
+                var Callback = t.Callback;
                 Callback(Parameters);
                 return;
             }

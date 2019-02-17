@@ -26,8 +26,8 @@ namespace Server
         Optional<std::wstring> CommunicationSchemaHashToVersion(std::wstring Hash)
         {
             if (Hash == HeadCommunicationSchemaHash) { return Optional<std::wstring>::CreateHasValue(L""); }
-            if (Hash == L"D7FFBD0D2E5D7274") { return Optional<std::wstring>::CreateHasValue(L"1"); }
-            if (Hash == L"F4BFD5C0D1DB8B66") { return Optional<std::wstring>::CreateHasValue(L"2"); }
+            if (Hash == L"2E43E8086311138C") { return Optional<std::wstring>::CreateHasValue(L"2"); }
+            if (Hash == L"065DE60CA9210FC4") { return Optional<std::wstring>::CreateHasValue(L"1"); }
             return Optional<std::wstring>::Empty();
         }
 

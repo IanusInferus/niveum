@@ -32,7 +32,7 @@ namespace Client
             Socket = new StreamedAsyncSocket(new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp), null, QueueUserWorkItem);
             //this.QueueUserWorkItem = QueueUserWorkItem;
             this.VirtualTransportClient = VirtualTransportClient;
-            VirtualTransportClient.ClientMethod += () =>
+            VirtualTransportClient.ClientMethod += OnError =>
             {
                 using (var h = new AutoResetEvent(false))
                 {
@@ -49,22 +49,7 @@ namespace Client
                         Offset += b.Length;
                     }
 
-                    Exception Exception = null;
-                    Action Completed = () =>
-                    {
-                        h.Set();
-                    };
-                    Action<Exception> Faulted = ex =>
-                    {
-                        Exception = ex;
-                        h.Set();
-                    };
-                    Socket.SendAsync(WriteBuffer, 0, TotalLength, Completed, Faulted);
-                    h.WaitOne();
-                    if (Exception != null)
-                    {
-                        throw new AggregateException(Exception);
-                    }
+                    Socket.SendAsync(WriteBuffer, 0, TotalLength, () => { }, OnError);
                 }
             };
         }

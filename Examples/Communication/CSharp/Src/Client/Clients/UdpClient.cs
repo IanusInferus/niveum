@@ -244,7 +244,7 @@ namespace Client
                 this.Socket.IOControl(unchecked((int)(SIO_UDP_CONNRESET)), new byte[] { Convert.ToByte(false) }, null);
             }
 
-            VirtualTransportClient.ClientMethod += () =>
+            VirtualTransportClient.ClientMethod += OnError =>
             {
                 OnWrite(VirtualTransportClient, () => { }, se => { throw new SocketException((int)(se)); });
             };

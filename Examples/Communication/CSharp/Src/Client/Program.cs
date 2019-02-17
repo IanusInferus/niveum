@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Net;
 using Firefly;
 using Communication;
@@ -413,8 +414,9 @@ namespace Client
                     Console.WriteLine(Line);
                 }
             };
-            Action<CheckSchemaVersionReply> CheckSchemaVersionHandler = r =>
+            ((Func<Task>)(async () =>
             {
+                var r = await InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = UseOld ? "D7FFBD0D2E5D7274" : InnerClient.Hash.ToString("X16") });
                 if (r.OnHead)
                 {
                 }
@@ -435,15 +437,7 @@ namespace Client
                 {
                     throw new InvalidOperationException();
                 }
-            };
-            if (UseOld)
-            {
-                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = "D7FFBD0D2E5D7274" }).ContinueWith(t => CheckSchemaVersionHandler(t.Result));
-            }
-            else
-            {
-                InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = InnerClient.Hash.ToString("X16") }).ContinueWith(t => CheckSchemaVersionHandler(t.Result));
-            }
+            }))();
             while (true)
             {
                 String Line = null;
@@ -469,58 +463,62 @@ namespace Client
                 }
                 lock (Lockee)
                 {
-                    if (Line == "exit")
+                    HandleLine(InnerClient, SetSecureContext, UseOld, Line).ContinueWith(tt =>
                     {
-                        InnerClient.Quit(new QuitRequest());
-                        break;
-                    }
-                    if (Line == "shutdown")
-                    {
-                        InnerClient.Shutdown(new ShutdownRequest()).ContinueWith(t =>
+                        if (!tt.Result)
                         {
-                            var r = t.Result;
-                            if (r.OnSuccess)
+                            lock (Lockee)
                             {
-                                Console.WriteLine("服务器正在关闭。");
+                                NeedToExit = true;
                             }
-                        });
-                        break;
-                    }
-                    if (Line == "secure")
-                    {
-                        InnerClient.SendMessage(new SendMessageRequest { Content = Line }).ContinueWith(t =>
-                        {
-                            //生成测试用确定Key
-                            var ServerToken = Enumerable.Range(0, 41).Select(i => (Byte)(i)).ToArray();
-                            var ClientToken = Enumerable.Range(0, 41).Select(i => (Byte)(40 - i)).ToArray();
-                            SetSecureContext(new SecureContext { ServerToken = ServerToken, ClientToken = ClientToken });
-                        });
-                        continue;
-                    }
-                    if (UseOld)
-                    {
-                        InnerClient.SendMessageAt1(new SendMessageAt1Request { Id = 1, Message = new MessageAt2 { Title = "", Lines = new List<String> { Line } } }).ContinueWith(t =>
-                        {
-                            var r = t.Result;
-                            if (r.OnTitleTooLong || r.OnLinesTooLong || r.OnLineTooLong)
-                            {
-                                Console.WriteLine("消息过长。");
-                            }
-                        });
-                    }
-                    else
-                    {
-                        InnerClient.SendMessage(new SendMessageRequest { Content = Line }).ContinueWith(t =>
-                        {
-                            var r = t.Result;
-                            if (r.OnTooLong)
-                            {
-                                Console.WriteLine("消息过长。");
-                            }
-                        });
-                    }
+                            NeedToCheck.Set();
+                        }
+                    });
                 }
             }
+        }
+
+        private static async Task<bool> HandleLine(IApplicationClient InnerClient, Action<SecureContext> SetSecureContext, bool UseOld, string Line)
+        {
+            if (Line == "exit")
+            {
+                await InnerClient.Quit(new QuitRequest());
+                return false;
+            }
+            if (Line == "shutdown")
+            {
+                var r = await InnerClient.Shutdown(new ShutdownRequest());
+                if (r.OnSuccess)
+                {
+                    Console.WriteLine("服务器正在关闭。");
+                }
+                return false;
+            }
+            if (Line == "secure")
+            {
+                await InnerClient.SendMessage(new SendMessageRequest { Content = Line });
+                //生成测试用确定Key
+                var ServerToken = Enumerable.Range(0, 41).Select(i => (Byte)(i)).ToArray();
+                var ClientToken = Enumerable.Range(0, 41).Select(i => (Byte)(40 - i)).ToArray();
+                SetSecureContext(new SecureContext { ServerToken = ServerToken, ClientToken = ClientToken });
+            }
+            else if (UseOld)
+            {
+                var r = await InnerClient.SendMessageAt1(new SendMessageAt1Request { Id = 1, Message = new MessageAt2 { Title = "", Lines = new List<String> { Line } } });
+                if (r.OnTitleTooLong || r.OnLinesTooLong || r.OnLineTooLong)
+                {
+                    Console.WriteLine("消息过长。");
+                }
+            }
+            else
+            {
+                var r = await InnerClient.SendMessage(new SendMessageRequest { Content = Line });
+                if (r.OnTooLong)
+                {
+                    Console.WriteLine("消息过长。");
+                }
+            }
+            return true;
         }
     }
 }

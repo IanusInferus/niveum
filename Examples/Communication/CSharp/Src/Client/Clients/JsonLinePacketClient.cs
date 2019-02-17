@@ -26,7 +26,7 @@ namespace Client
             this.c = new Context(ReadBufferSize);
             this.jc = jc;
             this.Transformer = Transformer;
-            jc.ClientEvent += (String CommandName, UInt32 CommandHash, String Parameters) =>
+            jc.ClientEvent += (String CommandName, UInt32 CommandHash, String Parameters, Action<Exception> OnError) =>
             {
                 var Message = "/" + CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture) + " " + Parameters + "\r\n";
                 var Bytes = System.Text.Encoding.UTF8.GetBytes(Message);
@@ -35,7 +35,7 @@ namespace Client
                     Transformer.Transform(Bytes, 0, Bytes.Length);
                 }
                 c.WriteBuffer.Add(Bytes);
-                if (this.ClientMethod != null) { ClientMethod(); }
+                if (this.ClientMethod != null) { ClientMethod(OnError); }
             };
         }
 
@@ -122,7 +122,7 @@ namespace Client
         }
 
         public UInt64 Hash { get { return jc.Hash; } }
-        public event Action ClientMethod;
+        public event Action<Action<Exception>> ClientMethod;
 
         private static Regex r = new Regex(@"^/svr\s+(?<Name>\S+)(\s+(?<Params>.*))?$", RegexOptions.ExplicitCapture); //Regex是线程安全的
         private static Regex rName = new Regex(@"^(?<CommandName>.*?)@(?<CommandHash>.*)$", RegexOptions.ExplicitCapture); //Regex是线程安全的

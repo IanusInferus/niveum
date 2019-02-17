@@ -608,7 +608,7 @@ namespace Niveum.ObjectSchema.CSharp
             yield return "public interface IApplicationClient";
             yield return "{";
             yield return "    UInt64 Hash { get; }";
-            yield return "    void DequeueCallback(String CommandName);";
+            yield return "    void NotifyErrorCommand(String CommandName, String Message);";
             yield return "";
             foreach (var c in Commands)
             {

@@ -670,6 +670,8 @@ namespace Niveum.ObjectSchema.Cpp
             yield return "";
             yield return "    virtual std::uint64_t Hash() = 0;";
             yield return "    virtual void DequeueCallback(std::wstring CommandName) = 0;";
+            yield return "    virtual void NotifyErrorCommand(std::wstring CommandName, std::wstring Message) = 0;";
+            yield return "    std::function<void(std::wstring CommandName, std::wstring Message)> GlobalErrorHandler;";
             yield return "";
             foreach (var c in Commands)
             {
@@ -683,7 +685,7 @@ namespace Niveum.ObjectSchema.Cpp
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "virtual void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback) = 0;"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "virtual void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback, std::function<void(std::wstring)> OnError = nullptr) = 0;"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
