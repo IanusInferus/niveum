@@ -10,7 +10,7 @@ namespace Client
         event BinaryClientEventDelegate ClientEvent;
     }
 
-    public delegate void JsonClientEventDelegate(String CommandName, UInt32 CommandHash, String Parameters);
+    public delegate void JsonClientEventDelegate(String CommandName, UInt32 CommandHash, String Parameters, Action<Exception> OnError);
     public interface IJsonSerializationClientAdapter
     {
         UInt64 Hash { get; }

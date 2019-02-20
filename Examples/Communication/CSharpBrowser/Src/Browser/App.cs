@@ -64,17 +64,15 @@ public class App
         var jsca = new JsonSerializationClientAdapter();
         var jhc = new JsonHttpClient(jsca, "/api/", "q", true, false);
         var jc = jsca.GetApplicationClient();
-        Q("#button_servertime").Click(e =>
+        Q("#button_servertime").Click(async e =>
         {
-            jc.ServerTime(new ServerTimeRequest { }, r =>
+            var r = await jc.ServerTime(new ServerTimeRequest { });
+            if (r.OnSuccess)
             {
-                if (r.OnSuccess)
-                {
-                    var Time = r.Success;
-                    var template = T("#tmpl_paragraph");
-                    Q("#div_servertime").Append(template.render(new { content = Time }));
-                }
-            });
+                var Time = r.Success;
+                var template = T("#tmpl_paragraph");
+                Q("#div_servertime").Append(template.render(new { content = Time }));
+            }
         });
     }
 }

@@ -66,24 +66,18 @@
     protected override async Task OnInitAsync()
     {
         var jsca = new JsonSerializationClientAdapter();
-        var jhc = new JsonHttpClient(jsca, "/api/", "q", false, false, Http, Message => Console.WriteLine(Message));
+        var jhc = new JsonHttpClient(jsca, "/api/", "q", false, false, Http);
         jc = jsca.GetApplicationClient();
         await Task.FromResult(0);
     }
 
-    Task ButtonServerTimeClicked()
+    async Task ButtonServerTimeClicked()
     {
-        var t = new TaskCompletionSource<Unit>();
-
-        jc.ServerTime(new ServerTimeRequest { }, r =>
+        var r = await jc.ServerTime(new ServerTimeRequest { });
+        Console.WriteLine("test2");
+        if (r.OnSuccess)
         {
-            Console.WriteLine("test2");
-            if (r.OnSuccess)
-            {
-                serverTime = r.Success;
-                t.SetResult(default(Unit));
-            }
-        });
-        return t.Task;
+            serverTime = r.Success;
+        }
     }
 }
