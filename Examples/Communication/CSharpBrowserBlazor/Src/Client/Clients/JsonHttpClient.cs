@@ -15,16 +15,16 @@ namespace Client
         private Boolean UseJsonp;
         private Boolean UseShortConnection;
         private HttpClient HttpClient;
-        private Action<String> OnError;
         private String SessionId;
         private class Command
         {
             public Object jo;
             public Action<String, UInt32, String> Callback;
+            public Action<Exception> OnError;
         }
         private Queue<Command> CommandQueue;
 
-        public JsonHttpClient(IJsonSerializationClientAdapter jc, String Prefix, String ServiceVirtualPath, Boolean UseJsonp, Boolean UseShortConnection, HttpClient HttpClient, Action<String> OnError)
+        public JsonHttpClient(IJsonSerializationClientAdapter jc, String Prefix, String ServiceVirtualPath, Boolean UseJsonp, Boolean UseShortConnection, HttpClient HttpClient)
         {
             if (!Prefix.EndsWith("/")) { throw new InvalidOperationException("PrefixNotEndWithSlash: '" + Prefix + "'"); }
             this.jc = jc;
@@ -33,13 +33,12 @@ namespace Client
             this.UseJsonp = UseJsonp;
             this.UseShortConnection = UseShortConnection;
             this.HttpClient = HttpClient;
-            this.OnError = OnError;
             SessionId = null;
             CommandQueue = new Queue<Command>();
-            jc.ClientEvent += (CommandName, CommandHash, Parameters) =>
+            jc.ClientEvent += (CommandName, CommandHash, Parameters, OnError) =>
             {
                 var jo = new { commandName = CommandName, commandHash = CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), parameters = Parameters };
-                SendWithHash(jo, jc.HandleResult);
+                SendWithHash(jo, jc.HandleResult, OnError);
             };
         }
 
@@ -50,7 +49,7 @@ namespace Client
             var Random = random.Next(10000).ToString("0000");
             return Time + Random;
         }
-        private void SendRaw<T>(T jo, Action<String, UInt32, String> Callback)
+        private void SendRaw<T>(T jo, Action<String, UInt32, String> Callback, Action<Exception> OnError)
         {
             Action<ResponsePacket> OnSuccess = r =>
             {
@@ -63,8 +62,8 @@ namespace Client
                 CommandQueue.Dequeue();
                 if (CommandQueue.Count > 0)
                 {
-                    var Pair = CommandQueue.Peek();
-                    SendRaw(Pair.jo, Pair.Callback);
+                    var Command = CommandQueue.Peek();
+                    SendRaw(Command.jo, Command.Callback, Command.OnError);
                 }
             };
             if (UseJsonp)
@@ -92,7 +91,7 @@ namespace Client
                     {
                         if (OnError != null)
                         {
-                            OnError(ex.ToString());
+                            OnError(ex);
                         }
                     }
                 });
@@ -118,32 +117,32 @@ namespace Client
                     {
                         if (OnError != null)
                         {
-                            OnError(ex.ToString());
+                            OnError(ex);
                         }
                     }
                 });
             }
         }
-        private void SendWithHash<T>(T jo, Action<String, UInt32, String> Callback)
+        private void SendWithHash<T>(T jo, Action<String, UInt32, String> Callback, Action<Exception> OnError)
         {
             if (CommandQueue.Count > 0)
             {
-                CommandQueue.Enqueue(new Command { jo = jo, Callback = Callback });
+                CommandQueue.Enqueue(new Command { jo = jo, Callback = Callback, OnError = OnError });
             }
             else
             {
-                CommandQueue.Enqueue(new Command { jo = jo, Callback = Callback });
-                SendRaw(jo, Callback);
+                CommandQueue.Enqueue(new Command { jo = jo, Callback = Callback, OnError = OnError });
+                SendRaw(jo, Callback, OnError);
             }
         }
 
-        public void Send(String CommandName, String Parameters, Action<String, String> Callback)
+        public void Send(String CommandName, String Parameters, Action<String, String> Callback, Action<Exception> OnError)
         {
             Action<String, UInt32, String> c = (CommandNameInner, CommandHashInner, ParametersInner) =>
             {
                 Callback(CommandNameInner, ParametersInner);
             };
-            SendWithHash(new { commandName = CommandName, parameters = Parameters }, c);
+            SendWithHash(new { commandName = CommandName, parameters = Parameters }, c, OnError);
         }
 
         private class ResponsePacket

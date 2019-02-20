@@ -14,7 +14,7 @@ public class JsonSerializationClientAdapter : IJsonSerializationClientAdapter, I
         var ac = jc.GetApplicationClient();
         ac.ErrorCommand += e =>
         {
-            ac.DequeueCallback(e.CommandName);
+            ac.NotifyErrorCommand(e.CommandName, e.Message);
         };
     }
 
@@ -31,9 +31,9 @@ public class JsonSerializationClientAdapter : IJsonSerializationClientAdapter, I
         }
     }
 
-    public void DequeueCallback(String CommandName)
+    public void NotifyErrorCommand(String CommandName, String Message)
     {
-        jc.GetApplicationClient().DequeueCallback(CommandName);
+        jc.GetApplicationClient().NotifyErrorCommand(CommandName, Message);
     }
 
     public void HandleResult(String CommandName, UInt32 CommandHash, String Parameters)
@@ -42,11 +42,11 @@ public class JsonSerializationClientAdapter : IJsonSerializationClientAdapter, I
     }
     public event JsonClientEventDelegate ClientEvent;
 
-    public void Send(String CommandName, UInt32 CommandHash, String Parameters)
+    public void Send(String CommandName, UInt32 CommandHash, String Parameters, Action<Exception> OnError)
     {
         if (ClientEvent != null)
         {
-            ClientEvent(CommandName, CommandHash, Parameters);
+            ClientEvent(CommandName, CommandHash, Parameters, OnError);
         }
     }
 }

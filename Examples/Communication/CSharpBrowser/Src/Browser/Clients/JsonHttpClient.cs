@@ -32,7 +32,7 @@ namespace Client
             this.UseShortConnection = UseShortConnection;
             SessionId = null;
             CommandQueue = new Queue<Command>();
-            jc.ClientEvent += (CommandName, CommandHash, Parameters) =>
+            jc.ClientEvent += (CommandName, CommandHash, Parameters, OnError) =>
             {
                 var jo = new { commandName = CommandName, commandHash = CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), parameters = Parameters };
                 SendWithHash(jo, jc.HandleResult);
