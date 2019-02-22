@@ -388,6 +388,7 @@ namespace Client
         {
             var NeedToExit = false;
             AutoResetEvent NeedToCheck = new AutoResetEvent(false);
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo edi = null;
             InnerClient.ServerShutdown += e =>
             {
                 Console.WriteLine("服务器已关闭。");
@@ -460,11 +461,21 @@ namespace Client
                     }
                     if (l != null) { break; }
                     NeedToCheck.WaitOne();
+                    if (edi != null)
+                    {
+                        edi.Throw();
+                    }
                 }
                 lock (Lockee)
                 {
                     HandleLine(InnerClient, SetSecureContext, UseOld, Line).ContinueWith(tt =>
                     {
+                        if (tt.IsFaulted)
+                        {
+                            edi = System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(tt.Exception.InnerException ?? tt.Exception);
+                            NeedToCheck.Set();
+                            return;
+                        }
                         if (!tt.Result)
                         {
                             lock (Lockee)
@@ -482,6 +493,7 @@ namespace Client
         {
             if (Line == "exit")
             {
+                throw new InvalidOperationException();
                 await InnerClient.Quit(new QuitRequest());
                 return false;
             }
