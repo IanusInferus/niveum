@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2019.02.11.
+//  Version:     2019.03.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -493,7 +493,6 @@ namespace Client
         {
             if (Line == "exit")
             {
-                throw new InvalidOperationException();
                 await InnerClient.Quit(new QuitRequest());
                 return false;
             }
