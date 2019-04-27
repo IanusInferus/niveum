@@ -17,7 +17,7 @@ namespace Client
     class StreamedVirtualTransportClientHandleResultCommand
     {
     public:
-        std::wstring CommandName;
+        std::u16string CommandName;
         std::function<void()> HandleResult;
     };
 

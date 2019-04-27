@@ -20,7 +20,7 @@ namespace Server
         ClientDebugValue(false)
     {
         Communication::Binary::BinarySerializationServer bss;
-        HeadCommunicationSchemaHash = ToHexString(bss.Hash());
+        HeadCommunicationSchemaHash = ToHexU16String(bss.Hash());
     }
 
     std::shared_ptr<IServerImplementation> ServerContext::CreateServerImplementation(std::shared_ptr<SessionContext> SessionContext)

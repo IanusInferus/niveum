@@ -51,26 +51,26 @@ namespace Server
             rpst->SetSecureContext(c);
         };
         vts->ServerEvent = [this]() { ssm->NotifyWrite(Unit()); };
-        vts->InputByteLengthReport = [this](std::wstring CommandName, std::size_t ByteLength)
+        vts->InputByteLengthReport = [this](std::u16string CommandName, std::size_t ByteLength)
         {
             auto e = std::make_shared<SessionLogEntry>();
             e->Token = Context->SessionTokenString();
-            e->RemoteEndPoint = s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port());
+            e->RemoteEndPoint = systemToUtf16(this->RemoteEndPoint.address().to_string()) + u":" + ToU16String(this->RemoteEndPoint.port());
             e->Time = UtcNow();
-            e->Type = L"InBytes";
+            e->Type = u"InBytes";
             e->Name = CommandName;
-            e->Message = ToString(ByteLength);
+            e->Message = ToU16String(ByteLength);
             this->Server.ServerContext()->RaiseSessionLog(e);
         };
-        vts->OutputByteLengthReport = [this](std::wstring CommandName, std::size_t ByteLength)
+        vts->OutputByteLengthReport = [this](std::u16string CommandName, std::size_t ByteLength)
         {
             auto e = std::make_shared<SessionLogEntry>();
             e->Token = Context->SessionTokenString();
-            e->RemoteEndPoint = s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port());
+            e->RemoteEndPoint = systemToUtf16(this->RemoteEndPoint.address().to_string()) + u":" + ToU16String(this->RemoteEndPoint.port());
             e->Time = UtcNow();
-            e->Type = L"OutBytes";
+            e->Type = u"OutBytes";
             e->Name = CommandName;
-            e->Message = ToString(ByteLength);
+            e->Message = ToU16String(ByteLength);
             this->Server.ServerContext()->RaiseSessionLog(e);
         };
     }
@@ -148,11 +148,11 @@ namespace Server
                         auto Microseconds = std::chrono::duration_cast<std::chrono::microseconds>(EndTime - StartTime).count();
                         auto e = std::make_shared<SessionLogEntry>();
                         e->Token = Context->SessionTokenString();
-                        e->RemoteEndPoint = s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port());
+                        e->RemoteEndPoint = systemToUtf16(this->RemoteEndPoint.address().to_string()) + u":" + ToU16String(this->RemoteEndPoint.port());
                         e->Time = UtcNow();
-                        e->Type = L"Time";
+                        e->Type = u"Time";
                         e->Name = CommandName;
-                        e->Message = ToString(Microseconds) + L"μs";
+                        e->Message = ToU16String(Microseconds) + u"μs";
                         this->Server.ServerContext()->RaiseSessionLog(e);
                         ssm->NotifyWrite(Unit());
                         OnSuccess();
@@ -191,12 +191,12 @@ namespace Server
             // Maximum allowed bad commands exceeded.
             if (Server.MaxBadCommands() != 0 && NumBadCommands > Server.MaxBadCommands())
             {
-                RaiseError(CommandName, L"Too many bad commands, closing transmission channel.");
+                RaiseError(CommandName, u"Too many bad commands, closing transmission channel.");
                 OnFailure();
             }
             else
             {
-                RaiseError(CommandName, L"Not recognized.");
+                RaiseError(CommandName, u"Not recognized.");
                 OnSuccess();
             }
         }
@@ -209,12 +209,12 @@ namespace Server
             // Maximum allowed bad commands exceeded.
             if (Server.MaxBadCommands() != 0 && NumBadCommands > Server.MaxBadCommands())
             {
-                RaiseError(L"", L"\"" + CommandLine + L"\": Too many bad commands, closing transmission channel.");
+                RaiseError(u"", u"\"" + CommandLine + u"\": Too many bad commands, closing transmission channel.");
                 OnFailure();
             }
             else
             {
-                RaiseError(L"", L"\"" + CommandLine + L"\":  recognized.");
+                RaiseError(u"", u"\"" + CommandLine + u"\":  recognized.");
                 OnSuccess();
             }
         }
@@ -255,11 +255,11 @@ namespace Server
                         {
                             auto e = std::make_shared<SessionLogEntry>();
                             e->Token = Context->SessionTokenString();
-                            e->RemoteEndPoint = s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port());
+                            e->RemoteEndPoint = systemToUtf16(this->RemoteEndPoint.address().to_string()) + u":" + ToU16String(this->RemoteEndPoint.port());
                             e->Time = UtcNow();
-                            e->Type = L"Known";
-                            e->Name = L"Exception";
-                            e->Message = s2w(std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace());
+                            e->Type = u"Known";
+                            e->Name = u"Exception";
+                            e->Message = systemToUtf16(std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace());
                             Server.ServerContext()->RaiseSessionLog(e);
                         }
                         else if (!IsSocketErrorKnown(ex))
@@ -345,11 +345,11 @@ namespace Server
         {
             auto e = std::make_shared<SessionLogEntry>();
             e->Token = SessionTokenString;
-            e->RemoteEndPoint = s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port());
+            e->RemoteEndPoint = systemToUtf16(this->RemoteEndPoint.address().to_string()) + u":" + ToU16String(this->RemoteEndPoint.port());
             e->Time = UtcNow();
-            e->Type = L"Sys";
-            e->Name = L"SessionExit";
-            e->Message = L"";
+            e->Type = u"Sys";
+            e->Name = u"SessionExit";
+            e->Message = u"";
             Server.ServerContext()->RaiseSessionLog(e);
         }
     }
@@ -384,7 +384,7 @@ namespace Server
         {
             ExceptionStackTrace::Execute([=]
             {
-                Context->RemoteEndPoint(s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port()));
+                Context->RemoteEndPoint(systemToUtf16(this->RemoteEndPoint.address().to_string()) + u":" + ToU16String(this->RemoteEndPoint.port()));
 
                 Server.ServerContext()->RegisterSession(Context);
                 Server.SessionMappings.DoAction([=](std::shared_ptr<std::unordered_map<std::shared_ptr<ISessionContext>, std::shared_ptr<TcpSession>>> Mappings) { (*Mappings)[Context] = this->shared_from_this(); });
@@ -393,11 +393,11 @@ namespace Server
                 {
                     auto e = std::make_shared<SessionLogEntry>();
                     e->Token = Context->SessionTokenString();
-                    e->RemoteEndPoint = s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port());
+                    e->RemoteEndPoint = systemToUtf16(this->RemoteEndPoint.address().to_string()) + u":" + ToU16String(this->RemoteEndPoint.port());
                     e->Time = UtcNow();
-                    e->Type = L"Sys";
-                    e->Name = L"SessionEnter";
-                    e->Message = L"";
+                    e->Type = u"Sys";
+                    e->Name = u"SessionEnter";
+                    e->Message = u"";
                     Server.ServerContext()->RaiseSessionLog(e);
                 }
                 ssm->Start();
@@ -449,29 +449,29 @@ namespace Server
         std::memcpy(&Destination[DestinationIndex], &Source[SourceIndex], Length);
     }
 
-    void TcpSession::RaiseError(std::wstring CommandName, std::wstring Message)
+    void TcpSession::RaiseError(std::u16string CommandName, std::u16string Message)
     {
         si->RaiseError(CommandName, Message);
     }
-    void TcpSession::RaiseUnknownError(std::wstring CommandName, const std::exception &ex)
+    void TcpSession::RaiseUnknownError(std::u16string CommandName, const std::exception &ex)
     {
-        auto Info = s2w(ex.what());
+        auto Info = systemToUtf16(ex.what());
         if (Server.ServerContext()->ClientDebug())
         {
             si->RaiseError(CommandName, Info);
         }
         else
         {
-            si->RaiseError(CommandName, L"Internal server error.");
+            si->RaiseError(CommandName, u"Internal server error.");
         }
         if (Server.ServerContext()->EnableLogUnknownError())
         {
             auto e = std::make_shared<SessionLogEntry>();
             e->Token = Context->SessionTokenString();
-            e->RemoteEndPoint = s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port());
+            e->RemoteEndPoint = systemToUtf16(this->RemoteEndPoint.address().to_string()) + u":" + ToU16String(this->RemoteEndPoint.port());
             e->Time = UtcNow();
-            e->Type = L"Unk";
-            e->Name = L"Exception";
+            e->Type = u"Unk";
+            e->Name = u"Exception";
             e->Message = Info;
             Server.ServerContext()->RaiseSessionLog(e);
         }
@@ -481,13 +481,13 @@ namespace Server
     {
         if (Server.ServerContext()->EnableLogCriticalError())
         {
-            auto Info = s2w(ex.what());
+            auto Info = systemToUtf16(ex.what());
             auto e = std::make_shared<SessionLogEntry>();
             e->Token = Context->SessionTokenString();
-            e->RemoteEndPoint = s2w(this->RemoteEndPoint.address().to_string()) + L":" + ToString(this->RemoteEndPoint.port());
+            e->RemoteEndPoint = systemToUtf16(this->RemoteEndPoint.address().to_string()) + u":" + ToU16String(this->RemoteEndPoint.port());
             e->Time = UtcNow();
-            e->Type = L"Crtcl";
-            e->Name = L"Exception";
+            e->Type = u"Crtcu";
+            e->Name = u"Exception";
             e->Message = Info;
             Server.ServerContext()->RaiseSessionLog(e);
         }

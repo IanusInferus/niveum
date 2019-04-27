@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
 //  Description: 聊天服务器
-//  Version:     2019.02.11.
+//  Version:     2019.04.28.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -43,7 +43,7 @@ namespace Server
 
             if (argc == 2)
             {
-                auto v = s2w(argv[1]);
+                auto v = systemToWideChar(argv[1]);
                 if (v == L"/?" || v == L"/help" || v == L"--help")
                 {
                     DisplayInfo();
@@ -53,11 +53,11 @@ namespace Server
 
             if (argc == 3)
             {
-                Run(Parse<std::uint16_t>(s2w(argv[1])), !EqualIgnoreCase(s2w(argv[2]), L"/nolog"));
+                Run(Parse<std::uint16_t>(systemToWideChar(argv[1])), !EqualIgnoreCase(systemToWideChar(argv[2]), L"/nolog"));
             }
             else if (argc == 2)
             {
-                Run(Parse<std::uint16_t>(s2w(argv[1])), true);
+                Run(Parse<std::uint16_t>(systemToWideChar(argv[1])), true);
             }
             else if (argc == 1)
             {
@@ -135,7 +135,7 @@ namespace Server
                 auto p = ServerContext->CreateServerImplementationWithBinaryAdapter(Context);
                 auto si = std::get<0>(p);
                 auto a = std::get<1>(p);
-                auto CheckCommandAllowed = [&](std::wstring CommandName)
+                auto CheckCommandAllowed = [&](std::u16string CommandName)
                 {
                     return true;
                 };
@@ -162,7 +162,7 @@ namespace Server
 
                 Server->Start();
 
-                std::wprintf(L"%ls\n", (L"TCP/Binary服务器已启动。结点: " + s2w(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port()) + L"(TCP)").c_str());
+                std::wprintf(L"%ls\n", (L"TCP/Binary服务器已启动。结点: " + systemToWideChar(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port()) + L"(TCP)").c_str());
 
                 Servers->push_back(Server);
             }
@@ -184,7 +184,7 @@ namespace Server
 
                 Server->Start();
 
-                std::wprintf(L"%ls\n", (L"UDP/Binary服务器已启动。结点: " + s2w(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port()) + L"(UDP)").c_str());
+                std::wprintf(L"%ls\n", (L"UDP/Binary服务器已启动。结点: " + systemToWideChar(LocalEndPoint.address().to_string()) + L":" + ToString(LocalEndPoint.port()) + L"(UDP)").c_str());
 
                 Servers->push_back(Server);
             }
@@ -284,20 +284,20 @@ int main(int argc, char **argv)
         catch (const std::exception &ex)
         {
             auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace();
-            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            std::wprintf(L"Error:\n%ls\n", systemToWideChar(Message).c_str());
             return -1;
         }
         catch (const char *ex)
         {
             auto Message = std::string() + ex + "\r\n" + ExceptionStackTrace::GetStackTrace();
-            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            std::wprintf(L"Error:\n%ls\n", systemToWideChar(Message).c_str());
             return -1;
         }
         catch (...)
         {
             // 在Visual C++下需要指定/EHa才能捕捉到SEH异常
             auto Message = std::string() + "SEHException\r\n" + ExceptionStackTrace::GetStackTrace();
-            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            std::wprintf(L"Error:\n%ls\n", systemToWideChar(Message).c_str());
             return -1;
         }
     }

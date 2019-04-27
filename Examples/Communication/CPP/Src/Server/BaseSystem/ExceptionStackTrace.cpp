@@ -1406,7 +1406,7 @@ void StackWalker::OnOutput(LPCSTR buffer)
 namespace
 {
 
-char *GetSehExpDescription(DWORD dwExpCode)
+const char *GetSehExpDescription(DWORD dwExpCode)
 {
     switch (dwExpCode) {
     case EXCEPTION_ACCESS_VIOLATION:
@@ -1470,7 +1470,7 @@ public:
         ExceptionInfo = "";
         CHAR buffer[STACKWALK_MAX_NAMELEN] = {};
         _snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "SEH ExceptionCode: %X(%s)\n", dwExpCode, GetSehExpDescription(dwExpCode));
-        ExceptionInfo += s2u(buffer);
+        ExceptionInfo += systemToUtf8(buffer);
     }
     void OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUserName)
     {
@@ -1515,7 +1515,7 @@ public:
     }
     void OnOutput(LPCSTR szText)
     {
-        ExceptionInfo += s2u(szText);
+        ExceptionInfo += systemToUtf8(szText);
     }
 };
 
@@ -1575,7 +1575,7 @@ public:
     }
     void OnOutput(LPCSTR szText)
     {
-        ExceptionInfo += s2u(szText);
+        ExceptionInfo += systemToUtf8(szText);
     }
 };
 

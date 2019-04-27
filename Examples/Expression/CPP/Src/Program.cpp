@@ -47,7 +47,7 @@ namespace ExprTest
         {
             std::shared_ptr<Assembly> a;
             {
-                ReadableStream s(L"Assembly.bin");
+                ReadableStream s(u"Assembly.bin");
                 a = BinaryTranslator::AssemblyFromBinary(s);
             }
 
@@ -379,7 +379,7 @@ int main(int argc, char **argv)
     }
     catch (std::exception &ex)
     {
-        std::wprintf(L"Error:\n%ls\n", s2w(ex.what()).c_str());
+        std::wprintf(L"Error:\n%ls\n", systemToWideChar(ex.what()).c_str());
         return -1;
     }
 }

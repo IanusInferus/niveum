@@ -4,7 +4,7 @@
       File:        CppCompatible.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C++通讯兼容模板
-      Version:     2019.02.13.
+      Version:     2019.04.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -26,7 +26,7 @@
     class EventPump : public IEventPump
     {
     };
-    std::shared_ptr<IEventPump> CreateEventPump(std::function<std::function<std::wstring()>(std::vector<std::wstring>)> GetVersionResolver)
+    std::shared_ptr<IEventPump> CreateEventPump(std::function<std::function<std::u16string()>(std::vector<std::u16string>)> GetVersionResolver)
     {
         auto ep = std::make_shared<EventPump>();
         $$
@@ -49,7 +49,7 @@
                         ep->[[${Name}]] = [=](${EventTypeString} eHead)
                         {
                             auto Version = [[${Name}Resolver]]();
-                            if (Version == L"")
+                            if (Version == u"")
                             {
                                 if ([[${Name}]] != nullptr) { [[${Name}]](eHead); }
                                 return;
@@ -59,7 +59,7 @@
                                 {
                                     var VersionedSimpleName = sc.GetTypeSpec().SimpleName(NamespaceName);
                                     ##
-                                        if (Version == L"${sc.Version}")
+                                        if (Version == u"${sc.Version}")
                                         {
                                             auto e = [[${VersionedSimpleName}EventFromHead]](eHead);
                                             if ([[${VersionedSimpleName}]] != nullptr) { [[${VersionedSimpleName}]](e); }

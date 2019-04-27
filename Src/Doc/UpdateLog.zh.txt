@@ -1,4 +1,10 @@
-﻿2019.03.22
+﻿2019.04.28
+Niveum.Core, Niveum.Expression:
+在C++代码生成中将std::wstring改为std::u16string，去除对std::wstring_convert的依赖。
+Example:
+修正C++示例，并升级到C++17。
+
+2019.03.22
 Example:
 修正C#通讯示例客户端。
 

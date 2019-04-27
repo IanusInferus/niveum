@@ -2,6 +2,7 @@
 
 #include "Communication.h"
 #include "Servers/IContext.h"
+#include "BaseSystem/StringUtilities.h"
 
 #include <memory>
 #include <cstdint>
@@ -9,29 +10,12 @@
 #include <string>
 #include <functional>
 #include <mutex>
+#include <shared_mutex>
 #include <asio.hpp>
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
 #include <format.h>
-
-//在C++11中实现SessionLock
-using _shared_mutex = std::mutex;
-using _shared_lock = std::unique_lock<std::mutex>;
-using _unique_lock = std::unique_lock<std::mutex>;
-
-//在C++17中实现SessionLock
-//#include <shared_mutex>
-//using _shared_mutex = std::shared_mutex;
-//using _shared_lock = std::shared_lock<std::shared_mutex>;
-//using _unique_lock = std::unique_lock<std::shared_mutex>;
-
-//在boost中实现SessionLock
-//#include <boost/thread/shared_mutex.hpp>
-//#include <boost/thread/locks.hpp>
-//using _shared_mutex = boost::shared_mutex;
-//using _shared_lock = boost::shared_lock<boost::shared_mutex>;
-//using _unique_lock = boost::unique_lock<boost::shared_mutex>;
 
 namespace Server
 {
@@ -44,7 +28,7 @@ namespace Server
             SessionTokenValue(SessionTokenValue),
             ReceivedMessageCount(0),
             SendMessageCount(0),
-            Version(L"")
+            Version(u"")
         {
             std::wstring s;
             for (std::size_t k = 0; k < SessionTokenValue.size(); k += 1)
@@ -52,7 +36,7 @@ namespace Server
                 auto b = SessionTokenValue[k];
                 s += fmt::format(L"{:02X}", b);
             }
-            SessionTokenStringValue = s;
+            SessionTokenStringValue = wideCharToUtf16(s);
         }
 
         //跨线程共享只读访问
@@ -74,20 +58,20 @@ namespace Server
         }
         bool IsSecureConnection;
 
-        std::wstring RemoteEndPoint()
+        std::u16string RemoteEndPoint()
         {
             return RemoteEndPointValue;
         }
-        void RemoteEndPoint(std::wstring value)
+        void RemoteEndPoint(std::u16string value)
         {
             RemoteEndPointValue = value;
         }
 
     private:
-        std::wstring RemoteEndPointValue;
+        std::u16string RemoteEndPointValue;
 
         std::vector<std::uint8_t> SessionTokenValue;
-        std::wstring SessionTokenStringValue;
+        std::u16string SessionTokenStringValue;
 
     public:
         /// <summary>长度为4</summary>
@@ -95,7 +79,7 @@ namespace Server
         {
             return SessionTokenValue;
         }
-        std::wstring SessionTokenString()
+        std::u16string SessionTokenString()
         {
             return SessionTokenStringValue;
         }
@@ -103,16 +87,16 @@ namespace Server
 
         //读时先定义auto Lock = ReaderLock();
         //写时先定义auto Lock = WriterLock();
-        _shared_mutex SessionLock;
-        _shared_lock ReaderLock() { return _shared_lock(SessionLock); }
-        _unique_lock WriterLock() { return _unique_lock(SessionLock); }
+		std::shared_mutex SessionLock;
+		std::shared_lock<std::shared_mutex> ReaderLock() { return std::shared_lock<std::shared_mutex>(SessionLock); }
+		std::unique_lock<std::shared_mutex> WriterLock() { return std::unique_lock<std::shared_mutex>(SessionLock); }
 
 
         //跨线程共享读写访问，读写必须通过SessionLock
 
         int ReceivedMessageCount; //跨线程变量
 
-        std::wstring Version;
+        std::u16string Version;
         std::shared_ptr<Communication::IEventPump> EventPump;
 
         //单线程访问

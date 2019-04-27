@@ -34,14 +34,14 @@ namespace Server
     {
         if (s != nullptr && s->IsRunning())
         {
-            s->RaiseError(L"", L"Client host rejected: too many connections, please try again later.");
+            s->RaiseError(u"", u"Client host rejected: too many connections, please try again later.");
         }
     }
     void TcpServer::OnMaxConnectionsPerIPExceeded(std::shared_ptr<TcpSession> s)
     {
         if (s != nullptr && s->IsRunning())
         {
-            s->RaiseError(L"", L"Client host rejected: too many connections from your IP(" + s2w(s->RemoteEndPoint.address().to_string()) + L"), please try again later.");
+            s->RaiseError(u"", u"Client host rejected: too many connections from your IP(" + systemToUtf16(s->RemoteEndPoint.address().to_string()) + u"), please try again later.");
         }
     }
 

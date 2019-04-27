@@ -40,7 +40,7 @@ void DisplayInfo()
     std::wprintf(L"%ls\n", L"复制WorldData.bin。");
 }
 
-void BinaryToBinary(std::wstring BinaryPath1, std::wstring BinaryPath2)
+void BinaryToBinary(std::u16string BinaryPath1, std::u16string BinaryPath2)
 {
     ReadableStream rs(BinaryPath1);
 
@@ -58,7 +58,7 @@ int MainInner(int argc, char **argv)
         DisplayInfo();
         return -1;
     }
-    BinaryToBinary(s2w(argv[1]), s2w(argv[2]));
+    BinaryToBinary(systemToUtf16(argv[1]), systemToUtf16(argv[2]));
     return 0;
 }
 
@@ -98,7 +98,6 @@ int main(int argc, char **argv)
     }
     catch (std::exception &ex)
     {
-        std::wprintf(L"Error:\n%ls\n", s2w(ex.what()).c_str());
+        std::wprintf(L"Error:\n%ls\n", systemToWideChar(ex.what()).c_str());
     }
 }
-

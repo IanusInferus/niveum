@@ -23,9 +23,9 @@ namespace Niveum
             ReadableStream(String Path)
             {
 #if defined WIN32 || defined _WIN32
-                s.open(Path, std::ifstream::binary);
+                s.open(utf16ToWideChar(Path), std::ifstream::binary);
 #else
-                s.open(w2s(Path), std::ifstream::binary);
+                s.open(utf16ToSystem(Path), std::ifstream::binary);
 #endif
                 if (!s)
                 {
@@ -73,9 +73,9 @@ namespace Niveum
             WritableStream(String Path)
             {
 #if defined WIN32 || defined _WIN32
-                s.open(Path, std::ofstream::binary);
+                s.open(utf16ToWideChar(Path), std::ofstream::binary);
 #else
-                s.open(w2s(Path), std::ofstream::binary);
+                s.open(utf16ToSystem(Path), std::ofstream::binary);
 #endif
                 if (!s)
                 {

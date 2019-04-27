@@ -40,14 +40,14 @@ namespace Server
     {
         if (s != nullptr && s->IsRunning())
         {
-            s->RaiseError(L"", L"Client host rejected: too many connections, please try again later.");
+            s->RaiseError(u"", u"Client host rejected: too many connections, please try again later.");
         }
     }
     void UdpServer::OnMaxConnectionsPerIPExceeded(std::shared_ptr<UdpSession> s)
     {
         if (s != nullptr && s->IsRunning())
         {
-            s->RaiseError(L"", L"Client host rejected: too many connections from your IP(" + s2w(s->RemoteEndPoint.address().to_string()) + L"), please try again later.");
+            s->RaiseError(u"", u"Client host rejected: too many connections from your IP(" + systemToUtf16(s->RemoteEndPoint.address().to_string()) + u"), please try again later.");
         }
     }
 
@@ -445,12 +445,12 @@ namespace Server
                     if (ServerContext()->EnableLogSystem())
                     {
                         auto e = std::make_shared<SessionLogEntry>();
-                        e->Token = L"";
-                        e->RemoteEndPoint = s2w(ep.address().to_string()) + L":" + ToString(ep.port());
+                        e->Token = u"";
+                        e->RemoteEndPoint = systemToUtf16(ep.address().to_string()) + u":" + ToU16String(ep.port());
                         e->Time = UtcNow();
-                        e->Type = L"Sys";
-                        e->Name = L"Exception";
-                        e->Message = s2w(std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace());
+                        e->Type = u"Sys";
+                        e->Name = u"Exception";
+                        e->Message = systemToUtf16(std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace());
                         ServerContext()->RaiseSessionLog(e);
                     }
                     if (s != nullptr)
@@ -494,7 +494,8 @@ namespace Server
 #if _MSC_VER
                     //在Windows下关闭SIO_UDP_CONNRESET报告，防止接受数据出错
                     //http://support.microsoft.com/kb/263823/en-us
-                    s->io_control(connection_reset_command());
+					connection_reset_command command;
+					s->io_control(command);
 #endif
                     return s;
                 };

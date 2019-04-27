@@ -42,11 +42,11 @@ namespace Server
             class EventPump : public Communication::IEventPump
             {
             };
-            std::shared_ptr<Communication::IEventPump> CreateEventPump(std::function<std::function<std::wstring()>(std::vector<std::wstring>)> GetVersionResolver);
+            std::shared_ptr<Communication::IEventPump> CreateEventPump(std::function<std::function<std::u16string()>(std::vector<std::u16string>)> GetVersionResolver);
             void RegisterCrossSessionEvents()
             {
                 auto Lock = SessionContext->WriterLock();
-                auto GetVersionResolver = [this](std::vector<std::wstring> Versions)
+                auto GetVersionResolver = [this](std::vector<std::u16string> Versions)
                 {
                     std::vector<int> Sorted;
                     for (auto v : Versions)
@@ -54,11 +54,11 @@ namespace Server
                         Sorted.push_back(Parse<int>(v));
                     }
                     std::sort(Sorted.begin(), Sorted.end());
-                    return [this, Sorted]() -> std::wstring
+                    return [this, Sorted]() -> std::u16string
                     {
                         auto Version = SessionContext->Version;
-                        if (Version == L"") { return L""; }
-                        if (Sorted.size() == 0) { return L""; }
+                        if (Version == u"") { return u""; }
+                        if (Sorted.size() == 0) { return u""; }
                         auto cv = Parse<int>(Version);
                         auto vPrev = 0;
                         for (auto v : Sorted)
@@ -72,7 +72,7 @@ namespace Server
                                 break;
                             }
                         }
-                        return ToString(vPrev);
+                        return ToU16String(vPrev);
                     };
                 };
                 SessionContext->EventPump = CreateEventPump(GetVersionResolver);
@@ -84,9 +84,9 @@ namespace Server
                 SessionContext->EventPump = nullptr;
             }
 
-            void RaiseError(std::wstring CommandName, std::wstring Message)
+            void RaiseError(std::u16string CommandName, std::u16string Message)
             {
-                if (CommandName != L"")
+                if (CommandName != u"")
                 {
                     if (ErrorCommand != nullptr)
                     {
@@ -97,7 +97,7 @@ namespace Server
                     if (Error != nullptr)
                     {
                         auto e = std::make_shared<Communication::ErrorEvent>();
-                        e->Message = CommandName + L": " + Message;
+                        e->Message = CommandName + u": " + Message;
                         Error(e);
                     }
                 }

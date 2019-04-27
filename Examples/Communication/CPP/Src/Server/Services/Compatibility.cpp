@@ -5,22 +5,22 @@
 using namespace Communication;
 using namespace Server::Services;
 
-std::shared_ptr<IEventPump> ServerImplementation::CreateEventPump(std::function<std::function<std::wstring()>(std::vector<std::wstring>)> GetVersionResolver)
+std::shared_ptr<IEventPump> ServerImplementation::CreateEventPump(std::function<std::function<std::u16string()>(std::vector<std::u16string>)> GetVersionResolver)
 {
     auto ep = std::make_shared<EventPump>();
     ep->Error = [=](std::shared_ptr<class ErrorEvent> e) { if (Error != nullptr) { Error(e); } };
     ep->ErrorCommand = [=](std::shared_ptr<class ErrorCommandEvent> e) { if (ErrorCommand != nullptr) { ErrorCommand(e); } };
     ep->ServerShutdown = [=](std::shared_ptr<class ServerShutdownEvent> e) { if (ServerShutdown != nullptr) { ServerShutdown(e); } };
-    auto MessageReceivedResolver = GetVersionResolver({ L"2" });
+    auto MessageReceivedResolver = GetVersionResolver({ u"2" });
     ep->MessageReceived = [=](std::shared_ptr<class MessageReceivedEvent> eHead)
     {
         auto Version = MessageReceivedResolver();
-        if (Version == L"")
+        if (Version == u"")
         {
             if (MessageReceived != nullptr) { MessageReceived(eHead); }
             return;
         }
-        if (Version == L"2")
+        if (Version == u"2")
         {
             auto e = MessageReceivedAt2EventFromHead(eHead);
             if (MessageReceivedAt2 != nullptr) { MessageReceivedAt2(e); }
@@ -43,7 +43,7 @@ std::shared_ptr<class SendMessageAt1Reply> ServerImplementation::SendMessageAt1(
 std::shared_ptr<class SendMessageRequest> ServerImplementation::SendMessageAt1RequestToHead(std::shared_ptr<class SendMessageAt1Request> o)
 {
     auto ho = std::make_shared<std::shared_ptr<class SendMessageRequest>::element_type>();
-    ho->Content = (o->Message->Title != L"" ? o->Message->Title + L"\r\n" : L"") + JoinStrings(o->Message->Lines, L"\r\n");
+    ho->Content = (o->Message->Title != u"" ? o->Message->Title + u"\r\n" : u"") + JoinStrings(o->Message->Lines, u"\r\n");
     return ho;
 }
 std::shared_ptr<class SendMessageAt1Reply> ServerImplementation::SendMessageAt1ReplyFromHead(std::shared_ptr<class SendMessageReply> ho)
@@ -69,7 +69,7 @@ std::shared_ptr<class SendMessageAt2Reply> ServerImplementation::SendMessageAt2(
 std::shared_ptr<class SendMessageRequest> ServerImplementation::SendMessageAt2RequestToHead(std::shared_ptr<class SendMessageAt2Request> o)
 {
     auto ho = std::make_shared<std::shared_ptr<class SendMessageRequest>::element_type>();
-    ho->Content = (o->Message->Title != L"" ? o->Message->Title + L"\r\n" : L"") + JoinStrings(o->Message->Lines, L"\r\n");
+    ho->Content = (o->Message->Title != u"" ? o->Message->Title + u"\r\n" : u"") + JoinStrings(o->Message->Lines, u"\r\n");
     return ho;
 }
 std::shared_ptr<class SendMessageAt2Reply> ServerImplementation::SendMessageAt2ReplyFromHead(std::shared_ptr<class SendMessageReply> ho)
@@ -88,8 +88,8 @@ std::shared_ptr<class SendMessageAt2Reply> ServerImplementation::SendMessageAt2R
 std::shared_ptr<class MessageReceivedAt2Event> ServerImplementation::MessageReceivedAt2EventFromHead(std::shared_ptr<class MessageReceivedEvent> ho)
 {
     auto o = std::make_shared<std::shared_ptr<class MessageReceivedAt2Event>::element_type>();
-    o->Title = L"";
-    o->Lines = SplitString(ReplaceAllCopy(ho->Content, L"\r\n", L"\n"), L"\n");
+    o->Title = u"";
+    o->Lines = SplitString(ReplaceAllCopy(ho->Content, u"\r\n", u"\n"), u"\n");
     return o;
 }
 

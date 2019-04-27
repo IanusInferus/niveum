@@ -5,6 +5,25 @@
 #include <sstream>
 #include <stdexcept>
 
+std::u16string utf8ToUtf16(const std::string & u8s);
+std::string utf16ToUtf8(const std::u16string & u16s);
+std::u32string utf8ToUtf32(const std::string & u8s);
+std::string utf32ToUtf8(const std::u32string & u32s);
+std::u16string utf32ToUtf16(const std::u32string & u32s);
+std::u32string utf16ToUtf32(const std::u16string & u16s);
+
+std::u16string systemToUtf16(const std::string & s);
+std::string utf16ToSystem(const std::u16string & us);
+std::string systemToUtf8(const std::string & s);
+std::string utf8ToSystem(const std::string & us);
+
+std::string wideCharToUtf8(const std::wstring & ws);
+std::wstring utf8ToWideChar(const std::string & us);
+std::u16string wideCharToUtf16(const std::wstring & ws);
+std::wstring utf16ToWideChar(const std::u16string & us);
+std::string wideCharToSystem(const std::wstring & ws);
+std::wstring systemToWideChar(const std::string & s);
+
 template<typename T>
 std::wstring ToString(T value)
 {
@@ -25,7 +44,19 @@ std::wstring ToHexString(T value)
 }
 
 template<typename T>
-T Parse(const std::wstring& str)
+std::u16string ToU16String(T value)
+{
+	return wideCharToUtf16(ToString<T>(value));
+}
+
+template<typename T>
+std::u16string ToHexU16String(T value)
+{
+	return wideCharToUtf16(ToHexString<T>(value));
+}
+
+template<typename T>
+T Parse(const std::wstring & str)
 {
     if (str.size() > 0)
     {
@@ -47,9 +78,9 @@ T Parse(const std::wstring& str)
 }
 
 template<typename T>
-T Parse(std::shared_ptr<std::wstring> str)
+T Parse(const std::u16string & str)
 {
-    return Parse<T>(*str);
+	return Parse<T>(utf16ToWideChar(str));
 }
 
 template<typename CharT>
@@ -181,21 +212,3 @@ bool EqualIgnoreCase(const std::wstring &l, const std::wstring &r);
 
 std::wstring ToLower(const std::wstring &Input);
 std::wstring ToUpper(const std::wstring &Input);
-
-// convert string from multibyte to widechar
-std::wstring s2w(const std::string &s);
-
-// convert string from widechar to multibyte
-std::string w2s(const std::wstring &ws);
-
-// convert string from UTF-8 to widechar
-std::wstring u2w(const std::string &us);
-
-// convert string from widechar to UTF-8
-std::string w2u(const std::wstring &ws);
-
-// convert string from multibyte to UTF-8
-std::string s2u(const std::string &s);
-
-// convert string from UTF-8 to multibyte
-std::string u2s(const std::string &us);

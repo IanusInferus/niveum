@@ -8,11 +8,11 @@ namespace Server
     class SessionLogEntry
     {
     public:
-        std::wstring RemoteEndPoint;
-        std::wstring Token;
+        std::u16string RemoteEndPoint;
+        std::u16string Token;
         std::chrono::system_clock::time_point Time;
-        std::wstring Type;
-        std::wstring Name;
-        std::wstring Message;
+        std::u16string Type;
+        std::u16string Name;
+        std::u16string Message;
     };
 }

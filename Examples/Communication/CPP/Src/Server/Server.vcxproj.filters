@@ -108,7 +108,6 @@
     <ClInclude Include="BaseSystem\ExceptionStackTrace.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
-    <ClInclude Include="Workaround.h" />
     <ClInclude Include="Generated\Communication.h">
       <Filter>Generated</Filter>
     </ClInclude>

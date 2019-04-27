@@ -19,20 +19,20 @@ namespace Server
     class StreamedVirtualTransportServerHandleResultCommand
     {
     public:
-        std::wstring CommandName;
+        std::u16string CommandName;
         std::function<void(std::function<void()>, std::function<void(const std::exception &)>)> ExecuteCommand;
     };
 
     class StreamedVirtualTransportServerHandleResultBadCommand
     {
     public:
-        std::wstring CommandName;
+        std::u16string CommandName;
     };
 
     class StreamedVirtualTransportServerHandleResultBadCommandLine
     {
     public:
-        std::wstring CommandLine;
+        std::u16string CommandLine;
     };
 
     enum StreamedVirtualTransportServerHandleResultTag
@@ -111,7 +111,7 @@ namespace Server
         virtual std::shared_ptr<StreamedVirtualTransportServerHandleResult> Handle(int Count) = 0;
         virtual std::uint64_t Hash() = 0;
         std::function<void()> ServerEvent;
-        std::function<void(std::wstring, std::size_t)> InputByteLengthReport;
-        std::function<void(std::wstring, std::size_t)> OutputByteLengthReport;
+        std::function<void(std::u16string, std::size_t)> InputByteLengthReport;
+        std::function<void(std::u16string, std::size_t)> OutputByteLengthReport;
     };
 }

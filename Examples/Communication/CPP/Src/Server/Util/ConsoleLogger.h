@@ -45,8 +45,8 @@ namespace Server
                         break;
                     }
 
-                    auto Line = DateTimeUtcToString(e->Time) + L" " + e->RemoteEndPoint + L" " + e->Token + L" " + e->Type + L" " + e->Name + L" " + e->Message;
-                    std::wprintf(L"%ls\n", Line.c_str());
+                    auto Line = wideCharToUtf16(DateTimeUtcToString(e->Time)) + u" " + e->RemoteEndPoint + u" " + e->Token + u" " + e->Type + u" " + e->Name + u" " + e->Message;
+                    std::wprintf(L"%ls\n", utf16ToWideChar(Line).c_str());
                 }
             }
         }

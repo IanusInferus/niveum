@@ -3,7 +3,6 @@
 #include "IContext.h"
 #include "ISerializationClient.h"
 #include "StreamedClient.h"
-#include "Workaround.h"
 
 #include <memory>
 #include <cstdint>
@@ -114,16 +113,15 @@ namespace Client
 
             String ReadString()
             {
-                std::int32_t Length = ReadInt32();
-                int n = static_cast<int>(Length);
-                std::vector<std::uint8_t> Bytes;
-                for (int k = 0; k < n; k += 1)
-                {
-                    Bytes.push_back(ReadByte());
-                }
-                std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
-                return conv.from_bytes(reinterpret_cast<const char *>(Bytes.data()), reinterpret_cast<const char *>(Bytes.data() + Bytes.size()));
-            }
+				std::int32_t Length = ReadInt32();
+				int n = static_cast<int>(Length) / 2;
+				std::u16string v;
+				for (int k = 0; k < n; k += 1)
+				{
+					v.push_back(static_cast<char16_t>(ReadUInt16()));
+				}
+				return v;
+			}
 
             virtual ~IReadableStream() {}
         };
@@ -215,15 +213,12 @@ namespace Client
 
             void WriteString(String v)
             {
-                std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
-                auto Bytes = conv.to_bytes(v);
-                int n = static_cast<int>(Bytes.size());
-                WriteInt32((std::int32_t)(n));
-                for (int k = 0; k < n; k += 1)
-                {
-                    WriteByte(static_cast<std::uint8_t>(Bytes[k]));
-                }
-            }
+				WriteInt32(static_cast<std::int32_t>(v.size()) * 2);
+				for (auto c : v)
+				{
+					WriteUInt16(static_cast<std::uint16_t>(c));
+				}
+			}
 
             virtual ~IWritableStream() {}
         };
@@ -315,12 +310,12 @@ namespace Client
             // 4 已读取ParametersLength
 
             std::int32_t CommandNameLength;
-            std::wstring CommandName;
+            std::u16string CommandName;
             std::uint32_t CommandHash;
             std::int32_t ParametersLength;
 
             Context(int ReadBufferSize)
-                : ReadBufferOffset(0), ReadBufferLength(0), State(0), CommandNameLength(0), CommandName(L""), CommandHash(0), ParametersLength(0)
+                : ReadBufferOffset(0), ReadBufferLength(0), State(0), CommandNameLength(0), CommandName(u""), CommandHash(0), ParametersLength(0)
             {
                 ReadBuffer = std::make_shared<std::vector<std::uint8_t>>();
                 ReadBuffer->resize(ReadBufferSize, 0);
@@ -337,7 +332,7 @@ namespace Client
         {
             this->bc = bc;
             this->Transformer = Transformer;
-            bc->ClientEvent = [=](std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
+            bc->ClientEvent = [=](std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
             {
                 ByteArrayStream s;
                 s.WriteString(CommandName);
@@ -450,7 +445,7 @@ namespace Client
         class Command
         {
         public:
-            std::wstring CommandName;
+            std::u16string CommandName;
             std::uint32_t CommandHash;
             std::vector<std::uint8_t> Parameters;
         };
@@ -561,7 +556,7 @@ namespace Client
                     r->Command = cmd;
                     r->Position = Position + bc.ParametersLength;
                     bc.CommandNameLength = 0;
-                    bc.CommandName = L"";
+                    bc.CommandName = u"";
                     bc.CommandHash = 0;
                     bc.ParametersLength = 0;
                     bc.State = 0;

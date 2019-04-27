@@ -37,13 +37,13 @@ namespace Niveum
         class ExpressionParameterContext
         {
         public:
-            std::unordered_map<std::wstring, Any> Parameters;
+            std::unordered_map<std::u16string, Any> Parameters;
         };
 
         class ExpressionParameterTypeProvider
         {
         public:
-            std::unordered_map<std::wstring, Niveum::ExpressionSchema::PrimitiveType> Parameters;
+            std::unordered_map<std::u16string, Niveum::ExpressionSchema::PrimitiveType> Parameters;
 
             ExpressionParameterTypeProvider()
             {

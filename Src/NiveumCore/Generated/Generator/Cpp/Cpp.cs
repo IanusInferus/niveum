@@ -30,7 +30,7 @@ namespace Niveum.ObjectSchema.Cpp
     partial class Templates
     {
         public readonly List<String> Keywords = new List<String> {"__abstract", "__alignof", "__asm", "__assume", "__based", "__box", "__cdecl", "__declspec", "__delegate", "__event", "__except", "__fastcall", "__finally", "__forceinline", "__gc", "__hook", "__identifier", "__if_exists", "__if_not_exists", "__inline", "__int16", "__int32", "__int64", "__int8", "__interface", "__leave", "__m128", "__m128d", "__m128i", "__m64", "__multiple_inheritance", "__nogc", "__noop", "__pin", "__property", "__raise", "__sealed", "__single_inheritance", "__stdcall", "__super", "__thiscall", "__try", "__except", "__finally", "__try_cast", "__unaligned", "__unhook", "__uuidof", "__value", "__virtual_inheritance", "__w64", "__wchar_t", "wchar_t", "abstract", "array", "auto", "bool", "break", "case", "catch", "char", "class", "const", "const_cast", "continue", "decltype", "default", "delegate", "delete", "deprecated", "dllexport", "dllimport", "do", "double", "dynamic_cast", "else", "enum", "event", "explicit", "extern", "false", "finally", "float", "for", "each", "in", "friend", "friend_as", "gcnew", "generic", "goto", "if", "initonly", "inline", "int", "interface", "interior_ptr", "literal", "long", "mutable", "naked", "namespace", "new", "noinline", "noreturn", "nothrow", "novtable", "nullptr", "operator", "private", "property", "protected", "public", "ref", "register", "reinterpret_cast", "return", "safecast", "sealed", "selectany", "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "template", "this", "thread", "throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using", "uuid", "value", "virtual", "void", "volatile", "while"};
-        public readonly Dictionary<String, String> PrimitiveMapping = new Dictionary<String, String> {{"Unit", "Unit"}, {"Boolean", "bool"}, {"String", "std::wstring"}, {"Int", "std::int32_t"}, {"Real", "double"}, {"Byte", "std::uint8_t"}, {"UInt8", "std::uint8_t"}, {"UInt16", "std::uint16_t"}, {"UInt32", "std::uint32_t"}, {"UInt64", "std::uint64_t"}, {"Int8", "std::int8_t"}, {"Int16", "std::int16_t"}, {"Int32", "std::int32_t"}, {"Int64", "std::int64_t"}, {"Float32", "float"}, {"Float64", "double"}, {"Type", "std::wstring"}, {"Optional", "Optional"}, {"List", "std::vector"}, {"Set", "std::unordered_set"}, {"Map", "std::unordered_map"}};
+        public readonly Dictionary<String, String> PrimitiveMapping = new Dictionary<String, String> {{"Unit", "Unit"}, {"Boolean", "bool"}, {"String", "std::u16string"}, {"Int", "std::int32_t"}, {"Real", "double"}, {"Byte", "std::uint8_t"}, {"UInt8", "std::uint8_t"}, {"UInt16", "std::uint16_t"}, {"UInt32", "std::uint32_t"}, {"UInt64", "std::uint64_t"}, {"Int8", "std::int8_t"}, {"Int16", "std::int16_t"}, {"Int32", "std::int32_t"}, {"Int64", "std::int64_t"}, {"Float32", "float"}, {"Float64", "double"}, {"Type", "std::u16string"}, {"Optional", "Optional"}, {"List", "std::vector"}, {"Set", "std::unordered_set"}, {"Map", "std::unordered_map"}};
         private IEnumerable<String> Begin()
         {
             yield return "";
@@ -669,9 +669,9 @@ namespace Niveum.ObjectSchema.Cpp
             yield return "    virtual ~IApplicationClient() {}";
             yield return "";
             yield return "    virtual std::uint64_t Hash() = 0;";
-            yield return "    virtual void DequeueCallback(std::wstring CommandName) = 0;";
-            yield return "    virtual void NotifyErrorCommand(std::wstring CommandName, std::wstring Message) = 0;";
-            yield return "    std::function<void(std::wstring CommandName, std::wstring Message)> GlobalErrorHandler;";
+            yield return "    virtual void DequeueCallback(std::u16string CommandName) = 0;";
+            yield return "    virtual void NotifyErrorCommand(std::u16string CommandName, std::u16string Message) = 0;";
+            yield return "    std::function<void(std::u16string CommandName, std::u16string Message)> GlobalErrorHandler;";
             yield return "";
             foreach (var c in Commands)
             {
@@ -685,7 +685,7 @@ namespace Niveum.ObjectSchema.Cpp
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "virtual void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback, std::function<void(std::wstring)> OnError = nullptr) = 0;"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "virtual void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback, std::function<void(std::u16string)> OnError = nullptr) = 0;"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
