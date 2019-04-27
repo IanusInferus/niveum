@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
 //  Description: 数据库示例程序
-//  Version:     2018.08.21.
+//  Version:     2019.04.28.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -30,8 +30,8 @@ namespace Database
 
             if (argc == 3)
             {
-                auto ConnectionString = s2w(argv[1]);
-                auto Option = s2w(argv[2]);
+                auto ConnectionString = systemToWideChar(argv[1]);
+                auto Option = systemToWideChar(argv[2]);
 
                 auto dam = std::make_shared<DataAccessManager>(ConnectionString);
                 if (EqualIgnoreCase(Option, L"/load"))
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     }
     catch (std::exception &ex)
     {
-        std::wprintf(L"Error:\n%ls\n", s2w(ex.what()).c_str());
+        std::wprintf(L"Error:\n%ls\n", systemToWideChar(ex.what()).c_str());
         return -1;
     }
 }

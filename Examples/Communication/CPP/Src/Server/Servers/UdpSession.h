@@ -311,9 +311,9 @@ namespace Server
         static void ArrayCopy(const std::vector<std::uint8_t> &Source, int SourceIndex, std::vector<std::uint8_t> &Destination, int DestinationIndex, int Length);
     public:
         //线程安全
-        void RaiseError(std::wstring CommandName, std::wstring Message);
+        void RaiseError(std::u16string CommandName, std::u16string Message);
         //线程安全
-        void RaiseUnknownError(std::wstring CommandName, const std::exception &ex);
+        void RaiseUnknownError(std::u16string CommandName, const std::exception &ex);
 
     private:
         //线程安全

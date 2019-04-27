@@ -4,7 +4,7 @@
       File:        CppBinaryLoader.tree
       Location:    Niveum.Expression <Tree>
       Description: 表达式结构C++二进制加载器模板
-      Version:     2018.12.22.
+      Version:     2019.04.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -36,7 +36,7 @@
         Calculation(std::shared_ptr<Niveum::ExpressionSchema::Assembly> a)
         {
             if (a->Hash != 0x${Hash}) { throw std::logic_error("InvalidOperation"); }
-            std::unordered_map<std::wstring, std::shared_ptr<Niveum::ExpressionSchema::ModuleDef>> _d_;
+            std::unordered_map<std::u16string, std::shared_ptr<Niveum::ExpressionSchema::ModuleDef>> _d_;
             for (auto m : a->Modules)
             {
                 _d_[m->Name] = m;
@@ -67,7 +67,7 @@
     public:
         [[${m.Name}]](std::shared_ptr<Niveum::ExpressionSchema::ModuleDef> md)
         {
-            std::unordered_map<std::wstring, std::shared_ptr<Niveum::ExpressionSchema::Expr>> fd;
+            std::unordered_map<std::u16string, std::shared_ptr<Niveum::ExpressionSchema::Expr>> fd;
             for (auto _f_ : md->Functions)
             {
                 fd[_f_->Name] = _f_->Body;

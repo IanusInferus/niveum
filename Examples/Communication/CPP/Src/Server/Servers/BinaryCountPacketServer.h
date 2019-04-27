@@ -3,7 +3,6 @@
 #include "IContext.h"
 #include "ISerializationServer.h"
 #include "StreamedServer.h"
-#include "Workaround.h"
 
 #include <memory>
 #include <cstdint>
@@ -115,14 +114,13 @@ namespace Server
             String ReadString()
             {
                 std::int32_t Length = ReadInt32();
-                int n = static_cast<int>(Length);
-                std::vector<std::uint8_t> Bytes;
+                int n = static_cast<int>(Length) / 2;
+                std::u16string v;
                 for (int k = 0; k < n; k += 1)
                 {
-                    Bytes.push_back(ReadByte());
+                    v.push_back(static_cast<char16_t>(ReadUInt16()));
                 }
-                std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
-                return conv.from_bytes(reinterpret_cast<const char *>(Bytes.data()), reinterpret_cast<const char *>(Bytes.data() + Bytes.size()));
+                return v;
             }
 
             virtual ~IReadableStream() {}
@@ -215,14 +213,11 @@ namespace Server
 
             void WriteString(String v)
             {
-                std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
-                auto Bytes = conv.to_bytes(v);
-                int n = static_cast<int>(Bytes.size());
-                WriteInt32((std::int32_t)(n));
-                for (int k = 0; k < n; k += 1)
-                {
-                    WriteByte(static_cast<std::uint8_t>(Bytes[k]));
-                }
+				WriteInt32(static_cast<std::int32_t>(v.size()) * 2);
+				for (auto c : v)
+				{
+					WriteUInt16(static_cast<std::uint16_t>(c));
+				}
             }
 
             virtual ~IWritableStream() {}
@@ -315,13 +310,13 @@ namespace Server
             // 4 已读取ParametersLength
 
             std::int32_t CommandNameLength;
-            std::wstring CommandName;
+            std::u16string CommandName;
             std::uint32_t CommandHash;
             std::int32_t ParametersLength;
             std::size_t InputCommandByteLength;
 
             Context(int ReadBufferSize)
-                : ReadBufferOffset(0), ReadBufferLength(0), State(0), CommandNameLength(0), CommandName(L""), CommandHash(0), ParametersLength(0), InputCommandByteLength(0)
+                : ReadBufferOffset(0), ReadBufferLength(0), State(0), CommandNameLength(0), CommandName(u""), CommandHash(0), ParametersLength(0), InputCommandByteLength(0)
             {
                 ReadBuffer = std::make_shared<std::vector<std::uint8_t>>();
                 ReadBuffer->resize(ReadBufferSize, 0);
@@ -330,17 +325,17 @@ namespace Server
 
         std::shared_ptr<IBinarySerializationServerAdapter> ss;
         Context c;
-        std::function<bool(std::wstring)> CheckCommandAllowed;
+        std::function<bool(std::u16string)> CheckCommandAllowed;
         std::shared_ptr<IBinaryTransformer> Transformer;
 
     public:
-        BinaryCountPacketServer(std::shared_ptr<IBinarySerializationServerAdapter> SerializationServerAdapter, std::function<bool(std::wstring)> CheckCommandAllowed, std::shared_ptr<IBinaryTransformer> Transformer = nullptr, int ReadBufferSize = 8 * 1024)
+        BinaryCountPacketServer(std::shared_ptr<IBinarySerializationServerAdapter> SerializationServerAdapter, std::function<bool(std::u16string)> CheckCommandAllowed, std::shared_ptr<IBinaryTransformer> Transformer = nullptr, int ReadBufferSize = 8 * 1024)
             : c(ReadBufferSize)
         {
             this->ss = SerializationServerAdapter;
             this->CheckCommandAllowed = CheckCommandAllowed;
             this->Transformer = Transformer;
-            this->ss->ServerEvent = [=](std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
+            this->ss->ServerEvent = [=](std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
             {
                 ByteArrayStream s;
                 s.WriteString(CommandName);
@@ -500,7 +495,7 @@ namespace Server
         class Command
         {
         public:
-            std::wstring CommandName;
+            std::u16string CommandName;
             std::uint32_t CommandHash;
             std::vector<std::uint8_t> Parameters;
             std::int32_t ByteLength;
@@ -618,7 +613,7 @@ namespace Server
                     r->Command = cmd;
                     r->Position = Position + bc.ParametersLength;
                     bc.CommandNameLength = 0;
-                    bc.CommandName = L"";
+                    bc.CommandName = u"";
                     bc.CommandHash = 0;
                     bc.ParametersLength = 0;
                     bc.InputCommandByteLength = 0;

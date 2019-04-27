@@ -23,7 +23,7 @@ namespace Server
         BinarySerializationServerAdapter(std::shared_ptr<Communication::IApplicationServer> ApplicationServer);
 
         std::uint64_t Hash();
-        bool HasCommand(std::wstring CommandName, std::uint32_t CommandHash);
-        void ExecuteCommand(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> OnSuccess, std::function<void(const std::exception &)> OnFailure);
+        bool HasCommand(std::u16string CommandName, std::uint32_t CommandHash);
+        void ExecuteCommand(std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> OnSuccess, std::function<void(const std::exception &)> OnFailure);
     };
 }

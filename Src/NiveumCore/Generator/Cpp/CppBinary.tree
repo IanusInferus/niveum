@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C++二进制通讯模板
-      Version:     2019.02.17.
+      Version:     2019.04.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -26,13 +26,13 @@
     private:
         struct Hash
         {
-            std::size_t operator() (const std::pair<std::wstring, std::uint32_t> &p) const
+            std::size_t operator() (const std::pair<std::u16string, std::uint32_t> &p) const
             {
-                return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);
+                return std::hash<std::u16string>()(std::get<0>(p)) ^ std::get<1>(p);
             }
         };
-        std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<std::vector<std::uint8_t>(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>)>, Hash> ClientCommands;
-        std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<void(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>, std::function<void(std::vector<std::uint8_t>)>, std::function<void(const std::exception &)>)>, Hash> AsyncClientCommands;
+        std::unordered_map<std::pair<std::u16string, std::uint32_t>, std::function<std::vector<std::uint8_t>(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>)>, Hash> ClientCommands;
+        std::unordered_map<std::pair<std::u16string, std::uint32_t>, std::function<void(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>, std::function<void(std::vector<std::uint8_t>)>, std::function<void(const std::exception &)>)>, Hash> AsyncClientCommands;
 
     public:
         BinarySerializationServer()
@@ -52,7 +52,7 @@
                         if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                         {
                             ##
-                                AsyncClientCommands[std::pair<std::wstring, std::uint32_t>(${CommandNameString}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void
+                                AsyncClientCommands[std::pair<std::u16string, std::uint32_t>(${CommandNameString}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void
                                 {
                                     ByteArrayStream bas;
                                     bas.WriteBytes(p);
@@ -72,7 +72,7 @@
                         else
                         {
                             ##
-                                ClientCommands[std::pair<std::wstring, std::uint32_t>(${CommandNameString}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p) -> std::vector<std::uint8_t>
+                                ClientCommands[std::pair<std::u16string, std::uint32_t>(${CommandNameString}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p) -> std::vector<std::uint8_t>
                                 {
                                     ByteArrayStream bas;
                                     bas.WriteBytes(p);
@@ -95,23 +95,23 @@
             return 0x${Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)};
         }
 
-        Boolean HasCommand(std::wstring CommandName, std::uint32_t CommandHash)
+        Boolean HasCommand(std::u16string CommandName, std::uint32_t CommandHash)
         {
             return ClientCommands.count(std::pair<String, std::uint32_t>(CommandName, CommandHash)) > 0;
         }
-        Boolean HasCommandAsync(std::wstring CommandName, std::uint32_t CommandHash)
+        Boolean HasCommandAsync(std::u16string CommandName, std::uint32_t CommandHash)
         {
             return AsyncClientCommands.count(std::pair<String, std::uint32_t>(CommandName, CommandHash)) > 0;
         }
 
-        std::vector<std::uint8_t> ExecuteCommand(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
+        std::vector<std::uint8_t> ExecuteCommand(std::shared_ptr<IApplicationServer> s, std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
         {
-            auto cmd = ClientCommands[std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash)];
+            auto cmd = ClientCommands[std::pair<std::u16string, std::uint32_t>(CommandName, CommandHash)];
             return cmd(s, Parameters);
         }
-        void ExecuteCommandAsync(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure)
+        void ExecuteCommandAsync(std::shared_ptr<IApplicationServer> s, std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure)
         {
-            auto cmd = AsyncClientCommands[std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash)];
+            auto cmd = AsyncClientCommands[std::pair<std::u16string, std::uint32_t>(CommandName, CommandHash)];
             cmd(s, Parameters, Callback, OnFailure);
         }
     };
@@ -142,8 +142,8 @@
                 }
         }
 
-        /// (std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) -> void
-        typedef std::function<void(std::wstring, std::uint32_t, std::vector<std::uint8_t>)> ServerEventDelegate;
+        /// (std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) -> void
+        typedef std::function<void(std::u16string, std::uint32_t, std::vector<std::uint8_t>)> ServerEventDelegate;
         ServerEventDelegate ServerEvent;
     };
 
@@ -153,7 +153,7 @@
     public:
         virtual ~IBinarySender() {}
 
-        virtual void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::wstring)> OnError) = 0;
+        virtual void Send(std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::u16string)> OnError) = 0;
     };
 
 #Template BinarySerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
@@ -162,9 +162,9 @@
     private:
         struct Hash
         {
-            std::size_t operator() (const std::pair<std::wstring, std::uint32_t> &p) const
+            std::size_t operator() (const std::pair<std::u16string, std::uint32_t> &p) const
             {
-                return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);
+                return std::hash<std::u16string>()(std::get<0>(p)) ^ std::get<1>(p);
             }
         };
 
@@ -173,24 +173,24 @@
         public:
             std::uint32_t Hash;
             std::function<void(std::vector<std::uint8_t>)> Callback;
-            std::function<void(std::wstring)> OnError;
+            std::function<void(std::u16string)> OnError;
         };
         class ApplicationClient : public IApplicationClient
         {
         public:
             std::shared_ptr<IBinarySender> s;
-            std::unordered_map<std::wstring, std::shared_ptr<std::queue<ClientCommandTriple>>> ClientCommandCallbacks;
+            std::unordered_map<std::u16string, std::shared_ptr<std::queue<ClientCommandTriple>>> ClientCommandCallbacks;
 
             std::uint64_t Hash()
             {
                 return 0x${Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)};
             }
 
-            void DequeueCallback(std::wstring CommandName)
+            void DequeueCallback(std::u16string CommandName)
             {
                 ClientCommandCallbacks[CommandName]->pop();
             }
-            void NotifyErrorCommand(std::wstring CommandName, std::wstring Message)
+            void NotifyErrorCommand(std::u16string CommandName, std::u16string Message)
             {
                 auto q = ClientCommandCallbacks[CommandName];
                 auto t = q->front();
@@ -199,7 +199,7 @@
             }
 
         private:
-            void AddCallback(std::wstring CommandName, std::uint32_t CommandHash, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(std::wstring)> OnError)
+            void AddCallback(std::u16string CommandName, std::uint32_t CommandHash, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(std::u16string)> OnError)
             {
                 if (ClientCommandCallbacks.count(CommandName) > 0)
                 {
@@ -227,9 +227,9 @@
                         var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                         var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                         ##
-                            void [[${Name}]](${RequestTypeString} r, std::function<void(${ReplyTypeString})> Callback, std::function<void(std::wstring)> OnError = nullptr)
+                            void [[${Name}]](${RequestTypeString} r, std::function<void(${ReplyTypeString})> Callback, std::function<void(std::u16string)> OnError = nullptr)
                             {
-                                if (OnError == nullptr) { OnError = [GlobalErrorHandler = this->GlobalErrorHandler](std::wstring Message) { GlobalErrorHandler(${CommandNameString}, Message); }; }
+                                if (OnError == nullptr) { OnError = [GlobalErrorHandler = this->GlobalErrorHandler](std::u16string Message) { GlobalErrorHandler(${CommandNameString}, Message); }; }
                                 ByteArrayStream bas;
                                 BinaryTranslator::[[${RequestName}ToBinary]](bas, r);
                                 bas.SetPosition(0);
@@ -249,16 +249,24 @@
         };
 
         std::shared_ptr<ApplicationClient> c;
-        std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<void(std::vector<std::uint8_t>)>, Hash> ServerCommands;
+        std::unordered_map<std::pair<std::u16string, std::uint32_t>, std::function<void(std::vector<std::uint8_t>)>, Hash> ServerCommands;
 
     private:
-        static std::string w2s(std::wstring ws)
+        static std::string utf16ToSystem(std::u16string us)
         {
-            std::size_t n = std::wcstombs(nullptr, ws.c_str(), std::numeric_limits<std::size_t>::max());
-            if (n == static_cast<std::size_t>(-1)) { throw std::logic_error("InvalidOperation"); }
-            std::string s(n, 0);
-            if (n == 0) { return s; }
-            std::wcstombs(&s[0], ws.c_str(), n);
+            std::string s;
+            s.reserve(us.size() * 2);
+            std::mbstate_t State{};
+            char cOut[MB_LEN_MAX]{};
+            for (char16_t c16 : us)
+            {
+                std::size_t OutCharCount = std::c16rtomb(cOut, c16, &State);
+                if (OutCharCount == static_cast<std::size_t>(-1))
+                {
+                    throw std::logic_error("InvalidChar");
+                }
+                s.append(cOut, OutCharCount);
+            }
             return s;
         }
 
@@ -266,9 +274,9 @@
         BinarySerializationClient(std::shared_ptr<IBinarySender> s)
         {
             c = std::make_shared<ApplicationClient>();
-            c->GlobalErrorHandler = [](std::wstring CommandName, std::wstring Message)
+            c->GlobalErrorHandler = [](std::u16string CommandName, std::u16string Message)
             {
-                throw std::runtime_error(w2s(CommandName) + ": " + w2s(Message));
+                throw std::runtime_error(utf16ToSystem(CommandName) + ": " + utf16ToSystem(Message));
             };
             c->s = s;
             $$
@@ -302,19 +310,19 @@
             return c;
         }
 
-        void HandleResult(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
+        void HandleResult(std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
         {
             if (c->ClientCommandCallbacks.count(CommandName) > 0)
             {
                 auto q = c->ClientCommandCallbacks[CommandName];
                 if (q->size() == 0)
                 {
-                    throw std::logic_error("InvalidOperation: " + w2s(CommandName));
+                    throw std::logic_error("InvalidOperation: " + utf16ToSystem(CommandName));
                 }
                 auto t = q->front();
                 if (t.Hash != CommandHash)
                 {
-                    throw std::logic_error("InvalidOperation: " + w2s(CommandName));
+                    throw std::logic_error("InvalidOperation: " + utf16ToSystem(CommandName));
                 }
                 q->pop();
                 auto Callback = t.Callback;
@@ -322,7 +330,7 @@
                 return;
             }
 
-            auto p = std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash);
+            auto p = std::pair<std::u16string, std::uint32_t>(CommandName, CommandHash);
             if (ServerCommands.count(p) > 0)
             {
                 auto a = ServerCommands[p];
@@ -330,7 +338,7 @@
                 return;
             }
 
-            throw std::logic_error("InvalidOperation: " + w2s(CommandName));
+            throw std::logic_error("InvalidOperation: " + utf16ToSystem(CommandName));
         }
     };
 
@@ -431,14 +439,13 @@
         String ReadString()
         {
             std::int32_t Length = ReadInt32();
-            int n = static_cast<int>(Length);
-            std::vector<std::uint8_t> Bytes;
+            int n = static_cast<int>(Length) / 2;
+            std::u16string v;
             for (int k = 0; k < n; k += 1)
             {
-                Bytes.push_back(ReadByte());
+                v.push_back(static_cast<char16_t>(ReadUInt16()));
             }
-            std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
-            return conv.from_bytes(reinterpret_cast<const char *>(Bytes.data()), reinterpret_cast<const char *>(Bytes.data() + Bytes.size()));
+            return v;
         }
 
         virtual ~IReadableStream() {}
@@ -531,13 +538,10 @@
 
         void WriteString(String v)
         {
-            std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;
-            auto Bytes = conv.to_bytes(v);
-            int n = static_cast<int>(Bytes.size());
-            WriteInt32((std::int32_t)(n));
-            for (int k = 0; k < n; k += 1)
+            WriteInt32(static_cast<std::int32_t>(v.size()) * 2);
+            for (auto c : v)
             {
-                WriteByte(static_cast<std::uint8_t>(Bytes[k]));
+                WriteUInt16(static_cast<std::uint16_t>(c));
             }
         }
 
@@ -1079,12 +1083,9 @@
     #pragma once
 
     #include <cstdint>
-    #include <cwchar>
-    #include <limits>
-    #include <cstdlib>
+    #include <cuchar>
+    #include <climits>
     #include <string>
-    #include <codecvt>
-    #include <locale>
     #include <vector>
     #include <queue>
     #include <unordered_set>

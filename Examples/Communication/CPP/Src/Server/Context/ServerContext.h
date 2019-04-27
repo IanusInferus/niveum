@@ -22,13 +22,13 @@ namespace Server
     public:
         ServerContext();
 
-        std::wstring HeadCommunicationSchemaHash;
-        Optional<std::wstring> CommunicationSchemaHashToVersion(std::wstring Hash)
+        std::u16string HeadCommunicationSchemaHash;
+        Optional<std::u16string> CommunicationSchemaHashToVersion(std::u16string Hash)
         {
-            if (Hash == HeadCommunicationSchemaHash) { return Optional<std::wstring>::CreateHasValue(L""); }
-            if (Hash == L"2E43E8086311138C") { return Optional<std::wstring>::CreateHasValue(L"2"); }
-            if (Hash == L"065DE60CA9210FC4") { return Optional<std::wstring>::CreateHasValue(L"1"); }
-            return Optional<std::wstring>::Empty();
+            if (Hash == HeadCommunicationSchemaHash) { return Optional<std::u16string>::CreateHasValue(u""); }
+            if (Hash == u"2E43E8086311138C") { return Optional<std::u16string>::CreateHasValue(u"2"); }
+            if (Hash == u"065DE60CA9210FC4") { return Optional<std::u16string>::CreateHasValue(u"1"); }
+            return Optional<std::u16string>::Empty();
         }
 
         bool EnableLogNormalIn() { return EnableLogNormalInValue; }

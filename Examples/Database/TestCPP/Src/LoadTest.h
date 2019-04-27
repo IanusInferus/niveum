@@ -90,7 +90,7 @@ namespace Database
                             }
                             catch (std::exception &ex)
                             {
-                                std::wprintf(L"Error:\n%ls\n", s2w(ex.what()).c_str());
+                                std::wprintf(L"Error:\n%ls\n", systemToWideChar(ex.what()).c_str());
                             }
                         }
                     }

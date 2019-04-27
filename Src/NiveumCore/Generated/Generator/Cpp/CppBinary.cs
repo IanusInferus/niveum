@@ -82,13 +82,13 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "private:";
             yield return "    struct Hash";
             yield return "    {";
-            yield return "        std::size_t operator() (const std::pair<std::wstring, std::uint32_t> &p) const";
+            yield return "        std::size_t operator() (const std::pair<std::u16string, std::uint32_t> &p) const";
             yield return "        {";
-            yield return "            return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);";
+            yield return "            return std::hash<std::u16string>()(std::get<0>(p)) ^ std::get<1>(p);";
             yield return "        }";
             yield return "    };";
-            yield return "    std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<std::vector<std::uint8_t>(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>)>, Hash> ClientCommands;";
-            yield return "    std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<void(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>, std::function<void(std::vector<std::uint8_t>)>, std::function<void(const std::exception &)>)>, Hash> AsyncClientCommands;";
+            yield return "    std::unordered_map<std::pair<std::u16string, std::uint32_t>, std::function<std::vector<std::uint8_t>(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>)>, Hash> ClientCommands;";
+            yield return "    std::unordered_map<std::pair<std::u16string, std::uint32_t>, std::function<void(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>, std::function<void(std::vector<std::uint8_t>)>, std::function<void(const std::exception &)>)>, Hash> AsyncClientCommands;";
             yield return "";
             yield return "public:";
             yield return "    BinarySerializationServer()";
@@ -106,7 +106,7 @@ namespace Niveum.ObjectSchema.CppBinary
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
                     if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands[std::pair<std::wstring, std::uint32_t>("), CommandNameString), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "AsyncClientCommands[std::pair<std::u16string, std::uint32_t>("), CommandNameString), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -137,7 +137,7 @@ namespace Niveum.ObjectSchema.CppBinary
                     }
                     else
                     {
-                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ClientCommands[std::pair<std::wstring, std::uint32_t>("), CommandNameString), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p) -> std::vector<std::uint8_t>"))
+                        foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "ClientCommands[std::pair<std::u16string, std::uint32_t>("), CommandNameString), ", 0x"), CommandHash), ")] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p) -> std::vector<std::uint8_t>"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }
@@ -175,23 +175,23 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "    }";
             yield return "";
-            yield return "    Boolean HasCommand(std::wstring CommandName, std::uint32_t CommandHash)";
+            yield return "    Boolean HasCommand(std::u16string CommandName, std::uint32_t CommandHash)";
             yield return "    {";
             yield return "        return ClientCommands.count(std::pair<String, std::uint32_t>(CommandName, CommandHash)) > 0;";
             yield return "    }";
-            yield return "    Boolean HasCommandAsync(std::wstring CommandName, std::uint32_t CommandHash)";
+            yield return "    Boolean HasCommandAsync(std::u16string CommandName, std::uint32_t CommandHash)";
             yield return "    {";
             yield return "        return AsyncClientCommands.count(std::pair<String, std::uint32_t>(CommandName, CommandHash)) > 0;";
             yield return "    }";
             yield return "";
-            yield return "    std::vector<std::uint8_t> ExecuteCommand(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)";
+            yield return "    std::vector<std::uint8_t> ExecuteCommand(std::shared_ptr<IApplicationServer> s, std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)";
             yield return "    {";
-            yield return "        auto cmd = ClientCommands[std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash)];";
+            yield return "        auto cmd = ClientCommands[std::pair<std::u16string, std::uint32_t>(CommandName, CommandHash)];";
             yield return "        return cmd(s, Parameters);";
             yield return "    }";
-            yield return "    void ExecuteCommandAsync(std::shared_ptr<IApplicationServer> s, std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure)";
+            yield return "    void ExecuteCommandAsync(std::shared_ptr<IApplicationServer> s, std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure)";
             yield return "    {";
-            yield return "        auto cmd = AsyncClientCommands[std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash)];";
+            yield return "        auto cmd = AsyncClientCommands[std::pair<std::u16string, std::uint32_t>(CommandName, CommandHash)];";
             yield return "        cmd(s, Parameters, Callback, OnFailure);";
             yield return "    }";
             yield return "};";
@@ -229,8 +229,8 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "    }";
             yield return "";
-            yield return "    /// (std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) -> void";
-            yield return "    typedef std::function<void(std::wstring, std::uint32_t, std::vector<std::uint8_t>)> ServerEventDelegate;";
+            yield return "    /// (std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) -> void";
+            yield return "    typedef std::function<void(std::u16string, std::uint32_t, std::vector<std::uint8_t>)> ServerEventDelegate;";
             yield return "    ServerEventDelegate ServerEvent;";
             yield return "};";
         }
@@ -241,7 +241,7 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "public:";
             yield return "    virtual ~IBinarySender() {}";
             yield return "";
-            yield return "    virtual void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::wstring)> OnError) = 0;";
+            yield return "    virtual void Send(std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::u16string)> OnError) = 0;";
             yield return "};";
         }
         public IEnumerable<String> BinarySerializationClient(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator, String NamespaceName)
@@ -251,9 +251,9 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "private:";
             yield return "    struct Hash";
             yield return "    {";
-            yield return "        std::size_t operator() (const std::pair<std::wstring, std::uint32_t> &p) const";
+            yield return "        std::size_t operator() (const std::pair<std::u16string, std::uint32_t> &p) const";
             yield return "        {";
-            yield return "            return std::hash<std::wstring>()(std::get<0>(p)) ^ std::get<1>(p);";
+            yield return "            return std::hash<std::u16string>()(std::get<0>(p)) ^ std::get<1>(p);";
             yield return "        }";
             yield return "    };";
             yield return "";
@@ -262,13 +262,13 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    public:";
             yield return "        std::uint32_t Hash;";
             yield return "        std::function<void(std::vector<std::uint8_t>)> Callback;";
-            yield return "        std::function<void(std::wstring)> OnError;";
+            yield return "        std::function<void(std::u16string)> OnError;";
             yield return "    };";
             yield return "    class ApplicationClient : public IApplicationClient";
             yield return "    {";
             yield return "    public:";
             yield return "        std::shared_ptr<IBinarySender> s;";
-            yield return "        std::unordered_map<std::wstring, std::shared_ptr<std::queue<ClientCommandTriple>>> ClientCommandCallbacks;";
+            yield return "        std::unordered_map<std::u16string, std::shared_ptr<std::queue<ClientCommandTriple>>> ClientCommandCallbacks;";
             yield return "";
             yield return "        std::uint64_t Hash()";
             yield return "        {";
@@ -278,11 +278,11 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "        }";
             yield return "";
-            yield return "        void DequeueCallback(std::wstring CommandName)";
+            yield return "        void DequeueCallback(std::u16string CommandName)";
             yield return "        {";
             yield return "            ClientCommandCallbacks[CommandName]->pop();";
             yield return "        }";
-            yield return "        void NotifyErrorCommand(std::wstring CommandName, std::wstring Message)";
+            yield return "        void NotifyErrorCommand(std::u16string CommandName, std::u16string Message)";
             yield return "        {";
             yield return "            auto q = ClientCommandCallbacks[CommandName];";
             yield return "            auto t = q->front();";
@@ -291,7 +291,7 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "        }";
             yield return "";
             yield return "    private:";
-            yield return "        void AddCallback(std::wstring CommandName, std::uint32_t CommandHash, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(std::wstring)> OnError)";
+            yield return "        void AddCallback(std::u16string CommandName, std::uint32_t CommandHash, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(std::u16string)> OnError)";
             yield return "        {";
             yield return "            if (ClientCommandCallbacks.count(CommandName) > 0)";
             yield return "            {";
@@ -317,12 +317,12 @@ namespace Niveum.ObjectSchema.CppBinary
                     var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
                     var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
                     var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback, std::function<void(std::wstring)> OnError = nullptr)"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "void "), GetEscapedIdentifier(Name)), "("), RequestTypeString), " r, std::function<void("), ReplyTypeString), ")> Callback, std::function<void(std::u16string)> OnError = nullptr)"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
                     yield return "        " + "{";
-                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    if (OnError == nullptr) { OnError = [GlobalErrorHandler = this->GlobalErrorHandler](std::wstring Message) { GlobalErrorHandler("), CommandNameString), ", Message); }; }"))
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    if (OnError == nullptr) { OnError = [GlobalErrorHandler = this->GlobalErrorHandler](std::u16string Message) { GlobalErrorHandler("), CommandNameString), ", Message); }; }"))
                     {
                         yield return _Line == "" ? "" : "        " + _Line;
                     }
@@ -357,16 +357,24 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    };";
             yield return "";
             yield return "    std::shared_ptr<ApplicationClient> c;";
-            yield return "    std::unordered_map<std::pair<std::wstring, std::uint32_t>, std::function<void(std::vector<std::uint8_t>)>, Hash> ServerCommands;";
+            yield return "    std::unordered_map<std::pair<std::u16string, std::uint32_t>, std::function<void(std::vector<std::uint8_t>)>, Hash> ServerCommands;";
             yield return "";
             yield return "private:";
-            yield return "    static std::string w2s(std::wstring ws)";
+            yield return "    static std::string utf16ToSystem(std::u16string us)";
             yield return "    {";
-            yield return "        std::size_t n = std::wcstombs(nullptr, ws.c_str(), std::numeric_limits<std::size_t>::max());";
-            yield return "        if (n == static_cast<std::size_t>(-1)) { throw std::logic_error(\"InvalidOperation\"); }";
-            yield return "        std::string s(n, 0);";
-            yield return "        if (n == 0) { return s; }";
-            yield return "        std::wcstombs(&s[0], ws.c_str(), n);";
+            yield return "        std::string s;";
+            yield return "        s.reserve(us.size() * 2);";
+            yield return "        std::mbstate_t State{};";
+            yield return "        char cOut[MB_LEN_MAX]{};";
+            yield return "        for (char16_t c16 : us)";
+            yield return "        {";
+            yield return "            std::size_t OutCharCount = std::c16rtomb(cOut, c16, &State);";
+            yield return "            if (OutCharCount == static_cast<std::size_t>(-1))";
+            yield return "            {";
+            yield return "                throw std::logic_error(\"InvalidChar\");";
+            yield return "            }";
+            yield return "            s.append(cOut, OutCharCount);";
+            yield return "        }";
             yield return "        return s;";
             yield return "    }";
             yield return "";
@@ -374,9 +382,9 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    BinarySerializationClient(std::shared_ptr<IBinarySender> s)";
             yield return "    {";
             yield return "        c = std::make_shared<ApplicationClient>();";
-            yield return "        c->GlobalErrorHandler = [](std::wstring CommandName, std::wstring Message)";
+            yield return "        c->GlobalErrorHandler = [](std::u16string CommandName, std::u16string Message)";
             yield return "        {";
-            yield return "            throw std::runtime_error(w2s(CommandName) + \": \" + w2s(Message));";
+            yield return "            throw std::runtime_error(utf16ToSystem(CommandName) + \": \" + utf16ToSystem(Message));";
             yield return "        };";
             yield return "        c->s = s;";
             foreach (var c in Commands)
@@ -420,19 +428,19 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "        return c;";
             yield return "    }";
             yield return "";
-            yield return "    void HandleResult(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)";
+            yield return "    void HandleResult(std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)";
             yield return "    {";
             yield return "        if (c->ClientCommandCallbacks.count(CommandName) > 0)";
             yield return "        {";
             yield return "            auto q = c->ClientCommandCallbacks[CommandName];";
             yield return "            if (q->size() == 0)";
             yield return "            {";
-            yield return "                throw std::logic_error(\"InvalidOperation: \" + w2s(CommandName));";
+            yield return "                throw std::logic_error(\"InvalidOperation: \" + utf16ToSystem(CommandName));";
             yield return "            }";
             yield return "            auto t = q->front();";
             yield return "            if (t.Hash != CommandHash)";
             yield return "            {";
-            yield return "                throw std::logic_error(\"InvalidOperation: \" + w2s(CommandName));";
+            yield return "                throw std::logic_error(\"InvalidOperation: \" + utf16ToSystem(CommandName));";
             yield return "            }";
             yield return "            q->pop();";
             yield return "            auto Callback = t.Callback;";
@@ -440,7 +448,7 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "            return;";
             yield return "        }";
             yield return "";
-            yield return "        auto p = std::pair<std::wstring, std::uint32_t>(CommandName, CommandHash);";
+            yield return "        auto p = std::pair<std::u16string, std::uint32_t>(CommandName, CommandHash);";
             yield return "        if (ServerCommands.count(p) > 0)";
             yield return "        {";
             yield return "            auto a = ServerCommands[p];";
@@ -448,7 +456,7 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "            return;";
             yield return "        }";
             yield return "";
-            yield return "        throw std::logic_error(\"InvalidOperation: \" + w2s(CommandName));";
+            yield return "        throw std::logic_error(\"InvalidOperation: \" + utf16ToSystem(CommandName));";
             yield return "    }";
             yield return "};";
         }
@@ -550,14 +558,13 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    String ReadString()";
             yield return "    {";
             yield return "        std::int32_t Length = ReadInt32();";
-            yield return "        int n = static_cast<int>(Length);";
-            yield return "        std::vector<std::uint8_t> Bytes;";
+            yield return "        int n = static_cast<int>(Length) / 2;";
+            yield return "        std::u16string v;";
             yield return "        for (int k = 0; k < n; k += 1)";
             yield return "        {";
-            yield return "            Bytes.push_back(ReadByte());";
+            yield return "            v.push_back(static_cast<char16_t>(ReadUInt16()));";
             yield return "        }";
-            yield return "        std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;";
-            yield return "        return conv.from_bytes(reinterpret_cast<const char *>(Bytes.data()), reinterpret_cast<const char *>(Bytes.data() + Bytes.size()));";
+            yield return "        return v;";
             yield return "    }";
             yield return "";
             yield return "    virtual ~IReadableStream() {}";
@@ -650,13 +657,10 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "";
             yield return "    void WriteString(String v)";
             yield return "    {";
-            yield return "        std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>, wchar_t> conv;";
-            yield return "        auto Bytes = conv.to_bytes(v);";
-            yield return "        int n = static_cast<int>(Bytes.size());";
-            yield return "        WriteInt32((std::int32_t)(n));";
-            yield return "        for (int k = 0; k < n; k += 1)";
+            yield return "        WriteInt32(static_cast<std::int32_t>(v.size()) * 2);";
+            yield return "        for (auto c : v)";
             yield return "        {";
-            yield return "            WriteByte(static_cast<std::uint8_t>(Bytes[k]));";
+            yield return "            WriteUInt16(static_cast<std::uint16_t>(c));";
             yield return "        }";
             yield return "    }";
             yield return "";
@@ -1383,12 +1387,9 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "#pragma once";
             yield return "";
             yield return "#include <cstdint>";
-            yield return "#include <cwchar>";
-            yield return "#include <limits>";
-            yield return "#include <cstdlib>";
+            yield return "#include <cuchar>";
+            yield return "#include <climits>";
             yield return "#include <string>";
-            yield return "#include <codecvt>";
-            yield return "#include <locale>";
             yield return "#include <vector>";
             yield return "#include <queue>";
             yield return "#include <unordered_set>";

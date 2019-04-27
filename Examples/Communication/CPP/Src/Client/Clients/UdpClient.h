@@ -772,7 +772,8 @@ namespace Client
 #if _MSC_VER
                 //在Windows下关闭SIO_UDP_CONNRESET报告，防止接受数据出错
                 //http://support.microsoft.com/kb/263823/en-us
-                Socket.io_control(connection_reset_command());
+				connection_reset_command command;
+                Socket.io_control(command);
 #endif
 
                 if (RemoteEndPoint.address().is_v4())
@@ -815,7 +816,7 @@ namespace Client
             return false;
         }
 
-        void CompletedSocket(std::shared_ptr<std::vector<std::uint8_t>> Buffer, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::wstring &)> UnknownFaulted)
+        void CompletedSocket(std::shared_ptr<std::vector<std::uint8_t>> Buffer, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::u16string &)> UnknownFaulted)
         {
             auto a = [&]()
             {
@@ -963,7 +964,7 @@ namespace Client
                     auto ReadBufferLength = VirtualTransportClient->GetReadBufferOffset() + VirtualTransportClient->GetReadBufferLength();
                     if (static_cast<int>(p->size()) > static_cast<int>(ReadBuffer->size()) - ReadBufferLength)
                     {
-                        UnknownFaulted(s2w(asio::error_code(asio::error::no_buffer_space).message()));
+                        UnknownFaulted(systemToUtf16(asio::error_code(asio::error::no_buffer_space).message()));
                         return;
                     }
                     ArrayCopy(*p, 0, *ReadBuffer, ReadBufferLength, static_cast<int>(p->size()));
@@ -1006,17 +1007,17 @@ namespace Client
                 catch (const asio::system_error &ex)
                 {
                     auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.code().message() + "\r\n" + ExceptionStackTrace::GetStackTrace();
-                    UnknownFaulted(s2w(Message));
+                    UnknownFaulted(systemToUtf16(Message));
                 }
                 catch (const std::exception &ex)
                 {
                     auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace();
-                    UnknownFaulted(s2w(Message));
+                    UnknownFaulted(systemToUtf16(Message));
                 }
             }
         }
 
-        void ReceiveAsyncInner(std::shared_ptr<BaseSystem::LockedVariable<bool>> IsRunningValue, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::wstring &)> UnknownFaulted)
+        void ReceiveAsyncInner(std::shared_ptr<BaseSystem::LockedVariable<bool>> IsRunningValue, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::u16string &)> UnknownFaulted)
         {
             IsRunningValue->DoAction([=](bool b)
             {
@@ -1028,7 +1029,7 @@ namespace Client
                     if (se)
                     {
                         if (IsSocketErrorKnown(se)) { return; }
-                        UnknownFaulted(s2w(se.message()));
+                        UnknownFaulted(systemToUtf16(se.message()));
                         return;
                     }
                     auto IsRunning = IsRunningValue->Check<bool>([=](bool b)
@@ -1055,7 +1056,7 @@ namespace Client
         /// <summary>接收消息</summary>
         /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
         /// <param name="UnknownFaulted">未知错误处理函数</param>
-        void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::wstring &)> UnknownFaulted)
+        void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::u16string &)> UnknownFaulted)
         {
             ReceiveAsyncInner(this->IsRunningValue, DoResultHandle, UnknownFaulted);
         }

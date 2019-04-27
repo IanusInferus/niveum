@@ -13,12 +13,12 @@ std::shared_ptr<SendMessageReply> ServerImplementation::SendMessage(std::shared_
     {
         return SendMessageReply::CreateTooLong();
     }
-    if (r->Content == L"login")
+    if (r->Content == u"login")
     {
         SessionContext->RaiseAuthenticated();
         return SendMessageReply::CreateSuccess();
     }
-    else if (r->Content == L"secure")
+    else if (r->Content == u"secure")
     {
         //生成测试用确定Key
         auto sc = std::make_shared<SecureContext>();

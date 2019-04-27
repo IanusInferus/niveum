@@ -20,7 +20,7 @@ namespace Server
         s = ApplicationServer;
         ss = sss.Value();
         ssed = std::make_shared<Communication::Binary::BinarySerializationServerEventDispatcher>(ApplicationServer);
-        ssed->ServerEvent = [=](std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
+        ssed->ServerEvent = [=](std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
         {
             if (ServerEvent != nullptr)
             {
@@ -33,11 +33,11 @@ namespace Server
     {
         return ss->Hash();
     }
-    bool BinarySerializationServerAdapter::HasCommand(std::wstring CommandName, std::uint32_t CommandHash)
+    bool BinarySerializationServerAdapter::HasCommand(std::u16string CommandName, std::uint32_t CommandHash)
     {
         return ss->HasCommand(CommandName, CommandHash) || ss->HasCommandAsync(CommandName, CommandHash);
     }
-    void BinarySerializationServerAdapter::ExecuteCommand(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> OnSuccess, std::function<void(const std::exception &)> OnFailure)
+    void BinarySerializationServerAdapter::ExecuteCommand(std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> OnSuccess, std::function<void(const std::exception &)> OnFailure)
     {
         std::function<void()> a;
         if (ss->HasCommand(CommandName, CommandHash))

@@ -39,7 +39,7 @@ namespace Client
             {
             }
 
-            void Send(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::wstring)> OnError)
+            void Send(std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::u16string)> OnError)
             {
                 if (a.ClientCommandSent != nullptr)
                 {
@@ -111,19 +111,19 @@ namespace Client
 
         struct CommandRequest
         {
-            std::wstring Name;
+            std::u16string Name;
             std::chrono::steady_clock::time_point Time;
             std::shared_ptr<asio::steady_timer> Timer;
             std::shared_ptr<bool> Finished;
         };
         struct CommandContent
         {
-            std::wstring CommandName;
+            std::u16string CommandName;
             std::uint32_t CommandHash;
             std::vector<std::uint8_t> Parameters;
         };
 
-        std::shared_ptr<std::unordered_map<std::wstring, std::shared_ptr<std::queue<CommandRequest>>>> CommandRequests;
+        std::shared_ptr<std::unordered_map<std::u16string, std::shared_ptr<std::queue<CommandRequest>>>> CommandRequests;
         std::shared_ptr<std::queue<std::shared_ptr<CommandContent>>> CommandQueue;
 
         void SendNotFlushedRequest()
@@ -141,15 +141,15 @@ namespace Client
         }
 
     public:
-        std::function<void(std::wstring)> ClientCommandSent;
-        std::function<void(std::wstring, int)> ClientCommandReceived;
-        std::function<void(std::wstring, int)> ClientCommandFailed;
-        std::function<void(std::wstring)> ServerCommandReceived;
+        std::function<void(std::u16string)> ClientCommandSent;
+        std::function<void(std::u16string, int)> ClientCommandReceived;
+        std::function<void(std::u16string, int)> ClientCommandFailed;
+        std::function<void(std::u16string)> ServerCommandReceived;
 
         BinarySerializationClientAdapter(asio::io_service &io_service, int NumTimeoutMilliseconds)
             : io_service(io_service), NumTimeoutMilliseconds(NumTimeoutMilliseconds), RequestCount(0), FirstFinished(false)
         {
-            CommandRequests = std::make_shared<std::unordered_map<std::wstring, std::shared_ptr<std::queue<CommandRequest>>>>();
+            CommandRequests = std::make_shared<std::unordered_map<std::u16string, std::shared_ptr<std::queue<CommandRequest>>>>();
             CommandQueue = std::make_shared<std::queue<std::shared_ptr<CommandContent>>>();
             this->bc = std::make_shared<Communication::Binary::BinarySerializationClient>(std::make_shared<BinarySender>(*this));
             auto ac = this->bc->GetApplicationClient();
@@ -189,7 +189,7 @@ namespace Client
         {
             return bc->GetApplicationClient()->Hash();
         }
-        virtual void HandleResult(std::wstring CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
+        virtual void HandleResult(std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
         {
             if (CommandRequests->count(CommandName) > 0)
             {

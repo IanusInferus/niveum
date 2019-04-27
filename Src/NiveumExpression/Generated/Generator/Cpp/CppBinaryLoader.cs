@@ -95,7 +95,7 @@ namespace Niveum.ExpressionSchema.CppBinaryLoader
             {
                 yield return _Line;
             }
-            yield return "        std::unordered_map<std::wstring, std::shared_ptr<Niveum::ExpressionSchema::ModuleDef>> _d_;";
+            yield return "        std::unordered_map<std::u16string, std::shared_ptr<Niveum::ExpressionSchema::ModuleDef>> _d_;";
             yield return "        for (auto m : a->Modules)";
             yield return "        {";
             yield return "            _d_[m->Name] = m;";
@@ -139,7 +139,7 @@ namespace Niveum.ExpressionSchema.CppBinaryLoader
                 yield return _Line;
             }
             yield return "    {";
-            yield return "        std::unordered_map<std::wstring, std::shared_ptr<Niveum::ExpressionSchema::Expr>> fd;";
+            yield return "        std::unordered_map<std::u16string, std::shared_ptr<Niveum::ExpressionSchema::Expr>> fd;";
             yield return "        for (auto _f_ : md->Functions)";
             yield return "        {";
             yield return "            fd[_f_->Name] = _f_->Body;";

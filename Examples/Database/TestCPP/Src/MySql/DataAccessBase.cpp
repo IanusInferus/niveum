@@ -43,7 +43,7 @@ namespace Database
                 auto f = std::regex_replace(Fields[i], rWhitespace, L"");
                 if (f == L"") { continue; }
                 auto Parts = SplitString(f, L"=");
-                if (Parts.size() != 2) { throw std::logic_error("ConnectionStringInvalid: " + w2s(f)); }
+                if (Parts.size() != 2) { throw std::logic_error("ConnectionStringInvalid: " + wideCharToSystem(f)); }
 
                 auto Name = std::regex_replace(Parts[0], rWhitespace, L"");
                 auto Value = std::regex_replace(Parts[1], rWhitespace, L"");
@@ -54,7 +54,7 @@ namespace Database
                 }
                 else if (EqualIgnoreCase(Name, L"port"))
                 {
-                    if (!std::regex_match(Value, rPort)) { throw std::logic_error("ConnectionStringInvalid: " + w2s(f)); }
+                    if (!std::regex_match(Value, rPort)) { throw std::logic_error("ConnectionStringInvalid: " + wideCharToSystem(f)); }
                     Port = Value;
                 }
                 else if (EqualIgnoreCase(Name, L"uid"))
@@ -71,7 +71,7 @@ namespace Database
                 }
                 else
                 {
-                    throw std::logic_error("ConnectionStringInvalid: " + w2s(f));
+                    throw std::logic_error("ConnectionStringInvalid: " + wideCharToSystem(f));
                 }
             }
 
@@ -92,12 +92,12 @@ namespace Database
                 std::unique_lock<std::mutex> Lock(DriverMutex);
                 sql::Driver *driver = get_driver_instance();
                 sql::ConnectOptionsMap connectionProperties;
-                connectionProperties["hostName"] = w2s(Server);
+                connectionProperties["hostName"] = wideCharToSystem(Server);
                 connectionProperties["port"] = Parse<int>(Port);
-                connectionProperties["userName"] = w2s(Uid);
+                connectionProperties["userName"] = wideCharToSystem(Uid);
                 if (Pwd != L"")
                 {
-                    connectionProperties["password"] = w2s(Pwd);
+                    connectionProperties["password"] = wideCharToSystem(Pwd);
                 }
                 driver->threadInit();
                 con = std::shared_ptr<sql::Connection>(driver->connect(connectionProperties));

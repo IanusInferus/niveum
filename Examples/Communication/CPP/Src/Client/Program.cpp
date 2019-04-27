@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2015.12.24.
+//  Version:     2019.04.28.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -51,7 +51,7 @@ namespace Client
                 asio::io_service IoService(16);
                 if (TransportProtocol == "tcp")
                 {
-                    asio::ip::tcp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
+                    asio::ip::tcp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(systemToUtf16(argv[3])));
                     for (int k = 0; k < 2048; k += 1)
                     {
                         IoService.post([=, &IoService]() { RunTcp(IoService, RemoteEndPoint, Test); });
@@ -59,7 +59,7 @@ namespace Client
                 }
                 else if (TransportProtocol == "udp")
                 {
-                    asio::ip::udp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
+                    asio::ip::udp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(systemToUtf16(argv[3])));
                     for (int k = 0; k < 2048; k += 1)
                     {
                         IoService.post([=, &IoService]() { RunUdp(IoService, RemoteEndPoint, Test); });
@@ -123,12 +123,12 @@ namespace Client
                 });
                 if (TransportProtocol == "tcp")
                 {
-                    asio::ip::tcp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
+                    asio::ip::tcp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(systemToUtf16(argv[3])));
                     RunTcp(IoService, RemoteEndPoint, ReadLineAndSendLoop);
                 }
                 else if (TransportProtocol == "udp")
                 {
-                    asio::ip::udp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(s2w(argv[3])));
+                    asio::ip::udp::endpoint RemoteEndPoint(asio::ip::address::from_string(argv[2]), Parse<uint16_t>(systemToUtf16(argv[3])));
                     RunUdp(IoService, RemoteEndPoint, ReadLineAndSendLoop);
                 }
                 Work = nullptr;
@@ -188,22 +188,22 @@ namespace Client
         {
             std::wprintf(L"%ls\n", L"输入login登录，输入secure启用安全连接。");
 
-            InnerClient->GlobalErrorHandler = [=](std::wstring CommandName, std::wstring Message)
+            InnerClient->GlobalErrorHandler = [=](std::u16string CommandName, std::u16string Message)
             {
-                wprintf(L"%ls: %ls\n", CommandName.c_str(), Message.c_str());
+                wprintf(L"%ls: %ls\n", utf16ToWideChar(CommandName).c_str(), utf16ToWideChar(Message).c_str());
             };
             InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
             {
                 auto m = e->Message;
-                wprintf(L"%ls\n", m.c_str());
+                wprintf(L"%ls\n", utf16ToWideChar(m).c_str());
             };
             InnerClient->MessageReceived = [=](std::shared_ptr<Communication::MessageReceivedEvent> e)
             {
-                wprintf(L"%ls\n", e->Content.c_str());
+                wprintf(L"%ls\n", utf16ToWideChar(e->Content).c_str());
             };
 
             auto csvr = std::make_shared<Communication::CheckSchemaVersionRequest>();
-            csvr->Hash = ReplaceAllCopy(ToHexString(InnerClient->Hash()), L" ", L"");
+            csvr->Hash = ReplaceAllCopy(ToHexU16String(InnerClient->Hash()), u" ", u"");
             InnerClient->CheckSchemaVersion(csvr, [](std::shared_ptr<Communication::CheckSchemaVersionReply> r)
             {
                 if (r->OnHead())
@@ -237,7 +237,7 @@ namespace Client
                     if (Line == L"secure")
                     {
                         auto RequestSecure = std::make_shared<Communication::SendMessageRequest>();
-                        RequestSecure->Content = Line;
+                        RequestSecure->Content = wideCharToUtf16(Line);
                         InnerClient->SendMessage(RequestSecure, [=](std::shared_ptr<Communication::SendMessageReply> r)
                         {
                             //生成测试用确定Key
@@ -266,7 +266,7 @@ namespace Client
                         break;
                     }
                     auto Request = std::make_shared<Communication::SendMessageRequest>();
-                    Request->Content = Line;
+                    Request->Content = wideCharToUtf16(Line);
                     InnerClient->SendMessage(Request, [](std::shared_ptr<Communication::SendMessageReply> r)
                     {
                         if (r->OnTooLong())
@@ -285,7 +285,7 @@ namespace Client
                 InnerClient->Error = [=](std::shared_ptr<Communication::ErrorEvent> e)
                 {
                     auto m = e->Message;
-                    wprintf(L"%ls\n", m.c_str());
+                    wprintf(L"%ls\n", utf16ToWideChar(m).c_str());
                 };
             }
 
@@ -301,7 +301,7 @@ namespace Client
                 InnerClient->ServerTime(std::make_shared<Communication::ServerTimeRequest>(), [=](std::shared_ptr<Communication::ServerTimeReply> r2)
                 {
                     auto Request = std::make_shared<Communication::SendMessageRequest>();
-                    Request->Content = Line;
+                    Request->Content = wideCharToUtf16(Line);
                     InnerClient->SendMessage(Request, [](std::shared_ptr<Communication::SendMessageReply> r)
                     {
                         if (r->OnTooLong())
@@ -321,17 +321,17 @@ namespace Client
         static void RunTcp(asio::io_service &IoService, asio::ip::tcp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::function<void(std::shared_ptr<SecureContext>)>, std::mutex &)> Action)
         {
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30 * 1000);
-            bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
+            bsca->ClientCommandReceived = [=](std::u16string CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", fmt::format(L"{0} {1}ms", CommandName, Milliseconds).c_str());
+                //std::wprintf(L"%ls\n", fmt::format(L"{0} {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
             };
-            bsca->ClientCommandFailed = [=](std::wstring CommandName, int Milliseconds)
+            bsca->ClientCommandFailed = [=](std::u16string CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", fmt::format(L"{0} Failed {1}ms", CommandName, Milliseconds).c_str());
+                //std::wprintf(L"%ls\n", fmt::format(L"{0} Failed {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
             };
-            bsca->ServerCommandReceived = [=](std::wstring CommandName)
+            bsca->ServerCommandReceived = [=](std::u16string CommandName)
             {
-                //std::wprintf(L"%ls\n", CommandName.c_str());
+                //std::wprintf(L"%ls\n", utf16ToWideChar(CommandName).c_str());
             };
 
             auto bt = std::make_shared<Rc4PacketClientTransformer>();
@@ -344,7 +344,7 @@ namespace Client
             }
             catch (std::exception &e)
             {
-                auto Message = s2w(e.what());
+                auto Message = systemToWideChar(e.what());
                 wprintf(L"%ls\n", Message.c_str());
                 exit(-1);
             }
@@ -358,9 +358,9 @@ namespace Client
                     a();
                 });
             };
-            bc->ReceiveAsync(DoHandle, [](const std::wstring &Message)
+            bc->ReceiveAsync(DoHandle, [](const std::u16string &Message)
             {
-                wprintf(L"%ls\n", Message.c_str());
+                wprintf(L"%ls\n", utf16ToWideChar(Message).c_str());
                 exit(-1);
             });
 
@@ -381,17 +381,17 @@ namespace Client
         static void RunUdp(asio::io_service &IoService, asio::ip::udp::endpoint RemoteEndPoint, std::function<void(std::shared_ptr<Communication::IApplicationClient>, std::function<void(std::shared_ptr<SecureContext>)>, std::mutex &)> Action)
         {
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30 * 1000);
-            bsca->ClientCommandReceived = [=](std::wstring CommandName, int Milliseconds)
+            bsca->ClientCommandReceived = [=](std::u16string CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", fmt::format(L"{0} {1}ms", CommandName, Milliseconds).c_str());
+                //std::wprintf(L"%ls\n", fmt::format(L"{0} {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
             };
-            bsca->ClientCommandFailed = [=](std::wstring CommandName, int Milliseconds)
+            bsca->ClientCommandFailed = [=](std::u16string CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", fmt::format(L"{0} Failed {1}ms", CommandName, Milliseconds).c_str());
+                //std::wprintf(L"%ls\n", fmt::format(L"{0} Failed {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
             };
-            bsca->ServerCommandReceived = [=](std::wstring CommandName)
+            bsca->ServerCommandReceived = [=](std::u16string CommandName)
             {
-                //std::wprintf(L"%ls\n", CommandName.c_str());
+                //std::wprintf(L"%ls\n", utf16ToWideChar(CommandName).c_str());
             };
 
             auto bt = std::make_shared<Rc4PacketClientTransformer>();
@@ -404,7 +404,7 @@ namespace Client
             }
             catch (std::exception &e)
             {
-                auto Message = s2w(e.what());
+                auto Message = systemToWideChar(e.what());
                 wprintf(L"%ls\n", Message.c_str());
                 exit(-1);
             }
@@ -418,9 +418,9 @@ namespace Client
                     a();
                 });
             };
-            bc->ReceiveAsync(DoHandle, [](const std::wstring &Message)
+            bc->ReceiveAsync(DoHandle, [](const std::u16string &Message)
             {
-                wprintf(L"%ls\n", Message.c_str());
+                wprintf(L"%ls\n", utf16ToWideChar(Message).c_str());
                 exit(-1);
             });
 
@@ -487,20 +487,20 @@ int main(int argc, char **argv)
         catch (const std::exception &ex)
         {
             auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace();
-            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            std::wprintf(L"Error:\n%ls\n", systemToWideChar(Message).c_str());
             return -1;
         }
         catch (const char *ex)
         {
             auto Message = std::string() + ex + "\r\n" + ExceptionStackTrace::GetStackTrace();
-            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            std::wprintf(L"Error:\n%ls\n", systemToWideChar(Message).c_str());
             return -1;
         }
         catch (...)
         {
             // 在Visual C++下需要指定/EHa才能捕捉到SEH异常
             auto Message = std::string() + "SEHException\r\n" + ExceptionStackTrace::GetStackTrace();
-            std::wprintf(L"Error:\n%ls\n", s2w(Message).c_str());
+            std::wprintf(L"Error:\n%ls\n", systemToWideChar(Message).c_str());
             return -1;
         }
     }

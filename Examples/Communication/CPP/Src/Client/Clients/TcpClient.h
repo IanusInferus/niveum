@@ -114,7 +114,7 @@ namespace Client
             return false;
         }
 
-        void Completed(std::size_t Count, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::wstring &)> UnknownFaulted)
+        void Completed(std::size_t Count, std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::u16string &)> UnknownFaulted)
         {
             if (Count == 0)
             {
@@ -161,13 +161,13 @@ namespace Client
                     if (!IsSocketErrorKnown(ex.code()))
                     {
                         auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.code().message() + "\r\n" + ExceptionStackTrace::GetStackTrace();
-                        UnknownFaulted(s2w(Message));
+                        UnknownFaulted(systemToUtf16(Message));
                     }
                 }
                 catch (const std::exception &ex)
                 {
                     auto Message = std::string() + typeid(*(&ex)).name() + "\r\n" + ex.what() + "\r\n" + ExceptionStackTrace::GetStackTrace();
-                    UnknownFaulted(s2w(Message));
+                    UnknownFaulted(systemToUtf16(Message));
                 }
             }
             ReceiveAsync(DoResultHandle, UnknownFaulted);
@@ -177,7 +177,7 @@ namespace Client
         /// <summary>接收消息</summary>
         /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
         /// <param name="UnknownFaulted">未知错误处理函数</param>
-        void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::wstring &)> UnknownFaulted)
+        void ReceiveAsync(std::function<void(std::function<void(void)>)> DoResultHandle, std::function<void(const std::u16string &)> UnknownFaulted)
         {
             auto ReadHandler = [=](const asio::error_code &se, std::size_t Count)
             {
@@ -185,7 +185,7 @@ namespace Client
                 {
                     if (!IsSocketErrorKnown(se))
                     {
-                        UnknownFaulted(s2w(se.message()));
+                        UnknownFaulted(systemToUtf16(se.message()));
                     }
                 }
                 else

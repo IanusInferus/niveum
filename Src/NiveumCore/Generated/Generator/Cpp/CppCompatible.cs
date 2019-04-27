@@ -81,7 +81,7 @@ namespace Niveum.ObjectSchema.CppCompatible
             yield return "class EventPump : public IEventPump";
             yield return "{";
             yield return "};";
-            yield return "std::shared_ptr<IEventPump> CreateEventPump(std::function<std::function<std::wstring()>(std::vector<std::wstring>)> GetVersionResolver)";
+            yield return "std::shared_ptr<IEventPump> CreateEventPump(std::function<std::function<std::u16string()>(std::vector<std::u16string>)> GetVersionResolver)";
             yield return "{";
             yield return "    auto ep = std::make_shared<EventPump>();";
             foreach (var g in ServerCommandGroups)
@@ -113,7 +113,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    yield return "    " + "    if (Version == L\"\")";
+                    yield return "    " + "    if (Version == u\"\")";
                     yield return "    " + "    {";
                     foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "        if ("), GetEscapedIdentifier(Name)), " != nullptr) { "), GetEscapedIdentifier(Name)), "(eHead); }"))
                     {
@@ -124,7 +124,7 @@ namespace Niveum.ObjectSchema.CppCompatible
                     foreach (var sc in SortedGroupCommands)
                     {
                         var VersionedSimpleName = sc.GetTypeSpec().SimpleName(NamespaceName);
-                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (Version == L\""), sc.Version), "\")"))
+                        foreach (var _Line in Combine(Combine(Combine(Begin(), "if (Version == u\""), sc.Version), "\")"))
                         {
                             yield return _Line == "" ? "" : "        " + _Line;
                         }

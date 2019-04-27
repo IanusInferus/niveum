@@ -1,6 +1,7 @@
 ﻿#include "Services/ServerImplementation.h"
 
 #include "BaseSystem/Times.h"
+#include "BaseSystem/StringUtilities.h"
 
 #include <memory>
 #include <string>
@@ -11,7 +12,7 @@ using namespace Server::Services;
 /// <summary>服务器时间</summary>
 std::shared_ptr<ServerTimeReply> ServerImplementation::ServerTime(std::shared_ptr<ServerTimeRequest> r)
 {
-    auto s = DateTimeUtcToString(UtcNow());
+    auto s = wideCharToUtf16(DateTimeUtcToString(UtcNow()));
     return ServerTimeReply::CreateSuccess(s);
 }
 
@@ -28,7 +29,7 @@ std::shared_ptr<CheckSchemaVersionReply> ServerImplementation::CheckSchemaVersio
     if (r->Hash == ServerContext->HeadCommunicationSchemaHash)
     {
         auto Lock = SessionContext->WriterLock();
-        SessionContext->Version = L"";
+        SessionContext->Version = u"";
         return CheckSchemaVersionReply::CreateHead();
     }
     auto ov = ServerContext->CommunicationSchemaHashToVersion(r->Hash);

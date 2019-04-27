@@ -19,7 +19,7 @@ namespace Server
         virtual ~IServerImplementation() {}
 
         virtual void Stop() = 0;
-        virtual void RaiseError(std::wstring CommandName, std::wstring Message) = 0;
+        virtual void RaiseError(std::u16string CommandName, std::u16string Message) = 0;
     };
 
     class ISessionContext;
@@ -74,11 +74,11 @@ namespace Server
         std::function<void()> Authenticated; //跨线程事件(订阅者需要保证线程安全)
         std::function<void(std::shared_ptr<SecureContext>)> SecureConnectionRequired; //跨线程事件(订阅者需要保证线程安全)
 
-        virtual std::wstring RemoteEndPoint() = 0;
-        virtual void RemoteEndPoint(std::wstring value) = 0;
+        virtual std::u16string RemoteEndPoint() = 0;
+        virtual void RemoteEndPoint(std::u16string value) = 0;
         /// <summary>长度为4</summary>
         virtual std::vector<std::uint8_t> SessionToken() = 0;
-        virtual std::wstring SessionTokenString() = 0;
+        virtual std::u16string SessionTokenString() = 0;
         virtual std::chrono::system_clock::time_point RequestTime() = 0;
         virtual void RequestTime(std::chrono::system_clock::time_point value) = 0;
     };
