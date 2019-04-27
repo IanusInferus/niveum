@@ -40,18 +40,18 @@ namespace Database
                 cmd->execute();
             }
 
-            virtual Optional<std::shared_ptr<Database::TestRecord>> FromTestRecordSelectOptionalBySessionIndex(int SessionIndex)
+            virtual std::optional<std::shared_ptr<Database::TestRecord>> FromTestRecordSelectOptionalBySessionIndex(int SessionIndex)
             {
                 auto cmd = CreateTextCommand(L"SELECT SessionIndex, Value FROM TestRecords WHERE SessionIndex = @SessionIndex");
                 Add(L"SessionIndex", SessionIndex);
-                auto ov = Optional<std::shared_ptr<Database::TestRecord>>::Empty();
+				auto ov = std::optional<std::shared_ptr<Database::TestRecord>>{};
                 auto rs = std::shared_ptr<sql::ResultSet>(cmd->executeQuery());
                 if (rs->next())
                 {
                     auto v = std::make_shared<Database::TestRecord>();
                     v->SessionIndex = GetInt(rs, L"SessionIndex");
                     v->Value = GetInt(rs, L"Value");
-                    ov = Optional<std::shared_ptr<Database::TestRecord>>::CreateHasValue(v);
+                    ov = v;
                 }
                 if (rs->next())
                 {
@@ -84,18 +84,18 @@ namespace Database
                 cmd->execute();
             }
 
-            Optional<std::shared_ptr<Database::TestLockRecord>> FromTestLockRecordSelectOptionalById(int Id)
+            std::optional<std::shared_ptr<Database::TestLockRecord>> FromTestLockRecordSelectOptionalById(int Id)
             {
                 auto cmd = CreateTextCommand(L"SELECT Id, Value FROM TestLockRecords WHERE Id = @Id");
                 Add(L"Id", Id);
-                auto ov = Optional<std::shared_ptr<Database::TestLockRecord>>::Empty();
+				auto ov = std::optional<std::shared_ptr<Database::TestLockRecord>>{};
                 auto rs = std::shared_ptr<sql::ResultSet>(cmd->executeQuery());
                 if (rs->next())
                 {
                     auto v = std::make_shared<Database::TestLockRecord>();
                     v->Id = GetInt(rs, L"Id");
                     v->Value = GetInt(rs, L"Value");
-                    ov = Optional<std::shared_ptr<Database::TestLockRecord>>::CreateHasValue(v);
+                    ov = v;
                 }
                 if (rs->next())
                 {
@@ -104,18 +104,18 @@ namespace Database
                 return ov;
             }
 
-            Optional<std::shared_ptr<Database::TestLockRecord>> FromTestLockRecordLockOptionalById(int Id)
+            std::optional<std::shared_ptr<Database::TestLockRecord>> FromTestLockRecordLockOptionalById(int Id)
             {
                 auto cmd = CreateTextCommand(L"SELECT Id, Value FROM TestLockRecords WHERE Id = @Id FOR UPDATE");
                 Add(L"Id", Id);
-                auto ov = Optional<std::shared_ptr<Database::TestLockRecord>>::Empty();
+				auto ov = std::optional<std::shared_ptr<Database::TestLockRecord>>{};
                 auto rs = std::shared_ptr<sql::ResultSet>(cmd->executeQuery());
                 if (rs->next())
                 {
                     auto v = std::make_shared<Database::TestLockRecord>();
                     v->Id = GetInt(rs, L"Id");
                     v->Value = GetInt(rs, L"Value");
-                    ov = Optional<std::shared_ptr<Database::TestLockRecord>>::CreateHasValue(v);
+                    ov = v;
                 }
                 if (rs->next())
                 {
@@ -124,8 +124,8 @@ namespace Database
                 return ov;
             }
 
-            Optional<std::shared_ptr<class Database::TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordSelectOptionalByA(String A) { throw std::logic_error("NotImplementedException"); }
-            Optional<std::shared_ptr<class Database::TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordSelectOptionalByAAndB(String A, enum class Database::TestEnum B) { throw std::logic_error("NotImplementedException"); }
+            std::optional<std::shared_ptr<class Database::TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordSelectOptionalByA(String A) { throw std::logic_error("NotImplementedException"); }
+            std::optional<std::shared_ptr<class Database::TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordSelectOptionalByAAndB(String A, enum class Database::TestEnum B) { throw std::logic_error("NotImplementedException"); }
             std::shared_ptr<class Database::TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordSelectOneByA(String A) { throw std::logic_error("NotImplementedException"); }
             std::shared_ptr<class Database::TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordSelectOneByAAndB(String A, enum class Database::TestEnum B) { throw std::logic_error("NotImplementedException"); }
             std::shared_ptr<std::vector<std::shared_ptr<class Database::TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordSelectManyByA(String A) { throw std::logic_error("NotImplementedException"); }
@@ -136,8 +136,8 @@ namespace Database
             Int FromTestDuplicatedKeyNameRecordSelectCount() { throw std::logic_error("NotImplementedException"); }
             Int FromTestDuplicatedKeyNameRecordSelectCountByA(String A) { throw std::logic_error("NotImplementedException"); }
             Int FromTestDuplicatedKeyNameRecordSelectCountByAAndB(String A, enum class Database::TestEnum B) { throw std::logic_error("NotImplementedException"); }
-            Optional<std::shared_ptr<class Database::TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordLockOptionalByA(String A) { throw std::logic_error("NotImplementedException"); }
-            Optional<std::shared_ptr<class Database::TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordLockOptionalByAAndB(String A, enum class Database::TestEnum B) { throw std::logic_error("NotImplementedException"); }
+            std::optional<std::shared_ptr<class Database::TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordLockOptionalByA(String A) { throw std::logic_error("NotImplementedException"); }
+            std::optional<std::shared_ptr<class Database::TestDuplicatedKeyNameRecord>> FromTestDuplicatedKeyNameRecordLockOptionalByAAndB(String A, enum class Database::TestEnum B) { throw std::logic_error("NotImplementedException"); }
             std::shared_ptr<class Database::TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordLockOneByA(String A) { throw std::logic_error("NotImplementedException"); }
             std::shared_ptr<class Database::TestDuplicatedKeyNameRecord> FromTestDuplicatedKeyNameRecordLockOneByAAndB(String A, enum class Database::TestEnum B) { throw std::logic_error("NotImplementedException"); }
             std::shared_ptr<std::vector<std::shared_ptr<class Database::TestDuplicatedKeyNameRecord>>> FromTestDuplicatedKeyNameRecordLockManyByA(String A) { throw std::logic_error("NotImplementedException"); }

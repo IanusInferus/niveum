@@ -98,7 +98,6 @@
     <ClCompile Include="Program.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BaseSystem\Any.h" />
     <ClInclude Include="BaseSystem\StringUtilities.h" />
     <ClInclude Include="BaseSystem\ThreadLocalRandom.h" />
     <ClInclude Include="BaseSystem\ThreadLocalVariable.h" />

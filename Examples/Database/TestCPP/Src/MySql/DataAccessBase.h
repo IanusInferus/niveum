@@ -54,15 +54,15 @@ namespace Database
 
             std::shared_ptr<std::vector<std::uint8_t>> GetBinary(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName);
 
-            Optional<bool> GetOptionalOfBoolean(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName);
+            std::optional<bool> GetOptionalOfBoolean(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName);
 
-            Optional<std::wstring> GetOptionalOfString(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName);
+            std::optional<std::wstring> GetOptionalOfString(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName);
 
-            Optional<int> GetOptionalOfInt(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName);
+            std::optional<int> GetOptionalOfInt(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName);
 
-            Optional<double> GetOptionalOfReal(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName);
+            std::optional<double> GetOptionalOfReal(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName);
 
-            Optional<std::shared_ptr<std::vector<std::uint8_t>>> GetOptionalOfBinary(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName);
+            std::optional<std::shared_ptr<std::vector<std::uint8_t>>> GetOptionalOfBinary(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName);
         };
     }
 }

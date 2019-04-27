@@ -33,9 +33,9 @@ namespace Database
         {
             auto da = dam.Create();
             auto v = da->FromTestRecordSelectOptionalBySessionIndex(SessionIndex);
-            if (v.OnHasValue())
+            if (v.has_value())
             {
-                return v.HasValue->Value;
+                return v.value()->Value;
             }
             else
             {
@@ -58,9 +58,9 @@ namespace Database
             auto da = dam.Create();
             auto ov = da->FromTestLockRecordLockOptionalById(1);
             std::shared_ptr<Database::TestLockRecord> v;
-            if (ov.OnHasValue())
+            if (ov.has_value())
             {
-                v = ov.HasValue;
+                v = ov.value();
             }
             else
             {
@@ -77,11 +77,9 @@ namespace Database
         {
             auto da = dam.Create();
             auto ov = da->FromTestLockRecordSelectOptionalById(1);
-            std::shared_ptr<Database::TestLockRecord> v;
-            if (ov.OnHasValue())
+            if (ov.has_value())
             {
-                v = ov.HasValue;
-                return v->Value;
+                return ov.value()->Value;
             }
             else
             {

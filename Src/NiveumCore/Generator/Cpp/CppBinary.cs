@@ -3,7 +3,7 @@
 //  File:        CppBinary.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C++二进制通讯代码生成器
-//  Version:     2018.12.16.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -153,19 +153,11 @@ namespace Niveum.ObjectSchema.CppBinary
                 l.Add("");
             }
 
-            var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.NameMatches("Optional")).ToList();
-            TaggedUnionDef GenericOptionalType = null;
-            if (GenericOptionalTypes.Count > 0)
-            {
-                GenericOptionalType = new TaggedUnionDef { Name = new List<String> { "TaggedUnion" }, Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Type" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
-                l.AddRange(BinaryTranslator_Enum("OptionalTag", "OptionalTag", "Int", "Int", NamespaceName));
-                l.Add("");
-            }
             foreach (var gts in GenericTypeSpecs)
             {
                 if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Optional") && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(BinaryTranslator_Optional(gts, GenericOptionalType, NamespaceName));
+                    l.AddRange(BinaryTranslator_Optional(gts, NamespaceName));
                     l.Add("");
                 }
                 else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("List") && gts.GenericTypeSpec.ParameterValues.Count == 1)

@@ -1168,10 +1168,9 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "}";
         }
-        public IEnumerable<String> BinaryTranslator_Optional(TypeSpec o, TaggedUnionDef GenericOptionalType, String NamespaceName)
+        public IEnumerable<String> BinaryTranslator_Optional(TypeSpec o, String NamespaceName)
         {
             var ElementType = o.GenericTypeSpec.ParameterValues.Single();
-            var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
             var SimpleName = o.SimpleName(NamespaceName);
             var TypeString = GetTypeString(o, NamespaceName);
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromBinary"))), "(IReadableStream &s)"))
@@ -1179,48 +1178,36 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    auto o = "), TypeString), "();"))
+            yield return "    auto Tag = IntFromBinary(s);";
+            yield return "    if (Tag == 0)";
+            yield return "    {";
+            yield return "        return {};";
+            yield return "    }";
+            yield return "    else";
+            yield return "    {";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        return "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementType.SimpleName(NamespaceName)), "FromBinary"))), "(s);"))
             {
                 yield return _Line;
             }
-            yield return "    o._Tag = OptionalTagFromBinary(s);";
-            foreach (var a in Alternatives)
-            {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o._Tag == OptionalTag::"), GetEscapedIdentifier(a.Name)), ")"))
-                {
-                    yield return _Line == "" ? "" : "    " + _Line;
-                }
-                yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromBinary"))), "(s);"))
-                {
-                    yield return _Line == "" ? "" : "    " + _Line;
-                }
-                yield return "    " + "    return o;";
-                yield return "    " + "}";
-            }
-            yield return "    throw std::logic_error(\"InvalidOperation\");";
+            yield return "    }";
             yield return "}";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " o)"))
             {
                 yield return _Line;
             }
             yield return "{";
-            yield return "    OptionalTagToBinary(s, o._Tag);";
-            foreach (var a in Alternatives)
+            yield return "    if (!o.has_value())";
+            yield return "    {";
+            yield return "        IntToBinary(s, 0);";
+            yield return "    }";
+            yield return "    else";
+            yield return "    {";
+            yield return "        IntToBinary(s, 1);";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementType.SimpleName(NamespaceName)), "ToBinary"))), "(s, o.value());"))
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o._Tag == OptionalTag::"), GetEscapedIdentifier(a.Name)), ")"))
-                {
-                    yield return _Line == "" ? "" : "    " + _Line;
-                }
-                yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "ToBinary"))), "(s, o."), GetEscapedIdentifier(a.Name)), ");"))
-                {
-                    yield return _Line == "" ? "" : "    " + _Line;
-                }
-                yield return "    " + "    return;";
-                yield return "    " + "}";
+                yield return _Line;
             }
-            yield return "    throw std::logic_error(\"InvalidOperation\");";
+            yield return "    }";
             yield return "}";
         }
         public IEnumerable<String> BinaryTranslator_List(TypeSpec l, String NamespaceName)
