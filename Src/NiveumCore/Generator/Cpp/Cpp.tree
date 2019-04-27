@@ -187,7 +187,7 @@
         Float32             float
         Float64             double
         Type                std::u16string
-        Optional            Optional
+        Optional            std::optional
         List                std::vector
         Set                 std::unordered_set
         Map                 std::unordered_map
@@ -207,169 +207,6 @@
     #ifndef _UNIT_TYPE_
         typedef struct {} Unit;
     #   define _UNIT_TYPE_
-    #endif
-
-#Template Primitive_Optional
-    #ifndef _OPTIONAL_TYPE_
-        enum class OptionalTag
-        {
-            NotHasValue = 0,
-            HasValue = 1
-        };
-        /* TaggedUnion */
-        template<typename T>
-        class Optional final
-        {
-        public:
-            /* Tag */ OptionalTag _Tag;
-
-            Unit NotHasValue;
-            T HasValue;
-
-            static Optional<T> CreateNotHasValue()
-            {
-                auto r = Optional<T>();
-                r._Tag = OptionalTag::NotHasValue;
-                r.NotHasValue = Unit();
-                return r;
-            }
-            static Optional<T> CreateHasValue(T Value)
-            {
-                auto r = Optional<T>();
-                r._Tag = OptionalTag::HasValue;
-                r.HasValue = Value;
-                return r;
-            }
-
-            Boolean OnNotHasValue() const
-            {
-                return _Tag == OptionalTag::NotHasValue;
-            }
-            Boolean OnHasValue() const
-            {
-                return _Tag == OptionalTag::HasValue;
-            }
-
-            static Optional<T> Empty() { return CreateNotHasValue(); }
-            Optional()
-                : _Tag(OptionalTag::NotHasValue),
-                  NotHasValue(Unit()),
-                  HasValue(T())
-            {
-            }
-            Optional(const T &v)
-                : _Tag(OptionalTag::HasValue),
-                  NotHasValue(Unit()),
-                  HasValue(v)
-            {
-            }
-            Optional(std::nullptr_t v)
-                : _Tag(OptionalTag::NotHasValue),
-                  NotHasValue(Unit()),
-                  HasValue(T())
-            {
-            }
-            explicit operator const T &() const
-            {
-                if (OnNotHasValue())
-                {
-                    throw std::logic_error("InvalidOperation");
-                }
-                return HasValue;
-            }
-            Boolean operator ==(const Optional<T> &Right) const
-            {
-                return Equals(*this, Right);
-            }
-            Boolean operator !=(const Optional<T> &Right) const
-            {
-                return !Equals(*this, Right);
-            }
-            Boolean operator ==(const T &Right) const
-            {
-                return Equals(*this, static_cast<const Optional<T> &>(Right));
-            }
-            Boolean operator !=(const T &Right) const
-            {
-                return !Equals(*this, static_cast<const Optional<T> &>(Right));
-            }
-            Boolean operator ==(std::nullptr_t Right) const
-            {
-                return Equals(*this, Right);
-            }
-            Boolean operator !=(std::nullptr_t Right) const
-            {
-                return !Equals(*this, Right);
-            }
-
-        private:
-            static Boolean Equals(const Optional<T> &Left, const Optional<T> &Right)
-            {
-                if (Left.OnNotHasValue() && Right.OnNotHasValue())
-                {
-                    return true;
-                }
-                if (Left.OnNotHasValue() || Right.OnNotHasValue())
-                {
-                    return false;
-                }
-                return Left.HasValue == Right.HasValue;
-            }
-            static Boolean Equals(const Optional<T> &Left, std::nullptr_t Right)
-            {
-                return Left.OnNotHasValue();
-            }
-
-        public:
-            T Value() const
-            {
-                if (OnHasValue())
-                {
-                    return HasValue;
-                }
-                else
-                {
-                    throw std::logic_error("InvalidOperation");
-                }
-            }
-            T ValueOrDefault(T Default) const
-            {
-                if (OnHasValue())
-                {
-                    return HasValue;
-                }
-                else
-                {
-                    return Default;
-                }
-            }
-        };
-
-        namespace std
-        {
-            template <typename T>
-            struct hash<Optional<T>>
-            {
-                size_t operator()(const Optional<T> &x) const
-                {
-                    if (x.OnNotHasValue()) { return 0; }
-                    return hash<T>()(x.HasValue);
-                }
-            };
-            template <typename T>
-            struct less<Optional<T>>
-            {
-                bool operator()(const Optional<T> &x, const Optional<T> &y) const
-                {
-                    if ((x == nullptr) && (y == nullptr)) { return false; }
-                    if (x == nullptr) { return true; }
-                    if (y == nullptr) { return false; }
-                    return x.HasValue < y.HasValue;
-                }
-            };
-        }
-
-    #   define _OPTIONAL_TYPE_
     #endif
 
 #Template TypePredefinition Name:String MetaType:String GenericParameters:List<VariableDef>
@@ -680,6 +517,7 @@
     #include <cstddef>
     #include <cstdint>
     #include <string>
+    #include <optional>
     #include <vector>
     #include <unordered_set>
     #include <unordered_map>

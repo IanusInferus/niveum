@@ -7,7 +7,7 @@
 #include <functional>
 #include <vector>
 #include <unordered_map>
-#include "BaseSystem/Any.h"
+#include <any>
 
 namespace Niveum
 {
@@ -37,7 +37,7 @@ namespace Niveum
         class ExpressionParameterContext
         {
         public:
-            std::unordered_map<std::u16string, Any> Parameters;
+            std::unordered_map<std::u16string, std::any> Parameters;
         };
 
         class ExpressionParameterTypeProvider
@@ -70,11 +70,11 @@ namespace Niveum
             std::function<T(ExpressionParameterContext &)> BuildExpression(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Niveum::ExpressionSchema::Expr> e)
             {
                 auto f = BuildExpr(eptp, e);
-                return AnyCast<std::function<T(ExpressionParameterContext &)>>(f);
+                return std::any_cast<std::function<T(ExpressionParameterContext &)>>(f);
             }
 
         private:
-            Any BuildExpr(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Niveum::ExpressionSchema::Expr> e);
+			std::any BuildExpr(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Niveum::ExpressionSchema::Expr> e);
         };
     }
 }

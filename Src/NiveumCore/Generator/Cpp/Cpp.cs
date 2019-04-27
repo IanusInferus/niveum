@@ -88,7 +88,7 @@ namespace Niveum.ObjectSchema.Cpp
                 if (PrimitiveMapping.ContainsKey(Type.TypeRef.VersionedName()))
                 {
                     var PlatformName = PrimitiveMapping[Type.TypeRef.VersionedName()];
-                    if (Type.TypeRef.NameMatches("List", "Set", "Map"))
+                    if (Type.TypeRef.NameMatches("Optional", "List", "Set", "Map"))
                     {
                         return PlatformName;
                     }
@@ -222,10 +222,6 @@ namespace Niveum.ObjectSchema.Cpp
                     if (c.VersionedName() == "Unit")
                     {
                         l.AddRange(Primitive_Unit());
-                    }
-                    else if (c.VersionedName() == "Optional")
-                    {
-                        l.AddRange(Primitive_Optional());
                     }
                     else if (c.Primitive.GenericParameters.Count == 0)
                     {

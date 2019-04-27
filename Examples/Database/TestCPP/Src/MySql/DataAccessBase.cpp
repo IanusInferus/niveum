@@ -253,38 +253,38 @@ namespace Database
             return s;
         }
 
-        Optional<bool> DataAccessBase::GetOptionalOfBoolean(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
+        std::optional<bool> DataAccessBase::GetOptionalOfBoolean(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
             if (rs->isNull(FieldNameS)) { return nullptr; }
             return rs->getBoolean(FieldNameS);
         }
 
-        Optional<std::wstring> DataAccessBase::GetOptionalOfString(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
+        std::optional<std::wstring> DataAccessBase::GetOptionalOfString(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
             if (rs->isNull(FieldNameS)) { return nullptr; }
             return ConvertToWString(rs->getString(FieldNameS));
         }
 
-        Optional<int> DataAccessBase::GetOptionalOfInt(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
+        std::optional<int> DataAccessBase::GetOptionalOfInt(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
-            if (rs->isNull(FieldNameS)) { return nullptr; }
+			if (rs->isNull(FieldNameS)) { return {}; }
             return rs->getInt(FieldNameS);
         }
 
-        Optional<double> DataAccessBase::GetOptionalOfReal(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
+        std::optional<double> DataAccessBase::GetOptionalOfReal(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
-            if (rs->isNull(FieldNameS)) { return nullptr; }
+			if (rs->isNull(FieldNameS)) { return {}; }
             return rs->getDouble(FieldNameS);
         }
 
-        Optional<std::shared_ptr<std::vector<std::uint8_t>>> DataAccessBase::GetOptionalOfBinary(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
+        std::optional<std::shared_ptr<std::vector<std::uint8_t>>> DataAccessBase::GetOptionalOfBinary(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
-            if (rs->isNull(FieldNameS)) { return nullptr; }
+			if (rs->isNull(FieldNameS)) { return {}; }
             auto is = std::shared_ptr<std::istream>(rs->getBlob(FieldNameS));
             auto s = std::make_shared<std::vector<std::uint8_t>>();
             char b = 0;

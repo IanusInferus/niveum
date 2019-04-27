@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++简单类型代码生成器
-//  Version:     2018.12.22.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -138,7 +138,7 @@ namespace Yuki.RelationSchema.CppPlain
                 {
                     if (q.Numeral.OnOptional)
                     {
-                        Type = GetEscapedIdentifier("Optional<std::shared_ptr<class {0}>>".Formats(q.EntityName));
+                        Type = GetEscapedIdentifier("std::optional<std::shared_ptr<class {0}>>".Formats(q.EntityName));
                     }
                     else if (q.Numeral.OnOne)
                     {

@@ -927,42 +927,34 @@
             }
     }
 
-#Template BinaryTranslator_Optional o:TypeSpec GenericOptionalType:TaggedUnionDef NamespaceName:String
+#Template BinaryTranslator_Optional o:TypeSpec NamespaceName:String
     $$
         var ElementType = o.GenericTypeSpec.ParameterValues.Single();
-        var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
         var SimpleName = o.SimpleName(NamespaceName);
         var TypeString = GetTypeString(o, NamespaceName);
     static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
-        auto o = ${TypeString}();
-        o._Tag = OptionalTagFromBinary(s);
-        $$
-            foreach (var a in Alternatives)
-            {
-                ##
-                    if (o._Tag == OptionalTag::[[${a.Name}]])
-                    {
-                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
-                        return o;
-                    }
-            }
-        throw std::logic_error("InvalidOperation");
+        auto Tag = IntFromBinary(s);
+        if (Tag == 0)
+        {
+            return {};
+        }
+        else
+        {
+            return [[${ElementType.SimpleName(NamespaceName)}FromBinary]](s);
+        }
     }
     static void [[${SimpleName}ToBinary]](IWritableStream &s, ${TypeString} o)
     {
-        OptionalTagToBinary(s, o._Tag);
-        $$
-            foreach (var a in Alternatives)
-            {
-                ##
-                    if (o._Tag == OptionalTag::[[${a.Name}]])
-                    {
-                        [[${a.Type.SimpleName(NamespaceName)}ToBinary]](s, o.[[${a.Name}]]);
-                        return;
-                    }
-            }
-        throw std::logic_error("InvalidOperation");
+        if (!o.has_value())
+        {
+            IntToBinary(s, 0);
+        }
+        else
+        {
+            IntToBinary(s, 1);
+            [[${ElementType.SimpleName(NamespaceName)}ToBinary]](s, o.value());
+        }
     }
 
 #Template BinaryTranslator_List l:TypeSpec NamespaceName:String
