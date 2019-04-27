@@ -6,6 +6,8 @@ Niveum.Core, Yuki.Relation:
 Example:
 修正C++示例，并升级到C++17。
 修正C++示例，将Optional改为std::optional，Any改为std::any。
+*:
+整理工程和构建脚本。
 
 2019.03.22
 Example:
