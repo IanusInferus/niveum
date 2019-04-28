@@ -139,7 +139,7 @@ namespace Nivea.CUI
             //    {
             //        var ErrorMessage = p.Key;
             //        var ErrorRange = p.Value;
-            //        l.Add(p.Key + ": " + ErrorRange.Text.Path + (ErrorRange.Range.OnHasValue ? ": " + ErrorRange.Range.Value.ToString() : ""));
+            //        l.Add(p.Key + ": " + ErrorRange.Text.Path + (ErrorRange.Range.OnSome ? ": " + ErrorRange.Range.Value.ToString() : ""));
             //    }
             //    var OutputPath = FileNameHandling.GetPath(OutputDirectory, "Error.txt");
             //    var OutputDir = FileNameHandling.GetFileDirectory(OutputPath);

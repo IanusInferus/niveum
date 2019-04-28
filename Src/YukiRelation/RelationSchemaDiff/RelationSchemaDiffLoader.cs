@@ -190,7 +190,7 @@ namespace Yuki.RelationSchemaDiff
                 while (true)
                 {
                     var tpr = TreeFormatTokenParser.ReadToken(Text, pr.Positions, Range);
-                    if (!tpr.OnHasValue)
+                    if (!tpr.OnSome)
                     {
                         break;
                     }
@@ -217,7 +217,7 @@ namespace Yuki.RelationSchemaDiff
                         {
                             throw new Syntax.InvalidTokenException("EmptyIndex", new Syntax.FileTextRange { Text = Text, Range = Range }, ")");
                         }
-                        if (tpr.Value.RemainingChars.OnHasValue)
+                        if (tpr.Value.RemainingChars.OnSome)
                         {
                             clEnd = tpr.Value.RemainingChars.Value.End;
                         }
@@ -253,7 +253,7 @@ namespace Yuki.RelationSchemaDiff
                         throw new Syntax.InvalidTokenException("UnknownToken", new Syntax.FileTextRange { Text = Text, Range = Range }, Text.GetTextInLine(Range));
                     }
 
-                    if (!tpr.Value.RemainingChars.OnHasValue)
+                    if (!tpr.Value.RemainingChars.OnSome)
                     {
                         break;
                     }
@@ -341,7 +341,7 @@ namespace Yuki.RelationSchemaDiff
                             }
                             else
                             {
-                                Value = MakeStemNode("HasValue", MakeStemNode(f.Type.TypeRef.Value + "Value", Literal));
+                                Value = MakeStemNode("Some", MakeStemNode(f.Type.TypeRef.Value + "Value", Literal));
                             }
                         }
                         else if (f.Type.OnOptional)
@@ -365,7 +365,7 @@ namespace Yuki.RelationSchemaDiff
                                 }
                                 else
                                 {
-                                    Value = MakeStemNode("HasValue", MakeStemNode("BinaryValue", Literal));
+                                    Value = MakeStemNode("Some", MakeStemNode("BinaryValue", Literal));
                                 }
                             }
                             else
