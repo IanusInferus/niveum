@@ -46,13 +46,13 @@ std::wstring ToHexString(T value)
 template<typename T>
 std::u16string ToU16String(T value)
 {
-	return wideCharToUtf16(ToString<T>(value));
+    return wideCharToUtf16(ToString<T>(value));
 }
 
 template<typename T>
 std::u16string ToHexU16String(T value)
 {
-	return wideCharToUtf16(ToHexString<T>(value));
+    return wideCharToUtf16(ToHexString<T>(value));
 }
 
 template<typename T>
@@ -80,7 +80,7 @@ T Parse(const std::wstring & str)
 template<typename T>
 T Parse(const std::u16string & str)
 {
-	return Parse<T>(utf16ToWideChar(str));
+    return Parse<T>(utf16ToWideChar(str));
 }
 
 template<typename CharT>

@@ -74,7 +74,7 @@ namespace Niveum
             }
 
         private:
-			std::any BuildExpr(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Niveum::ExpressionSchema::Expr> e);
+            std::any BuildExpr(ExpressionParameterTypeProvider &eptp, std::shared_ptr<Niveum::ExpressionSchema::Expr> e);
         };
     }
 }

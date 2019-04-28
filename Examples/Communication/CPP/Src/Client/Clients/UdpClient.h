@@ -772,7 +772,7 @@ namespace Client
 #if _MSC_VER
                 //在Windows下关闭SIO_UDP_CONNRESET报告，防止接受数据出错
                 //http://support.microsoft.com/kb/263823/en-us
-				connection_reset_command command;
+                connection_reset_command command;
                 Socket.io_control(command);
 #endif
 
