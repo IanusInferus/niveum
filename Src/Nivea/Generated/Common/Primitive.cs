@@ -34,42 +34,42 @@ public class TupleAttribute : Attribute {}
 public struct Unit {}
 public enum OptionalTag
 {
-    NotHasValue = 0,
-    HasValue = 1
+    None = 0,
+    Some = 1
 }
 [TaggedUnion]
 public struct Optional<T>
 {
     [Tag] public OptionalTag _Tag;
 
-    public Unit NotHasValue;
-    public T HasValue;
+    public Unit None;
+    public T Some;
 
-    public static Optional<T> CreateNotHasValue() { return new Optional<T> { _Tag = OptionalTag.NotHasValue, NotHasValue = new Unit() }; }
-    public static Optional<T> CreateHasValue(T Value) { return new Optional<T> { _Tag = OptionalTag.HasValue, HasValue = Value }; }
+    public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, None = new Unit() }; }
+    public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, Some = Value }; }
 
-    public Boolean OnNotHasValue { get { return _Tag == OptionalTag.NotHasValue; } }
-    public Boolean OnHasValue { get { return _Tag == OptionalTag.HasValue; } }
+    public Boolean OnNone { get { return _Tag == OptionalTag.None; } }
+    public Boolean OnSome { get { return _Tag == OptionalTag.Some; } }
 
-    public static Optional<T> Empty { get { return CreateNotHasValue(); } }
+    public static Optional<T> Empty { get { return CreateNone(); } }
     public static implicit operator Optional<T>(T v)
     {
         if (v == null)
         {
-            return CreateNotHasValue();
+            return CreateNone();
         }
         else
         {
-            return CreateHasValue(v);
+            return CreateSome(v);
         }
     }
     public static explicit operator T(Optional<T> v)
     {
-        if (v.OnNotHasValue)
+        if (v.OnNone)
         {
             throw new InvalidOperationException();
         }
-        return v.HasValue;
+        return v.Some;
     }
     public static Boolean operator ==(Optional<T> Left, Optional<T> Right)
     {
@@ -96,29 +96,29 @@ public struct Optional<T>
     }
     public override Int32 GetHashCode()
     {
-        if (OnNotHasValue) { return 0; }
-        return HasValue.GetHashCode();
+        if (OnNone) { return 0; }
+        return Some.GetHashCode();
     }
 
     private static Boolean Equals(Optional<T> Left, Optional<T> Right)
     {
-        if (Left.OnNotHasValue && Right.OnNotHasValue)
+        if (Left.OnNone && Right.OnNone)
         {
             return true;
         }
-        if (Left.OnNotHasValue || Right.OnNotHasValue)
+        if (Left.OnNone || Right.OnNone)
         {
             return false;
         }
-        return Left.HasValue.Equals(Right.HasValue);
+        return Left.Some.Equals(Right.Some);
     }
     private static Boolean Equals(Optional<T>? Left, Optional<T>? Right)
     {
-        if ((!Left.HasValue || Left.Value.OnNotHasValue) && (!Right.HasValue || Right.Value.OnNotHasValue))
+        if ((!Left.HasValue || Left.Value.OnNone) && (!Right.HasValue || Right.Value.OnNone))
         {
             return true;
         }
-        if (!Left.HasValue || Left.Value.OnNotHasValue || !Right.HasValue || Right.Value.OnNotHasValue)
+        if (!Left.HasValue || Left.Value.OnNone || !Right.HasValue || Right.Value.OnNone)
         {
             return false;
         }
@@ -129,9 +129,9 @@ public struct Optional<T>
     {
         get
         {
-            if (OnHasValue)
+            if (OnSome)
             {
-                return HasValue;
+                return Some;
             }
             else
             {
@@ -141,9 +141,9 @@ public struct Optional<T>
     }
     public T ValueOrDefault(T Default)
     {
-        if (OnHasValue)
+        if (OnSome)
         {
-            return HasValue;
+            return Some;
         }
         else
         {
@@ -153,9 +153,9 @@ public struct Optional<T>
 
     public override String ToString()
     {
-        if (OnHasValue)
+        if (OnSome)
         {
-            return HasValue.ToString();
+            return Some.ToString();
         }
         else
         {

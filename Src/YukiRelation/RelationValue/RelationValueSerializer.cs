@@ -3,7 +3,7 @@
 //  File:        RelationValueSerializer.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构数据序列化器
-//  Version:     2014.12.06.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -165,8 +165,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = s =>
                     {
-                        var OnHasValue = s.ReadInt32() != 0;
-                        if (OnHasValue)
+                        var OnSome = s.ReadInt32() != 0;
+                        if (OnSome)
                         {
                             return ColumnVal.CreateOptional(PrimitiveVal.CreateBooleanValue(s.ReadByte() != 0));
                         }
@@ -180,8 +180,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = s =>
                     {
-                        var OnHasValue = s.ReadInt32() != 0;
-                        if (OnHasValue)
+                        var OnSome = s.ReadInt32() != 0;
+                        if (OnSome)
                         {
                             var NumBytes = s.ReadInt32();
                             var Bytes = s.Read(NumBytes);
@@ -198,8 +198,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = s =>
                     {
-                        var OnHasValue = s.ReadInt32() != 0;
-                        if (OnHasValue)
+                        var OnSome = s.ReadInt32() != 0;
+                        if (OnSome)
                         {
                             return ColumnVal.CreateOptional(PrimitiveVal.CreateIntValue(s.ReadInt32()));
                         }
@@ -213,8 +213,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = s =>
                     {
-                        var OnHasValue = s.ReadInt32() != 0;
-                        if (OnHasValue)
+                        var OnSome = s.ReadInt32() != 0;
+                        if (OnSome)
                         {
                             return ColumnVal.CreateOptional(PrimitiveVal.CreateInt64Value(s.ReadInt64()));
                         }
@@ -228,8 +228,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = s =>
                     {
-                        var OnHasValue = s.ReadInt32() != 0;
-                        if (OnHasValue)
+                        var OnSome = s.ReadInt32() != 0;
+                        if (OnSome)
                         {
                             return ColumnVal.CreateOptional(PrimitiveVal.CreateRealValue(s.ReadFloat64()));
                         }
@@ -243,8 +243,8 @@ namespace Yuki.RelationValue
                 {
                     Reader = s =>
                     {
-                        var OnHasValue = s.ReadInt32() != 0;
-                        if (OnHasValue)
+                        var OnSome = s.ReadInt32() != 0;
+                        if (OnSome)
                         {
                             var NumBytes = s.ReadInt32();
                             var Bytes = s.Read(NumBytes);
@@ -417,7 +417,7 @@ namespace Yuki.RelationValue
                     Writer = (s, v) =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             s.WriteInt32(0);
                             return;
@@ -426,7 +426,7 @@ namespace Yuki.RelationValue
                         {
                             s.WriteInt32(1);
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnBooleanValue) { throw new InvalidOperationException(); }
                         s.WriteByte((Byte)(vv.BooleanValue ? 0xFF : 0));
                     };
@@ -436,7 +436,7 @@ namespace Yuki.RelationValue
                     Writer = (s, v) =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             s.WriteInt32(0);
                             return;
@@ -445,7 +445,7 @@ namespace Yuki.RelationValue
                         {
                             s.WriteInt32(1);
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnStringValue) { throw new InvalidOperationException(); }
                         var Bytes = TextEncoding.UTF16.GetBytes(vv.StringValue);
                         s.WriteInt32(Bytes.Length);
@@ -457,7 +457,7 @@ namespace Yuki.RelationValue
                     Writer = (s, v) =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             s.WriteInt32(0);
                             return;
@@ -466,7 +466,7 @@ namespace Yuki.RelationValue
                         {
                             s.WriteInt32(1);
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnIntValue) { throw new InvalidOperationException(); }
                         s.WriteInt32(vv.IntValue);
                     };
@@ -476,7 +476,7 @@ namespace Yuki.RelationValue
                     Writer = (s, v) =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             s.WriteInt32(0);
                             return;
@@ -485,7 +485,7 @@ namespace Yuki.RelationValue
                         {
                             s.WriteInt32(1);
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnIntValue) { throw new InvalidOperationException(); }
                         s.WriteInt64(vv.IntValue);
                     };
@@ -495,7 +495,7 @@ namespace Yuki.RelationValue
                     Writer = (s, v) =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             s.WriteInt32(0);
                             return;
@@ -504,7 +504,7 @@ namespace Yuki.RelationValue
                         {
                             s.WriteInt32(1);
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnRealValue) { throw new InvalidOperationException(); }
                         s.WriteFloat64(vv.RealValue);
                     };
@@ -514,7 +514,7 @@ namespace Yuki.RelationValue
                     Writer = (s, v) =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             s.WriteInt32(0);
                             return;
@@ -523,7 +523,7 @@ namespace Yuki.RelationValue
                         {
                             s.WriteInt32(1);
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnBinaryValue) { throw new InvalidOperationException(); }
                         var Bytes = vv.BinaryValue.ToArray();
                         s.WriteInt32(Bytes.Length);

@@ -3,7 +3,7 @@
 //  File:        ExprParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2018.12.01.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -113,7 +113,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                         var i = TokenParser.TryParseUInt64Literal(One.Leaf);
-                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if (i.OnNone) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         if ((i.Value < Byte.MinValue) || (i.Value > Byte.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
                         Mark(pe, Value);
@@ -125,7 +125,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                         var i = TokenParser.TryParseUInt64Literal(One.Leaf);
-                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if (i.OnNone) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         if ((i.Value < Byte.MinValue) || (i.Value > Byte.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
                         Mark(pe, Value);
@@ -137,7 +137,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                         var i = TokenParser.TryParseUInt64Literal(One.Leaf);
-                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if (i.OnNone) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         if ((i.Value < UInt16.MinValue) || (i.Value > UInt16.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
                         Mark(pe, Value);
@@ -149,7 +149,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                         var i = TokenParser.TryParseUInt64Literal(One.Leaf);
-                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if (i.OnNone) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         if ((i.Value < UInt32.MinValue) || (i.Value > UInt32.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
                         Mark(pe, Value);
@@ -161,7 +161,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                         var i = TokenParser.TryParseUInt64Literal(One.Leaf);
-                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if (i.OnNone) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
                         Mark(pe, Value);
                         var e = Expr.CreatePrimitiveLiteral(pe);
@@ -172,7 +172,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                         var i = TokenParser.TryParseInt64Literal(One.Leaf);
-                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if (i.OnNone) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         if ((i.Value < SByte.MinValue) || (i.Value > SByte.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
                         Mark(pe, Value);
@@ -184,7 +184,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                         var i = TokenParser.TryParseInt64Literal(One.Leaf);
-                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if (i.OnNone) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         if ((i.Value < Int16.MinValue) || (i.Value > Int16.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
                         Mark(pe, Value);
@@ -196,7 +196,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                         var i = TokenParser.TryParseInt64Literal(One.Leaf);
-                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if (i.OnNone) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         if ((i.Value < Int32.MinValue) || (i.Value > Int32.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
                         Mark(pe, Value);
@@ -208,7 +208,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (!TokenParser.IsIntLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                         var i = TokenParser.TryParseInt64Literal(One.Leaf);
-                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if (i.OnNone) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
                         Mark(pe, Value);
                         var e = Expr.CreatePrimitiveLiteral(pe);
@@ -219,7 +219,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (!TokenParser.IsFloatLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                         var i = TokenParser.TryParseFloat64Literal(One.Leaf);
-                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if (i.OnNone) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         if ((i.Value < Single.MinValue) || (i.Value > Single.MaxValue)) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
                         Mark(pe, Value);
@@ -231,7 +231,7 @@ namespace Nivea.Template.Syntax
                     {
                         if (!TokenParser.IsFloatLiteral(One.Leaf)) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                         var i = TokenParser.TryParseFloat64Literal(One.Leaf);
-                        if (i.OnNotHasValue) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
+                        if (i.OnNone) { throw new InvalidEvaluationException("ValueExceedRange", nm.GetFileRange(Value), Value); }
                         var pe = new PrimitiveLiteralExpr { Type = Type, Value = One.Leaf };
                         Mark(pe, Value);
                         var e = Expr.CreatePrimitiveLiteral(pe);
@@ -256,7 +256,7 @@ namespace Nivea.Template.Syntax
                                 }
                             }
                         }, out InvalidCharIndex);
-                        if (ot.OnHasValue)
+                        if (ot.OnSome)
                         {
                             var e = Expr.CreateTypeLiteral(ot.Value);
                             Mark(e, Value);
@@ -299,19 +299,19 @@ namespace Nivea.Template.Syntax
                     var ElementType = Type.GenericTypeSpec.ParameterValues.Single();
                     if (Value.Stem.Children.Count != 1) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(Value), Value); }
                     var One = Value.Stem.Children.Single();
-                    if (One.Stem.Name == "NotHasValue")
+                    if (One.Stem.Name == "None")
                     {
                         if (!One.OnStem || One.Stem.Children.Count != 1 || !One.Stem.Children.Single().OnEmpty) { throw new InvalidEvaluationException("ValueNotMatchType", nm.GetFileRange(One), One); }
-                        var tule = new TaggedUnionLiteralExpr { Type = Type, Alternative = "NotHasValue", Expr = Optional<Expr>.Empty };
+                        var tule = new TaggedUnionLiteralExpr { Type = Type, Alternative = "None", Expr = Optional<Expr>.Empty };
                         Mark(tule, Value);
                         var e = Expr.CreateTaggedUnionLiteral(tule);
                         Mark(e, Value);
                         return e;
                     }
-                    else if (One.Stem.Name == "HasValue")
+                    else if (One.Stem.Name == "Some")
                     {
                         var ve = ParseConstantBody(One, ElementType, nm, Positions);
-                        var tule = new TaggedUnionLiteralExpr { Type = Type, Alternative = "HasValue", Expr = ve };
+                        var tule = new TaggedUnionLiteralExpr { Type = Type, Alternative = "Some", Expr = ve };
                         Mark(tule, Value);
                         var e = Expr.CreateTaggedUnionLiteral(tule);
                         Mark(e, Value);
@@ -540,7 +540,7 @@ namespace Nivea.Template.Syntax
                     }
                 }
 
-                if (FirstMatch.OnNotHasValue)
+                if (FirstMatch.OnNone)
                 {
                     break;
                 }
@@ -716,7 +716,7 @@ namespace Nivea.Template.Syntax
                 }
 
                 var e = Expr.CreateEmbedded(Body);
-                if (Range.OnHasValue)
+                if (Range.OnSome)
                 {
                     Positions.Add(e, Range.Value);
                 }
@@ -735,7 +735,7 @@ namespace Nivea.Template.Syntax
                 {
                     var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = l, CanMerge = false };
                     OuterNode = ExprNode.CreateStem(OuterStem);
-                    if (Range.OnHasValue)
+                    if (Range.OnSome)
                     {
                         Positions.Add(l, Range.Value);
                         Positions.Add(OuterStem, Range.Value);
@@ -861,7 +861,7 @@ namespace Nivea.Template.Syntax
                         if (Parameters.Count != 0) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
                         var s = String.Join("\r\n", ChildLines.Select(ChildLine => ChildLine.Text.Substring(Math.Min(LinesIndentSpace + 4, ChildLine.Text.Length))));
                         var n = ExprNode.CreateLiteral(s);
-                        if (Range.OnHasValue)
+                        if (Range.OnSome)
                         {
                             NodePositions.Add(n, Range.Value);
                         }
@@ -889,7 +889,7 @@ namespace Nivea.Template.Syntax
                         }
                         var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = ln, CanMerge = true };
                         var OuterNode = ExprNode.CreateStem(OuterStem);
-                        if (Range.OnHasValue)
+                        if (Range.OnSome)
                         {
                             NodePositions.Add(ln, Range.Value);
                             NodePositions.Add(OuterStem, Range.Value);
@@ -951,7 +951,7 @@ namespace Nivea.Template.Syntax
                         }
                         var OuterStem = new ExprNodeStem { Head = Optional<ExprNode>.Empty, Nodes = ln, CanMerge = true };
                         var OuterNode = ExprNode.CreateStem(OuterStem);
-                        if (Range.OnHasValue)
+                        if (Range.OnSome)
                         {
                             NodePositions.Add(ln, Range.Value);
                             NodePositions.Add(OuterStem, Range.Value);
@@ -964,7 +964,7 @@ namespace Nivea.Template.Syntax
                         if (Parameters.Count != 0) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
                         var Children = ParseTemplateBody(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, FilterNameAndRegex, FilterNameToParameters, false, nm, Positions);
                         var OuterNode = ExprNode.CreateTemplate(Children);
-                        if (Range.OnHasValue)
+                        if (Range.OnSome)
                         {
                             Positions.Add(Children, Range.Value);
                             Positions.Add(OuterNode, Range.Value);
@@ -976,7 +976,7 @@ namespace Nivea.Template.Syntax
                         if (Parameters.Count != 0) { throw new InvalidSyntaxException("InvalidParameterCount", GetFileRange(PreprocessDirectiveToken)); }
                         var Children = ParseTemplateBody(ChildLines, LinesIndentSpace + 4, InlineExpressionRegex, FilterNameAndRegex, FilterNameToParameters, false, nm, Positions);
                         var OuterNode = ExprNode.CreateYieldTemplate(Children);
-                        if (Range.OnHasValue)
+                        if (Range.OnSome)
                         {
                             Positions.Add(Children, Range.Value);
                             Positions.Add(OuterNode, Range.Value);
@@ -1021,7 +1021,7 @@ namespace Nivea.Template.Syntax
                     {
                         var Undetermined = new ExprNodeUndetermined { Nodes = Nodes };
                         var n = ExprNode.CreateUndetermined(Undetermined);
-                        if (Range.OnHasValue)
+                        if (Range.OnSome)
                         {
                             NodePositions.Add(Nodes, Range.Value);
                             NodePositions.Add(Undetermined, Range.Value);

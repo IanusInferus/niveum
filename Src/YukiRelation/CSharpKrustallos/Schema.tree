@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Krustallos代码模板数据
-      Version:     2016.09.04.
+      Version:     2019.04.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -209,7 +209,7 @@ ObjectSchemaTemplate
             //Parameters: ${FieldName}
             Value
                 $String
-                    nv.[[${FieldName}]] = v.[[${FieldName}]].OnHasValue ? v.[[${FieldName}]].Value.ToList() : v.[[${FieldName}]];
+                    nv.[[${FieldName}]] = v.[[${FieldName}]].OnSome ? v.[[${FieldName}]].Value.ToList() : v.[[${FieldName}]];
         Template
             Name DataAccess
             //Parameters: ${Queries}
@@ -626,14 +626,14 @@ ObjectSchemaTemplate
                             bs.PutCounterTranslator(st);
                             return bs;
                         }
-                    
+
                         private class StringTranslator : IProjectorToProjectorDomainTranslator<String, Byte[]>, IProjectorToProjectorRangeTranslator<String, Byte[]>
                         {
                             public Func<String, R> TranslateProjectorToProjectorDomain<R>(Func<Byte[], R> Projector)
                             {
                                 return s => Projector(TextEncoding.UTF16.GetBytes(s));
                             }
-                    
+
                             public Func<D, String> TranslateProjectorToProjectorRange<D>(Func<D, Byte[]> Projector)
                             {
                                 return k => TextEncoding.UTF16.GetString(Projector(k));

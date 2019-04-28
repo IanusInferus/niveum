@@ -3,7 +3,7 @@
 //  File:        TypeParser.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 类型词法解析器
-//  Version:     2018.12.02.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -35,7 +35,7 @@ namespace Niveum.ObjectSchema
         {
             int InvalidCharIndex;
             var ov = TryParseTypeSpec(TypeString, Mark, out InvalidCharIndex);
-            if (ov.OnNotHasValue)
+            if (ov.OnNone)
             {
                 throw InvalidCharExceptionGenerator(InvalidCharIndex);
             }
@@ -44,7 +44,7 @@ namespace Niveum.ObjectSchema
         public static Optional<TypeSpec> TryParseTypeSpec(String TypeString, Action<Object, int, int> Mark, out int InvalidCharIndex)
         {
             var osml = TokenParser.TrySplitSymbolMemberChain(TypeString, out InvalidCharIndex);
-            if (osml.OnNotHasValue)
+            if (osml.OnNone)
             {
                 return Optional<TypeSpec>.Empty;
             }
@@ -56,7 +56,7 @@ namespace Niveum.ObjectSchema
             {
                 var LocalInvalidCharIndex = 0;
                 var oName = TokenParser.TryUnescapeSymbolName(s.Name, out LocalInvalidCharIndex);
-                if (oName.OnNotHasValue)
+                if (oName.OnNone)
                 {
                     InvalidCharIndex = s.NameStartIndex + LocalInvalidCharIndex;
                     return Optional<TypeSpec>.Empty;
@@ -68,7 +68,7 @@ namespace Niveum.ObjectSchema
                 {
                     var LocalLocalInvalidCharIndex = 0;
                     var ov = TryParseTypeSpec(p.Key, (o, Start, End) => Mark(o, p.Value + Start, p.Value + End), out LocalLocalInvalidCharIndex);
-                    if (ov.OnNotHasValue)
+                    if (ov.OnNone)
                     {
                         InvalidCharIndex = p.Value + LocalLocalInvalidCharIndex;
                         return Optional<TypeSpec>.Empty;
@@ -85,7 +85,7 @@ namespace Niveum.ObjectSchema
                 }
                 else
                 {
-                    if (tTotal.OnHasValue)
+                    if (tTotal.OnSome)
                     {
                         if (!tTotal.Value.OnTypeRef || (tTotal.Value.TypeRef.Version != ""))
                         {
@@ -95,7 +95,7 @@ namespace Niveum.ObjectSchema
                     }
                     String Version;
                     ParseNameAndVersion(Name, out Name, out Version);
-                    var NameList = tTotal.OnHasValue ? tTotal.Value.TypeRef.Name.Concat(new List<String> { Name }).ToList() : new List<String> { Name };
+                    var NameList = tTotal.OnSome ? tTotal.Value.TypeRef.Name.Concat(new List<String> { Name }).ToList() : new List<String> { Name };
                     var Ref = new TypeRef { Name = NameList, Version = Version };
                     Mark(NameList, s.NameStartIndex, s.NameStartIndex + Name.Length);
                     Mark(Ref, s.NameStartIndex, s.NameEndIndex);
@@ -105,7 +105,7 @@ namespace Niveum.ObjectSchema
 
                 if (s.Parameters.Count > 0)
                 {
-                    if (tTotal.OnNotHasValue && String.Equals(Name, "Tuple", StringComparison.OrdinalIgnoreCase))
+                    if (tTotal.OnNone && String.Equals(Name, "Tuple", StringComparison.OrdinalIgnoreCase))
                     {
                         t = TypeSpec.CreateTuple(l);
                     }
@@ -123,7 +123,7 @@ namespace Niveum.ObjectSchema
                     Mark(t, s.SymbolStartIndex, s.SymbolEndIndex);
                 }
 
-                if (tTotal.OnNotHasValue)
+                if (tTotal.OnNone)
                 {
                     tTotal = t;
                     FirstStart = s.SymbolStartIndex;

@@ -1,9 +1,9 @@
 ﻿//==========================================================================
 //
 //  File:        RelationSchemaDiffTranslator.cs
-//  Location:    Yuki.Core <Visual C#>
+//  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构差异转换器
-//  Version:     2015.06.17.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -135,27 +135,27 @@ namespace Yuki.RelationSchemaDiff
                     var nc = NewColumns[i];
                     if (nc.Type.OnTypeRef)
                     {
-                        if (v.OnNotHasValue) { throw new InvalidOperationException(); }
-                        var vv = ColumnVal.CreatePrimitive(v.HasValue);
+                        if (v.OnNone) { throw new InvalidOperationException(); }
+                        var vv = ColumnVal.CreatePrimitive(v.Some);
                         ColumnFetchers.Add(r => vv);
                     }
                     else if (nc.Type.OnOptional)
                     {
-                        if (v.OnNotHasValue)
+                        if (v.OnNone)
                         {
                             var vv = ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty);
                             ColumnFetchers.Add(r => vv);
                         }
                         else
                         {
-                            var vv = ColumnVal.CreateOptional(v.HasValue);
+                            var vv = ColumnVal.CreateOptional(v.Some);
                             ColumnFetchers.Add(r => vv);
                         }
                     }
                     else if (nc.Type.OnList && (nc.Type.List.Value == "Byte"))
                     {
-                        if (v.OnNotHasValue) { throw new InvalidOperationException(); }
-                        var vv = ColumnVal.CreatePrimitive(v.HasValue);
+                        if (v.OnNone) { throw new InvalidOperationException(); }
+                        var vv = ColumnVal.CreatePrimitive(v.Some);
                         ColumnFetchers.Add(r => vv);
                     }
                     else
@@ -250,13 +250,13 @@ namespace Yuki.RelationSchemaDiff
                     {
                         throw new InvalidOperationException();
                     }
-                    if (cv.Optional.OnNotHasValue)
+                    if (cv.Optional.OnNone)
                     {
                         return ColumnVal.CreateOptional(Optional<PrimitiveVal>.Empty);
                     }
                     else
                     {
-                        return ColumnVal.CreateOptional(t(cv.Optional.HasValue));
+                        return ColumnVal.CreateOptional(t(cv.Optional.Some));
                     }
                 };
             }
@@ -281,13 +281,13 @@ namespace Yuki.RelationSchemaDiff
                     {
                         throw new InvalidOperationException();
                     }
-                    if (cv.Optional.OnNotHasValue)
+                    if (cv.Optional.OnNone)
                     {
                         throw new InvalidOperationException();
                     }
                     else
                     {
-                        return ColumnVal.CreatePrimitive(t(cv.Optional.HasValue));
+                        return ColumnVal.CreatePrimitive(t(cv.Optional.Some));
                     }
                 };
             }

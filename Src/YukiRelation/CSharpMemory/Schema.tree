@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# Memory代码模板数据
-      Version:     2016.09.04.
+      Version:     2019.04.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -94,7 +94,7 @@ ObjectSchemaTemplate
                                 if ((x == null) && (y == null)) { return 0; }
                                 if (x == null) { return -1; }
                                 if (y == null) { return 1; }
-                                return x.HasValue.CompareTo(y.HasValue);
+                                return x.Value.CompareTo(y.Value);
                             }
                         }
 

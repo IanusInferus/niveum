@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2018.12.01.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -89,7 +89,7 @@ namespace Nivea.Template.Syntax
                                 var NamespaceParts = new List<String>();
                                 int InvalidCharIndex;
                                 var osml = TokenParser.TrySplitSymbolMemberChain(Namespace, out InvalidCharIndex);
-                                if (osml.OnNotHasValue)
+                                if (osml.OnNone)
                                 {
                                     var Range = nm.GetRange(Node);
                                     var InvalidChar = Namespace.Substring(InvalidCharIndex, 1);
@@ -113,7 +113,7 @@ namespace Nivea.Template.Syntax
                                     }
                                     int LocalInvalidCharIndex;
                                     var oName = TokenParser.TryUnescapeSymbolName(p.Name, out LocalInvalidCharIndex);
-                                    if (oName.OnNotHasValue)
+                                    if (oName.OnNone)
                                     {
                                         InvalidCharIndex = p.NameStartIndex + LocalInvalidCharIndex;
                                         var Range = nm.GetRange(Node);
@@ -536,7 +536,7 @@ namespace Nivea.Template.Syntax
                                                     }
                                                 }
                                             }
-                                            if (FilterName.OnNotHasValue || FilterRegex.OnNotHasValue) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(RecordNode), RecordNode); }
+                                            if (FilterName.OnNone || FilterRegex.OnNone) { throw new InvalidEvaluationException("InvalidOption", nm.GetFileRange(RecordNode), RecordNode); }
                                             FilterNameToParameters.Add(FilterName.Value, Parameters);
                                             FilterNameAndRegex.Add(new KeyValuePair<String, Regex>(FilterName.Value, FilterRegex.Value));
                                         }

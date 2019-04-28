@@ -3,7 +3,7 @@
 //  File:        PythonBinary.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构Python二进制通讯代码生成器
-//  Version:     2018.12.22.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -147,7 +147,19 @@ namespace Niveum.ObjectSchema.PythonBinary
             TaggedUnionDef GenericOptionalType = null;
             if (GenericOptionalTypes.Count > 0)
             {
-                GenericOptionalType = new TaggedUnionDef { Name = new List<String> { "TaggedUnion" }, Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Type" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
+                GenericOptionalType = new TaggedUnionDef
+                {
+                    Name = new List<String> { "TaggedUnion" },
+                    Version = "",
+                    GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Type" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } },
+                    Alternatives = new List<VariableDef>
+                    {
+                        new VariableDef { Name = "None", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                        new VariableDef { Name = "Some", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
+                    },
+                    Attributes = new List<KeyValuePair<String, List<String>>> { },
+                    Description = ""
+                };
             }
             foreach (var gts in GenericTypeSpecs)
             {

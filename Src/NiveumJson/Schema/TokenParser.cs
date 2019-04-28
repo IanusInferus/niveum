@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Niveum.Json <Visual C#>
 //  Description: 词法分析器
-//  Version:     2018.09.19.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -29,7 +29,7 @@ namespace Niveum.Json.Syntax
             {
                 var FilePath = r.FilePath;
                 var Message = !r.EndOfText ? "IllegalChar '" + r.Peek() + "'" : "InvalidEndOfText";
-                if (FilePath.OnHasValue)
+                if (FilePath.OnSome)
                 {
                     return new InvalidOperationException(FilePath.Value + r.CurrentPosition.ToString() + ": " + Message);
                 }
@@ -40,7 +40,7 @@ namespace Niveum.Json.Syntax
             }
             T MarkRange<T>(T Rule)
             {
-                if (TextRanges.OnHasValue)
+                if (TextRanges.OnSome)
                 {
                     var Range = new TextRange(StartPosition, r.CurrentPosition);
                     TextRanges.Value.Add(Rule, Range);
@@ -184,7 +184,7 @@ namespace Niveum.Json.Syntax
             {
                 var FilePath = r.FilePath;
                 var Message = !r.EndOfText ? "IllegalChar '" + r.Peek() + "'" : "InvalidEndOfText";
-                if (FilePath.OnHasValue)
+                if (FilePath.OnSome)
                 {
                     return new InvalidOperationException(FilePath.Value + r.CurrentPosition.ToString() + ": " + Message);
                 }
@@ -195,7 +195,7 @@ namespace Niveum.Json.Syntax
             }
             T MarkRange<T>(T Rule)
             {
-                if (TextRanges.OnHasValue)
+                if (TextRanges.OnSome)
                 {
                     var Range = new TextRange(StartPosition, r.CurrentPosition);
                     TextRanges.Value.Add(Rule, Range);
@@ -401,7 +401,7 @@ namespace Niveum.Json.Syntax
             {
                 var FilePath = r.FilePath;
                 var Message = !r.EndOfText ? "IllegalChar '" + r.Peek() + "'" : "InvalidEndOfText";
-                if (FilePath.OnHasValue)
+                if (FilePath.OnSome)
                 {
                     return new InvalidOperationException(FilePath.Value + r.CurrentPosition.ToString() + ": " + Message);
                 }
@@ -412,7 +412,7 @@ namespace Niveum.Json.Syntax
             }
             T MarkRange<T>(T Rule)
             {
-                if (TextRanges.OnHasValue)
+                if (TextRanges.OnSome)
                 {
                     var Range = new TextRange(StartPosition, r.CurrentPosition);
                     TextRanges.Value.Add(Rule, Range);

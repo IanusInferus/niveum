@@ -77,9 +77,9 @@ namespace Server
             var Parameters = StringFromJson(jo["parameters"]);
 
             HttpVirtualTransportServerHandleResult ret;
-            if ((CommandHash.OnHasValue ? ss.HasCommand(CommandName, CommandHash.HasValue) : ss.HasCommand(CommandName)) && (CheckCommandAllowed != null ? CheckCommandAllowed(CommandName) : true))
+            if ((CommandHash.OnSome ? ss.HasCommand(CommandName, CommandHash.Some) : ss.HasCommand(CommandName)) && (CheckCommandAllowed != null ? CheckCommandAllowed(CommandName) : true))
             {
-                if (CommandHash.OnHasValue)
+                if (CommandHash.OnSome)
                 {
                     ret = HttpVirtualTransportServerHandleResult.CreateCommand(new HttpVirtualTransportServerHandleResultCommand
                     {
@@ -90,7 +90,7 @@ namespace Server
                             {
                                 var rjo = new JObject();
                                 rjo["commandName"] = new JValue(CommandName);
-                                rjo["commandHash"] = new JValue(CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
+                                rjo["commandHash"] = new JValue(CommandHash.Some.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
                                 rjo["parameters"] = new JValue(OutputParameters);
                                 lock (c.WriteBufferLockee)
                                 {
@@ -98,7 +98,7 @@ namespace Server
                                 }
                                 OnSuccess();
                             };
-                            ss.ExecuteCommand(CommandName, CommandHash.HasValue, Parameters, OnSuccessInner, OnFailure);
+                            ss.ExecuteCommand(CommandName, CommandHash.Some, Parameters, OnSuccessInner, OnFailure);
                         }
                     });
                 }

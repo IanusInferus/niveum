@@ -3,7 +3,7 @@
 //  File:        SyntaxParser.cs
 //  Location:    Niveum.Json <Visual C#>
 //  Description: 文法分析器
-//  Version:     2018.09.19.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -35,11 +35,11 @@ namespace Niveum.Json.Syntax
             Exception MakeIllegalSyntaxRule()
             {
                 var FilePath = r.FilePath;
-                var Message = CurrentRule.OnHasValue ? "IllegalSyntaxRule '" + CurrentRule.Value._Tag.ToString() + "'" : !r.EndOfText ? "InvalidChar '" + r.Peek() + "'" : "InvalidEndOfText";
-                if (CurrentRule.OnHasValue && TextRanges.OnHasValue && TextRanges.Value.ContainsKey(CurrentRule.Value))
+                var Message = CurrentRule.OnSome ? "IllegalSyntaxRule '" + CurrentRule.Value._Tag.ToString() + "'" : !r.EndOfText ? "InvalidChar '" + r.Peek() + "'" : "InvalidEndOfText";
+                if (CurrentRule.OnSome && TextRanges.OnSome && TextRanges.Value.ContainsKey(CurrentRule.Value))
                 {
                     var Range = TextRanges.Value[CurrentRule.Value];
-                    if (FilePath.OnHasValue)
+                    if (FilePath.OnSome)
                     {
                         return new InvalidOperationException(FilePath.Value + Range.ToString() + ": " + Message);
                     }
@@ -48,7 +48,7 @@ namespace Niveum.Json.Syntax
                         return new InvalidOperationException(Range.ToString() + ": " + Message);
                     }
                 }
-                else if (FilePath.OnHasValue)
+                else if (FilePath.OnSome)
                 {
                     return new InvalidOperationException(FilePath.Value + r.CurrentPosition.ToString() + ": " + Message);
                 }
@@ -59,7 +59,7 @@ namespace Niveum.Json.Syntax
             }
             T MarkRange<T>(T Rule, Object StartToken, Object EndToken)
             {
-                if (TextRanges.OnHasValue)
+                if (TextRanges.OnSome)
                 {
                     var d = TextRanges.Value;
                     if (d.ContainsKey(StartToken) && d.ContainsKey(EndToken))
@@ -111,15 +111,15 @@ namespace Niveum.Json.Syntax
 
             while (true)
             {
-                while (CurrentRule.OnNotHasValue && !r.EndOfText)
+                while (CurrentRule.OnNone && !r.EndOfText)
                 {
                     CurrentRule = TokenParser.ReadToken(r, TextRanges);
-                    if (CurrentRule.OnHasValue && CurrentRule.Value.OnWhitespace)
+                    if (CurrentRule.OnSome && CurrentRule.Value.OnWhitespace)
                     {
                         CurrentRule = Optional<SyntaxRule>.Empty;
                     }
                 }
-                if (CurrentRule.OnNotHasValue)
+                if (CurrentRule.OnNone)
                 {
                     throw MakeIllegalSyntaxRule();
                 }
@@ -144,7 +144,7 @@ namespace Niveum.Json.Syntax
                         while (!r.EndOfText)
                         {
                             CurrentRule = TokenParser.ReadToken(r, TextRanges);
-                            if (CurrentRule.OnHasValue && !CurrentRule.Value.OnWhitespace)
+                            if (CurrentRule.OnSome && !CurrentRule.Value.OnWhitespace)
                             {
                                 throw MakeIllegalSyntaxRule();
                             }

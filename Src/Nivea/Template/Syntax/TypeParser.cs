@@ -3,7 +3,7 @@
 //  File:        TypeParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 类型词法解析器
-//  Version:     2018.12.01.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -36,7 +36,7 @@ namespace Nivea.Template.Syntax
         {
             int InvalidCharIndex;
             var ov = TryParseTypeSpec(TypeString, Mark, out InvalidCharIndex);
-            if (ov.OnNotHasValue)
+            if (ov.OnNone)
             {
                 throw InvalidCharExceptionGenerator(InvalidCharIndex);
             }
@@ -45,7 +45,7 @@ namespace Nivea.Template.Syntax
         public static Optional<TypeSpec> TryParseTypeSpec(String TypeString, Action<Object, int, int> Mark, out int InvalidCharIndex)
         {
             var osml = TokenParser.TrySplitSymbolMemberChain(TypeString, out InvalidCharIndex);
-            if (osml.OnNotHasValue)
+            if (osml.OnNone)
             {
                 return Optional<TypeSpec>.Empty;
             }
@@ -57,7 +57,7 @@ namespace Nivea.Template.Syntax
             {
                 var LocalInvalidCharIndex = 0;
                 var oName = TokenParser.TryUnescapeSymbolName(s.Name, out LocalInvalidCharIndex);
-                if (oName.OnNotHasValue)
+                if (oName.OnNone)
                 {
                     InvalidCharIndex = s.NameStartIndex + LocalInvalidCharIndex;
                     return Optional<TypeSpec>.Empty;
@@ -69,7 +69,7 @@ namespace Nivea.Template.Syntax
                 {
                     var LocalLocalInvalidCharIndex = 0;
                     var ov = TryParseTypeSpec(p.Key, (o, Start, End) => Mark(o, p.Value + Start, p.Value + End), out LocalLocalInvalidCharIndex);
-                    if (ov.OnNotHasValue)
+                    if (ov.OnNone)
                     {
                         InvalidCharIndex = p.Value + LocalLocalInvalidCharIndex;
                         return Optional<TypeSpec>.Empty;
@@ -98,11 +98,11 @@ namespace Nivea.Template.Syntax
 
                 if (s.Parameters.Count > 0)
                 {
-                    if (tTotal.OnNotHasValue && String.Equals(Name, "Tuple", StringComparison.OrdinalIgnoreCase))
+                    if (tTotal.OnNone && String.Equals(Name, "Tuple", StringComparison.OrdinalIgnoreCase))
                     {
                         t = TypeSpec.CreateTuple(l);
                     }
-                    else if (tTotal.OnNotHasValue && String.Equals(Name, "Array", StringComparison.OrdinalIgnoreCase) && (l.Count == 1))
+                    else if (tTotal.OnNone && String.Equals(Name, "Array", StringComparison.OrdinalIgnoreCase) && (l.Count == 1))
                     {
                         t = TypeSpec.CreateArray(l.Single());
                     }
@@ -120,7 +120,7 @@ namespace Nivea.Template.Syntax
                     Mark(t, s.SymbolStartIndex, s.SymbolEndIndex);
                 }
 
-                if (tTotal.OnNotHasValue)
+                if (tTotal.OnNone)
                 {
                     tTotal = t;
                     FirstStart = s.SymbolStartIndex;

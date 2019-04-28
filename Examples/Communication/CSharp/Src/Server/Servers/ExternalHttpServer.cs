@@ -346,7 +346,7 @@ namespace Server
                                 }
 
                                 var oRelativePath = MatchBindingNameAndGetRelativePath(a.Request.Url);
-                                if (oRelativePath.OnNotHasValue)
+                                if (oRelativePath.OnNone)
                                 {
                                     a.Response.StatusCode = 404;
                                     NotifyListenerContextQuit(a);

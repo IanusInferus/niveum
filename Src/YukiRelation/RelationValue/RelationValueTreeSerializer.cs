@@ -3,7 +3,7 @@
 //  File:        RelationValueTreeSerializer.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构数据Tree序列化器
-//  Version:     2016.05.13.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -789,11 +789,11 @@ namespace Yuki.RelationValue
                     Writer = v =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnBooleanValue) { throw new InvalidOperationException(); }
                         return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.BooleanValue.ToInvariantString()) } });
                     };
@@ -803,11 +803,11 @@ namespace Yuki.RelationValue
                     Writer = v =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnStringValue) { throw new InvalidOperationException(); }
                         return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.StringValue) } });
                     };
@@ -817,11 +817,11 @@ namespace Yuki.RelationValue
                     Writer = v =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnIntValue) { throw new InvalidOperationException(); }
                         return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.IntValue.ToInvariantString()) } });
                     };
@@ -831,11 +831,11 @@ namespace Yuki.RelationValue
                     Writer = v =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnInt64Value) { throw new InvalidOperationException(); }
                         return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.Int64Value.ToInvariantString()) } });
                     };
@@ -845,11 +845,11 @@ namespace Yuki.RelationValue
                     Writer = v =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnRealValue) { throw new InvalidOperationException(); }
                         return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(vv.RealValue.ToInvariantString()) } });
                     };
@@ -859,11 +859,11 @@ namespace Yuki.RelationValue
                     Writer = v =>
                     {
                         if (!v.OnOptional) { throw new InvalidOperationException(); }
-                        if (v.Optional.OnNotHasValue)
+                        if (v.Optional.OnNone)
                         {
                             return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateEmpty() } });
                         }
-                        var vv = v.Optional.HasValue;
+                        var vv = v.Optional.Some;
                         if (!vv.OnBinaryValue) { throw new InvalidOperationException(); }
                         var ByteString = String.Join(" ", vv.BinaryValue.Select(b => b.ToString("X2", System.Globalization.CultureInfo.InvariantCulture)).ToArray());
                         return Node.CreateStem(new Stem { Name = c.Name, Children = new List<Node> { Node.CreateLeaf(ByteString) } });

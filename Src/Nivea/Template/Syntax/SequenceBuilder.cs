@@ -3,7 +3,7 @@
 //  File:        SequenceBuilder.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 序列构建器
-//  Version:     2016.06.02.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -121,7 +121,7 @@ namespace Nivea.Template.Syntax
                         if (Children.Count == 1)
                         {
                             var One = Children.Single();
-                            if (One.OnStem && !One.Stem.Head.OnHasValue && One.Stem.CanMerge)
+                            if (One.OnStem && !One.Stem.Head.OnSome && One.Stem.CanMerge)
                             {
                                 Children = One.Stem.Nodes;
                             }
@@ -237,7 +237,7 @@ namespace Nivea.Template.Syntax
                 var Children = InnerNodes.Select(Part => Part.Node).ToList();
                 var Undetermined = new ExprNodeUndetermined { Nodes = Children };
                 var Node = ExprNode.CreateUndetermined(Undetermined);
-                if (RangeStart.OnHasValue && RangeEnd.OnHasValue)
+                if (RangeStart.OnSome && RangeEnd.OnSome)
                 {
                     Positions.Add(Undetermined, new TextRange { Start = RangeStart.Value.Start, End = RangeEnd.Value.End });
                     Positions.Add(Node, new TextRange { Start = RangeStart.Value.Start, End = RangeEnd.Value.End });

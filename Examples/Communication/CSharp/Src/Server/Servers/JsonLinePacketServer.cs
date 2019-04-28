@@ -98,18 +98,18 @@ namespace Server
                 var LineBytes = Buffer.Skip(FirstPosition).Take(LineFeedPosition - FirstPosition).Where(b => b != '\r').ToArray();
                 var Line = TextEncoding.UTF8.GetString(LineBytes, 0, LineBytes.Length);
                 var cmd = ParseCommand(Line);
-                if (cmd.OnHasValue)
+                if (cmd.OnSome)
                 {
-                    var CommandName = cmd.HasValue.CommandName;
-                    var CommandHash = cmd.HasValue.CommandHash;
-                    var Parameters = cmd.HasValue.Parameters;
+                    var CommandName = cmd.Some.CommandName;
+                    var CommandHash = cmd.Some.CommandHash;
+                    var Parameters = cmd.Some.Parameters;
                     if (InputByteLengthReport != null)
                     {
                         InputByteLengthReport(CommandName, LineBytes.Length);
                     }
-                    if ((CommandHash.OnHasValue ? ss.HasCommand(CommandName, CommandHash.HasValue) : ss.HasCommand(CommandName)) && (CheckCommandAllowed != null ? CheckCommandAllowed(CommandName) : true))
+                    if ((CommandHash.OnSome ? ss.HasCommand(CommandName, CommandHash.Some) : ss.HasCommand(CommandName)) && (CheckCommandAllowed != null ? CheckCommandAllowed(CommandName) : true))
                     {
-                        if (CommandHash.OnHasValue)
+                        if (CommandHash.OnSome)
                         {
                             ret = StreamedVirtualTransportServerHandleResult.CreateCommand(new StreamedVirtualTransportServerHandleResultCommand
                             {
@@ -118,7 +118,7 @@ namespace Server
                                 {
                                     Action<String> OnSuccessInner = OutputParameters =>
                                     {
-                                        var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName + "@" + CommandHash.HasValue.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), OutputParameters));
+                                        var Bytes = TextEncoding.UTF8.GetBytes(String.Format(@"/svr {0} {1}" + "\r\n", CommandName + "@" + CommandHash.Some.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), OutputParameters));
                                         lock (c.WriteBufferLockee)
                                         {
                                             if (Transformer != null)
@@ -133,7 +133,7 @@ namespace Server
                                         }
                                         OnSuccess();
                                     };
-                                    ss.ExecuteCommand(CommandName, CommandHash.HasValue, Parameters, OnSuccessInner, OnFailure);
+                                    ss.ExecuteCommand(CommandName, CommandHash.Some, Parameters, OnSuccessInner, OnFailure);
                                 }
                             });
                         }
@@ -167,7 +167,7 @@ namespace Server
                         ret = StreamedVirtualTransportServerHandleResult.CreateBadCommand(new StreamedVirtualTransportServerHandleResultBadCommand { CommandName = CommandName });
                     }
                 }
-                else if (cmd.OnNotHasValue)
+                else if (cmd.OnNone)
                 {
                     ret = StreamedVirtualTransportServerHandleResult.CreateBadCommandLine(new StreamedVirtualTransportServerHandleResultBadCommandLine { CommandLine = Line });
                 }

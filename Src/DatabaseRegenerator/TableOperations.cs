@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2016.09.02.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -126,8 +126,8 @@ namespace Yuki.DatabaseRegenerator
                                         }
                                         else
                                         {
-                                            if (!cv.Optional.HasValue.OnBooleanValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
-                                            Value = cv.Optional.HasValue.BooleanValue;
+                                            if (!cv.Optional.Value.OnBooleanValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
+                                            Value = cv.Optional.Value.BooleanValue;
                                         }
                                     }
                                     else
@@ -148,8 +148,8 @@ namespace Yuki.DatabaseRegenerator
                                         }
                                         else
                                         {
-                                            if (!cv.Optional.HasValue.OnBooleanValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
-                                            p.Value = cv.Optional.HasValue.BooleanValue;
+                                            if (!cv.Optional.Value.OnBooleanValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
+                                            p.Value = cv.Optional.Value.BooleanValue;
                                         }
                                     }
                                     else
@@ -170,8 +170,8 @@ namespace Yuki.DatabaseRegenerator
                                     }
                                     else
                                     {
-                                        if (!cv.Optional.HasValue.OnStringValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
-                                        p.Value = cv.Optional.HasValue.StringValue;
+                                        if (!cv.Optional.Value.OnStringValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
+                                        p.Value = cv.Optional.Value.StringValue;
                                     }
                                 }
                                 else
@@ -191,8 +191,8 @@ namespace Yuki.DatabaseRegenerator
                                     }
                                     else
                                     {
-                                        if (!cv.Optional.HasValue.OnIntValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
-                                        p.Value = cv.Optional.HasValue.IntValue;
+                                        if (!cv.Optional.Value.OnIntValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
+                                        p.Value = cv.Optional.Value.IntValue;
                                     }
                                 }
                                 else
@@ -212,8 +212,8 @@ namespace Yuki.DatabaseRegenerator
                                     }
                                     else
                                     {
-                                        if (!cv.Optional.HasValue.OnInt64Value) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
-                                        p.Value = cv.Optional.HasValue.Int64Value;
+                                        if (!cv.Optional.Value.OnInt64Value) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
+                                        p.Value = cv.Optional.Value.Int64Value;
                                     }
                                 }
                                 else
@@ -233,8 +233,8 @@ namespace Yuki.DatabaseRegenerator
                                     }
                                     else
                                     {
-                                        if (!cv.Optional.HasValue.OnRealValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
-                                        p.Value = cv.Optional.HasValue.RealValue;
+                                        if (!cv.Optional.Value.OnRealValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}[{2}].{1}", CollectionName, f.Name, RowIndex)); }
+                                        p.Value = cv.Optional.Value.RealValue;
                                     }
                                 }
                                 else
@@ -254,8 +254,8 @@ namespace Yuki.DatabaseRegenerator
                                     }
                                     else
                                     {
-                                        if (!cv.Optional.HasValue.OnBinaryValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, RowIndex)); }
-                                        p.Value = cv.Optional.HasValue.BinaryValue.ToArray();
+                                        if (!cv.Optional.Value.OnBinaryValue) { throw new InvalidOperationException(String.Format("InvalidValue: {0}.{1}[{2}]", CollectionName, f.Name, RowIndex)); }
+                                        p.Value = cv.Optional.Value.BinaryValue.ToArray();
                                     }
                                 }
                                 else

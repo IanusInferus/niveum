@@ -3,7 +3,7 @@
 //  File:        SyntaxParser.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 语法解析器
-//  Version:     2018.12.22.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -44,12 +44,12 @@ namespace Niveum.ExpressionSchema
             while (true)
             {
                 var t = tp.ReadToken(r);
-                if (t.Token.OnHasValue)
+                if (t.Token.OnSome)
                 {
-                    TokenQueue.AddLast(t.Token.HasValue);
+                    TokenQueue.AddLast(t.Token.Some);
                 }
-                if (!t.RemainingChars.OnHasValue) { break; }
-                r = t.RemainingChars.HasValue;
+                if (!t.RemainingChars.OnSome) { break; }
+                r = t.RemainingChars.Some;
             }
 
             var StateStack = new Stack<int>();
@@ -94,7 +94,7 @@ namespace Niveum.ExpressionSchema
                 }
                 else
                 {
-                    var NextTokenRange = Positions[Token.HasValue];
+                    var NextTokenRange = Positions[Token.Some];
                     Range = new TextRange { Start = NextTokenRange.Start, End = NextTokenRange.Start };
                 }
                 Mark(st, Range);
@@ -157,7 +157,7 @@ namespace Niveum.ExpressionSchema
             };
             Action<SyntaxRule> Replace = f =>
             {
-                Mark(f, Positions[Token.HasValue]);
+                Mark(f, Positions[Token.Some]);
                 Token = f;
                 TokenQueue.First.Value = f;
             };
@@ -169,7 +169,7 @@ namespace Niveum.ExpressionSchema
             };
             Func<InvalidSyntaxException> MakeInvalidSyntaxRule = () =>
             {
-                var tr = Positions[Token.HasValue];
+                var tr = Positions[Token.Some];
                 var Range = new FileTextRange { Text = Text, Range = tr };
                 var t = Text.GetTextInLine(tr);
                 return new InvalidSyntaxException(String.Format("'{0}' : InvalidSyntaxRuleAtToken", t), Range);
@@ -181,8 +181,8 @@ namespace Niveum.ExpressionSchema
                 Token = EndOfFile() ? Optional<SyntaxRule>.Empty : TokenQueue.First.Value;
                 if (State == 0)
                 {
-                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.HasValue;
+                    if (!Token.OnSome) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.Some;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -241,7 +241,7 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 2)
                 {
-                    if (Token.OnHasValue && Token.HasValue.OnLeftParen)
+                    if (Token.OnSome && Token.Some.OnLeftParen)
                     {
                         Shift(6);
                     }
@@ -252,8 +252,8 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 3)
                 {
-                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.HasValue;
+                    if (!Token.OnSome) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.Some;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -308,8 +308,8 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 4)
                 {
-                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.HasValue;
+                    if (!Token.OnSome) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.Some;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -364,8 +364,8 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 5)
                 {
-                    if (!Token.OnHasValue) { return new SyntaxParserResult { Syntax = RuleStack.Single().Expr }; }
-                    var t = Token.HasValue;
+                    if (!Token.OnSome) { return new SyntaxParserResult { Syntax = RuleStack.Single().Expr }; }
+                    var t = Token.Some;
                     if (t.OnBinaryOperator)
                     {
                         BinaryOperatorStack.Push(t.BinaryOperator);
@@ -378,8 +378,8 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 6)
                 {
-                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.HasValue;
+                    if (!Token.OnSome) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.Some;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -434,7 +434,7 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 7)
                 {
-                    if (Token.OnHasValue && Token.HasValue.OnLeftParen)
+                    if (Token.OnSome && Token.Some.OnLeftParen)
                     {
                         Shift(6);
                     }
@@ -445,8 +445,8 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 8)
                 {
-                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.HasValue;
+                    if (!Token.OnSome) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.Some;
                     if (t.OnBinaryOperator)
                     {
                         BinaryOperatorStack.Push(t.BinaryOperator);
@@ -463,8 +463,8 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 9)
                 {
-                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.HasValue;
+                    if (!Token.OnSome) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.Some;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -519,9 +519,9 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 10)
                 {
-                    if (Token.OnHasValue && Token.HasValue.OnBinaryOperator)
+                    if (Token.OnSome && Token.Some.OnBinaryOperator)
                     {
-                        BinaryOperatorStack.Push(Token.HasValue.BinaryOperator);
+                        BinaryOperatorStack.Push(Token.Some.BinaryOperator);
                         Shift(9);
                     }
                     else
@@ -531,8 +531,8 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 11)
                 {
-                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.HasValue;
+                    if (!Token.OnSome) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.Some;
                     if (t.OnRightParen)
                     {
                         Shift(15);
@@ -544,7 +544,7 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 12)
                 {
-                    if (Token.OnHasValue && Token.HasValue.OnComma)
+                    if (Token.OnSome && Token.Some.OnComma)
                     {
                         Shift(16);
                     }
@@ -559,10 +559,10 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 14)
                 {
-                    if (Token.OnHasValue && Token.HasValue.OnBinaryOperator)
+                    if (Token.OnSome && Token.Some.OnBinaryOperator)
                     {
                         var sbo = BinaryOperatorStack.Peek();
-                        var bo = Token.HasValue.BinaryOperator;
+                        var bo = Token.Some.BinaryOperator;
                         var sp = GetPriority(sbo);
                         var p = GetPriority(bo);
                         if (p == 3 && p == sp && bo.Name != sbo.Name)
@@ -576,7 +576,7 @@ namespace Niveum.ExpressionSchema
                         }
                         else
                         {
-                            BinaryOperatorStack.Push(Token.HasValue.BinaryOperator);
+                            BinaryOperatorStack.Push(Token.Some.BinaryOperator);
                             Shift(9);
                         }
                     }
@@ -592,8 +592,8 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 16)
                 {
-                    if (!Token.OnHasValue) { throw MakeInvalidEndOfFile(); }
-                    var t = Token.HasValue;
+                    if (!Token.OnSome) { throw MakeInvalidEndOfFile(); }
+                    var t = Token.Some;
                     if (t.OnLiteral)
                     {
                         Shift(1);
@@ -648,9 +648,9 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (State == 17)
                 {
-                    if (Token.OnHasValue && Token.HasValue.OnBinaryOperator)
+                    if (Token.OnSome && Token.Some.OnBinaryOperator)
                     {
-                        BinaryOperatorStack.Push(Token.HasValue.BinaryOperator);
+                        BinaryOperatorStack.Push(Token.Some.BinaryOperator);
                         Shift(9);
                     }
                     else

@@ -80,11 +80,11 @@ namespace Client
                 var LineBytes = Buffer.Skip(FirstPosition).Take(LineFeedPosition - FirstPosition).Where(b => b != '\r').ToArray();
                 var Line = System.Text.Encoding.UTF8.GetString(LineBytes, 0, LineBytes.Length);
                 var cmd = ParseCommand(Line);
-                if (cmd.OnHasValue)
+                if (cmd.OnSome)
                 {
-                    var CommandName = cmd.HasValue.CommandName;
-                    var CommandHash = cmd.HasValue.CommandHash;
-                    var Parameters = cmd.HasValue.Parameters;
+                    var CommandName = cmd.Some.CommandName;
+                    var CommandHash = cmd.Some.CommandHash;
+                    var Parameters = cmd.Some.Parameters;
                     ret = StreamedVirtualTransportClientHandleResult.CreateCommand(new StreamedVirtualTransportClientHandleResultCommand
                     {
                         CommandName = CommandName,

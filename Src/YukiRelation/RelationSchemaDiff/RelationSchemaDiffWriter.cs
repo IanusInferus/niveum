@@ -1,9 +1,9 @@
 ﻿//==========================================================================
 //
 //  File:        RelationSchemaDiffWriter.cs
-//  Location:    Yuki.Core <Visual C#>
+//  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构差异写入器
-//  Version:     2016.05.13.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -103,9 +103,9 @@ namespace Yuki.RelationSchemaDiff
 
         private static String GetPrimitiveValString(Optional<PrimitiveVal> v)
         {
-            if (v.OnHasValue)
+            if (v.OnSome)
             {
-                return GetPrimitiveValString(v.HasValue);
+                return GetPrimitiveValString(v.Some);
             }
             else
             {
