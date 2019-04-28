@@ -483,11 +483,11 @@ namespace Niveum.ObjectSchema.CSharpCompatible
             var UnversionedReplyTypeString = GetSuffixedTypeString(cHeadTypeRef.Name, cHeadTypeRef.Version, "Reply", NamespaceName);
             if (c.Attributes.Any(a => a.Key == "Async"))
             {
-                l.AddRange(Translator_ClientCommandAsync(SimpleName, VersionedSimpleName, RequestTypeString, ReplyTypeString, NamespaceName));
+                l.AddRange(Translator_ClientCommandAsync(SimpleName, VersionedSimpleName, RequestTypeString, ReplyTypeString, NamespaceName).Select(Line => cHead != null ? Line : "//" + Line));
             }
             else
             {
-                l.AddRange(Translator_ClientCommand(SimpleName, VersionedSimpleName, RequestTypeString, ReplyTypeString, NamespaceName));
+                l.AddRange(Translator_ClientCommand(SimpleName, VersionedSimpleName, RequestTypeString, ReplyTypeString, NamespaceName).Select(Line => cHead != null ? Line : "//" + Line));
             }
             if (cHead != null)
             {
@@ -517,7 +517,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
             var EventTypeString = GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName);
             var EventName = GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName);
             var UnversionedEventTypeString = GetSuffixedTypeString(cHeadTypeRef.Name, cHeadTypeRef.Version, "Event", NamespaceName);
-            l.AddRange(Translator_ServerCommand(VersionedSimpleName, EventTypeString, NamespaceName));
+            l.AddRange(Translator_ServerCommand(VersionedSimpleName, EventTypeString, NamespaceName).Select(Line => cHead != null ? Line : "//" + Line));
             if (cHead != null)
             {
                 FillTranslatorRecordFrom(EventName, UnversionedEventTypeString, EventTypeString, c.OutParameters, cHead.OutParameters, l, false, NamespaceName);

@@ -102,7 +102,7 @@ std::shared_ptr<class TestAddRequest> ServerImplementation::TestAddAt1RequestToH
 {
     auto ho = std::make_shared<std::shared_ptr<class TestAddRequest>::element_type>();
     ho->Left = o->Operand1;
-    ho->Right = o->Operand2;
+    ho->Right = o->Operand2.value_or(0);
     return ho;
 }
 std::shared_ptr<class TestAddAt1Reply> ServerImplementation::TestAddAt1ReplyFromHead(std::shared_ptr<class TestAddReply> ho)
@@ -112,4 +112,82 @@ std::shared_ptr<class TestAddAt1Reply> ServerImplementation::TestAddAt1ReplyFrom
         return TestAddAt1Reply::CreateResult(ho->Result);
     }
     throw std::logic_error("InvalidOperation");
+}
+
+void ServerImplementation::TestAddAt2(std::shared_ptr<class TestAddAt2Request> r, std::function<void(std::shared_ptr<class TestAddAt2Reply>)> Callback, std::function<void(const std::exception&)> OnFailure)
+{
+    auto HeadRequest = TestAddAt2RequestToHead(r);
+    TestAdd(HeadRequest, [=](std::shared_ptr<class TestAddReply> HeadReply) { Callback(TestAddAt2ReplyFromHead(HeadReply)); }, OnFailure);
+}
+std::shared_ptr<class TestAddRequest> ServerImplementation::TestAddAt2RequestToHead(std::shared_ptr<class TestAddAt2Request> o)
+{
+    auto ho = std::make_shared<std::shared_ptr<class TestAddRequest>::element_type>();
+    ho->Left = o->Left.value_or(0);
+    ho->Right = o->Right;
+    return ho;
+}
+std::shared_ptr<class TestAddAt2Reply> ServerImplementation::TestAddAt2ReplyFromHead(std::shared_ptr<class TestAddReply> ho)
+{
+    if (ho->OnResult())
+    {
+        return TestAddAt2Reply::CreateResult(ho->Result);
+    }
+    throw std::logic_error("InvalidOperation");
+}
+
+std::shared_ptr<class TestAverageAt1Reply> ServerImplementation::TestAverageAt1(std::shared_ptr<class TestAverageAt1Request> r)
+{
+    auto HeadRequest = TestAverageAt1RequestToHead(r);
+    auto HeadReply = TestAverage(HeadRequest);
+    auto Reply = TestAverageAt1ReplyFromHead(HeadReply);
+    return Reply;
+}
+std::shared_ptr<class TestAverageRequest> ServerImplementation::TestAverageAt1RequestToHead(std::shared_ptr<class TestAverageAt1Request> o)
+{
+    auto ho = std::make_shared<std::shared_ptr<class TestAverageRequest>::element_type>();
+    ho->Values = ListOfAverageInputAt1ToHead(o->Values);
+    return ho;
+}
+std::shared_ptr<class TestAverageAt1Reply> ServerImplementation::TestAverageAt1ReplyFromHead(std::shared_ptr<class TestAverageReply> ho)
+{
+    if (ho->OnResult())
+    {
+        return TestAverageAt1Reply::CreateResult(OptionalOfAverageResultAt1FromHead(ho->Result));
+    }
+    throw std::logic_error("InvalidOperation");
+}
+std::shared_ptr<class AverageResultAt1> ServerImplementation::AverageResultAt1FromHead(std::shared_ptr<class AverageResult> ho)
+{
+    auto o = std::make_shared<std::shared_ptr<class AverageResultAt1>::element_type>();
+    o->Value = static_cast<int>(ho->Value);
+    return o;
+}
+std::shared_ptr<class AverageInput> ServerImplementation::AverageInputAt1ToHead(std::shared_ptr<class AverageInputAt1> o)
+{
+    auto ho = std::make_shared<std::shared_ptr<class AverageInput>::element_type>();
+    ho->Value = o->Value;
+    return ho;
+}
+std::optional<std::shared_ptr<class AverageResultAt1>> ServerImplementation::OptionalOfAverageResultAt1FromHead(std::optional<std::shared_ptr<class AverageResult>> ho)
+{
+    return ho.has_value() ? AverageResultAt1FromHead(ho.value()) : std::optional<std::shared_ptr<class AverageResultAt1>>{};
+}
+std::vector<std::shared_ptr<class AverageInput>> ServerImplementation::ListOfAverageInputAt1ToHead(std::vector<std::shared_ptr<class AverageInputAt1>> o)
+{
+    std::vector<std::shared_ptr<class AverageInput>> l;
+    for (auto e : o)
+    {
+        l.push_back(AverageInputAt1ToHead(e));
+    }
+    return l;
+}
+
+std::shared_ptr<class TestSumAt2Reply> ServerImplementation::TestSumAt2(std::shared_ptr<class TestSumAt2Request> r)
+{
+    auto s = 0.0;
+    for (auto v : r->Values)
+    {
+        s += v;
+    }
+    return TestSumAt2Reply::CreateResult(s);
 }

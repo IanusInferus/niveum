@@ -56,8 +56,31 @@ namespace Server.Services
         {
             var ho = new TestAddRequest();
             ho.Left = o.Operand1;
-            ho.Right = o.Operand2;
+            ho.Right = o.Operand2.ValueOrDefault(0);
             return ho;
+        }
+        public TestAddRequest TestAddAt2RequestToHead(TestAddAt2Request o)
+        {
+            var ho = new TestAddRequest();
+            ho.Left = o.Left.ValueOrDefault(0);
+            ho.Right = o.Right;
+            return ho;
+        }
+        public AverageResultAt1 AverageResultAt1FromHead(AverageResult ho)
+        {
+            var o = new AverageResultAt1();
+            o.Value = (int)(ho.Value);
+            return o;
+        }
+        public AverageInput AverageInputAt1ToHead(AverageInputAt1 o)
+        {
+            var ho = new AverageInput();
+            ho.Value = o.Value;
+            return ho;
+        }
+        public TestSumAt2Reply TestSumAt2(TestSumAt2Request r)
+        {
+            return TestSumAt2Reply.CreateResult(r.Values.Sum());
         }
     }
 }

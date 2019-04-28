@@ -24,6 +24,12 @@ namespace Server.Services
             return TestMultiplyReply.CreateResult(o);
         }
 
+        public TestAverageReply TestAverage(TestAverageRequest r)
+        {
+            if (r.Values.Count == 0) { return TestAverageReply.CreateResult(Optional<AverageResult>.Empty); }
+            return TestAverageReply.CreateResult(new AverageResult { Value = r.Values.Average(v => v.Value) });
+        }
+
         public TestTextReply TestText(TestTextRequest r)
         {
             return TestTextReply.CreateResult(r.Text);

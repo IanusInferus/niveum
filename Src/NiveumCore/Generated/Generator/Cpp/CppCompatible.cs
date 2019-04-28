@@ -828,6 +828,32 @@ namespace Niveum.ObjectSchema.CppCompatible
             }
             yield return "}";
         }
+        public IEnumerable<String> Translator_OptionalFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, String VersionedElementSimpleName, String NamespaceName)
+        {
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "FromHead"))), "("), TypeString), " ho)"))
+            {
+                yield return _Line;
+            }
+            yield return "{";
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return ho.has_value() ? "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementSimpleName), "FromHead"))), "(ho.value()) : "), VersionedTypeString), "{};"))
+            {
+                yield return _Line;
+            }
+            yield return "}";
+        }
+        public IEnumerable<String> Translator_OptionalTo(String VersionedSimpleName, String TypeString, String VersionedTypeString, String VersionedElementSimpleName, String NamespaceName)
+        {
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "ToHead"))), "("), VersionedTypeString), " o)"))
+            {
+                yield return _Line;
+            }
+            yield return "{";
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return o.has_value() ? "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedElementSimpleName), "ToHead"))), "(o.value()) : "), TypeString), "{};"))
+            {
+                yield return _Line;
+            }
+            yield return "}";
+        }
         public IEnumerable<String> Translator_ListFrom(String VersionedSimpleName, String TypeString, String VersionedTypeString, String VersionedElementSimpleName, String NamespaceName)
         {
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), VersionedTypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), VersionedSimpleName), "FromHead"))), "("), TypeString), " ho)"))

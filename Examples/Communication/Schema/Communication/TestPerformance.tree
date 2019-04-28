@@ -4,7 +4,7 @@
       File:        TestPerformance.tree
       Location:    Niveum.Examples <Tree>
       Description: 性能测试
-      Version:     2018.12.05.
+      Version:     2019.04.28.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -22,6 +22,17 @@
     Operand             Real                        操作数
     >
     Result              Real                        结果
+
+#Record AverageInput                                平均数输入
+    Value               Real                        结果
+
+#Record AverageResult                               平均数结果
+    Value               Real                        结果
+
+#ClientCommand TestAverage                          测试平均数
+    Values              List<AverageInput>          数据列表
+    >
+    Result              Optional<AverageResult>     结果
 
 #ClientCommand TestText                             文本原样返回
     Text                String                      文本

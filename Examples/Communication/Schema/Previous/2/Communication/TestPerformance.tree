@@ -4,7 +4,7 @@
       File:        TestPerformance.tree
       Location:    Niveum.Examples <Tree>
       Description: 性能测试
-      Version:     2018.12.05.
+      Version:     2019.04.28.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -13,13 +13,29 @@
 #Namespace Communication
 
 #ClientCommand TestAdd                              加法
-    Left                Int                         操作数1
+    Left                Optional<Int>               操作数1
     Right               Int                         操作数2
     >
     Result              Int                         结果
 
 #ClientCommand TestMultiply                         两百万次浮点乘法
     Operand             Real                        操作数
+    >
+    Result              Real                        结果
+
+#Record AverageInput                                平均数输入
+    Value               Real                        结果
+
+#Record AverageResult                               平均数结果
+    Value               Real                        结果
+
+#ClientCommand TestAverage                          测试平均数
+    Values              List<AverageInput>          数据列表
+    >
+    Result              Optional<AverageResult>     结果
+
+#ClientCommand TestSum                              测试和
+    Values              List<Real>                  数据列表
     >
     Result              Real                        结果
 
