@@ -1,0 +1,38 @@
+#ifndef _LIBCPP_CUCHAR
+#define _LIBCPP_CUCHAR
+
+/*
+    cuchar synopsis
+
+namespace std
+{
+
+Types:
+    mbstate_t
+    size_t
+
+size_t mbrtoc16( char16_t* pc16, const char* s, size_t n, mbstate_t* ps );
+size_t c16rtomb( char* s, char16_t c16, std::mbstate_t* ps );
+
+}  // std
+
+*/
+
+#include <__config>
+#include <wchar.h>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
+using ::mbstate_t;
+using ::size_t;
+
+size_t mbrtoc16( char16_t* pc16, const char* s, size_t n, mbstate_t* ps );
+size_t c16rtomb( char* s, char16_t c16, std::mbstate_t* ps );
+
+_LIBCPP_END_NAMESPACE_STD
+
+#endif  // _LIBCPP_CUCHAR
