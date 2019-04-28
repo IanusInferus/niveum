@@ -31,7 +31,7 @@ namespace Nivea.Template.Syntax
                     Positions.Add(SemanticsObj, Positions[SyntaxObj]);
                 }
                 var Range = nm.GetRange(SyntaxObj);
-                if (Range.OnHasValue)
+                if (Range.OnSome)
                 {
                     Positions.Add(SemanticsObj, Range.Value);
                 }
@@ -244,7 +244,7 @@ namespace Nivea.Template.Syntax
                         var ot = TypeParser.TryParseTypeSpec(One.Leaf, (o, Start, End) =>
                         {
                             var Range = nm.GetRange(One);
-                            if (Range.OnHasValue)
+                            if (Range.OnSome)
                             {
                                 if ((Range.Value.Start.Row == Range.Value.End.Row) && (nm.Text.GetTextInLine(Range.Value) == One.Leaf))
                                 {
@@ -265,7 +265,7 @@ namespace Nivea.Template.Syntax
                         else
                         {
                             var FileRange = nm.GetFileRange(One);
-                            if (FileRange.OnHasValue && FileRange.Value.Range.OnHasValue)
+                            if (FileRange.OnSome && FileRange.Value.Range.OnSome)
                             {
                                 var Range = FileRange.Value.Range.Value;
                                 if ((Range.Start.Row == Range.End.Row) && (nm.Text.GetTextInLine(Range) == One.Leaf))
@@ -837,12 +837,12 @@ namespace Nivea.Template.Syntax
                     RangeEnd = ChildLines.Last().Range;
                 }
                 var ChildRange = ChildRangeStart;
-                if (RangeEnd.OnHasValue)
+                if (RangeEnd.OnSome)
                 {
                     ChildRange = new TextRange { Start = ChildRangeStart.Start, End = RangeEnd.Value.End };
                 }
                 var Range = Optional<TextRange>.Empty;
-                if (RangeStart.OnHasValue && RangeEnd.OnHasValue)
+                if (RangeStart.OnSome && RangeEnd.OnSome)
                 {
                     Range = new TextRange { Start = RangeStart.Value.Start, End = RangeEnd.Value.End };
                 }

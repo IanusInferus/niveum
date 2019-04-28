@@ -72,7 +72,7 @@ namespace Yuki.RelationSchema
                             Action<Object, Object> Mark = (SemanticsObj, SyntaxObj) =>
                             {
                                 var Range = nm.GetRange(SyntaxObj);
-                                if (Range.OnHasValue)
+                                if (Range.OnSome)
                                 {
                                     Positions.Add(SemanticsObj, Range.Value);
                                 }
@@ -100,7 +100,7 @@ namespace Yuki.RelationSchema
                                 }
 
                                 var ContentLines = new List<FunctionCallTableLine> { };
-                                if (f.Content.OnHasValue)
+                                if (f.Content.OnSome)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (!ContentValue.OnTableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -309,7 +309,7 @@ namespace Yuki.RelationSchema
                                     while (true)
                                     {
                                         var tpr = TreeFormatTokenParser.ReadToken(Text, pr.Positions, Range);
-                                        if (!tpr.OnHasValue)
+                                        if (!tpr.OnSome)
                                         {
                                             break;
                                         }
@@ -336,7 +336,7 @@ namespace Yuki.RelationSchema
                                             {
                                                 throw new InvalidTokenException("EmptyIndex", new FileTextRange { Text = Text, Range = Range }, ")");
                                             }
-                                            if (tpr.Value.RemainingChars.OnHasValue)
+                                            if (tpr.Value.RemainingChars.OnSome)
                                             {
                                                 clEnd = tpr.Value.RemainingChars.Value.End;
                                             }
@@ -361,7 +361,7 @@ namespace Yuki.RelationSchema
                                             throw new InvalidTokenException("UnknownToken", new FileTextRange { Text = Text, Range = Range }, Text.GetTextInLine(Range));
                                         }
 
-                                        if (!tpr.Value.RemainingChars.OnHasValue)
+                                        if (!tpr.Value.RemainingChars.OnSome)
                                         {
                                             break;
                                         }
@@ -506,7 +506,7 @@ namespace Yuki.RelationSchema
                         Imports.AddRange(ReadResult.Key.Imports);
                         foreach (var p in ReadResult.Value)
                         {
-                            if (p.Value.Range.OnHasValue)
+                            if (p.Value.Range.OnSome)
                             {
                                 Positions.Add(p.Key, p.Value.Range.Value);
                             }
@@ -540,7 +540,7 @@ namespace Yuki.RelationSchema
                 (o, Start, End) =>
                 {
                     var oRange = nm.GetRange(TypeNode);
-                    if (oRange.OnHasValue)
+                    if (oRange.OnSome)
                     {
                         var Range = oRange.Value;
                         var TypeRange = new TextRange { Start = nm.Text.Calc(Range.Start, Start), End = nm.Text.Calc(Range.Start, End) };
@@ -551,7 +551,7 @@ namespace Yuki.RelationSchema
                 {
                     var FileRange = TreeFormat.Optional<FileTextRange>.Empty;
                     var oRange = nm.GetRange(TypeNode);
-                    if (oRange.OnHasValue)
+                    if (oRange.OnSome)
                     {
                         var Range = oRange.Value;
                         FileRange = new FileTextRange { Text = nm.Text, Range = new TextRange { Start = nm.Text.Calc(Range.Start, Index), End = nm.Text.Calc(Range.Start, Index + 1) } };

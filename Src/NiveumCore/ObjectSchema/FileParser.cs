@@ -79,7 +79,7 @@ namespace Niveum.ObjectSchema
                             Action<Object, Object> Mark = (SemanticsObj, SyntaxObj) =>
                             {
                                 var Range = nm.GetRange(SyntaxObj);
-                                if (Range.OnHasValue)
+                                if (Range.OnSome)
                                 {
                                     Positions.Add(SemanticsObj, Range.Value);
                                 }
@@ -96,7 +96,7 @@ namespace Niveum.ObjectSchema
                                 {
                                     var Range = nm.GetRange(Node);
                                     var InvalidChar = Namespace.Substring(InvalidCharIndex, 1);
-                                    if (Range.OnHasValue)
+                                    if (Range.OnSome)
                                     {
                                         Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, InvalidCharIndex), End = nm.Text.Calc(Range.Value.Start, InvalidCharIndex + 1) };
                                     }
@@ -108,7 +108,7 @@ namespace Niveum.ObjectSchema
                                     {
                                         var Range = nm.GetRange(Node);
                                         var Part = Namespace.Substring(p.SymbolStartIndex, p.SymbolEndIndex);
-                                        if (Range.OnHasValue)
+                                        if (Range.OnSome)
                                         {
                                             Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, p.SymbolStartIndex), End = nm.Text.Calc(Range.Value.Start, p.SymbolEndIndex) };
                                         }
@@ -121,7 +121,7 @@ namespace Niveum.ObjectSchema
                                         InvalidCharIndex = p.NameStartIndex + LocalInvalidCharIndex;
                                         var Range = nm.GetRange(Node);
                                         var InvalidChar = Namespace.Substring(InvalidCharIndex, 1);
-                                        if (Range.OnHasValue)
+                                        if (Range.OnSome)
                                         {
                                             Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, InvalidCharIndex), End = nm.Text.Calc(Range.Value.Start, InvalidCharIndex + 1) };
                                         }
@@ -154,7 +154,7 @@ namespace Niveum.ObjectSchema
                                 }
 
                                 var ContentLines = new List<FunctionCallTableLine> { };
-                                if (f.Content.OnHasValue)
+                                if (f.Content.OnSome)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (!ContentValue.OnTableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -608,7 +608,7 @@ namespace Niveum.ObjectSchema
                                 if (f.Parameters.Count != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
                                 var ContentLines = new List<FunctionCallTableLine> { };
-                                if (f.Content.OnHasValue)
+                                if (f.Content.OnSome)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (!ContentValue.OnTableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -668,7 +668,7 @@ namespace Niveum.ObjectSchema
                         Imports.AddRange(ReadResult.Key.Imports);
                         foreach (var p in ReadResult.Value)
                         {
-                            if (p.Value.Range.OnHasValue)
+                            if (p.Value.Range.OnSome)
                             {
                                 Positions.Add(p.Key, p.Value.Range.Value);
                             }
@@ -705,7 +705,7 @@ namespace Niveum.ObjectSchema
                 TypeSpecString,
                 (o, Start, End) =>
                 {
-                    if (oRange.OnHasValue)
+                    if (oRange.OnSome)
                     {
                         var Range = oRange.Value;
                         var TypeRange = new TextRange { Start = nm.Text.Calc(Range.Start, Start), End = nm.Text.Calc(Range.Start, End) };
@@ -715,7 +715,7 @@ namespace Niveum.ObjectSchema
                 Index =>
                 {
                     var FileRange = TreeFormat.Optional<FileTextRange>.Empty;
-                    if (oRange.OnHasValue)
+                    if (oRange.OnSome)
                     {
                         var Range = oRange.Value;
                         FileRange = new FileTextRange { Text = nm.Text, Range = new TextRange { Start = nm.Text.Calc(Range.Start, Index), End = nm.Text.Calc(Range.Start, Index + 1) } };

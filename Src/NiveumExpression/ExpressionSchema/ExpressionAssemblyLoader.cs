@@ -99,7 +99,7 @@ namespace Niveum.ExpressionSchema
                     }
 
                     var ContentLines = new List<Syntax.TextLine> { };
-                    if (f.Content.OnHasValue)
+                    if (f.Content.OnSome)
                     {
                         var ContentValue = f.Content.Value;
                         if (!ContentValue.OnLineContent) { throw new Syntax.InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }

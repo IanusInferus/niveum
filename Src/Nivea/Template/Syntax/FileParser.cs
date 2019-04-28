@@ -76,7 +76,7 @@ namespace Nivea.Template.Syntax
                             Action<Object, Object> Mark = (SemanticsObj, SyntaxObj) =>
                             {
                                 var Range = nm.GetRange(SyntaxObj);
-                                if (Range.OnHasValue)
+                                if (Range.OnSome)
                                 {
                                     Positions.Add(SemanticsObj, Range.Value);
                                 }
@@ -93,7 +93,7 @@ namespace Nivea.Template.Syntax
                                 {
                                     var Range = nm.GetRange(Node);
                                     var InvalidChar = Namespace.Substring(InvalidCharIndex, 1);
-                                    if (Range.OnHasValue)
+                                    if (Range.OnSome)
                                     {
                                         Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, InvalidCharIndex), End = nm.Text.Calc(Range.Value.Start, InvalidCharIndex + 1) };
                                     }
@@ -105,7 +105,7 @@ namespace Nivea.Template.Syntax
                                     {
                                         var Range = nm.GetRange(Node);
                                         var Part = Namespace.Substring(p.SymbolStartIndex, p.SymbolEndIndex);
-                                        if (Range.OnHasValue)
+                                        if (Range.OnSome)
                                         {
                                             Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, p.SymbolStartIndex), End = nm.Text.Calc(Range.Value.Start, p.SymbolEndIndex) };
                                         }
@@ -118,7 +118,7 @@ namespace Nivea.Template.Syntax
                                         InvalidCharIndex = p.NameStartIndex + LocalInvalidCharIndex;
                                         var Range = nm.GetRange(Node);
                                         var InvalidChar = Namespace.Substring(InvalidCharIndex, 1);
-                                        if (Range.OnHasValue)
+                                        if (Range.OnSome)
                                         {
                                             Range = new TextRange { Start = nm.Text.Calc(Range.Value.Start, InvalidCharIndex), End = nm.Text.Calc(Range.Value.Start, InvalidCharIndex + 1) };
                                         }
@@ -147,7 +147,7 @@ namespace Nivea.Template.Syntax
                                 }
 
                                 var ContentLines = new List<FunctionCallTableLine> { };
-                                if (f.Content.OnHasValue)
+                                if (f.Content.OnSome)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (!ContentValue.OnTableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -461,7 +461,7 @@ namespace Nivea.Template.Syntax
                                 if (f.Parameters.Count != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
                                 var ContentNodes = new List<TFSemantics.Node> { };
-                                if (f.Content.OnHasValue)
+                                if (f.Content.OnSome)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (!ContentValue.OnTreeContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -582,7 +582,7 @@ namespace Nivea.Template.Syntax
                                 if (f.Parameters.Count != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
                                 var ContentLines = new List<FunctionCallTableLine> { };
-                                if (f.Content.OnHasValue)
+                                if (f.Content.OnSome)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (!ContentValue.OnTableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -622,7 +622,7 @@ namespace Nivea.Template.Syntax
                                 if (f.Parameters.Count != 0) { throw new InvalidEvaluationException("InvalidParameterCount", nm.GetFileRange(f), f); }
 
                                 var ContentLines = new List<FunctionCallTableLine> { };
-                                if (f.Content.OnHasValue)
+                                if (f.Content.OnSome)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (!ContentValue.OnTableContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -665,7 +665,7 @@ namespace Nivea.Template.Syntax
                                 if (ParameterParts.Length != 2) { throw new InvalidEvaluationException("InvalidParameter", nm.GetFileRange(p), p); }
                                 var Name = ParameterParts[0];
                                 var oRange = nm.GetRange(p);
-                                if (oRange.OnHasValue)
+                                if (oRange.OnSome)
                                 {
                                     var Range = oRange.Value;
                                     var Start = nm.Text.Calc(Range.Start, Name.Length + 1);
@@ -674,7 +674,7 @@ namespace Nivea.Template.Syntax
                                 var Type = ParseTypeSpec(ParameterParts[1], oRange, nm, Positions);
 
                                 List<TFSemantics.Node> Content;
-                                if (f.Content.OnHasValue)
+                                if (f.Content.OnSome)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (!ContentValue.OnTreeContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -710,7 +710,7 @@ namespace Nivea.Template.Syntax
                                     if (ParameterParts.Length != 2) { throw new InvalidEvaluationException("InvalidParameter", nm.GetFileRange(p), p); }
                                     var ParameterName = ParameterParts[0];
                                     var oRange = nm.GetRange(p);
-                                    if (oRange.OnHasValue)
+                                    if (oRange.OnSome)
                                     {
                                         var Range = oRange.Value;
                                         var Start = nm.Text.Calc(Range.Start, ParameterName.Length + 1);
@@ -724,7 +724,7 @@ namespace Nivea.Template.Syntax
                                 Mark(Parameters, f.Parameters);
 
                                 FunctionContent Content;
-                                if (f.Content.OnHasValue)
+                                if (f.Content.OnSome)
                                 {
                                     var ContentValue = f.Content.Value;
                                     if (!ContentValue.OnLineContent) { throw new InvalidEvaluationException("InvalidContent", nm.GetFileRange(ContentValue), ContentValue); }
@@ -738,7 +738,7 @@ namespace Nivea.Template.Syntax
                                 var Signature = new TemplateSignature { Name = Name, Parameters = Parameters };
                                 var FirstRange = nm.GetRange(f.Parameters.First());
                                 var EndRange = nm.GetRange(f.Parameters.Last());
-                                if (FirstRange.OnHasValue && EndRange.OnHasValue)
+                                if (FirstRange.OnSome && EndRange.OnSome)
                                 {
                                     Positions.Add(Signature, new TextRange { Start = FirstRange.Value.Start, End = FirstRange.Value.End });
                                 }
@@ -779,7 +779,7 @@ namespace Nivea.Template.Syntax
                         Sections.AddRange(ReadResult.Key.Sections);
                         foreach (var p in ReadResult.Value)
                         {
-                            if (p.Value.Range.OnHasValue)
+                            if (p.Value.Range.OnSome)
                             {
                                 Positions.Add(p.Key, p.Value.Range.Value);
                             }
@@ -858,7 +858,7 @@ namespace Nivea.Template.Syntax
                 TypeSpecString,
                 (o, Start, End) =>
                 {
-                    if (oRange.OnHasValue)
+                    if (oRange.OnSome)
                     {
                         var Range = oRange.Value;
                         var TypeRange = new TextRange { Start = nm.Text.Calc(Range.Start, Start), End = nm.Text.Calc(Range.Start, End) };
@@ -868,7 +868,7 @@ namespace Nivea.Template.Syntax
                 Index =>
                 {
                     var FileRange = Firefly.Texting.TreeFormat.Optional<FileTextRange>.Empty;
-                    if (oRange.OnHasValue)
+                    if (oRange.OnSome)
                     {
                         var Range = oRange.Value;
                         FileRange = new FileTextRange { Text = nm.Text, Range = new TextRange { Start = nm.Text.Calc(Range.Start, Index), End = nm.Text.Calc(Range.Start, Index + 1) } };

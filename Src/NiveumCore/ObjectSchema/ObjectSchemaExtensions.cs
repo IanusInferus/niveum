@@ -595,7 +595,7 @@ namespace Niveum.ObjectSchema
                     if (Positions.ContainsKey(o))
                     {
                         var ftr = Positions[o];
-                        if (ftr.Range.OnHasValue)
+                        if (ftr.Range.OnSome)
                         {
                             var r = ftr.Range.Value;
                             return String.Format("{0}({1},{2},{3},{4}): {5}", ftr.Text.Path, r.Start.Row, r.Start.Column, r.End.Row, r.End.Column, Message);
@@ -671,7 +671,7 @@ namespace Niveum.ObjectSchema
                 if (oslr.Positions.ContainsKey(o))
                 {
                     var ftr = oslr.Positions[o];
-                    if (ftr.Range.OnHasValue)
+                    if (ftr.Range.OnSome)
                     {
                         var r = ftr.Range.Value;
                         return String.Format("{0}({1},{2},{3},{4}): {5}", ftr.Text.Path, r.Start.Row, r.Start.Column, r.End.Row, r.End.Column, Message);

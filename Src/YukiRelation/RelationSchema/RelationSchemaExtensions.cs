@@ -267,7 +267,7 @@ namespace Yuki.RelationSchema
                 if (rslr.Positions.ContainsKey(o))
                 {
                     var ftr = rslr.Positions[o];
-                    if (ftr.Range.OnHasValue)
+                    if (ftr.Range.OnSome)
                     {
                         var r = ftr.Range.Value;
                         return String.Format("{0}({1},{2},{3},{4}): {5}", ftr.Text.Path, r.Start.Row, r.Start.Column, r.End.Row, r.End.Column, Message);

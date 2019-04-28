@@ -11,6 +11,7 @@ Example:
 *:
 整理工程和构建脚本。
 将所有Optional中的NotHasValue改为None，HasValue改为Some。
+升级Firefly, 将所有Optional中的NotHasValue改为None，HasValue改为Some。
 
 2019.03.22
 Example:
