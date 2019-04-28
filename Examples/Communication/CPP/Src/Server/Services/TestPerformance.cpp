@@ -24,6 +24,19 @@ std::shared_ptr<TestMultiplyReply> ServerImplementation::TestMultiply(std::share
     return TestMultiplyReply::CreateResult(o);
 }
 
+/// <summary>测试平均数</summary>
+std::shared_ptr<TestAverageReply> ServerImplementation::TestAverage(std::shared_ptr<TestAverageRequest> r)
+{
+    if (r->Values.size() == 0) { return TestAverageReply::CreateResult({}); }
+    auto s = 0.0;
+    for (auto v : r->Values)
+    {
+        s += v->Value;
+    }
+    auto ret = std::make_shared<AverageResult>(AverageResult{s / r->Values.size()});
+    return TestAverageReply::CreateResult(ret);
+}
+
 /// <summary>文本原样返回</summary>
 std::shared_ptr<TestTextReply> ServerImplementation::TestText(std::shared_ptr<TestTextRequest> r)
 {

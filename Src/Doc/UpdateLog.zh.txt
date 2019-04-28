@@ -3,6 +3,8 @@ Niveum.Core, Niveum.Expression:
 在C++代码生成中将std::wstring改为std::u16string，去除对std::wstring_convert的依赖。
 Niveum.Core, Yuki.Relation:
 在C++代码生成中将Optional改为std::optional。
+Niveum.Core:
+修正C#和C++兼容代码对Optional的处理。
 Example:
 修正C++示例，并升级到C++17。
 修正C++示例，将Optional改为std::optional，Any改为std::any。

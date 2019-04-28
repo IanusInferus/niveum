@@ -498,11 +498,11 @@ namespace Niveum.ObjectSchema.CppCompatible
             var RawReplyTypeString = GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
             if (c.Attributes.Any(a => a.Key == "Async"))
             {
-                l.AddRange(Translator_ClientCommandAsync(SimpleName, VersionedSimpleName, RequestTypeString, ReplyTypeString, UnversionedReplyTypeString, NamespaceName));
+                l.AddRange(Translator_ClientCommandAsync(SimpleName, VersionedSimpleName, RequestTypeString, ReplyTypeString, UnversionedReplyTypeString, NamespaceName).Select(Line => cHead != null ? Line : "//" + Line));
             }
             else
             {
-                l.AddRange(Translator_ClientCommand(SimpleName, VersionedSimpleName, RequestTypeString, ReplyTypeString, NamespaceName));
+                l.AddRange(Translator_ClientCommand(SimpleName, VersionedSimpleName, RequestTypeString, ReplyTypeString, NamespaceName).Select(Line => cHead != null ? Line : "//" + Line));
             }
             if (cHead != null)
             {
@@ -554,58 +554,34 @@ namespace Niveum.ObjectSchema.CppCompatible
         public void FillTranslatorOptionalFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            var VersionedName = ts.SimpleName(NamespaceName);
+            var VersionedSimpleName = ts.SimpleName(NamespaceName);
             var TypeString = GetTypeString(nts, NamespaceName);
             var VersionedTypeString = GetTypeString(ts, NamespaceName);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
-            var RawVersionedTypeString = GetTypeString(ts, NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
-            var Alternatives = new List<VariableDef>
-            {
-                new VariableDef { Name = "None", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
-                new VariableDef { Name = "Some", Type = ElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
-            };
-            var HeadAlternatives = new List<VariableDef>
-            {
-                new VariableDef { Name = "None", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
-                new VariableDef { Name = "Some", Type = HeadElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
-            };
+            var VersionedElementSimpleName = ElementTypeSpec.SimpleName(NamespaceName);
+            var Result = Translator_OptionalFrom(VersionedSimpleName, TypeString, VersionedTypeString, VersionedElementSimpleName, NamespaceName);
             if (!IsExistentType(VersionedNameToType, HeadElementTypeSpec))
             {
-                FillTranslatorTaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, RawVersionedTypeString, Alternatives, HeadAlternatives, l, true, NamespaceName);
+                Result = Result.Select(Line => "//" + Line);
             }
-            else
-            {
-                FillTranslatorTaggedUnionFrom(VersionedName, TypeString, VersionedTypeString, RawVersionedTypeString, Alternatives, HeadAlternatives, l, false, NamespaceName);
-            }
+            l.AddRange(Result);
         }
         public void FillTranslatorOptionalTo(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {
             var nts = Nonversioned(ts);
-            var VersionedName = ts.SimpleName(NamespaceName);
+            var VersionedSimpleName = ts.SimpleName(NamespaceName);
             var TypeString = GetTypeString(nts, NamespaceName);
             var VersionedTypeString = GetTypeString(ts, NamespaceName);
             var ElementTypeSpec = ts.GenericTypeSpec.ParameterValues.Single();
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
-            var RawVersionedTypeString = GetTypeString(ts, NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsValue: true);
-            var Alternatives = new List<VariableDef>
-            {
-                new VariableDef { Name = "None", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
-                new VariableDef { Name = "Some", Type = ElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
-            };
-            var HeadAlternatives = new List<VariableDef>
-            {
-                new VariableDef { Name = "None", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
-                new VariableDef { Name = "Some", Type = HeadElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
-            };
+            var VersionedElementSimpleName = ElementTypeSpec.SimpleName(NamespaceName);
+            var Result = Translator_OptionalTo(VersionedSimpleName, TypeString, VersionedTypeString, VersionedElementSimpleName, NamespaceName);
             if (!IsExistentType(VersionedNameToType, HeadElementTypeSpec))
             {
-                FillTranslatorTaggedUnionTo(VersionedName, TypeString, VersionedTypeString, RawVersionedTypeString, Alternatives, HeadAlternatives, l, true, NamespaceName);
+                Result = Result.Select(Line => "//" + Line);
             }
-            else
-            {
-                FillTranslatorTaggedUnionTo(VersionedName, TypeString, VersionedTypeString, RawVersionedTypeString, Alternatives, HeadAlternatives, l, false, NamespaceName);
-            }
+            l.AddRange(Result);
         }
         public void FillTranslatorListFrom(Dictionary<String, TypeDef> VersionedNameToType, TypeSpec ts, List<String> l, String NamespaceName)
         {

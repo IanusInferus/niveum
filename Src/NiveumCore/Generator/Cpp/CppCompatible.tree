@@ -553,6 +553,18 @@
         return std::make_tuple(${String.Join(", ", Enumerable.Range(0, Elements.Count).Select(i => "Item" + i.ToInvariantString()))});
     }
 
+#Template Translator_OptionalFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String VersionedElementSimpleName:String NamespaceName:String
+    ${VersionedTypeString} [[${VersionedSimpleName}FromHead]](${TypeString} ho)
+    {
+        return ho.has_value() ? [[${VersionedElementSimpleName}FromHead]](ho.value()) : ${VersionedTypeString}{};
+    }
+
+#Template Translator_OptionalTo VersionedSimpleName:String TypeString:String VersionedTypeString:String VersionedElementSimpleName:String NamespaceName:String
+    ${TypeString} [[${VersionedSimpleName}ToHead]](${VersionedTypeString} o)
+    {
+        return o.has_value() ? [[${VersionedElementSimpleName}ToHead]](o.value()) : ${TypeString}{};
+    }
+
 #Template Translator_ListFrom VersionedSimpleName:String TypeString:String VersionedTypeString:String VersionedElementSimpleName:String NamespaceName:String
     ${VersionedTypeString} [[${VersionedSimpleName}FromHead]](${TypeString} ho)
     {
