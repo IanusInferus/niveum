@@ -112,7 +112,7 @@ namespace Server
             Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  服务器进程启动。");
 
             var ProcessorCount = Environment.ProcessorCount;
-            var WorkThreadCount = c.NumThread.OnHasValue ? Math.Max(1, c.NumThread.Value) : ProcessorCount;
+            var WorkThreadCount = c.NumThread.OnSome ? Math.Max(1, c.NumThread.Value) : ProcessorCount;
             Console.WriteLine(@"逻辑处理器数量: " + ProcessorCount.ToString());
             Console.WriteLine(@"工作线程数量: {0}".Formats(WorkThreadCount));
 

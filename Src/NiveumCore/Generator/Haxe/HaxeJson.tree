@@ -4,7 +4,7 @@
       File:        HaxeJson.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构Haxe JSON通讯模板
-      Version:     2018.12.12.
+      Version:     2019.04.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -511,13 +511,13 @@
         var ElementSimpleName = o.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
     public static function [[${LowercaseCamelize(SimpleName)}FromJson]](j : Dynamic) : ${TypeString}
     {
-        if (hasField(j, "notHasValue"))
+        if (hasField(j, "none"))
         {
             return null;
         }
-        if (hasField(j, "hasValue"))
+        if (hasField(j, "some"))
         {
-            var v = [[${LowercaseCamelize(ElementSimpleName)}FromJson]](getField(j, "hasValue"));
+            var v = [[${LowercaseCamelize(ElementSimpleName)}FromJson]](getField(j, "some"));
             return v;
         }
         throw "InvalidOperation";
@@ -527,11 +527,11 @@
         var j : Dynamic = {};
         if (o == null)
         {
-            setField(j, "notHasValue", unitToJson({}));
+            setField(j, "none", unitToJson({}));
         }
         else
         {
-            setField(j, "hasValue", [[${LowercaseCamelize(ElementSimpleName)}ToJson]](o));
+            setField(j, "some", [[${LowercaseCamelize(ElementSimpleName)}ToJson]](o));
         }
         return j;
     }

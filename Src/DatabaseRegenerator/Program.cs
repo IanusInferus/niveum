@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2018.12.22.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -1050,12 +1050,12 @@ namespace Yuki.DatabaseRegenerator
                     foreach (var ne in NewEntities)
                     {
                         var oOldEntityName = dt.GetOldEntityName(ne.Name);
-                        if (oOldEntityName.OnNotHasValue)
+                        if (oOldEntityName.OnNone)
                         {
                             fso.WriteInt32(0);
                             continue;
                         }
-                        var Index = OldEntityNameToIndex[oOldEntityName.HasValue];
+                        var Index = OldEntityNameToIndex[oOldEntityName.Some];
                         var rr = orvs.GetRowReader(OldEntities[Index]);
                         var rw = nrvs.GetRowWriter(ne);
                         var t = dt.GetTranslator(ne.Name);

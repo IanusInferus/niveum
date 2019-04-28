@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# SQL Server代码模板数据
-      Version:     2015.02.24.
+      Version:     2019.04.28.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -195,9 +195,9 @@ ObjectSchemaTemplate
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
                             p.DbType = DbType.Boolean;
-                            if (Value.OnHasValue)
+                            if (Value.OnSome)
                             {
-                                p.Value = Value.HasValue;
+                                p.Value = Value.Value;
                             }
                             else
                             {
@@ -210,9 +210,9 @@ ObjectSchemaTemplate
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
                             p.DbType = DbType.String;
-                            if (Value.OnHasValue)
+                            if (Value.OnSome)
                             {
-                                p.Value = Value.HasValue;
+                                p.Value = Value.Value;
                             }
                             else
                             {
@@ -225,9 +225,9 @@ ObjectSchemaTemplate
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
                             p.DbType = DbType.Int32;
-                            if (Value.OnHasValue)
+                            if (Value.OnSome)
                             {
-                                p.Value = Value.HasValue;
+                                p.Value = Value.Value;
                             }
                             else
                             {
@@ -240,9 +240,9 @@ ObjectSchemaTemplate
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
                             p.DbType = DbType.Int64;
-                            if (Value.OnHasValue)
+                            if (Value.OnSome)
                             {
-                                p.Value = Value.HasValue;
+                                p.Value = Value.Value;
                             }
                             else
                             {
@@ -255,9 +255,9 @@ ObjectSchemaTemplate
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
                             p.DbType = DbType.Single;
-                            if (Value.OnHasValue)
+                            if (Value.OnSome)
                             {
-                                p.Value = (Single)(Value.HasValue);
+                                p.Value = (Single)(Value.Value);
                             }
                             else
                             {
@@ -270,9 +270,9 @@ ObjectSchemaTemplate
                             var p = cmd.CreateParameter();
                             p.ParameterName = ParameterName;
                             p.DbType = DbType.Binary;
-                            if (Value.OnHasValue)
+                            if (Value.OnSome)
                             {
-                                p.Value = Value.HasValue.ToArray();
+                                p.Value = Value.Value.ToArray();
                             }
                             else
                             {
@@ -366,8 +366,8 @@ ObjectSchemaTemplate
                     private static Optional<[[${EnumName}]]> [[GetOptionalOf${EnumName}]](SqlDataReader dr, String FieldName)
                     {
                         var v = GetOptionalOfInt(dr, FieldName);
-                        if (v.OnNotHasValue) { return Optional<[[${EnumName}]]>.Empty; }
-                        return ([[${EnumName}]])(v.HasValue);
+                        if (v.OnNone) { return Optional<[[${EnumName}]]>.Empty; }
+                        return ([[${EnumName}]])(v.Value);
                     }
                     private static void Add(SqlCommand cmd, String ParameterName, [[${EnumName}]] Value)
                     {
@@ -375,13 +375,13 @@ ObjectSchemaTemplate
                     }
                     private static void Add(SqlCommand cmd, String ParameterName, Optional<[[${EnumName}]]> Value)
                     {
-                        if (Value.OnNotHasValue)
+                        if (Value.OnNone)
                         {
                             Add(cmd, ParameterName, Optional<Int>.Empty);
                         }
                         else
                         {
-                            Add(cmd, ParameterName, (Int)(Value.HasValue));
+                            Add(cmd, ParameterName, (Int)(Value.Value));
                         }
                     }
         Template

@@ -3,7 +3,7 @@
 //  File:        EmbeddedCSharpGenerator.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 嵌入C#代码生成器
-//  Version:     2018.12.01.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -447,14 +447,14 @@ namespace Nivea.Generator
                 else if (Name == "Int")
                 {
                     var i = TokenParser.TryParseInt64Literal(v);
-                    if (i.OnNotHasValue) { throw new InvalidOperationException("ValueExceedRange: " + v); }
+                    if (i.OnNone) { throw new InvalidOperationException("ValueExceedRange: " + v); }
                     if ((i.Value < Int32.MinValue) || (i.Value > Int32.MaxValue)) { throw new InvalidOperationException("ValueExceedRange: " + v); }
                     return i.Value.ToInvariantString();
                 }
                 else if (Name == "Real")
                 {
                     var i = TokenParser.TryParseFloat64Literal(v);
-                    if (i.OnNotHasValue) { throw new InvalidOperationException("ValueExceedRange: " + v); }
+                    if (i.OnNone) { throw new InvalidOperationException("ValueExceedRange: " + v); }
                     return i.Value.ToInvariantString();
                 }
                 else if (Name == "Byte")
@@ -516,7 +516,7 @@ namespace Nivea.Generator
                 if (t.OnGenericTypeSpec && t.GenericTypeSpec.TypeSpec.OnTypeRef && (t.GenericTypeSpec.TypeSpec.TypeRef.Name.Count == 1) && (t.GenericTypeSpec.TypeSpec.TypeRef.Name.Single() == "Optional") && (t.GenericTypeSpec.TypeSpec.TypeRef.Version == "") && (t.GenericTypeSpec.ParameterValues.Count == 1))
                 {
                     var AlternativeType = t.GenericTypeSpec.ParameterValues.Single();
-                    return GetTypeString(t) + "." + GetEscapedIdentifier("Create" + Value.TaggedUnionLiteral.Alternative) + "(" + (Value.TaggedUnionLiteral.Expr.OnHasValue ? GetValueLiteral(Value.TaggedUnionLiteral.Expr.Value, AlternativeType) : "") + ")";
+                    return GetTypeString(t) + "." + GetEscapedIdentifier("Create" + Value.TaggedUnionLiteral.Alternative) + "(" + (Value.TaggedUnionLiteral.Expr.OnSome ? GetValueLiteral(Value.TaggedUnionLiteral.Expr.Value, AlternativeType) : "") + ")";
                 }
                 throw new NotSupportedException(GetTypeString(Type));
             }

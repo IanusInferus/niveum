@@ -3,7 +3,7 @@
 //  File:        TokenParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 词法解析器
-//  Version:     2016.08.01.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -560,10 +560,10 @@ namespace Nivea.Template.Syntax
             while (true)
             {
                 var oResult = ReadToken(Range, IsLeadingToken, Text, Positions);
-                if (oResult.OnNotHasValue) { break; }
+                if (oResult.OnNone) { break; }
                 var Result = oResult.Value;
                 l.Add(Result.Token);
-                if (Result.RemainingChars.OnNotHasValue) { break; }
+                if (Result.RemainingChars.OnNone) { break; }
                 Range = Result.RemainingChars.Value;
                 IsLeadingToken = false;
             }

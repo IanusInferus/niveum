@@ -3,7 +3,7 @@
 //  File:        Java.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构Java代码生成器
-//  Version:     2018.12.20.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -273,7 +273,19 @@ namespace Niveum.ObjectSchema.Java
             var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.NameMatches("Optional")).ToList();
             if (GenericOptionalTypes.Count > 0)
             {
-                var GenericOptionalType = new TaggedUnionDef { Name = new List<String> { "Optional" }, Version = "", GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Type" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Alternatives = new List<VariableDef> { new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }, new VariableDef { Name = "HasValue", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
+                var GenericOptionalType = new TaggedUnionDef
+                {
+                    Name = new List<String> { "Optional" },
+                    Version = "",
+                    GenericParameters = new List<VariableDef> { new VariableDef { Name = "T", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Type" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" } },
+                    Alternatives = new List<VariableDef>
+                    {
+                        new VariableDef { Name = "None", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                        new VariableDef { Name = "Some", Type = TypeSpec.CreateGenericParameterRef("T"), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
+                    },
+                    Attributes = new List<KeyValuePair<String, List<String>>> { },
+                    Description = ""
+                };
                 {
                     var TagName = GetSuffixedTypeName(GenericOptionalType.Name, GenericOptionalType.Version, "Tag", GenericOptionalType.NamespaceName());
                     AddClass(NamespaceName, TagName, TaggedUnionTag(GenericOptionalType));

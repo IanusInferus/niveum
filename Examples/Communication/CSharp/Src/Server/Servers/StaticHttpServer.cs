@@ -49,7 +49,7 @@ namespace Server
             this.ReadBufferSize = ReadBufferSize;
             this.Indices = new String[] { };
         }
-        
+
         public void Start()
         {
             var Root = FileNameHandling.GetDirectoryPathWithTailingSeparator(FileNameHandling.GetAbsolutePath(PhysicalPath, Environment.CurrentDirectory));
@@ -151,7 +151,7 @@ namespace Server
                 if (RelativePathTranslator != null)
                 {
                     var oRelativePath = RelativePathTranslator(RelativePath);
-                    if (oRelativePath.OnNotHasValue)
+                    if (oRelativePath.OnNone)
                     {
                         a.Response.StatusCode = 404;
                         OnSuccess();
@@ -245,7 +245,7 @@ namespace Server
 
                     Int64 Start;
                     Int64 Length;
-                    if (oRange.OnHasValue)
+                    if (oRange.OnSome)
                     {
                         var Range = oRange.Value;
                         Start = Range.Key;

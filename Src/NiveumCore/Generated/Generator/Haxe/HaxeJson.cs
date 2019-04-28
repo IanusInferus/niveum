@@ -696,13 +696,13 @@ namespace Niveum.ObjectSchema.HaxeJson
                 yield return _Line;
             }
             yield return "{";
-            yield return "    if (hasField(j, \"notHasValue\"))";
+            yield return "    if (hasField(j, \"none\"))";
             yield return "    {";
             yield return "        return null;";
             yield return "    }";
-            yield return "    if (hasField(j, \"hasValue\"))";
+            yield return "    if (hasField(j, \"some\"))";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var v = "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementSimpleName)), "FromJson"))), "(getField(j, \"hasValue\"));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        var v = "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementSimpleName)), "FromJson"))), "(getField(j, \"some\"));"))
             {
                 yield return _Line;
             }
@@ -718,11 +718,11 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "    var j : Dynamic = {};";
             yield return "    if (o == null)";
             yield return "    {";
-            yield return "        setField(j, \"notHasValue\", unitToJson({}));";
+            yield return "        setField(j, \"none\", unitToJson({}));";
             yield return "    }";
             yield return "    else";
             yield return "    {";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        setField(j, \"hasValue\", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementSimpleName)), "ToJson"))), "(o));"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        setField(j, \"some\", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(ElementSimpleName)), "ToJson"))), "(o));"))
             {
                 yield return _Line;
             }

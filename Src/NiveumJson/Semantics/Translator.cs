@@ -3,7 +3,7 @@
 //  File:        Translator.cs
 //  Location:    Niveum.Json <Visual C#>
 //  Description: 转换器
-//  Version:     2018.09.19.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -57,7 +57,7 @@ namespace Niveum.Json.Semantics
         }
         private static Dictionary<String, JToken> TranslateMembers(Optional<SyntaxMembers> Members)
         {
-            if (Members.OnNotHasValue) { return new Dictionary<String, JToken>(); }
+            if (Members.OnNone) { return new Dictionary<String, JToken>(); }
             var CurrentMembers = Members.Value;
             var s = new Stack<Tuple<SyntaxMembers, TokenLiteral, SyntaxValue>>();
             while (CurrentMembers.OnMultiple)
@@ -76,7 +76,7 @@ namespace Niveum.Json.Semantics
         }
         private static List<JToken> TranslateElements(Optional<SyntaxElements> Elements)
         {
-            if (Elements.OnNotHasValue) { return new List<JToken>(); }
+            if (Elements.OnNone) { return new List<JToken>(); }
             var CurrentElements = Elements.Value;
             var s = new Stack<Tuple<SyntaxElements, SyntaxValue>>();
             while (CurrentElements.OnMultiple)

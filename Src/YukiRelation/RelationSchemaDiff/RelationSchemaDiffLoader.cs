@@ -3,7 +3,7 @@
 //  File:        RelationSchemaDiffLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异加载器
-//  Version:     2016.07.26.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -348,11 +348,11 @@ namespace Yuki.RelationSchemaDiff
                         {
                             if (Literal.OnEmpty)
                             {
-                                Value = MakeStemNode("NotHasValue", MakeEmptyNode());
+                                Value = MakeStemNode("None", MakeEmptyNode());
                             }
                             else
                             {
-                                Value = MakeStemNode("HasValue", MakeStemNode(f.Type.Optional.Value + "Value", Literal));
+                                Value = MakeStemNode("Some", MakeStemNode(f.Type.Optional.Value + "Value", Literal));
                             }
                         }
                         else if (f.Type.OnList)

@@ -3,7 +3,7 @@
 //  File:        CSharpCompatible.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2018.12.06.
+//  Version:     2019.04.28.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -547,13 +547,13 @@ namespace Niveum.ObjectSchema.CSharpCompatible
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
             var Alternatives = new List<VariableDef>
             {
-                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
-                new VariableDef { Name = "HasValue", Type = ElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
+                new VariableDef { Name = "None", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                new VariableDef { Name = "Some", Type = ElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
             };
             var HeadAlternatives = new List<VariableDef>
             {
-                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
-                new VariableDef { Name = "HasValue", Type = HeadElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
+                new VariableDef { Name = "None", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                new VariableDef { Name = "Some", Type = HeadElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
             };
             if (!IsExistentType(VersionedNameToType, HeadElementTypeSpec))
             {
@@ -574,13 +574,13 @@ namespace Niveum.ObjectSchema.CSharpCompatible
             var HeadElementTypeSpec = nts.GenericTypeSpec.ParameterValues.Single();
             var Alternatives = new List<VariableDef>
             {
-                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
-                new VariableDef { Name = "HasValue", Type = ElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
+                new VariableDef { Name = "None", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                new VariableDef { Name = "Some", Type = ElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
             };
             var HeadAlternatives = new List<VariableDef>
             {
-                new VariableDef { Name = "NotHasValue", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
-                new VariableDef { Name = "HasValue", Type = HeadElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
+                new VariableDef { Name = "None", Type = TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String>{ "Unit" }, Version = "" }), Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" },
+                new VariableDef { Name = "Some", Type = HeadElementTypeSpec, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }
             };
             if (!IsExistentType(VersionedNameToType, HeadElementTypeSpec))
             {
