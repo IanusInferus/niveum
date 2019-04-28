@@ -12,6 +12,6 @@ using namespace Server::Services;
 /// <summary>服务器时间</summary>
 std::shared_ptr<CommunicationDuplication::ServerTimeReply> ServerImplementation::CommunicationDuplicationDotServerTime(std::shared_ptr<CommunicationDuplication::ServerTimeRequest> r)
 {
-	auto s = wideCharToUtf16(DateTimeUtcToString(UtcNow()));
-	return CommunicationDuplication::ServerTimeReply::CreateSuccess(s);
+    auto s = wideCharToUtf16(DateTimeUtcToString(UtcNow()));
+    return CommunicationDuplication::ServerTimeReply::CreateSuccess(s);
 }

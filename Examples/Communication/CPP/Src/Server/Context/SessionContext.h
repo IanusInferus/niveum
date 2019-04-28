@@ -87,9 +87,9 @@ namespace Server
 
         //读时先定义auto Lock = ReaderLock();
         //写时先定义auto Lock = WriterLock();
-		std::shared_mutex SessionLock;
-		std::shared_lock<std::shared_mutex> ReaderLock() { return std::shared_lock<std::shared_mutex>(SessionLock); }
-		std::unique_lock<std::shared_mutex> WriterLock() { return std::unique_lock<std::shared_mutex>(SessionLock); }
+        std::shared_mutex SessionLock;
+        std::shared_lock<std::shared_mutex> ReaderLock() { return std::shared_lock<std::shared_mutex>(SessionLock); }
+        std::unique_lock<std::shared_mutex> WriterLock() { return std::unique_lock<std::shared_mutex>(SessionLock); }
 
 
         //跨线程共享读写访问，读写必须通过SessionLock

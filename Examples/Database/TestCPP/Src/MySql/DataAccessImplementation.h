@@ -44,7 +44,7 @@ namespace Database
             {
                 auto cmd = CreateTextCommand(L"SELECT SessionIndex, Value FROM TestRecords WHERE SessionIndex = @SessionIndex");
                 Add(L"SessionIndex", SessionIndex);
-				auto ov = std::optional<std::shared_ptr<Database::TestRecord>>{};
+                auto ov = std::optional<std::shared_ptr<Database::TestRecord>>{};
                 auto rs = std::shared_ptr<sql::ResultSet>(cmd->executeQuery());
                 if (rs->next())
                 {
@@ -88,7 +88,7 @@ namespace Database
             {
                 auto cmd = CreateTextCommand(L"SELECT Id, Value FROM TestLockRecords WHERE Id = @Id");
                 Add(L"Id", Id);
-				auto ov = std::optional<std::shared_ptr<Database::TestLockRecord>>{};
+                auto ov = std::optional<std::shared_ptr<Database::TestLockRecord>>{};
                 auto rs = std::shared_ptr<sql::ResultSet>(cmd->executeQuery());
                 if (rs->next())
                 {
@@ -108,7 +108,7 @@ namespace Database
             {
                 auto cmd = CreateTextCommand(L"SELECT Id, Value FROM TestLockRecords WHERE Id = @Id FOR UPDATE");
                 Add(L"Id", Id);
-				auto ov = std::optional<std::shared_ptr<Database::TestLockRecord>>{};
+                auto ov = std::optional<std::shared_ptr<Database::TestLockRecord>>{};
                 auto rs = std::shared_ptr<sql::ResultSet>(cmd->executeQuery());
                 if (rs->next())
                 {

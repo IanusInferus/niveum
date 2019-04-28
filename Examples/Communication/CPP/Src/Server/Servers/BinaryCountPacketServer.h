@@ -213,11 +213,11 @@ namespace Server
 
             void WriteString(String v)
             {
-				WriteInt32(static_cast<std::int32_t>(v.size()) * 2);
-				for (auto c : v)
-				{
-					WriteUInt16(static_cast<std::uint16_t>(c));
-				}
+                WriteInt32(static_cast<std::int32_t>(v.size()) * 2);
+                for (auto c : v)
+                {
+                    WriteUInt16(static_cast<std::uint16_t>(c));
+                }
             }
 
             virtual ~IWritableStream() {}

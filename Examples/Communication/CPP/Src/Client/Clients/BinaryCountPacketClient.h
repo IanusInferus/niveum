@@ -113,15 +113,15 @@ namespace Client
 
             String ReadString()
             {
-				std::int32_t Length = ReadInt32();
-				int n = static_cast<int>(Length) / 2;
-				std::u16string v;
-				for (int k = 0; k < n; k += 1)
-				{
-					v.push_back(static_cast<char16_t>(ReadUInt16()));
-				}
-				return v;
-			}
+                std::int32_t Length = ReadInt32();
+                int n = static_cast<int>(Length) / 2;
+                std::u16string v;
+                for (int k = 0; k < n; k += 1)
+                {
+                    v.push_back(static_cast<char16_t>(ReadUInt16()));
+                }
+                return v;
+            }
 
             virtual ~IReadableStream() {}
         };
@@ -213,12 +213,12 @@ namespace Client
 
             void WriteString(String v)
             {
-				WriteInt32(static_cast<std::int32_t>(v.size()) * 2);
-				for (auto c : v)
-				{
-					WriteUInt16(static_cast<std::uint16_t>(c));
-				}
-			}
+                WriteInt32(static_cast<std::int32_t>(v.size()) * 2);
+                for (auto c : v)
+                {
+                    WriteUInt16(static_cast<std::uint16_t>(c));
+                }
+            }
 
             virtual ~IWritableStream() {}
         };

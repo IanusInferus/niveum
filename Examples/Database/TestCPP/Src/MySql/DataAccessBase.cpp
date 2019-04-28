@@ -270,21 +270,21 @@ namespace Database
         std::optional<int> DataAccessBase::GetOptionalOfInt(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
-			if (rs->isNull(FieldNameS)) { return {}; }
+            if (rs->isNull(FieldNameS)) { return {}; }
             return rs->getInt(FieldNameS);
         }
 
         std::optional<double> DataAccessBase::GetOptionalOfReal(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
-			if (rs->isNull(FieldNameS)) { return {}; }
+            if (rs->isNull(FieldNameS)) { return {}; }
             return rs->getDouble(FieldNameS);
         }
 
         std::optional<std::shared_ptr<std::vector<std::uint8_t>>> DataAccessBase::GetOptionalOfBinary(std::shared_ptr<sql::ResultSet> rs, std::wstring FieldName)
         {
             auto FieldNameS = ConvertToSQLString(FieldName);
-			if (rs->isNull(FieldNameS)) { return {}; }
+            if (rs->isNull(FieldNameS)) { return {}; }
             auto is = std::shared_ptr<std::istream>(rs->getBlob(FieldNameS));
             auto s = std::make_shared<std::vector<std::uint8_t>>();
             char b = 0;
