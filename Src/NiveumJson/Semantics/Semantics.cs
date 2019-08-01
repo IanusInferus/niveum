@@ -3,7 +3,7 @@
 //  File:        Semantics.cs
 //  Location:    Niveum.Json <Visual C#>
 //  Description: 语义结构
-//  Version:     2018.09.19.
+//  Version:     2019.08.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -56,6 +56,55 @@ namespace Niveum.Json
             }
             return Translator.Translate(t);
         }
+
+        public JToken this[String propertyName]
+        {
+            get
+            {
+                var o = this as JObject;
+                if (o == null) { throw new InvalidOperationException(); }
+                return o[propertyName];
+            }
+            set
+            {
+                var o = this as JObject;
+                if (o == null) { throw new InvalidOperationException(); }
+                o[propertyName] = value;
+            }
+        }
+        public JToken this[int index]
+        {
+            get
+            {
+                var a = this as JArray;
+                if (a == null) { throw new InvalidOperationException(); }
+                return a[index];
+            }
+
+            set
+            {
+                var a = this as JArray;
+                if (a == null) { throw new InvalidOperationException(); }
+                a[index] = value;
+            }
+        }
+
+        public T Value<T>(String propertyName)
+        {
+            var o = this as JObject;
+            if (o == null) { throw new InvalidOperationException(); }
+            var p = o[propertyName] as JValue;
+            if (p == null) { throw new InvalidOperationException(); }
+            return (T)Convert.ChangeType(p.Value, typeof(T));
+        }
+        public T Value<T>(int index)
+        {
+            var a = this as JArray;
+            if (a == null) { throw new InvalidOperationException(); }
+            var e = a[index] as JValue;
+            if (e == null) { throw new InvalidOperationException(); }
+            return (T)Convert.ChangeType(e.Value, typeof(T));
+        }
     }
 
     public sealed class JValue : JToken
@@ -98,7 +147,7 @@ namespace Niveum.Json
             this.Dict = Dict;
         }
 
-        public JToken this[String propertyName]
+        public new JToken this[String propertyName]
         {
             get
             {
@@ -241,7 +290,7 @@ namespace Niveum.Json
             }
         }
 
-        public JToken this[int index]
+        public new JToken this[int index]
         {
             get
             {
