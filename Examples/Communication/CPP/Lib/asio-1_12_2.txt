@@ -1,0 +1,5 @@
+﻿asio库引用
+
+请按以下地址下载asio 1.12.2库，并将其解压放在当前目录的asio目录，可以看到文件Lib/asio/README。
+https://sourceforge.net/projects/asio/files/asio/1.12.2%20%28Stable%29/asio-1.12.2.tar.bz2/download
+即配置好asio库。

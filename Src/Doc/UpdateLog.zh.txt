@@ -1,6 +1,7 @@
 ﻿2019.08.04
 Example:
 修正C++示例中的警告，增加StackTrace对ARM/ARM64的支持。
+升级asio到1.12.2。
 
 2019.08.02
 Niveum.Json:

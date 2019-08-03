@@ -90,7 +90,7 @@ std::u16string systemToUtf16(const std::string & s)
             //null character
             Ptr += 1;
         }
-        else if ((InCharCount == static_cast<std::size_t>(-3)))
+        else if (InCharCount == static_cast<std::size_t>(-3))
         {
         }
         else if ((InCharCount == static_cast<std::size_t>(-2)) || (InCharCount == static_cast<std::size_t>(-1)))
