@@ -1,4 +1,8 @@
-﻿2019.08.02
+﻿2019.08.04
+Example:
+修正C++示例中的警告，增加StackTrace对ARM/ARM64的支持。
+
+2019.08.02
 Niveum.Json:
 增加一些Newtonsoft.Json中简化调用的函数，便于迁移。
 

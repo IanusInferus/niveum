@@ -67,13 +67,13 @@ std::u16string systemToUtf16(const std::string & s)
 {
 #if defined(WIN32) || defined(_WIN32)
     if (s.size() == 0) { return u""; }
-    int n = MultiByteToWideChar(CP_THREAD_ACP, 0, s.data(), s.size(), nullptr, 0);
+    int n = MultiByteToWideChar(CP_THREAD_ACP, 0, s.data(), static_cast<int>(s.size()), nullptr, 0);
     if (n == 0)
     {
         throw std::logic_error("InvalidChar");
     }
     std::u16string us(n, 0);
-    MultiByteToWideChar(CP_THREAD_ACP, 0, s.data(), s.size(), reinterpret_cast<wchar_t *>(us.data()), n);
+    MultiByteToWideChar(CP_THREAD_ACP, 0, s.data(), static_cast<int>(s.size()), reinterpret_cast<wchar_t *>(const_cast<char16_t *>(us.data())), n);
     return us;
 #else
     std::u16string us;
@@ -111,13 +111,13 @@ std::string utf16ToSystem(const std::u16string & us)
 {
 #if defined(WIN32) || defined(_WIN32)
     if (us.size() == 0) { return ""; }
-    int n = WideCharToMultiByte(CP_THREAD_ACP, 0, reinterpret_cast<const wchar_t *>(us.data()), us.size(), nullptr, 0, nullptr, nullptr);
+    int n = WideCharToMultiByte(CP_THREAD_ACP, 0, reinterpret_cast<const wchar_t *>(us.data()), static_cast<int>(us.size()), nullptr, 0, nullptr, nullptr);
     std::string s(n, 0);
     if (n == 0)
     {
         throw std::logic_error("InvalidChar");
     }
-    WideCharToMultiByte(CP_THREAD_ACP, 0, reinterpret_cast<const wchar_t*>(us.data()), us.size(), s.data(), n, nullptr, nullptr);
+    WideCharToMultiByte(CP_THREAD_ACP, 0, reinterpret_cast<const wchar_t *>(us.data()), static_cast<int>(us.size()), const_cast<char *>(s.data()), n, nullptr, nullptr);
     return s;
 #else
     std::string s;

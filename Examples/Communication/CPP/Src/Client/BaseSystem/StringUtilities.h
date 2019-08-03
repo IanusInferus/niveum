@@ -83,6 +83,34 @@ T Parse(const std::u16string & str)
     return Parse<T>(utf16ToWideChar(str));
 }
 
+template<typename T>
+T ParseHex(const std::wstring& str)
+{
+    if (str.size() > 0)
+    {
+        wchar_t c = str[0];
+        if (!((((c >= '0') && (c <= '9')) || ((c >= 'A') && (c <= 'F')) || ((c >= 'a') && (c <= 'f'))) || (c == '+') || (c == '-') || (c == '.')))
+        {
+            throw std::logic_error("InvalidFormat");
+        }
+    }
+    std::wstringstream s;
+    s << str;
+    T t;
+    s >> std::hex >> t;
+    if (!s.eof())
+    {
+        throw std::logic_error("InvalidFormat");
+    }
+    return t;
+}
+
+template<typename T>
+T ParseHex(const std::u16string & str)
+{
+    return ParseHex<T>(utf16ToWideChar(str));
+}
+
 template<typename CharT>
 std::basic_string<CharT> ReplaceAllCopy(const std::basic_string<CharT> &Input, const std::basic_string<CharT> &Match, const std::basic_string<CharT> &Replacement)
 {

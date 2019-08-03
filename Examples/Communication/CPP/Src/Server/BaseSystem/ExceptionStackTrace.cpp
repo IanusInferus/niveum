@@ -2,7 +2,7 @@
 //
 //  File:        ExceptionStackTrace.cpp
 //  Description: C++异常捕捉时获得代码栈
-//  Version:     2017.04.22.
+//  Version:     2019.08.04.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -10,6 +10,7 @@
 //  Author:      Jochen Kalmbach
 //  Url:         http://www.codeproject.com/Articles/11132/Walking-the-callstack
 //               https://stackwalker.codeplex.com/SourceControl/latest
+//               https://github.com/JochenKalmbach/StackWalker
 //  License:     The BSD 2-Clause License, http://www.opensource.org/licenses/bsd-license.php
 //
 //  gdb_check
@@ -441,10 +442,15 @@ public:
       if (this->pSGSP(m_hProcess, buf, StackWalker::STACKWALK_MAX_NAMELEN) == FALSE)
         this->m_parent->OnDbgHelpErr("SymGetSearchPath", GetLastError(), 0);
     }
+
+#if _M_ARM
+    this->m_parent->OnSymInit(buf, symOptions, "Unknown");
+#else
     char szUserName[1024] = {0};
     DWORD dwSize = 1024;
     GetUserNameA(szUserName, &dwSize);
     this->m_parent->OnSymInit(buf, symOptions, szUserName);
+#endif
 
     return TRUE;
   }
@@ -691,7 +697,7 @@ private:
     pGMI = (tGMI) GetProcAddress( hPsapi, "GetModuleInformation" );
     if ( (pEPM == NULL) || (pGMFNE == NULL) || (pGMBN == NULL) || (pGMI == NULL) )
     {
-      // we couldn�t find all functions
+      // we couldn´t find all functions
       FreeLibrary(hPsapi);
       return FALSE;
     }
@@ -1132,6 +1138,26 @@ BOOL StackWalker::ShowCallstack(HANDLE hThread, const CONTEXT *context, PReadPro
   s.AddrBStore.Offset = c.RsBSP;
   s.AddrBStore.Mode = AddrModeFlat;
   s.AddrStack.Offset = c.IntSp;
+  s.AddrStack.Mode = AddrModeFlat;
+#elif _M_ARM
+  //https://github.com/JochenKalmbach/StackWalker/issues/26
+  //https://docs.microsoft.com/en-us/cpp/build/overview-of-arm-abi-conventions?view=vs-2019
+  imageType = IMAGE_FILE_MACHINE_ARM;
+  s.AddrPC.Offset = c.Pc;
+  s.AddrPC.Mode = AddrModeFlat;
+  s.AddrFrame.Offset = c.R11;
+  s.AddrFrame.Mode = AddrModeFlat;
+  s.AddrStack.Offset = c.Sp;
+  s.AddrStack.Mode = AddrModeFlat;
+#elif _M_ARM64
+  //https://github.com/JochenKalmbach/StackWalker/issues/26
+  //https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions?view=vs-2019
+  imageType = IMAGE_FILE_MACHINE_ARM64;
+  s.AddrPC.Offset = c.Pc;
+  s.AddrPC.Mode = AddrModeFlat;
+  s.AddrFrame.Offset = c.Fp;
+  s.AddrFrame.Mode = AddrModeFlat;
+  s.AddrStack.Offset = c.Sp;
   s.AddrStack.Mode = AddrModeFlat;
 #else
 #error "Platform not supported!"
