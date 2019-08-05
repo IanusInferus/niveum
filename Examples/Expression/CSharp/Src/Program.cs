@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 表达式计算工具
-//  Version:     2018.12.22.
+//  Version:     2019.08.06.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -525,10 +525,10 @@ namespace ExprCalc
                 }
                 catch (InvalidSyntaxException ex)
                 {
-                    if (ex.Range.OnHasValue)
+                    if (ex.Range.OnSome)
                     {
                         var r = ex.Range.Value.Range;
-                        if (r.OnHasValue)
+                        if (r.OnSome)
                         {
                             var Start = r.Value.Start.CharIndex;
                             var End = r.Value.End.CharIndex;

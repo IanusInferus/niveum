@@ -141,7 +141,7 @@ namespace Krustallos
         }
         public IEnumerable<KeyValuePair<TKey, TValue>> Range(Optional<TKey> Lower, Optional<TKey> Upper)
         {
-            if (Lower.OnHasValue && Upper.OnHasValue)
+            if (Lower.OnSome && Upper.OnSome)
             {
                 if (Compare(Lower.Value, Upper.Value) > 0)
                 {
@@ -157,7 +157,7 @@ namespace Krustallos
             {
                 return Enumerable.Empty<KeyValuePair<TKey, TValue>>();
             }
-            if (Lower.OnHasValue && Upper.OnHasValue)
+            if (Lower.OnSome && Upper.OnSome)
             {
                 if (Compare(Lower.Value, Upper.Value) > 0)
                 {
@@ -165,12 +165,12 @@ namespace Krustallos
                 }
             }
             var LowerIndex = 0;
-            if (Lower.OnHasValue)
+            if (Lower.OnSome)
             {
                 LowerIndex = GetIndexStartWithKey(Lower.Value);
             }
             var UpperIndex = GetCount(Root) - 1;
-            if (Upper.OnHasValue)
+            if (Upper.OnSome)
             {
                 UpperIndex = GetIndexEndWithKey(Upper.Value);
             }
@@ -192,7 +192,7 @@ namespace Krustallos
         }
         public IEnumerable<KeyValuePair<TKey, TValue>> RangeByIndex(Optional<int> LowerIndex, Optional<int> UpperIndex)
         {
-            if (LowerIndex.OnHasValue && UpperIndex.OnHasValue)
+            if (LowerIndex.OnSome && UpperIndex.OnSome)
             {
                 if (LowerIndex.Value > UpperIndex.Value)
                 {
@@ -203,7 +203,7 @@ namespace Krustallos
         }
         public int RangeCount(Optional<TKey> Lower, Optional<TKey> Upper)
         {
-            if (Lower.OnHasValue && Upper.OnHasValue)
+            if (Lower.OnSome && Upper.OnSome)
             {
                 if (Compare(Lower.Value, Upper.Value) > 0)
                 {
@@ -214,7 +214,7 @@ namespace Krustallos
         }
         public IEnumerable<KeyValuePair<TKey, TValue>> RangeReversed(Optional<TKey> Lower, Optional<TKey> Upper)
         {
-            if (Lower.OnHasValue && Upper.OnHasValue)
+            if (Lower.OnSome && Upper.OnSome)
             {
                 if (Compare(Lower.Value, Upper.Value) > 0)
                 {
@@ -225,7 +225,7 @@ namespace Krustallos
         }
         public IEnumerable<KeyValuePair<TKey, TValue>> RangeByIndexReversed(Optional<int> LowerIndex, Optional<int> UpperIndex)
         {
-            if (LowerIndex.OnHasValue && UpperIndex.OnHasValue)
+            if (LowerIndex.OnSome && UpperIndex.OnSome)
             {
                 if (LowerIndex.Value > UpperIndex.Value)
                 {
@@ -262,8 +262,8 @@ namespace Krustallos
         {
             if (n == null) { yield break; }
 
-            var nAgainstLower = Lower.OnNotHasValue ? 1 : Compare(n.Key, Lower.Value);
-            var nAgainstUpper = Upper.OnNotHasValue ? -1 : Compare(n.Key, Upper.Value);
+            var nAgainstLower = Lower.OnNone ? 1 : Compare(n.Key, Lower.Value);
+            var nAgainstUpper = Upper.OnNone ? -1 : Compare(n.Key, Upper.Value);
 
             if (nAgainstLower > 0)
             {
@@ -291,8 +291,8 @@ namespace Krustallos
             if (n == null) { yield break; }
 
             var Index = GetCount(n.Left);
-            var nAgainstLower = LowerIndex.OnNotHasValue ? 1 : Index.CompareTo(LowerIndex.Value);
-            var nAgainstUpper = UpperIndex.OnNotHasValue ? -1 : Index.CompareTo(UpperIndex.Value);
+            var nAgainstLower = LowerIndex.OnNone ? 1 : Index.CompareTo(LowerIndex.Value);
+            var nAgainstUpper = UpperIndex.OnNone ? -1 : Index.CompareTo(UpperIndex.Value);
 
             if (nAgainstLower > 0)
             {
@@ -309,7 +309,7 @@ namespace Krustallos
 
             if (nAgainstUpper < 0)
             {
-                foreach (var v in RangeByIndex(n.Right, nAgainstLower >= 0 ? Optional<int>.Empty : (LowerIndex.Value - Index - 1), UpperIndex.OnNotHasValue ? Optional<int>.Empty : (UpperIndex.Value - Index - 1)))
+                foreach (var v in RangeByIndex(n.Right, nAgainstLower >= 0 ? Optional<int>.Empty : (LowerIndex.Value - Index - 1), UpperIndex.OnNone ? Optional<int>.Empty : (UpperIndex.Value - Index - 1)))
                 {
                     yield return v;
                 }
@@ -319,11 +319,11 @@ namespace Krustallos
         {
             if (n == null) { return 0; }
 
-            var nAgainstLower = Lower.OnNotHasValue ? 1 : Compare(n.Key, Lower.Value);
-            var nAgainstUpper = Upper.OnNotHasValue ? -1 : Compare(n.Key, Upper.Value);
+            var nAgainstLower = Lower.OnNone ? 1 : Compare(n.Key, Lower.Value);
+            var nAgainstUpper = Upper.OnNone ? -1 : Compare(n.Key, Upper.Value);
 
             int Count = 0;
-            if (Lower.OnNotHasValue && (nAgainstUpper <= 0))
+            if (Lower.OnNone && (nAgainstUpper <= 0))
             {
                 Count += GetCount(n.Left);
             }
@@ -337,7 +337,7 @@ namespace Krustallos
                 Count += 1;
             }
 
-            if (Upper.OnNotHasValue && (nAgainstLower >= 0))
+            if (Upper.OnNone && (nAgainstLower >= 0))
             {
                 Count += GetCount(n.Right);
             }
@@ -352,8 +352,8 @@ namespace Krustallos
         {
             if (n == null) { yield break; }
 
-            var nAgainstLower = Lower.OnNotHasValue ? 1 : Compare(n.Key, Lower.Value);
-            var nAgainstUpper = Upper.OnNotHasValue ? -1 : Compare(n.Key, Upper.Value);
+            var nAgainstLower = Lower.OnNone ? 1 : Compare(n.Key, Lower.Value);
+            var nAgainstUpper = Upper.OnNone ? -1 : Compare(n.Key, Upper.Value);
 
             if (nAgainstUpper < 0)
             {
@@ -381,12 +381,12 @@ namespace Krustallos
             if (n == null) { yield break; }
 
             var Index = GetCount(n.Left);
-            var nAgainstLower = LowerIndex.OnNotHasValue ? 1 : Index.CompareTo(LowerIndex.Value);
-            var nAgainstUpper = UpperIndex.OnNotHasValue ? -1 : Index.CompareTo(UpperIndex.Value);
+            var nAgainstLower = LowerIndex.OnNone ? 1 : Index.CompareTo(LowerIndex.Value);
+            var nAgainstUpper = UpperIndex.OnNone ? -1 : Index.CompareTo(UpperIndex.Value);
 
             if (nAgainstUpper < 0)
             {
-                foreach (var v in RangeByIndexReversed(n.Right, nAgainstLower >= 0 ? Optional<int>.Empty : (LowerIndex.Value - Index - 1), UpperIndex.OnNotHasValue ? Optional<int>.Empty : (UpperIndex.Value - Index - 1)))
+                foreach (var v in RangeByIndexReversed(n.Right, nAgainstLower >= 0 ? Optional<int>.Empty : (LowerIndex.Value - Index - 1), UpperIndex.OnNone ? Optional<int>.Empty : (UpperIndex.Value - Index - 1)))
                 {
                     yield return v;
                 }

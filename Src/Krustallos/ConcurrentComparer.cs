@@ -132,7 +132,7 @@ namespace Krustallos
                 if ((x == null) && (y == null)) { return 0; }
                 if (x == null) { return -1; }
                 if (y == null) { return 1; }
-                return Inner.Compare(x.HasValue, y.HasValue);
+                return Inner.Compare(x.Some, y.Some);
             }
         }
         private class MappedComparer<T, M> : IComparer<T>

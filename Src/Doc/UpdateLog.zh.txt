@@ -1,4 +1,8 @@
-﻿2019.08.04
+﻿2019.08.06
+*:
+将遗漏的所有Optional中的NotHasValue改为None，HasValue改为Some。
+
+2019.08.04
 Example:
 修正C++示例中的警告，增加StackTrace对ARM/ARM64的支持。
 升级asio到1.12.2。

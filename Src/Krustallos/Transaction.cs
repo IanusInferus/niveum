@@ -62,17 +62,17 @@ namespace Krustallos
 
         public void Revert()
         {
-            if (WriterVersion.OnHasValue)
+            if (WriterVersion.OnSome)
             {
                 Instance.RevertWriterVersion(WriterVersion.Value);
                 WriterVersion = Optional<Version>.Empty;
             }
-            if (ReaderVersion.OnHasValue)
+            if (ReaderVersion.OnSome)
             {
                 Instance.ReturnReaderVersion(ReaderVersion.Value);
                 ReaderVersion = Optional<Version>.Empty;
             }
-            if (PendingWriterVesions.OnHasValue)
+            if (PendingWriterVesions.OnSome)
             {
                 Instance.ReturnPendingWriterVesions(PendingWriterVesions.Value);
                 PendingWriterVesions = Optional<ImmutableSortedDictionary<Version, Unit>>.Empty;
@@ -98,7 +98,7 @@ namespace Krustallos
                                 Locked.Add(o);
                             }
                         }
-                        if (WriterVersion.OnNotHasValue)
+                        if (WriterVersion.OnNone)
                         {
                             WriterVersion = Instance.CreateWriterVersion();
                         }
@@ -113,7 +113,7 @@ namespace Krustallos
                     {
                         if (Success)
                         {
-                            if (WriterVersion.OnHasValue)
+                            if (WriterVersion.OnSome)
                             {
                                 Instance.CommitWriterVersion(WriterVersion.Value, new HashSet<IVersionedPartition>(UpdateStores.SelectMany(p => p.Value).Select(p => p.Value.Partition)));
                                 WriterVersion = Optional<Version>.Empty;
@@ -121,7 +121,7 @@ namespace Krustallos
                         }
                         else
                         {
-                            if (WriterVersion.OnHasValue)
+                            if (WriterVersion.OnSome)
                             {
                                 var WriterVersionValue = WriterVersion.Value;
                                 foreach (var ps in UpdateStores)
@@ -145,12 +145,12 @@ namespace Krustallos
             }
             finally
             {
-                if (ReaderVersion.OnHasValue)
+                if (ReaderVersion.OnSome)
                 {
                     Instance.ReturnReaderVersion(ReaderVersion.Value);
                     ReaderVersion = Optional<Version>.Empty;
                 }
-                if (PendingWriterVesions.OnHasValue)
+                if (PendingWriterVesions.OnSome)
                 {
                     Instance.ReturnPendingWriterVesions(PendingWriterVesions.Value);
                     PendingWriterVesions = Optional<ImmutableSortedDictionary<Version, Unit>>.Empty;
@@ -165,7 +165,7 @@ namespace Krustallos
 
         public Version GetReaderVersion()
         {
-            if (ReaderVersion.OnNotHasValue)
+            if (ReaderVersion.OnNone)
             {
                 ReaderVersion = Instance.TakeReaderVersion();
             }
@@ -173,7 +173,7 @@ namespace Krustallos
         }
         public ImmutableSortedDictionary<Version, Unit> GetPendingWriterVersions()
         {
-            if (PendingWriterVesions.OnNotHasValue)
+            if (PendingWriterVesions.OnNone)
             {
                 PendingWriterVesions = Instance.TakePendingWriterVesions();
             }

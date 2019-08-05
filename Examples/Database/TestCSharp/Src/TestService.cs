@@ -27,9 +27,9 @@ namespace Database
             using (var da = dam.Create())
             {
                 var v = da.FromTestRecordSelectOptionalBySessionIndex(SessionIndex);
-                if (v.OnHasValue)
+                if (v.OnSome)
                 {
-                    return v.HasValue.Value;
+                    return v.Some.Value;
                 }
                 else
                 {
@@ -65,9 +65,9 @@ namespace Database
                 DB.TestLockRecord v;
                 try
                 {
-                    if (ov.OnHasValue)
+                    if (ov.OnSome)
                     {
-                        v = ov.HasValue;
+                        v = ov.Some;
                     }
                     else
                     {
@@ -103,9 +103,9 @@ namespace Database
                 DB.TestLockRecord v;
                 try
                 {
-                    if (ov.OnHasValue)
+                    if (ov.OnSome)
                     {
-                        v = ov.HasValue;
+                        v = ov.Some;
                     }
                     else
                     {
@@ -132,9 +132,9 @@ namespace Database
             {
                 var ov = da.FromTestLockRecordSelectOptionalById(1);
                 DB.TestLockRecord v;
-                if (ov.OnHasValue)
+                if (ov.OnSome)
                 {
-                    v = ov.HasValue;
+                    v = ov.Some;
                     return v.Value;
                 }
                 else

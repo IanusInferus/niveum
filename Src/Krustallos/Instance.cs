@@ -76,7 +76,7 @@ namespace Krustallos
                     throw new InvalidOperationException();
                 }
             }
-            if (oMinReaderVersion.OnHasValue)
+            if (oMinReaderVersion.OnSome)
             {
                 var CurrentMinReaderVersion = oMinReaderVersion.Value;
                 Version CurrentMinWriterVersion;

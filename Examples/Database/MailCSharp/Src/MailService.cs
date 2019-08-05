@@ -31,10 +31,10 @@ namespace Database
                 var u = da.FromUserProfileSelectOptionalByName(Name);
                 if (u == null) { return false; }
 
-                var dua = da.FromDirectUserAuthenticationSelectOptionalByName(u.HasValue.Name);
-                if (dua.OnNotHasValue) { return false; }
+                var dua = da.FromDirectUserAuthenticationSelectOptionalByName(u.Some.Name);
+                if (dua.OnNone) { return false; }
 
-                UserId = u.HasValue.Id;
+                UserId = u.Some.Id;
                 return true;
             }
         }
@@ -143,7 +143,7 @@ namespace Database
             {
                 var u = da.FromUserProfileSelectOptionalByName(Name);
                 if (u == null) { return null; }
-                return u.HasValue.Id;
+                return u.Some.Id;
             }
         }
 

@@ -110,7 +110,7 @@ namespace Database.Krustallos
                 if (this.FilePath == "") { throw new InvalidOperationException("InvalidConnectionString: {0}".Formats(ConnectionString)); }
 
                 Data = new KrustallosData(NumPartition);
-                sbs = Yuki.ObjectSchema.BinarySerializerWithString.Create();
+                sbs = Niveum.ObjectSchema.BinarySerializerWithString.Create();
                 bs = KrustallosSerializer.Create();
                 using (var da = new KrustallosDataAccess(Instance, Data, IsolationLevel, (ITransactionLock)(null)))
                 {
@@ -181,7 +181,7 @@ namespace Database.Krustallos
                             File.Copy(i.FilePath, FilePath + ".new", true);
                             File.Move(FilePath + ".new", FilePath);
                         }
-                        if (i.MaxBackupCount.OnHasValue)
+                        if (i.MaxBackupCount.OnSome)
                         {
                             var MaxBackupCount = i.MaxBackupCount.Value;
                             var FilesToDelete = new List<String>();

@@ -142,4 +142,4 @@
     ServerDebug True
     ClientDebug True
     ServerConnectionTimeout 30
-    NumThread NotHasValue $Empty
+    NumThread None $Empty

@@ -82,7 +82,7 @@ namespace Krustallos
                 Versions = this.Versions;
             }
             var oPair = Versions.TryGetMaxPair();
-            if (oPair.OnHasValue)
+            if (oPair.OnSome)
             {
                 return oPair.Value.Value;
             }
@@ -120,7 +120,7 @@ namespace Krustallos
             {
                 var Versions = this.Versions;
                 var oMaxPair = Versions.TryGetMaxPair();
-                if (oMaxPair.OnHasValue && oMaxPair.Value.Key > v) { return false; }
+                if (oMaxPair.OnSome && oMaxPair.Value.Key > v) { return false; }
                 this.Versions = (Versions.ContainsKey(v) ? Versions.Remove(v) : Versions).Add(v, Content);
             }
             return true;
@@ -147,7 +147,7 @@ namespace Krustallos
                 var Prev = Optional<Version>.Empty;
                 foreach (var p in Versions.Range(Optional<Version>.Empty, v))
                 {
-                    if (Prev.OnHasValue)
+                    if (Prev.OnSome)
                     {
                         NewVersions = NewVersions.Remove(Prev.Value);
                     }

@@ -41,8 +41,8 @@
     <Reference Include="Firefly.Lite">
       <HintPath>..\..\..\..\Bin\Firefly.Lite.dll</HintPath>
     </Reference>
-    <Reference Include="Yuki.Core">
-      <HintPath>..\..\..\..\Bin\Yuki.Core.dll</HintPath>
+    <Reference Include="Niveum.Core">
+      <HintPath>..\..\..\..\Bin\Niveum.Core.dll</HintPath>
     </Reference>
     <Reference Include="Yuki.Relation">
       <HintPath>..\..\..\..\Bin\Yuki.Relation.dll</HintPath>
@@ -76,7 +76,6 @@
     <Compile Include="..\..\..\..\Src\Krustallos\VersionedStore.cs">
       <Link>Krustallos\VersionedStore.cs</Link>
     </Compile>
-    <Compile Include="Common.cs" />
     <Compile Include="CountedDataAccessWrapper.cs" />
     <Compile Include="DataAccessManager.cs" />
     <Compile Include="Database.cs" />
