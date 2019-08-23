@@ -3,7 +3,7 @@
 //  File:        Cpp.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C++代码生成器
-//  Version:     2019.04.28.
+//  Version:     2019.08.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -103,11 +103,11 @@ namespace Niveum.ObjectSchema.Cpp
                 }
                 else if (EnumSet.Contains(Type.TypeRef.VersionedName()))
                 {
-                    return (NoElaboratedTypeSpecifier ? "" : "_ENUM_CLASS_ ") + GetTypeString(Type.TypeRef, NamespaceName);
+                    return (NoElaboratedTypeSpecifier ? "" : "enum ") + GetTypeString(Type.TypeRef, NamespaceName);
                 }
                 if (ForceAsEnum)
                 {
-                    return (NoElaboratedTypeSpecifier ? "" : "_ENUM_CLASS_ ") + GetTypeString(Type.TypeRef, NamespaceName);
+                    return (NoElaboratedTypeSpecifier ? "" : "enum ") + GetTypeString(Type.TypeRef, NamespaceName);
                 }
                 else if (ForceAsValue)
                 {

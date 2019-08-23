@@ -1,4 +1,10 @@
-﻿2019.08.06
+﻿2019.08.23
+Niveum.Core, Yuki.Relation:
+去除为Visual C++不支持scoped enum类型的Elaborated type specifier为enum而做的workaround。(Visual C++ 2019已经修复。)
+Doc:
+修正说明。
+
+2019.08.06
 *:
 将遗漏的所有Optional中的NotHasValue改为None，HasValue改为Some。
 

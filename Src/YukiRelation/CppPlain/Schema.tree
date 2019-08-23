@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C++简单类型代码模板数据
-      Version:     2019.04.28.
+      Version:     2019.08.23.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -73,14 +73,6 @@ ObjectSchemaTemplate
                     #include <exception>
                     #include <stdexcept>
                     #include ${Includes}
-
-                    #ifndef _ENUM_CLASS_
-                    #   if defined(_MSC_VER)
-                    #       define _ENUM_CLASS_ enum class
-                    #   else
-                    #       define _ENUM_CLASS_ enum
-                    #   endif
-                    #endif
 
                     ${Types}
 

@@ -55,7 +55,7 @@
 这部分的代码生成主要分成五个部分：类型定义、二进制序列化、JSON序列化、通讯、版本兼容。
 下面列出各语言代码生成的支持矩阵。
 
-                    VB.Net      C#          Java        C++2011     Haxe        Python      XHTML
+                    VB.Net      C#          Java        C++2017     Haxe        Python      XHTML
 类型定义            √          √          √          √          √          √(*)       √
 二进制序列化        Firefly     √|Firefly  √          √          ×          √          无需
 JSON序列化          ×          √          ×          ×          √          ×          无需
@@ -91,7 +91,7 @@ JSON通讯            ×          两端        ×          ×          客户�
 这部分的代码生成主要分成：类型定义、内存只读数据库、内存数据库Krustallos、SQL Server和MySQL。
 下面列出各语言代码生成的支持矩阵。
 
-                    C#          C++2011         XHTML
+                    C#          C++2017         XHTML
 类型定义            √          √              √ 
 只读数据库          √          √              无需
 Krustallos          √          ×              无需
@@ -108,7 +108,7 @@ MySQL               √          ×              无需
 
 5 环境要求
 
-本框架使用 Visual C# 3.0 编写，开发时需要 Microsoft .Net Framework 4.0 编译器 或 Visual Studio 2012 支持。
+本框架使用 Visual C# 编写，开发时需要 Visual Studio 2019 支持。
 本框架运行时需要 Microsoft .Net Framework 4 运行库支持。
 Microsoft .Net Framework 4 (x86/x64，48.1MB)
 http://download.microsoft.com/download/9/5/A/95A9616B-7A37-4AF6-BC36-D6EA96C8DAAE/dotNetFx40_Full_x86_x64.exe

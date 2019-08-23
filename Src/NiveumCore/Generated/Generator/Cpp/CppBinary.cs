@@ -1390,14 +1390,6 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "";
-            yield return "#ifndef _ENUM_CLASS_";
-            yield return "#   if defined(_MSC_VER)";
-            yield return "#       define _ENUM_CLASS_ enum class";
-            yield return "#   else";
-            yield return "#       define _ENUM_CLASS_ enum";
-            yield return "#   endif";
-            yield return "#endif";
-            yield return "";
             foreach (var _Line in Combine(Begin(), GetTypes(Schema, NamespaceName)))
             {
                 yield return _Line;
