@@ -236,19 +236,17 @@ namespace Server
 
         private static void SetTimer(HttpListener Listener, int Seconds)
         {
-            if (typeof(HttpListener).GetProperty("TimeoutManager") != null)
+            try
             {
                 var ts = TimeSpan.FromSeconds(Seconds);
-                var p = typeof(HttpListener).GetProperty("TimeoutManager");
-                var tm = p.GetValue(Listener, null);
-                var tmt = p.PropertyType;
-                tmt.GetProperty("DrainEntityBody").SetValue(tm, ts, null);
-                tmt.GetProperty("EntityBody").SetValue(tm, ts, null);
-                tmt.GetProperty("HeaderWait").SetValue(tm, ts, null);
-                tmt.GetProperty("IdleConnection").SetValue(tm, ts, null);
-                tmt.GetProperty("RequestQueue").SetValue(tm, ts, null);
+                var tm = Listener.TimeoutManager;
+                tm.DrainEntityBody = ts;
+                tm.EntityBody = ts;
+                tm.HeaderWait = ts;
+                tm.IdleConnection = ts;
+                tm.RequestQueue = ts;
             }
-            else
+            catch (NotImplementedException)
             {
                 Console.WriteLine("SetTimerFailed");
             }

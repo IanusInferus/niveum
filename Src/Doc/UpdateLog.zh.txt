@@ -1,4 +1,8 @@
-﻿2019.08.23
+﻿2019.09.10
+Example:
+修正Mono兼容性。
+
+2019.08.23
 Niveum.Core, Yuki.Relation:
 去除为Visual C++不支持scoped enum类型的Elaborated type specifier为enum而做的workaround。(Visual C++ 2019已经修复。)
 Doc:
