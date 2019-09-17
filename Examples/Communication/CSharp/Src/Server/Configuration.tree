@@ -9,6 +9,9 @@
                                 Binding
                                     IpAddress 0.0.0.0
                                     Port 8001
+                                Binding
+                                    IpAddress ::
+                                    Port 8001
                             SessionIdleTimeout 120
                             UnauthenticatedSessionIdleTimeout 30
                             MaxConnections 32768
@@ -21,6 +24,9 @@
                             Bindings
                                 Binding
                                     IpAddress 0.0.0.0
+                                    Port 8002
+                                Binding
+                                    IpAddress ::
                                     Port 8002
                             SessionIdleTimeout 120
                             UnauthenticatedSessionIdleTimeout 30
@@ -35,6 +41,9 @@
                                 Binding
                                     IpAddress 0.0.0.0
                                     Port 8001
+                                Binding
+                                    IpAddress ::
+                                    Port 8001
                             SessionIdleTimeout 120
                             UnauthenticatedSessionIdleTimeout 30
                             MaxConnections 32768
@@ -48,6 +57,9 @@
                             Bindings
                                 Binding
                                     IpAddress 0.0.0.0
+                                    Port 8002
+                                Binding
+                                    IpAddress ::
                                     Port 8002
                             SessionIdleTimeout 120
                             UnauthenticatedSessionIdleTimeout 30

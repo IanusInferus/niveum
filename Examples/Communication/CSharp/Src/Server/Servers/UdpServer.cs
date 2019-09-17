@@ -706,7 +706,7 @@ namespace Server
                             BindingInfo.Start = () =>
                             {
                                 var EventArgs = new SocketAsyncEventArgs();
-                                EventArgs.RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+                                EventArgs.RemoteEndPoint = new IPEndPoint(Binding.Address.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0);
                                 EventArgs.SetBuffer(BindingInfo.ReadBuffer, 0, BindingInfo.ReadBuffer.Length);
                                 var bs = BindingInfo.Socket.Check(s => s);
                                 EventArgs.Completed += (o, args) => BindingInfo.ListenConsumer.Push(args);
