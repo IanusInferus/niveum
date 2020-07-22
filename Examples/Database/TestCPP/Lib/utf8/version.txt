@@ -1,0 +1,2 @@
+https://sourceforge.net/projects/utfcpp/
+https://iweb.dl.sourceforge.net/project/utfcpp/utf8cpp_2x/Release%202.3.4/utf8_v2_3_4.zip

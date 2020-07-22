@@ -17,7 +17,7 @@ namespace Database
 #if defined WIN32 || defined _WIN32
         s.open(ConnectionString, std::ifstream::binary);
 #else
-        s.open(w2s(ConnectionString), std::ifstream::binary);
+        s.open(wideCharToSystem(ConnectionString), std::ifstream::binary);
 #endif
         s.seekg(0, s.end);
         auto size = static_cast<std::size_t>(s.tellg());

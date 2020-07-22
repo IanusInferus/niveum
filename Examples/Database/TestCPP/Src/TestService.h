@@ -42,7 +42,7 @@ namespace Database
                 throw std::logic_error("InvalidOperationException");
             }
         }
-        
+
         void SaveLockData(int Value)
         {
             auto da = dam.Create();
@@ -52,7 +52,7 @@ namespace Database
             da->FromTestLockRecordUpsertOne(tlr);
             da->Complete();
         }
-        
+
         void AddLockData(int Value)
         {
             auto da = dam.Create();
@@ -72,7 +72,7 @@ namespace Database
             da->FromTestLockRecordUpsertOne(v);
             da->Complete();
         }
-        
+
         int LoadLockData()
         {
             auto da = dam.Create();

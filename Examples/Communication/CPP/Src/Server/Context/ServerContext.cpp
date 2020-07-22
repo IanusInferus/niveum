@@ -1,7 +1,7 @@
 ﻿#include "ServerContext.h"
 
 #include "BaseSystem/StringUtilities.h"
-#include "CommunicationBinary.h"
+#include "Generated/CommunicationBinary.h"
 #include "Context/SerializationServerAdapter.h"
 #include "Services/ServerImplementation.h"
 

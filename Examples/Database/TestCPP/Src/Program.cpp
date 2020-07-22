@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
 //  Description: 数据库示例程序
-//  Version:     2019.04.28.
+//  Version:     2020.07.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //

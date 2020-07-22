@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C++二进制通讯模板
-      Version:     2019.08.23.
+      Version:     2020.07.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -248,35 +248,18 @@
                 }
         };
 
+        std::function<std::exception(std::u16string)> ExceptionFactory;
         std::shared_ptr<ApplicationClient> c;
         std::unordered_map<std::pair<std::u16string, std::uint32_t>, std::function<void(std::vector<std::uint8_t>)>, Hash> ServerCommands;
 
-    private:
-        static std::string utf16ToSystem(std::u16string us)
-        {
-            std::string s;
-            s.reserve(us.size() * 2);
-            std::mbstate_t State{};
-            char cOut[MB_LEN_MAX]{};
-            for (char16_t c16 : us)
-            {
-                std::size_t OutCharCount = std::c16rtomb(cOut, c16, &State);
-                if (OutCharCount == static_cast<std::size_t>(-1))
-                {
-                    throw std::logic_error("InvalidChar");
-                }
-                s.append(cOut, OutCharCount);
-            }
-            return s;
-        }
-
     public:
-        BinarySerializationClient(std::shared_ptr<IBinarySender> s)
+        BinarySerializationClient(std::shared_ptr<IBinarySender> s, std::function<std::exception(std::u16string)> ExceptionFactory)
         {
+            this->ExceptionFactory = ExceptionFactory;
             c = std::make_shared<ApplicationClient>();
-            c->GlobalErrorHandler = [](std::u16string CommandName, std::u16string Message)
+            c->GlobalErrorHandler = [this](std::u16string CommandName, std::u16string Message)
             {
-                throw std::runtime_error(utf16ToSystem(CommandName) + ": " + utf16ToSystem(Message));
+                throw this->ExceptionFactory(CommandName + u": " + Message);
             };
             c->s = s;
             $$
@@ -317,12 +300,12 @@
                 auto q = c->ClientCommandCallbacks[CommandName];
                 if (q->size() == 0)
                 {
-                    throw std::logic_error("InvalidOperation: " + utf16ToSystem(CommandName));
+                    throw ExceptionFactory(u"InvalidOperation: " + CommandName);
                 }
                 auto t = q->front();
                 if (t.Hash != CommandHash)
                 {
-                    throw std::logic_error("InvalidOperation: " + utf16ToSystem(CommandName));
+                    throw ExceptionFactory(u"InvalidOperation: " + CommandName);
                 }
                 q->pop();
                 auto Callback = t.Callback;
@@ -338,7 +321,7 @@
                 return;
             }
 
-            throw std::logic_error("InvalidOperation: " + utf16ToSystem(CommandName));
+            throw ExceptionFactory(u"InvalidOperation: " + CommandName);
         }
     };
 
@@ -1075,7 +1058,6 @@
     #pragma once
 
     #include <cstdint>
-    #include <cuchar>
     #include <climits>
     #include <string>
     #include <vector>

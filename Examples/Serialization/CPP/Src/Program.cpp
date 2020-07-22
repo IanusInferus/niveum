@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
 //  Description: 数据复制工具
-//  Version:     2018.08.17.
+//  Version:     2020.07.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //

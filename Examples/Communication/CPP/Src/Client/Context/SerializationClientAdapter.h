@@ -2,8 +2,9 @@
 
 #include "Clients/ISerializationClient.h"
 
-#include "Communication.h"
-#include "CommunicationBinary.h"
+#include "BaseSystem/StringUtilities.h"
+#include "Generated/Communication.h"
+#include "Generated/CommunicationBinary.h"
 
 #include <memory>
 #include <cstdint>
@@ -13,6 +14,7 @@
 #include <string>
 #include <cmath>
 #include <functional>
+#include <stdexcept>
 #include <asio.hpp>
 #include <asio/steady_timer.hpp>
 #ifdef _MSC_VER
@@ -151,7 +153,7 @@ namespace Client
         {
             CommandRequests = std::make_shared<std::unordered_map<std::u16string, std::shared_ptr<std::queue<CommandRequest>>>>();
             CommandQueue = std::make_shared<std::queue<std::shared_ptr<CommandContent>>>();
-            this->bc = std::make_shared<Communication::Binary::BinarySerializationClient>(std::make_shared<BinarySender>(*this));
+            this->bc = std::make_shared<Communication::Binary::BinarySerializationClient>(std::make_shared<BinarySender>(*this), [](std::u16string Message) { return std::logic_error(utf16ToSystem(Message)); });
             auto ac = this->bc->GetApplicationClient();
             ac->ErrorCommand = [=](std::shared_ptr<Communication::ErrorCommandEvent> e)
             {

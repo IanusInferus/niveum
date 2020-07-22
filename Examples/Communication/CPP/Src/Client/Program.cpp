@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2019.04.28.
+//  Version:     2020.07.22.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -11,8 +11,8 @@
 
 #include "BaseSystem/StringUtilities.h"
 #include "BaseSystem/ExceptionStackTrace.h"
-#include "Communication.h"
-#include "CommunicationBinary.h"
+#include "Generated/Communication.h"
+#include "Generated/CommunicationBinary.h"
 #include "Clients/BinaryCountPacketClient.h"
 #include "Clients/TcpClient.h"
 #include "Clients/UdpClient.h"

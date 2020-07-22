@@ -5,6 +5,7 @@
 #include "BaseSystem/ThreadLocalVariable.h"
 #include "TestService.h"
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <queue>

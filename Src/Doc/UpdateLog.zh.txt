@@ -1,4 +1,12 @@
-﻿2019.09.17
+﻿2020.07.22
+Niveum.Core:
+去除C++中对<cuchar>头文件的使用，字符串转换改为外部注入。
+Example:
+去除数据库C++ MySQL示例。
+升级C++示例中的UTF-8 CPP和ASIO库。
+修正C++示例在Linux上的编译。
+
+2019.09.17
 Example:
 修正IPv6兼容性。
 

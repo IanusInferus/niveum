@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "Communication.h"
+#include "Generated/Communication.h"
 #include "Servers/IContext.h"
 #include "BaseSystem/StringUtilities.h"
 

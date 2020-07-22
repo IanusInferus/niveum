@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "Communication.h"
-#include "CommunicationBinary.h"
+#include "Generated/Communication.h"
+#include "Generated/CommunicationBinary.h"
 #include "Context/ServerContext.h"
 #include "Context/SessionContext.h"
 #include "BaseSystem/StringUtilities.h"

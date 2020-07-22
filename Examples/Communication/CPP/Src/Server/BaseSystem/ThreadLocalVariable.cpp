@@ -67,8 +67,10 @@ std::function<void()> do_at_thread_exit(std::function<void()> f)
 #include <pthread.h>
 #include <cstdio>
 
-namespace BaseSystem {
-namespace detail {
+namespace BaseSystem
+{
+namespace detail
+{
 
 struct Context
 {

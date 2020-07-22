@@ -356,35 +356,18 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "    };";
             yield return "";
+            yield return "    std::function<std::exception(std::u16string)> ExceptionFactory;";
             yield return "    std::shared_ptr<ApplicationClient> c;";
             yield return "    std::unordered_map<std::pair<std::u16string, std::uint32_t>, std::function<void(std::vector<std::uint8_t>)>, Hash> ServerCommands;";
             yield return "";
-            yield return "private:";
-            yield return "    static std::string utf16ToSystem(std::u16string us)";
-            yield return "    {";
-            yield return "        std::string s;";
-            yield return "        s.reserve(us.size() * 2);";
-            yield return "        std::mbstate_t State{};";
-            yield return "        char cOut[MB_LEN_MAX]{};";
-            yield return "        for (char16_t c16 : us)";
-            yield return "        {";
-            yield return "            std::size_t OutCharCount = std::c16rtomb(cOut, c16, &State);";
-            yield return "            if (OutCharCount == static_cast<std::size_t>(-1))";
-            yield return "            {";
-            yield return "                throw std::logic_error(\"InvalidChar\");";
-            yield return "            }";
-            yield return "            s.append(cOut, OutCharCount);";
-            yield return "        }";
-            yield return "        return s;";
-            yield return "    }";
-            yield return "";
             yield return "public:";
-            yield return "    BinarySerializationClient(std::shared_ptr<IBinarySender> s)";
+            yield return "    BinarySerializationClient(std::shared_ptr<IBinarySender> s, std::function<std::exception(std::u16string)> ExceptionFactory)";
             yield return "    {";
+            yield return "        this->ExceptionFactory = ExceptionFactory;";
             yield return "        c = std::make_shared<ApplicationClient>();";
-            yield return "        c->GlobalErrorHandler = [](std::u16string CommandName, std::u16string Message)";
+            yield return "        c->GlobalErrorHandler = [this](std::u16string CommandName, std::u16string Message)";
             yield return "        {";
-            yield return "            throw std::runtime_error(utf16ToSystem(CommandName) + \": \" + utf16ToSystem(Message));";
+            yield return "            throw this->ExceptionFactory(CommandName + u\": \" + Message);";
             yield return "        };";
             yield return "        c->s = s;";
             foreach (var c in Commands)
@@ -435,12 +418,12 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "            auto q = c->ClientCommandCallbacks[CommandName];";
             yield return "            if (q->size() == 0)";
             yield return "            {";
-            yield return "                throw std::logic_error(\"InvalidOperation: \" + utf16ToSystem(CommandName));";
+            yield return "                throw ExceptionFactory(u\"InvalidOperation: \" + CommandName);";
             yield return "            }";
             yield return "            auto t = q->front();";
             yield return "            if (t.Hash != CommandHash)";
             yield return "            {";
-            yield return "                throw std::logic_error(\"InvalidOperation: \" + utf16ToSystem(CommandName));";
+            yield return "                throw ExceptionFactory(u\"InvalidOperation: \" + CommandName);";
             yield return "            }";
             yield return "            q->pop();";
             yield return "            auto Callback = t.Callback;";
@@ -456,7 +439,7 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "            return;";
             yield return "        }";
             yield return "";
-            yield return "        throw std::logic_error(\"InvalidOperation: \" + utf16ToSystem(CommandName));";
+            yield return "        throw ExceptionFactory(u\"InvalidOperation: \" + CommandName);";
             yield return "    }";
             yield return "};";
         }
@@ -1374,7 +1357,6 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "#pragma once";
             yield return "";
             yield return "#include <cstdint>";
-            yield return "#include <cuchar>";
             yield return "#include <climits>";
             yield return "#include <string>";
             yield return "#include <vector>";
