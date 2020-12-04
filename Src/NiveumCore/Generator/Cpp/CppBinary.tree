@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构C++二进制通讯模板
-      Version:     2020.07.22.
+      Version:     2020.12.04.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -896,7 +896,7 @@
             }
         return std::make_tuple(${String.Join(", ", ItemNames)});
     }
-    static void [[${SimpleName}ToBinary]](IWritableStream &s, ${TypeString} t)
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &t)
     {
         $$
             {
@@ -927,7 +927,7 @@
             return [[${ElementType.SimpleName(NamespaceName)}FromBinary]](s);
         }
     }
-    static void [[${SimpleName}ToBinary]](IWritableStream &s, ${TypeString} o)
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &o)
     {
         if (!o.has_value())
         {
@@ -967,7 +967,7 @@
             }
         return l;
     }
-    static void [[${SimpleName}ToBinary]](IWritableStream &s, ${TypeString} l)
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
     {
         int Length = static_cast<int>(l.size());
         IntToBinary(s, static_cast<Int>(Length));
@@ -1003,7 +1003,7 @@
         }
         return l;
     }
-    static void [[${SimpleName}ToBinary]](IWritableStream &s, ${TypeString} l)
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
     {
         int Length = static_cast<int>(l.size());
         IntToBinary(s, static_cast<Int>(Length));
@@ -1036,7 +1036,7 @@
         }
         return l;
     }
-    static void [[${SimpleName}ToBinary]](IWritableStream &s, ${TypeString} l)
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
     {
         int Length = static_cast<int>(l.size());
         IntToBinary(s, static_cast<Int>(Length));
