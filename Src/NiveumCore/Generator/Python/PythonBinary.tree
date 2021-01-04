@@ -4,7 +4,7 @@
       File:        PythonBinary.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构Python二进制通讯模板
-      Version:     2018.12.22.
+      Version:     2021.01.04.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -21,6 +21,18 @@
     Firefly
 
 #Template Streams
+    def _check_methods(C, *methods):
+        mro = C.__mro__
+        for method in methods:
+            for B in mro:
+                if method in B.__dict__:
+                    if B.__dict__[method] is None:
+                        return NotImplemented
+                    break
+            else:
+                return NotImplemented
+        return True
+
     class IReadableStream(metaclass=ABCMeta):
         __slots__ = ()
 
@@ -43,8 +55,8 @@
         @classmethod
         def __subclasshook__(cls, C):
             if cls is IReadableStream:
-                return _check_methods(C, "ReadByte") and _check_methods(C, "ReadBytes") and _check_methods(C, "__enter__") and _check_methods(C, "__exit__")
-            raise NotImplementedError
+                return _check_methods(C, "ReadByte", "ReadBytes", "__enter__", "__exit__")
+            return NotImplementedError
 
     class IWritableStream(metaclass=ABCMeta):
         __slots__ = ()
@@ -68,8 +80,8 @@
         @classmethod
         def __subclasshook__(cls, C):
             if cls is IReadableStream:
-                return _check_methods(C, "WriteByte") and _check_methods(C, "WriteBytes") and _check_methods(C, "__enter__") and _check_methods(C, "__exit__")
-            raise NotImplementedError
+                return _check_methods(C, "WriteByte", "WriteBytes", "__enter__", "__exit__")
+            return NotImplementedError
 
     class ReadStream:
         @staticmethod
@@ -603,7 +615,7 @@
     @staticmethod
     def [[${Name}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${Name}ToBinary]](bas, v)
+            BinaryTranslator.[[${Name}ToBinary]](bas, o)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
@@ -648,7 +660,7 @@
     @staticmethod
     def [[${Name}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${Name}ToBinary]](bas, v)
+            BinaryTranslator.[[${Name}ToBinary]](bas, o)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
@@ -691,7 +703,7 @@
     @staticmethod
     def [[${Name}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${Name}ToBinary]](bas, v)
+            BinaryTranslator.[[${Name}ToBinary]](bas, o)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
@@ -714,7 +726,7 @@
     @staticmethod
     def [[${Name}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${Name}ToBinary]](bas, v)
+            BinaryTranslator.[[${Name}ToBinary]](bas, o)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
@@ -757,7 +769,7 @@
     @staticmethod
     def [[${SimpleName}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${SimpleName}ToBinary]](bas, v)
+            BinaryTranslator.[[${SimpleName}ToBinary]](bas, o)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
@@ -788,7 +800,7 @@
     @staticmethod
     def [[${SimpleName}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${SimpleName}ToBinary]](bas, v)
+            BinaryTranslator.[[${SimpleName}ToBinary]](bas, o)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
@@ -819,7 +831,7 @@
     @staticmethod
     def [[${SimpleName}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${SimpleName}ToBinary]](bas, v)
+            BinaryTranslator.[[${SimpleName}ToBinary]](bas, o)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
@@ -850,7 +862,7 @@
     @staticmethod
     def [[${SimpleName}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${SimpleName}ToBinary]](bas, v)
+            BinaryTranslator.[[${SimpleName}ToBinary]](bas, o)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
@@ -889,7 +901,7 @@
     @staticmethod
     def [[${SimpleName}ToBytes]](o: ${TypeString}) -> List[Byte]:
         with ByteArrayStream() as bas:
-            BinaryTranslator.[[${SimpleName}ToBinary]](bas, v)
+            BinaryTranslator.[[${SimpleName}ToBinary]](bas, o)
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 

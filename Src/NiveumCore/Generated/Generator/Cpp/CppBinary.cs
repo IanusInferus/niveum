@@ -1133,7 +1133,7 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " t)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, const "), TypeString), " &t)"))
             {
                 yield return _Line;
             }
@@ -1174,7 +1174,7 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "    }";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " o)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, const "), TypeString), " &o)"))
             {
                 yield return _Line;
             }
@@ -1226,7 +1226,7 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, const "), TypeString), " &l)"))
             {
                 yield return _Line;
             }
@@ -1274,7 +1274,7 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    }";
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, const "), TypeString), " &l)"))
             {
                 yield return _Line;
             }
@@ -1325,7 +1325,7 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "    }";
             yield return "    return l;";
             yield return "}";
-            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, "), TypeString), " l)"))
+            foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static void "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(IWritableStream &s, const "), TypeString), " &l)"))
             {
                 yield return _Line;
             }

@@ -77,6 +77,18 @@ namespace Niveum.ObjectSchema.PythonBinary
         }
         public IEnumerable<String> Streams()
         {
+            yield return "def _check_methods(C, *methods):";
+            yield return "    mro = C.__mro__";
+            yield return "    for method in methods:";
+            yield return "        for B in mro:";
+            yield return "            if method in B.__dict__:";
+            yield return "                if B.__dict__[method] is None:";
+            yield return "                    return NotImplemented";
+            yield return "                break";
+            yield return "        else:";
+            yield return "            return NotImplemented";
+            yield return "    return True";
+            yield return "";
             yield return "class IReadableStream(metaclass=ABCMeta):";
             yield return "    __slots__ = ()";
             yield return "";
@@ -99,8 +111,8 @@ namespace Niveum.ObjectSchema.PythonBinary
             yield return "    @classmethod";
             yield return "    def __subclasshook__(cls, C):";
             yield return "        if cls is IReadableStream:";
-            yield return "            return _check_methods(C, \"ReadByte\") and _check_methods(C, \"ReadBytes\") and _check_methods(C, \"__enter__\") and _check_methods(C, \"__exit__\")";
-            yield return "        raise NotImplementedError";
+            yield return "            return _check_methods(C, \"ReadByte\", \"ReadBytes\", \"__enter__\", \"__exit__\")";
+            yield return "        return NotImplementedError";
             yield return "";
             yield return "class IWritableStream(metaclass=ABCMeta):";
             yield return "    __slots__ = ()";
@@ -124,8 +136,8 @@ namespace Niveum.ObjectSchema.PythonBinary
             yield return "    @classmethod";
             yield return "    def __subclasshook__(cls, C):";
             yield return "        if cls is IReadableStream:";
-            yield return "            return _check_methods(C, \"WriteByte\") and _check_methods(C, \"WriteBytes\") and _check_methods(C, \"__enter__\") and _check_methods(C, \"__exit__\")";
-            yield return "        raise NotImplementedError";
+            yield return "            return _check_methods(C, \"WriteByte\", \"WriteBytes\", \"__enter__\", \"__exit__\")";
+            yield return "        return NotImplementedError";
             yield return "";
             yield return "class ReadStream:";
             yield return "    @staticmethod";
@@ -701,7 +713,7 @@ namespace Niveum.ObjectSchema.PythonBinary
                 yield return _Line;
             }
             yield return "    with ByteArrayStream() as bas:";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(bas, v)"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(bas, o)"))
             {
                 yield return _Line;
             }
@@ -776,7 +788,7 @@ namespace Niveum.ObjectSchema.PythonBinary
                 yield return _Line;
             }
             yield return "    with ByteArrayStream() as bas:";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(bas, v)"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(bas, o)"))
             {
                 yield return _Line;
             }
@@ -862,7 +874,7 @@ namespace Niveum.ObjectSchema.PythonBinary
                 yield return _Line;
             }
             yield return "    with ByteArrayStream() as bas:";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(bas, v)"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(bas, o)"))
             {
                 yield return _Line;
             }
@@ -914,7 +926,7 @@ namespace Niveum.ObjectSchema.PythonBinary
                 yield return _Line;
             }
             yield return "    with ByteArrayStream() as bas:";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(bas, v)"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "ToBinary"))), "(bas, o)"))
             {
                 yield return _Line;
             }
@@ -983,7 +995,7 @@ namespace Niveum.ObjectSchema.PythonBinary
                 yield return _Line;
             }
             yield return "    with ByteArrayStream() as bas:";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(bas, v)"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(bas, o)"))
             {
                 yield return _Line;
             }
@@ -1038,7 +1050,7 @@ namespace Niveum.ObjectSchema.PythonBinary
                 yield return _Line;
             }
             yield return "    with ByteArrayStream() as bas:";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(bas, v)"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(bas, o)"))
             {
                 yield return _Line;
             }
@@ -1093,7 +1105,7 @@ namespace Niveum.ObjectSchema.PythonBinary
                 yield return _Line;
             }
             yield return "    with ByteArrayStream() as bas:";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(bas, v)"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(bas, o)"))
             {
                 yield return _Line;
             }
@@ -1148,7 +1160,7 @@ namespace Niveum.ObjectSchema.PythonBinary
                 yield return _Line;
             }
             yield return "    with ByteArrayStream() as bas:";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(bas, v)"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(bas, o)"))
             {
                 yield return _Line;
             }
@@ -1217,7 +1229,7 @@ namespace Niveum.ObjectSchema.PythonBinary
                 yield return _Line;
             }
             yield return "    with ByteArrayStream() as bas:";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(bas, v)"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "ToBinary"))), "(bas, o)"))
             {
                 yield return _Line;
             }
