@@ -3,7 +3,7 @@
 //  File:        PythonBinary.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构Python二进制通讯代码生成器
-//  Version:     2019.04.28.
+//  Version:     2021.01.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,7 +20,7 @@ namespace Niveum.ObjectSchema.PythonBinary
         {
             var t = new Templates(Schema);
             var Lines = t.Main(Schema).Select(Line => Line.TrimEnd(' '));
-            return String.Join("\r\n", Lines);
+            return String.Join("\n", Lines);
         }
     }
 

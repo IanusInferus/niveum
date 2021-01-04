@@ -3,7 +3,7 @@
 //  File:        Python.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构Python3代码生成器
-//  Version:     2018.12.21.
+//  Version:     2021.01.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,7 +21,7 @@ namespace Niveum.ObjectSchema.Python
         {
             var t = new Templates(Schema);
             var Lines = t.Main(Schema).Select(Line => Line.TrimEnd(' '));
-            return String.Join("\r\n", Lines);
+            return String.Join("\n", Lines);
         }
     }
 

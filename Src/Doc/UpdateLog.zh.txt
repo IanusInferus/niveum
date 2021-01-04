@@ -1,6 +1,7 @@
 ﻿2021.01.04.0
 Niveum.Core:
 修正Python二进制代码生成中的编译错误。
+由于Python源代码可以作为脚本使用，生成的文件中的换行改为了Unix形式，并去除了BOM。
 Examples:
 增加Python的Visual Studio Code工程文件。
 *:

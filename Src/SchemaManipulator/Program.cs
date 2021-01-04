@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2018.12.22.
+//  Version:     2021.01.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -1025,7 +1025,7 @@ namespace Niveum.SchemaManipulator
             }
             var Dir = FileNameHandling.GetFileDirectory(PythonCodePath);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(PythonCodePath, Compiled);
+            Txt.WriteFile(PythonCodePath, TextEncoding.UTF8, Compiled, false);
         }
 
         public static void ObjectSchemaToPythonBinaryCode(String PythonCodePath)
