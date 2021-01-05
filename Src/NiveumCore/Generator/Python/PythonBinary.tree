@@ -4,7 +4,7 @@
       File:        PythonBinary.tree
       Location:    Niveum.Core <Tree>
       Description: 对象类型结构Python二进制通讯模板
-      Version:     2021.01.04.
+      Version:     2021.01.05.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -187,7 +187,7 @@
 
     class ByteArrayStream(IReadableStream, IWritableStream):
         def __init__(self) -> None:
-            self._bytes = []
+            self._bytes = bytearray()
             self._position = 0
 
         def ReadByte(self) -> int:
@@ -240,8 +240,7 @@
             if (diff == 0):
                 return
             if (diff > 0):
-                for k in range(diff):
-                    self._bytes.append(0)
+                self._bytes.extend(bytearray(diff))
             else:
                 del self._bytes[-diff:]
 
@@ -808,20 +807,41 @@
     $$
         var SimpleName = l.SimpleName(NamespaceName);
         var TypeString = GetTypeString(l, NamespaceName);
-        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+        var ElementType = l.GenericTypeSpec.ParameterValues.Single();
+        var ElementSimpleName = ElementType.SimpleName(NamespaceName);
     @staticmethod
     def [[${SimpleName}FromBinary]](s: IReadableStream) -> ${TypeString}:
-        l = []
         Length = BinaryTranslator.IntFromBinary(s)
-        for k in range(Length):
-            l.append(BinaryTranslator.[[${ElementSimpleName}FromBinary]](s))
+        $$
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
+            {
+                ##
+                    l = s.ReadBytes(Length)
+            }
+            else
+            {
+                ##
+                    l = []
+                    for k in range(Length):
+                        l.append(BinaryTranslator.[[${ElementSimpleName}FromBinary]](s))
+            }
         return l
     @staticmethod
     def [[${SimpleName}ToBinary]](s: IWritableStream, l: ${TypeString}) -> None:
         Length = len(l)
         BinaryTranslator.IntToBinary(s, Length)
-        for k in range(Length):
-            BinaryTranslator.[[${ElementSimpleName}ToBinary]](s, l[k])
+        $$
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
+            {
+                ##
+                    s.WriteBytes(l)
+            }
+            else
+            {
+                ##
+                    for k in range(Length):
+                        BinaryTranslator.[[${ElementSimpleName}ToBinary]](s, l[k])
+            }
     @staticmethod
     def [[${SimpleName}FromBytes]](Bytes: List[Byte]) -> ${TypeString}:
         with ByteArrayStream() as bas:
@@ -842,8 +862,8 @@
         var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
     @staticmethod
     def [[${SimpleName}FromBinary]](s: IReadableStream) -> ${TypeString}:
-        l = set()
         Length = BinaryTranslator.IntFromBinary(s)
+        l = set()
         for k in range(Length):
             l.add(BinaryTranslator.[[${ElementSimpleName}FromBinary]](s))
         return l
@@ -879,8 +899,8 @@
         var ValueSimpleName = gp[1].SimpleName(NamespaceName);
     @staticmethod
     def [[${SimpleName}FromBinary]](s: IReadableStream) -> ${TypeString}:
-        l = {}
         Length = BinaryTranslator.IntFromBinary(s)
+        l = {}
         for k in range(Length):
             Key = BinaryTranslator.[[${KeySimpleName}FromBinary]](s)
             l[Key] = BinaryTranslator.[[${ValueSimpleName}FromBinary]](s)

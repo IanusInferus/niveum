@@ -243,7 +243,7 @@ namespace Niveum.ObjectSchema.PythonBinary
             yield return "";
             yield return "class ByteArrayStream(IReadableStream, IWritableStream):";
             yield return "    def __init__(self) -> None:";
-            yield return "        self._bytes = []";
+            yield return "        self._bytes = bytearray()";
             yield return "        self._position = 0";
             yield return "";
             yield return "    def ReadByte(self) -> int:";
@@ -296,8 +296,7 @@ namespace Niveum.ObjectSchema.PythonBinary
             yield return "        if (diff == 0):";
             yield return "            return";
             yield return "        if (diff > 0):";
-            yield return "            for k in range(diff):";
-            yield return "                self._bytes.append(0)";
+            yield return "            self._bytes.extend(bytearray(diff))";
             yield return "        else:";
             yield return "            del self._bytes[-diff:]";
             yield return "";
@@ -1061,18 +1060,26 @@ namespace Niveum.ObjectSchema.PythonBinary
         {
             var SimpleName = l.SimpleName(NamespaceName);
             var TypeString = GetTypeString(l, NamespaceName);
-            var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+            var ElementType = l.GenericTypeSpec.ParameterValues.Single();
+            var ElementSimpleName = ElementType.SimpleName(NamespaceName);
             yield return "@staticmethod";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "def "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromBinary"))), "(s: IReadableStream) -> "), TypeString), ":"))
             {
                 yield return _Line;
             }
-            yield return "    l = []";
             yield return "    Length = BinaryTranslator.IntFromBinary(s)";
-            yield return "    for k in range(Length):";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.append(BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromBinary"))), "(s))"))
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
-                yield return _Line;
+                yield return "    " + "l = s.ReadBytes(Length)";
+            }
+            else
+            {
+                yield return "    " + "l = []";
+                yield return "    " + "for k in range(Length):";
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "    l.append(BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromBinary"))), "(s))"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
             }
             yield return "    return l";
             yield return "@staticmethod";
@@ -1082,10 +1089,17 @@ namespace Niveum.ObjectSchema.PythonBinary
             }
             yield return "    Length = len(l)";
             yield return "    BinaryTranslator.IntToBinary(s, Length)";
-            yield return "    for k in range(Length):";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "ToBinary"))), "(s, l[k])"))
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
-                yield return _Line;
+                yield return "    " + "s.WriteBytes(l)";
+            }
+            else
+            {
+                yield return "    " + "for k in range(Length):";
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "    BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "ToBinary"))), "(s, l[k])"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
             }
             yield return "@staticmethod";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "def "), GetEscapedIdentifier(Combine(Combine(Begin(), SimpleName), "FromBytes"))), "(Bytes: List[Byte]) -> "), TypeString), ":"))
@@ -1122,8 +1136,8 @@ namespace Niveum.ObjectSchema.PythonBinary
             {
                 yield return _Line;
             }
-            yield return "    l = set()";
             yield return "    Length = BinaryTranslator.IntFromBinary(s)";
+            yield return "    l = set()";
             yield return "    for k in range(Length):";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.add(BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromBinary"))), "(s))"))
             {
@@ -1183,8 +1197,8 @@ namespace Niveum.ObjectSchema.PythonBinary
             {
                 yield return _Line;
             }
-            yield return "    l = {}";
             yield return "    Length = BinaryTranslator.IntFromBinary(s)";
+            yield return "    l = {}";
             yield return "    for k in range(Length):";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        Key = BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "FromBinary"))), "(s)"))
             {
