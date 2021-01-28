@@ -21,7 +21,7 @@
 #   include <cwchar>
 #endif
 
-std::u16string utf8ToUtf16(const std::string& u8s)
+std::u16string utf8ToUtf16(const std::string & u8s)
 {
     std::u16string u16s;
     u16s.reserve(u8s.size());
@@ -29,7 +29,7 @@ std::u16string utf8ToUtf16(const std::string& u8s)
     return u16s;
 }
 
-std::string utf16ToUtf8(const std::u16string& u16s)
+std::string utf16ToUtf8(const std::u16string & u16s)
 {
     std::string u8s;
     u8s.reserve(u16s.size() * 2);
@@ -37,7 +37,7 @@ std::string utf16ToUtf8(const std::u16string& u16s)
     return u8s;
 }
 
-std::u32string utf8ToUtf32(const std::string& u8s)
+std::u32string utf8ToUtf32(const std::string & u8s)
 {
     std::u32string u32s;
     u32s.reserve(u8s.size());
@@ -45,7 +45,7 @@ std::u32string utf8ToUtf32(const std::string& u8s)
     return u32s;
 }
 
-std::string utf32ToUtf8(const std::u32string& u32s)
+std::string utf32ToUtf8(const std::u32string & u32s)
 {
     std::string u8s;
     u8s.reserve(u32s.size() * 4);
@@ -53,23 +53,23 @@ std::string utf32ToUtf8(const std::u32string& u32s)
     return u8s;
 }
 
-std::u16string utf32ToUtf16(const std::u32string& u32s)
+std::u16string utf32ToUtf16(const std::u32string & u32s)
 {
     return utf8ToUtf16(utf32ToUtf8(u32s));
 }
 
-std::u32string utf16ToUtf32(const std::u16string& u16s)
+std::u32string utf16ToUtf32(const std::u16string & u16s)
 {
     return utf8ToUtf32(utf16ToUtf8(u16s));
 }
 
 std::string wideCharToUtf8(const std::wstring & ws)
 {
-    if (sizeof(wchar_t) == 2)
+    if constexpr (sizeof(wchar_t) == 2)
     {
         return utf16ToUtf8(std::u16string(reinterpret_cast<const char16_t *>(ws.data()), reinterpret_cast<const char16_t *>(ws.data() + ws.size())));
     }
-    else if (sizeof(wchar_t) == 4)
+    else if constexpr (sizeof(wchar_t) == 4)
     {
         return utf32ToUtf8(std::u32string(reinterpret_cast<const char32_t *>(ws.data()), reinterpret_cast<const char32_t *>(ws.data() + ws.size())));
     }
@@ -80,12 +80,12 @@ std::string wideCharToUtf8(const std::wstring & ws)
 }
 std::wstring utf8ToWideChar(const std::string & us)
 {
-    if (sizeof(wchar_t) == 2)
+    if constexpr (sizeof(wchar_t) == 2)
     {
         auto u16s = utf8ToUtf16(us);
         return std::wstring(reinterpret_cast<const wchar_t *>(u16s.data()), reinterpret_cast<const wchar_t *>(u16s.data() + u16s.size()));
     }
-    else if (sizeof(wchar_t) == 4)
+    else if constexpr (sizeof(wchar_t) == 4)
     {
         auto u32s = utf8ToUtf32(us);
         return std::wstring(reinterpret_cast<const wchar_t *>(u32s.data()), reinterpret_cast<const wchar_t *>(u32s.data() + u32s.size()));
@@ -98,11 +98,11 @@ std::wstring utf8ToWideChar(const std::string & us)
 
 std::u16string wideCharToUtf16(const std::wstring & ws)
 {
-    if (sizeof(wchar_t) == 2)
+    if constexpr (sizeof(wchar_t) == 2)
     {
         return std::u16string(reinterpret_cast<const char16_t *>(ws.data()), reinterpret_cast<const char16_t *>(ws.data() + ws.size()));
     }
-    else if (sizeof(wchar_t) == 4)
+    else if constexpr (sizeof(wchar_t) == 4)
     {
         return utf32ToUtf16(std::u32string(reinterpret_cast<const char32_t *>(ws.data()), reinterpret_cast<const char32_t *>(ws.data() + ws.size())));
     }
@@ -114,11 +114,11 @@ std::u16string wideCharToUtf16(const std::wstring & ws)
 
 std::wstring utf16ToWideChar(const std::u16string & us)
 {
-    if (sizeof(wchar_t) == 2)
+    if constexpr (sizeof(wchar_t) == 2)
     {
         return std::wstring(reinterpret_cast<const wchar_t *>(us.data()), reinterpret_cast<const wchar_t *>(us.data() + us.size()));
     }
-    else if (sizeof(wchar_t) == 4)
+    else if constexpr (sizeof(wchar_t) == 4)
     {
         auto u32s = utf16ToUtf32(us);
         return std::wstring(reinterpret_cast<const wchar_t *>(u32s.data()), reinterpret_cast<const wchar_t *>(u32s.data() + u32s.size()));
@@ -210,6 +210,7 @@ std::string wideCharToSystem(const std::wstring & ws)
     return s;
 #endif
 }
+
 
 std::u16string systemToUtf16(const std::string & s)
 {

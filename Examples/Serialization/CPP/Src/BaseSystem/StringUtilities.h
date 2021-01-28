@@ -12,17 +12,25 @@ std::string utf32ToUtf8(const std::u32string & u32s);
 std::u16string utf32ToUtf16(const std::u32string & u32s);
 std::u32string utf16ToUtf32(const std::u16string & u16s);
 
-std::u16string systemToUtf16(const std::string & s);
-std::string utf16ToSystem(const std::u16string & us);
-std::string systemToUtf8(const std::string & s);
-std::string utf8ToSystem(const std::string & us);
-
 std::string wideCharToUtf8(const std::wstring & ws);
 std::wstring utf8ToWideChar(const std::string & us);
 std::u16string wideCharToUtf16(const std::wstring & ws);
 std::wstring utf16ToWideChar(const std::u16string & us);
-std::string wideCharToSystem(const std::wstring & ws);
+
+// The following system string conversions use std::mbrtowc/std::wcrtomb on Linux
+// Which require std::setlocale(LC_ALL, "") on program startup to function as expected
+// https://en.cppreference.com/w/cpp/locale/setlocale
+// On Windows, MultiByteToWideChar and WideCharToMultiByte are used.
+// On MacOS and iOS, mbrtowc_l/wcrtomb_l are used.
+// On Android, std::mbrtowc/std::wcrtomb are used, but UTF-8 is enforced by Bionic.
+
 std::wstring systemToWideChar(const std::string & s);
+std::string wideCharToSystem(const std::wstring & ws);
+
+std::u16string systemToUtf16(const std::string & s);
+std::string utf16ToSystem(const std::u16string & us);
+std::string systemToUtf8(const std::string & s);
+std::string utf8ToSystem(const std::string & us);
 
 template<typename T>
 std::wstring ToString(T value)

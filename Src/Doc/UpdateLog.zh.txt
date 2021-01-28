@@ -1,4 +1,8 @@
-﻿2021.01.05.0
+﻿2021.01.28
+Example:
+升级C++示例中的UTF-8 CPP、fmt、ASIO库。
+
+2021.01.05.0
 Niveum.Core:
 优化Python二进制代码生成中读写Byte数组的速度。
 
