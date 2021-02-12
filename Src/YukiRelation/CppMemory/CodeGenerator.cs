@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2018.12.22.
+//  Version:     2021.02.13.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -361,7 +361,7 @@ namespace Yuki.RelationSchema.CppMemory
                         var Filters = new List<String>();
                         for (var n = Key.Count; n < k.Count; n += 1)
                         {
-                            Filters.Add(@">>select_many([](" + GetIndexType(e, k.Skip(n).ToList(), true) + @"::value_type _d_) { return from(*std::get<1>(_d_)); })");
+                            Filters.Add(@">>select_many([](auto _d_) { return from(*std::get<1>(_d_)); })");
                         }
                         Content = Content.Substitute("EntityName", e.Name).Substitute("IndexName", IndexName).Substitute("Fetches", Fetches).Substitute("ByIndex", GetByIndex(Key)).Substitute("Filters", String.Join("", Filters.ToArray()));
                     }
