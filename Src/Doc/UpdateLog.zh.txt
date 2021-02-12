@@ -1,4 +1,8 @@
-﻿2021.01.28
+﻿2021.02.13
+Yuki.Relation:
+将遗漏的所有Optional中的NotHasValue改为None，HasValue改为Some。
+
+2021.01.28
 Example:
 升级C++示例中的UTF-8 CPP、fmt、ASIO库。
 

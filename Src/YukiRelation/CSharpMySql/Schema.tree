@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C# MySQL代码模板数据
-      Version:     2019.04.28.
+      Version:     2021.02.13.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -258,7 +258,7 @@ ObjectSchemaTemplate
                             p.DbType = DbType.Single;
                             if (Value.OnSome)
                             {
-                                p.Value = (Single)(Value.HasValue);
+                                p.Value = (Single)(Value.Value);
                             }
                             else
                             {
@@ -273,7 +273,7 @@ ObjectSchemaTemplate
                             p.DbType = DbType.Binary;
                             if (Value.OnSome)
                             {
-                                p.Value = Value.HasValue.ToArray();
+                                p.Value = Value.Value.ToArray();
                             }
                             else
                             {
