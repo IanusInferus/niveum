@@ -18,7 +18,6 @@
     <ClInclude Include="BaseSystem\AutoResetEvent.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
-    <ClInclude Include="Workaround.h" />
     <ClInclude Include="Memory\MemoryDataAccess.h">
       <Filter>Memory</Filter>
     </ClInclude>

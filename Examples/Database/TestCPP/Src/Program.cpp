@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
 //  Description: 数据库示例程序
-//  Version:     2020.07.22.
+//  Version:     2021.02.13.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -34,7 +34,16 @@ namespace Database
                 auto Option = systemToWideChar(argv[2]);
 
                 auto dam = std::make_shared<DataAccessManager>(ConnectionString);
-                if (EqualIgnoreCase(Option, L"/load"))
+                if (EqualIgnoreCase(Option, L"/simple"))
+                {
+                    auto da = dam->Create();
+                    auto records = da->FromTestDuplicatedKeyNameRecordSelectManyByA(u"Test1");
+                    for (auto r : *records)
+                    {
+                        std::wprintf(L"%d %ls %d\n", r->Id, utf16ToWideChar(r->A).c_str(), static_cast<int>(r->B));
+                    }
+                }
+                else if (EqualIgnoreCase(Option, L"/load"))
                 {
                     LoadTest::DoTest(dam);
                 }
@@ -66,14 +75,15 @@ namespace Database
         static void DisplayInfo(std::wstring ProgramName, std::wstring ConnectionString)
         {
             std::wprintf(L"%ls\n", L"用法:");
-            std::wprintf(L"%ls\n", (ProgramName + L" <ConnectionString> /load|/perf").c_str());
+            std::wprintf(L"%ls\n", (ProgramName + L" <ConnectionString> /simple|/load|/perf").c_str());
             std::wprintf(L"%ls\n", L"ConnectionString 数据库连接字符串");
-            std::wprintf(L"%ls\n", L"/load 自动化负载测试");
-            std::wprintf(L"%ls\n", L"/perf 自动化性能测试");
+            std::wprintf(L"%ls\n", L"/simple 简单测试");
+            std::wprintf(L"%ls\n", L"/load 自动化负载测试，当前不支持");
+            std::wprintf(L"%ls\n", L"/perf 自动化性能测试，当前不支持");
             std::wprintf(L"%ls\n", L"示例:");
             if (ConnectionString != L"")
             {
-                std::wprintf(L"%ls\n", (ProgramName + L" \"" + ConnectionString + L"\" /load").c_str());
+                std::wprintf(L"%ls\n", (ProgramName + L" \"" + ConnectionString + L"\" /simple").c_str());
             }
         }
     };

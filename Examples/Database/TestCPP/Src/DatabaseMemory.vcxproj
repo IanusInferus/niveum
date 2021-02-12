@@ -100,7 +100,6 @@
     <ClInclude Include="Memory\MemoryDataAccess.h" />
     <ClInclude Include="PerformanceTest.h" />
     <ClInclude Include="TestService.h" />
-    <ClInclude Include="Workaround.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseSystem\StringUtilities.cpp" />

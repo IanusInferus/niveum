@@ -1,0 +1,20 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Test.tree
+      Location:    Niveum.Examples <Tree>
+      Description: 测试
+      Version:     2021.02.13.
+      Author:      F.R.C.
+      Copyright(C) Public Domain
+
+    ==========================================================================
+
+TestDuplicatedKeyNameRecords
+    $Table TestDuplicatedKeyNameRecord Id A B C D E F G H
+        1 Test1 0 "00 01 02" "" "" "TestF" "TestG" "TestH"
+        2 Test1 1 "00 01 02" "" "" "TestF" "TestG" "TestH"
+        3 Test2 0 "00 01 02" "" "" "TestF" "TestG" "TestH"
+        4 Test2 1 "00 01 02" "" "" "TestF" "TestG" "TestH"
+        5 Test3 0 "00 01 02" "" "" "TestF" "TestG" "TestH"
+        6 Test3 1 "00 01 02" "" "" "TestF" "TestG" "TestH"

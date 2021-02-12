@@ -2,6 +2,8 @@
 Yuki.Relation:
 将遗漏的所有Optional中的NotHasValue改为None，HasValue改为Some。
 修正C++内存数据库代码生成编译问题。
+Examples:
+修正C++内存数据库示例。
 
 2021.01.28
 Example:
