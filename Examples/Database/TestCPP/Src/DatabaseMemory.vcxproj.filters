@@ -12,9 +12,6 @@
     <ClInclude Include="BaseSystem\LockedVariable.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
-    <ClInclude Include="BaseSystem\ThreadLocalVariable.h">
-      <Filter>BaseSystem</Filter>
-    </ClInclude>
     <ClInclude Include="BaseSystem\AutoResetEvent.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
@@ -25,9 +22,6 @@
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="BaseSystem\StringUtilities.cpp">
-      <Filter>BaseSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
     <ClCompile Include="DataAccessManagerMemory.cpp" />

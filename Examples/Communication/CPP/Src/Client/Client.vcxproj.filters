@@ -40,9 +40,6 @@
     <ClInclude Include="BaseSystem\ExceptionStackTrace.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
-    <ClInclude Include="BaseSystem\ThreadLocalVariable.h">
-      <Filter>BaseSystem</Filter>
-    </ClInclude>
     <ClInclude Include="Generated\Communication.h">
       <Filter>Generated</Filter>
     </ClInclude>
@@ -59,9 +56,6 @@
       <Filter>BaseSystem</Filter>
     </ClCompile>
     <ClCompile Include="BaseSystem\ExceptionStackTrace.cpp">
-      <Filter>BaseSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>

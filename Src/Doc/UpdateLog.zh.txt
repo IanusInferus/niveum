@@ -1,4 +1,8 @@
-﻿2021.02.13
+﻿2021.03.24
+Examples:
+将各C++示例中的ThreadLocalVariable使用改为C++标准关键字。
+
+2021.02.13
 Yuki.Relation:
 将遗漏的所有Optional中的NotHasValue改为None，HasValue改为Some。
 修正C++内存数据库代码生成编译问题。

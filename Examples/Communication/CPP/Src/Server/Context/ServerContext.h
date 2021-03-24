@@ -66,7 +66,6 @@ namespace Server
 
     private:
         BaseSystem::LockedVariable<std::unordered_set<std::shared_ptr<SessionContext>>> SessionSet;
-        BaseSystem::ThreadLocalRandom RNG;
     public:
         std::shared_ptr<std::vector<std::shared_ptr<SessionContext>>> Sessions()
         {
@@ -100,10 +99,10 @@ namespace Server
         std::shared_ptr<ISessionContext> CreateSessionContext()
         {
             std::vector<std::uint8_t> SessionToken;
-            SessionToken.push_back(RNG.NextInt<std::uint8_t>(0, 255));
-            SessionToken.push_back(RNG.NextInt<std::uint8_t>(0, 255));
-            SessionToken.push_back(RNG.NextInt<std::uint8_t>(0, 255));
-            SessionToken.push_back(RNG.NextInt<std::uint8_t>(0, 255));
+            SessionToken.push_back(BaseSystem::ThreadLocalRandom::NextInt<std::uint8_t>(0, 255));
+            SessionToken.push_back(BaseSystem::ThreadLocalRandom::NextInt<std::uint8_t>(0, 255));
+            SessionToken.push_back(BaseSystem::ThreadLocalRandom::NextInt<std::uint8_t>(0, 255));
+            SessionToken.push_back(BaseSystem::ThreadLocalRandom::NextInt<std::uint8_t>(0, 255));
             return std::make_shared<SessionContext>(SessionToken);
         }
         std::shared_ptr<IServerImplementation> CreateServerImplementation(std::shared_ptr<SessionContext> SessionContext);

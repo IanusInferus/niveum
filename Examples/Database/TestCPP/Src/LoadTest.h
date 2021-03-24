@@ -2,7 +2,6 @@
 
 #include "BaseSystem/AutoResetEvent.h"
 #include "BaseSystem/LockedVariable.h"
-#include "BaseSystem/ThreadLocalVariable.h"
 #include "TestService.h"
 
 #include <cmath>
@@ -57,23 +56,21 @@ namespace Database
 
         static void TestForNumUser(std::shared_ptr<DataAccessManager> dam, int NumUser, std::wstring Title, std::function<void(int, int, std::shared_ptr<TestService>)> Test)
         {
-            auto Factory = [=]() -> std::shared_ptr<TestService> { return std::make_shared<TestService>(*dam); };
-            auto tf = BaseSystem::ThreadLocalVariable<std::shared_ptr<TestService>>(Factory);
-
             int ProcessorCount = (int)(std::thread::hardware_concurrency());
             auto ThreadCount = ProcessorCount * 2 + 1;
 
             std::mutex Lockee;
-            auto TaskQueue = std::make_shared<std::queue<std::function<void()>>>();
+            auto TaskQueue = std::make_shared<std::queue<std::function<void(std::shared_ptr<TestService>)>>>();
 
             std::vector<std::shared_ptr<std::thread>> Threads;
             for (int i = 0; i < ThreadCount; i += 1)
             {
                 auto t = std::make_shared<std::thread>([&]()
                 {
+                    auto Service = std::make_shared<TestService>(*dam);
                     while (true)
                     {
-                        std::function<void()> a = nullptr;
+                        std::function<void(std::shared_ptr<TestService>)> a = nullptr;
                         {
                             std::unique_lock<std::mutex> Lock(Lockee);
                             if (TaskQueue == nullptr) { return; }
@@ -87,7 +84,7 @@ namespace Database
                         {
                             try
                             {
-                                a();
+                                a(Service);
                             }
                             catch (std::exception &ex)
                             {
@@ -106,9 +103,9 @@ namespace Database
 
             for (int i = 0; i < NumUser; i += 1)
             {
-                auto a = [=, &tf, &eNum, &vNum]()
+                auto a = [=, &eNum, &vNum](std::shared_ptr<TestService> s)
                 {
-                    Test(NumUser, i, tf.Value());
+                    Test(NumUser, i, s);
                     vNum.Update([](const int &n) { return n - 1; });
                     eNum.Set();
                 };

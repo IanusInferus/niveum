@@ -8,8 +8,6 @@
 using namespace Niveum::ExpressionSchema;
 using namespace Niveum::Expression;
 
-static BaseSystem::ThreadLocalRandom RNG;
-
 namespace Niveum
 {
     namespace Expression
@@ -205,17 +203,17 @@ namespace Niveum
 
         double rand()
         {
-            return RNG.NextReal<double>(0, 1);
+            return BaseSystem::ThreadLocalRandom::NextReal<double>(0, 1);
         }
 
         int rand(int LowerBound, int UpperBoundExclusive)
         {
-            return RNG.NextInt<int>(LowerBound, UpperBoundExclusive - 1);
+            return BaseSystem::ThreadLocalRandom::NextInt<int>(LowerBound, UpperBoundExclusive - 1);
         }
 
         double rand(double LowerBound, double UpperBoundExclusive)
         {
-            return RNG.NextReal<double>(LowerBound, UpperBoundExclusive);
+            return BaseSystem::ThreadLocalRandom::NextReal<double>(LowerBound, UpperBoundExclusive);
         }
     }
 }

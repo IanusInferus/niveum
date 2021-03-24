@@ -48,9 +48,6 @@
     <ClInclude Include="Util\SessionLogEntry.h">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="BaseSystem\ThreadLocalVariable.h">
-      <Filter>BaseSystem</Filter>
-    </ClInclude>
     <ClInclude Include="Util\ConsoleLogger.h">
       <Filter>Util</Filter>
     </ClInclude>
@@ -141,9 +138,6 @@
     <ClCompile Include="BaseSystem\Times.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
-    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
-      <Filter>BaseSystem</Filter>
-    </ClCompile>
     <ClCompile Include="BaseSystem\StringUtilities.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
@@ -170,6 +164,9 @@
     </ClCompile>
     <ClCompile Include="Services\TestDuplication.cpp">
       <Filter>Services</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseSystem\ThreadLocalRandom.cpp">
+      <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

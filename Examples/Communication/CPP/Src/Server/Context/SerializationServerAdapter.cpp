@@ -1,6 +1,5 @@
 ﻿#include "SerializationServerAdapter.h"
 
-#include "BaseSystem/ThreadLocalVariable.h"
 #include "BaseSystem/ExceptionStackTrace.h"
 
 #include <cstdint>
@@ -13,12 +12,12 @@
 
 namespace Server
 {
-    static BaseSystem::ThreadLocalVariable<std::shared_ptr<Communication::Binary::BinarySerializationServer>> sss = BaseSystem::ThreadLocalVariable<std::shared_ptr<Communication::Binary::BinarySerializationServer>>([]() { return std::make_shared<Communication::Binary::BinarySerializationServer>(); });
+    thread_local static std::shared_ptr<Communication::Binary::BinarySerializationServer> sss = std::make_shared<Communication::Binary::BinarySerializationServer>();
 
     BinarySerializationServerAdapter::BinarySerializationServerAdapter(std::shared_ptr<Communication::IApplicationServer> ApplicationServer)
     {
         s = ApplicationServer;
-        ss = sss.Value();
+        ss = sss;
         ssed = std::make_shared<Communication::Binary::BinarySerializationServerEventDispatcher>(ApplicationServer);
         ssed->ServerEvent = [=](std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
         {

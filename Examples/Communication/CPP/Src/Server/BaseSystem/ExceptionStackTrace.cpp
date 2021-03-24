@@ -2,7 +2,7 @@
 //
 //  File:        ExceptionStackTrace.cpp
 //  Description: C++异常捕捉时获得代码栈
-//  Version:     2019.08.04.
+//  Version:     2021.03.24.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -1417,7 +1417,6 @@ void StackWalker::OnOutput(LPCSTR buffer)
 #pragma warning(pop)
 
 #include "StringUtilities.h"
-#include "ThreadLocalVariable.h"
 
 #include <vector>
 #include <string>
@@ -1607,15 +1606,15 @@ public:
 
 }
 
-static BaseSystem::ThreadLocalVariable<std::string> ThreadLocalExceptionInfo = BaseSystem::ThreadLocalVariable<std::string>([]() { return ""; });
+static thread_local std::string ThreadLocalExceptionInfo = "";
 
 // Exception handling and stack-walking example:
 static LONG WINAPI ExpFilter(EXCEPTION_POINTERS* pExp, DWORD dwExpCode)
 {
-    ConciseStackWalker sw(ThreadLocalExceptionInfo.Value(), dwExpCode);
+    ConciseStackWalker sw(ThreadLocalExceptionInfo, dwExpCode);
     sw.ShowCallstack(GetCurrentThread(), pExp->ContextRecord);
-    if (ThreadLocalExceptionInfo.Value().size() > 0) {
-        ThreadLocalExceptionInfo.Value().pop_back();
+    if (ThreadLocalExceptionInfo.size() > 0) {
+        ThreadLocalExceptionInfo.pop_back();
     }
     return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -1627,7 +1626,7 @@ bool ExceptionStackTrace::IsDebuggerAttached()
 
 std::string ExceptionStackTrace::GetStackTrace()
 {
-    return ThreadLocalExceptionInfo.Value();
+    return ThreadLocalExceptionInfo;
 }
 
 void *ExceptionStackTrace::detail::Execute(void *obj, void *(*f)(void *))
@@ -1656,10 +1655,10 @@ std::string ExceptionStackTrace::GetStackFrame(int Skip)
 
 #elif defined(__linux__) && !defined(__ANDROID__)
 
-#include "ThreadLocalVariable.h"
 #include "AutoRelease.h"
 
 #include <mutex>
+#include <memory>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/ptrace.h>
@@ -1716,8 +1715,8 @@ static std::mutex Lockee;
 static std::shared_ptr<bool> GdbCheckResult;
 static decltype(__cxa_throw) *__cxa_throw_original;
 
-static BaseSystem::ThreadLocalVariable<bool> ThreadLocalExceptionInfoEnabled = BaseSystem::ThreadLocalVariable<bool>([]() { return false; });
-static BaseSystem::ThreadLocalVariable<std::string> ThreadLocalExceptionInfo = BaseSystem::ThreadLocalVariable<std::string>([]() { return ""; });
+static thread_local bool ThreadLocalExceptionInfoEnabled = false;;
+static thread_local std::string ThreadLocalExceptionInfo = "";
 
 extern "C" void __cxa_throw(void *thrown_exception, void *pvtinfo, void(*dest)(void *))
 {
@@ -1731,7 +1730,7 @@ extern "C" void __cxa_throw(void *thrown_exception, void *pvtinfo, void(*dest)(v
         _original = __cxa_throw_original;
     }
 
-    if (ThreadLocalExceptionInfoEnabled.Value())
+    if (ThreadLocalExceptionInfoEnabled)
     {
         void *array[10];
         size_t size;
@@ -1740,7 +1739,7 @@ extern "C" void __cxa_throw(void *thrown_exception, void *pvtinfo, void(*dest)(v
         size = backtrace(array, 10);
         strings = backtrace_symbols(array, size);
 
-        std::string &ExceptionInfo = ThreadLocalExceptionInfo.Value();
+        std::string &ExceptionInfo = ThreadLocalExceptionInfo;
         ExceptionInfo = "";
         for (size_t i = 0; i < size; i += 1)
         {
@@ -1792,7 +1791,7 @@ bool ExceptionStackTrace::IsDebuggerAttached()
 
 std::string ExceptionStackTrace::GetStackTrace()
 {
-    return ThreadLocalExceptionInfo.Value();
+    return ThreadLocalExceptionInfo;
 }
 
 void *ExceptionStackTrace::detail::Execute(void *obj, void *(*f)(void *))
@@ -1820,11 +1819,11 @@ void *ExceptionStackTrace::detail::Execute(void *obj, void *(*f)(void *))
     if (sigaction(SIGSEGV, &sig_action, &old_sig_SEGV) != 0) { throw "UnexpectedReturnValue: sigaction"; }
     if (sigaction(SIGFPE, &sig_action, &old_sig_FPE) != 0) { throw "UnexpectedReturnValue: sigaction"; }
 
-    ThreadLocalExceptionInfoEnabled.Value() = true;
+    ThreadLocalExceptionInfoEnabled = true;
 
     BaseSystem::AutoRelease ar([&]()
     {
-        ThreadLocalExceptionInfoEnabled.Value() = false;
+        ThreadLocalExceptionInfoEnabled = false;
 
         sigaction(SIGSEGV, &old_sig_SEGV, nullptr);
         sigaction(SIGFPE, &old_sig_FPE, nullptr);

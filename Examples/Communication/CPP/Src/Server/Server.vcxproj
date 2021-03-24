@@ -21,7 +21,6 @@
     <ClInclude Include="BaseSystem\Optional.h" />
     <ClInclude Include="BaseSystem\StringUtilities.h" />
     <ClInclude Include="BaseSystem\ThreadLocalRandom.h" />
-    <ClInclude Include="BaseSystem\ThreadLocalVariable.h" />
     <ClInclude Include="BaseSystem\Times.h" />
     <ClInclude Include="Context\SerializationServerAdapter.h" />
     <ClInclude Include="Context\ServerContext.h" />
@@ -48,7 +47,7 @@
     <ClCompile Include="BaseSystem\Cryptography.cpp" />
     <ClCompile Include="BaseSystem\ExceptionStackTrace.cpp" />
     <ClCompile Include="BaseSystem\StringUtilities.cpp" />
-    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp" />
+    <ClCompile Include="BaseSystem\ThreadLocalRandom.cpp" />
     <ClCompile Include="BaseSystem\Times.cpp" />
     <ClCompile Include="Context\SerializationServerAdapter.cpp" />
     <ClCompile Include="Context\ServerContext.cpp" />

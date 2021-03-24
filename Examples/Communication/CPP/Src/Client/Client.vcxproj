@@ -97,7 +97,6 @@
     <ClInclude Include="BaseSystem\ExceptionStackTrace.h" />
     <ClInclude Include="BaseSystem\LockedVariable.h" />
     <ClInclude Include="BaseSystem\StringUtilities.h" />
-    <ClInclude Include="BaseSystem\ThreadLocalVariable.h" />
     <ClInclude Include="Clients\BinaryCountPacketClient.h" />
     <ClInclude Include="Clients\IContext.h" />
     <ClInclude Include="Clients\ISerializationClient.h" />
@@ -113,7 +112,6 @@
     <ClCompile Include="BaseSystem\Cryptography.cpp" />
     <ClCompile Include="BaseSystem\ExceptionStackTrace.cpp" />
     <ClCompile Include="BaseSystem\StringUtilities.cpp" />
-    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp" />
     <ClCompile Include="Program.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

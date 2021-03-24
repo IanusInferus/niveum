@@ -93,7 +93,6 @@
     <ClInclude Include="BaseSystem\AutoResetEvent.h" />
     <ClInclude Include="BaseSystem\LockedVariable.h" />
     <ClInclude Include="BaseSystem\StringUtilities.h" />
-    <ClInclude Include="BaseSystem\ThreadLocalVariable.h" />
     <ClInclude Include="DataAccessManager.h" />
     <ClInclude Include="Database.h" />
     <ClInclude Include="LoadTest.h" />
@@ -103,7 +102,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseSystem\StringUtilities.cpp" />
-    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp" />
     <ClCompile Include="DataAccessManagerMemory.cpp" />
     <ClCompile Include="Program.cpp" />
   </ItemGroup>

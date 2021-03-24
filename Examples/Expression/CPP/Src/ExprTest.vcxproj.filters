@@ -3,10 +3,10 @@
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="ExpressionCalculator.cpp" />
-    <ClCompile Include="BaseSystem\ThreadLocalVariable.cpp">
+    <ClCompile Include="BaseSystem\StringUtilities.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
-    <ClCompile Include="BaseSystem\StringUtilities.cpp">
+    <ClCompile Include="BaseSystem\ThreadLocalRandom.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
   </ItemGroup>
@@ -17,9 +17,6 @@
     <ClInclude Include="Streams.h" />
     <ClInclude Include="ExpressionCalculator.h" />
     <ClInclude Include="BaseSystem\ThreadLocalRandom.h">
-      <Filter>BaseSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="BaseSystem\ThreadLocalVariable.h">
       <Filter>BaseSystem</Filter>
     </ClInclude>
     <ClInclude Include="BaseSystem\StringUtilities.h">
