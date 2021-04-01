@@ -96,6 +96,7 @@
     <ClCompile Include="BaseSystem\ThreadLocalRandom.cpp" />
     <ClCompile Include="ExpressionCalculator.cpp" />
     <ClCompile Include="Program.cpp" />
+    <ClCompile Include="Streams.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseSystem\StringUtilities.h" />

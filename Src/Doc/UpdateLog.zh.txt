@@ -1,4 +1,8 @@
-﻿2021.03.24
+﻿2021.04.01
+Examples:
+将各C++示例中的std::fstream改为使用C API(fopen)等，以获取更详细的错误信息。
+
+2021.03.24
 Examples:
 将各C++示例中的ThreadLocalVariable使用改为C++标准关键字。
 

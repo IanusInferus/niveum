@@ -93,6 +93,7 @@
   <ItemGroup>
     <ClCompile Include="BaseSystem\StringUtilities.cpp" />
     <ClCompile Include="Program.cpp" />
+    <ClCompile Include="Streams.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

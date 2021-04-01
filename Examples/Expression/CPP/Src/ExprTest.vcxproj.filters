@@ -9,6 +9,7 @@
     <ClCompile Include="BaseSystem\ThreadLocalRandom.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
+    <ClCompile Include="Streams.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Calculation.h" />
