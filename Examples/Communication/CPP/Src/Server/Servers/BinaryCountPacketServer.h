@@ -608,7 +608,7 @@ namespace Server
                     cmd->CommandName = bc.CommandName;
                     cmd->CommandHash = bc.CommandHash;
                     cmd->Parameters = std::move(Parameters);
-                    cmd->ByteLength = bc.InputCommandByteLength;
+                    cmd->ByteLength = static_cast<std::int32_t>(bc.InputCommandByteLength);
                     auto r = std::make_shared<TryShiftResult>();
                     r->Command = cmd;
                     r->Position = Position + bc.ParametersLength;

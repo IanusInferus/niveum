@@ -231,10 +231,10 @@ namespace Server
                     continue;
                 }
 
-                auto BindingInfo = std::make_shared<class BindingInfo>();
-                BindingInfo->Socket = std::make_shared<BaseSystem::LockedVariable<std::shared_ptr<asio::ip::tcp::acceptor>>>(Socket);
-                auto BindingInfoPtr = &*BindingInfo;
-                auto Completed = [this, Binding, CreateSocket, BindingInfoPtr](std::shared_ptr<AcceptResult> args) -> bool
+                auto bi = std::make_shared<BindingInfo>();
+                bi->Socket = std::make_shared<BaseSystem::LockedVariable<std::shared_ptr<asio::ip::tcp::acceptor>>>(Socket);
+                auto bip = &*bi;
+                auto Completed = [this, Binding, CreateSocket, bip](std::shared_ptr<AcceptResult> args) -> bool
                 {
                     if (ListeningTaskToken->IsCancellationRequested()) { return false; }
                     if (!args->ec)
@@ -244,36 +244,36 @@ namespace Server
                     }
                     else
                     {
-                        BindingInfoPtr->Socket->Update([=](std::shared_ptr<asio::ip::tcp::acceptor> OriginalSocket) -> std::shared_ptr<asio::ip::tcp::acceptor>
+                        bip->Socket->Update([=](std::shared_ptr<asio::ip::tcp::acceptor> OriginalSocket) -> std::shared_ptr<asio::ip::tcp::acceptor>
                         {
                             return nullptr;
                         });
-                        BindingInfoPtr->Socket->Update([=](std::shared_ptr<asio::ip::tcp::acceptor> OriginalSocket) -> std::shared_ptr<asio::ip::tcp::acceptor>
+                        bip->Socket->Update([=](std::shared_ptr<asio::ip::tcp::acceptor> OriginalSocket) -> std::shared_ptr<asio::ip::tcp::acceptor>
                         {
                             auto NewSocket = CreateSocket();
                             NewSocket->listen(MaxConnectionsValue.OnHasValue() ? (MaxConnectionsValue.Value() + 1) : 128);
                             return NewSocket;
                         });
                     }
-                    BindingInfoPtr->Start();
+                    bip->Start();
                     return true;
                 };
-                BindingInfo->ListenConsumer = std::make_shared<BaseSystem::AsyncConsumer<std::shared_ptr<AcceptResult>>>(QueueUserWorkItem, Completed, 1);
-                BindingInfo->Start = [this, BindingInfoPtr]()
+                bi->ListenConsumer = std::make_shared<BaseSystem::AsyncConsumer<std::shared_ptr<AcceptResult>>>(QueueUserWorkItem, Completed, 1);
+                bi->Start = [this, bip]()
                 {
                     auto a = std::make_shared<AcceptResult>();
                     a->AcceptSocket = std::make_shared<asio::ip::tcp::socket>(IoService);
                     auto RemoteEndPoint = std::make_shared<asio::ip::tcp::endpoint>();
-                    auto bs = BindingInfoPtr->Socket->Check<std::shared_ptr<asio::ip::tcp::acceptor>>([](std::shared_ptr<asio::ip::tcp::acceptor> s) { return s; });
-                    bs->async_accept(*a->AcceptSocket, *RemoteEndPoint, [this, a, RemoteEndPoint, BindingInfoPtr](const asio::error_code& ec)
+                    auto bs = bip->Socket->Check<std::shared_ptr<asio::ip::tcp::acceptor>>([](const std::shared_ptr<asio::ip::tcp::acceptor> &s) { return s; });
+                    bs->async_accept(*a->AcceptSocket, *RemoteEndPoint, [this, a, RemoteEndPoint, bip](const asio::error_code &ec)
                     {
                         if (ec == asio::error::operation_aborted) { return; }
                         a->ec = ec;
-                        BindingInfoPtr->ListenConsumer->Push(a);
+                        bip->ListenConsumer->Push(a);
                     });
                 };
 
-                BindingInfos.push_back(BindingInfo);
+                BindingInfos.push_back(bi);
             }
             if (BindingInfos.size() == 0)
             {

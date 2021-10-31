@@ -286,7 +286,7 @@ namespace Server
 
                             s->PrePush([=]()
                             {
-                                if (!s->Push(ep, Index, nullptr, Buffer, Offset, Buffer->size() - Offset))
+                                if (!s->Push(ep, Index, nullptr, Buffer, Offset, static_cast<int>(Buffer->size()) - Offset))
                                 {
                                     PurifyConsumer->Push(s);
                                 }
@@ -334,7 +334,7 @@ namespace Server
                                     std::vector<std::uint8_t> Key;
                                     Key.resize(SecureContext->ClientToken.size() + SHA256.size());
                                     ArrayCopy(SecureContext->ClientToken, 0, Key, 0, static_cast<int>(SecureContext->ClientToken.size()));
-                                    ArrayCopy(SHA256, 0, Key, SecureContext->ClientToken.size(), static_cast<int>(SHA256.size()));
+                                    ArrayCopy(SHA256, 0, Key, static_cast<int>(SecureContext->ClientToken.size()), static_cast<int>(SHA256.size()));
                                     auto HMACBytes = Algorithms::Cryptography::HMACSHA256Simple(Key, *Buffer);
                                     HMACBytes.resize(4);
                                     auto HMAC = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
@@ -431,7 +431,7 @@ namespace Server
                                 }
                                 else
                                 {
-                                    if (!s->Push(ep, Index, Indices, Buffer, Offset, Buffer->size() - Offset))
+                                    if (!s->Push(ep, Index, Indices, Buffer, Offset, static_cast<int>(Buffer->size()) - Offset))
                                     {
                                         PurifyConsumer->Push(s);
                                     }
@@ -510,13 +510,13 @@ namespace Server
                     continue;
                 }
 
-                auto BindingInfo = std::make_shared<class BindingInfo>();
-                BindingInfo->EndPoint = Binding;
-                BindingInfo->Socket = std::make_shared<BaseSystem::LockedVariable<std::shared_ptr<asio::ip::udp::socket>>>(Socket);
-                BindingInfo->ReadBuffer = std::make_shared<std::vector<std::uint8_t>>();
-                BindingInfo->ReadBuffer->resize(UdpSession::MaxPacketLength());
-                auto BindingInfoPtr = &*BindingInfo;
-                auto Completed = [this, Binding, CreateSocket, BindingInfoPtr](std::shared_ptr<AcceptResult> args) -> bool
+                auto bi = std::make_shared<BindingInfo>();
+                bi->EndPoint = Binding;
+                bi->Socket = std::make_shared<BaseSystem::LockedVariable<std::shared_ptr<asio::ip::udp::socket>>>(Socket);
+                bi->ReadBuffer = std::make_shared<std::vector<std::uint8_t>>();
+                bi->ReadBuffer->resize(UdpSession::MaxPacketLength());
+                auto bip = &*bi;
+                auto Completed = [this, Binding, CreateSocket, bip](std::shared_ptr<AcceptResult> args) -> bool
                 {
                     if (ListeningTaskToken->IsCancellationRequested()) { return false; }
                     if (!args->ec)
@@ -524,34 +524,34 @@ namespace Server
                         auto Count = args->BytesTransferred;
                         auto ReadBuffer = std::make_shared<std::vector<std::uint8_t>>();
                         ReadBuffer->resize(Count, 0);
-                        ArrayCopy(*BindingInfoPtr->ReadBuffer, 0, *ReadBuffer, 0, Count);
+                        ArrayCopy(*bip->ReadBuffer, 0, *ReadBuffer, 0, static_cast<int>(Count));
                         auto a = std::make_shared<AcceptingInfo>();
-                        a->Socket = BindingInfoPtr->Socket->Check<std::shared_ptr<asio::ip::udp::socket>>([](std::shared_ptr<asio::ip::udp::socket> s) { return s; });
+                        a->Socket = bip->Socket->Check<std::shared_ptr<asio::ip::udp::socket>>([](std::shared_ptr<asio::ip::udp::socket> s) { return s; });
                         a->ReadBuffer = ReadBuffer;
                         a->RemoteEndPoint = args->RemoteEndPoint;
                         AcceptConsumer->Push(a);
                     }
                     else
                     {
-                        BindingInfoPtr->Socket->Update([=](std::shared_ptr<asio::ip::udp::socket> OriginalSocket) -> std::shared_ptr<asio::ip::udp::socket>
+                        bip->Socket->Update([=](std::shared_ptr<asio::ip::udp::socket> OriginalSocket) -> std::shared_ptr<asio::ip::udp::socket>
                         {
                             return nullptr;
                         });
-                        BindingInfoPtr->Socket->Update([=](std::shared_ptr<asio::ip::udp::socket> OriginalSocket) -> std::shared_ptr<asio::ip::udp::socket>
+                        bip->Socket->Update([=](std::shared_ptr<asio::ip::udp::socket> OriginalSocket) -> std::shared_ptr<asio::ip::udp::socket>
                         {
                             auto NewSocket = CreateSocket();
                             NewSocket->bind(Binding);
                             return NewSocket;
                         });
                     }
-                    BindingInfoPtr->Start();
+                    bip->Start();
                     return true;
                 };
-                BindingInfo->ListenConsumer = std::make_shared<BaseSystem::AsyncConsumer<std::shared_ptr<AcceptResult>>>(QueueUserWorkItem, Completed, 1);
-                BindingInfo->Start = [this, BindingInfoPtr]()
+                bi->ListenConsumer = std::make_shared<BaseSystem::AsyncConsumer<std::shared_ptr<AcceptResult>>>(QueueUserWorkItem, Completed, 1);
+                bi->Start = [this, bip]()
                 {
-                    auto bs = BindingInfoPtr->Socket->Check<std::shared_ptr<asio::ip::udp::socket>>([](std::shared_ptr<asio::ip::udp::socket> s) { return s; });
-                    auto ReadBuffer = BindingInfoPtr->ReadBuffer;
+                    auto bs = bip->Socket->Check<std::shared_ptr<asio::ip::udp::socket>>([](const std::shared_ptr<asio::ip::udp::socket> &s) { return s; });
+                    auto ReadBuffer = bip->ReadBuffer;
                     auto RemoteEndPoint = std::make_shared<asio::ip::udp::endpoint>();
                     auto ReadHandler = [=](const asio::error_code &ec, std::size_t Count)
                     {
@@ -560,12 +560,12 @@ namespace Server
                         a->ec = ec;
                         a->BytesTransferred = Count;
                         a->RemoteEndPoint = *RemoteEndPoint;
-                        BindingInfoPtr->ListenConsumer->Push(a);
+                        bip->ListenConsumer->Push(a);
                     };
                     bs->async_receive_from(asio::buffer(*ReadBuffer), *RemoteEndPoint, ReadHandler);
                 };
 
-                BindingInfos.push_back(BindingInfo);
+                BindingInfos.push_back(bi);
             }
             if (BindingInfos.size() == 0)
             {

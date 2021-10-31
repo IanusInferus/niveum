@@ -108,8 +108,8 @@ namespace Server
         auto Offset = 0;
         for (auto b : ByteArrays)
         {
-            ArrayCopy(*b, 0, *WriteBuffer, Offset, b->size());
-            Offset += b->size();
+            ArrayCopy(*b, 0, *WriteBuffer, Offset, static_cast<int>(b->size()));
+            Offset += static_cast<int>(b->size());
         }
         auto WriteHandler = [=](const asio::error_code &ec, size_t Count)
         {
@@ -303,7 +303,7 @@ namespace Server
             }
             else
             {
-                Completed(Count);
+                Completed(static_cast<int>(Count));
             }
         };
         Socket->async_read_some(asio::buffer(Buffer->data() + BufferLength, Buffer->size() - BufferLength), ReadHandler);

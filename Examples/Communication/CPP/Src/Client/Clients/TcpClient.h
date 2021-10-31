@@ -125,7 +125,7 @@ namespace Client
             {
                 while (true)
                 {
-                    auto r = VirtualTransportClient->Handle(Count);
+                    auto r = VirtualTransportClient->Handle(static_cast<int>(Count));
                     if (r->OnContinue())
                     {
                         break;

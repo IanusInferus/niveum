@@ -241,7 +241,7 @@ namespace Server
                     std::vector<std::uint8_t> Key;
                     Key.resize(SecureContext->ServerToken.size() + SHA256.size());
                     ArrayCopy(SecureContext->ServerToken, 0, Key, 0, static_cast<int>(SecureContext->ServerToken.size()));
-                    ArrayCopy(SHA256, 0, Key, SecureContext->ServerToken.size(), static_cast<int>(SHA256.size()));
+                    ArrayCopy(SHA256, 0, Key, static_cast<int>(SecureContext->ServerToken.size()), static_cast<int>(SHA256.size()));
                     auto HMACBytes = Algorithms::Cryptography::HMACSHA256Simple(Key, *Buffer);
                     HMACBytes.resize(4);
                     Verification = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
@@ -431,12 +431,12 @@ namespace Server
         {
             auto Buffer = vts->GetReadBuffer();
             auto BufferLength = vts->GetReadBufferOffset() + vts->GetReadBufferLength();
-            if (p->Data->size() > Buffer->size() - BufferLength)
+            if (static_cast<int>(p->Data->size()) > static_cast<int>(Buffer->size()) - BufferLength)
             {
                 OnFailure();
                 return;
             }
-            ArrayCopy(*p->Data, 0, *Buffer, BufferLength, p->Data->size());
+            ArrayCopy(*p->Data, 0, *Buffer, BufferLength, static_cast<int>(p->Data->size()));
 
             auto c = p->Data->size();
             while (true)
@@ -444,7 +444,7 @@ namespace Server
                 std::shared_ptr<StreamedVirtualTransportServerHandleResult> Result;
                 try
                 {
-                    ExceptionStackTrace::Execute([&]() { Result = vts->Handle(c); });
+                    ExceptionStackTrace::Execute([&]() { Result = vts->Handle(static_cast<int>(c)); });
                 }
                 catch (const std::exception &ex)
                 {

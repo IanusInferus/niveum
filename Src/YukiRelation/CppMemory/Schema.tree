@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构C++ Memory代码模板数据
-      Version:     2018.12.22.
+      Version:     2021.11.01.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -223,7 +223,7 @@ ObjectSchemaTemplate
                     auto &_Index_ = *this->Indices->[[${IndexName}]];
                     ${Fetches}
                     auto _c_ = from([[_Index${ByIndex}_]])${Filters}>>count();
-                    return _c_;
+                    return static_cast<Int>(_c_);
         Template
             Name SelectLock_Count_WhenEmpty
             //Parameters: ${EntityName}

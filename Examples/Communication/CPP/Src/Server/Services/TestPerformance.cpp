@@ -63,5 +63,5 @@ std::shared_ptr<TestMessageReply> ServerImplementation::TestMessage(std::shared_
             }
         }
     }
-    return TestMessageReply::CreateSuccess(Sessions->size());
+    return TestMessageReply::CreateSuccess(static_cast<int>(Sessions->size()));
 }

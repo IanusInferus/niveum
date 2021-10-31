@@ -495,7 +495,7 @@ namespace Client
                         std::vector<std::uint8_t> Key;
                         Key.resize(SecureContext->ClientToken.size() + SHA256.size());
                         ArrayCopy(SecureContext->ClientToken, 0, Key, 0, static_cast<int>(SecureContext->ClientToken.size()));
-                        ArrayCopy(SHA256, 0, Key, SecureContext->ClientToken.size(), static_cast<int>(SHA256.size()));
+                        ArrayCopy(SHA256, 0, Key, static_cast<int>(SecureContext->ClientToken.size()), static_cast<int>(SHA256.size()));
                         auto HMACBytes = Algorithms::Cryptography::HMACSHA256Simple(Key, *Buffer);
                         HMACBytes.resize(4);
                         Verification = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
@@ -671,7 +671,7 @@ namespace Client
                             std::vector<std::uint8_t> Key;
                             Key.resize(SecureContext->ClientToken.size() + SHA256.size());
                             ArrayCopy(SecureContext->ClientToken, 0, Key, 0, static_cast<int>(SecureContext->ClientToken.size()));
-                            ArrayCopy(SHA256, 0, Key, SecureContext->ClientToken.size(), static_cast<int>(SHA256.size()));
+                            ArrayCopy(SHA256, 0, Key, static_cast<int>(SecureContext->ClientToken.size()), static_cast<int>(SHA256.size()));
                             auto HMACBytes = Algorithms::Cryptography::HMACSHA256Simple(Key, *Buffer);
                             HMACBytes.resize(4);
                             Verification = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
@@ -849,7 +849,7 @@ namespace Client
                     std::vector<std::uint8_t> Key;
                     Key.resize(SecureContext->ServerToken.size() + SHA256.size());
                     ArrayCopy(SecureContext->ServerToken, 0, Key, 0, static_cast<int>(SecureContext->ServerToken.size()));
-                    ArrayCopy(SHA256, 0, Key, SecureContext->ServerToken.size(), static_cast<int>(SHA256.size()));
+                    ArrayCopy(SHA256, 0, Key, static_cast<int>(SecureContext->ServerToken.size()), static_cast<int>(SHA256.size()));
                     auto HMACBytes = Algorithms::Cryptography::HMACSHA256Simple(Key, *Buffer);
                     HMACBytes.resize(4);
                     auto HMAC = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
@@ -972,7 +972,7 @@ namespace Client
                     auto c = p->size();
                     while (true)
                     {
-                        auto r = VirtualTransportClient->Handle(c);
+                        auto r = VirtualTransportClient->Handle(static_cast<int>(c));
                         if (r->OnContinue())
                         {
                             break;
@@ -1038,7 +1038,7 @@ namespace Client
                         if (*ServerEndPoint != this->RemoteEndPoint) { return b; }
                         auto Buffer = std::make_shared<std::vector<std::uint8_t>>();
                         Buffer->resize(Count, 0);
-                        ArrayCopy(*ReadBuffer, 0, *Buffer, 0, Count);
+                        ArrayCopy(*ReadBuffer, 0, *Buffer, 0, static_cast<int>(Count));
                         CompletedSocket(Buffer, DoResultHandle, UnknownFaulted);
                         Buffer = nullptr;
                         return b;
