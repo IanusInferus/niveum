@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{B48FA479-1187-4A73-9681-B29DF0936FA7}") = "Browser", "Browser\Browser.csproj", "{61381DD4-66B9-4B29-B05C-36932B0BB31E}"
 EndProject

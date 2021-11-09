@@ -10,16 +10,19 @@ if not "%NO_PAUSE_SYMBOL%"=="1" pause
 exit /b %EXIT_CODE%
 
 :main
-for %%v in (2019 2017) do (
-  for %%p in (Enterprise Professional Community BuildTools) do (
-    for %%b in (Current 15.0) do (
-      if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\%%v\%%p\MSBuild\%%b\Bin\MSBuild.exe" (
-        set MSBuild="%ProgramFiles(x86)%\Microsoft Visual Studio\%%v\%%p\MSBuild\%%b\Bin\MSBuild.exe"
-        goto MSBuild_Found
+for %%f in ("%ProgramFiles%" "%ProgramFiles(x86)%") do (
+  for %%v in (2022 2019 2017) do (
+    for %%p in (Enterprise Professional Community BuildTools) do (
+      for %%b in (Current 15.0) do (
+        if exist "%%~f\Microsoft Visual Studio\%%v\%%p\MSBuild\%%b\Bin\MSBuild.exe" (
+          set MSBuild="%%~f\Microsoft Visual Studio\%%v\%%p\MSBuild\%%b\Bin\MSBuild.exe"
+          goto MSBuild_Found
+        )
       )
     )
   )
 )
 :MSBuild_Found
+echo MSBuild=%MSBuild%
 
 %MSBuild% Database.sln /t:Rebuild /p:Configuration=Release || exit /b 1
