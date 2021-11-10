@@ -385,7 +385,7 @@ namespace Client
             {
                 throw std::logic_error("InvalidOperation");
             }
-            auto SecureContext = this->SecureContextValue.Check<std::shared_ptr<class SecureContext>>([](std::shared_ptr<class SecureContext> v) { return v; });
+            auto sc = this->SecureContextValue.Check<std::shared_ptr<Client::SecureContext>>([](std::shared_ptr<Client::SecureContext> v) { return v; });
             std::vector<int> Indices;
             RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
             {
@@ -476,7 +476,7 @@ namespace Client
                     ArrayCopy(*WriteBuffer, WritingOffset, *Buffer, 12 + (IsACK ? 2 + NumIndex * 2 : 0), DataLength);
                     WritingOffset += DataLength;
 
-                    if (SecureContext != nullptr)
+                    if (sc != nullptr)
                     {
                         Flag |= 2; //ENC
                     }
@@ -486,16 +486,16 @@ namespace Client
                     (*Buffer)[7] = static_cast<std::uint8_t>((Index >> 8) & 0xFF);
 
                     std::int32_t Verification = 0;
-                    if (SecureContext != nullptr)
+                    if (sc != nullptr)
                     {
                         std::vector<std::uint8_t> SHABuffer;
                         SHABuffer.resize(4);
                         ArrayCopy(*Buffer, 4, SHABuffer, 0, 4);
                         auto SHA256 = Algorithms::Cryptography::SHA256(SHABuffer);
                         std::vector<std::uint8_t> Key;
-                        Key.resize(SecureContext->ClientToken.size() + SHA256.size());
-                        ArrayCopy(SecureContext->ClientToken, 0, Key, 0, static_cast<int>(SecureContext->ClientToken.size()));
-                        ArrayCopy(SHA256, 0, Key, static_cast<int>(SecureContext->ClientToken.size()), static_cast<int>(SHA256.size()));
+                        Key.resize(sc->ClientToken.size() + SHA256.size());
+                        ArrayCopy(sc->ClientToken, 0, Key, 0, static_cast<int>(sc->ClientToken.size()));
+                        ArrayCopy(SHA256, 0, Key, static_cast<int>(sc->ClientToken.size()), static_cast<int>(SHA256.size()));
                         auto HMACBytes = Algorithms::Cryptography::HMACSHA256Simple(Key, *Buffer);
                         HMACBytes.resize(4);
                         Verification = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
@@ -573,7 +573,7 @@ namespace Client
                     SessionId = this->SessionId();
                     return v;
                 });
-                auto SecureContext = this->SecureContextValue.Check<std::shared_ptr<class SecureContext>>([](std::shared_ptr<class SecureContext> v) { return v; });
+                auto sc = this->SecureContextValue.Check<std::shared_ptr<Client::SecureContext>>([](std::shared_ptr<Client::SecureContext> v) { return v; });
                 std::vector<int> Indices;
                 RawReadingContext.DoAction([&](std::shared_ptr<UdpReadContext> c)
                 {
@@ -652,7 +652,7 @@ namespace Client
                         }
                         Indices.clear();
 
-                        if (SecureContext != nullptr)
+                        if (sc != nullptr)
                         {
                             Flag |= 2; //ENC
                         }
@@ -662,16 +662,16 @@ namespace Client
                         (*Buffer)[7] = static_cast<std::uint8_t>((Index >> 8) & 0xFF);
 
                         std::int32_t Verification = 0;
-                        if (SecureContext != nullptr)
+                        if (sc != nullptr)
                         {
                             std::vector<std::uint8_t> SHABuffer;
                             SHABuffer.resize(4);
                             ArrayCopy(*Buffer, 4, SHABuffer, 0, 4);
                             auto SHA256 = Algorithms::Cryptography::SHA256(SHABuffer);
                             std::vector<std::uint8_t> Key;
-                            Key.resize(SecureContext->ClientToken.size() + SHA256.size());
-                            ArrayCopy(SecureContext->ClientToken, 0, Key, 0, static_cast<int>(SecureContext->ClientToken.size()));
-                            ArrayCopy(SHA256, 0, Key, static_cast<int>(SecureContext->ClientToken.size()), static_cast<int>(SHA256.size()));
+                            Key.resize(sc->ClientToken.size() + SHA256.size());
+                            ArrayCopy(sc->ClientToken, 0, Key, 0, static_cast<int>(sc->ClientToken.size()));
+                            ArrayCopy(SHA256, 0, Key, static_cast<int>(sc->ClientToken.size()), static_cast<int>(SHA256.size()));
                             auto HMACBytes = Algorithms::Cryptography::HMACSHA256Simple(Key, *Buffer);
                             HMACBytes.resize(4);
                             Verification = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);
@@ -834,8 +834,8 @@ namespace Client
                 (*Buffer)[11] = 0;
 
                 auto IsEncrypted = (Flag & 2) != 0;
-                auto SecureContext = this->SecureContextValue.Check<std::shared_ptr<class SecureContext>>([](std::shared_ptr<class SecureContext> v) { return v; });
-                if ((SecureContext != nullptr) != IsEncrypted)
+                auto sc = this->SecureContextValue.Check<std::shared_ptr<Client::SecureContext>>([](std::shared_ptr<Client::SecureContext> v) { return v; });
+                if ((sc != nullptr) != IsEncrypted)
                 {
                     return;
                 }
@@ -847,9 +847,9 @@ namespace Client
                     ArrayCopy(*Buffer, 4, SHABuffer, 0, 4);
                     auto SHA256 = Algorithms::Cryptography::SHA256(SHABuffer);
                     std::vector<std::uint8_t> Key;
-                    Key.resize(SecureContext->ServerToken.size() + SHA256.size());
-                    ArrayCopy(SecureContext->ServerToken, 0, Key, 0, static_cast<int>(SecureContext->ServerToken.size()));
-                    ArrayCopy(SHA256, 0, Key, static_cast<int>(SecureContext->ServerToken.size()), static_cast<int>(SHA256.size()));
+                    Key.resize(sc->ServerToken.size() + SHA256.size());
+                    ArrayCopy(sc->ServerToken, 0, Key, 0, static_cast<int>(sc->ServerToken.size()));
+                    ArrayCopy(SHA256, 0, Key, static_cast<int>(sc->ServerToken.size()), static_cast<int>(SHA256.size()));
                     auto HMACBytes = Algorithms::Cryptography::HMACSHA256Simple(Key, *Buffer);
                     HMACBytes.resize(4);
                     auto HMAC = HMACBytes[0] | (static_cast<std::int32_t>(HMACBytes[1]) << 8) | (static_cast<std::int32_t>(HMACBytes[2]) << 16) | (static_cast<std::int32_t>(HMACBytes[3]) << 24);

@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2020.07.22.
+//  Version:     2021.11.10.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
