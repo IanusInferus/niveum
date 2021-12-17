@@ -7,9 +7,6 @@
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>RelationSchemaManipulator</AssemblyName>
     <AssemblyVersion>2021.12.18.0</AssemblyVersion>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(FLTKey)</AssemblyOriginatorKeyFile>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputType>Exe</OutputType>
     <OutputPath>..\..\Bin\</OutputPath>
@@ -17,10 +14,6 @@
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-
-  <PropertyGroup Condition=" Exists('$(FLTKey)') ">
-    <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
