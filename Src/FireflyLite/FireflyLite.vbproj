@@ -4,10 +4,7 @@
     <RootNamespace>Firefly</RootNamespace>
     <OptionStrict>On</OptionStrict>
     <PackageId>Firefly.Lite</PackageId>
-    <Description>萤火虫框架核心库精简版</Description>
     <Product>Firefly.Lite</Product>
-    <Company>F.R.C.</Company>
-    <Authors>F.R.C.</Authors>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>Firefly.Lite</AssemblyName>
     <AssemblyVersion>2021.12.18.0</AssemblyVersion>
@@ -41,5 +38,4 @@
     <NoWarn />
     <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
   </PropertyGroup>
-
 </Project>

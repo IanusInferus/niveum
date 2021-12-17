@@ -25,7 +25,7 @@ echo You need to install Visual Studio 2019/2022 or add MSBuild environment vari
 exit /b 1
 :MSBuild_Found
 
-%MSBuild% /t:Rebuild /p:Configuration=Release || exit /b 1
+%MSBuild% /restore /t:Rebuild /p:Configuration=Release || exit /b 1
 
 copy Doc\Readme.*.txt ..\Bin\ || exit /b 1
 copy Doc\UpdateLog.*.txt ..\Bin\ || exit /b 1
