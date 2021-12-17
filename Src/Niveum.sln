@@ -26,6 +26,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nivea", "Nivea\Nivea.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NiveumJson", "NiveumJson\NiveumJson.csproj", "{0A2ACEBF-1C9E-497A-A996-3A5549A13710}"
 EndProject
+Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "FireflyLite", "FireflyLite\FireflyLite.vbproj", "{E70CC4C7-8598-4631-B25C-71B925CC14D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,6 +74,10 @@ Global
 		{0A2ACEBF-1C9E-497A-A996-3A5549A13710}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A2ACEBF-1C9E-497A-A996-3A5549A13710}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A2ACEBF-1C9E-497A-A996-3A5549A13710}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E70CC4C7-8598-4631-B25C-71B925CC14D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E70CC4C7-8598-4631-B25C-71B925CC14D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E70CC4C7-8598-4631-B25C-71B925CC14D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E70CC4C7-8598-4631-B25C-71B925CC14D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

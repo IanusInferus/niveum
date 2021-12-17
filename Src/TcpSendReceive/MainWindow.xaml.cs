@@ -635,7 +635,7 @@ namespace TcpSendReceive
             var cp = new CompilerParameters();
             cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(System.CodeDom.Compiler.CodeCompiler)).Location); //System.dll
             cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(System.Linq.Enumerable)).Location); //System.Core.dll
-            cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(Firefly.N32)).Location); //Firefly.Core.dll
+            cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(Firefly.Texting.TreeFormat.TreeFile)).Location); //Firefly.Lite.dll
             cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(Niveum.Json.JObject)).Location); //Niveum.Json.dll
             cp.GenerateExecutable = false;
             cp.GenerateInMemory = true;

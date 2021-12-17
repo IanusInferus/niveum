@@ -49,9 +49,6 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Firefly.Lite">
-      <HintPath>..\Lib\Firefly\Firefly.Lite.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
@@ -87,7 +84,12 @@
     <None Include="Template\Syntax\Syntax.tree" />
     <None Include="Template\Syntax\Token.tree" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\FireflyLite\FireflyLite.vbproj">
+      <Project>{e70cc4c7-8598-4631-b25c-71b925cc14d1}</Project>
+      <Name>FireflyLite</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

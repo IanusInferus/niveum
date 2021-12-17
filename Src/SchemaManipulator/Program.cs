@@ -669,7 +669,7 @@ namespace Niveum.SchemaManipulator
             var cp = new CompilerParameters();
             cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(System.CodeDom.Compiler.CodeCompiler)).Location); //System.dll
             cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(System.Linq.Enumerable)).Location); //System.Core.dll
-            cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(Firefly.N32)).Location); //Firefly.Core.dll
+            cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(Firefly.Texting.TreeFormat.TreeFile)).Location); //Firefly.Lite.dll
             cp.GenerateExecutable = false;
             cp.GenerateInMemory = true;
             var cr = (new Microsoft.CSharp.CSharpCodeProvider()).CompileAssemblyFromSource(cp, Code);

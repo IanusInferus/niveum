@@ -44,9 +44,6 @@
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Firefly.Lite">
-      <HintPath>..\Lib\Firefly\Firefly.Lite.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
@@ -106,6 +103,10 @@
     <EmbeddedResource Include="Xhtml\Schema.tree" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FireflyLite\FireflyLite.vbproj">
+      <Project>{e70cc4c7-8598-4631-b25c-71b925cc14d1}</Project>
+      <Name>FireflyLite</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NiveumCore\NiveumCore.csproj">
       <Project>{23021296-4e59-4532-9b5f-cb3ced3a978e}</Project>
       <Name>NiveumCore</Name>

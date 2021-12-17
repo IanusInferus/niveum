@@ -44,9 +44,6 @@
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Firefly.Lite">
-      <HintPath>..\Lib\Firefly\Firefly.Lite.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
@@ -119,6 +116,12 @@
     <None Include="Generator\VB\VB.tree" />
     <None Include="Generator\Xhtml\Xhtml.tree" />
     <None Include="ObjectSchema\ObjectSchema.tree" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FireflyLite\FireflyLite.vbproj">
+      <Project>{e70cc4c7-8598-4631-b25c-71b925cc14d1}</Project>
+      <Name>FireflyLite</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
