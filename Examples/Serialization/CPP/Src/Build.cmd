@@ -13,16 +13,16 @@ exit /b %EXIT_CODE%
 for %%f in ("%ProgramFiles%") do (
   for %%v in (2022) do (
     for %%p in (Enterprise Professional Community BuildTools) do (
-      for %%b in (Current) do (
-        if exist "%%~f\Microsoft Visual Studio\%%v\%%p\MSBuild\%%b\Bin\MSBuild.exe" (
-          set MSBuild="%%~f\Microsoft Visual Studio\%%v\%%p\MSBuild\%%b\Bin\MSBuild.exe"
-          goto MSBuild_Found
-        )
+      if exist "%%~f\Microsoft Visual Studio\%%v\%%p\MSBuild\Current\Bin\MSBuild.exe" (
+        set MSBuild="%%~f\Microsoft Visual Studio\%%v\%%p\MSBuild\Current\Bin\MSBuild.exe"
+        goto MSBuild_Found
       )
     )
   )
 )
+echo MSBuild not found.
+echo You need to install Visual Studio 2019/2022 or add MSBuild environment variable.
+exit /b 1
 :MSBuild_Found
-echo MSBuild=%MSBuild%
 
 %MSBuild% /t:Rebuild /p:Configuration=Release || exit /b 1

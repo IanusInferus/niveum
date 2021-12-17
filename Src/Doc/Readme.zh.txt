@@ -108,10 +108,10 @@ MySQL               √          ×              无需
 
 5 环境要求
 
-本框架使用 Visual C# 编写，开发时需要 Visual Studio 2019 支持。
-本框架运行时需要 Microsoft .Net Framework 4 运行库支持。
-Microsoft .Net Framework 4 (x86/x64，48.1MB)
-http://download.microsoft.com/download/9/5/A/95A9616B-7A37-4AF6-BC36-D6EA96C8DAAE/dotNetFx40_Full_x86_x64.exe
+本框架使用 C# 编写，开发时需要 Visual Studio 2022 或 BuildTool 支持。
+本框架运行需要 Microsoft .Net Framework 4.8 运行时。
+Microsoft .Net Framework 4.8 (x86/x64)
+https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48
 
 
 6 用户使用协议
