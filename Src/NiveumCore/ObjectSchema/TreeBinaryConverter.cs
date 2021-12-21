@@ -3,10 +3,12 @@
 //  File:        TreeBinaryConverter.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: Tree格式数据与二进制数据转换器
-//  Version:     2012.04.07.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -60,12 +62,12 @@ namespace Niveum.ObjectSchema
 
         public Byte[] TreeToBinary(Type t, XElement x)
         {
-            var tbc = Activator.CreateInstance(typeof(TypedTreeBinaryConverter<>).MakeGenericType(t), bs, xs) as ITreeBinaryConverter;
+            var tbc = (Activator.CreateInstance(typeof(TypedTreeBinaryConverter<>).MakeGenericType(t), bs, xs) as ITreeBinaryConverter)!;
             return tbc.TreeToBinary(x);
         }
         public XElement BinaryToTree(Type t, Byte[] b)
         {
-            var tbc = Activator.CreateInstance(typeof(TypedTreeBinaryConverter<>).MakeGenericType(t), bs, xs) as ITreeBinaryConverter;
+            var tbc = (Activator.CreateInstance(typeof(TypedTreeBinaryConverter<>).MakeGenericType(t), bs, xs) as ITreeBinaryConverter)!;
             return tbc.BinaryToTree(b);
         }
         public Byte[] TreeToBinary<T>(XElement x)

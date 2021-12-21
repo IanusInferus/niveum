@@ -3,10 +3,13 @@
 //  File:        ObjectSchemaDiffGenerator.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构差异生成器
-//  Version:     2018.12.02.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
+#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -14,10 +17,10 @@ using System.Linq;
 
 namespace Niveum.ObjectSchema
 {
-    public class ObjectSchemaDiffResult
+    public sealed class ObjectSchemaDiffResult
     {
-        public Schema Patch;
-        public Schema Revert;
+        public Schema Patch { get; init; }
+        public Schema Revert { get; init; }
     }
 
     public sealed class ObjectSchemaDiffGenerator

@@ -3,10 +3,12 @@
 //  File:        CppCompatible.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C#通讯兼容代码生成器
-//  Version:     2019.04.28.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -247,7 +249,7 @@ namespace Niveum.ObjectSchema.CppCompatible
         public void FillTranslatorAliasFrom(Dictionary<String, TypeDef> VersionedNameToType, AliasDef a, List<String> l, String NamespaceName)
         {
             var Name = a.FullName();
-            AliasDef aHead = null;
+            AliasDef? aHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
                 var tHead = VersionedNameToType[Name];
@@ -275,7 +277,7 @@ namespace Niveum.ObjectSchema.CppCompatible
         public void FillTranslatorAliasTo(Dictionary<String, TypeDef> VersionedNameToType, AliasDef a, List<String> l, String NamespaceName)
         {
             var Name = a.FullName();
-            AliasDef aHead = null;
+            AliasDef? aHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
                 var tHead = VersionedNameToType[Name];
@@ -303,7 +305,7 @@ namespace Niveum.ObjectSchema.CppCompatible
         public void FillTranslatorRecordFrom(Dictionary<String, TypeDef> VersionedNameToType, RecordDef r, List<String> l, String NamespaceName)
         {
             var Name = r.FullName();
-            RecordDef aHead = null;
+            RecordDef? aHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
                 var tHead = VersionedNameToType[Name];
@@ -331,7 +333,7 @@ namespace Niveum.ObjectSchema.CppCompatible
         public void FillTranslatorRecordTo(Dictionary<String, TypeDef> VersionedNameToType, RecordDef r, List<String> l, String NamespaceName)
         {
             var Name = r.FullName();
-            RecordDef aHead = null;
+            RecordDef? aHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
                 var tHead = VersionedNameToType[Name];
@@ -359,7 +361,7 @@ namespace Niveum.ObjectSchema.CppCompatible
         public void FillTranslatorTaggedUnionFrom(Dictionary<String, TypeDef> VersionedNameToType, TaggedUnionDef tu, List<String> l, String NamespaceName)
         {
             var Name = tu.FullName();
-            TaggedUnionDef tuHead = null;
+            TaggedUnionDef? tuHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
                 var tHead = VersionedNameToType[Name];
@@ -388,7 +390,7 @@ namespace Niveum.ObjectSchema.CppCompatible
         public void FillTranslatorTaggedUnionTo(Dictionary<String, TypeDef> VersionedNameToType, TaggedUnionDef tu, List<String> l, String NamespaceName)
         {
             var Name = tu.FullName();
-            TaggedUnionDef tuHead = null;
+            TaggedUnionDef? tuHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
                 var tHead = VersionedNameToType[Name];
@@ -417,7 +419,7 @@ namespace Niveum.ObjectSchema.CppCompatible
         public void FillTranslatorEnumFrom(Dictionary<String, TypeDef> VersionedNameToType, EnumDef e, List<String> l, String NamespaceName)
         {
             var Name = e.FullName();
-            EnumDef eHead = null;
+            EnumDef? eHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
                 var tHead = VersionedNameToType[Name];
@@ -447,7 +449,7 @@ namespace Niveum.ObjectSchema.CppCompatible
         public void FillTranslatorEnumTo(Dictionary<String, TypeDef> VersionedNameToType, EnumDef e, List<String> l, String NamespaceName)
         {
             var Name = e.FullName();
-            EnumDef eHead = null;
+            EnumDef? eHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
                 var tHead = VersionedNameToType[Name];
@@ -477,7 +479,7 @@ namespace Niveum.ObjectSchema.CppCompatible
         public void FillTranslatorClientCommand(Dictionary<String, TypeDef> VersionedNameToType, ClientCommandDef c, List<String> l, String NamespaceName)
         {
             var Name = c.FullName();
-            ClientCommandDef cHead = null;
+            ClientCommandDef? cHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
                 var tHead = VersionedNameToType[Name];
@@ -518,7 +520,7 @@ namespace Niveum.ObjectSchema.CppCompatible
         public void FillTranslatorServerCommand(Dictionary<String, TypeDef> VersionedNameToType, ServerCommandDef c, List<String> l, String NamespaceName)
         {
             var Name = c.FullName();
-            ServerCommandDef cHead = null;
+            ServerCommandDef? cHead = null;
             if (VersionedNameToType.ContainsKey(Name))
             {
                 var tHead = VersionedNameToType[Name];

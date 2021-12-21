@@ -3,10 +3,13 @@
 //  File:        Xhtml.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2018.12.22.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
+#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -16,10 +19,10 @@ using Firefly;
 
 namespace Niveum.ObjectSchema.Xhtml
 {
-    public class FileResult
+    public sealed class FileResult
     {
-        public String Path;
-        public String Content;
+        public String Path { get; init; }
+        public String Content { get; init; }
     }
     public static class CodeGenerator
     {

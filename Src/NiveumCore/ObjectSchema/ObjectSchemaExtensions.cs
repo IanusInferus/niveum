@@ -3,10 +3,13 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2018.12.05.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
+#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -36,10 +39,10 @@ namespace Niveum.ObjectSchema
         public Func<LiteralDef, LiteralDef, LiteralDef> LiteralDefMarker = (lOld, lNew) => lNew;
     }
 
-    public class SchemaClosure
+    public sealed class SchemaClosure
     {
-        public List<TypeDef> TypeDefs;
-        public List<TypeSpec> TypeSpecs;
+        public List<TypeDef> TypeDefs { get; init; }
+        public List<TypeSpec> TypeSpecs { get; init; }
     }
     public interface ISchemaClosureGenerator
     {
@@ -470,10 +473,10 @@ namespace Niveum.ObjectSchema
                 Positions = oslr.Positions;
             }
 
-            private class Marker
+            private sealed class Marker
             {
-                public Func<String, Object, String> GetPositionedMessage;
-                public Dictionary<String, TypeDef> SchemaTypes;
+                public Func<String, Object, String> GetPositionedMessage { get; init; }
+                public Dictionary<String, TypeDef> SchemaTypes { get; init; }
                 public List<TypeDef> TypeDefs = new List<TypeDef>();
                 public HashSet<TypeDef> TypeDefSet = new HashSet<TypeDef>();
                 public List<TypeSpec> TypeSpecs = new List<TypeSpec>();
@@ -1286,7 +1289,7 @@ namespace Niveum.ObjectSchema
 
         public static IEnumerable<T> Join<T>(this IEnumerable<IEnumerable<T>> l, IEnumerable<T> Separator)
         {
-            IEnumerable<T> Output = null;
+            IEnumerable<T>? Output = null;
             foreach (var v in l)
             {
                 if (Output == null)

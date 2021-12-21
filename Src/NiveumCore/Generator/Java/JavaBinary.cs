@@ -3,10 +3,12 @@
 //  File:        JavaBinary.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构Java二进制代码生成器
-//  Version:     2019.04.28.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -146,7 +148,7 @@ namespace Niveum.ObjectSchema.JavaBinary
             }
 
             var GenericOptionalTypes = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.NameMatches("Optional")).ToList();
-            TaggedUnionDef GenericOptionalType = null;
+            var GenericOptionalType = Optional<TaggedUnionDef>.Empty;
             if (GenericOptionalTypes.Count > 0)
             {
                 GenericOptionalType = new TaggedUnionDef
@@ -169,7 +171,7 @@ namespace Niveum.ObjectSchema.JavaBinary
             {
                 if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Optional") && gts.GenericTypeSpec.ParameterValues.Count == 1)
                 {
-                    l.AddRange(BinaryTranslator_Optional(gts, GenericOptionalType, NamespaceName));
+                    l.AddRange(BinaryTranslator_Optional(gts, GenericOptionalType.Value, NamespaceName));
                     l.Add("");
                 }
                 else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("List") && gts.GenericTypeSpec.ParameterValues.Count == 1)

@@ -3,10 +3,13 @@
 //  File:        ObjectSchemaLoader.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构加载器
-//  Version:     2018.12.02.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
+#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -19,10 +22,10 @@ using TreeFormat = Firefly.Texting.TreeFormat;
 
 namespace Niveum.ObjectSchema
 {
-    public class ObjectSchemaLoaderResult
+    public sealed class ObjectSchemaLoaderResult
     {
-        public Schema Schema;
-        public Dictionary<Object, FileTextRange> Positions;
+        public Schema Schema { get; init; }
+        public Dictionary<Object, FileTextRange> Positions { get; init; }
     }
 
     public sealed class ObjectSchemaLoader
@@ -258,6 +261,9 @@ namespace Niveum.ObjectSchema
         }
         private T Mark<T>(T sOld, T sNew)
         {
+            if (sOld == null) { throw new ArgumentNullException(nameof(sOld)); }
+            if (sNew == null) { throw new ArgumentNullException(nameof(sNew)); }
+
             if (Positions.ContainsKey(sOld) && !Positions.ContainsKey(sNew))
             {
                 Positions.Add(sNew, Positions[sOld]);

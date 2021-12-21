@@ -3,10 +3,13 @@
 //  File:        FileParser.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 文件解析器
-//  Version:     2019.04.28.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
+#pragma warning disable CS8618
 
 using Firefly;
 using Firefly.Mapping.TreeText;
@@ -21,15 +24,15 @@ using TreeFormat = Firefly.Texting.TreeFormat;
 namespace Niveum.ObjectSchema
 {
 
-    public class FileParserResult
+    public sealed class FileParserResult
     {
-        public Text Text;
-        public Dictionary<Object, TextRange> Positions;
-        public List<TypeDef> Types;
-        public List<TypeDef> TypeRefs;
-        public List<String> Imports;
-        public Dictionary<TypeDef, List<String>> TypeToNamespace;
-        public Dictionary<TypeDef, List<List<String>>> TypeToNamespaceImports;
+        public Text Text { get; init; }
+        public Dictionary<Object, TextRange> Positions { get; init; }
+        public List<TypeDef> Types { get; init; }
+        public List<TypeDef> TypeRefs { get; init; }
+        public List<String> Imports { get; init; }
+        public Dictionary<TypeDef, List<String>> TypeToNamespace { get; init; }
+        public Dictionary<TypeDef, List<List<String>>> TypeToNamespaceImports { get; init; }
     }
 
     public static class FileParser
@@ -171,8 +174,8 @@ namespace Niveum.ObjectSchema
 
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
+                                                String cName;
+                                                TypeSpec cType;
                                                 var cAttributes = new List<KeyValuePair<String, List<String>>>();
                                                 var cDescription = "";
 
@@ -224,12 +227,12 @@ namespace Niveum.ObjectSchema
                                     case "Alias":
                                         {
                                             var GenericParameters = new List<VariableDef>();
-                                            TypeSpec Type = null;
+                                            TypeSpec? Type = null;
 
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
+                                                String cName;
+                                                TypeSpec cType;
                                                 var cAttributes = new List<KeyValuePair<String, List<String>>>();
                                                 var cDescription = "";
 
@@ -299,8 +302,8 @@ namespace Niveum.ObjectSchema
 
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
+                                                String cName;
+                                                TypeSpec cType;
                                                 var cAttributes = new List<KeyValuePair<String, List<String>>>();
                                                 var cDescription = "";
 
@@ -358,8 +361,8 @@ namespace Niveum.ObjectSchema
 
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
+                                                String cName;
+                                                TypeSpec cType;
                                                 var cAttributes = new List<KeyValuePair<String, List<String>>>();
                                                 var cDescription = "";
 
@@ -417,7 +420,7 @@ namespace Niveum.ObjectSchema
                                             Int64 NextValue = 0;
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
+                                                String cName;
                                                 Int64 cValue = NextValue;
                                                 var cAttributes = new List<KeyValuePair<String, List<String>>>();
                                                 var cDescription = "";
@@ -479,8 +482,8 @@ namespace Niveum.ObjectSchema
                                             Boolean IsInParameter = false;
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
+                                                String cName;
+                                                TypeSpec cType;
                                                 var cAttributes = new List<KeyValuePair<String, List<String>>>();
                                                 var cDescription = "";
 
@@ -546,8 +549,8 @@ namespace Niveum.ObjectSchema
 
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
+                                                String cName;
+                                                TypeSpec cType;
                                                 var cAttributes = new List<KeyValuePair<String, List<String>>>();
                                                 var cDescription = "";
 

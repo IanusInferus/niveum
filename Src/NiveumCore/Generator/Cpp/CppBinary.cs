@@ -3,10 +3,12 @@
 //  File:        CppBinary.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C++二进制通讯代码生成器
-//  Version:     2019.04.28.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;

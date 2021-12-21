@@ -3,10 +3,13 @@
 //  File:        TokenParser.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 词法解析器
-//  Version:     2016.08.22.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
+#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -18,15 +21,15 @@ using Firefly.Texting.TreeFormat.Syntax;
 
 namespace Niveum.ObjectSchema
 {
-    public class TokenParserResult
+    public sealed class TokenParserResult
     {
-        public Token Token;
-        public Optional<TextRange> RemainingChars;
+        public Token Token { get; init; }
+        public Optional<TextRange> RemainingChars { get; init; }
     }
-    public class DescriptionComposite
+    public sealed class DescriptionComposite
     {
-        public List<KeyValuePair<String, List<String>>> Attributes;
-        public String Description;
+        public List<KeyValuePair<String, List<String>>> Attributes { get; init; }
+        public String Description { get; init; }
     }
 
     public static class TokenParser
@@ -93,14 +96,14 @@ namespace Niveum.ObjectSchema
             return l;
         }
 
-        public class Symbol
+        public sealed class Symbol
         {
-            public String Name;
-            public int SymbolStartIndex;
-            public int SymbolEndIndex;
-            public int NameStartIndex;
-            public int NameEndIndex;
-            public List<KeyValuePair<String, int>> Parameters;
+            public String Name { get; init; }
+            public int SymbolStartIndex { get; init; }
+            public int SymbolEndIndex { get; init; }
+            public int NameStartIndex { get; init; }
+            public int NameEndIndex { get; init; }
+            public List<KeyValuePair<String, int>> Parameters { get; init; }
         }
 
         public static Optional<List<Symbol>> TrySplitSymbolMemberChain(String s, out int InvalidCharIndex)

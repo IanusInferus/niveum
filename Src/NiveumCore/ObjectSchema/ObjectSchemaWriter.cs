@@ -3,10 +3,12 @@
 //  File:        ObjectSchemaWriter.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构写入器
-//  Version:     2016.07.14.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -27,7 +29,7 @@ namespace Niveum.ObjectSchema
         {
         }
 
-        public String Write(List<TypeDef> Types, String Comment = null)
+        public String Write(List<TypeDef> Types, String Comment = "")
         {
             var f = WriteToForest(Types, Comment);
 

@@ -3,10 +3,12 @@
 //  File:        CppVersion.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构C++版本代码生成器
-//  Version:     2018.12.15.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;

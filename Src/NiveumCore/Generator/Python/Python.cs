@@ -3,10 +3,12 @@
 //  File:        Python.cs
 //  Location:    Niveum.Core <Visual C#>
 //  Description: 对象类型结构Python3代码生成器
-//  Version:     2021.01.04.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
