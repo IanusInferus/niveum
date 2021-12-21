@@ -3,10 +3,12 @@
 //  File:        SequenceBuilder.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 序列构建器
-//  Version:     2019.04.28.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;

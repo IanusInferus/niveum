@@ -1,12 +1,15 @@
 ﻿<Project>
   <PropertyGroup>
     <TargetFrameworks>net48</TargetFrameworks>
-    <RootNamespace>Nivea</RootNamespace>
+	<LangVersion>10.0</LangVersion>
+	<ImplicitUsings>disable</ImplicitUsings>
+	<Nullable>enable</Nullable>
+	<RootNamespace>Nivea</RootNamespace>
     <PackageId>Nivea</PackageId>
     <Product>Nivea</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>Nivea</AssemblyName>
-    <AssemblyVersion>2021.12.18.0</AssemblyVersion>
+    <AssemblyVersion>2021.12.21.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputType>Exe</OutputType>
     <OutputPath>..\..\Bin\</OutputPath>

@@ -3,10 +3,12 @@
 //  File:        TypeParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 类型词法解析器
-//  Version:     2019.04.28.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;

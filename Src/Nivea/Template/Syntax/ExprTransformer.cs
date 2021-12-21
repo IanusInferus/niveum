@@ -3,10 +3,13 @@
 //  File:        ExprTransformer.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式转换器
-//  Version:     2019.04.28.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
+#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -1202,10 +1205,10 @@ namespace Nivea.Template.Syntax
             return MarkRange(MatchPattern.CreateError(), Range, Positions);
         }
 
-        private class TypeVariableMemberChain
+        private sealed class TypeVariableMemberChain
         {
-            public TypeSpec Type;
-            public VariableRef Variable;
+            public TypeSpec Type { get; init; }
+            public VariableRef Variable { get; init; }
         }
         private static Optional<TypeVariableMemberChain> TryTransformTypeVariableMemberChain(String NodeString, ExprNode Node, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
         {
@@ -1229,7 +1232,7 @@ namespace Nivea.Template.Syntax
 
             var tTotal = Optional<TypeSpec>.Empty;
             var vTotal = Optional<VariableRef>.Empty;
-            Expr Ambiguous = null;
+            var Ambiguous = Optional<Expr>.Empty;
             var FirstStart = 0;
             foreach (var s in sml)
             {
@@ -1319,7 +1322,7 @@ namespace Nivea.Template.Syntax
                     var al = new List<Expr> { tl, vv };
                     Ambiguous = Expr.CreateAmbiguous(al);
                     Mark(al, s.SymbolStartIndex, s.SymbolEndIndex);
-                    Mark(Ambiguous, s.SymbolStartIndex, s.SymbolEndIndex);
+                    Mark(Ambiguous.Value, s.SymbolStartIndex, s.SymbolEndIndex);
 
                     FirstStart = s.SymbolStartIndex;
                 }
@@ -1333,7 +1336,7 @@ namespace Nivea.Template.Syntax
                     var tl = Expr.CreateTypeLiteral(t);
                     Mark(tl, FirstStart, s.SymbolEndIndex);
 
-                    var ma = new MemberAccess { Parent = Ambiguous, Child = v };
+                    var ma = new MemberAccess { Parent = Ambiguous.Value, Child = v };
                     var vma = VariableRef.CreateMemberAccess(ma);
                     var vv = Expr.CreateVariableRef(vma);
                     vTotal = vma;
@@ -1344,7 +1347,7 @@ namespace Nivea.Template.Syntax
                     var al = new List<Expr> { tl, vv };
                     Ambiguous = Expr.CreateAmbiguous(al);
                     Mark(al, FirstStart, s.SymbolEndIndex);
-                    Mark(Ambiguous, FirstStart, s.SymbolEndIndex);
+                    Mark(Ambiguous.Value, FirstStart, s.SymbolEndIndex);
                 }
             }
 
@@ -1432,6 +1435,9 @@ namespace Nivea.Template.Syntax
 
         private static T Mark<T>(T SemanticsObj, Object SyntaxObj, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
         {
+            if (SemanticsObj == null) { throw new ArgumentNullException(nameof(SemanticsObj)); }
+            if (SyntaxObj == null) { throw new ArgumentNullException(nameof(SyntaxObj)); }
+
             if (!NodePositions.ContainsKey(SyntaxObj)) { return SemanticsObj; }
             var Range = NodePositions[SyntaxObj];
             Positions.Add(SemanticsObj, Range);
@@ -1439,6 +1445,8 @@ namespace Nivea.Template.Syntax
         }
         private static T MarkRange<T>(T SemanticsObj, Optional<TextRange> Range, Dictionary<Object, TextRange> Positions)
         {
+            if (SemanticsObj == null) { throw new ArgumentNullException(nameof(SemanticsObj)); }
+
             if (Range.OnSome)
             {
                 Positions.Add(SemanticsObj, Range.Value);
@@ -1447,6 +1455,8 @@ namespace Nivea.Template.Syntax
         }
         private static Optional<TextRange> GetRange<T>(T SyntaxObj, Dictionary<Object, TextRange> NodePositions)
         {
+            if (SyntaxObj == null) { throw new ArgumentNullException(nameof(SyntaxObj)); }
+
             if (NodePositions.ContainsKey(SyntaxObj))
             {
                 return NodePositions[SyntaxObj];
@@ -1458,6 +1468,8 @@ namespace Nivea.Template.Syntax
             if (!SyntaxObjs.Any()) { return Optional<TextRange>.Empty; }
             var First = SyntaxObjs.First();
             var Last = SyntaxObjs.Last();
+            if (First == null) { throw new ArgumentNullException(nameof(SyntaxObjs)); }
+            if (Last == null) { throw new ArgumentNullException(nameof(SyntaxObjs)); }
             if (NodePositions.ContainsKey(First) && NodePositions.ContainsKey(Last))
             {
                 return new TextRange { Start = NodePositions[First].Start, End = NodePositions[Last].End };

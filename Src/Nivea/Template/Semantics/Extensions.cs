@@ -3,10 +3,12 @@
 //  File:        Extensions.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 扩展
-//  Version:     2018.12.02.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;

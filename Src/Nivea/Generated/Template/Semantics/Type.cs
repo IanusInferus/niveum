@@ -5,6 +5,9 @@
 //
 //==========================================================================
 
+#nullable enable
+#pragma warning disable CS8618
+
 using System;
 using System.Collections.Generic;
 using Boolean = System.Boolean;
@@ -43,18 +46,18 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class TypeDef
     {
-        [Tag] public TypeDefTag _Tag;
+        [Tag] public TypeDefTag _Tag { get; init; }
 
         /// <summary>基元</summary>
-        public PrimitiveDef Primitive;
+        public PrimitiveDef Primitive { get; init; }
         /// <summary>别名</summary>
-        public AliasDef Alias;
+        public AliasDef Alias { get; init; }
         /// <summary>记录</summary>
-        public RecordDef Record;
+        public RecordDef Record { get; init; }
         /// <summary>标签联合</summary>
-        public TaggedUnionDef TaggedUnion;
+        public TaggedUnionDef TaggedUnion { get; init; }
         /// <summary>枚举</summary>
-        public EnumDef Enum;
+        public EnumDef Enum { get; init; }
 
         /// <summary>基元</summary>
         public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, Primitive = Value }; }
@@ -83,9 +86,9 @@ namespace Nivea.Template.Semantics
     public sealed class TypeRef
     {
         /// <summary>名称</summary>
-        public List<String> Name;
+        public List<String> Name { get; init; }
         /// <summary>版本</summary>
-        public String Version;
+        public String Version { get; init; }
     }
     public enum TypeSpecTag
     {
@@ -106,20 +109,20 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class TypeSpec
     {
-        [Tag] public TypeSpecTag _Tag;
+        [Tag] public TypeSpecTag _Tag { get; init; }
 
         /// <summary>类型引用</summary>
-        public TypeRef TypeRef;
+        public TypeRef TypeRef { get; init; }
         /// <summary>泛型参数引用</summary>
-        public String GenericParameterRef;
+        public String GenericParameterRef { get; init; }
         /// <summary>元组规格</summary>
-        public List<TypeSpec> Tuple;
+        public List<TypeSpec> Tuple { get; init; }
         /// <summary>泛型特化规格</summary>
-        public GenericTypeSpec GenericTypeSpec;
+        public GenericTypeSpec GenericTypeSpec { get; init; }
         /// <summary>数组规格</summary>
-        public TypeSpec Array;
+        public TypeSpec Array { get; init; }
         /// <summary>成员类型规格</summary>
-        public TypeMemberSpec Member;
+        public TypeMemberSpec Member { get; init; }
 
         /// <summary>类型引用</summary>
         public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, TypeRef = Value }; }
@@ -152,110 +155,110 @@ namespace Nivea.Template.Semantics
     public sealed class PrimitiveDef
     {
         /// <summary>名称</summary>
-        public List<String> Name;
+        public List<String> Name { get; init; }
         /// <summary>泛型参数</summary>
-        public List<VariableDef> GenericParameters;
+        public List<VariableDef> GenericParameters { get; init; }
         /// <summary>描述</summary>
-        public String Description;
+        public String Description { get; init; }
     }
     /// <summary>别名定义</summary>
     [Record]
     public sealed class AliasDef
     {
         /// <summary>名称</summary>
-        public List<String> Name;
+        public List<String> Name { get; init; }
         /// <summary>版本</summary>
-        public String Version;
+        public String Version { get; init; }
         /// <summary>泛型参数</summary>
-        public List<VariableDef> GenericParameters;
+        public List<VariableDef> GenericParameters { get; init; }
         /// <summary>类型</summary>
-        public TypeSpec Type;
+        public TypeSpec Type { get; init; }
         /// <summary>描述</summary>
-        public String Description;
+        public String Description { get; init; }
     }
     /// <summary>记录定义</summary>
     [Record]
     public sealed class RecordDef
     {
         /// <summary>名称</summary>
-        public List<String> Name;
+        public List<String> Name { get; init; }
         /// <summary>版本</summary>
-        public String Version;
+        public String Version { get; init; }
         /// <summary>泛型参数</summary>
-        public List<VariableDef> GenericParameters;
+        public List<VariableDef> GenericParameters { get; init; }
         /// <summary>字段</summary>
-        public List<VariableDef> Fields;
+        public List<VariableDef> Fields { get; init; }
         /// <summary>描述</summary>
-        public String Description;
+        public String Description { get; init; }
     }
     /// <summary>标签联合定义</summary>
     [Record]
     public sealed class TaggedUnionDef
     {
         /// <summary>名称</summary>
-        public List<String> Name;
+        public List<String> Name { get; init; }
         /// <summary>版本</summary>
-        public String Version;
+        public String Version { get; init; }
         /// <summary>泛型参数</summary>
-        public List<VariableDef> GenericParameters;
+        public List<VariableDef> GenericParameters { get; init; }
         /// <summary>选择</summary>
-        public List<VariableDef> Alternatives;
+        public List<VariableDef> Alternatives { get; init; }
         /// <summary>描述</summary>
-        public String Description;
+        public String Description { get; init; }
     }
     /// <summary>枚举定义</summary>
     [Record]
     public sealed class EnumDef
     {
         /// <summary>名称</summary>
-        public List<String> Name;
+        public List<String> Name { get; init; }
         /// <summary>版本</summary>
-        public String Version;
+        public String Version { get; init; }
         /// <summary>基础类型</summary>
-        public TypeSpec UnderlyingType;
+        public TypeSpec UnderlyingType { get; init; }
         /// <summary>字面量</summary>
-        public List<LiteralDef> Literals;
+        public List<LiteralDef> Literals { get; init; }
         /// <summary>描述</summary>
-        public String Description;
+        public String Description { get; init; }
     }
     /// <summary>泛型特化规格</summary>
     [Record]
     public sealed class GenericTypeSpec
     {
         /// <summary>泛型类型</summary>
-        public TypeSpec TypeSpec;
+        public TypeSpec TypeSpec { get; init; }
         /// <summary>泛型参数</summary>
-        public List<TypeSpec> ParameterValues;
+        public List<TypeSpec> ParameterValues { get; init; }
     }
     /// <summary>成员类型规格</summary>
     [Record]
     public sealed class TypeMemberSpec
     {
         /// <summary>父结点</summary>
-        public TypeSpec Parent;
+        public TypeSpec Parent { get; init; }
         /// <summary>子结点</summary>
-        public TypeSpec Child;
+        public TypeSpec Child { get; init; }
     }
     /// <summary>变量定义</summary>
     [Record]
     public sealed class VariableDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>类型</summary>
-        public TypeSpec Type;
+        public TypeSpec Type { get; init; }
         /// <summary>描述</summary>
-        public String Description;
+        public String Description { get; init; }
     }
     /// <summary>字面量定义</summary>
     [Record]
     public sealed class LiteralDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>值</summary>
-        public Int64 Value;
+        public Int64 Value { get; init; }
         /// <summary>描述</summary>
-        public String Description;
+        public String Description { get; init; }
     }
 }

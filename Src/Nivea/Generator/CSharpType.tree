@@ -4,7 +4,7 @@
       File:        CSharpType.tree
       Location:    Nivea <Tree>
       Description: C#类型代码生成
-      Version:     2018.12.15.
+      Version:     2021.12.21.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -50,10 +50,10 @@
     [TaggedUnion]
     public struct Optional<T>
     {
-        [Tag] public OptionalTag _Tag;
+        [Tag] public OptionalTag _Tag { get; init; }
 
-        public Unit None;
-        public T Some;
+        public Unit None { get; init; }
+        public T Some { get; init; }
 
         public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, None = new Unit() }; }
         public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, Some = Value }; }
@@ -62,7 +62,7 @@
         public Boolean OnSome { get { return _Tag == OptionalTag.Some; } }
 
         public static Optional<T> Empty { get { return CreateNone(); } }
-        public static implicit operator Optional<T>(T v)
+        public static implicit operator Optional<T>(T? v)
         {
             if (v == null)
             {
@@ -107,7 +107,7 @@
         public override Int32 GetHashCode()
         {
             if (OnNone) { return 0; }
-            return Some.GetHashCode();
+            return Some!.GetHashCode();
         }
 
         private static Boolean Equals(Optional<T> Left, Optional<T> Right)
@@ -120,7 +120,7 @@
             {
                 return false;
             }
-            return Left.Some.Equals(Right.Some);
+            return Left.Some!.Equals(Right.Some);
         }
         private static Boolean Equals(Optional<T>? Left, Optional<T>? Right)
         {
@@ -165,7 +165,7 @@
         {
             if (OnSome)
             {
-                return Some.ToString();
+                return Some!.ToString();
             }
             else
             {
@@ -182,7 +182,7 @@
     [Alias]
     public sealed class ${Name}
     {
-        public ${Type} Value;
+        public ${Type} Value { get; init; }
 
         public static implicit operator ${Name}(${Type} o)
         {
@@ -206,7 +206,7 @@
             {
                 ##
                     ${GetXmlComment(f.Description)}
-                    public ${GetTypeString(f.Type)} [[${f.Name}]];
+                    public ${GetTypeString(f.Type)} [[${f.Name}]] { get; init; }
             }
     }
 
@@ -239,14 +239,14 @@
     [TaggedUnion]
     public sealed class ${Name}
     {
-        [Tag] public ${TagName} _Tag;
+        [Tag] public ${TagName} _Tag { get; init; }
 
         $$
             foreach (var a in tu.Alternatives)
             {
                 ##
                     ${GetXmlComment(a.Description)}
-                    public ${GetTypeString(a.Type)} [[${a.Name}]];
+                    public ${GetTypeString(a.Type)} [[${a.Name}]] { get; init; }
             }
 
         $$

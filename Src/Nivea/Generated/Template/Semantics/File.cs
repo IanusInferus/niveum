@@ -5,6 +5,9 @@
 //
 //==========================================================================
 
+#nullable enable
+#pragma warning disable CS8618
+
 using System;
 using System.Collections.Generic;
 using Boolean = System.Boolean;
@@ -31,18 +34,18 @@ namespace Nivea.Template.Semantics
     public sealed class File
     {
         /// <summary>过滤器</summary>
-        public List<FilterDef> Filters;
+        public List<FilterDef> Filters { get; init; }
         /// <summary>节列表</summary>
-        public List<SectionDef> Sections;
+        public List<SectionDef> Sections { get; init; }
     }
     /// <summary>过滤器定义</summary>
     [Record]
     public sealed class FilterDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>参数</summary>
-        public List<String> Parameters;
+        public List<String> Parameters { get; init; }
     }
     public enum SectionDefTag
     {
@@ -63,20 +66,20 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class SectionDef
     {
-        [Tag] public SectionDefTag _Tag;
+        [Tag] public SectionDefTag _Tag { get; init; }
 
         /// <summary>命名空间</summary>
-        public List<String> Namespace;
+        public List<String> Namespace { get; init; }
         /// <summary>程序集引用</summary>
-        public List<String> Assembly;
+        public List<String> Assembly { get; init; }
         /// <summary>命名空间和类空间导入</summary>
-        public List<List<String>> Import;
+        public List<List<String>> Import { get; init; }
         /// <summary>类型定义</summary>
-        public TypeDef Type;
+        public TypeDef Type { get; init; }
         /// <summary>常量值</summary>
-        public ConstantValue Constant;
+        public ConstantValue Constant { get; init; }
         /// <summary>模板定义</summary>
-        public TemplateDef Template;
+        public TemplateDef Template { get; init; }
 
         /// <summary>命名空间</summary>
         public static SectionDef CreateNamespace(List<String> Value) { return new SectionDef { _Tag = SectionDefTag.Namespace, Namespace = Value }; }
@@ -109,28 +112,28 @@ namespace Nivea.Template.Semantics
     public sealed class ConstantValue
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>类型</summary>
-        public TypeSpec Type;
+        public TypeSpec Type { get; init; }
         /// <summary>值</summary>
-        public Expr Value;
+        public Expr Value { get; init; }
     }
     /// <summary>模板定义</summary>
     [Record]
     public sealed class TemplateDef
     {
         /// <summary>签名</summary>
-        public TemplateSignature Signature;
+        public TemplateSignature Signature { get; init; }
         /// <summary>主体</summary>
-        public List<TemplateExpr> Body;
+        public List<TemplateExpr> Body { get; init; }
     }
     /// <summary>模板签名</summary>
     [Record]
     public sealed class TemplateSignature
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>参数</summary>
-        public List<VariableDef> Parameters;
+        public List<VariableDef> Parameters { get; init; }
     }
 }

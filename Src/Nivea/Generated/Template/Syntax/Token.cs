@@ -5,6 +5,9 @@
 //
 //==========================================================================
 
+#nullable enable
+#pragma warning disable CS8618
+
 using System;
 using System.Collections.Generic;
 using Boolean = System.Boolean;
@@ -31,13 +34,13 @@ namespace Nivea.Template.Syntax
     public sealed class Token
     {
         /// <summary>原始文本</summary>
-        public String OriginalText;
+        public String OriginalText { get; init; }
         /// <summary>词类型</summary>
-        public TokenType Type;
+        public TokenType Type { get; init; }
         /// <summary>是否是一行的起始</summary>
-        public Boolean IsLeadingToken;
+        public Boolean IsLeadingToken { get; init; }
         /// <summary>是否在非缩进空格后</summary>
-        public Boolean IsAfterSpace;
+        public Boolean IsAfterSpace { get; init; }
     }
     public enum TokenTypeTag
     {
@@ -64,26 +67,26 @@ namespace Nivea.Template.Syntax
     [TaggedUnion]
     public sealed class TokenType
     {
-        [Tag] public TokenTypeTag _Tag;
+        [Tag] public TokenTypeTag _Tag { get; init; }
 
         /// <summary>直接</summary>
-        public String Direct;
+        public String Direct { get; init; }
         /// <summary>双引号引用</summary>
-        public String Quoted;
+        public String Quoted { get; init; }
         /// <summary>双双引号引用</summary>
-        public String Escaped;
+        public String Escaped { get; init; }
         /// <summary>左括号</summary>
-        public Unit LeftParenthesis;
+        public Unit LeftParenthesis { get; init; }
         /// <summary>右括号</summary>
-        public Unit RightParenthesis;
+        public Unit RightParenthesis { get; init; }
         /// <summary>逗号</summary>
-        public Unit Comma;
+        public Unit Comma { get; init; }
         /// <summary>预处理指令</summary>
-        public String PreprocessDirective;
+        public String PreprocessDirective { get; init; }
         /// <summary>运算符</summary>
-        public String Operator;
+        public String Operator { get; init; }
         /// <summary>单行注释</summary>
-        public String SingleLineComment;
+        public String SingleLineComment { get; init; }
 
         /// <summary>直接</summary>
         public static TokenType CreateDirect(String Value) { return new TokenType { _Tag = TokenTypeTag.Direct, Direct = Value }; }

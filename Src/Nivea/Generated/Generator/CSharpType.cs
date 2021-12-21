@@ -5,6 +5,9 @@
 //
 //==========================================================================
 
+#nullable enable
+#pragma warning disable CS8618
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -119,10 +122,10 @@ namespace Nivea.Generator.CSharpType
             yield return "[TaggedUnion]";
             yield return "public struct Optional<T>";
             yield return "{";
-            yield return "    [Tag] public OptionalTag _Tag;";
+            yield return "    [Tag] public OptionalTag _Tag { get; init; }";
             yield return "";
-            yield return "    public Unit None;";
-            yield return "    public T Some;";
+            yield return "    public Unit None { get; init; }";
+            yield return "    public T Some { get; init; }";
             yield return "";
             yield return "    public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, None = new Unit() }; }";
             yield return "    public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, Some = Value }; }";
@@ -131,7 +134,7 @@ namespace Nivea.Generator.CSharpType
             yield return "    public Boolean OnSome { get { return _Tag == OptionalTag.Some; } }";
             yield return "";
             yield return "    public static Optional<T> Empty { get { return CreateNone(); } }";
-            yield return "    public static implicit operator Optional<T>(T v)";
+            yield return "    public static implicit operator Optional<T>(T? v)";
             yield return "    {";
             yield return "        if (v == null)";
             yield return "        {";
@@ -176,7 +179,7 @@ namespace Nivea.Generator.CSharpType
             yield return "    public override Int32 GetHashCode()";
             yield return "    {";
             yield return "        if (OnNone) { return 0; }";
-            yield return "        return Some.GetHashCode();";
+            yield return "        return Some!.GetHashCode();";
             yield return "    }";
             yield return "";
             yield return "    private static Boolean Equals(Optional<T> Left, Optional<T> Right)";
@@ -189,7 +192,7 @@ namespace Nivea.Generator.CSharpType
             yield return "        {";
             yield return "            return false;";
             yield return "        }";
-            yield return "        return Left.Some.Equals(Right.Some);";
+            yield return "        return Left.Some!.Equals(Right.Some);";
             yield return "    }";
             yield return "    private static Boolean Equals(Optional<T>? Left, Optional<T>? Right)";
             yield return "    {";
@@ -234,7 +237,7 @@ namespace Nivea.Generator.CSharpType
             yield return "    {";
             yield return "        if (OnSome)";
             yield return "        {";
-            yield return "            return Some.ToString();";
+            yield return "            return Some!.ToString();";
             yield return "        }";
             yield return "        else";
             yield return "        {";
@@ -257,7 +260,7 @@ namespace Nivea.Generator.CSharpType
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    public "), Type), " Value;"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    public "), Type), " Value { get; init; }"))
             {
                 yield return _Line;
             }
@@ -300,7 +303,7 @@ namespace Nivea.Generator.CSharpType
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(f.Type)), " "), GetEscapedIdentifier(f.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(f.Type)), " "), GetEscapedIdentifier(f.Name)), " { get; init; }"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -354,7 +357,7 @@ namespace Nivea.Generator.CSharpType
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    [Tag] public "), TagName), " _Tag;"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    [Tag] public "), TagName), " _Tag { get; init; }"))
             {
                 yield return _Line;
             }
@@ -365,7 +368,7 @@ namespace Nivea.Generator.CSharpType
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(a.Type)), " "), GetEscapedIdentifier(a.Name)), ";"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(a.Type)), " "), GetEscapedIdentifier(a.Name)), " { get; init; }"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }

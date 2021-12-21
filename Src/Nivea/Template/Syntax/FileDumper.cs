@@ -3,10 +3,12 @@
 //  File:        FileDumper.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文法解析结果导出器
-//  Version:     2016.06.02.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -23,7 +25,7 @@ namespace Nivea.Template.Syntax
     {
         private TreeSerializer ts = new TreeSerializer();
 
-        public TFSyntax.Forest Dump(FileParserResult Result, String Comment = null)
+        public TFSyntax.Forest Dump(FileParserResult Result, String Comment = "")
         {
             var sem = ts.Write(CollectionOperations.CreatePair(Result.File, Result.Positions.ToDictionary(p => p.Key, p => (Object)(p.Value))));
             var syn = TranslateForest(sem.Key, Comment, sem.Value);

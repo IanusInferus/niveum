@@ -3,10 +3,13 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2019.04.28.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
+#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -21,11 +24,11 @@ using Nivea.Template.Semantics;
 
 namespace Nivea.Template.Syntax
 {
-    public class FileParserResult
+    public sealed class FileParserResult
     {
-        public File File;
-        public Text Text;
-        public Dictionary<Object, TextRange> Positions;
+        public File File { get; init; }
+        public Text Text { get; init; }
+        public Dictionary<Object, TextRange> Positions { get; init; }
     }
 
     public static class FileParser
@@ -164,9 +167,9 @@ namespace Nivea.Template.Syntax
 
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
-                                                String cDescription = null;
+                                                String cName;
+                                                TypeSpec cType;
+                                                String cDescription;
 
                                                 if (Line.Nodes.Count == 2)
                                                 {
@@ -214,13 +217,13 @@ namespace Nivea.Template.Syntax
                                     case "Alias":
                                         {
                                             var GenericParameters = new List<VariableDef>();
-                                            TypeSpec Type = null;
+                                            TypeSpec? Type = null;
 
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
-                                                String cDescription = null;
+                                                String cName;
+                                                TypeSpec cType;
+                                                String cDescription;
 
                                                 if (Line.Nodes.Count == 1)
                                                 {
@@ -286,9 +289,9 @@ namespace Nivea.Template.Syntax
 
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
-                                                String cDescription = null;
+                                                String cName;
+                                                TypeSpec cType;
+                                                String cDescription;
 
                                                 if (Line.Nodes.Count == 2)
                                                 {
@@ -342,9 +345,9 @@ namespace Nivea.Template.Syntax
 
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
-                                                String cDescription = null;
+                                                String cName;
+                                                TypeSpec cType;
+                                                String cDescription;
 
                                                 if (Line.Nodes.Count == 2)
                                                 {
@@ -398,9 +401,9 @@ namespace Nivea.Template.Syntax
                                             Int64 NextValue = 0;
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
+                                                String cName;
                                                 Int64 cValue = NextValue;
-                                                String cDescription = null;
+                                                String cDescription;
 
                                                 if (Line.Nodes.Count == 1)
                                                 {
@@ -593,7 +596,7 @@ namespace Nivea.Template.Syntax
 
                                 foreach (var Line in ContentLines)
                                 {
-                                    String cName = null;
+                                    String cName;
 
                                     if (Line.Nodes.Count == 1)
                                     {

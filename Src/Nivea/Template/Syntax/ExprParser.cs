@@ -3,10 +3,12 @@
 //  File:        ExprParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2019.04.28.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -473,7 +475,7 @@ namespace Nivea.Template.Syntax
             return Body;
         }
 
-        private static List<TemplateSpan> ParseTemplateSpans(String s, TextRange sRange, Regex InlineExpressionRegex, List<KeyValuePair<String, Regex>> FilterNameAndRegex, Dictionary<String, List<String>> FilterNameToParameters, bool EnableEmbeddedExpr, ISemanticsNodeMaker nm, Dictionary<object, TextRange> Positions)
+        private static List<TemplateSpan> ParseTemplateSpans(String s, TextRange sRange, Regex InlineExpressionRegex, List<KeyValuePair<String, Regex>> FilterNameAndRegex, Dictionary<String, List<String>> FilterNameToParameters, bool EnableEmbeddedExpr, ISemanticsNodeMaker nm, Dictionary<Object, TextRange> Positions)
         {
             var PreviousEndIndex = 0;
             var Spans = new List<TemplateSpan>();

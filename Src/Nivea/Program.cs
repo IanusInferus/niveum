@@ -3,10 +3,12 @@
 //  File:        Program.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 模板语言运行时
-//  Version:     2016.08.03.
+//  Version:     2021.12.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;

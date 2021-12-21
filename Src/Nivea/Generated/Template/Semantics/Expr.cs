@@ -5,6 +5,9 @@
 //
 //==========================================================================
 
+#nullable enable
+#pragma warning disable CS8618
+
 using System;
 using System.Collections.Generic;
 using Boolean = System.Boolean;
@@ -37,12 +40,12 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class TemplateExpr
     {
-        [Tag] public TemplateExprTag _Tag;
+        [Tag] public TemplateExprTag _Tag { get; init; }
 
         /// <summary>模板行</summary>
-        public List<TemplateSpan> Line;
+        public List<TemplateSpan> Line { get; init; }
         /// <summary>缩进的表达式</summary>
-        public IndentedExpr IndentedExpr;
+        public IndentedExpr IndentedExpr { get; init; }
 
         /// <summary>模板行</summary>
         public static TemplateExpr CreateLine(List<TemplateSpan> Value) { return new TemplateExpr { _Tag = TemplateExprTag.Line, Line = Value }; }
@@ -67,14 +70,14 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class TemplateSpan
     {
-        [Tag] public TemplateSpanTag _Tag;
+        [Tag] public TemplateSpanTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public String Literal;
+        public String Literal { get; init; }
         /// <summary>过滤器</summary>
-        public FilterExpr Filter;
+        public FilterExpr Filter { get; init; }
         /// <summary>表达式</summary>
-        public Expr Expr;
+        public Expr Expr { get; init; }
 
         /// <summary>字面量</summary>
         public static TemplateSpan CreateLiteral(String Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Literal, Literal = Value }; }
@@ -95,18 +98,18 @@ namespace Nivea.Template.Semantics
     public sealed class FilterExpr
     {
         /// <summary>过滤器名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>内容块</summary>
-        public List<List<TemplateSpan>> Spans;
+        public List<List<TemplateSpan>> Spans { get; init; }
     }
     /// <summary>缩进的表达式</summary>
     [Record]
     public sealed class IndentedExpr
     {
         /// <summary>缩进空格数</summary>
-        public Int IndentSpace;
+        public Int IndentSpace { get; init; }
         /// <summary>表达式</summary>
-        public Expr Expr;
+        public Expr Expr { get; init; }
     }
     public enum EmbeddedExprTag
     {
@@ -121,14 +124,14 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class EmbeddedExpr
     {
-        [Tag] public EmbeddedExprTag _Tag;
+        [Tag] public EmbeddedExprTag _Tag { get; init; }
 
         /// <summary>嵌入块</summary>
-        public String Span;
+        public String Span { get; init; }
         /// <summary>嵌入行</summary>
-        public String Line;
+        public String Line { get; init; }
         /// <summary>缩进的表达式</summary>
-        public IndentedExpr IndentedExpr;
+        public IndentedExpr IndentedExpr { get; init; }
 
         /// <summary>嵌入块</summary>
         public static EmbeddedExpr CreateSpan(String Value) { return new EmbeddedExpr { _Tag = EmbeddedExprTag.Span, Span = Value }; }
@@ -217,74 +220,74 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class Expr
     {
-        [Tag] public ExprTag _Tag;
+        [Tag] public ExprTag _Tag { get; init; }
 
         /// <summary>错误</summary>
-        public Unit Error;
+        public Unit Error { get; init; }
         /// <summary>歧义</summary>
-        public List<Expr> Ambiguous;
+        public List<Expr> Ambiguous { get; init; }
         /// <summary>序列</summary>
-        public List<Expr> Sequence;
+        public List<Expr> Sequence { get; init; }
         /// <summary>生成</summary>
-        public Expr Yield;
+        public Expr Yield { get; init; }
         /// <summary>多行生成</summary>
-        public Expr YieldMany;
+        public Expr YieldMany { get; init; }
         /// <summary>嵌入表达式</summary>
-        public List<EmbeddedExpr> Embedded;
+        public List<EmbeddedExpr> Embedded { get; init; }
         /// <summary>内嵌模板生成</summary>
-        public List<TemplateExpr> YieldTemplate;
+        public List<TemplateExpr> YieldTemplate { get; init; }
         /// <summary>抛出异常</summary>
-        public Optional<Expr> Throw;
+        public Optional<Expr> Throw { get; init; }
         /// <summary>不变量定义</summary>
-        public LetExpr Let;
+        public LetExpr Let { get; init; }
         /// <summary>变量定义</summary>
-        public VarExpr Var;
+        public VarExpr Var { get; init; }
         /// <summary>条件</summary>
-        public IfExpr If;
+        public IfExpr If { get; init; }
         /// <summary>匹配</summary>
-        public MatchExpr Match;
+        public MatchExpr Match { get; init; }
         /// <summary>枚举循环</summary>
-        public ForExpr For;
+        public ForExpr For { get; init; }
         /// <summary>条件循环</summary>
-        public WhileExpr While;
+        public WhileExpr While { get; init; }
         /// <summary>下一次循环</summary>
-        public Optional<Int> Continue;
+        public Optional<Int> Continue { get; init; }
         /// <summary>终止循环</summary>
-        public Optional<Int> Break;
+        public Optional<Int> Break { get; init; }
         /// <summary>返回</summary>
-        public Optional<Expr> Return;
+        public Optional<Expr> Return { get; init; }
         /// <summary>赋值</summary>
-        public AssignExpr Assign;
+        public AssignExpr Assign { get; init; }
         /// <summary>递增</summary>
-        public IncreaseExpr Increase;
+        public IncreaseExpr Increase { get; init; }
         /// <summary>递减</summary>
-        public DecreaseExpr Decrease;
+        public DecreaseExpr Decrease { get; init; }
         /// <summary>Lambda表达式</summary>
-        public LambdaExpr Lambda;
+        public LambdaExpr Lambda { get; init; }
         /// <summary>空字面量</summary>
-        public Unit Null;
+        public Unit Null { get; init; }
         /// <summary>默认值字面量</summary>
-        public Unit Default;
+        public Unit Default { get; init; }
         /// <summary>基元字面量</summary>
-        public PrimitiveLiteralExpr PrimitiveLiteral;
+        public PrimitiveLiteralExpr PrimitiveLiteral { get; init; }
         /// <summary>记录字面量</summary>
-        public RecordLiteralExpr RecordLiteral;
+        public RecordLiteralExpr RecordLiteral { get; init; }
         /// <summary>标签联合字面量</summary>
-        public TaggedUnionLiteralExpr TaggedUnionLiteral;
+        public TaggedUnionLiteralExpr TaggedUnionLiteral { get; init; }
         /// <summary>枚举字面量</summary>
-        public EnumLiteralExpr EnumLiteral;
+        public EnumLiteralExpr EnumLiteral { get; init; }
         /// <summary>元组字面量</summary>
-        public TupleLiteralExpr TupleLiteral;
+        public TupleLiteralExpr TupleLiteral { get; init; }
         /// <summary>列表字面量</summary>
-        public ListLiteralExpr ListLiteral;
+        public ListLiteralExpr ListLiteral { get; init; }
         /// <summary>类型字面量</summary>
-        public TypeSpec TypeLiteral;
+        public TypeSpec TypeLiteral { get; init; }
         /// <summary>变量引用</summary>
-        public VariableRef VariableRef;
+        public VariableRef VariableRef { get; init; }
         /// <summary>函数调用</summary>
-        public FunctionCallExpr FunctionCall;
+        public FunctionCallExpr FunctionCall { get; init; }
         /// <summary>转换</summary>
-        public CastExpr Cast;
+        public CastExpr Cast { get; init; }
 
         /// <summary>错误</summary>
         public static Expr CreateError() { return new Expr { _Tag = ExprTag.Error, Error = default(Unit) }; }
@@ -425,146 +428,146 @@ namespace Nivea.Template.Semantics
     public sealed class LetExpr
     {
         /// <summary>左</summary>
-        public List<LeftValueDef> Left;
+        public List<LeftValueDef> Left { get; init; }
         /// <summary>右</summary>
-        public Expr Right;
+        public Expr Right { get; init; }
     }
     /// <summary>变量定义</summary>
     [Record]
     public sealed class VarExpr
     {
         /// <summary>左</summary>
-        public List<LeftValueDef> Left;
+        public List<LeftValueDef> Left { get; init; }
         /// <summary>右</summary>
-        public Optional<Expr> Right;
+        public Optional<Expr> Right { get; init; }
     }
     /// <summary>条件</summary>
     [Record]
     public sealed class IfExpr
     {
         /// <summary>分支</summary>
-        public List<IfBranch> Branches;
+        public List<IfBranch> Branches { get; init; }
     }
     /// <summary>匹配</summary>
     [Record]
     public sealed class MatchExpr
     {
         /// <summary>目标</summary>
-        public Expr Target;
+        public Expr Target { get; init; }
         /// <summary>选择</summary>
-        public List<MatchAlternative> Alternatives;
+        public List<MatchAlternative> Alternatives { get; init; }
     }
     /// <summary>枚举循环</summary>
     [Record]
     public sealed class ForExpr
     {
         /// <summary>集合</summary>
-        public Expr Enumerable;
+        public Expr Enumerable { get; init; }
         /// <summary>变量</summary>
-        public List<LeftValueDef> EnumeratedValue;
+        public List<LeftValueDef> EnumeratedValue { get; init; }
         /// <summary>循环体</summary>
-        public Expr Body;
+        public Expr Body { get; init; }
     }
     /// <summary>条件循环</summary>
     [Record]
     public sealed class WhileExpr
     {
         /// <summary>条件</summary>
-        public Expr Condition;
+        public Expr Condition { get; init; }
         /// <summary>循环体</summary>
-        public Expr Body;
+        public Expr Body { get; init; }
     }
     /// <summary>赋值</summary>
     [Record]
     public sealed class AssignExpr
     {
         /// <summary>左</summary>
-        public List<LeftValueRef> Left;
+        public List<LeftValueRef> Left { get; init; }
         /// <summary>右</summary>
-        public Expr Right;
+        public Expr Right { get; init; }
     }
     /// <summary>递增</summary>
     [Record]
     public sealed class IncreaseExpr
     {
         /// <summary>左</summary>
-        public List<LeftValueRef> Left;
+        public List<LeftValueRef> Left { get; init; }
         /// <summary>右</summary>
-        public Expr Right;
+        public Expr Right { get; init; }
     }
     /// <summary>递减</summary>
     [Record]
     public sealed class DecreaseExpr
     {
         /// <summary>左</summary>
-        public List<LeftValueRef> Left;
+        public List<LeftValueRef> Left { get; init; }
         /// <summary>右</summary>
-        public Expr Right;
+        public Expr Right { get; init; }
     }
     /// <summary>Lambda表达式</summary>
     [Record]
     public sealed class LambdaExpr
     {
         /// <summary>参数</summary>
-        public List<LeftValueDef> Parameters;
+        public List<LeftValueDef> Parameters { get; init; }
         /// <summary>函数体</summary>
-        public Expr Body;
+        public Expr Body { get; init; }
     }
     /// <summary>基元字面量</summary>
     [Record]
     public sealed class PrimitiveLiteralExpr
     {
         /// <summary>类型</summary>
-        public TypeSpec Type;
+        public TypeSpec Type { get; init; }
         /// <summary>值</summary>
-        public Optional<String> Value;
+        public Optional<String> Value { get; init; }
     }
     /// <summary>记录字面量</summary>
     [Record]
     public sealed class RecordLiteralExpr
     {
         /// <summary>类型</summary>
-        public Optional<TypeSpec> Type;
+        public Optional<TypeSpec> Type { get; init; }
         /// <summary>字段赋值</summary>
-        public List<FieldAssign> FieldAssigns;
+        public List<FieldAssign> FieldAssigns { get; init; }
     }
     /// <summary>标签联合字面量</summary>
     [Record]
     public sealed class TaggedUnionLiteralExpr
     {
         /// <summary>类型</summary>
-        public Optional<TypeSpec> Type;
+        public Optional<TypeSpec> Type { get; init; }
         /// <summary>选择</summary>
-        public String Alternative;
+        public String Alternative { get; init; }
         /// <summary>表达式</summary>
-        public Optional<Expr> Expr;
+        public Optional<Expr> Expr { get; init; }
     }
     /// <summary>枚举字面量</summary>
     [Record]
     public sealed class EnumLiteralExpr
     {
         /// <summary>类型</summary>
-        public Optional<TypeSpec> Type;
+        public Optional<TypeSpec> Type { get; init; }
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
     }
     /// <summary>元组字面量</summary>
     [Record]
     public sealed class TupleLiteralExpr
     {
         /// <summary>类型</summary>
-        public Optional<TypeSpec> Type;
+        public Optional<TypeSpec> Type { get; init; }
         /// <summary>元素</summary>
-        public List<Expr> Elements;
+        public List<Expr> Elements { get; init; }
     }
     /// <summary>列表字面量</summary>
     [Record]
     public sealed class ListLiteralExpr
     {
         /// <summary>类型</summary>
-        public Optional<TypeSpec> Type;
+        public Optional<TypeSpec> Type { get; init; }
         /// <summary>元素</summary>
-        public List<Expr> Elements;
+        public List<Expr> Elements { get; init; }
     }
     public enum VariableRefTag
     {
@@ -583,18 +586,18 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class VariableRef
     {
-        [Tag] public VariableRefTag _Tag;
+        [Tag] public VariableRefTag _Tag { get; init; }
 
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>当前对象</summary>
-        public Unit This;
+        public Unit This { get; init; }
         /// <summary>成员访问（静态和动态）</summary>
-        public MemberAccess MemberAccess;
+        public MemberAccess MemberAccess { get; init; }
         /// <summary>索引器访问</summary>
-        public IndexerAccess IndexerAccess;
+        public IndexerAccess IndexerAccess { get; init; }
         /// <summary>泛型函数特化</summary>
-        public GenericFunctionSpec GenericFunctionSpec;
+        public GenericFunctionSpec GenericFunctionSpec { get; init; }
 
         /// <summary>名称</summary>
         public static VariableRef CreateName(String Value) { return new VariableRef { _Tag = VariableRefTag.Name, Name = Value }; }
@@ -623,18 +626,18 @@ namespace Nivea.Template.Semantics
     public sealed class FunctionCallExpr
     {
         /// <summary>函数</summary>
-        public Expr Func;
+        public Expr Func { get; init; }
         /// <summary>参数</summary>
-        public List<Expr> Parameters;
+        public List<Expr> Parameters { get; init; }
     }
     /// <summary>转换</summary>
     [Record]
     public sealed class CastExpr
     {
         /// <summary>运算数</summary>
-        public Expr Operand;
+        public Expr Operand { get; init; }
         /// <summary>目标类型</summary>
-        public TypeSpec Type;
+        public TypeSpec Type { get; init; }
     }
     public enum LeftValueDefTag
     {
@@ -647,12 +650,12 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class LeftValueDef
     {
-        [Tag] public LeftValueDefTag _Tag;
+        [Tag] public LeftValueDefTag _Tag { get; init; }
 
         /// <summary>变量</summary>
-        public LocalVariableDef Variable;
+        public LocalVariableDef Variable { get; init; }
         /// <summary>忽略</summary>
-        public Optional<TypeSpec> Ignore;
+        public Optional<TypeSpec> Ignore { get; init; }
 
         /// <summary>变量</summary>
         public static LeftValueDef CreateVariable(LocalVariableDef Value) { return new LeftValueDef { _Tag = LeftValueDefTag.Variable, Variable = Value }; }
@@ -669,20 +672,20 @@ namespace Nivea.Template.Semantics
     public sealed class IfBranch
     {
         /// <summary>条件</summary>
-        public Expr Condition;
+        public Expr Condition { get; init; }
         /// <summary>表达式</summary>
-        public Expr Expr;
+        public Expr Expr { get; init; }
     }
     /// <summary>匹配选择</summary>
     [Record]
     public sealed class MatchAlternative
     {
         /// <summary>模式</summary>
-        public MatchPattern Pattern;
+        public MatchPattern Pattern { get; init; }
         /// <summary>条件</summary>
-        public Optional<Expr> Condition;
+        public Optional<Expr> Condition { get; init; }
         /// <summary>表达式</summary>
-        public Expr Expr;
+        public Expr Expr { get; init; }
     }
     public enum LeftValueRefTag
     {
@@ -695,12 +698,12 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class LeftValueRef
     {
-        [Tag] public LeftValueRefTag _Tag;
+        [Tag] public LeftValueRefTag _Tag { get; init; }
 
         /// <summary>变量</summary>
-        public VariableRef Variable;
+        public VariableRef Variable { get; init; }
         /// <summary>忽略</summary>
-        public Unit Ignore;
+        public Unit Ignore { get; init; }
 
         /// <summary>变量</summary>
         public static LeftValueRef CreateVariable(VariableRef Value) { return new LeftValueRef { _Tag = LeftValueRefTag.Variable, Variable = Value }; }
@@ -717,45 +720,45 @@ namespace Nivea.Template.Semantics
     public sealed class LocalVariableDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>类型</summary>
-        public Optional<TypeSpec> Type;
+        public Optional<TypeSpec> Type { get; init; }
     }
     /// <summary>成员访问</summary>
     [Record]
     public sealed class MemberAccess
     {
         /// <summary>父结点</summary>
-        public Expr Parent;
+        public Expr Parent { get; init; }
         /// <summary>子结点</summary>
-        public VariableRef Child;
+        public VariableRef Child { get; init; }
     }
     /// <summary>索引器访问</summary>
     [Record]
     public sealed class IndexerAccess
     {
         /// <summary>表达式</summary>
-        public Expr Expr;
+        public Expr Expr { get; init; }
         /// <summary>索引</summary>
-        public List<Expr> Index;
+        public List<Expr> Index { get; init; }
     }
     /// <summary>泛型函数特化</summary>
     [Record]
     public sealed class GenericFunctionSpec
     {
         /// <summary>函数</summary>
-        public VariableRef Func;
+        public VariableRef Func { get; init; }
         /// <summary>泛型参数</summary>
-        public List<TypeSpec> Parameters;
+        public List<TypeSpec> Parameters { get; init; }
     }
     /// <summary>字段赋值</summary>
     [Record]
     public sealed class FieldAssign
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>表达式</summary>
-        public Expr Expr;
+        public Expr Expr { get; init; }
     }
     public enum MatchPatternTag
     {
@@ -786,30 +789,30 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class MatchPattern
     {
-        [Tag] public MatchPatternTag _Tag;
+        [Tag] public MatchPatternTag _Tag { get; init; }
 
         /// <summary>错误</summary>
-        public Unit Error;
+        public Unit Error { get; init; }
         /// <summary>歧义</summary>
-        public List<MatchPattern> Ambiguous;
+        public List<MatchPattern> Ambiguous { get; init; }
         /// <summary>不变量定义</summary>
-        public LeftValueDef Let;
+        public LeftValueDef Let { get; init; }
         /// <summary>忽略</summary>
-        public Unit Ignore;
+        public Unit Ignore { get; init; }
         /// <summary>基元字面量</summary>
-        public PrimitiveLiteralExpr PrimitiveLiteral;
+        public PrimitiveLiteralExpr PrimitiveLiteral { get; init; }
         /// <summary>记录模式</summary>
-        public RecordLiteralPattern RecordLiteral;
+        public RecordLiteralPattern RecordLiteral { get; init; }
         /// <summary>标签联合模式</summary>
-        public TaggedUnionLiteralPattern TaggedUnionLiteral;
+        public TaggedUnionLiteralPattern TaggedUnionLiteral { get; init; }
         /// <summary>枚举字面量</summary>
-        public EnumLiteralExpr EnumLiteral;
+        public EnumLiteralExpr EnumLiteral { get; init; }
         /// <summary>元组模式</summary>
-        public TupleLiteralPattern TupleLiteral;
+        public TupleLiteralPattern TupleLiteral { get; init; }
         /// <summary>列表模式</summary>
-        public ListLiteralPattern ListLiteral;
+        public ListLiteralPattern ListLiteral { get; init; }
         /// <summary>变量引用</summary>
-        public VariableRef VariableRef;
+        public VariableRef VariableRef { get; init; }
 
         /// <summary>错误</summary>
         public static MatchPattern CreateError() { return new MatchPattern { _Tag = MatchPatternTag.Error, Error = default(Unit) }; }
@@ -862,46 +865,46 @@ namespace Nivea.Template.Semantics
     public sealed class RecordLiteralPattern
     {
         /// <summary>类型</summary>
-        public Optional<TypeSpec> Type;
+        public Optional<TypeSpec> Type { get; init; }
         /// <summary>字段赋值</summary>
-        public List<FieldAssignPattern> FieldAssigns;
+        public List<FieldAssignPattern> FieldAssigns { get; init; }
     }
     /// <summary>标签联合模式</summary>
     [Record]
     public sealed class TaggedUnionLiteralPattern
     {
         /// <summary>类型</summary>
-        public Optional<TypeSpec> Type;
+        public Optional<TypeSpec> Type { get; init; }
         /// <summary>选择</summary>
-        public String Alternative;
+        public String Alternative { get; init; }
         /// <summary>表达式</summary>
-        public Optional<MatchPattern> Expr;
+        public Optional<MatchPattern> Expr { get; init; }
     }
     /// <summary>元组模式</summary>
     [Record]
     public sealed class TupleLiteralPattern
     {
         /// <summary>类型</summary>
-        public Optional<TypeSpec> Type;
+        public Optional<TypeSpec> Type { get; init; }
         /// <summary>元素</summary>
-        public List<MatchPattern> Elements;
+        public List<MatchPattern> Elements { get; init; }
     }
     /// <summary>列表模式</summary>
     [Record]
     public sealed class ListLiteralPattern
     {
         /// <summary>类型</summary>
-        public Optional<TypeSpec> Type;
+        public Optional<TypeSpec> Type { get; init; }
         /// <summary>元素</summary>
-        public List<MatchPattern> Elements;
+        public List<MatchPattern> Elements { get; init; }
     }
     /// <summary>字段赋值模式</summary>
     [Record]
     public sealed class FieldAssignPattern
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>表达式</summary>
-        public MatchPattern Expr;
+        public MatchPattern Expr { get; init; }
     }
 }
