@@ -3,10 +3,12 @@
 //  File:        ExpressionSchemaLoader.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式Schema加载器
-//  Version:     2018.12.22.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -104,8 +106,7 @@ namespace Niveum.ExpressionSchema
                             var Trimmed = Line.Text.Trim();
                             if (Trimmed == "") { continue; }
                             if (Trimmed.StartsWith("//")) { continue; }
-                            var ep = new ExpressionParser(nm.Text, null);
-                            var epdr = ep.ParseDeclaration(Line.Range);
+                            var epdr = ExpressionParser.ParseDeclaration(nm.Text, Line.Range);
                             Functions.Add(epdr.Declaration);
                         }
                         Modules.Add(new ModuleDecl { Name = Name, Description = Description, Functions = Functions });

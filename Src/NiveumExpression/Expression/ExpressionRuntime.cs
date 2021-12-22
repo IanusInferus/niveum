@@ -3,10 +3,12 @@
 //  File:        ExpressionRuntime.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式系统库
-//  Version:     2018.12.22.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -196,9 +198,6 @@ namespace Niveum.Expression
             public PrimitiveType ReturnType;
             public Delegate Create;
 
-            public FunctionResolver()
-            {
-            }
             public FunctionResolver(String Name, PrimitiveType rt, Func<Delegate> Create)
             {
                 this.Name = Name;
@@ -361,21 +360,21 @@ namespace Niveum.Expression
             return new List<FunctionParameterAndReturnTypes> { };
         }
 
-        public List<PrimitiveType> GetMatched(string Name, List<PrimitiveType> ParameterTypes)
+        public List<PrimitiveType> GetMatched(String Name, Optional<List<PrimitiveType>> ParameterTypes)
         {
             if (FunctionSignatureMap.Map.ContainsKey(Name))
             {
-                var Matched = FunctionSignatureMap.Map[Name].Where(f => f.ParameterTypes.SequenceEqual(ParameterTypes)).Select(f => f.ReturnType).ToList();
+                var Matched = FunctionSignatureMap.Map[Name].Where(f => ParameterTypes.OnSome && f.ParameterTypes.SequenceEqual(ParameterTypes.Value)).Select(f => f.ReturnType).ToList();
                 return Matched;
             }
             return new List<PrimitiveType> { };
         }
 
-        public List<Delegate> GetValue(String Name, List<PrimitiveType> ParameterTypes, List<Delegate> ParameterFuncs)
+        public List<Delegate> GetValue(String Name, Optional<List<PrimitiveType>> ParameterTypes, Optional<List<Delegate>> ParameterFuncs)
         {
             if (FunctionSignatureMap.Map.ContainsKey(Name))
             {
-                var Matched = FunctionSignatureMap.Map[Name].Where(f => f.ParameterTypes.SequenceEqual(ParameterTypes)).Select(f => f.Create.StaticDynamicInvokeWithObjects<Delegate>(ParameterFuncs.ToArray())).ToList();
+                var Matched = FunctionSignatureMap.Map[Name].Where(f => ParameterTypes.OnSome && f.ParameterTypes.SequenceEqual(ParameterTypes.Value)).Select(f => f.Create.StaticDynamicInvokeWithObjects<Delegate>(ParameterFuncs.Value.ToArray())).ToList();
                 return Matched;
             }
             return new List<Delegate> { };

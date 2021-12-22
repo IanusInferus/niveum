@@ -3,30 +3,32 @@
 //  File:        TypeBinder.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 类型绑定器
-//  Version:     2018.12.22.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
+#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Firefly;
 using Firefly.Texting.TreeFormat.Syntax;
-using Firefly.Texting.TreeFormat.Semantics;
 
 namespace Niveum.ExpressionSchema
 {
-    public class FunctionParameterAndReturnTypes
+    public sealed class FunctionParameterAndReturnTypes
     {
-        public List<PrimitiveType> ParameterTypes;
-        public PrimitiveType ReturnType;
+        public Optional<List<PrimitiveType>> ParameterTypes { get; init; }
+        public PrimitiveType ReturnType { get; init; }
     }
 
     public interface IVariableTypeProvider
     {
         List<FunctionParameterAndReturnTypes> GetOverloads(String Name);
-        List<PrimitiveType> GetMatched(String Name, List<PrimitiveType> ParameterTypes);
+        List<PrimitiveType> GetMatched(String Name, Optional<List<PrimitiveType>> ParameterTypes);
     }
 
     public class VariableTypeProviderCombiner : IVariableTypeProvider
@@ -43,7 +45,7 @@ namespace Niveum.ExpressionSchema
             return Providers.SelectMany(p => p.GetOverloads(Name)).ToList();
         }
 
-        public List<PrimitiveType> GetMatched(String Name, List<PrimitiveType> ParameterTypes)
+        public List<PrimitiveType> GetMatched(String Name, Optional<List<PrimitiveType>> ParameterTypes)
         {
             return Providers.SelectMany(p => p.GetMatched(Name, ParameterTypes)).ToList();
         }
@@ -62,7 +64,7 @@ namespace Niveum.ExpressionSchema
         {
             if (d.ContainsKey(Name))
             {
-                return new List<FunctionParameterAndReturnTypes> { new FunctionParameterAndReturnTypes { ParameterTypes = null, ReturnType = d[Name] } };
+                return new List<FunctionParameterAndReturnTypes> { new FunctionParameterAndReturnTypes { ParameterTypes = Optional<List<PrimitiveType>>.Empty, ReturnType = d[Name] } };
             }
             else
             {
@@ -70,9 +72,9 @@ namespace Niveum.ExpressionSchema
             }
         }
 
-        public List<PrimitiveType> GetMatched(String Name, List<PrimitiveType> ParameterTypes)
+        public List<PrimitiveType> GetMatched(String Name, Optional<List<PrimitiveType>> ParameterTypes)
         {
-            if (ParameterTypes.Count == 0 && d.ContainsKey(Name))
+            if (ParameterTypes.OnSome && (ParameterTypes.Value.Count == 0) && d.ContainsKey(Name))
             {
                 return new List<PrimitiveType> { d[Name] };
             }
@@ -80,10 +82,10 @@ namespace Niveum.ExpressionSchema
         }
     }
 
-    public class TypeBinderResult
+    public sealed class TypeBinderResult
     {
-        public Expr Semantics;
-        public Dictionary<Expr, PrimitiveType> TypeDict;
+        public Expr Semantics { get; init; }
+        public Dictionary<Expr, PrimitiveType> TypeDict { get; init; }
     }
 
     public class TypeBinder
@@ -104,10 +106,10 @@ namespace Niveum.ExpressionSchema
             var Result = st.Translate(RangeInLine);
 
             var TypeDict = new Dictionary<Expr, PrimitiveType>();
-            BindExpr(VariableTypeProvider, TypeDict, Result.Semantics);
+            var Semantics = BindExpr(VariableTypeProvider, TypeDict, Result.Semantics);
             var tbr = new TypeBinderResult
             {
-                Semantics = Result.Semantics,
+                Semantics = Semantics,
                 TypeDict = TypeDict
             };
             return tbr;
@@ -117,17 +119,17 @@ namespace Niveum.ExpressionSchema
             var Result = st.Translate(RangeInLine);
 
             var TypeDict = new Dictionary<Expr, PrimitiveType>();
-            BindExpr(VariableTypeProvider, TypeDict, Result.Semantics);
-            var rt = TypeDict[Result.Semantics];
+            var Semantics = BindExpr(VariableTypeProvider, TypeDict, Result.Semantics);
+            var rt = TypeDict[Semantics];
             if (rt == PrimitiveType.Int && ReturnType == PrimitiveType.Real)
             {
                 var feCReal = new FunctionExpr { Name = "creal", Parameters = new List<Expr> { Result.Semantics } };
                 var CReal = Expr.CreateFunction(feCReal);
-                var Range = Positions[Result.Semantics];
+                var Range = Positions[Semantics];
                 Positions.Add(feCReal, Range);
                 Positions.Add(CReal, Range);
                 TypeDict.Add(CReal, PrimitiveType.Real);
-                Result.Semantics = CReal;
+                Semantics = CReal;
             }
             else if (rt != ReturnType)
             {
@@ -136,13 +138,13 @@ namespace Niveum.ExpressionSchema
 
             var tbr = new TypeBinderResult
             {
-                Semantics = Result.Semantics,
+                Semantics = Semantics,
                 TypeDict = TypeDict
             };
             return tbr;
         }
 
-        private void BindExpr(IVariableTypeProvider VariableTypeProvider, Dictionary<Expr, PrimitiveType> TypeDict, Expr e)
+        private Expr BindExpr(IVariableTypeProvider VariableTypeProvider, Dictionary<Expr, PrimitiveType> TypeDict, Expr e)
         {
             if (e.OnLiteral)
             {
@@ -163,13 +165,14 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+                return e;
             }
             else if (e.OnVariable)
             {
                 List<FunctionParameterAndReturnTypes> t;
                 try
                 {
-                    t = VariableTypeProvider.GetOverloads(e.Variable.Name).Where(fs => fs.ParameterTypes == null).ToList();
+                    t = VariableTypeProvider.GetOverloads(e.Variable.Name).Where(fs => fs.ParameterTypes.OnNone).ToList();
                 }
                 catch (Exception ex)
                 {
@@ -184,29 +187,28 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidSyntaxException("'{0}' : VariableFunctionOverloadExist".Formats(e.Variable.Name), new FileTextRange { Text = Text, Range = Positions[e] });
                 }
                 TypeDict.Add(e, t.Single().ReturnType);
+                return e;
             }
             else if (e.OnFunction)
             {
-                var t = BindFunctionExpr(VariableTypeProvider, TypeDict, e.Function);
-                TypeDict.Add(e, t);
+                var (fe, t) = BindFunctionExpr(VariableTypeProvider, TypeDict, e.Function);
+                var Result = Expr.CreateFunction(fe);
+                Positions.Add(Result, Positions[e]);
+                TypeDict.Add(Result, t);
+                return Result;
             }
             else if (e.OnIf)
             {
-                var Condition = e.If.Condition;
-                var TruePart = e.If.TruePart;
-                var FalsePart = e.If.FalsePart;
-
-                BindExpr(VariableTypeProvider, TypeDict, Condition);
+                var Condition = BindExpr(VariableTypeProvider, TypeDict, e.If.Condition);
                 var ConditionType = TypeDict[Condition];
                 if (ConditionType != PrimitiveType.Boolean)
                 {
                     throw new InvalidSyntaxException("TypeMismatch : 'Boolean' expected.", new FileTextRange { Text = Text, Range = Positions[Condition] });
                 }
-                BindExpr(VariableTypeProvider, TypeDict, TruePart);
+                var TruePart = BindExpr(VariableTypeProvider, TypeDict, e.If.TruePart);
                 var TruePartType = TypeDict[TruePart];
-                BindExpr(VariableTypeProvider, TypeDict, FalsePart);
+                var FalsePart = BindExpr(VariableTypeProvider, TypeDict, e.If.FalsePart);
                 var FalsePartType = TypeDict[FalsePart];
-                PrimitiveType ReturnType;
                 if (TruePartType == PrimitiveType.Int && FalsePartType == PrimitiveType.Real)
                 {
                     var fe = new FunctionExpr { Name = "creal", Parameters = new List<Expr> { TruePart } };
@@ -215,8 +217,12 @@ namespace Niveum.ExpressionSchema
                     Positions.Add(fe, Range);
                     Positions.Add(CReal, Range);
                     TypeDict.Add(CReal, PrimitiveType.Real);
-                    e.If.TruePart = CReal;
-                    ReturnType = PrimitiveType.Real;
+                    var ie = new IfExpr { Condition = Condition, TruePart = CReal, FalsePart = FalsePart };
+                    Positions.Add(ie, Positions[e.If]);
+                    var Result = Expr.CreateIf(ie);
+                    Positions.Add(Result, Positions[e]);
+                    TypeDict.Add(Result, PrimitiveType.Real);
+                    return Result;
                 }
                 else if (TruePartType == PrimitiveType.Real && FalsePartType == PrimitiveType.Int)
                 {
@@ -226,8 +232,12 @@ namespace Niveum.ExpressionSchema
                     Positions.Add(fe, Range);
                     Positions.Add(CReal, Range);
                     TypeDict.Add(CReal, PrimitiveType.Real);
-                    e.If.FalsePart = CReal;
-                    ReturnType = PrimitiveType.Real;
+                    var ie = new IfExpr { Condition = Condition, TruePart = TruePart, FalsePart = CReal };
+                    Positions.Add(ie, Positions[e.If]);
+                    var Result = Expr.CreateIf(ie);
+                    Positions.Add(Result, Positions[e]);
+                    TypeDict.Add(Result, PrimitiveType.Real);
+                    return Result;
                 }
                 else if (TruePartType != FalsePartType)
                 {
@@ -235,45 +245,55 @@ namespace Niveum.ExpressionSchema
                 }
                 else
                 {
-                    ReturnType = TruePartType;
+                    var ie = new IfExpr { Condition = Condition, TruePart = TruePart, FalsePart = FalsePart };
+                    Positions.Add(ie, Positions[e.If]);
+                    var Result = Expr.CreateIf(ie);
+                    Positions.Add(Result, Positions[e]);
+                    TypeDict.Add(Result, TruePartType);
+                    return Result;
                 }
-                TypeDict.Add(e, ReturnType);
             }
             else if (e.OnAndAlso)
             {
-                var Left = e.AndAlso.Left;
-                var Right = e.AndAlso.Right;
-                BindExpr(VariableTypeProvider, TypeDict, Left);
+                var Left = BindExpr(VariableTypeProvider, TypeDict, e.AndAlso.Left);
                 var LeftType = TypeDict[Left];
                 if (LeftType != PrimitiveType.Boolean)
                 {
                     throw new InvalidSyntaxException("TypeMismatch : 'Boolean' expected.", new FileTextRange { Text = Text, Range = Positions[Left] });
                 }
-                BindExpr(VariableTypeProvider, TypeDict, Right);
+                var Right = BindExpr(VariableTypeProvider, TypeDict, e.AndAlso.Right);
                 var RightType = TypeDict[Right];
                 if (RightType != PrimitiveType.Boolean)
                 {
                     throw new InvalidSyntaxException("TypeMismatch : 'Boolean' expected.", new FileTextRange { Text = Text, Range = Positions[Right] });
                 }
-                TypeDict.Add(e, PrimitiveType.Boolean);
+                var aae = new AndAlsoExpr { Left = Left, Right = Right };
+                Positions.Add(aae, Positions[e.AndAlso]);
+                var Result = Expr.CreateAndAlso(aae);
+                Positions.Add(Result, Positions[e]);
+                TypeDict.Add(Result, PrimitiveType.Boolean);
+                return Result;
             }
             else if (e.OnOrElse)
             {
-                var Left = e.OrElse.Left;
-                var Right = e.OrElse.Right;
-                BindExpr(VariableTypeProvider, TypeDict, Left);
+                var Left = BindExpr(VariableTypeProvider, TypeDict, e.OrElse.Left);
                 var LeftType = TypeDict[Left];
                 if (LeftType != PrimitiveType.Boolean)
                 {
                     throw new InvalidSyntaxException("TypeMismatch : 'Boolean' expected.", new FileTextRange { Text = Text, Range = Positions[Left] });
                 }
-                BindExpr(VariableTypeProvider, TypeDict, Right);
+                var Right = BindExpr(VariableTypeProvider, TypeDict, e.OrElse.Right);
                 var RightType = TypeDict[Right];
                 if (RightType != PrimitiveType.Boolean)
                 {
                     throw new InvalidSyntaxException("TypeMismatch : 'Boolean' expected.", new FileTextRange { Text = Text, Range = Positions[Right] });
                 }
-                TypeDict.Add(e, PrimitiveType.Boolean);
+                var oee = new OrElseExpr { Left = Left, Right = Right };
+                Positions.Add(oee, Positions[e.OrElse]);
+                var Result = Expr.CreateOrElse(oee);
+                Positions.Add(Result, Positions[e]);
+                TypeDict.Add(Result, PrimitiveType.Boolean);
+                return Result;
             }
             else
             {
@@ -281,13 +301,10 @@ namespace Niveum.ExpressionSchema
             }
         }
 
-        private PrimitiveType BindFunctionExpr(IVariableTypeProvider VariableTypeProvider, Dictionary<Expr, PrimitiveType> TypeDict, FunctionExpr fe)
+        private Tuple<FunctionExpr, PrimitiveType> BindFunctionExpr(IVariableTypeProvider VariableTypeProvider, Dictionary<Expr, PrimitiveType> TypeDict, FunctionExpr fe)
         {
-            foreach (var p in fe.Parameters)
-            {
-                BindExpr(VariableTypeProvider, TypeDict, p);
-            }
-            var ParameterTypes = fe.Parameters.Select(p => TypeDict[p]).ToList();
+            var Parameters = fe.Parameters.Select(p => BindExpr(VariableTypeProvider, TypeDict, p)).ToList();
+            var ParameterTypes = Parameters.Select(p => TypeDict[p]).ToList();
             List<FunctionParameterAndReturnTypes> Functions;
             try
             {
@@ -297,7 +314,7 @@ namespace Niveum.ExpressionSchema
             {
                 throw new InvalidSyntaxException("'{0}' : FunctionNotExist".Formats(fe.Name), new FileTextRange { Text = Text, Range = Positions[fe] }, ex);
             }
-            var Sorted = Functions.Where(fs => IsOverloadSatisfied(ParameterTypes, fs.ParameterTypes)).GroupBy(fs => GetOverloadTypeConversionPoint(ParameterTypes, fs.ParameterTypes)).OrderBy(g => g.Key).ToList();
+            var Sorted = Functions.Where(fs => IsOverloadSatisfied(ParameterTypes, fs.ParameterTypes)).GroupBy(fs => GetOverloadTypeConversionPoint(ParameterTypes, fs.ParameterTypes.Value)).OrderBy(g => g.Key).ToList();
             if (Sorted.Count == 0)
             {
                 throw new InvalidSyntaxException("'{0}' : FunctionNotExist".Formats(fe.Name), new FileTextRange { Text = Text, Range = Positions[fe] });
@@ -311,7 +328,7 @@ namespace Niveum.ExpressionSchema
             for (int k = 0; k < ParameterTypes.Count; k += 1)
             {
                 var pt = ParameterTypes[k];
-                var fspt = MostMatchedSignature.ParameterTypes[k];
+                var fspt = MostMatchedSignature.ParameterTypes.Value[k];
                 if (pt == PrimitiveType.Int && fspt == PrimitiveType.Real)
                 {
                     var feCReal = new FunctionExpr { Name = "creal", Parameters = new List<Expr> { fe.Parameters[k] } };
@@ -320,20 +337,24 @@ namespace Niveum.ExpressionSchema
                     Positions.Add(feCReal, Range);
                     Positions.Add(CReal, Range);
                     TypeDict.Add(CReal, PrimitiveType.Real);
-                    fe.Parameters[k] = CReal;
+                    Parameters[k] = CReal;
                 }
             }
-            return MostMatchedSignature.ReturnType;
+
+            var Result = new FunctionExpr { Name = fe.Name, Parameters = Parameters };
+            Positions.Add(Result, Positions[fe]);
+            return Tuple.Create(Result, MostMatchedSignature.ReturnType);
         }
 
-        private static bool IsOverloadSatisfied(List<PrimitiveType> ParameterTypes, List<PrimitiveType> fs)
+        private static bool IsOverloadSatisfied(List<PrimitiveType> ParameterTypes, Optional<List<PrimitiveType>> fs)
         {
-            if (fs == null) { return false; }
-            if (ParameterTypes.Count != fs.Count) { return false; }
+            if (fs.OnNone) { return false; }
+            var fsValue = fs.Value;
+            if (ParameterTypes.Count != fsValue.Count) { return false; }
             for (int k = 0; k < ParameterTypes.Count; k += 1)
             {
                 var pt = ParameterTypes[k];
-                var fspt = fs[k];
+                var fspt = fsValue[k];
                 if (pt != fspt)
                 {
                     if (pt == PrimitiveType.Int && fspt == PrimitiveType.Real)

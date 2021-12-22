@@ -3,10 +3,13 @@
 //  File:        SemanticTranslator.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 语法表达式到语义表达式转换器
-//  Version:     2018.12.22.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
+#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -16,9 +19,9 @@ using Firefly.Texting.TreeFormat.Syntax;
 
 namespace Niveum.ExpressionSchema
 {
-    public class SemanticTranslatorResult
+    public sealed class SemanticTranslatorResult
     {
-        public Expr Semantics;
+        public Expr Semantics { get; init; }
     }
 
     public class SemanticTranslator

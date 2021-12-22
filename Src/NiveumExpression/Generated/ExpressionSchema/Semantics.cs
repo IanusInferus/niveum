@@ -5,6 +5,9 @@
 //
 //==========================================================================
 
+#nullable enable
+#pragma warning disable CS8618
+
 using System;
 using System.Collections.Generic;
 using Boolean = System.Boolean;
@@ -31,73 +34,73 @@ namespace Niveum.ExpressionSchema
     public sealed class Schema
     {
         /// <summary>模块声明</summary>
-        public List<ModuleDecl> Modules;
+        public List<ModuleDecl> Modules { get; init; }
         /// <summary>命名空间导入</summary>
-        public List<String> Imports;
+        public List<String> Imports { get; init; }
     }
     /// <summary>模块声明</summary>
     [Record]
     public sealed class ModuleDecl
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>描述</summary>
-        public String Description;
+        public String Description { get; init; }
         /// <summary>函数声明</summary>
-        public List<FunctionDecl> Functions;
+        public List<FunctionDecl> Functions { get; init; }
     }
     /// <summary>函数集</summary>
     [Record]
     public sealed class Assembly
     {
         /// <summary>散列</summary>
-        public UInt64 Hash;
+        public UInt64 Hash { get; init; }
         /// <summary>函数定义</summary>
-        public List<ModuleDef> Modules;
+        public List<ModuleDef> Modules { get; init; }
     }
     /// <summary>模块定义</summary>
     [Record]
     public sealed class ModuleDef
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>描述</summary>
-        public String Description;
+        public String Description { get; init; }
         /// <summary>函数定义</summary>
-        public List<FunctionDef> Functions;
+        public List<FunctionDef> Functions { get; init; }
     }
     /// <summary>函数声明</summary>
     [Record]
     public sealed class FunctionDecl
     {
         /// <summary>函数名</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>参数</summary>
-        public List<VariableDef> Parameters;
+        public List<VariableDef> Parameters { get; init; }
         /// <summary>返回值类型</summary>
-        public PrimitiveType ReturnValue;
+        public PrimitiveType ReturnValue { get; init; }
     }
     /// <summary>函数定义</summary>
     [Record]
     public sealed class FunctionDef
     {
         /// <summary>函数名</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>参数</summary>
-        public List<VariableDef> Parameters;
+        public List<VariableDef> Parameters { get; init; }
         /// <summary>返回值类型</summary>
-        public PrimitiveType ReturnValue;
+        public PrimitiveType ReturnValue { get; init; }
         /// <summary>函数体</summary>
-        public Expr Body;
+        public Expr Body { get; init; }
     }
     /// <summary>变量</summary>
     [Record]
     public sealed class VariableDef
     {
         /// <summary>变量名</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>类型</summary>
-        public PrimitiveType Type;
+        public PrimitiveType Type { get; init; }
     }
     public enum ExprTag
     {
@@ -118,20 +121,20 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class Expr
     {
-        [Tag] public ExprTag _Tag;
+        [Tag] public ExprTag _Tag { get; init; }
 
         /// <summary>字面量表达式</summary>
-        public LiteralExpr Literal;
+        public LiteralExpr Literal { get; init; }
         /// <summary>变量表达式</summary>
-        public VariableExpr Variable;
+        public VariableExpr Variable { get; init; }
         /// <summary>函数表达式</summary>
-        public FunctionExpr Function;
+        public FunctionExpr Function { get; init; }
         /// <summary>if伪函数表达式</summary>
-        public IfExpr If;
+        public IfExpr If { get; init; }
         /// <summary>&amp;&amp;运算符表达式</summary>
-        public AndAlsoExpr AndAlso;
+        public AndAlsoExpr AndAlso { get; init; }
         /// <summary>||运算符表达式</summary>
-        public OrElseExpr OrElse;
+        public OrElseExpr OrElse { get; init; }
 
         /// <summary>字面量表达式</summary>
         public static Expr CreateLiteral(LiteralExpr Value) { return new Expr { _Tag = ExprTag.Literal, Literal = Value }; }
@@ -172,14 +175,14 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class LiteralExpr
     {
-        [Tag] public LiteralExprTag _Tag;
+        [Tag] public LiteralExprTag _Tag { get; init; }
 
         /// <summary>布尔字面量</summary>
-        public Boolean BooleanValue;
+        public Boolean BooleanValue { get; init; }
         /// <summary>整数字面量</summary>
-        public Int IntValue;
+        public Int IntValue { get; init; }
         /// <summary>实数字面量</summary>
-        public Real RealValue;
+        public Real RealValue { get; init; }
 
         /// <summary>布尔字面量</summary>
         public static LiteralExpr CreateBooleanValue(Boolean Value) { return new LiteralExpr { _Tag = LiteralExprTag.BooleanValue, BooleanValue = Value }; }
@@ -200,45 +203,45 @@ namespace Niveum.ExpressionSchema
     public sealed class VariableExpr
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
     }
     /// <summary>函数表达式</summary>
     [Record]
     public sealed class FunctionExpr
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
         /// <summary>实参</summary>
-        public List<Expr> Parameters;
+        public List<Expr> Parameters { get; init; }
     }
     /// <summary>if伪函数表达式</summary>
     [Record]
     public sealed class IfExpr
     {
         /// <summary>条件</summary>
-        public Expr Condition;
+        public Expr Condition { get; init; }
         /// <summary>条件为真时的值</summary>
-        public Expr TruePart;
+        public Expr TruePart { get; init; }
         /// <summary>条件为假时的值</summary>
-        public Expr FalsePart;
+        public Expr FalsePart { get; init; }
     }
     /// <summary>&amp;&amp;运算符表达式</summary>
     [Record]
     public sealed class AndAlsoExpr
     {
         /// <summary>左部表达式</summary>
-        public Expr Left;
+        public Expr Left { get; init; }
         /// <summary>右部表达式</summary>
-        public Expr Right;
+        public Expr Right { get; init; }
     }
     /// <summary>||运算符表达式</summary>
     [Record]
     public sealed class OrElseExpr
     {
         /// <summary>左部表达式</summary>
-        public Expr Left;
+        public Expr Left { get; init; }
         /// <summary>右部表达式</summary>
-        public Expr Right;
+        public Expr Right { get; init; }
     }
     /// <summary>基元类型</summary>
     public enum PrimitiveType : int

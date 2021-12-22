@@ -5,6 +5,9 @@
 //
 //==========================================================================
 
+#nullable enable
+#pragma warning disable CS8618
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -148,7 +151,7 @@ namespace Niveum.ExpressionSchema.CSharpBinaryLoader
                 }
                 foreach (var p in f.Parameters)
                 {
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "vc.Replace("), GetEscapedStringLiteral(p.Name)), ", null, PrimitiveType."), p.Type.ToString()), ", vvc => (Func<"), GetEscapedIdentifier(Combine(Combine(Begin(), "FuncContext_"), f.Name))), ", "), p.Type.ToString()), ">)("), GetEscapedIdentifier(Combine(Combine(Begin(), "Context_"), f.Name))), " => "), GetEscapedIdentifier(Combine(Combine(Combine(Combine(Begin(), "Context_"), f.Name), "."), p.Name))), "));"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "vc.Replace("), GetEscapedStringLiteral(p.Name)), ", Optional<List<VariableDef>>.Empty, PrimitiveType."), p.Type.ToString()), ", vvc => (Func<"), GetEscapedIdentifier(Combine(Combine(Begin(), "FuncContext_"), f.Name))), ", "), p.Type.ToString()), ">)("), GetEscapedIdentifier(Combine(Combine(Begin(), "Context_"), f.Name))), " => "), GetEscapedIdentifier(Combine(Combine(Combine(Combine(Begin(), "Context_"), f.Name), "."), p.Name))), "));"))
                     {
                         yield return _Line == "" ? "" : "            " + _Line;
                     }

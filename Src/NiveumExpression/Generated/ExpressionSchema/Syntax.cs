@@ -5,6 +5,9 @@
 //
 //==========================================================================
 
+#nullable enable
+#pragma warning disable CS8618
+
 using System;
 using System.Collections.Generic;
 using Boolean = System.Boolean;
@@ -39,14 +42,14 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class TokenLiteral
     {
-        [Tag] public TokenLiteralTag _Tag;
+        [Tag] public TokenLiteralTag _Tag { get; init; }
 
         /// <summary>布尔类型</summary>
-        public Boolean BooleanValue;
+        public Boolean BooleanValue { get; init; }
         /// <summary>整数类型</summary>
-        public Int IntValue;
+        public Int IntValue { get; init; }
         /// <summary>实数类型</summary>
-        public Real RealValue;
+        public Real RealValue { get; init; }
 
         /// <summary>布尔类型</summary>
         public static TokenLiteral CreateBooleanValue(Boolean Value) { return new TokenLiteral { _Tag = TokenLiteralTag.BooleanValue, BooleanValue = Value }; }
@@ -67,21 +70,21 @@ namespace Niveum.ExpressionSchema
     public sealed class TokenIdentifier
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
     }
     /// <summary>二目运算符</summary>
     [Record]
     public sealed class TokenBinaryOperator
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
     }
     /// <summary>单目运算符</summary>
     [Record]
     public sealed class TokenUnaryOperator
     {
         /// <summary>名称</summary>
-        public String Name;
+        public String Name { get; init; }
     }
     /// <summary>左小括号</summary>
     [Record]
@@ -117,20 +120,20 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class SyntaxExpr
     {
-        [Tag] public SyntaxExprTag _Tag;
+        [Tag] public SyntaxExprTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public ProductionLiteral Literal;
+        public ProductionLiteral Literal { get; init; }
         /// <summary>函数</summary>
-        public ProductionFunction Function;
+        public ProductionFunction Function { get; init; }
         /// <summary>单个变量</summary>
-        public ProductionVariable Variable;
+        public ProductionVariable Variable { get; init; }
         /// <summary>括号</summary>
-        public ProductionParen Paren;
+        public ProductionParen Paren { get; init; }
         /// <summary>前缀单目运算</summary>
-        public ProductionUnaryOperator UnaryOperator;
+        public ProductionUnaryOperator UnaryOperator { get; init; }
         /// <summary>中缀二目运算</summary>
-        public ProductionBinaryOperator BinaryOperator;
+        public ProductionBinaryOperator BinaryOperator { get; init; }
 
         /// <summary>字面量</summary>
         public static SyntaxExpr CreateLiteral(ProductionLiteral Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.Literal, Literal = Value }; }
@@ -169,12 +172,12 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class SyntaxParameterList
     {
-        [Tag] public SyntaxParameterListTag _Tag;
+        [Tag] public SyntaxParameterListTag _Tag { get; init; }
 
         /// <summary>空参数列表</summary>
-        public ProductionNullParameterList Null;
+        public ProductionNullParameterList Null { get; init; }
         /// <summary>非空参数列表</summary>
-        public ProductionNonnullParameterList Nonnull;
+        public ProductionNonnullParameterList Nonnull { get; init; }
 
         /// <summary>空参数列表</summary>
         public static SyntaxParameterList CreateNull(ProductionNullParameterList Value) { return new SyntaxParameterList { _Tag = SyntaxParameterListTag.Null, Null = Value }; }
@@ -197,12 +200,12 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class SyntaxNonnullParameterList
     {
-        [Tag] public SyntaxNonnullParameterListTag _Tag;
+        [Tag] public SyntaxNonnullParameterListTag _Tag { get; init; }
 
         /// <summary>单个参数列表</summary>
-        public ProductionSingleParameterList Single;
+        public ProductionSingleParameterList Single { get; init; }
         /// <summary>多个参数列表</summary>
-        public ProductionMultipleParameterList Multiple;
+        public ProductionMultipleParameterList Multiple { get; init; }
 
         /// <summary>单个参数列表</summary>
         public static SyntaxNonnullParameterList CreateSingle(ProductionSingleParameterList Value) { return new SyntaxNonnullParameterList { _Tag = SyntaxNonnullParameterListTag.Single, Single = Value }; }
@@ -219,50 +222,50 @@ namespace Niveum.ExpressionSchema
     public sealed class ProductionLiteral
     {
         /// <summary>字面量</summary>
-        public TokenLiteral Literal;
+        public TokenLiteral Literal { get; init; }
     }
     /// <summary>函数</summary>
     [Record]
     public sealed class ProductionFunction
     {
         /// <summary>标识符</summary>
-        public TokenIdentifier Identifier;
+        public TokenIdentifier Identifier { get; init; }
         /// <summary>参数列表</summary>
-        public SyntaxParameterList ParameterList;
+        public SyntaxParameterList ParameterList { get; init; }
     }
     /// <summary>单个变量</summary>
     [Record]
     public sealed class ProductionVariable
     {
         /// <summary>标识符</summary>
-        public TokenIdentifier Identifier;
+        public TokenIdentifier Identifier { get; init; }
     }
     /// <summary>括号</summary>
     [Record]
     public sealed class ProductionParen
     {
         /// <summary>表达式</summary>
-        public SyntaxExpr Expr;
+        public SyntaxExpr Expr { get; init; }
     }
     /// <summary>前缀单目运算</summary>
     [Record]
     public sealed class ProductionUnaryOperator
     {
         /// <summary>单目运算符</summary>
-        public TokenUnaryOperator UnaryOperator;
+        public TokenUnaryOperator UnaryOperator { get; init; }
         /// <summary>表达式</summary>
-        public SyntaxExpr Expr;
+        public SyntaxExpr Expr { get; init; }
     }
     /// <summary>中缀二目运算</summary>
     [Record]
     public sealed class ProductionBinaryOperator
     {
         /// <summary>二目运算符</summary>
-        public TokenBinaryOperator BinaryOperator;
+        public TokenBinaryOperator BinaryOperator { get; init; }
         /// <summary>表达式</summary>
-        public SyntaxExpr Left;
+        public SyntaxExpr Left { get; init; }
         /// <summary>表达式</summary>
-        public SyntaxExpr Right;
+        public SyntaxExpr Right { get; init; }
     }
     /// <summary>空参数列表</summary>
     [Record]
@@ -274,23 +277,23 @@ namespace Niveum.ExpressionSchema
     public sealed class ProductionNonnullParameterList
     {
         /// <summary>非空参数列表</summary>
-        public SyntaxNonnullParameterList NonnullParameterList;
+        public SyntaxNonnullParameterList NonnullParameterList { get; init; }
     }
     /// <summary>单个参数列表</summary>
     [Record]
     public sealed class ProductionSingleParameterList
     {
         /// <summary>表达式</summary>
-        public SyntaxExpr Expr;
+        public SyntaxExpr Expr { get; init; }
     }
     /// <summary>多个参数列表</summary>
     [Record]
     public sealed class ProductionMultipleParameterList
     {
         /// <summary>非空参数列表</summary>
-        public SyntaxNonnullParameterList NonnullParameterList;
+        public SyntaxNonnullParameterList NonnullParameterList { get; init; }
         /// <summary>表达式</summary>
-        public SyntaxExpr Expr;
+        public SyntaxExpr Expr { get; init; }
     }
     public enum SyntaxRuleTag
     {
@@ -319,28 +322,28 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class SyntaxRule
     {
-        [Tag] public SyntaxRuleTag _Tag;
+        [Tag] public SyntaxRuleTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public TokenLiteral Literal;
+        public TokenLiteral Literal { get; init; }
         /// <summary>标识符</summary>
-        public TokenIdentifier Identifier;
+        public TokenIdentifier Identifier { get; init; }
         /// <summary>二目运算符</summary>
-        public TokenBinaryOperator BinaryOperator;
+        public TokenBinaryOperator BinaryOperator { get; init; }
         /// <summary>单目运算符</summary>
-        public TokenUnaryOperator UnaryOperator;
+        public TokenUnaryOperator UnaryOperator { get; init; }
         /// <summary>左小括号</summary>
-        public TokenLeftParen LeftParen;
+        public TokenLeftParen LeftParen { get; init; }
         /// <summary>右小括号</summary>
-        public TokenRightParen RightParen;
+        public TokenRightParen RightParen { get; init; }
         /// <summary>逗号</summary>
-        public TokenComma Comma;
+        public TokenComma Comma { get; init; }
         /// <summary>表达式</summary>
-        public SyntaxExpr Expr;
+        public SyntaxExpr Expr { get; init; }
         /// <summary>参数列表</summary>
-        public SyntaxParameterList ParameterList;
+        public SyntaxParameterList ParameterList { get; init; }
         /// <summary>非空参数列表</summary>
-        public SyntaxNonnullParameterList NonnullParameterList;
+        public SyntaxNonnullParameterList NonnullParameterList { get; init; }
 
         /// <summary>字面量</summary>
         public static SyntaxRule CreateLiteral(TokenLiteral Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Literal, Literal = Value }; }

@@ -3,17 +3,18 @@
 //  File:        TokenParser.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 符号解析器
-//  Version:     2018.12.22.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
-using Firefly.Texting.TreeFormat;
 using Firefly.Texting.TreeFormat.Syntax;
 
 namespace Niveum.ExpressionSchema

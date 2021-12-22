@@ -4,7 +4,7 @@
       File:        CSharpBinaryLoader.tree
       Location:    Niveum.Expression <Tree>
       Description: 表达式结构C#二进制加载器模板
-      Version:     2018.12.22.
+      Version:     2021.12.22.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -77,7 +77,7 @@
                                 foreach (var p in f.Parameters)
                                 {
                                     ##
-                                        vc.Replace(${GetEscapedStringLiteral(p.Name)}, null, PrimitiveType.${p.Type.ToString()}, vvc => (Func<[[FuncContext_${f.Name}]], ${p.Type.ToString()}>)([[Context_${f.Name}]] => [[Context_${f.Name}.${p.Name}]]));
+                                        vc.Replace(${GetEscapedStringLiteral(p.Name)}, Optional<List<VariableDef>>.Empty, PrimitiveType.${p.Type.ToString()}, vvc => (Func<[[FuncContext_${f.Name}]], ${p.Type.ToString()}>)([[Context_${f.Name}]] => [[Context_${f.Name}.${p.Name}]]));
                                 }
                             var p = new VariableProviderCombiner<[[FuncContext_${f.Name}]]>(vc, new ExpressionRuntimeProvider<[[FuncContext_${f.Name}]]>());
                             var d = ExpressionEvaluator<[[FuncContext_${f.Name}]]>.Compile<${f.ReturnValue.ToString()}>(p, fd[${GetEscapedStringLiteral(f.Name)}].Body);

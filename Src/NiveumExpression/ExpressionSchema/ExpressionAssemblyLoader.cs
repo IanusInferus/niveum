@@ -3,10 +3,12 @@
 //  File:        ExpressionAssemblyLoader.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式函数集加载器
-//  Version:     2018.12.22.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -128,9 +130,8 @@ namespace Niveum.ExpressionSchema
                             if (ReachedFunctions.Contains(FunctionName)) { throw new Syntax.InvalidEvaluationException("DuplicateFunction", new Syntax.FileTextRange { Text = nm.Text, Range = Line.Range }, Line); }
                             var fd = FunctionDeclDict[FunctionName];
                             ReachedFunctions.Add(FunctionName);
-                            var ep = new ExpressionParser(null, nm.Text);
                             var BodyRange = new Syntax.TextRange { Start = nm.Text.Calc(Line.Range.Start, gBody.Index), End = nm.Text.Calc(Line.Range.Start, gBody.Index + gBody.Length) };
-                            var func = ep.ParseFunction(new Niveum.Expression.ExpressionRuntimeProvider<int>(), fd, BodyRange);
+                            var func = ExpressionParser.ParseFunction(nm.Text, new Niveum.Expression.ExpressionRuntimeProvider<int>(), fd, BodyRange);
                             Functions.Add(FunctionName, func.Definition);
                         }
 

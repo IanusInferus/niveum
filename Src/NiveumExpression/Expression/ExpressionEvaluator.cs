@@ -3,10 +3,12 @@
 //  File:        ExpressionEvaluator.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式求值工具
-//  Version:     2018.12.22.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -17,7 +19,7 @@ namespace Niveum.Expression
 {
     public interface IVariableProvider<T> : IVariableTypeProvider
     {
-        List<Delegate> GetValue(String Name, List<PrimitiveType> ParameterTypes, List<Delegate> Parameters);
+        List<Delegate> GetValue(String Name, Optional<List<PrimitiveType>> ParameterTypes, Optional<List<Delegate>> Parameters);
     }
 
     /// <summary>
@@ -37,12 +39,12 @@ namespace Niveum.Expression
             return Providers.SelectMany(p => p.GetOverloads(Name)).ToList();
         }
 
-        public List<PrimitiveType> GetMatched(String Name, List<PrimitiveType> ParameterTypes)
+        public List<PrimitiveType> GetMatched(String Name, Optional<List<PrimitiveType>> ParameterTypes)
         {
             return Providers.SelectMany(p => p.GetMatched(Name, ParameterTypes)).ToList();
         }
 
-        public List<Delegate> GetValue(String Name, List<PrimitiveType> ParameterTypes, List<Delegate> Parameters)
+        public List<Delegate> GetValue(String Name, Optional<List<PrimitiveType>> ParameterTypes, Optional<List<Delegate>> Parameters)
         {
             return Providers.SelectMany(p => p.GetValue(Name, ParameterTypes, Parameters)).ToList();
         }
@@ -120,7 +122,7 @@ namespace Niveum.Expression
             else if (e.OnVariable)
             {
                 var Name = e.Variable.Name;
-                var f = VariableProvider.GetValue(Name, null, null);
+                var f = VariableProvider.GetValue(Name, Optional<List<PrimitiveType>>.Empty, Optional<List<Delegate>>.Empty);
                 if (f.Count == 0)
                 {
                     throw new InvalidOperationException(String.Format("VariableNotExist: {0}", Name));

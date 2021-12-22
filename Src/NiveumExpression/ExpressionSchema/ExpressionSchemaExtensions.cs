@@ -3,10 +3,12 @@
 //  File:        ExpressionSchemaExtensions.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式类型结构扩展
-//  Version:     2018.12.22.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;

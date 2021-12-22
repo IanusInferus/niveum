@@ -1,4 +1,8 @@
-﻿2021.12.21
+﻿2021.12.22
+Niveum.Expression:
+使用C#的nullable reference types和init only setters改善代码。
+
+2021.12.21
 Nivea:
 使用C#的nullable reference types和init only setters改善代码。
 Niveum.Core:

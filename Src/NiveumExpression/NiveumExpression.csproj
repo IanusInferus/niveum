@@ -1,12 +1,15 @@
 ﻿<Project>
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+	<LangVersion>10.0</LangVersion>
+	<ImplicitUsings>disable</ImplicitUsings>
+	<Nullable>enable</Nullable>
     <RootNamespace>Niveum.ExpressionSchema</RootNamespace>
     <PackageId>Niveum.Expression</PackageId>
     <Product>Niveum.Expression</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>Niveum.Expression</AssemblyName>
-    <AssemblyVersion>2021.12.18.0</AssemblyVersion>
+    <AssemblyVersion>2021.12.22.0</AssemblyVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>$(FLTKey)</AssemblyOriginatorKeyFile>

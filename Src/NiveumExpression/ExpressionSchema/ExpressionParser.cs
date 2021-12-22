@@ -3,10 +3,13 @@
 //  File:        ExpressionParser.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2018.12.22.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
+#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -17,59 +20,53 @@ using Firefly.Texting.TreeFormat.Syntax;
 
 namespace Niveum.ExpressionSchema
 {
-    public class ExpressionParserDeclarationResult
+    public sealed class ExpressionParserDeclarationResult
     {
-        public FunctionDecl Declaration;
-        public Dictionary<Object, TextRange> Positions;
+        public FunctionDecl Declaration { get; init; }
+        public Dictionary<Object, TextRange> Positions { get; init; }
     }
 
-    public class ExpressionParserExprResult
+    public sealed class ExpressionParserExprResult
     {
-        public Expr Body;
-        public Dictionary<Expr, PrimitiveType> TypeDict;
-        public Dictionary<Object, TextRange> Positions;
+        public Expr Body { get; init; }
+        public Dictionary<Expr, PrimitiveType> TypeDict { get; init; }
+        public Dictionary<Object, TextRange> Positions { get; init; }
     }
 
-    public class ExpressionParserResult
+    public sealed class ExpressionParserResult
     {
-        public FunctionDef Definition;
-        public Dictionary<Expr, PrimitiveType> TypeDict;
-        public Dictionary<Object, TextRange> Positions;
+        public FunctionDef Definition { get; init; }
+        public Dictionary<Expr, PrimitiveType> TypeDict { get; init; }
+        public Dictionary<Object, TextRange> Positions { get; init; }
     }
 
-    public class ExpressionParser
+    public static class ExpressionParser
     {
-        private Text SignatureText = null;
-        private Text BodyText = null;
-        public ExpressionParser(Text SignatureText, Text BodyText)
-        {
-            this.SignatureText = SignatureText;
-            this.BodyText = BodyText;
-        }
-
         public static ExpressionParserDeclarationResult ParseSignature(String Signature)
         {
             var LinesSignature = new List<TextLine>();
             LinesSignature.Add(new TextLine { Text = Signature, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Signature.Length, Row = 1, Column = Signature.Length + 1 } } });
             var tSignature = new Text { Path = "Signature", Lines = LinesSignature };
-            var p = new Parser(tSignature, null);
-            return p.ParseDeclaration(LinesSignature.Single().Range);
+            var Positions = new Dictionary<Object, TextRange>();
+            return Parser.ParseDeclaration(tSignature, LinesSignature.Single().Range, Positions);
         }
         public static ExpressionParserExprResult ParseBody(IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, String Body)
         {
             var LinesBody = new List<TextLine>();
             LinesBody.Add(new TextLine { Text = Body, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Body.Length, Row = 1, Column = Body.Length + 1 } } });
             var tBody = new Text { Path = "Body", Lines = LinesBody };
-            var p = new Parser(null, tBody);
-            return p.ParseBody(VariableTypeProvider, Declaration, LinesBody.Single().Range);
+            var Positions = new Dictionary<Object, TextRange>();
+            var tb = new TypeBinder(tBody, Positions);
+            return Parser.ParseBody(tb, tBody, VariableTypeProvider, Declaration, LinesBody.Single().Range, Positions);
         }
         public static ExpressionParserExprResult ParseExpr(IVariableTypeProvider VariableTypeProvider, String Body)
         {
             var LinesBody = new List<TextLine>();
             LinesBody.Add(new TextLine { Text = Body, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Body.Length, Row = 1, Column = Body.Length + 1 } } });
             var tBody = new Text { Path = "Body", Lines = LinesBody };
-            var p = new Parser(null, tBody);
-            return p.ParseExpr(VariableTypeProvider, LinesBody.Single().Range);
+            var Positions = new Dictionary<Object, TextRange>();
+            var tb = new TypeBinder(tBody, Positions);
+            return Parser.ParseExpr(tb, VariableTypeProvider, LinesBody.Single().Range, Positions);
         }
         public static ExpressionParserResult ParseFunction(IVariableTypeProvider VariableTypeProvider, String Signature, String Body)
         {
@@ -79,55 +76,47 @@ namespace Niveum.ExpressionSchema
             LinesBody.Add(new TextLine { Text = Body, Range = new TextRange { Start = new TextPosition { CharIndex = 0, Row = 1, Column = 1 }, End = new TextPosition { CharIndex = Body.Length, Row = 1, Column = Body.Length + 1 } } });
             var tSignature = new Text { Path = "Signature", Lines = LinesSignature };
             var tBody = new Text { Path = "Body", Lines = LinesBody };
-            var p = new Parser(tSignature, tBody);
-            return p.ParseFunction(VariableTypeProvider, LinesSignature.Single().Range, LinesBody.Single().Range);
+            var Positions = new Dictionary<Object, TextRange>();
+            var tb = new TypeBinder(tBody, Positions);
+            return Parser.ParseFunction(tb, tSignature, tBody, VariableTypeProvider, LinesSignature.Single().Range, LinesBody.Single().Range, Positions);
         }
 
-        public ExpressionParserDeclarationResult ParseDeclaration(TextRange Signature)
+        public static ExpressionParserDeclarationResult ParseDeclaration(Text SignatureText, TextRange Signature)
         {
-            var p = new Parser(SignatureText, BodyText);
-            return p.ParseDeclaration(Signature);
+            var Positions = new Dictionary<Object, TextRange>();
+            return Parser.ParseDeclaration(SignatureText, Signature, Positions);
         }
-        public ExpressionParserExprResult ParseBody(IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body)
+        public static ExpressionParserExprResult ParseBody(Text BodyText, IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body)
         {
-            var p = new Parser(SignatureText, BodyText);
-            return p.ParseBody(VariableTypeProvider, Declaration, Body);
+            var Positions = new Dictionary<Object, TextRange>();
+            var tb = new TypeBinder(BodyText, Positions);
+            return Parser.ParseBody(tb, BodyText, VariableTypeProvider, Declaration, Body, Positions);
         }
-        public ExpressionParserExprResult ParseExpr(IVariableTypeProvider VariableTypeProvider, TextRange Body)
+        public static ExpressionParserExprResult ParseExpr(Text BodyText, IVariableTypeProvider VariableTypeProvider, TextRange Body)
         {
-            var p = new Parser(SignatureText, BodyText);
-            return p.ParseExpr(VariableTypeProvider, Body);
+            var Positions = new Dictionary<Object, TextRange>();
+            var tb = new TypeBinder(BodyText, Positions);
+            return Parser.ParseExpr(tb, VariableTypeProvider, Body, Positions);
         }
-        public ExpressionParserResult ParseFunction(IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body)
+        public static ExpressionParserResult ParseFunction(Text BodyText, IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body)
         {
-            var p = new Parser(SignatureText, BodyText);
-            return p.ParseFunction(VariableTypeProvider, Declaration, Body);
+            var Positions = new Dictionary<Object, TextRange>();
+            var tb = new TypeBinder(BodyText, Positions);
+            return Parser.ParseFunction(tb, BodyText, VariableTypeProvider, Declaration, Body, Positions);
         }
-        public ExpressionParserResult ParseFunction(IVariableTypeProvider VariableTypeProvider, TextRange Signature, TextRange Body)
+        public static ExpressionParserResult ParseFunction(Text SignatureText, Text BodyText, IVariableTypeProvider VariableTypeProvider, TextRange Signature, TextRange Body)
         {
-            var p = new Parser(SignatureText, BodyText);
-            return p.ParseFunction(VariableTypeProvider, Signature, Body);
+            var Positions = new Dictionary<Object, TextRange>();
+            var tb = new TypeBinder(BodyText, Positions);
+            return Parser.ParseFunction(tb, SignatureText, BodyText, VariableTypeProvider, Signature, Body, Positions);
         }
 
-        private class Parser
+        private static class Parser
         {
-            private Text SignatureText;
-            private Text BodyText;
-            private Dictionary<Object, TextRange> Positions;
-            private TypeBinder tb;
-
-            public Parser(Text SignatureText, Text BodyText)
-            {
-                this.SignatureText = SignatureText;
-                this.BodyText = BodyText;
-                this.Positions = new Dictionary<Object, TextRange>();
-                this.tb = new TypeBinder(BodyText, Positions);
-            }
-
             private static Regex rSignature = new Regex(@"^ *(?<Name>[A-Za-z_][A-Za-z0-9_]*) *\((?<ParameterList>.*?)\) *: *(?<ReturnType>[A-Za-z_][A-Za-z0-9_]*) *$", RegexOptions.ExplicitCapture);
             private static Regex rEmptyParameterList = new Regex(@"^ *$", RegexOptions.ExplicitCapture);
             private static Regex rVariable = new Regex(@"^ *(?<Name>[A-Za-z_][A-Za-z0-9_]*) *: *(?<Type>[A-Za-z_][A-Za-z0-9_]*) *$", RegexOptions.ExplicitCapture);
-            public ExpressionParserDeclarationResult ParseDeclaration(TextRange Signature)
+            public static ExpressionParserDeclarationResult ParseDeclaration(Text SignatureText, TextRange Signature, Dictionary<Object, TextRange> Positions)
             {
                 var m = rSignature.Match(SignatureText.GetTextInLine(Signature));
                 if (!m.Success) { throw new InvalidSyntaxException("SignatureInvalid: " + Signature, new FileTextRange { Text = SignatureText, Range = Signature }); }
@@ -143,7 +132,7 @@ namespace Niveum.ExpressionSchema
                 }
                 else
                 {
-                    Parameters = ParameterList.Split(',').Select(p => ParseVariable(p, Signature)).ToList();
+                    Parameters = ParameterList.Split(',').Select(p => ParseVariable(SignatureText, p, Signature)).ToList();
                 }
                 var dParameters = Parameters.ToDictionary(p => p.Name, p => p.Type);
 
@@ -161,12 +150,13 @@ namespace Niveum.ExpressionSchema
                 };
                 return epr;
             }
-            public ExpressionParserExprResult ParseBody(IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body)
+
+            public static ExpressionParserExprResult ParseBody(TypeBinder tb, Text BodyText, IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body, Dictionary<Object, TextRange> Positions)
             {
                 var d = Declaration;
                 var dParameters = d.Parameters.ToDictionary(p => p.Name, p => p.Type);
                 var vtp = new VariableTypeProviderCombiner(new SimpleVariableTypeProvider(dParameters), VariableTypeProvider);
-                var br = BindExpr(vtp, d.ReturnValue, Body);
+                var br = BindExpr(tb, vtp, d.ReturnValue, Body);
 
                 var epr = new ExpressionParserExprResult
                 {
@@ -176,9 +166,9 @@ namespace Niveum.ExpressionSchema
                 };
                 return epr;
             }
-            public ExpressionParserExprResult ParseExpr(IVariableTypeProvider VariableTypeProvider, TextRange Body)
+            public static ExpressionParserExprResult ParseExpr(TypeBinder tb, IVariableTypeProvider VariableTypeProvider, TextRange Body, Dictionary<Object, TextRange> Positions)
             {
-                var br = BindExpr(VariableTypeProvider, Body);
+                var br = BindExpr(tb, VariableTypeProvider, Body);
 
                 var epr = new ExpressionParserExprResult
                 {
@@ -188,10 +178,10 @@ namespace Niveum.ExpressionSchema
                 };
                 return epr;
             }
-            public ExpressionParserResult ParseFunction(IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body)
+            public static ExpressionParserResult ParseFunction(TypeBinder tb, Text BodyText, IVariableTypeProvider VariableTypeProvider, FunctionDecl Declaration, TextRange Body, Dictionary<Object, TextRange> Positions)
             {
                 var d = Declaration;
-                var epbr = ParseBody(VariableTypeProvider, d, Body);
+                var epbr = ParseBody(tb, BodyText, VariableTypeProvider, d, Body, Positions);
 
                 var fd = new FunctionDef
                 {
@@ -209,11 +199,11 @@ namespace Niveum.ExpressionSchema
                 };
                 return epr;
             }
-            public ExpressionParserResult ParseFunction(IVariableTypeProvider VariableTypeProvider, TextRange Signature, TextRange Body)
+            public static ExpressionParserResult ParseFunction(TypeBinder tb, Text SignatureText, Text BodyText, IVariableTypeProvider VariableTypeProvider, TextRange Signature, TextRange Body, Dictionary<Object, TextRange> Positions)
             {
-                var epdr = ParseDeclaration(Signature);
+                var epdr = ParseDeclaration(SignatureText, Signature, Positions);
                 var d = epdr.Declaration;
-                var epbr = ParseBody(VariableTypeProvider, d, Body);
+                var epbr = ParseBody(tb, BodyText, VariableTypeProvider, d, Body, Positions);
 
                 var fd = new FunctionDef
                 {
@@ -232,7 +222,7 @@ namespace Niveum.ExpressionSchema
                 return epr;
             }
 
-            private VariableDef ParseVariable(String e, TextRange Signature)
+            private static VariableDef ParseVariable(Text SignatureText, String e, TextRange Signature)
             {
                 var m = rVariable.Match(e);
                 if (!m.Success) { throw new InvalidSyntaxException("VariableInvalid: " + e, new FileTextRange { Text = SignatureText, Range = Signature }); }
@@ -241,7 +231,7 @@ namespace Niveum.ExpressionSchema
                 return new VariableDef { Name = Name, Type = ParseType(Type, new FileTextRange { Text = SignatureText, Range = Signature }) };
             }
 
-            private PrimitiveType ParseType(String e, FileTextRange r)
+            private static PrimitiveType ParseType(String e, FileTextRange r)
             {
                 if (e.Equals("Boolean", StringComparison.Ordinal)) { return PrimitiveType.Boolean; }
                 if (e.Equals("Int", StringComparison.Ordinal)) { return PrimitiveType.Int; }
@@ -249,12 +239,12 @@ namespace Niveum.ExpressionSchema
                 throw new InvalidSyntaxException("TypeInvalid: " + e, r);
             }
 
-            private TypeBinderResult BindExpr(IVariableTypeProvider VariableTypeProvider, PrimitiveType ReturnType, TextRange RangeInLine)
+            private static TypeBinderResult BindExpr(TypeBinder tb, IVariableTypeProvider VariableTypeProvider, PrimitiveType ReturnType, TextRange RangeInLine)
             {
                 var r = tb.Bind(VariableTypeProvider, ReturnType, RangeInLine);
                 return r;
             }
-            private TypeBinderResult BindExpr(IVariableTypeProvider VariableTypeProvider, TextRange RangeInLine)
+            private static TypeBinderResult BindExpr(TypeBinder tb, IVariableTypeProvider VariableTypeProvider, TextRange RangeInLine)
             {
                 var r = tb.Bind(VariableTypeProvider, RangeInLine);
                 return r;

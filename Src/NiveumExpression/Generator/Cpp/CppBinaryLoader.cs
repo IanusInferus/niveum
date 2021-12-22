@@ -3,10 +3,12 @@
 //  File:        CppBinaryLoader.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式结构C++二进制加载器代码生成器
-//  Version:     2018.12.22.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
