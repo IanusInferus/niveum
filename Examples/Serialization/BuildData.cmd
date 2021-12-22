@@ -1,4 +1,4 @@
-@PATH ..\..\Bin;%PATH%
+@PATH ..\..\Bin\net48;%PATH%
 
 :: SchemaManipulator
 @if not exist SchemaManipulator\Data @md SchemaManipulator\Data

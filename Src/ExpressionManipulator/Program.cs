@@ -3,10 +3,12 @@
 //  File:        Program.cs
 //  Location:    Niveum.ExpressionManipulator <Visual C#>
 //  Description: 表达式结构处理工具
-//  Version:     2018.12.22.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -196,7 +198,7 @@ namespace Niveum.ExpressionManipulator
         }
 
         private static ES.ExpressionSchemaLoader esl = new ES.ExpressionSchemaLoader();
-        private static ES.Schema es = null;
+        private static ES.Schema? es = null;
         private static ES.Schema GetExpressionSchema()
         {
             if (es != null) { return es; }

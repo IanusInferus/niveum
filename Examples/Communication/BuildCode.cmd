@@ -1,4 +1,4 @@
-@PATH ..\..\Bin;%PATH%
+@PATH ..\..\Bin\net48;%PATH%
 
 :: C#
 @if not exist CSharp\Src\Server\Generated @md CSharp\Src\Server\Generated

@@ -41,10 +41,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Firefly.Lite">
-      <HintPath>..\..\..\..\..\Bin\Firefly.Lite.dll</HintPath>
+      <HintPath>..\..\..\..\..\Bin\net48\Firefly.Lite.dll</HintPath>
     </Reference>
     <Reference Include="Niveum.Json">
-      <HintPath>..\..\..\..\..\Bin\Niveum.Json.dll</HintPath>
+      <HintPath>..\..\..\..\..\Bin\net48\Niveum.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

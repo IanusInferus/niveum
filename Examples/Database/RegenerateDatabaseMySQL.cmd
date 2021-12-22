@@ -1,6 +1,6 @@
-@PATH ..\..\Bin;%PATH%
+@PATH ..\..\Bin\net48;%PATH%
 
-@if not exist ..\..\Bin\MySql.Data.dll (
+@if not exist ..\..\Bin\net48\MySql.Data.dll (
   @echo Niveum\Bin÷–≤ª¥Ê‘⁄MySql.Data.dll°£
   @pause
   @exit

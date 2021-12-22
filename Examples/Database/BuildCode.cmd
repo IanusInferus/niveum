@@ -1,4 +1,4 @@
-@PATH ..\..\Bin;%PATH%
+@PATH ..\..\Bin\net48;%PATH%
 
 :: Mail
 

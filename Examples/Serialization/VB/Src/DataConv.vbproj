@@ -56,10 +56,10 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Firefly.Lite">
-      <HintPath>..\..\..\..\Bin\Firefly.Lite.dll</HintPath>
+      <HintPath>..\..\..\..\Bin\net48\Firefly.Lite.dll</HintPath>
     </Reference>
     <Reference Include="Niveum.Core">
-      <HintPath>..\..\..\..\Bin\Niveum.Core.dll</HintPath>
+      <HintPath>..\..\..\..\Bin\net48\Niveum.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

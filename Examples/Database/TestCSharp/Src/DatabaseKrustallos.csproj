@@ -18,6 +18,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\Bin\</OutputPath>
+    <BaseIntermediateOutputPath>..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -28,6 +29,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\Bin\</OutputPath>
+    <BaseIntermediateOutputPath>..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -39,13 +41,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Firefly.Lite">
-      <HintPath>..\..\..\..\Bin\Firefly.Lite.dll</HintPath>
+      <HintPath>..\..\..\..\Bin\net48\Firefly.Lite.dll</HintPath>
     </Reference>
     <Reference Include="Niveum.Core">
-      <HintPath>..\..\..\..\Bin\Niveum.Core.dll</HintPath>
+      <HintPath>..\..\..\..\Bin\net48\Niveum.Core.dll</HintPath>
     </Reference>
     <Reference Include="Yuki.Relation">
-      <HintPath>..\..\..\..\Bin\Yuki.Relation.dll</HintPath>
+      <HintPath>..\..\..\..\Bin\net48\Yuki.Relation.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

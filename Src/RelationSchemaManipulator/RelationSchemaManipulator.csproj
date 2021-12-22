@@ -1,6 +1,9 @@
 ﻿<Project>
   <PropertyGroup>
     <TargetFrameworks>net48</TargetFrameworks>
+	<LangVersion>10.0</LangVersion>
+	<ImplicitUsings>disable</ImplicitUsings>
+	<Nullable>disable</Nullable>
     <RootNamespace>Yuki.RelationSchemaManipulator</RootNamespace>
     <PackageId>RelationSchemaManipulator</PackageId>
     <Product>Yuki.RelationSchemaManipulator</Product>

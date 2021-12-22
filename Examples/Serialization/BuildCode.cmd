@@ -1,4 +1,4 @@
-@PATH ..\..\Bin;%PATH%
+@PATH ..\..\Bin\net48;%PATH%
 
 :: VB.Net
 @if not exist VB\Src @md VB\Src

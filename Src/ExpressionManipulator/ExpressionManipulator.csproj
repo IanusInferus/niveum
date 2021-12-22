@@ -1,6 +1,9 @@
 ﻿<Project>
   <PropertyGroup>
     <TargetFrameworks>net48</TargetFrameworks>
+	<LangVersion>10.0</LangVersion>
+	<ImplicitUsings>disable</ImplicitUsings>
+	<Nullable>enable</Nullable>
     <RootNamespace>Niveum.ExpressionManipulator</RootNamespace>
     <PackageId>ExpressionManipulator</PackageId>
     <Product>Niveum.ExpressionManipulator</Product>

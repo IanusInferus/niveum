@@ -1,6 +1,9 @@
 ﻿<Project>
   <PropertyGroup>
     <TargetFrameworks>net48</TargetFrameworks>
+	<LangVersion>10.0</LangVersion>
+	<ImplicitUsings>disable</ImplicitUsings>
+	<Nullable>disable</Nullable>
     <RootNamespace>TcpSendReceive</RootNamespace>
     <PackageId>TcpSendReceive</PackageId>
     <Product>Niveum.TcpSendReceive</Product>

@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <Reference Include="Niveum.Json">
-      <HintPath>..\..\..\..\..\Bin\Niveum.Json.dll</HintPath>
+      <HintPath>..\..\..\..\..\Bin\net48\Niveum.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
 

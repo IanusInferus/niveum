@@ -41,13 +41,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Firefly.Lite">
-      <HintPath>..\..\..\..\Bin\Firefly.Lite.dll</HintPath>
+      <HintPath>..\..\..\..\Bin\net48\Firefly.Lite.dll</HintPath>
     </Reference>
     <Reference Include="Niveum.Core">
-      <HintPath>..\..\..\..\Bin\Niveum.Core.dll</HintPath>
+      <HintPath>..\..\..\..\Bin\net48\Niveum.Core.dll</HintPath>
     </Reference>
     <Reference Include="Yuki.Relation">
-      <HintPath>..\..\..\..\Bin\Yuki.Relation.dll</HintPath>
+      <HintPath>..\..\..\..\Bin\net48\Yuki.Relation.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

@@ -1,8 +1,8 @@
-@PATH ..\..\Bin;%PATH%
+@PATH ..\..\Bin\net48;%PATH%
 
 :: C#
 @if not exist CSharp\Src @md CSharp\Src
-ExpressionManipulator.exe /loadtype:Schema /t2b:Assembly,CSharp\Bin\Assembly.bin /t2csbl:CSharp\Src\Calculation.cs,ExprCalc
+ExpressionManipulator.exe /loadtype:Schema /t2b:Assembly,CSharp\Bin\net48\Assembly.bin /t2csbl:CSharp\Src\Calculation.cs,ExprCalc
 
 :: C++2011
 @if not exist CPP\Src @md CPP\Src

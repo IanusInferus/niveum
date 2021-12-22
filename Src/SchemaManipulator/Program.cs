@@ -3,10 +3,12 @@
 //  File:        Program.cs
 //  Location:    Niveum.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2021.01.04.
+//  Version:     2021.12.22.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.CodeDom.Compiler;
@@ -631,9 +633,9 @@ namespace Niveum.SchemaManipulator
         }
 
         private static ObjectSchemaLoader osl = new ObjectSchemaLoader();
-        private static OS.ObjectSchemaLoaderResult oslr = null;
-        private static Assembly osa = null;
-        private static TreeBinaryConverter tbc = null;
+        private static OS.ObjectSchemaLoaderResult? oslr = null;
+        private static Assembly? osa = null;
+        private static TreeBinaryConverter? tbc = null;
         private static HashSet<String> AsyncCommands = new HashSet<String>();
         private static bool AsyncAll = false;
         private static OS.ObjectSchemaLoaderResult GetObjectSchemaLoaderResult()

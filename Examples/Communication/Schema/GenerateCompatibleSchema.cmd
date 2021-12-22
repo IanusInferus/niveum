@@ -7,7 +7,7 @@
     @set SUB_NO_PAUSE_SYMBOL=1
 )
 
-@PATH %CD%\..\..\..\Bin;%PATH%
+@PATH %CD%\..\..\..\Bin\net48;%PATH%
 
 @set SchemaDirs=
 @for /D %%a in (Previous\*) do @(

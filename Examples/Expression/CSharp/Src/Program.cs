@@ -505,13 +505,13 @@ namespace ExprCalc
                             {
                                 vc.TryRemove(Identifier, o.ParameterTypes);
                                 String t;
-                                if (o.ParameterTypes == null)
+                                if (o.ParameterTypes.OnNone)
                                 {
                                     t = o.ReturnType.ToString();
                                 }
                                 else
                                 {
-                                    t = String.Join("->", o.ParameterTypes.Concat(new PrimitiveType[] { o.ReturnType }).Select(p => p.ToString()).ToArray());
+                                    t = String.Join("->", o.ParameterTypes.Value.Concat(new PrimitiveType[] { o.ReturnType }).Select(p => p.ToString()).ToArray());
                                 }
                                 Console.WriteLine(String.Format("{0}:{1} deleted.", Identifier, t));
                             }
