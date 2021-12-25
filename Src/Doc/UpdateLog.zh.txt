@@ -1,6 +1,8 @@
 ﻿2021.12.26
 Niveum.Core:
 改名为Niveum.Object。
+*:
+整理文档。
 
 2021.12.22
 Niveum.Expression:

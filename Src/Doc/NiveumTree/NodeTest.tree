@@ -1,0 +1,98 @@
+﻿SingleLineNode
+SingleLineNode //注释
+
+$String      //注释
+    内容
+     
+    
+   
+    内容
+    内容
+
+$String
+    内容
+
+    内容
+    内容
+
+$End
+
+$String
+$End
+
+$String
+
+//注释
+
+$Comment
+    注释
+
+$Comment //注释
+    注释
+$End
+
+$Comment
+
+MultiLineNode //注释
+    $String
+        内容
+
+    SingleLineNode 值
+
+$List Value //注释
+    Int 0
+    Double 1.1
+    String ABC
+    HexInt 0x123445
+    $Table IntList Int //注释
+        0
+        1
+        2
+
+Node
+    $List Int
+        0
+        1
+        2
+        3
+
+Node1 (Node2 (Node3) ((Node4))) (Node5 Node6) Node7
+
+$Table IntList Key Value Description //注释
+    Name0 0 Test
+    Name1 1 "123"
+    Name2 2 """"
+
+MultiLineNode //注释
+    $String
+        内容
+
+    $Table IntList Int //注释
+        0
+        1
+        2
+
+#Function //注释
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+$End
+
+#Function
+
+#Function (12) (((32)) "123") //注释
+
+Single #Function (12) (((32)) "123") //注释
+
+#TreeParameterFunction 1 2 3 //注释
+#TreeParameterFunction 1 2 3
+#TableParameterFunction 1 2 3 //注释
+#TableParameterFunction 1 2 3
+
+#TreeContentFunction
+    1 2 3
+    1 2 3
+
+#TableContentFunction
+    1 2 3
+    1 2 3
+
+EmptyNode $Empty
