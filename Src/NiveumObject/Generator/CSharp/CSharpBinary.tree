@@ -1,0 +1,1714 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        CSharpBinary.tree
+      Location:    Niveum.Object <Tree>
+      Description: 对象类型结构C#二进制通讯模板
+      Version:     2019.02.17.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Niveum.ObjectSchema.CSharpBinary
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+    Firefly
+
+#Template BinarySerializationServer Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
+    public sealed class BinarySerializationServer
+    {
+        private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>> ClientCommands;
+        private Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Task<Byte[]>>> AsyncClientCommands;
+
+        private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>
+        {
+            public Boolean Equals(KeyValuePair<TKey, TValue> x, KeyValuePair<TKey, TValue> y)
+            {
+                if (!x.Key.Equals(y.Key)) { return false; }
+                if (!x.Value.Equals(y.Value)) { return false; }
+                return true;
+            }
+
+            public int GetHashCode(KeyValuePair<TKey, TValue> obj)
+            {
+                var KeyHash = obj.Key.GetHashCode();
+                var ValueHash = obj.Value.GetHashCode();
+                return KeyHash ^ ((ValueHash << 9) | ((ValueHash >> (32 - 9)) & ((1 << 9) - 1)));
+            }
+        }
+
+        public BinarySerializationServer()
+        {
+            ClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, Byte[], Byte[]>>(new KeyValuePairEqualityComparer<String, UInt32>());
+            AsyncClientCommands = new Dictionary<KeyValuePair<String, UInt32>, Func<IApplicationServer, UInt8[], Task<UInt8[]>>>(new KeyValuePairEqualityComparer<String, UInt32>());
+            $$
+                foreach (var c in Commands)
+                {
+                    if (c.OnClientCommand)
+                    {
+                        var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                        var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        if (WithFirefly)
+                        {
+                            if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
+                            {
+                                ##
+                                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), async (s, p) => BinaryTranslator.Serialize(await s.[[${Name}]](BinaryTranslator.Deserialize<${RequestTypeString}>(p))));
+                            }
+                            else
+                            {
+                                ##
+                                    ClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), (s, p) => BinaryTranslator.Serialize(s.[[${Name}]](BinaryTranslator.Deserialize<${RequestTypeString}>(p))));
+                            }
+                        }
+                        else
+                        {
+                            if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
+                            {
+                                ##
+                                    AsyncClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), async (s, p) => BinaryTranslator.[[${ReplyName}ToBytes]](await s.[[${Name}]](BinaryTranslator.[[${RequestName}FromBytes]](p))));
+                            }
+                            else
+                            {
+                                ##
+                                    ClientCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), (s, p) => BinaryTranslator.[[${ReplyName}ToBytes]](s.[[${Name}]](BinaryTranslator.[[${RequestName}FromBytes]](p))));
+                            }
+                        }
+                    }
+                }
+        }
+
+        public UInt64 Hash
+        {
+            get
+            {
+                return 0x${Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)};
+            }
+        }
+
+        public Boolean HasCommand(String CommandName, UInt32 CommandHash)
+        {
+            return ClientCommands.ContainsKey(new KeyValuePair<String, UInt32>(CommandName, CommandHash));
+        }
+        public Boolean HasCommandAsync(String CommandName, UInt32 CommandHash)
+        {
+            return AsyncClientCommands.ContainsKey(new KeyValuePair<String, UInt32>(CommandName, CommandHash));
+        }
+
+        public Byte[] ExecuteCommand(IApplicationServer s, String CommandName, UInt32 CommandHash, Byte[] Parameters)
+        {
+            var cmd = ClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];
+            return cmd(s, Parameters);
+        }
+        public async Task<Byte[]> ExecuteCommandAsync(IApplicationServer s, String CommandName, UInt32 CommandHash, Byte[] Parameters)
+        {
+            var cmd = AsyncClientCommands[new KeyValuePair<String, UInt32>(CommandName, CommandHash)];
+            return await cmd(s, Parameters);
+        }
+    }
+    public sealed class BinarySerializationServerEventDispatcher
+    {
+        public BinarySerializationServerEventDispatcher(IApplicationServer s)
+        {
+            $$
+                foreach (var c in Commands)
+                {
+                    if (c.OnServerCommand)
+                    {
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        if (WithFirefly)
+                        {
+                            ##
+                                s.[[${Name}]] += e => OnServerEvent(${CommandNameString}, 0x${CommandHash}, BinaryTranslator.Serialize(e));
+                        }
+                        else
+                        {
+                            ##
+                                s.[[${Name}]] += e => OnServerEvent(${CommandNameString}, 0x${CommandHash}, BinaryTranslator.[[${EventName}ToBytes]](e));
+                        }
+                    }
+                }
+        }
+
+        public delegate void ServerEventDelegate(String CommandName, UInt32 CommandHash, Byte[] Parameters);
+        public event ServerEventDelegate ServerEvent;
+        private void OnServerEvent(String CommandName, UInt32 CommandHash, Byte[] Parameters)
+        {
+            if (ServerEvent != null) { ServerEvent(CommandName, CommandHash, Parameters); }
+        }
+    }
+
+#Template IBinarySender
+    public interface IBinarySender
+    {
+        void Send(String CommandName, UInt32 CommandHash, Byte[] Parameters, Action<Exception> OnError);
+    }
+
+#Template BinarySerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
+    public sealed class BinarySerializationClient
+    {
+        private class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>
+        {
+            public Boolean Equals(KeyValuePair<TKey, TValue> x, KeyValuePair<TKey, TValue> y)
+            {
+                if (!x.Key.Equals(y.Key)) { return false; }
+                if (!x.Value.Equals(y.Value)) { return false; }
+                return true;
+            }
+
+            public int GetHashCode(KeyValuePair<TKey, TValue> obj)
+            {
+                var KeyHash = obj.Key.GetHashCode();
+                var ValueHash = obj.Value.GetHashCode();
+                return KeyHash ^ ((ValueHash << 9) | ((ValueHash >> (32 - 9)) & ((1 << 9) - 1)));
+            }
+        }
+
+        private class ClientCommandTriple
+        {
+            public UInt32 Hash;
+            public Action<Byte[]> Callback;
+            public Action<Exception> OnError;
+        }
+        private class ApplicationClient : IApplicationClient
+        {
+            public IBinarySender s;
+            public Dictionary<String, Queue<ClientCommandTriple>> ClientCommandCallbacks;
+
+            public UInt64 Hash
+            {
+                get
+                {
+                    return 0x${Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)};
+                }
+            }
+
+            public void NotifyErrorCommand(String CommandName, String Message)
+            {
+                var q = ClientCommandCallbacks[CommandName];
+                var t = q.Dequeue();
+                t.OnError(new InvalidOperationException(Message));
+            }
+
+            private void AddCallback(String CommandName, UInt32 CommandHash, Action<Byte[]> Callback, Action<Exception> OnError)
+            {
+                if (ClientCommandCallbacks.ContainsKey(CommandName))
+                {
+                    ClientCommandCallbacks[CommandName].Enqueue(new ClientCommandTriple { Hash = CommandHash, Callback = Callback, OnError = OnError });
+                }
+                else
+                {
+                    var q = new Queue<ClientCommandTriple>();
+                    q.Enqueue(new ClientCommandTriple { Hash = CommandHash, Callback = Callback, OnError = OnError });
+                    ClientCommandCallbacks.Add(CommandName, q);
+                }
+            }
+
+            $$
+                foreach (var c in Commands)
+                {
+                    if (c.OnClientCommand)
+                    {
+                        var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                        var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        if (WithFirefly)
+                        {
+                            ##
+                                public Task<${ReplyTypeString}> [[${Name}]](${RequestTypeString} r)
+                                {
+                                    var Source = new TaskCompletionSource<${ReplyTypeString}>();
+                                    var Request = BinaryTranslator.Serialize(r);
+                                    AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Source.SetResult(BinaryTranslator.Deserialize<${ReplyTypeString}>(Parameters)), e => Source.SetException(e));
+                                    s.Send(${CommandNameString}, 0x${CommandHash}, Request, e => Source.SetException(e));
+                                    return Source.Task;
+                                }
+                        }
+                        else
+                        {
+                            ##
+                                public Task<${ReplyTypeString}> [[${Name}]](${RequestTypeString} r)
+                                {
+                                    var Source = new TaskCompletionSource<${ReplyTypeString}>();
+                                    var Request = BinaryTranslator.[[${RequestName}ToBytes]](r);
+                                    AddCallback(${CommandNameString}, 0x${CommandHash}, Parameters => Source.SetResult(BinaryTranslator.[[${ReplyName}FromBytes]](Parameters)), e => Source.SetException(e));
+                                    s.Send(${CommandNameString}, 0x${CommandHash}, Request, e => Source.SetException(e));
+                                    return Source.Task;
+                                }
+                        }
+                    }
+                    else if (c.OnServerCommand)
+                    {
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                        var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        ##
+                            public event Action<${EventTypeString}> [[${Name}]];
+                            public void [[Raise${Name}]](${EventTypeString} e) { if ([[${Name}]] != null) { [[${Name}]](e); } }
+                    }
+                }
+        }
+
+        private ApplicationClient c;
+        private Dictionary<KeyValuePair<String, UInt32>, Action<Byte[]>> ServerCommands;
+
+        public BinarySerializationClient(IBinarySender s)
+        {
+            c = new ApplicationClient();
+            c.s = s;
+            c.ClientCommandCallbacks = new Dictionary<String, Queue<ClientCommandTriple>>();
+            ServerCommands = new Dictionary<KeyValuePair<String, UInt32>, Action<Byte[]>>(new KeyValuePairEqualityComparer<String, UInt32>());
+            $$
+                foreach (var c in Commands)
+                {
+                    if (c.OnServerCommand)
+                    {
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        if (WithFirefly)
+                        {
+                            ##
+                                ServerCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), Parameters => c.[[Raise${Name}]](BinaryTranslator.Deserialize<${EventTypeString}>(Parameters)));
+                        }
+                        else
+                        {
+                            ##
+                                ServerCommands.Add(new KeyValuePair<String, UInt32>(${CommandNameString}, 0x${CommandHash}), Parameters => c.[[Raise${Name}]](BinaryTranslator.[[${EventName}FromBytes]](Parameters)));
+                        }
+                    }
+                }
+        }
+
+        public IApplicationClient GetApplicationClient()
+        {
+            return c;
+        }
+
+        public void HandleResult(String CommandName, UInt32 CommandHash, Byte[] Parameters)
+        {
+            if (c.ClientCommandCallbacks.ContainsKey(CommandName))
+            {
+                var q = c.ClientCommandCallbacks[CommandName];
+                if (q.Count == 0)
+                {
+                    throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
+                }
+                var t = q.Peek();
+                if (t.Hash != CommandHash)
+                {
+                    throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
+                }
+                q.Dequeue();
+                var Callback = t.Callback;
+                Callback(Parameters);
+                return;
+            }
+
+            var p = new KeyValuePair<String, UInt32>(CommandName, CommandHash);
+            if (ServerCommands.ContainsKey(p))
+            {
+                var a = ServerCommands[p];
+                a(Parameters);
+                return;
+            }
+
+            throw new InvalidOperationException(CommandName + "@" + CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture));
+        }
+    }
+
+#Template Streams
+    public interface IReadableStream : IDisposable
+    {
+        Byte ReadByte();
+        Byte[] ReadBytes(int Size);
+    }
+    public interface IWritableStream : IDisposable
+    {
+        void WriteByte(Byte b);
+        void WriteBytes(Byte[] Buffer);
+    }
+
+    public static class ReadStream
+    {
+        public static Unit ReadUnit(IReadableStream s)
+        {
+            return new Unit();
+        }
+        public static Boolean ReadBoolean(IReadableStream s)
+        {
+            return s.ReadByte() != 0;
+        }
+        public static Byte ReadByte(IReadableStream s)
+        {
+            return s.ReadByte();
+        }
+
+        public static Byte ReadUInt8(IReadableStream s)
+        {
+            return s.ReadByte();
+        }
+        public static UInt16 ReadUInt16(IReadableStream s)
+        {
+            UInt16 o;
+            o = (UInt16)((UInt16)(s.ReadByte()) & (UInt16)(0xFF));
+            o = (UInt16)(o | (((UInt16)(s.ReadByte()) & 0xFF) << 8));
+            return o;
+        }
+        public static UInt32 ReadUInt32(IReadableStream s)
+        {
+            UInt32 o;
+            o = (UInt32)(s.ReadByte()) & 0xFF;
+            o = o | (((UInt32)(s.ReadByte()) & 0xFF) << 8);
+            o = o | (((UInt32)(s.ReadByte()) & 0xFF) << 16);
+            o = o | (((UInt32)(s.ReadByte()) & 0xFF) << 24);
+            return o;
+        }
+        public static UInt64 ReadUInt64(IReadableStream s)
+        {
+            UInt64 o;
+            o = (UInt64)(s.ReadByte()) & 0xFF;
+            o = o | (((UInt64)(s.ReadByte()) & 0xFF) << 8);
+            o = o | (((UInt64)(s.ReadByte()) & 0xFF) << 16);
+            o = o | (((UInt64)(s.ReadByte()) & 0xFF) << 24);
+            o = o | (((UInt64)(s.ReadByte()) & 0xFF) << 32);
+            o = o | (((UInt64)(s.ReadByte()) & 0xFF) << 40);
+            o = o | (((UInt64)(s.ReadByte()) & 0xFF) << 48);
+            o = o | (((UInt64)(s.ReadByte()) & 0xFF) << 56);
+            return o;
+        }
+        public static SByte ReadInt8(IReadableStream s)
+        {
+            return unchecked((SByte)(s.ReadByte()));
+        }
+        public static Int16 ReadInt16(IReadableStream s)
+        {
+            Int16 o;
+            o = (Int16)((Int16)(s.ReadByte()) & (Int16)(0xFF));
+            o = (Int16)(o | (Int16)(((Int16)(s.ReadByte()) & 0xFF) << 8));
+            return o;
+        }
+        public static Int32 ReadInt32(IReadableStream s)
+        {
+            Int32 o;
+            o = (Int32)(s.ReadByte()) & 0xFF;
+            o = o | (((Int32)(s.ReadByte()) & 0xFF) << 8);
+            o = o | (((Int32)(s.ReadByte()) & 0xFF) << 16);
+            o = o | (((Int32)(s.ReadByte()) & 0xFF) << 24);
+            return o;
+        }
+        public static Int64 ReadInt64(IReadableStream s)
+        {
+            Int64 o;
+            o = (Int64)(s.ReadByte()) & 0xFF;
+            o = o | (((Int64)(s.ReadByte()) & 0xFF) << 8);
+            o = o | (((Int64)(s.ReadByte()) & 0xFF) << 16);
+            o = o | (((Int64)(s.ReadByte()) & 0xFF) << 24);
+            o = o | (((Int64)(s.ReadByte()) & 0xFF) << 32);
+            o = o | (((Int64)(s.ReadByte()) & 0xFF) << 40);
+            o = o | (((Int64)(s.ReadByte()) & 0xFF) << 48);
+            o = o | (((Int64)(s.ReadByte()) & 0xFF) << 56);
+            return o;
+        }
+
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+        private struct FloatInt32
+        {
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public Single Float32Value;
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public Int32 Int32Value;
+        }
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+        private struct FloatInt64
+        {
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public Double Float64Value;
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public Int64 Int64Value;
+        }
+        public static Single ReadFloat32(IReadableStream s)
+        {
+            var fi = new FloatInt32();
+            fi.Int32Value = ReadInt32(s);
+            return fi.Float32Value;
+        }
+        public static Double ReadFloat64(IReadableStream s)
+        {
+            var fi = new FloatInt64();
+            fi.Int64Value = ReadInt64(s);
+            return fi.Float64Value;
+        }
+
+        public static String ReadString(IReadableStream s)
+        {
+            var Length = ReadInt32(s);
+            var n = (int)(Length);
+            var Bytes = new List<Byte>();
+            for (int k = 0; k < n; k += 1)
+            {
+                Bytes.Add(s.ReadByte());
+            }
+            return System.Text.Encoding.Unicode.GetString(Bytes.ToArray());
+        }
+    }
+
+    public static class WriteStream
+    {
+        public static void WriteUnit(IWritableStream s, Unit v)
+        {
+        }
+        public static void WriteBoolean(IWritableStream s, Boolean v)
+        {
+            if (v)
+            {
+                s.WriteByte(0xFF);
+            }
+            else
+            {
+                s.WriteByte(0);
+            }
+        }
+        public static void WriteByte(IWritableStream s, Byte v)
+        {
+            s.WriteByte(v);
+        }
+
+        public static void WriteUInt8(IWritableStream s, Byte v)
+        {
+            s.WriteByte(v);
+        }
+        public static void WriteUInt16(IWritableStream s, UInt16 v)
+        {
+            s.WriteByte((Byte)(v & 0xFF));
+            s.WriteByte((Byte)((v >> 8) & 0xFF));
+        }
+        public static void WriteUInt32(IWritableStream s, UInt32 v)
+        {
+            s.WriteByte((Byte)(v & 0xFF));
+            s.WriteByte((Byte)((v >> 8) & 0xFF));
+            s.WriteByte((Byte)((v >> 16) & 0xFF));
+            s.WriteByte((Byte)((v >> 24) & 0xFF));
+        }
+        public static void WriteUInt64(IWritableStream s, UInt64 v)
+        {
+            s.WriteByte((Byte)(v & 0xFF));
+            s.WriteByte((Byte)((v >> 8) & 0xFF));
+            s.WriteByte((Byte)((v >> 16) & 0xFF));
+            s.WriteByte((Byte)((v >> 24) & 0xFF));
+            s.WriteByte((Byte)((v >> 32) & 0xFF));
+            s.WriteByte((Byte)((v >> 40) & 0xFF));
+            s.WriteByte((Byte)((v >> 48) & 0xFF));
+            s.WriteByte((Byte)((v >> 56) & 0xFF));
+        }
+        public static void WriteInt8(IWritableStream s, SByte v)
+        {
+            s.WriteByte(unchecked((Byte)(v)));
+        }
+        public static void WriteInt16(IWritableStream s, Int16 v)
+        {
+            s.WriteByte((Byte)(v & 0xFF));
+            s.WriteByte((Byte)((v >> 8) & 0xFF));
+        }
+        public static void WriteInt32(IWritableStream s, Int32 v)
+        {
+            s.WriteByte((Byte)(v & 0xFF));
+            s.WriteByte((Byte)((v >> 8) & 0xFF));
+            s.WriteByte((Byte)((v >> 16) & 0xFF));
+            s.WriteByte((Byte)((v >> 24) & 0xFF));
+        }
+        public static void WriteInt64(IWritableStream s, Int64 v)
+        {
+            s.WriteByte((Byte)(v & 0xFF));
+            s.WriteByte((Byte)((v >> 8) & 0xFF));
+            s.WriteByte((Byte)((v >> 16) & 0xFF));
+            s.WriteByte((Byte)((v >> 24) & 0xFF));
+            s.WriteByte((Byte)((v >> 32) & 0xFF));
+            s.WriteByte((Byte)((v >> 40) & 0xFF));
+            s.WriteByte((Byte)((v >> 48) & 0xFF));
+            s.WriteByte((Byte)((v >> 56) & 0xFF));
+        }
+
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+        private struct FloatInt32
+        {
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public Single Float32Value;
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public Int32 Int32Value;
+        }
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+        private struct FloatInt64
+        {
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public Double Float64Value;
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public Int64 Int64Value;
+        }
+        public static void WriteFloat32(IWritableStream s, Single v)
+        {
+            var fi = new FloatInt32();
+            fi.Float32Value = v;
+            WriteInt32(s, fi.Int32Value);
+        }
+        public static void WriteFloat64(IWritableStream s, Double v)
+        {
+            var fi = new FloatInt64();
+            fi.Float64Value = v;
+            WriteInt64(s, fi.Int64Value);
+        }
+
+        public static void WriteString(IWritableStream s, String v)
+        {
+            var Bytes = System.Text.Encoding.Unicode.GetBytes(v);
+            WriteInt32(s, (Int32)(Bytes.Length));
+            foreach (var b in Bytes)
+            {
+                s.WriteByte(b);
+            }
+        }
+    }
+
+    public interface IReadableWritableStream : IReadableStream, IWritableStream
+    {
+    }
+
+    public sealed class ByteArrayStream : IReadableWritableStream
+    {
+        private List<Byte> Buffer;
+        public int Position { get; set; }
+
+        public ByteArrayStream()
+        {
+            Buffer = new List<Byte>();
+            Position = 0;
+        }
+        public void Dispose()
+        {
+        }
+
+        public Byte ReadByte()
+        {
+            if (Position + 1 > Buffer.Count) { throw new IndexOutOfRangeException(); }
+            var b = Buffer[Position];
+            Position += 1;
+            return b;
+        }
+        public Byte[] ReadBytes(int Size)
+        {
+            if (Position + Size > Buffer.Count) { throw new IndexOutOfRangeException(); }
+            var l = new Byte[Size];
+            if (Size == 0) { return l; }
+            Buffer.CopyTo(Position, l, 0, Size);
+            Position += Size;
+            return l;
+        }
+
+        public void WriteByte(Byte b)
+        {
+            if (Position + 1 > Buffer.Count) { SetLength(Position + 1); }
+            Buffer[Position] = b;
+            Position += 1;
+        }
+        public void WriteBytes(Byte[] l)
+        {
+            var Size = l.Length;
+            if (Size == 0) { return; }
+            if (Position + Size > Buffer.Count) { SetLength(Position + Size); }
+            for (var k = 0; k < Size; k += 1)
+            {
+                Buffer[Position + k] = l[k];
+            }
+            Position += Size;
+        }
+
+        public int Length
+        {
+            get
+            {
+                return Buffer.Count;
+            }
+        }
+
+        public void SetLength(int Length)
+        {
+            if (Buffer.Count < Length)
+            {
+                var Diff = Length - Buffer.Count;
+                for (var k = 0; k < Diff; k += 1)
+                {
+                    Buffer.Add(0);
+                }
+            }
+            else
+            {
+                Buffer.RemoveRange(Length, Buffer.Count - Length);
+            }
+        }
+    }
+
+#Template BinaryTranslator Schema:Schema NamespaceName:String
+    public static class BinaryTranslator
+    {
+        $$
+            if (WithFirefly)
+            {
+                ##
+                    private static Object Lockee = new Object();
+                    private static LinkedList<BinarySerializer> bsl = new LinkedList<BinarySerializer>();
+                    private static BinarySerializer CreateNewSerializer()
+                    {
+                        var s = new BinarySerializer();
+                        var st = new StringTranslator();
+                        s.PutReaderTranslator(st);
+                        s.PutWriterTranslator(st);
+                        s.PutCounterTranslator(st);
+                        return s;
+                    }
+
+                    public static Byte[] Serialize<T>(T Value)
+                    {
+                        BinarySerializer bs;
+                        lock (Lockee)
+                        {
+                            if (bsl.Count > 0)
+                            {
+                                bs = bsl.Last.Value;
+                                bsl.RemoveLast();
+                            }
+                            else
+                            {
+                                bs = CreateNewSerializer();
+                            }
+                        }
+                        try
+                        {
+                            using (var s = Streams.CreateMemoryStream())
+                            {
+                                bs.Write<T>(Value, s);
+                                s.Position = 0;
+                                return s.Read((int)(s.Length));
+                            }
+                        }
+                        finally
+                        {
+                            lock (Lockee)
+                            {
+                                bsl.AddLast(bs);
+                            }
+                        }
+                    }
+                    public static T Deserialize<T>(Byte[] Bytes)
+                    {
+                        BinarySerializer bs;
+                        lock (Lockee)
+                        {
+                            if (bsl.Count > 0)
+                            {
+                                bs = bsl.Last.Value;
+                                bsl.RemoveLast();
+                            }
+                            else
+                            {
+                                bs = CreateNewSerializer();
+                            }
+                        }
+                        try
+                        {
+                            using (var s = new ByteArrayStream(Bytes))
+                            {
+                                return bs.Read<T>(s);
+                            }
+                        }
+                        finally
+                        {
+                            lock (Lockee)
+                            {
+                                bsl.AddLast(bs);
+                            }
+                        }
+                    }
+
+                    private class StringTranslator : IProjectorToProjectorDomainTranslator<String, Byte[]>, IProjectorToProjectorRangeTranslator<String, Byte[]>
+                    {
+                        public Func<String, R> TranslateProjectorToProjectorDomain<R>(Func<Byte[], R> Projector)
+                        {
+                            return s => Projector(TextEncoding.UTF16.GetBytes(s));
+                        }
+
+                        public Func<D, String> TranslateProjectorToProjectorRange<D>(Func<D, Byte[]> Projector)
+                        {
+                            return k => TextEncoding.UTF16.GetString(Projector(k));
+                        }
+                    }
+            }
+            else
+            {
+                ##
+                    ${GetBinaryTranslatorSerializers(Schema, NamespaceName)}
+            }
+    }
+
+#Template BinaryTranslator_Primitive_Unit
+    public static Unit UnitFromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadUnit(s);
+    }
+    public static void UnitToBinary(IWritableStream s, Unit v)
+    {
+        WriteStream.WriteUnit(s, v);
+    }
+    public static Unit UnitFromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return UnitFromBinary(bas);
+        }
+    }
+    public static Byte[] UnitToBytes(Unit v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            UnitToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_Boolean
+    public static Boolean BooleanFromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadBoolean(s);
+    }
+    public static void BooleanToBinary(IWritableStream s, Boolean v)
+    {
+        WriteStream.WriteBoolean(s, v);
+    }
+    public static Boolean BooleanFromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return BooleanFromBinary(bas);
+        }
+    }
+    public static Byte[] BooleanToBytes(Boolean v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            BooleanToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_String
+    public static String StringFromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadString(s);
+    }
+    public static void StringToBinary(IWritableStream s, String v)
+    {
+        WriteStream.WriteString(s, v);
+    }
+    public static String StringFromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return StringFromBinary(bas);
+        }
+    }
+    public static Byte[] StringToBytes(String v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            StringToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_Int
+    public static Int IntFromBinary(IReadableStream s)
+    {
+        return (Int)(ReadStream.ReadInt32(s));
+    }
+    public static void IntToBinary(IWritableStream s, Int v)
+    {
+        WriteStream.WriteInt32(s, (Int32)(v));
+    }
+    public static Int IntFromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return IntFromBinary(bas);
+        }
+    }
+    public static Byte[] IntToBytes(Int v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            IntToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_Real
+    public static Real RealFromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadFloat64(s);
+    }
+    public static void RealToBinary(IWritableStream s, Real v)
+    {
+        WriteStream.WriteFloat64(s, v);
+    }
+    public static Real RealFromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return RealFromBinary(bas);
+        }
+    }
+    public static Byte[] RealToBytes(Real v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            RealToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_Byte
+    public static Byte ByteFromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadByte(s);
+    }
+    public static void ByteToBinary(IWritableStream s, Byte v)
+    {
+        WriteStream.WriteByte(s, v);
+    }
+    public static Byte ByteFromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return ByteFromBinary(bas);
+        }
+    }
+    public static Byte[] ByteToBytes(Byte v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            ByteToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_UInt8
+    public static UInt8 UInt8FromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadUInt8(s);
+    }
+    public static void UInt8ToBinary(IWritableStream s, UInt8 v)
+    {
+        WriteStream.WriteUInt8(s, v);
+    }
+    public static UInt8 UInt8FromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return UInt8FromBinary(bas);
+        }
+    }
+    public static Byte[] UInt8ToBytes(UInt8 v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            UInt8ToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_UInt16
+    public static UInt16 UInt16FromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadUInt16(s);
+    }
+    public static void UInt16ToBinary(IWritableStream s, UInt16 v)
+    {
+        WriteStream.WriteUInt16(s, v);
+    }
+    public static UInt16 UInt16FromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return UInt16FromBinary(bas);
+        }
+    }
+    public static Byte[] UInt16ToBytes(UInt16 v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            UInt16ToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_UInt32
+    public static UInt32 UInt32FromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadUInt32(s);
+    }
+    public static void UInt32ToBinary(IWritableStream s, UInt32 v)
+    {
+        WriteStream.WriteUInt32(s, v);
+    }
+    public static UInt32 UInt32FromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return UInt32FromBinary(bas);
+        }
+    }
+    public static Byte[] UInt32ToBytes(UInt32 v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            UInt32ToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_UInt64
+    public static UInt64 UInt64FromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadUInt64(s);
+    }
+    public static void UInt64ToBinary(IWritableStream s, UInt64 v)
+    {
+        WriteStream.WriteUInt64(s, v);
+    }
+    public static UInt64 UInt64FromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return UInt64FromBinary(bas);
+        }
+    }
+    public static Byte[] UInt64ToBytes(UInt64 v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            UInt64ToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_Int8
+    public static Int8 Int8FromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadInt8(s);
+    }
+    public static void Int8ToBinary(IWritableStream s, Int8 v)
+    {
+        WriteStream.WriteInt8(s, v);
+    }
+    public static Int8 Int8FromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return Int8FromBinary(bas);
+        }
+    }
+    public static Byte[] Int8ToBytes(Int8 v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            Int8ToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_Int16
+    public static Int16 Int16FromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadInt16(s);
+    }
+    public static void Int16ToBinary(IWritableStream s, Int16 v)
+    {
+        WriteStream.WriteInt16(s, v);
+    }
+    public static Int16 Int16FromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return Int16FromBinary(bas);
+        }
+    }
+    public static Byte[] Int16ToBytes(Int16 v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            Int16ToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_Int32
+    public static Int32 Int32FromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadInt32(s);
+    }
+    public static void Int32ToBinary(IWritableStream s, Int32 v)
+    {
+        WriteStream.WriteInt32(s, v);
+    }
+    public static Int32 Int32FromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return Int32FromBinary(bas);
+        }
+    }
+    public static Byte[] Int32ToBytes(Int32 v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            Int32ToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_Int64
+    public static Int64 Int64FromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadInt64(s);
+    }
+    public static void Int64ToBinary(IWritableStream s, Int64 v)
+    {
+        WriteStream.WriteInt64(s, v);
+    }
+    public static Int64 Int64FromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return Int64FromBinary(bas);
+        }
+    }
+    public static Byte[] Int64ToBytes(Int64 v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            Int64ToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_Float32
+    public static Float32 Float32FromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadFloat32(s);
+    }
+    public static void Float32ToBinary(IWritableStream s, Float32 v)
+    {
+        WriteStream.WriteFloat32(s, v);
+    }
+    public static Float32 Float32FromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return Float32FromBinary(bas);
+        }
+    }
+    public static Byte[] Float32ToBytes(Float32 v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            Float32ToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_Float64
+    public static Float64 Float64FromBinary(IReadableStream s)
+    {
+        return ReadStream.ReadFloat64(s);
+    }
+    public static void Float64ToBinary(IWritableStream s, Float64 v)
+    {
+        WriteStream.WriteFloat64(s, v);
+    }
+    public static Float64 Float64FromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return Float64FromBinary(bas);
+        }
+    }
+    public static Byte[] Float64ToBytes(Float64 v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            Float64ToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Primitive_Type
+    public static Type TypeFromBinary(IReadableStream s)
+    {
+        throw new NotSupportedException();
+    }
+    public static void TypeToBinary(IWritableStream s, Type v)
+    {
+        throw new NotSupportedException();
+    }
+    public static Type TypeFromBytes(Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return TypeFromBinary(bas);
+        }
+    }
+    public static Byte[] TypeToBytes(Type v)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            TypeToBinary(bas, v);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Alias a:AliasDef NamespaceName:String
+    $$
+        var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
+        var Name = a.GetTypeSpec().SimpleName(NamespaceName);
+        var ValueSimpleName = a.Type.SimpleName(NamespaceName);
+    public static ${TypeString} [[${Name}FromBinary]](IReadableStream s)
+    {
+        var o = new ${TypeString}();
+        o.Value = [[${ValueSimpleName}FromBinary]](s);
+        return o;
+    }
+    public static void [[${Name}ToBinary]](IWritableStream s, ${TypeString} o)
+    {
+        [[${ValueSimpleName}ToBinary]](s, o.Value);
+    }
+    public static ${TypeString} [[${Name}FromBytes]](Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return [[${Name}FromBinary]](bas);
+        }
+    }
+    public static Byte[] [[${Name}ToBytes]](${TypeString} o)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            [[${Name}ToBinary]](bas, o);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Record r:RecordDef NamespaceName:String
+    ${BinaryTranslator_Record(r.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(r.GetTypeSpec(), NamespaceName), r.Fields, NamespaceName)}
+
+#Template BinaryTranslator_Record Name:String TypeString:String Fields:List<VariableDef> NamespaceName:String
+    public static ${TypeString} [[${Name}FromBinary]](IReadableStream s)
+    {
+        var o = new ${TypeString}();
+        $$
+            foreach (var f in Fields)
+            {
+                ##
+                    o.[[${f.Name}]] = [[${f.Type.SimpleName(NamespaceName)}FromBinary]](s);
+            }
+        return o;
+    }
+    public static void [[${Name}ToBinary]](IWritableStream s, ${TypeString} o)
+    {
+        $$
+            foreach (var f in Fields)
+            {
+                ##
+                    [[${f.Type.SimpleName(NamespaceName)}ToBinary]](s, o.[[${f.Name}]]);
+            }
+    }
+    public static ${TypeString} [[${Name}FromBytes]](Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return [[${Name}FromBinary]](bas);
+        }
+    }
+    public static Byte[] [[${Name}ToBytes]](${TypeString} o)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            [[${Name}ToBinary]](bas, o);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_TaggedUnion tu:TaggedUnionDef NamespaceName:String
+    ${BinaryTranslator_TaggedUnion(tu.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(tu.GetTypeSpec(), NamespaceName), GetSuffixedTypeName(tu.Name, tu.Version, "Tag", NamespaceName), GetSuffixedTypeString(tu.Name, tu.Version, "Tag", NamespaceName), tu.Alternatives, NamespaceName)}
+
+#Template BinaryTranslator_TaggedUnion Name:String TypeString:String TagName:String TagTypeString:String Alternatives:List<VariableDef> NamespaceName:String
+    ${BinaryTranslator_Enum(TagName, TagTypeString, "Int", "Int", NamespaceName)}
+    public static ${TypeString} [[${Name}FromBinary]](IReadableStream s)
+    {
+        var o = new ${TypeString}();
+        o._Tag = [[${TagName}FromBinary]](s);
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    if (o._Tag == ${TagTypeString}.[[${a.Name}]])
+                    {
+                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
+                        return o;
+                    }
+            }
+        throw new InvalidOperationException();
+    }
+    public static void [[${Name}ToBinary]](IWritableStream s, ${TypeString} o)
+    {
+        [[${TagName}ToBinary]](s, o._Tag);
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    if (o._Tag == ${TagTypeString}.[[${a.Name}]])
+                    {
+                        [[${a.Type.SimpleName(NamespaceName)}ToBinary]](s, o.[[${a.Name}]]);
+                        return;
+                    }
+            }
+        throw new InvalidOperationException();
+    }
+    public static ${TypeString} [[${Name}FromBytes]](Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return [[${Name}FromBinary]](bas);
+        }
+    }
+    public static Byte[] [[${Name}ToBytes]](${TypeString} o)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            [[${Name}ToBinary]](bas, o);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Enum e:EnumDef NamespaceName:String
+    ${BinaryTranslator_Enum(e.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(e.GetTypeSpec(), NamespaceName), e.UnderlyingType.SimpleName(NamespaceName), GetTypeString(e.UnderlyingType, NamespaceName), NamespaceName)}
+
+#Template BinaryTranslator_Enum Name:String TypeString:String UnderlyingSimpleName:String UnderlyingType:String NamespaceName:String
+    public static ${TypeString} [[${Name}FromBinary]](IReadableStream s)
+    {
+        return (${TypeString})([[${UnderlyingSimpleName}FromBinary]](s));
+    }
+    public static void [[${Name}ToBinary]](IWritableStream s, ${TypeString} o)
+    {
+        [[${UnderlyingSimpleName}ToBinary]](s, (${UnderlyingType})(o));
+    }
+    public static ${TypeString} [[${Name}FromBytes]](Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return [[${Name}FromBinary]](bas);
+        }
+    }
+    public static Byte[] [[${Name}ToBytes]](${TypeString} o)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            [[${Name}ToBinary]](bas, o);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_ClientCommand c:ClientCommandDef NamespaceName:String
+    ${BinaryTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Request", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Request", NamespaceName), c.OutParameters, NamespaceName)}
+    ${BinaryTranslator_TaggedUnion(GetSuffixedTypeName(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeName(c.Name, c.Version, "ReplyTag", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "ReplyTag", NamespaceName), c.InParameters, NamespaceName)}
+
+#Template BinaryTranslator_ServerCommand c:ServerCommandDef NamespaceName:String
+    ${BinaryTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName), c.OutParameters, NamespaceName)}
+
+#Template BinaryTranslator_Tuple tp:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = tp.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(tp, NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
+    {
+        $$
+            var ItemNames = new List<String>{};
+            {
+                int k = 0;
+                foreach (var t in tp.Tuple)
+                {
+                    ##
+                        var [[Item${k + 1}]] = [[${t.SimpleName(NamespaceName)}FromBinary]](s);
+                    ItemNames.Add("Item" + (k + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    k += 1;
+                }
+            }
+        return Tuple.Create(${String.Join(", ", ItemNames)});
+    }
+    public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} t)
+    {
+        $$
+            {
+                int k = 0;
+                foreach (var t in tp.Tuple)
+                {
+                    ##
+                        [[${t.SimpleName(NamespaceName)}ToBinary]](s, t.[[Item${k + 1}]]);
+                    k += 1;
+                }
+            }
+    }
+    public static ${TypeString} [[${SimpleName}FromBytes]](Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return [[${SimpleName}FromBinary]](bas);
+        }
+    }
+    public static Byte[] [[${SimpleName}ToBytes]](${TypeString} o)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            [[${SimpleName}ToBinary]](bas, o);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Optional o:TypeSpec GenericOptionalType:TaggedUnionDef NamespaceName:String
+    $$
+        var ElementType = o.GenericTypeSpec.ParameterValues.Single();
+        var Alternatives = GenericOptionalType.Alternatives.Select(a => new VariableDef { Name = a.Name, Type = a.Type.OnGenericParameterRef ? ElementType : a.Type, Attributes = a.Attributes, Description = a.Description }).ToList();
+        var SimpleName = o.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(o, NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
+    {
+        var o = new ${TypeString}();
+        o._Tag = OptionalTagFromBinary(s);
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    if (o._Tag == OptionalTag.[[${a.Name}]])
+                    {
+                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
+                        return o;
+                    }
+            }
+        throw new InvalidOperationException();
+    }
+    public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} o)
+    {
+        OptionalTagToBinary(s, o._Tag);
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    if (o._Tag == OptionalTag.[[${a.Name}]])
+                    {
+                        [[${a.Type.SimpleName(NamespaceName)}ToBinary]](s, o.[[${a.Name}]]);
+                        return;
+                    }
+            }
+        throw new InvalidOperationException();
+    }
+    public static ${TypeString} [[${SimpleName}FromBytes]](Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return [[${SimpleName}FromBinary]](bas);
+        }
+    }
+    public static Byte[] [[${SimpleName}ToBytes]](${TypeString} o)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            [[${SimpleName}ToBinary]](bas, o);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_List l:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementType = l.GenericTypeSpec.ParameterValues.Single();
+        var ElementSimpleName = ElementType.SimpleName(NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
+    {
+        int Length = (int)(IntFromBinary(s));
+        $$
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
+            {
+                ##
+                    var l = new List<Byte>(s.ReadBytes(Length));
+            }
+            else
+            {
+                ##
+                    var l = new ${TypeString}(Length);
+                    for (int k = 0; k < Length; k += 1)
+                    {
+                        l.Add([[${ElementSimpleName}FromBinary]](s));
+                    }
+            }
+        return l;
+    }
+    public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
+    {
+        int Length = l.Count;
+        IntToBinary(s, (Int)(Length));
+        $$
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
+            {
+                ##
+                    s.WriteBytes(l.ToArray());
+            }
+            else
+            {
+                ##
+                    foreach (var e in l)
+                    {
+                        [[${ElementSimpleName}ToBinary]](s, e);
+                    }
+            }
+    }
+    public static ${TypeString} [[${SimpleName}FromBytes]](Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return [[${SimpleName}FromBinary]](bas);
+        }
+    }
+    public static Byte[] [[${SimpleName}ToBytes]](${TypeString} o)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            [[${SimpleName}ToBinary]](bas, o);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Set l:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementTypeString = GetTypeString(l.GenericTypeSpec.ParameterValues.Single(), NamespaceName);
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
+    {
+        int Length = (int)(IntFromBinary(s));
+        var l = new List<${ElementTypeString}>(Length);
+        for (int k = 0; k < Length; k += 1)
+        {
+            l.Add([[${ElementSimpleName}FromBinary]](s));
+        }
+        return new ${TypeString}(l);
+    }
+    public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
+    {
+        int Length = l.Count;
+        IntToBinary(s, (Int)(Length));
+        foreach (var e in l)
+        {
+            [[${ElementSimpleName}ToBinary]](s, e);
+        }
+    }
+    public static ${TypeString} [[${SimpleName}FromBytes]](Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return [[${SimpleName}FromBinary]](bas);
+        }
+    }
+    public static Byte[] [[${SimpleName}ToBytes]](${TypeString} o)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            [[${SimpleName}ToBinary]](bas, o);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template BinaryTranslator_Map l:TypeSpec NamespaceName:String
+    $$
+        var gp = l.GenericTypeSpec.ParameterValues;
+        if (gp.Count != 2)
+        {
+            throw new ArgumentException();
+        }
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var KeySimpleName = gp[0].SimpleName(NamespaceName);
+        var ValueSimpleName = gp[1].SimpleName(NamespaceName);
+    public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
+    {
+        int Length = (Int)(IntFromBinary(s));
+        var l = new ${TypeString}(Length);
+        for (int k = 0; k < Length; k += 1)
+        {
+            var Key = [[${KeySimpleName}FromBinary]](s);
+            l.Add(Key, [[${ValueSimpleName}FromBinary]](s));
+        }
+        return l;
+    }
+    public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
+    {
+        int Length = l.Count;
+        IntToBinary(s, (Int)(Length));
+        foreach (var p in l)
+        {
+            [[${KeySimpleName}ToBinary]](s, p.Key);
+            [[${ValueSimpleName}ToBinary]](s, p.Value);
+        }
+    }
+    public static ${TypeString} [[${SimpleName}FromBytes]](Byte[] Bytes)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            bas.WriteBytes(Bytes);
+            bas.Position = 0;
+            return [[${SimpleName}FromBinary]](bas);
+        }
+    }
+    public static Byte[] [[${SimpleName}ToBytes]](${TypeString} o)
+    {
+        using (var bas = new ByteArrayStream())
+        {
+            [[${SimpleName}ToBinary]](bas, o);
+            bas.Position = 0;
+            return bas.ReadBytes(bas.Length);
+        }
+    }
+
+#Template Main Schema:Schema NamespaceName:String
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    using System;
+    using System.Collections.Generic;
+    $$
+        var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+        if (Commands.Count > 0)
+        {
+            ##
+                using System.Threading.Tasks;
+        }
+        if (WithFirefly)
+        {
+            ##
+                using Firefly;
+                using Firefly.Streaming;
+                using Firefly.Mapping;
+                using Firefly.Mapping.Binary;
+                using Firefly.TextEncoding;
+        }
+    using ${Schema.Imports};
+
+    ${GetTypes(Schema, NamespaceName)}
+
+$End

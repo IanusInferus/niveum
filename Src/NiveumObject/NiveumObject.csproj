@@ -4,12 +4,12 @@
 	<LangVersion>10.0</LangVersion>
 	<ImplicitUsings>disable</ImplicitUsings>
 	<Nullable>enable</Nullable>
-    <RootNamespace>Niveum.ExpressionSchema</RootNamespace>
-    <PackageId>Niveum.Expression</PackageId>
-    <Product>Niveum.Expression</Product>
+	<RootNamespace>Niveum.ObjectSchema</RootNamespace>
+    <PackageId>Niveum.Object</PackageId>
+    <Product>Niveum.Object</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
-    <AssemblyName>Niveum.Expression</AssemblyName>
-    <AssemblyVersion>2021.12.22.0</AssemblyVersion>
+    <AssemblyName>Niveum.Object</AssemblyName>
+    <AssemblyVersion>2021.12.26.0</AssemblyVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>$(FLTKey)</AssemblyOriginatorKeyFile>
@@ -47,6 +47,5 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FireflyLite\FireflyLite.vbproj" />
-    <ProjectReference Include="..\NiveumObject\NiveumObject.csproj" />
   </ItemGroup>
 </Project>

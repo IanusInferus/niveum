@@ -1,0 +1,1075 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        CppBinary.tree
+      Location:    Niveum.Object <Tree>
+      Description: 对象类型结构C++二进制通讯模板
+      Version:     2020.12.04.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Niveum.ObjectSchema.CppBinary
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+    Firefly
+
+#Template BinarySerializationServer Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
+    class BinarySerializationServer final
+    {
+    private:
+        struct Hash
+        {
+            std::size_t operator() (const std::pair<std::u16string, std::uint32_t> &p) const
+            {
+                return std::hash<std::u16string>()(std::get<0>(p)) ^ std::get<1>(p);
+            }
+        };
+        std::unordered_map<std::pair<std::u16string, std::uint32_t>, std::function<std::vector<std::uint8_t>(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>)>, Hash> ClientCommands;
+        std::unordered_map<std::pair<std::u16string, std::uint32_t>, std::function<void(std::shared_ptr<IApplicationServer>, std::vector<std::uint8_t>, std::function<void(std::vector<std::uint8_t>)>, std::function<void(const std::exception &)>)>, Hash> AsyncClientCommands;
+
+    public:
+        BinarySerializationServer()
+        {
+            $$
+                foreach (var c in Commands)
+                {
+                    if (c.OnClientCommand)
+                    {
+                        var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                        var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        if (c.ClientCommand.Attributes.Any(a => a.Key == "Async"))
+                        {
+                            ##
+                                AsyncClientCommands[std::pair<std::u16string, std::uint32_t>(${CommandNameString}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure) -> void
+                                {
+                                    ByteArrayStream bas;
+                                    bas.WriteBytes(p);
+                                    bas.SetPosition(0);
+                                    auto Request = BinaryTranslator::[[${RequestName}FromBinary]](bas);
+                                    s->[[${Name}]](Request, [=](${ReplyTypeString} Reply)
+                                    {
+                                        ByteArrayStream bas;
+                                        bas.SetPosition(0);
+                                        bas.SetLength(0);
+                                        BinaryTranslator::[[${ReplyName}ToBinary]](bas, Reply);
+                                        bas.SetPosition(0);
+                                        Callback(bas.ReadBytes(bas.GetLength()));
+                                    }, OnFailure);
+                                };
+                        }
+                        else
+                        {
+                            ##
+                                ClientCommands[std::pair<std::u16string, std::uint32_t>(${CommandNameString}, 0x${CommandHash})] = [](std::shared_ptr<IApplicationServer> s, std::vector<std::uint8_t> p) -> std::vector<std::uint8_t>
+                                {
+                                    ByteArrayStream bas;
+                                    bas.WriteBytes(p);
+                                    bas.SetPosition(0);
+                                    auto Request = BinaryTranslator::[[${RequestName}FromBinary]](bas);
+                                    auto Reply = s->[[${Name}]](Request);
+                                    bas.SetPosition(0);
+                                    bas.SetLength(0);
+                                    BinaryTranslator::[[${ReplyName}ToBinary]](bas, Reply);
+                                    bas.SetPosition(0);
+                                    return bas.ReadBytes(bas.GetLength());
+                                };
+                        }
+                    }
+                }
+        }
+
+        std::uint64_t Hash()
+        {
+            return 0x${Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)};
+        }
+
+        Boolean HasCommand(std::u16string CommandName, std::uint32_t CommandHash)
+        {
+            return ClientCommands.count(std::pair<String, std::uint32_t>(CommandName, CommandHash)) > 0;
+        }
+        Boolean HasCommandAsync(std::u16string CommandName, std::uint32_t CommandHash)
+        {
+            return AsyncClientCommands.count(std::pair<String, std::uint32_t>(CommandName, CommandHash)) > 0;
+        }
+
+        std::vector<std::uint8_t> ExecuteCommand(std::shared_ptr<IApplicationServer> s, std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
+        {
+            auto cmd = ClientCommands[std::pair<std::u16string, std::uint32_t>(CommandName, CommandHash)];
+            return cmd(s, Parameters);
+        }
+        void ExecuteCommandAsync(std::shared_ptr<IApplicationServer> s, std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(const std::exception &)> OnFailure)
+        {
+            auto cmd = AsyncClientCommands[std::pair<std::u16string, std::uint32_t>(CommandName, CommandHash)];
+            cmd(s, Parameters, Callback, OnFailure);
+        }
+    };
+    class BinarySerializationServerEventDispatcher final
+    {
+    public:
+        BinarySerializationServerEventDispatcher(std::shared_ptr<IApplicationServer> s)
+        {
+            $$
+                foreach (var c in Commands)
+                {
+                    if (c.OnServerCommand)
+                    {
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        ##
+                            s->[[${Name}]] = [=](${EventTypeString} e)
+                            {
+                                ByteArrayStream bas;
+                                BinaryTranslator::[[${EventName}ToBinary]](bas, e);
+                                bas.SetPosition(0);
+                                if (ServerEvent != nullptr) { ServerEvent(${CommandNameString}, 0x${CommandHash}, bas.ReadBytes(bas.GetLength())); }
+                            };
+                    }
+                }
+        }
+
+        /// (std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters) -> void
+        typedef std::function<void(std::u16string, std::uint32_t, std::vector<std::uint8_t>)> ServerEventDelegate;
+        ServerEventDelegate ServerEvent;
+    };
+
+#Template IBinarySender
+    class IBinarySender
+    {
+    public:
+        virtual ~IBinarySender() {}
+
+        virtual void Send(std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters, std::function<void(std::u16string)> OnError) = 0;
+    };
+
+#Template BinarySerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
+    class BinarySerializationClient final
+    {
+    private:
+        struct Hash
+        {
+            std::size_t operator() (const std::pair<std::u16string, std::uint32_t> &p) const
+            {
+                return std::hash<std::u16string>()(std::get<0>(p)) ^ std::get<1>(p);
+            }
+        };
+
+        class ClientCommandTriple
+        {
+        public:
+            std::uint32_t Hash;
+            std::function<void(std::vector<std::uint8_t>)> Callback;
+            std::function<void(std::u16string)> OnError;
+        };
+        class ApplicationClient : public IApplicationClient
+        {
+        public:
+            std::shared_ptr<IBinarySender> s;
+            std::unordered_map<std::u16string, std::shared_ptr<std::queue<ClientCommandTriple>>> ClientCommandCallbacks;
+
+            std::uint64_t Hash()
+            {
+                return 0x${Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)};
+            }
+
+            void DequeueCallback(std::u16string CommandName)
+            {
+                ClientCommandCallbacks[CommandName]->pop();
+            }
+            void NotifyErrorCommand(std::u16string CommandName, std::u16string Message)
+            {
+                auto q = ClientCommandCallbacks[CommandName];
+                auto t = q->front();
+                q->pop();
+                t.OnError(Message);
+            }
+
+        private:
+            void AddCallback(std::u16string CommandName, std::uint32_t CommandHash, std::function<void(std::vector<std::uint8_t>)> Callback, std::function<void(std::u16string)> OnError)
+            {
+                if (ClientCommandCallbacks.count(CommandName) > 0)
+                {
+                    ClientCommandCallbacks[CommandName]->push({CommandHash, Callback, OnError});
+                }
+                else
+                {
+                    auto q = std::make_shared<std::queue<ClientCommandTriple>>();
+                    q->push({CommandHash, Callback, OnError});
+                    ClientCommandCallbacks[CommandName] = q;
+                }
+            }
+
+        public:
+            $$
+                foreach (var c in Commands)
+                {
+                    if (c.OnClientCommand)
+                    {
+                        var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                        var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                        var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                        var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        ##
+                            void [[${Name}]](${RequestTypeString} r, std::function<void(${ReplyTypeString})> Callback, std::function<void(std::u16string)> OnError = nullptr)
+                            {
+                                if (OnError == nullptr) { OnError = [GlobalErrorHandler = this->GlobalErrorHandler](std::u16string Message) { GlobalErrorHandler(${CommandNameString}, Message); }; }
+                                ByteArrayStream bas;
+                                BinaryTranslator::[[${RequestName}ToBinary]](bas, r);
+                                bas.SetPosition(0);
+                                auto Request = bas.ReadBytes(bas.GetLength());
+                                AddCallback(${CommandNameString}, 0x${CommandHash}, [=](std::vector<std::uint8_t> Parameters)
+                                {
+                                    ByteArrayStream bas;
+                                    bas.WriteBytes(Parameters);
+                                    bas.SetPosition(0);
+                                    auto Reply = BinaryTranslator::[[${ReplyName}FromBinary]](bas);
+                                    Callback(Reply);
+                                }, OnError);
+                                s->Send(${CommandNameString}, 0x${CommandHash}, Request, OnError);
+                            }
+                    }
+                }
+        };
+
+        std::function<std::exception(std::u16string)> ExceptionFactory;
+        std::shared_ptr<ApplicationClient> c;
+        std::unordered_map<std::pair<std::u16string, std::uint32_t>, std::function<void(std::vector<std::uint8_t>)>, Hash> ServerCommands;
+
+    public:
+        BinarySerializationClient(std::shared_ptr<IBinarySender> s, std::function<std::exception(std::u16string)> ExceptionFactory)
+        {
+            this->ExceptionFactory = ExceptionFactory;
+            c = std::make_shared<ApplicationClient>();
+            c->GlobalErrorHandler = [this](std::u16string CommandName, std::u16string Message)
+            {
+                throw this->ExceptionFactory(CommandName + u": " + Message);
+            };
+            c->s = s;
+            $$
+                foreach (var c in Commands)
+                {
+                    if (c.OnServerCommand)
+                    {
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        ##
+                            ServerCommands[std::pair<String, std::uint32_t>(${CommandNameString}, 0x${CommandHash})] = [&](std::vector<std::uint8_t> Parameters)
+                            {
+                                ByteArrayStream bas;
+                                bas.WriteBytes(Parameters);
+                                bas.SetPosition(0);
+                                auto e = BinaryTranslator::[[${EventName}FromBinary]](bas);
+                                if (c->[[${Name}]] != nullptr)
+                                {
+                                    c->[[${Name}]](e);
+                                }
+                            };
+                    }
+                }
+        }
+
+        std::shared_ptr<IApplicationClient> GetApplicationClient()
+        {
+            return c;
+        }
+
+        void HandleResult(std::u16string CommandName, std::uint32_t CommandHash, std::vector<std::uint8_t> Parameters)
+        {
+            if (c->ClientCommandCallbacks.count(CommandName) > 0)
+            {
+                auto q = c->ClientCommandCallbacks[CommandName];
+                if (q->size() == 0)
+                {
+                    throw ExceptionFactory(u"InvalidOperation: " + CommandName);
+                }
+                auto t = q->front();
+                if (t.Hash != CommandHash)
+                {
+                    throw ExceptionFactory(u"InvalidOperation: " + CommandName);
+                }
+                q->pop();
+                auto Callback = t.Callback;
+                Callback(Parameters);
+                return;
+            }
+
+            auto p = std::pair<std::u16string, std::uint32_t>(CommandName, CommandHash);
+            if (ServerCommands.count(p) > 0)
+            {
+                auto a = ServerCommands[p];
+                a(Parameters);
+                return;
+            }
+
+            throw ExceptionFactory(u"InvalidOperation: " + CommandName);
+        }
+    };
+
+#Template Streams
+    class IReadableStream
+    {
+    public:
+        virtual std::uint8_t ReadByte() = 0;
+        virtual std::vector<std::uint8_t> ReadBytes(std::size_t Size) = 0;
+
+        Unit ReadUnit()
+        {
+            return Unit();
+        }
+        Boolean ReadBoolean()
+        {
+            return ReadByte() != 0;
+        }
+
+        std::uint8_t ReadUInt8()
+        {
+            return ReadByte();
+        }
+        std::uint16_t ReadUInt16()
+        {
+            std::uint16_t o;
+            o = static_cast<std::uint16_t>(static_cast<std::uint16_t>(ReadByte()) & static_cast<std::uint16_t>(0xFF));
+            o = static_cast<std::uint16_t>(o | ((static_cast<std::uint16_t>(ReadByte()) & 0xFF) << 8));
+            return o;
+        }
+        std::uint32_t ReadUInt32()
+        {
+            std::uint32_t o;
+            o = static_cast<std::uint32_t>(ReadByte()) & 0xFF;
+            o = o | ((static_cast<std::uint32_t>(ReadByte()) & 0xFF) << 8);
+            o = o | ((static_cast<std::uint32_t>(ReadByte()) & 0xFF) << 16);
+            o = o | ((static_cast<std::uint32_t>(ReadByte()) & 0xFF) << 24);
+            return o;
+        }
+        std::uint64_t ReadUInt64()
+        {
+            std::uint64_t o;
+            o = static_cast<std::uint64_t>(ReadByte()) & 0xFF;
+            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 8);
+            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 16);
+            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 24);
+            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 32);
+            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 40);
+            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 48);
+            o = o | ((static_cast<std::uint64_t>(ReadByte()) & 0xFF) << 56);
+            return o;
+        }
+        std::int8_t ReadInt8()
+        {
+            return static_cast<std::int8_t>(ReadByte());
+        }
+        std::int16_t ReadInt16()
+        {
+            std::int16_t o;
+            o = static_cast<std::int16_t>(static_cast<std::int16_t>(ReadByte()) & static_cast<std::int16_t>(0xFF));
+            o = static_cast<std::int16_t>(o | ((static_cast<std::int16_t>(ReadByte()) & 0xFF) << 8));
+            return o;
+        }
+        std::int32_t ReadInt32()
+        {
+            std::int32_t o;
+            o = static_cast<std::int32_t>(ReadByte()) & 0xFF;
+            o = o | ((static_cast<std::int32_t>(ReadByte()) & 0xFF) << 8);
+            o = o | ((static_cast<std::int32_t>(ReadByte()) & 0xFF) << 16);
+            o = o | ((static_cast<std::int32_t>(ReadByte()) & 0xFF) << 24);
+            return o;
+        }
+        std::int64_t ReadInt64()
+        {
+            std::int64_t o;
+            o = static_cast<std::int64_t>(ReadByte()) & 0xFF;
+            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 8);
+            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 16);
+            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 24);
+            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 32);
+            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 40);
+            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 48);
+            o = o | ((static_cast<std::int64_t>(ReadByte()) & 0xFF) << 56);
+            return o;
+        }
+
+        float ReadFloat32()
+        {
+            std::int32_t i = ReadInt32();
+            return *reinterpret_cast<float *>(&i);
+        }
+        double ReadFloat64()
+        {
+            std::int64_t i = ReadInt64();
+            return *reinterpret_cast<double *>(&i);
+        }
+
+        String ReadString()
+        {
+            std::int32_t Length = ReadInt32();
+            int n = static_cast<int>(Length) / 2;
+            std::u16string v;
+            for (int k = 0; k < n; k += 1)
+            {
+                v.push_back(static_cast<char16_t>(ReadUInt16()));
+            }
+            return v;
+        }
+
+        virtual ~IReadableStream() {}
+    };
+
+    class IWritableStream
+    {
+    public:
+        virtual void WriteByte(std::uint8_t b) = 0;
+        virtual void WriteBytes(const std::vector<std::uint8_t> & l) = 0;
+
+        void WriteUnit(Unit v)
+        {
+        }
+        void WriteBoolean(Boolean v)
+        {
+            if (v)
+            {
+                WriteByte(0xFF);
+            }
+            else
+            {
+                WriteByte(0);
+            }
+        }
+
+        void WriteUInt8(std::uint8_t v)
+        {
+            WriteByte(v);
+        }
+        void WriteUInt16(std::uint16_t v)
+        {
+            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+        }
+        void WriteUInt32(std::uint32_t v)
+        {
+            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
+        }
+        void WriteUInt64(std::uint64_t v)
+        {
+            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 32) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 40) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 48) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 56) & 0xFF));
+        }
+        void WriteInt8(std::int8_t v)
+        {
+            WriteByte(static_cast<std::uint8_t>(v));
+        }
+        void WriteInt16(std::int16_t v)
+        {
+            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+        }
+        void WriteInt32(std::int32_t v)
+        {
+            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
+        }
+        void WriteInt64(std::int64_t v)
+        {
+            WriteByte(static_cast<std::uint8_t>(v & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 8) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 16) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 24) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 32) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 40) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 48) & 0xFF));
+            WriteByte(static_cast<std::uint8_t>((v >> 56) & 0xFF));
+        }
+
+        void WriteFloat32(float v)
+        {
+            WriteInt32(*reinterpret_cast<std::int32_t *>(&v));
+        }
+        void WriteFloat64(double v)
+        {
+            WriteInt64(*reinterpret_cast<std::int64_t *>(&v));
+        }
+
+        void WriteString(String v)
+        {
+            WriteInt32(static_cast<std::int32_t>(v.size()) * 2);
+            for (auto c : v)
+            {
+                WriteUInt16(static_cast<std::uint16_t>(c));
+            }
+        }
+
+        virtual ~IWritableStream() {}
+    };
+
+    class IReadableWritableStream : public IReadableStream, public IWritableStream
+    {
+    public:
+        virtual ~IReadableWritableStream() {}
+    };
+
+    class ByteArrayStream final : public IReadableWritableStream
+    {
+    private:
+        std::vector<std::uint8_t> Buffer;
+        std::size_t Position;
+    public:
+        ByteArrayStream() : Position(0)
+        {
+        }
+
+        std::uint8_t ReadByte()
+        {
+            if (Position + 1 > Buffer.size()) { throw std::out_of_range(""); }
+            std::uint8_t b = Buffer[Position];
+            Position += 1;
+            return b;
+        }
+        std::vector<std::uint8_t> ReadBytes(std::size_t Size)
+        {
+            if (Position + Size > Buffer.size()) { throw std::out_of_range(""); }
+            std::vector<std::uint8_t> l;
+            l.resize(Size, 0);
+            if (Size == 0) { return l; }
+            std::copy(Buffer.data() + Position, Buffer.data() + Position + Size, l.data());
+            Position += Size;
+            return l;
+        }
+
+        void WriteByte(std::uint8_t b)
+        {
+            if (Position + 1 > Buffer.size()) { Buffer.resize(Position + 1, 0); }
+            Buffer[Position] = b;
+            Position += 1;
+        }
+        void WriteBytes(const std::vector<std::uint8_t> & l)
+        {
+            auto Size = l.size();
+            if (Size == 0) { return; }
+            if (Position + Size > Buffer.size()) { Buffer.resize(Position + Size, 0); }
+            std::copy(l.data(), l.data() + Size, Buffer.data() + Position);
+            Position += Size;
+        }
+
+        std::size_t GetPosition()
+        {
+            return Position;
+        }
+
+        void SetPosition(std::size_t Position)
+        {
+            this->Position = Position;
+        }
+
+        std::size_t GetLength()
+        {
+            return Buffer.size();
+        }
+
+        void SetLength(std::size_t Length)
+        {
+            Buffer.resize(Length, 0);
+        }
+    };
+
+#Template BinaryTranslator Schema:Schema NamespaceName:String
+    class BinaryTranslator final
+    {
+    public:
+        ${GetBinaryTranslatorSerializers(Schema, NamespaceName)}
+    };
+
+#Template BinaryTranslator_Primitive_Unit
+    static Unit UnitFromBinary(IReadableStream &s)
+    {
+        return s.ReadUnit();
+    }
+    static void UnitToBinary(IWritableStream &s, Unit v)
+    {
+        s.WriteUnit(v);
+    }
+
+#Template BinaryTranslator_Primitive_Boolean
+    static Boolean BooleanFromBinary(IReadableStream &s)
+    {
+        return s.ReadBoolean();
+    }
+    static void BooleanToBinary(IWritableStream &s, Boolean v)
+    {
+        s.WriteBoolean(v);
+    }
+
+#Template BinaryTranslator_Primitive_String
+    static String StringFromBinary(IReadableStream &s)
+    {
+        return s.ReadString();
+    }
+    static void StringToBinary(IWritableStream &s, String v)
+    {
+        s.WriteString(v);
+    }
+
+#Template BinaryTranslator_Primitive_Int
+    static Int IntFromBinary(IReadableStream &s)
+    {
+        return static_cast<Int>(s.ReadInt32());
+    }
+    static void IntToBinary(IWritableStream &s, Int v)
+    {
+        s.WriteInt32(static_cast<Int>(v));
+    }
+
+#Template BinaryTranslator_Primitive_Real
+    static Real RealFromBinary(IReadableStream &s)
+    {
+        return s.ReadFloat64();
+    }
+    static void RealToBinary(IWritableStream &s, Real v)
+    {
+        s.WriteFloat64(v);
+    }
+
+#Template BinaryTranslator_Primitive_Byte
+    static Byte ByteFromBinary(IReadableStream &s)
+    {
+        return s.ReadByte();
+    }
+    static void ByteToBinary(IWritableStream &s, Byte v)
+    {
+        s.WriteByte(v);
+    }
+
+#Template BinaryTranslator_Primitive_UInt8
+    static UInt8 UInt8FromBinary(IReadableStream &s)
+    {
+        return s.ReadUInt8();
+    }
+    static void UInt8ToBinary(IWritableStream &s, UInt8 v)
+    {
+        s.WriteUInt8(v);
+    }
+
+#Template BinaryTranslator_Primitive_UInt16
+    static UInt16 UInt16FromBinary(IReadableStream &s)
+    {
+        return s.ReadUInt16();
+    }
+    static void UInt16ToBinary(IWritableStream &s, UInt16 v)
+    {
+        s.WriteUInt16(v);
+    }
+
+#Template BinaryTranslator_Primitive_UInt32
+    static UInt32 UInt32FromBinary(IReadableStream &s)
+    {
+        return s.ReadUInt32();
+    }
+    static void UInt32ToBinary(IWritableStream &s, UInt32 v)
+    {
+        s.WriteUInt32(v);
+    }
+
+#Template BinaryTranslator_Primitive_UInt64
+    static UInt64 UInt64FromBinary(IReadableStream &s)
+    {
+        return s.ReadUInt64();
+    }
+    static void UInt64ToBinary(IWritableStream &s, UInt64 v)
+    {
+        s.WriteUInt64(v);
+    }
+
+#Template BinaryTranslator_Primitive_Int8
+    static Int8 Int8FromBinary(IReadableStream &s)
+    {
+        return s.ReadInt8();
+    }
+    static void Int8ToBinary(IWritableStream &s, Int8 v)
+    {
+        s.WriteInt8(v);
+    }
+
+#Template BinaryTranslator_Primitive_Int16
+    static Int16 Int16FromBinary(IReadableStream &s)
+    {
+        return s.ReadInt16();
+    }
+    static void Int16ToBinary(IWritableStream &s, Int16 v)
+    {
+        s.WriteInt16(v);
+    }
+
+#Template BinaryTranslator_Primitive_Int32
+    static Int32 Int32FromBinary(IReadableStream &s)
+    {
+        return s.ReadInt32();
+    }
+    static void Int32ToBinary(IWritableStream &s, Int32 v)
+    {
+        s.WriteInt32(v);
+    }
+
+#Template BinaryTranslator_Primitive_Int64
+    static Int64 Int64FromBinary(IReadableStream &s)
+    {
+        return s.ReadInt64();
+    }
+    static void Int64ToBinary(IWritableStream &s, Int64 v)
+    {
+        s.WriteInt64(v);
+    }
+
+#Template BinaryTranslator_Primitive_Float32
+    static Float32 Float32FromBinary(IReadableStream &s)
+    {
+        return s.ReadFloat32();
+    }
+    static void Float32ToBinary(IWritableStream &s, Float32 v)
+    {
+        s.WriteFloat32(v);
+    }
+
+#Template BinaryTranslator_Primitive_Float64
+    static Float64 Float64FromBinary(IReadableStream &s)
+    {
+        return s.ReadFloat64();
+    }
+    static void Float64ToBinary(IWritableStream &s, Float64 v)
+    {
+        s.WriteFloat64(v);
+    }
+
+#Template BinaryTranslator_Primitive_Type
+    static Type TypeFromBinary(IReadableStream &s)
+    {
+        throw std::logic_error("NotSupported");
+    }
+    static void TypeToBinary(IWritableStream &s, Type v)
+    {
+        throw std::logic_error("NotSupported");
+    }
+
+#Template BinaryTranslator_Alias a:AliasDef NamespaceName:String
+    $$
+        var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
+        var Name = a.GetTypeSpec().SimpleName(NamespaceName);
+        var ValueSimpleName = a.Type.SimpleName(NamespaceName);
+    static ${TypeString} [[${Name}FromBinary]](IReadableStream &s)
+    {
+        class [[${Name}]] o;
+        o.Value = [[${ValueSimpleName}FromBinary]](s);
+        return o;
+    }
+    static void [[${Name}ToBinary]](IWritableStream &s, ${TypeString} o)
+    {
+        [[${ValueSimpleName}ToBinary]](s, o.Value);
+    }
+
+#Template BinaryTranslator_Record r:RecordDef NamespaceName:String
+    ${BinaryTranslator_Record(r.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(r.GetTypeSpec(), NamespaceName), r.Fields, NamespaceName)}
+
+#Template BinaryTranslator_Record Name:String TypeString:String Fields:List<VariableDef> NamespaceName:String
+    static ${TypeString} [[${Name}FromBinary]](IReadableStream &s)
+    {
+        auto o = std::make_shared<${TypeString}::element_type>();
+        $$
+            foreach (var f in Fields)
+            {
+                ##
+                    o->[[${f.Name}]] = [[${f.Type.SimpleName(NamespaceName)}FromBinary]](s);
+            }
+        return o;
+    }
+    static void [[${Name}ToBinary]](IWritableStream &s, ${TypeString} o)
+    {
+        $$
+            foreach (var f in Fields)
+            {
+                ##
+                    [[${f.Type.SimpleName(NamespaceName)}ToBinary]](s, o->[[${f.Name}]]);
+            }
+    }
+
+#Template BinaryTranslator_TaggedUnion tu:TaggedUnionDef NamespaceName:String
+    ${BinaryTranslator_TaggedUnion(tu.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(tu.GetTypeSpec(), NamespaceName), GetSuffixedTypeName(tu.Name, tu.Version, "Tag", NamespaceName), GetSuffixedTypeString(tu.Name, tu.Version, "Tag", NamespaceName, ForceAsEnum: true), GetSuffixedTypeString(tu.Name, tu.Version, "Tag", NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsEnum: true), tu.Alternatives, NamespaceName)}
+
+#Template BinaryTranslator_TaggedUnion Name:String TypeString:String TagName:String TagTypeString:String SimpleTagTypeString:String Alternatives:List<VariableDef> NamespaceName:String
+    ${BinaryTranslator_Enum(TagName, TagTypeString, "Int", "Int", NamespaceName)}
+    static ${TypeString} [[${Name}FromBinary]](IReadableStream &s)
+    {
+        auto o = std::make_shared<${TypeString}::element_type>();
+        o->_Tag = [[${TagName}FromBinary]](s);
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    if (o->_Tag == ${SimpleTagTypeString}::[[${a.Name}]])
+                    {
+                        o->[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
+                        return o;
+                    }
+            }
+        throw std::logic_error("InvalidOperation");
+    }
+    static void [[${Name}ToBinary]](IWritableStream &s, ${TypeString} o)
+    {
+        [[${TagName}ToBinary]](s, o->_Tag);
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    if (o->_Tag == ${SimpleTagTypeString}::[[${a.Name}]])
+                    {
+                        [[${a.Type.SimpleName(NamespaceName)}ToBinary]](s, o->[[${a.Name}]]);
+                        return;
+                    }
+            }
+        throw std::logic_error("InvalidOperation");
+    }
+
+#Template BinaryTranslator_Enum e:EnumDef NamespaceName:String
+    ${BinaryTranslator_Enum(e.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(e.GetTypeSpec(), NamespaceName), e.UnderlyingType.SimpleName(NamespaceName), GetTypeString(e.UnderlyingType, NamespaceName), NamespaceName)}
+
+#Template BinaryTranslator_Enum Name:String TypeString:String UnderlyingSimpleName:String UnderlyingType:String NamespaceName:String
+    static ${TypeString} [[${Name}FromBinary]](IReadableStream &s)
+    {
+        return static_cast<${TypeString}>([[${UnderlyingSimpleName}FromBinary]](s));
+    }
+    static void [[${Name}ToBinary]](IWritableStream &s, ${TypeString} o)
+    {
+        [[${UnderlyingSimpleName}ToBinary]](s, static_cast<${UnderlyingType}>(o));
+    }
+
+#Template BinaryTranslator_ClientCommand c:ClientCommandDef NamespaceName:String
+    ${BinaryTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Request", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Request", NamespaceName), c.OutParameters, NamespaceName)}
+    ${BinaryTranslator_TaggedUnion(GetSuffixedTypeName(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeName(c.Name, c.Version, "ReplyTag", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "ReplyTag", NamespaceName, ForceAsEnum: true), GetSuffixedTypeString(c.Name, c.Version, "ReplyTag", NamespaceName, NoElaboratedTypeSpecifier: true, ForceAsEnum: true), c.InParameters, NamespaceName)}
+
+#Template BinaryTranslator_ServerCommand c:ServerCommandDef NamespaceName:String
+    ${BinaryTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName), c.OutParameters, NamespaceName)}
+
+#Template BinaryTranslator_Tuple tp:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = tp.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(tp, NamespaceName);
+    static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
+    {
+        $$
+            var ItemNames = new List<String>{};
+            {
+                int k = 0;
+                foreach (var t in tp.Tuple)
+                {
+                    ##
+                        auto [[Item${k}]] = [[${t.SimpleName(NamespaceName)}FromBinary]](s);
+                    ItemNames.Add("Item" + (k).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    k += 1;
+                }
+            }
+        return std::make_tuple(${String.Join(", ", ItemNames)});
+    }
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &t)
+    {
+        $$
+            {
+                int k = 0;
+                foreach (var t in tp.Tuple)
+                {
+                    ##
+                        [[${t.SimpleName(NamespaceName)}ToBinary]](s, std::get<${k}>(t));
+                    k += 1;
+                }
+            }
+    }
+
+#Template BinaryTranslator_Optional o:TypeSpec NamespaceName:String
+    $$
+        var ElementType = o.GenericTypeSpec.ParameterValues.Single();
+        var SimpleName = o.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(o, NamespaceName);
+    static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
+    {
+        auto Tag = IntFromBinary(s);
+        if (Tag == 0)
+        {
+            return {};
+        }
+        else
+        {
+            return [[${ElementType.SimpleName(NamespaceName)}FromBinary]](s);
+        }
+    }
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &o)
+    {
+        if (!o.has_value())
+        {
+            IntToBinary(s, 0);
+        }
+        else
+        {
+            IntToBinary(s, 1);
+            [[${ElementType.SimpleName(NamespaceName)}ToBinary]](s, o.value());
+        }
+    }
+
+#Template BinaryTranslator_List l:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementType = l.GenericTypeSpec.ParameterValues.Single();
+        var ElementSimpleName = ElementType.SimpleName(NamespaceName);
+    static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
+    {
+        int Length = static_cast<int>(IntFromBinary(s));
+        $$
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
+            {
+                ##
+                    auto l = s.ReadBytes(Length);
+            }
+            else
+            {
+                ##
+                    ${TypeString} l;
+                    l.reserve(static_cast<std::size_t>(Length));
+                    for (int k = 0; k < Length; k += 1)
+                    {
+                        l.push_back([[${ElementSimpleName}FromBinary]](s));
+                    }
+            }
+        return l;
+    }
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
+    {
+        int Length = static_cast<int>(l.size());
+        IntToBinary(s, static_cast<Int>(Length));
+        $$
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
+            {
+                ##
+                    s.WriteBytes(l);
+            }
+            else
+            {
+                ##
+                    for (auto e : l)
+                    {
+                        [[${ElementSimpleName}ToBinary]](s, e);
+                    }
+            }
+    }
+
+#Template BinaryTranslator_Set l:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
+    {
+        int Length = static_cast<int>(IntFromBinary(s));
+        ${TypeString} l;
+        l.reserve(static_cast<std::size_t>(Length));
+        for (int k = 0; k < Length; k += 1)
+        {
+            l.insert([[${ElementSimpleName}FromBinary]](s));
+        }
+        return l;
+    }
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
+    {
+        int Length = static_cast<int>(l.size());
+        IntToBinary(s, static_cast<Int>(Length));
+        for (auto e : l)
+        {
+            [[${ElementSimpleName}ToBinary]](s, e);
+        }
+    }
+
+#Template BinaryTranslator_Map l:TypeSpec NamespaceName:String
+    $$
+        var gp = l.GenericTypeSpec.ParameterValues;
+        if (gp.Count != 2)
+        {
+            throw new ArgumentException();
+        }
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var KeySimpleName = gp[0].SimpleName(NamespaceName);
+        var ValueSimpleName = gp[1].SimpleName(NamespaceName);
+    static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
+    {
+        int Length = static_cast<int>(IntFromBinary(s));
+        ${TypeString} l;
+        l.reserve(static_cast<std::size_t>(Length));
+        for (int k = 0; k < Length; k += 1)
+        {
+            auto Key = [[${KeySimpleName}FromBinary]](s);
+            l[Key] = [[${ValueSimpleName}FromBinary]](s);
+        }
+        return l;
+    }
+    static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
+    {
+        int Length = static_cast<int>(l.size());
+        IntToBinary(s, static_cast<Int>(Length));
+        for (auto p : l)
+        {
+            [[${KeySimpleName}ToBinary]](s, std::get<0>(p));
+            [[${ValueSimpleName}ToBinary]](s, std::get<1>(p));
+        }
+    }
+
+#Template Main Schema:Schema NamespaceName:String
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    #pragma once
+
+    #include <cstdint>
+    #include <climits>
+    #include <string>
+    #include <vector>
+    #include <queue>
+    #include <unordered_set>
+    #include <unordered_map>
+    #include <tuple>
+    #include <memory>
+    #include <functional>
+    #include <stdexcept>
+    #include ${Schema.Imports.Where(i => IsInclude(i))}
+
+    ${GetTypes(Schema, NamespaceName)}
+
+$End

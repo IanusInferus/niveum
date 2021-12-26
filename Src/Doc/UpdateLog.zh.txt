@@ -1,4 +1,8 @@
-﻿2021.12.22
+﻿2021.12.26
+Niveum.Core:
+改名为Niveum.Object。
+
+2021.12.22
 Niveum.Expression:
 使用C#的nullable reference types和init only setters改善代码。
 *:

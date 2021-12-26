@@ -84,7 +84,7 @@
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsBase" />
     <ProjectReference Include="..\FireflyLite\FireflyLite.vbproj" />
-    <ProjectReference Include="..\NiveumCore\NiveumCore.csproj" />
+    <ProjectReference Include="..\NiveumObject\NiveumObject.csproj" />
     <ProjectReference Include="..\NiveumJson\NiveumJson.csproj" />
   </ItemGroup>
 </Project>

@@ -6,8 +6,8 @@ ExpressionManipulator.exe /loadtype:Schema /t2b:Assembly,CSharp\Bin\net48\Assemb
 
 :: C++2011
 @if not exist CPP\Src @md CPP\Src
-SchemaManipulator.exe /loadtype:..\..\Src\NiveumCore\Common /loadtype:..\..\Src\NiveumExpression\ExpressionSchema /t2cpp:CPP\Src\ExpressionSchema.h,Niveum.ExpressionSchema
-SchemaManipulator.exe /loadtyperef:..\..\Src\NiveumCore\Common /loadtype:..\..\Src\NiveumExpression\ExpressionSchema /t2cppb:CPP\Src\ExpressionSchemaBinary.h,Niveum.ExpressionSchema
+SchemaManipulator.exe /loadtype:..\..\Src\NiveumObject\Common /loadtype:..\..\Src\NiveumExpression\ExpressionSchema /t2cpp:CPP\Src\ExpressionSchema.h,Niveum.ExpressionSchema
+SchemaManipulator.exe /loadtyperef:..\..\Src\NiveumObject\Common /loadtype:..\..\Src\NiveumExpression\ExpressionSchema /t2cppb:CPP\Src\ExpressionSchemaBinary.h,Niveum.ExpressionSchema
 ExpressionManipulator.exe /loadtype:Schema /t2b:Assembly,Cpp\Bin\Assembly.bin /import:""ExpressionCalculator.h"" /t2cppbl:Cpp\Src\Calculation.h,ExprTest
 
 @pause

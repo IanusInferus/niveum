@@ -44,8 +44,8 @@
     <Reference Include="Firefly.Lite">
       <HintPath>..\..\..\..\Bin\net48\Firefly.Lite.dll</HintPath>
     </Reference>
-    <Reference Include="Niveum.Core">
-      <HintPath>..\..\..\..\Bin\net48\Niveum.Core.dll</HintPath>
+    <Reference Include="Niveum.Object">
+      <HintPath>..\..\..\..\Bin\net48\Niveum.Object.dll</HintPath>
     </Reference>
     <Reference Include="Niveum.Expression">
       <HintPath>..\..\..\..\Bin\net48\Niveum.Expression.dll</HintPath>

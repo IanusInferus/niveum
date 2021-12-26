@@ -41,7 +41,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FireflyLite\FireflyLite.vbproj" />
-    <ProjectReference Include="..\NiveumCore\NiveumCore.csproj" />
+    <ProjectReference Include="..\NiveumObject\NiveumObject.csproj" />
     <ProjectReference Include="..\NiveumExpression\NiveumExpression.csproj" />
   </ItemGroup>
 </Project>
