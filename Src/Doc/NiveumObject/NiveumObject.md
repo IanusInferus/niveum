@@ -135,3 +135,17 @@ NiveumObject语言，是内嵌于NiveumTree语言的类型定义语言，主要�
 | 版本兼容     | ×      | √          | ×   | √      | ×     | ×     | 无需  |
 
 \* Python不支持多命名空间。
+
+## 词法分析
+
+### 词(Token)
+
+直接使用NiveumTree中的词法分析。
+
+### 符号(Symbol)
+
+与NiveumTemplate中的符号(Symbol)的做法一致。
+
+## 文法分析
+
+文法非常简单，基本上在词法分析的结果上可以直接对应。

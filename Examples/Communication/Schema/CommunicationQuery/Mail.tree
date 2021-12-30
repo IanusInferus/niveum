@@ -1,0 +1,68 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Mail.tree
+      Location:    Niveum.Examples <Tree>
+      Description: 邮件
+      Version:     2021.12.31.
+      Author:      F.R.C.
+      Copyright(C) Public Domain
+
+    ==========================================================================
+
+#Namespace Communication
+
+#Query InboxViewQuery UserProfile Lower:Int Upper:Int
+    UserId Id
+    Name
+    EmailAddress
+    MailCount Count(Mails)
+    Mails Select(Mails [Range OrderBy Id-] Lower Upper)
+        Id
+        Title
+        FromId
+        Time
+        ContentBrief Content
+            PlainText
+                Size Count(..)
+            RichText
+                Size Count(..)
+        IsNew
+        AttachmentCount Count(Attachments)
+
+#Query MailViewQuery UserProfile MailId:Int
+    UserId Id
+    Name
+    EmailAddress
+    Mail Select(Mails [Optional By Id] MailId)
+        None
+        Some
+            MailId Id
+            Title
+            FromId
+            Time
+            Content
+            IsNew
+            From
+                Id
+                Name
+                EmailAddress
+            Tos
+                Id
+                Name
+                EmailAddress
+            Attachments
+                Id
+                Name
+                Size Count(Content)
+
+#Query MailAttachmentViewQuery UserProfile MailId:Int MailAttachmentId:Int
+    Mail Select(Mails [Optional By Id] MailId)
+        None
+        Some
+            Attachment Select(Attachments [Optional By Id] MailAttachmentId)
+                None
+                Some
+                    Id
+                    Name
+                    Content

@@ -105,3 +105,11 @@ NiveumRelation语言，是内嵌于NiveumTree语言的类型定义语言，主�
 | Krustallos | √ | ×      | 无需  |
 | SQL Server | √ | ×      | 无需  |
 | MySQL      | √ | ×      | 无需  |
+
+## 词法分析
+
+直接使用NiveumObject中的词法分析。
+
+## 文法分析
+
+文法非常简单，基本上在词法分析的结果上可以直接对应。

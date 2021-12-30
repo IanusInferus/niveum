@@ -138,6 +138,18 @@ XML的难以书写<、>等符号，需要使用撇脚的CDATA块的问题也得�
 
 但是，多行字面量的功能使得本格式的文法属于上下文相关文法，需要自顶向下来进行文法分析。
 
+### 词
+
+词(Token)，词法分析结果。
+
+    Token =
+        | SingleLineLiteral
+        | LeftParenthesis
+        | RightParenthesis
+        | PreprocessDirective
+        | FunctionDirective
+        | SingleLineComment
+
 ### 结点
 
 结点(Node)，基本可用单元。
@@ -270,23 +282,33 @@ XML的难以书写<、>等符号，需要使用撇脚的CDATA块的问题也得�
 
 以"#"加一个可写成无需引号形式的字面量的字符串作为名称的特殊结点。
 
-可以定义两种自定义指令，单行自定义指令和多行自定义指令。
+自定义指令可以带参数和内容。
 
-两种自定义指令均可指定其后面跟随的参数的形式，有树结点参数形式、表参数形式、自由参数形式。
+参数分三种：结点参数、树状参数、表状参数。
 
-多行自定义指令由读取者处理内容，或者使用默认的两种处理形式：树形式、表形式。
+    #Function Fruits (Fruit Name Apple) (Fruit Name Pear) (Fruit Name Watermelon) //树状参数，参数为SingleLineNode
+    #Function (Fruit Name Apple) (Fruit Name Pear) (Fruit Name Watermelon) //表状参数，表示有3个参数，每个参数为TableLineNode
+    #Function (Fruit Name Apple) //结点参数表示，表示有5个结点"(", "Fruit", "Name", "Apple", ")"
 
-单行自定义指令如下：
+内容也分三种：行内容、树状内容、表状内容。
 
-    SingleLineNode #SingleLineFunctionNode Param Param Param //Comment
-    SingleLineNode (#SingleLineFunctionNode Param (NodeParam Param)) //Comment
+    //行内容，每行均为自由内容
+    #Function
+        LineContent
+        LineContent
+        LineContent
 
-多行自定义指令如下：
+    //树状内容，内容为MultiNodes*
+    #Function
+        MultiNodes
+        MultiNodes
+        MultiNodes
 
-    #SingleLineFunctionNode Param Param Param //Comment
-        FreeContent
-        FreeContent
-        FreeContent
+    //表状内容，内容的每行为TableLineNode*
+    #Function
+        TableLineNode* SingleLineComment?
+        TableLineNode* SingleLineComment?
+        TableLineNode* SingleLineComment?
 
 ### 森林
 

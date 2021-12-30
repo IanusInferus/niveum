@@ -1,4 +1,8 @@
-﻿2022.10.02
+﻿2021.12.30
+Niveum.Object:
+增加NiveumQuery语言文档和基础定义。
+
+2022.10.02
 Niveum.Object:
 增加C#、C++、Haxe、Java泛型类型的序列化代码生成支持。
 
