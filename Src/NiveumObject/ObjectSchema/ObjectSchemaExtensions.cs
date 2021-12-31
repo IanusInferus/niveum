@@ -133,6 +133,11 @@ namespace Niveum.ObjectSchema
                 var sc = t.ServerCommand;
                 return conf.TypeDefMarker(d, TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters.Select(p => MapType(d, p, conf)).ToList(), Attributes = sc.Attributes, Description = sc.Description }));
             }
+            else if (t.OnQuery)
+            {
+                var q = t.Query;
+                return conf.TypeDefMarker(d, TypeDef.CreateQuery(new QueryDef { Name = q.Name, RootType = MapType(d, q.RootType, conf), MappingSpecs = q.MappingSpecs }));
+            }
             else
             {
                 throw new InvalidOperationException();
@@ -209,6 +214,11 @@ namespace Niveum.ObjectSchema
                     {
                         var sc = t.ServerCommand;
                         return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters, Attributes = sc.Attributes, Description = "" });
+                    }
+                    else if (t.OnQuery)
+                    {
+                        var q = t.Query;
+                        return TypeDef.CreateQuery(new QueryDef { Name = q.Name, RootType = q.RootType, MappingSpecs = q.MappingSpecs });
                     }
                     else
                     {
@@ -293,6 +303,11 @@ namespace Niveum.ObjectSchema
                         var sc = t.ServerCommand;
                         return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = GetVersionFromNameAndVersion(sc.Name, sc.Version), OutParameters = sc.OutParameters, Attributes = sc.Attributes, Description = sc.Description });
                     }
+                    else if (t.OnQuery)
+                    {
+                        var q = t.Query;
+                        return TypeDef.CreateQuery(new QueryDef { Name = q.Name, RootType = q.RootType, MappingSpecs = q.MappingSpecs });
+                    }
                     else
                     {
                         throw new InvalidOperationException();
@@ -363,6 +378,11 @@ namespace Niveum.ObjectSchema
                     {
                         var sc = t.ServerCommand;
                         return TypeDef.CreateServerCommand(new ServerCommandDef { Name = sc.Name, Version = sc.Version, OutParameters = sc.OutParameters, Attributes = m(sc.Attributes), Description = sc.Description });
+                    }
+                    else if (t.OnQuery)
+                    {
+                        var q = t.Query;
+                        return TypeDef.CreateQuery(new QueryDef { Name = q.Name, RootType = q.RootType, MappingSpecs = q.MappingSpecs });
                     }
                     else
                     {
@@ -544,6 +564,11 @@ namespace Niveum.ObjectSchema
                         {
                             MarkAndGetTypeString(p.Type);
                         }
+                    }
+                    else if (t.OnQuery)
+                    {
+                        var q = t.Query;
+                        MarkAndGetTypeString(q.RootType);
                     }
                     else
                     {
@@ -775,6 +800,10 @@ namespace Niveum.ObjectSchema
             {
                 return t.ServerCommand.Name;
             }
+            else if (t.OnQuery)
+            {
+                return t.Query.Name;
+            }
             else
             {
                 throw new InvalidOperationException();
@@ -810,6 +839,10 @@ namespace Niveum.ObjectSchema
             else if (t.OnServerCommand)
             {
                 return t.ServerCommand.Version;
+            }
+            else if (t.OnQuery)
+            {
+                return "";
             }
             else
             {
@@ -1245,6 +1278,10 @@ namespace Niveum.ObjectSchema
             {
                 return t.ServerCommand.Description;
             }
+            else if (t.OnQuery)
+            {
+                return "";
+            }
             else
             {
                 throw new InvalidOperationException();
@@ -1278,6 +1315,10 @@ namespace Niveum.ObjectSchema
                 return new List<VariableDef> { };
             }
             else if (t.OnServerCommand)
+            {
+                return new List<VariableDef> { };
+            }
+            else if (t.OnQuery)
             {
                 return new List<VariableDef> { };
             }

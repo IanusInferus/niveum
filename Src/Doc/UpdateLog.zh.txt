@@ -1,4 +1,8 @@
-﻿2021.12.30
+﻿2022.01.01
+Niveum.Object:
+增加NiveumQuery语言解析，修正定义。
+
+2021.12.30
 Niveum.Object:
 增加NiveumQuery语言文档和基础定义。
 

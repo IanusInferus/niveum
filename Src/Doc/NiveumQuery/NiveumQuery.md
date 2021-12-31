@@ -49,7 +49,7 @@
         Name
         EmailAddress
         MailCount Count(Mails)
-        Mails Select(Mails [Range OrderBy Id-] Lower Upper) // 容器均映射为列表；选择器包括选择索引和排序索引，均应在Record中标记才能使用，方向完全相反的两个排序索引可以互相使用
+        Mails Select(Mails (Range OrderBy Id-) Lower Upper) // 容器均映射为列表；选择器包括选择索引和排序索引，均应在Record中标记才能使用，方向完全相反的两个排序索引可以互相使用
             Id
             Title
             FromId
@@ -64,21 +64,7 @@
 
 ## 词法分析
 
-### 词(Token)
-
 直接使用NiveumTree中的词法分析。
-
-### 符号(Symbol)
-
-直接使用NiveumObject中的词法分析。
-
-### 路径(Path)
-
-在语法要求的地方，词认为是路径。路径内部会再进行单独的词法分析。
-
-### 过滤器(Filter)
-
-在语法要求的地方，词如果开始和结束分别为[]，则认为是过滤器。过滤器内部会再进行单独的词法分析。
 
 ## 文法定义
 
@@ -96,7 +82,7 @@
     QueryPath ::= SingleLineLiteral
                 | ".."
 
-    QueryFilter ::= "[" Numeral ("By" BySpec)? ("OrderBy" OrderBySpec)? QueryMappingExpr* "]"
+    QueryFilter ::= "(" Numeral ("By" BySpec)? ("OrderBy" OrderBySpec)? ")"
 
     Numeral ::= "Optional" | "One" | "Many" | "All" | "Range" | "Count"
 

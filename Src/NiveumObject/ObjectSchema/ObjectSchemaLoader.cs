@@ -212,6 +212,11 @@ namespace Niveum.ObjectSchema
                         var sc = t.ServerCommand;
                         return TypeDef.CreateServerCommand(new ServerCommandDef { Name = ResolveTypeDefName(t, sc.Name, sc.Version), Version = sc.Version, OutParameters = sc.OutParameters, Attributes = sc.Attributes, Description = sc.Description });
                     }
+                    else if (t.OnQuery)
+                    {
+                        var q = t.Query;
+                        return TypeDef.CreateQuery(new QueryDef { Name = ResolveTypeDefName(t, q.Name, ""), RootType = q.RootType, MappingSpecs = q.MappingSpecs });
+                    }
                     else
                     {
                         throw new InvalidOperationException();
