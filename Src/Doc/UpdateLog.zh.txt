@@ -1,4 +1,8 @@
-﻿2021.12.26
+﻿2021.12.31
+Firefly.Lite:
+删除冗余代码。
+
+2021.12.26
 Niveum.Core:
 改名为Niveum.Object。
 *:
