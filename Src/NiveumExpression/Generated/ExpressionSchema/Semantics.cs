@@ -211,8 +211,10 @@ namespace Niveum.ExpressionSchema
     {
         /// <summary>名称</summary>
         public String Name { get; init; }
+        /// <summary>参数类型</summary>
+        public List<PrimitiveType> ParameterTypes { get; init; }
         /// <summary>实参</summary>
-        public List<Expr> Parameters { get; init; }
+        public List<Expr> Arguments { get; init; }
     }
     /// <summary>if伪函数表达式</summary>
     [Record]

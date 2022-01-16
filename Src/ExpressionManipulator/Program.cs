@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.ExpressionManipulator <Visual C#>
 //  Description: 表达式结构处理工具
-//  Version:     2021.12.22.
+//  Version:     2022.01.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -29,6 +29,7 @@ using Niveum.ObjectSchema;
 using Niveum.ExpressionSchema;
 using Niveum.ExpressionSchema.CSharpBinaryLoader;
 using Niveum.ExpressionSchema.CppBinaryLoader;
+using Niveum.ExpressionSchema.CSource;
 
 namespace Niveum.ExpressionManipulator
 {
@@ -159,6 +160,19 @@ namespace Niveum.ExpressionManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "t2c")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 4)
+                    {
+                        ExpressionSchemaToCSourceCode(args[0], args[1], args[2], args[3]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else
                 {
                     throw new ArgumentException(opt.Name);
@@ -187,6 +201,8 @@ namespace Niveum.ExpressionManipulator
             Console.WriteLine(@"/t2csbl:<CsCodePath>,<NamespaceName>");
             Console.WriteLine(@"生成C++二进制程序集装载类型");
             Console.WriteLine(@"/t2cppbl:<CppCodePath>,<NamespaceName>");
+            Console.WriteLine(@"生成C源代码");
+            Console.WriteLine(@"/t2c:<BinaryPath>,<CHeaderPath>,<CSourcePath>,<NamespaceName>");
             Console.WriteLine(@"ExpressionSchemaDir|ExpressionSchemaFile 表达式结构Tree文件(夹)路径。");
             Console.WriteLine(@"BinaryPath 二进制程序集文件路径。");
             Console.WriteLine(@"CsCodePath C#代码文件路径。");
@@ -283,6 +299,51 @@ namespace Niveum.ExpressionManipulator
             var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CppCodePath, Compiled);
+        }
+
+        public static void ExpressionSchemaToCSourceCode(String BinaryPath, String CHeaderPath, String CSourcePath, String NamespaceName)
+        {
+            var ExpressionSchema = GetExpressionSchema();
+            Niveum.ExpressionSchema.Assembly a;
+            var bs = BinarySerializerWithString.Create();
+            using (var fs = Streams.OpenReadable(BinaryPath))
+            {
+                a = bs.Read<Niveum.ExpressionSchema.Assembly>(fs);
+            }
+
+            var HeaderCompiled = ExpressionSchema.CompileToCHeader(NamespaceName);
+            var SkipHeader = false;
+            if (File.Exists(CHeaderPath))
+            {
+                var Original = Txt.ReadFile(CHeaderPath);
+                if (String.Equals(HeaderCompiled, Original, StringComparison.Ordinal))
+                {
+                    SkipHeader = true;
+                }
+            }
+            if (!SkipHeader)
+            {
+                var HeaderDir = FileNameHandling.GetFileDirectory(CHeaderPath);
+                if (HeaderDir != "" && !Directory.Exists(HeaderDir)) { Directory.CreateDirectory(HeaderDir); }
+                Txt.WriteFile(CHeaderPath, HeaderCompiled);
+            }
+
+            var SourceCompiled = ExpressionSchema.CompileToCSource(NamespaceName, a);
+            var SkipSource = false;
+            if (File.Exists(CSourcePath))
+            {
+                var Original = Txt.ReadFile(CSourcePath);
+                if (String.Equals(SourceCompiled, Original, StringComparison.Ordinal))
+                {
+                    SkipSource = true;
+                }
+            }
+            if (!SkipSource)
+            {
+                var SourceDir = FileNameHandling.GetFileDirectory(CSourcePath);
+                if (SourceDir != "" && !Directory.Exists(SourceDir)) { Directory.CreateDirectory(SourceDir); }
+                Txt.WriteFile(CSourcePath, SourceCompiled);
+            }
         }
     }
 }

@@ -3,7 +3,7 @@
 //  File:        CppBinaryLoader.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式结构C++二进制加载器代码生成器
-//  Version:     2021.12.22.
+//  Version:     2022.01.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -42,7 +42,7 @@ namespace Niveum.ExpressionSchema.CppBinaryLoader
                 TypeRefs = new List<OS.TypeDef>
                     {
                         OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = new List<String> { "Unit" }, GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } }),
-                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = new List<String> {"Boolean" }, GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } })
+                        OS.TypeDef.CreatePrimitive(new OS.PrimitiveDef { Name = new List<String> { "Boolean" }, GenericParameters = new List<OS.VariableDef> { }, Description = "", Attributes = new List<KeyValuePair<String, List<String>>> { } })
                     },
                 Imports = new List<String> { }
             });

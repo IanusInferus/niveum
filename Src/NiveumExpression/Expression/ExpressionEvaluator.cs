@@ -3,7 +3,7 @@
 //  File:        ExpressionEvaluator.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式求值工具
-//  Version:     2021.12.22.
+//  Version:     2022.01.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -136,8 +136,8 @@ namespace Niveum.Expression
             else if (e.OnFunction)
             {
                 var Name = e.Function.Name;
-                var ParameterFuncs = e.Function.Parameters.Select(p => BuildExpr(p)).ToList();
-                var f = VariableProvider.GetValue(Name, ParameterFuncs.Select(pf => GetReturnType(pf)).ToList(), ParameterFuncs);
+                var ArgumentFuncs = e.Function.Arguments.Select(p => BuildExpr(p)).ToList();
+                var f = VariableProvider.GetValue(Name, ArgumentFuncs.Select(pf => GetReturnType(pf)).ToList(), ArgumentFuncs);
                 if (f.Count == 0)
                 {
                     throw new InvalidOperationException(String.Format("FunctionNotExist: {0}", Name));

@@ -123,7 +123,7 @@ namespace Niveum.ExpressionSchema
             var rt = TypeDict[Semantics];
             if (rt == PrimitiveType.Int && ReturnType == PrimitiveType.Real)
             {
-                var feCReal = new FunctionExpr { Name = "creal", Parameters = new List<Expr> { Result.Semantics } };
+                var feCReal = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { rt }, Arguments = new List<Expr> { Result.Semantics } };
                 var CReal = Expr.CreateFunction(feCReal);
                 var Range = Positions[Semantics];
                 Positions.Add(feCReal, Range);
@@ -211,7 +211,7 @@ namespace Niveum.ExpressionSchema
                 var FalsePartType = TypeDict[FalsePart];
                 if (TruePartType == PrimitiveType.Int && FalsePartType == PrimitiveType.Real)
                 {
-                    var fe = new FunctionExpr { Name = "creal", Parameters = new List<Expr> { TruePart } };
+                    var fe = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { TruePartType }, Arguments = new List<Expr> { TruePart } };
                     var CReal = Expr.CreateFunction(fe);
                     var Range = Positions[TruePart];
                     Positions.Add(fe, Range);
@@ -226,7 +226,7 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (TruePartType == PrimitiveType.Real && FalsePartType == PrimitiveType.Int)
                 {
-                    var fe = new FunctionExpr { Name = "creal", Parameters = new List<Expr> { FalsePart } };
+                    var fe = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { FalsePartType }, Arguments = new List<Expr> { FalsePart } };
                     var CReal = Expr.CreateFunction(fe);
                     var Range = Positions[FalsePart];
                     Positions.Add(fe, Range);
@@ -303,8 +303,8 @@ namespace Niveum.ExpressionSchema
 
         private Tuple<FunctionExpr, PrimitiveType> BindFunctionExpr(IVariableTypeProvider VariableTypeProvider, Dictionary<Expr, PrimitiveType> TypeDict, FunctionExpr fe)
         {
-            var Parameters = fe.Parameters.Select(p => BindExpr(VariableTypeProvider, TypeDict, p)).ToList();
-            var ParameterTypes = Parameters.Select(p => TypeDict[p]).ToList();
+            var Arguments = fe.Arguments.Select(p => BindExpr(VariableTypeProvider, TypeDict, p)).ToList();
+            var ParameterTypes = Arguments.Select(p => TypeDict[p]).ToList();
             List<FunctionParameterAndReturnTypes> Functions;
             try
             {
@@ -331,17 +331,18 @@ namespace Niveum.ExpressionSchema
                 var fspt = MostMatchedSignature.ParameterTypes.Value[k];
                 if (pt == PrimitiveType.Int && fspt == PrimitiveType.Real)
                 {
-                    var feCReal = new FunctionExpr { Name = "creal", Parameters = new List<Expr> { Parameters[k] } };
+                    var feCReal = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { pt }, Arguments = new List<Expr> { Arguments[k] } };
                     var CReal = Expr.CreateFunction(feCReal);
-                    var Range = Positions[fe.Parameters[k]];
+                    var Range = Positions[fe.Arguments[k]];
                     Positions.Add(feCReal, Range);
                     Positions.Add(CReal, Range);
                     TypeDict.Add(CReal, PrimitiveType.Real);
-                    Parameters[k] = CReal;
+                    Arguments[k] = CReal;
+                    ParameterTypes[k] = PrimitiveType.Real;
                 }
             }
 
-            var Result = new FunctionExpr { Name = fe.Name, Parameters = Parameters };
+            var Result = new FunctionExpr { Name = fe.Name, ParameterTypes = ParameterTypes, Arguments = Arguments };
             Positions.Add(Result, Positions[fe]);
             return Tuple.Create(Result, MostMatchedSignature.ReturnType);
         }

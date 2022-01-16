@@ -3,7 +3,7 @@
 //  File:        SemanticTranslator.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 语法表达式到语义表达式转换器
-//  Version:     2021.12.22.
+//  Version:     2022.01.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -53,7 +53,7 @@ namespace Niveum.ExpressionSchema
             }
             else if (e.OnFunction)
             {
-                var Parameters = new LinkedList<Expr>();
+                var Arguments = new LinkedList<Expr>();
                 var p = e.Function.ParameterList;
                 if (p.OnNull)
                 {
@@ -65,12 +65,12 @@ namespace Niveum.ExpressionSchema
                     {
                         if (n.OnSingle)
                         {
-                            Parameters.AddFirst(TranslateExpr(n.Single.Expr));
+                            Arguments.AddFirst(TranslateExpr(n.Single.Expr));
                             break;
                         }
                         else if (n.OnMultiple)
                         {
-                            Parameters.AddFirst(TranslateExpr(n.Multiple.Expr));
+                            Arguments.AddFirst(TranslateExpr(n.Multiple.Expr));
                             n = n.Multiple.NonnullParameterList;
                         }
                         else
@@ -84,15 +84,15 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
                 var Name = e.Function.Identifier.Name;
-                if (Name == "if" && Parameters.Count == 3)
+                if (Name == "if" && Arguments.Count == 3)
                 {
-                    var ie = new IfExpr { Condition = Parameters.First.Value, TruePart = Parameters.First.Next.Value, FalsePart = Parameters.First.Next.Next.Value };
+                    var ie = new IfExpr { Condition = Arguments.First.Value, TruePart = Arguments.First.Next.Value, FalsePart = Arguments.First.Next.Next.Value };
                     Positions.Add(ie, Positions[e]);
                     m = Expr.CreateIf(ie);
                 }
                 else
                 {
-                    var fe = new FunctionExpr { Name = Name, Parameters = Parameters.ToList() };
+                    var fe = new FunctionExpr { Name = Name, ParameterTypes = new List<PrimitiveType> { }, Arguments = Arguments.ToList() };
                     Positions.Add(fe, Positions[e]);
                     m = Expr.CreateFunction(fe);
                 }
@@ -109,7 +109,7 @@ namespace Niveum.ExpressionSchema
             }
             else if (e.OnUnaryOperator)
             {
-                var fe = new FunctionExpr { Name = e.UnaryOperator.UnaryOperator.Name, Parameters = new List<Expr> { TranslateExpr(e.UnaryOperator.Expr) } };
+                var fe = new FunctionExpr { Name = e.UnaryOperator.UnaryOperator.Name, ParameterTypes = new List<PrimitiveType> { }, Arguments = new List<Expr> { TranslateExpr(e.UnaryOperator.Expr) } };
                 Positions.Add(fe, Positions[e]);
                 m = Expr.CreateFunction(fe);
             }
@@ -130,7 +130,7 @@ namespace Niveum.ExpressionSchema
                 }
                 else
                 {
-                    var fe = new FunctionExpr { Name = Name, Parameters = new List<Expr> { TranslateExpr(e.BinaryOperator.Left), TranslateExpr(e.BinaryOperator.Right) } };
+                    var fe = new FunctionExpr { Name = Name, ParameterTypes = new List<PrimitiveType> { }, Arguments = new List<Expr> { TranslateExpr(e.BinaryOperator.Left), TranslateExpr(e.BinaryOperator.Right) } };
                     Positions.Add(fe, Positions[e]);
                     m = Expr.CreateFunction(fe);
                 }

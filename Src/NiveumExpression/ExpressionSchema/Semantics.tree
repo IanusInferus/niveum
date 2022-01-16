@@ -4,7 +4,7 @@
       File:        Semantics.tree
       Location:    Niveum.Expression <Tree>
       Description: 语义结构
-      Version:     2018.12.22.
+      Version:     2022.01.17.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -62,7 +62,8 @@
 
 #Record FunctionExpr                                函数表达式
     Name                String                      名称
-    Parameters          List<Expr>                  实参
+    ParameterTypes      List<PrimitiveType>         参数类型
+    Arguments           List<Expr>                  实参
 
 #Record IfExpr                                      "if伪函数表达式"
     Condition           Expr                        条件
