@@ -3,7 +3,7 @@
 //  File:        TypeBinder.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 类型绑定器
-//  Version:     2021.12.22.
+//  Version:     2022.01.17.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -331,7 +331,7 @@ namespace Niveum.ExpressionSchema
                 var fspt = MostMatchedSignature.ParameterTypes.Value[k];
                 if (pt == PrimitiveType.Int && fspt == PrimitiveType.Real)
                 {
-                    var feCReal = new FunctionExpr { Name = "creal", Parameters = new List<Expr> { fe.Parameters[k] } };
+                    var feCReal = new FunctionExpr { Name = "creal", Parameters = new List<Expr> { Parameters[k] } };
                     var CReal = Expr.CreateFunction(feCReal);
                     var Range = Positions[fe.Parameters[k]];
                     Positions.Add(feCReal, Range);
