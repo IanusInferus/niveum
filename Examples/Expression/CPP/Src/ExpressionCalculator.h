@@ -15,6 +15,8 @@ namespace Niveum
     {
         int pow(int Left, int Right);
         double pow(double Left, double Right);
+        double exp(double v);
+        double log(double v);
         int mod(int v, int m);
         int div(int Left, int Right);
         int round(double v);
@@ -30,6 +32,7 @@ namespace Niveum
         double max(double v1, double v2);
         double clamp(double v, double LowerBound, double UpperBound);
         int abs(int v);
+        double abs(double v);
         double rand();
         int rand(int LowerBound, int UpperBoundExclusive);
         double rand(double LowerBound, double UpperBoundExclusive);

@@ -24,6 +24,9 @@ __pycache__
 /Database/TestCSharp/Src/MySql/MySqlDataAccess.cs
 /Database/TestCSharp/Src/SqlServer/SqlServerDataAccess.cs
 /Database/XHTML
+/Expression/C/Src/Calculation.bin
+/Expression/C/Src/Calculation.c
+/Expression/C/Src/Calculation.h
 /Expression/CPP/Src/Calculation.h
 /Expression/CPP/Src/ExpressionSchema.h
 /Expression/CPP/Src/ExpressionSchemaBinary.h

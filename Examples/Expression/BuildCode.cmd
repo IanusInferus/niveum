@@ -10,4 +10,8 @@ SchemaManipulator.exe /loadtype:..\..\Src\NiveumObject\Common /loadtype:..\..\Sr
 SchemaManipulator.exe /loadtyperef:..\..\Src\NiveumObject\Common /loadtype:..\..\Src\NiveumExpression\ExpressionSchema /t2cppb:CPP\Src\ExpressionSchemaBinary.h,Niveum.ExpressionSchema
 ExpressionManipulator.exe /loadtype:Schema /t2b:Assembly,Cpp\Bin\Assembly.bin /import:""ExpressionCalculator.h"" /t2cppbl:Cpp\Src\Calculation.h,ExprTest
 
+:: C
+@if not exist C\Src @md C\Src
+ExpressionManipulator.exe /loadtype:Schema /t2b:Assembly,C\Src\Calculation.bin /t2c:C\Src\Calculation.bin,C\Src\Calculation.h,C\Src\Calculation.c,ExprTest
+
 @pause

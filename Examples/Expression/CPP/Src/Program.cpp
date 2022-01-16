@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
 //  Description: 表达式计算工具
-//  Version:     2020.07.22.
+//  Version:     2022.01.17.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
