@@ -31,6 +31,9 @@ __pycache__
 /Expression/CPP/Src/ExpressionSchema.h
 /Expression/CPP/Src/ExpressionSchemaBinary.h
 /Expression/CSharp/Src/Calculation.cs
+/Expression/RV64/Src/Calculation.bin
+/Expression/RV64/Src/Calculation.h
+/Expression/RV64/Src/Calculation.s
 /Serialization/CPP/Data
 /Serialization/CPP/Src/World.h
 /Serialization/CPP/Src/WorldBinary.h
