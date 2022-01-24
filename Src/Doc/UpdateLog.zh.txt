@@ -1,6 +1,9 @@
 ﻿2022.01.25
 Niveum.Expression:
 增加RISC-V汇编代码生成。
+Examples:
+增加表达式测试用例。
+绕过C++表达式示例在Debug编译时在新测试用例下栈溢出的问题。
 
 2022.01.17
 Niveum.Expression:

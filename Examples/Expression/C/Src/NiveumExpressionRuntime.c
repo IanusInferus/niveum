@@ -51,14 +51,14 @@ double Niveum_Expression_log_R(double v)
 
 int Niveum_Expression_mod_II(int v, int m)
 {
-    auto r = v % m;
+    int r = v % m;
     if ((r < 0 && m > 0) || (r > 0 && m < 0)) { r += m; }
     return r;
 }
 
 int Niveum_Expression_div_II(int Left, int Right)
 {
-    auto r = Niveum_Expression_mod_II(Left, Right);
+    int r = Niveum_Expression_mod_II(Left, Right);
     return (Left - r) / Right;
 }
 

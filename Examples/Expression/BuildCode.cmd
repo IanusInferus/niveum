@@ -14,4 +14,8 @@ ExpressionManipulator.exe /loadtype:Schema /t2b:Assembly,Cpp\Bin\Assembly.bin /i
 @if not exist C\Src @md C\Src
 ExpressionManipulator.exe /loadtype:Schema /t2b:Assembly,C\Src\Calculation.bin /t2c:C\Src\Calculation.bin,C\Src\Calculation.h,C\Src\Calculation.c,ExprTest
 
+:: RV64
+@if not exist RV64\Src @md RV64\Src
+ExpressionManipulator.exe /loadtype:Schema /t2b:Assembly,RV64\Src\Calculation.bin /t2rv64:RV64\Src\Calculation.bin,RV64\Src\Calculation.h,RV64\Src\Calculation.s,ExprTest
+
 @pause

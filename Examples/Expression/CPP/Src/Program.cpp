@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
 //  Description: 表达式计算工具
-//  Version:     2022.01.17.
+//  Version:     2022.01.25.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -18,7 +18,6 @@
 #include <memory>
 #include <exception>
 #include <cwchar>
-#include <cassert>
 
 using namespace Niveum::ExpressionSchema;
 
@@ -41,6 +40,14 @@ namespace ExprTest
             std::wprintf(L"%ls\n", L"表达式测试:");
             std::wprintf(L"%ls\n", L"ExprTest, Public Domain");
             std::wprintf(L"%ls\n", L"F.R.C.");
+        }
+
+        static void assert(bool v)
+        {
+            if (!v)
+            {
+                throw std::logic_error("assertion failed");
+            }
         }
 
         static void Test()
@@ -339,6 +346,12 @@ namespace ExprTest
             }
             assert(c->Test->CaseH11());
             assert(c->Test->CaseH12());
+
+            //传参
+            assert(c->Test->Sum12(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11) == 66);
+            assert(c->Test->Sum12Mixed(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11) == 66);
+            assert(c->Test->DoubleUse(0) == 0);
+            assert(c->Test->ManyRegisters() == 33);
         }
     };
 }

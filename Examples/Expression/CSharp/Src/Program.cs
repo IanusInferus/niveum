@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 表达式计算工具
-//  Version:     2019.08.06.
+//  Version:     2022.01.25.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -99,6 +99,11 @@ namespace ExprCalc
             Trace.Assert(c.Character.GetUpgradeExperience(1, 2) == 2);
 
             TestBasic(vc);
+
+            Trace.Assert(c.Test.Sum12(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11) == 66);
+            Trace.Assert(c.Test.Sum12Mixed(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11) == 66);
+            Trace.Assert(c.Test.DoubleUse(0) == 0);
+            Trace.Assert(c.Test.ManyRegisters() == 33);
 
             TestInteractive(vc);
         }

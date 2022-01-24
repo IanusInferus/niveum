@@ -260,6 +260,12 @@ static void TestBasic(void)
     }
     assert(ExprTest_Test_CaseH11());
     assert(ExprTest_Test_CaseH12());
+
+    //传参
+    assert(ExprTest_Test_Sum12(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11) == 66);
+    assert(ExprTest_Test_Sum12Mixed(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11) == 66);
+    assert(ExprTest_Test_DoubleUse(0) == 0);
+    assert(ExprTest_Test_ManyRegisters() == 33);
 }
 
 int main(int argc, char **argv)
