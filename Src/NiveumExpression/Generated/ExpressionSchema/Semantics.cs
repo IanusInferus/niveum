@@ -213,6 +213,8 @@ namespace Niveum.ExpressionSchema
         public String Name { get; init; }
         /// <summary>参数类型</summary>
         public List<PrimitiveType> ParameterTypes { get; init; }
+        /// <summary>返回值类型</summary>
+        public PrimitiveType ReturnType { get; init; }
         /// <summary>实参</summary>
         public List<Expr> Arguments { get; init; }
     }

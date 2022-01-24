@@ -3,7 +3,7 @@
 //  File:        TypeBinder.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 类型绑定器
-//  Version:     2022.01.17.
+//  Version:     2022.01.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -123,7 +123,7 @@ namespace Niveum.ExpressionSchema
             var rt = TypeDict[Semantics];
             if (rt == PrimitiveType.Int && ReturnType == PrimitiveType.Real)
             {
-                var feCReal = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { rt }, Arguments = new List<Expr> { Result.Semantics } };
+                var feCReal = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { rt }, ReturnType = ReturnType, Arguments = new List<Expr> { Result.Semantics } };
                 var CReal = Expr.CreateFunction(feCReal);
                 var Range = Positions[Semantics];
                 Positions.Add(feCReal, Range);
@@ -211,7 +211,7 @@ namespace Niveum.ExpressionSchema
                 var FalsePartType = TypeDict[FalsePart];
                 if (TruePartType == PrimitiveType.Int && FalsePartType == PrimitiveType.Real)
                 {
-                    var fe = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { TruePartType }, Arguments = new List<Expr> { TruePart } };
+                    var fe = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { TruePartType }, ReturnType = FalsePartType, Arguments = new List<Expr> { TruePart } };
                     var CReal = Expr.CreateFunction(fe);
                     var Range = Positions[TruePart];
                     Positions.Add(fe, Range);
@@ -226,7 +226,7 @@ namespace Niveum.ExpressionSchema
                 }
                 else if (TruePartType == PrimitiveType.Real && FalsePartType == PrimitiveType.Int)
                 {
-                    var fe = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { FalsePartType }, Arguments = new List<Expr> { FalsePart } };
+                    var fe = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { FalsePartType }, ReturnType = TruePartType, Arguments = new List<Expr> { FalsePart } };
                     var CReal = Expr.CreateFunction(fe);
                     var Range = Positions[FalsePart];
                     Positions.Add(fe, Range);
@@ -331,7 +331,7 @@ namespace Niveum.ExpressionSchema
                 var fspt = MostMatchedSignature.ParameterTypes.Value[k];
                 if (pt == PrimitiveType.Int && fspt == PrimitiveType.Real)
                 {
-                    var feCReal = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { pt }, Arguments = new List<Expr> { Arguments[k] } };
+                    var feCReal = new FunctionExpr { Name = "creal", ParameterTypes = new List<PrimitiveType> { pt }, ReturnType = fspt, Arguments = new List<Expr> { Arguments[k] } };
                     var CReal = Expr.CreateFunction(feCReal);
                     var Range = Positions[fe.Arguments[k]];
                     Positions.Add(feCReal, Range);
@@ -342,7 +342,7 @@ namespace Niveum.ExpressionSchema
                 }
             }
 
-            var Result = new FunctionExpr { Name = fe.Name, ParameterTypes = ParameterTypes, Arguments = Arguments };
+            var Result = new FunctionExpr { Name = fe.Name, ParameterTypes = ParameterTypes, ReturnType = MostMatchedSignature.ReturnType, Arguments = Arguments };
             Positions.Add(Result, Positions[fe]);
             return Tuple.Create(Result, MostMatchedSignature.ReturnType);
         }

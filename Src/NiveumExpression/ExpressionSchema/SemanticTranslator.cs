@@ -3,7 +3,7 @@
 //  File:        SemanticTranslator.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 语法表达式到语义表达式转换器
-//  Version:     2022.01.17.
+//  Version:     2022.01.25.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -92,7 +92,7 @@ namespace Niveum.ExpressionSchema
                 }
                 else
                 {
-                    var fe = new FunctionExpr { Name = Name, ParameterTypes = new List<PrimitiveType> { }, Arguments = Arguments.ToList() };
+                    var fe = new FunctionExpr { Name = Name, ParameterTypes = new List<PrimitiveType> { }, ReturnType = PrimitiveType.Boolean, Arguments = Arguments.ToList() };
                     Positions.Add(fe, Positions[e]);
                     m = Expr.CreateFunction(fe);
                 }
@@ -109,7 +109,7 @@ namespace Niveum.ExpressionSchema
             }
             else if (e.OnUnaryOperator)
             {
-                var fe = new FunctionExpr { Name = e.UnaryOperator.UnaryOperator.Name, ParameterTypes = new List<PrimitiveType> { }, Arguments = new List<Expr> { TranslateExpr(e.UnaryOperator.Expr) } };
+                var fe = new FunctionExpr { Name = e.UnaryOperator.UnaryOperator.Name, ParameterTypes = new List<PrimitiveType> { }, ReturnType = PrimitiveType.Boolean, Arguments = new List<Expr> { TranslateExpr(e.UnaryOperator.Expr) } };
                 Positions.Add(fe, Positions[e]);
                 m = Expr.CreateFunction(fe);
             }
@@ -130,7 +130,7 @@ namespace Niveum.ExpressionSchema
                 }
                 else
                 {
-                    var fe = new FunctionExpr { Name = Name, ParameterTypes = new List<PrimitiveType> { }, Arguments = new List<Expr> { TranslateExpr(e.BinaryOperator.Left), TranslateExpr(e.BinaryOperator.Right) } };
+                    var fe = new FunctionExpr { Name = Name, ParameterTypes = new List<PrimitiveType> { }, ReturnType = PrimitiveType.Boolean, Arguments = new List<Expr> { TranslateExpr(e.BinaryOperator.Left), TranslateExpr(e.BinaryOperator.Right) } };
                     Positions.Add(fe, Positions[e]);
                     m = Expr.CreateFunction(fe);
                 }

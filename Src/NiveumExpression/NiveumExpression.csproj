@@ -9,7 +9,7 @@
     <Product>Niveum.Expression</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>Niveum.Expression</AssemblyName>
-    <AssemblyVersion>2021.12.22.0</AssemblyVersion>
+    <AssemblyVersion>2022.01.25.0</AssemblyVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>$(FLTKey)</AssemblyOriginatorKeyFile>

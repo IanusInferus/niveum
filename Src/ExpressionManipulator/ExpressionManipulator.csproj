@@ -9,7 +9,7 @@
     <Product>Niveum.ExpressionManipulator</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>ExpressionManipulator</AssemblyName>
-    <AssemblyVersion>2022.01.17.0</AssemblyVersion>
+    <AssemblyVersion>2022.01.25.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputType>Exe</OutputType>
     <OutputPath>..\..\Bin\</OutputPath>
