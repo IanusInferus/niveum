@@ -24,7 +24,7 @@ static void TestBasic(void)
     assert(ExprTest_Test_CaseB03());
     assert(ExprTest_Test_CaseB04());
     assert(ExprTest_Test_CaseB05());
-    //ExprTest_Test_CaseB06(); //integer division by zero
+    //ExprTest_Test_CaseB06(); //integer division by zero, not issued on RISC-V following the behavior described in 7.2 Division Operations, The RISC-V Instruction Set Manual Volume I: Unprivileged ISA Document Version 20191213
     assert(ExprTest_Test_CaseB07());
     assert(ExprTest_Test_CaseB08());
     assert(ExprTest_Test_CaseB09());

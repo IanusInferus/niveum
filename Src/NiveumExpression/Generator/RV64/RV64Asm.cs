@@ -318,12 +318,12 @@ namespace Niveum.ExpressionSchema.RV64Asm
                 FunctionBuilders = (new List<FunctionBuilder>
                 {
                     CreateOperator("+", PrimitiveType.Int, PrimitiveType.Int, true, (RegisterArguments, Ret) => { }),
-                    CreateOperator("-", PrimitiveType.Int, PrimitiveType.Int, false, (RegisterArguments, Ret) => $"subw\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[0]}"),
+                    CreateOperator("-", PrimitiveType.Int, PrimitiveType.Int, false, (RegisterArguments, Ret) => $"subw\t{Ret}, zero, {RegisterArguments[0]}"),
                     CreateOperator("+", PrimitiveType.Real, PrimitiveType.Real, true, (RegisterArguments, Ret) => { }),
                     CreateOperator("-", PrimitiveType.Real, PrimitiveType.Real, false, (RegisterArguments, Ret) => $"fsgnjn.d\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[0]}"),
                     CreateOperator("+", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (RegisterArguments, Ret) => $"addw\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[1]}"),
-                    CreateOperator("-", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (RegisterArguments, Ret) => $"subw\t{Ret}, {RegisterArguments[1]}, {RegisterArguments[1]}"),
-                    CreateOperator("*", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (RegisterArguments, Ret) => $"mulw\t{Ret}, {RegisterArguments[1]}, {RegisterArguments[1]}"),
+                    CreateOperator("-", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (RegisterArguments, Ret) => $"subw\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[1]}"),
+                    CreateOperator("*", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int, (RegisterArguments, Ret) => $"mulw\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[1]}"),
                     CreateOperator("/", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Real, (RegisterArguments, Ret) =>
                     {
                         var t0 = AcquireTemporaryRegister(PrimitiveType.Real);
@@ -342,26 +342,26 @@ namespace Niveum.ExpressionSchema.RV64Asm
                     CreateRuntimeFunction("log", PrimitiveType.Real, PrimitiveType.Real),
                     CreateRuntimeFunction("mod", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int),
                     CreateRuntimeFunction("div", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Int),
-                    CreateOperator("!", PrimitiveType.Boolean, PrimitiveType.Boolean, false, (RegisterArguments, Ret) => $"xori\t{RegisterArguments[0]}, {RegisterArguments[0]}, -1"),
+                    CreateOperator("!", PrimitiveType.Boolean, PrimitiveType.Boolean, false, (RegisterArguments, Ret) => $"xori\t{RegisterArguments[0]}, {RegisterArguments[0]}, 1"),
                     CreateOperator("<", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (RegisterArguments, Ret) => $"slt\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[1]}"),
                     CreateOperator(">", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (RegisterArguments, Ret) => $"slt\t{Ret}, {RegisterArguments[1]}, {RegisterArguments[0]}"),
                     CreateOperator("<=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (RegisterArguments, Ret) =>
                     {
                         // (a <= b) == !(b < a)
                         Emit($"slt\t{Ret}, {RegisterArguments[1]}, {RegisterArguments[0]}");
-                        Emit($"xori\t{Ret}, {Ret}, -1");
+                        Emit($"xori\t{Ret}, {Ret}, 1");
                     }),
                     CreateOperator(">=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (RegisterArguments, Ret) =>
                     {
                         // (a >= b) == !(a < b)
                         Emit($"slt\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[1]}");
-                        Emit($"xori\t{Ret}, {Ret}, -1");
+                        Emit($"xori\t{Ret}, {Ret}, 1");
                     }),
                     CreateOperator("==", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (RegisterArguments, Ret) =>
                     {
-                        // (a == b) == !(a xor b)
+                        // (a == b) == !((boolean)(a xor b))
                         Emit($"xor\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[1]}");
-                        Emit($"xori\t{Ret}, {Ret}, -1");
+                        Emit($"sltiu\t{Ret}, {Ret}, 1"); //SLTIU rd, rs1, 1 sets rd to 1 if rs1 equals zero, otherwise sets rd to 0 (assembler pseudoinstruction SEQZ rd, rs)
                     }),
                     CreateOperator("!=", PrimitiveType.Int, PrimitiveType.Int, PrimitiveType.Boolean, (RegisterArguments, Ret) => $"xor\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[1]}"),
                     CreateOperator("<", PrimitiveType.Real, PrimitiveType.Real, PrimitiveType.Boolean, (RegisterArguments, Ret) => $"flt.d\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[1]}"),
@@ -372,7 +372,7 @@ namespace Niveum.ExpressionSchema.RV64Asm
                     {
                         // (a == b) == !(a xor b)
                         Emit($"xor\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[1]}");
-                        Emit($"xori\t{Ret}, {Ret}, -1");
+                        Emit($"xori\t{Ret}, {Ret}, 1");
                     }),
                     CreateOperator("!=", PrimitiveType.Boolean, PrimitiveType.Boolean, PrimitiveType.Boolean, (RegisterArguments, Ret) => $"xor\t{Ret}, {RegisterArguments[0]}, {RegisterArguments[1]}"),
                     CreateRuntimeFunction("round", PrimitiveType.Real, PrimitiveType.Int),
