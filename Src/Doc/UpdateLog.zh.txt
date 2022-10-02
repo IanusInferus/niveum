@@ -1,4 +1,8 @@
-﻿2022.01.01
+﻿2022.10.02
+Examples:
+在C++通讯示例中增加NiveumQuery内容。
+
+2022.01.01
 Niveum.Object:
 增加NiveumQuery语言解析，修正定义。
 

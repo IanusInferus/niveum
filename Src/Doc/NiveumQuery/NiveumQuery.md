@@ -12,9 +12,9 @@
         Id                  Int                         用户号
         Name                String                      用户名
         EmailAddress        Optional<String>            邮件地址
-    
+
         Mails               List<Mail>                  邮件列表，非管理员用户无法查看他人的邮件
-    
+
     #Record Mail                                        [By:Id][OrderBy:Id]邮件
         Id                  Int64                       邮件ID
         Title               String                      标题
@@ -22,20 +22,20 @@
         Time                String                      "时间(UTC)：yyyy-MM-ddTHH:mm:ssZ形式"
         Content             MailContent                 内容
         IsNew               Boolean                     是否是新邮件
-    
+
         From                UserProfile                 来源用户
         Tos                 List<UserProfile>           收件人
         Attachments         List<MailAttachment>        附件
-    
+
     #TaggedUnion MailContent                            邮件内容
         PlainText           String                      纯文本
         RichText            String                      RTF文本
-    
+
     #Record MailAttachment                              [By:Id]邮件附件
         Id                  Int64                       邮件ID
         Name                String                      名称
         Content             List<Byte>                  内容
-    
+
     #ClientCommand GetUserProfile                       获取用户信息
         UserId              Int                         用户号
         Query               QuerySpec<UserProfile>      查询
@@ -43,7 +43,7 @@
         Success             QueryResult<UserProfile>    查询结果
         NotExist            Unit                        用户不存在
         NotEnoughPrivilege  Unit                        权限不足
-    
+
     #Query InboxViewQuery UserProfile Lower:Int Upper:Int
         UserId Id
         Name

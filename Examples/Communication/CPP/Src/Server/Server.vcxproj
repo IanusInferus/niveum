@@ -59,6 +59,7 @@
     <ClCompile Include="Services\Admin.cpp" />
     <ClCompile Include="Services\Base.cpp" />
     <ClCompile Include="Services\Compatibility.cpp" />
+    <ClCompile Include="Services\Mail.cpp" />
     <ClCompile Include="Services\Message.cpp" />
     <ClCompile Include="Services\TestDuplication.cpp" />
     <ClCompile Include="Services\TestPerformance.cpp" />

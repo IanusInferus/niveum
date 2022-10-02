@@ -168,5 +168,8 @@
     <ClCompile Include="BaseSystem\ThreadLocalRandom.cpp">
       <Filter>BaseSystem</Filter>
     </ClCompile>
+    <ClCompile Include="Services\Mail.cpp">
+      <Filter>Services</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -4,7 +4,7 @@
       File:        Mail.tree
       Location:    Niveum.Examples <Tree>
       Description: 邮件
-      Version:     2021.12.31.
+      Version:     2022.01.01.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -17,7 +17,7 @@
     Name
     EmailAddress
     MailCount Count(Mails)
-    Mails Select(Mails [Range OrderBy Id-] Lower Upper)
+    Mails Select(Mails (Range OrderBy Id-) Lower Upper)
         Id
         Title
         FromId
@@ -34,7 +34,7 @@
     UserId Id
     Name
     EmailAddress
-    Mail Select(Mails [Optional By Id] MailId)
+    Mail Select(Mails (Optional By Id) MailId)
         None
         Some
             MailId Id
@@ -57,10 +57,10 @@
                 Size Count(Content)
 
 #Query MailAttachmentViewQuery UserProfile MailId:Int MailAttachmentId:Int
-    Mail Select(Mails [Optional By Id] MailId)
+    Mail Select(Mails (Optional By Id) MailId)
         None
         Some
-            Attachment Select(Attachments [Optional By Id] MailAttachmentId)
+            Attachment Select(Attachments (Optional By Id) MailAttachmentId)
                 None
                 Some
                     Id

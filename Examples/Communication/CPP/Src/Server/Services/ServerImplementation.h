@@ -120,6 +120,8 @@ namespace Server
             std::shared_ptr<Communication::QuitReply> Quit(std::shared_ptr<Communication::QuitRequest> r) override;
             /// <summary>检测类型结构版本</summary>
             std::shared_ptr<Communication::CheckSchemaVersionReply> CheckSchemaVersion(std::shared_ptr<Communication::CheckSchemaVersionRequest> r) override;
+            /// <summary>获取用户信息</summary>
+            std::shared_ptr<class GetUserProfileReply> GetUserProfile(std::shared_ptr<class GetUserProfileRequest> r) override;
             /// <summary>发送消息</summary>
             std::shared_ptr<Communication::SendMessageReply> SendMessage(std::shared_ptr<Communication::SendMessageRequest> r) override;
             /// <summary>加法</summary>
