@@ -44,9 +44,7 @@ namespace Niveum.ObjectSchema
         /// <summary>客户端命令</summary>
         ClientCommand = 5,
         /// <summary>服务端命令</summary>
-        ServerCommand = 6,
-        /// <summary>查询</summary>
-        Query = 7
+        ServerCommand = 6
     }
     /// <summary>类型定义</summary>
     [TaggedUnion]
@@ -68,8 +66,6 @@ namespace Niveum.ObjectSchema
         public ClientCommandDef ClientCommand { get; init; }
         /// <summary>服务端命令</summary>
         public ServerCommandDef ServerCommand { get; init; }
-        /// <summary>查询</summary>
-        public QueryDef Query { get; init; }
 
         /// <summary>基元</summary>
         public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, Primitive = Value }; }
@@ -85,8 +81,6 @@ namespace Niveum.ObjectSchema
         public static TypeDef CreateClientCommand(ClientCommandDef Value) { return new TypeDef { _Tag = TypeDefTag.ClientCommand, ClientCommand = Value }; }
         /// <summary>服务端命令</summary>
         public static TypeDef CreateServerCommand(ServerCommandDef Value) { return new TypeDef { _Tag = TypeDefTag.ServerCommand, ServerCommand = Value }; }
-        /// <summary>查询</summary>
-        public static TypeDef CreateQuery(QueryDef Value) { return new TypeDef { _Tag = TypeDefTag.Query, Query = Value }; }
 
         /// <summary>基元</summary>
         public Boolean OnPrimitive { get { return _Tag == TypeDefTag.Primitive; } }
@@ -102,8 +96,6 @@ namespace Niveum.ObjectSchema
         public Boolean OnClientCommand { get { return _Tag == TypeDefTag.ClientCommand; } }
         /// <summary>服务端命令</summary>
         public Boolean OnServerCommand { get { return _Tag == TypeDefTag.ServerCommand; } }
-        /// <summary>查询</summary>
-        public Boolean OnQuery { get { return _Tag == TypeDefTag.Query; } }
     }
     /// <summary>类型引用</summary>
     [Record]
@@ -305,171 +297,6 @@ namespace Niveum.ObjectSchema
         public List<KeyValuePair<String, List<String>>> Attributes { get; init; }
         /// <summary>描述</summary>
         public String Description { get; init; }
-    }
-    /// <summary>查询定义</summary>
-    [Record]
-    public sealed class QueryDef
-    {
-        /// <summary>名称</summary>
-        public String Name { get; init; }
-        /// <summary>根结点类型</summary>
-        public TypeSpec RootType { get; init; }
-        /// <summary>映射规格</summary>
-        public List<QueryMappingSpec> MappingSpecs { get; init; }
-    }
-    /// <summary>查询映射规格</summary>
-    [Record]
-    public sealed class QueryMappingSpec
-    {
-        /// <summary>名称</summary>
-        public String Name { get; init; }
-        /// <summary>映射表达式</summary>
-        public QueryMappingExpr Expr { get; init; }
-    }
-    public enum QueryMappingExprTag
-    {
-        /// <summary>参数名称</summary>
-        ParameterName = 0,
-        /// <summary>本地名称</summary>
-        LocalName = 1,
-        /// <summary>上级表达式</summary>
-        Parent = 2,
-        /// <summary>选择器表达式</summary>
-        Selector = 3,
-        /// <summary>函数表达式</summary>
-        Function = 4
-    }
-    /// <summary>查询映射表达式</summary>
-    [TaggedUnion]
-    public sealed class QueryMappingExpr
-    {
-        [Tag] public QueryMappingExprTag _Tag { get; init; }
-
-        /// <summary>参数名称</summary>
-        public String ParameterName { get; init; }
-        /// <summary>本地名称</summary>
-        public String LocalName { get; init; }
-        /// <summary>上级表达式</summary>
-        public QueryMappingExpr Parent { get; init; }
-        /// <summary>选择器表达式</summary>
-        public QuerySelectorExpr Selector { get; init; }
-        /// <summary>函数表达式</summary>
-        public QueryFunctionExpr Function { get; init; }
-
-        /// <summary>参数名称</summary>
-        public static QueryMappingExpr CreateParameterName(String Value) { return new QueryMappingExpr { _Tag = QueryMappingExprTag.ParameterName, ParameterName = Value }; }
-        /// <summary>本地名称</summary>
-        public static QueryMappingExpr CreateLocalName(String Value) { return new QueryMappingExpr { _Tag = QueryMappingExprTag.LocalName, LocalName = Value }; }
-        /// <summary>上级表达式</summary>
-        public static QueryMappingExpr CreateParent(QueryMappingExpr Value) { return new QueryMappingExpr { _Tag = QueryMappingExprTag.Parent, Parent = Value }; }
-        /// <summary>选择器表达式</summary>
-        public static QueryMappingExpr CreateSelector(QuerySelectorExpr Value) { return new QueryMappingExpr { _Tag = QueryMappingExprTag.Selector, Selector = Value }; }
-        /// <summary>函数表达式</summary>
-        public static QueryMappingExpr CreateFunction(QueryFunctionExpr Value) { return new QueryMappingExpr { _Tag = QueryMappingExprTag.Function, Function = Value }; }
-
-        /// <summary>参数名称</summary>
-        public Boolean OnParameterName { get { return _Tag == QueryMappingExprTag.ParameterName; } }
-        /// <summary>本地名称</summary>
-        public Boolean OnLocalName { get { return _Tag == QueryMappingExprTag.LocalName; } }
-        /// <summary>上级表达式</summary>
-        public Boolean OnParent { get { return _Tag == QueryMappingExprTag.Parent; } }
-        /// <summary>选择器表达式</summary>
-        public Boolean OnSelector { get { return _Tag == QueryMappingExprTag.Selector; } }
-        /// <summary>函数表达式</summary>
-        public Boolean OnFunction { get { return _Tag == QueryMappingExprTag.Function; } }
-    }
-    public enum NumeralTag
-    {
-        /// <summary>0..1</summary>
-        Optional = 0,
-        /// <summary>1</summary>
-        One = 1,
-        /// <summary>*</summary>
-        Many = 2,
-        /// <summary>全部</summary>
-        All = 3,
-        /// <summary>区间</summary>
-        Range = 4,
-        /// <summary>数量</summary>
-        Count = 5
-    }
-    /// <summary>量词</summary>
-    [TaggedUnion]
-    public sealed class Numeral
-    {
-        [Tag] public NumeralTag _Tag { get; init; }
-
-        /// <summary>0..1</summary>
-        public Unit Optional { get; init; }
-        /// <summary>1</summary>
-        public Unit One { get; init; }
-        /// <summary>*</summary>
-        public Unit Many { get; init; }
-        /// <summary>全部</summary>
-        public Unit All { get; init; }
-        /// <summary>区间</summary>
-        public Unit Range { get; init; }
-        /// <summary>数量</summary>
-        public Unit Count { get; init; }
-
-        /// <summary>0..1</summary>
-        public static Numeral CreateOptional() { return new Numeral { _Tag = NumeralTag.Optional, Optional = default(Unit) }; }
-        /// <summary>1</summary>
-        public static Numeral CreateOne() { return new Numeral { _Tag = NumeralTag.One, One = default(Unit) }; }
-        /// <summary>*</summary>
-        public static Numeral CreateMany() { return new Numeral { _Tag = NumeralTag.Many, Many = default(Unit) }; }
-        /// <summary>全部</summary>
-        public static Numeral CreateAll() { return new Numeral { _Tag = NumeralTag.All, All = default(Unit) }; }
-        /// <summary>区间</summary>
-        public static Numeral CreateRange() { return new Numeral { _Tag = NumeralTag.Range, Range = default(Unit) }; }
-        /// <summary>数量</summary>
-        public static Numeral CreateCount() { return new Numeral { _Tag = NumeralTag.Count, Count = default(Unit) }; }
-
-        /// <summary>0..1</summary>
-        public Boolean OnOptional { get { return _Tag == NumeralTag.Optional; } }
-        /// <summary>1</summary>
-        public Boolean OnOne { get { return _Tag == NumeralTag.One; } }
-        /// <summary>*</summary>
-        public Boolean OnMany { get { return _Tag == NumeralTag.Many; } }
-        /// <summary>全部</summary>
-        public Boolean OnAll { get { return _Tag == NumeralTag.All; } }
-        /// <summary>区间</summary>
-        public Boolean OnRange { get { return _Tag == NumeralTag.Range; } }
-        /// <summary>数量</summary>
-        public Boolean OnCount { get { return _Tag == NumeralTag.Count; } }
-    }
-    /// <summary>带序字段</summary>
-    [Record]
-    public sealed class OrderedField
-    {
-        /// <summary>名称</summary>
-        public String Name { get; init; }
-        /// <summary>是否逆序</summary>
-        public Boolean IsDescending { get; init; }
-    }
-    /// <summary>查询选择器表达式</summary>
-    [Record]
-    public sealed class QuerySelectorExpr
-    {
-        /// <summary>映射表达式</summary>
-        public QueryMappingExpr Expr { get; init; }
-        /// <summary>量词</summary>
-        public Numeral Numeral { get; init; }
-        /// <summary>选择索引</summary>
-        public List<String> By { get; init; }
-        /// <summary>排序索引</summary>
-        public List<OrderedField> OrderBy { get; init; }
-        /// <summary>实参</summary>
-        public List<QueryMappingExpr> Arguments { get; init; }
-    }
-    /// <summary>查询函数表达式</summary>
-    [Record]
-    public sealed class QueryFunctionExpr
-    {
-        /// <summary>名称</summary>
-        public String Name { get; init; }
-        /// <summary>实参</summary>
-        public List<QueryMappingExpr> Arguments { get; init; }
     }
     /// <summary>类型定义集</summary>
     [Record]

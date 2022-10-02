@@ -4,7 +4,7 @@
       File:        JavaBinary.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构Java二进制模板
-      Version:     2018.12.20.
+      Version:     2022.10.02.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -411,10 +411,11 @@
     }
 
 #Template BinaryTranslator_Alias a:AliasDef NamespaceName:String
+    ${BinaryTranslator_Alias(a.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(a.GetTypeSpec(), NamespaceName), a.Type, NamespaceName)}
+
+#Template BinaryTranslator_Alias Name:String TypeString:String ValueType:TypeSpec NamespaceName:String
     $$
-        var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
-        var Name = a.GetTypeSpec().SimpleName(NamespaceName);
-        var ValueSimpleName = a.Type.SimpleName(NamespaceName);
+        var ValueSimpleName = ValueType.SimpleName(NamespaceName);
     public static ${TypeString} [[${Name}FromBinary]](IReadableStream s)
     {
         ${TypeString} o = new ${TypeString}();

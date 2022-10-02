@@ -1,4 +1,8 @@
-﻿2022.01.25
+﻿2022.10.02
+Niveum.Object:
+增加C#、C++、Haxe、Java泛型类型的序列化代码生成支持。
+
+2022.01.25
 Niveum.Expression:
 增加RISC-V汇编代码生成。
 根据测试用例修正RISC-V汇编代码生成。

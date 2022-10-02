@@ -454,9 +454,14 @@ namespace Niveum.ObjectSchema.HaxeJson
         }
         public IEnumerable<String> JsonTranslator_Alias(AliasDef a, String NamespaceName)
         {
-            var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
-            var Name = a.GetTypeSpec().SimpleName(NamespaceName);
-            var ValueSimpleName = a.Type.SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Begin(), JsonTranslator_Alias(a.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(a.GetTypeSpec(), NamespaceName), a.Type, NamespaceName)))
+            {
+                yield return _Line;
+            }
+        }
+        public IEnumerable<String> JsonTranslator_Alias(String Name, String TypeString, TypeSpec ValueType, String NamespaceName)
+        {
+            var ValueSimpleName = ValueType.SimpleName(NamespaceName);
             foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), "public static function "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(Name)), "FromJson"))), "(j : Dynamic) : "), TypeString))
             {
                 yield return _Line;

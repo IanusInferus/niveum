@@ -3,7 +3,7 @@
 //  File:        CSharpJson.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 对象类型结构C# JSON通讯代码生成器
-//  Version:     2021.12.21.
+//  Version:     2022.10.02.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -157,6 +157,7 @@ namespace Niveum.ObjectSchema.CSharpJson
 
             var scg = Schema.GetSchemaClosureGenerator();
             var sc = scg.GetClosure(Schema.TypeRefs.Concat(Schema.Types), new List<TypeSpec> { });
+            var TypeDict = sc.TypeDefs.ToDictionary(t => t.VersionedName());
             var Tuples = sc.TypeSpecs.Where(t => t.OnTuple).ToList();
             var GenericTypeSpecs = sc.TypeSpecs.Where(t => t.OnGenericTypeSpec).ToList();
 
@@ -188,25 +189,53 @@ namespace Niveum.ObjectSchema.CSharpJson
             }
             foreach (var gts in GenericTypeSpecs)
             {
-                if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Optional") && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                if (gts.GenericTypeSpec.TypeSpec.OnTypeRef)
                 {
-                    l.AddRange(JsonTranslator_Optional(gts, GenericOptionalType.Value, NamespaceName));
-                    l.Add("");
-                }
-                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("List") && gts.GenericTypeSpec.ParameterValues.Count == 1)
-                {
-                    l.AddRange(JsonTranslator_List(gts, NamespaceName));
-                    l.Add("");
-                }
-                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Set") && gts.GenericTypeSpec.ParameterValues.Count == 1)
-                {
-                    l.AddRange(JsonTranslator_Set(gts, NamespaceName));
-                    l.Add("");
-                }
-                else if (gts.GenericTypeSpec.TypeSpec.OnTypeRef && gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Map") && gts.GenericTypeSpec.ParameterValues.Count == 2)
-                {
-                    l.AddRange(JsonTranslator_Map(gts, NamespaceName));
-                    l.Add("");
+                    var t = TypeDict[gts.GenericTypeSpec.TypeSpec.TypeRef.VersionedName()];
+                    if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Optional") && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                    {
+                        l.AddRange(JsonTranslator_Optional(gts, GenericOptionalType.Value, NamespaceName));
+                        l.Add("");
+                    }
+                    else if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("List") && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                    {
+                        l.AddRange(JsonTranslator_List(gts, NamespaceName));
+                        l.Add("");
+                    }
+                    else if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Set") && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                    {
+                        l.AddRange(JsonTranslator_Set(gts, NamespaceName));
+                        l.Add("");
+                    }
+                    else if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Map") && gts.GenericTypeSpec.ParameterValues.Count == 2)
+                    {
+                        l.AddRange(JsonTranslator_Map(gts, NamespaceName));
+                        l.Add("");
+                    }
+                    else if (t.OnAlias)
+                    {
+                        var a = t.MakeGenericType(new List<String> { }, gts.GenericTypeSpec.ParameterValues).Alias;
+                        l.AddRange(JsonTranslator_Alias(gts.SimpleName(NamespaceName), GetTypeString(gts, NamespaceName), a.Type, NamespaceName));
+                        l.Add("");
+                    }
+                    else if (t.OnRecord)
+                    {
+                        var r = t.MakeGenericType(new List<String> { }, gts.GenericTypeSpec.ParameterValues).Record;
+                        l.AddRange(JsonTranslator_Record(gts.SimpleName(NamespaceName), GetTypeString(gts, NamespaceName), r.Fields, NamespaceName));
+                        l.Add("");
+                    }
+                    else if (t.OnTaggedUnion)
+                    {
+                        var tu = t.MakeGenericType(new List<String> { }, gts.GenericTypeSpec.ParameterValues).TaggedUnion;
+                        var TagName = GetSuffixedTypeName(t.TaggedUnion.Name, t.TaggedUnion.Version, "Tag", NamespaceName);
+                        var TagTypeString = GetSuffixedTypeString(t.TaggedUnion.Name, t.TaggedUnion.Version, "Tag", NamespaceName);
+                        l.AddRange(JsonTranslator_TaggedUnion(gts.SimpleName(NamespaceName), GetTypeString(gts, NamespaceName), TagName, TagTypeString, tu.Alternatives, NamespaceName));
+                        l.Add("");
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(String.Format("GenericTypeNotSupported: {0}", gts.GenericTypeSpec.TypeSpec.TypeRef.VersionedName()));
+                    }
                 }
                 else
                 {

@@ -923,9 +923,14 @@ namespace Niveum.ObjectSchema.CppBinary
         }
         public IEnumerable<String> BinaryTranslator_Alias(AliasDef a, String NamespaceName)
         {
-            var TypeString = GetTypeString(a.GetTypeSpec(), NamespaceName);
-            var Name = a.GetTypeSpec().SimpleName(NamespaceName);
-            var ValueSimpleName = a.Type.SimpleName(NamespaceName);
+            foreach (var _Line in Combine(Begin(), BinaryTranslator_Alias(a.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(a.GetTypeSpec(), NamespaceName), a.Type, NamespaceName)))
+            {
+                yield return _Line;
+            }
+        }
+        public IEnumerable<String> BinaryTranslator_Alias(String Name, String TypeString, TypeSpec ValueType, String NamespaceName)
+        {
+            var ValueSimpleName = ValueType.SimpleName(NamespaceName);
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "static "), TypeString), " "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "FromBinary"))), "(IReadableStream &s)"))
             {
                 yield return _Line;
