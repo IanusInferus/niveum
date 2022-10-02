@@ -44,7 +44,9 @@ namespace Niveum.ObjectSchema
         /// <summary>客户端命令</summary>
         ClientCommand = 5,
         /// <summary>服务端命令</summary>
-        ServerCommand = 6
+        ServerCommand = 6,
+        /// <summary>查询</summary>
+        Query = 7
     }
     /// <summary>类型定义</summary>
     [TaggedUnion]
@@ -66,6 +68,8 @@ namespace Niveum.ObjectSchema
         public ClientCommandDef ClientCommand { get; init; }
         /// <summary>服务端命令</summary>
         public ServerCommandDef ServerCommand { get; init; }
+        /// <summary>查询</summary>
+        public QueryDef Query { get; init; }
 
         /// <summary>基元</summary>
         public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, Primitive = Value }; }
@@ -81,6 +85,8 @@ namespace Niveum.ObjectSchema
         public static TypeDef CreateClientCommand(ClientCommandDef Value) { return new TypeDef { _Tag = TypeDefTag.ClientCommand, ClientCommand = Value }; }
         /// <summary>服务端命令</summary>
         public static TypeDef CreateServerCommand(ServerCommandDef Value) { return new TypeDef { _Tag = TypeDefTag.ServerCommand, ServerCommand = Value }; }
+        /// <summary>查询</summary>
+        public static TypeDef CreateQuery(QueryDef Value) { return new TypeDef { _Tag = TypeDefTag.Query, Query = Value }; }
 
         /// <summary>基元</summary>
         public Boolean OnPrimitive { get { return _Tag == TypeDefTag.Primitive; } }
@@ -96,6 +102,8 @@ namespace Niveum.ObjectSchema
         public Boolean OnClientCommand { get { return _Tag == TypeDefTag.ClientCommand; } }
         /// <summary>服务端命令</summary>
         public Boolean OnServerCommand { get { return _Tag == TypeDefTag.ServerCommand; } }
+        /// <summary>查询</summary>
+        public Boolean OnQuery { get { return _Tag == TypeDefTag.Query; } }
     }
     /// <summary>类型引用</summary>
     [Record]

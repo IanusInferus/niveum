@@ -108,6 +108,7 @@ namespace Niveum.ObjectSchema.Xhtml
         {
             var Name = t.VersionedName();
             var MetaType = GetMetaType(t);
+            var Attributes = t.Attributes();
             var GenericParameters = t.GenericParameters();
             var Description = t.Description();
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "<h3 id=\""), GetEscaped(Name)), "\">"), GetEscaped(MetaType)), " "), GetEscaped(Name)), "</h3>"))
@@ -118,14 +119,38 @@ namespace Niveum.ObjectSchema.Xhtml
             {
                 yield return _Line;
             }
+            if (Attributes.Count > 0)
+            {
+                yield return "<pre>标记</pre>";
+                yield return "<table>";
+                foreach (var a in Attributes)
+                {
+                    foreach (var _Line in Combine(Begin(), Attribute("<" + a.Key + ">", a.Value)))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                }
+                yield return "</table>";
+            }
             if (GenericParameters.Count > 0)
             {
+                yield return "<pre>泛型参数</pre>";
                 yield return "<table>";
                 foreach (var gp in GenericParameters)
                 {
                     foreach (var _Line in Combine(Begin(), Variable("'" + gp.Name, gp.Type, gp.Description)))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                    if (gp.Attributes.Count > 0)
+                    {
+                        foreach (var a in gp.Attributes)
+                        {
+                            foreach (var _Line in Combine(Begin(), Attribute("'" + gp.Name + ".<" + a.Key + ">", a.Value)))
+                            {
+                                yield return _Line == "" ? "" : "    " + _Line;
+                            }
+                        }
                     }
                 }
                 yield return "</table>";
@@ -143,6 +168,7 @@ namespace Niveum.ObjectSchema.Xhtml
             }
             else if (t.OnRecord)
             {
+                yield return "<pre>字段</pre>";
                 yield return "<table>";
                 foreach (var _Line in Combine(Combine(Begin(), "    "), Variables(t.Record.Fields)))
                 {
@@ -152,6 +178,7 @@ namespace Niveum.ObjectSchema.Xhtml
             }
             else if (t.OnTaggedUnion)
             {
+                yield return "<pre>选择支</pre>";
                 yield return "<table>";
                 foreach (var _Line in Combine(Combine(Begin(), "    "), Variables(t.TaggedUnion.Alternatives)))
                 {
@@ -161,6 +188,7 @@ namespace Niveum.ObjectSchema.Xhtml
             }
             else if (t.OnEnum)
             {
+                yield return "<pre>字面量</pre>";
                 yield return "<table>";
                 foreach (var _Line in Combine(Combine(Begin(), "    "), Literals(t.Enum.Literals)))
                 {
@@ -187,6 +215,7 @@ namespace Niveum.ObjectSchema.Xhtml
             }
             else if (t.OnServerCommand)
             {
+                yield return "<pre>参数</pre>";
                 yield return "<table>";
                 foreach (var _Line in Combine(Combine(Begin(), "    "), Variables(t.ServerCommand.OutParameters)))
                 {
@@ -199,6 +228,20 @@ namespace Niveum.ObjectSchema.Xhtml
                 throw new InvalidOperationException();
             }
             yield return "<pre></pre>";
+        }
+        public IEnumerable<String> Attribute(String Name, List<String> Values)
+        {
+            yield return "<tr>";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    <td>"), GetEscaped(Name)), "</td>"))
+            {
+                yield return _Line;
+            }
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    <td>"), GetEscaped(String.Join(" ", Values))), "</td>"))
+            {
+                yield return _Line;
+            }
+            yield return "    <td></td>";
+            yield return "</tr>";
         }
         public IEnumerable<String> Variable(String Name, TypeSpec Type, String Description)
         {
@@ -226,6 +269,16 @@ namespace Niveum.ObjectSchema.Xhtml
                     foreach (var _Line in Combine(Begin(), Variable(v.Name, v.Type, v.Description)))
                     {
                         yield return _Line;
+                    }
+                    if (v.Attributes.Count > 0)
+                    {
+                        foreach (var a in v.Attributes)
+                        {
+                            foreach (var _Line in Combine(Begin(), Attribute("'" + v.Name + ".<" + a.Key + ">", a.Value)))
+                            {
+                                yield return _Line;
+                            }
+                        }
                     }
                 }
             }

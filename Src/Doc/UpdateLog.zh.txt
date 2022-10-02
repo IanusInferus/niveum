@@ -1,6 +1,8 @@
 ﻿2022.10.02
 Examples:
 在C++通讯示例中增加NiveumQuery内容。
+Niveum.Object:
+XHTML文档生成增加标记输出。
 
 2022.01.01
 Niveum.Object:

@@ -50,20 +50,43 @@
     $$
         var Name = t.VersionedName();
         var MetaType = GetMetaType(t);
+        var Attributes = t.Attributes();
         var GenericParameters = t.GenericParameters();
         var Description = t.Description();
     <h3 id="${GetEscaped(Name)}">${GetEscaped(MetaType)} ${GetEscaped(Name)}</h3>
     <pre>${GetEscaped(Description)}</pre>
     $$
+        if (Attributes.Count > 0)
+        {
+            ##
+                <pre>标记</pre>
+                <table>
+                    $$
+                        foreach (var a in Attributes)
+                        {
+                            ##
+                                ${Attribute("<" + a.Key + ">", a.Value)}
+                        }
+                </table>
+        }
         if (GenericParameters.Count > 0)
         {
             ##
+                <pre>泛型参数</pre>
                 <table>
                     $$
                         foreach (var gp in GenericParameters)
                         {
                             ##
                                 ${Variable("'" + gp.Name, gp.Type, gp.Description)}
+                            if (gp.Attributes.Count > 0)
+                            {
+                                foreach (var a in gp.Attributes)
+                                {
+                                    ##
+                                        ${Attribute("'" + gp.Name + ".<" + a.Key + ">", a.Value)}
+                                }
+                            }
                         }
                 </table>
         }
@@ -79,6 +102,7 @@
         else if (t.OnRecord)
         {
             ##
+                <pre>字段</pre>
                 <table>
                     ${Variables(t.Record.Fields)}
                 </table>
@@ -86,6 +110,7 @@
         else if (t.OnTaggedUnion)
         {
             ##
+                <pre>选择支</pre>
                 <table>
                     ${Variables(t.TaggedUnion.Alternatives)}
                 </table>
@@ -93,6 +118,7 @@
         else if (t.OnEnum)
         {
             ##
+                <pre>字面量</pre>
                 <table>
                     ${Literals(t.Enum.Literals)}
                 </table>
@@ -112,6 +138,7 @@
         else if (t.OnServerCommand)
         {
             ##
+                <pre>参数</pre>
                 <table>
                     ${Variables(t.ServerCommand.OutParameters)}
                 </table>
@@ -121,6 +148,13 @@
             throw new InvalidOperationException();
         }
     <pre></pre>
+
+#Template Attribute Name:String Values:List<String>
+    <tr>
+        <td>${GetEscaped(Name)}</td>
+        <td>${GetEscaped(String.Join(" ", Values))}</td>
+        <td></td>
+    </tr>
 
 #Template Variable Name:String Type:TypeSpec Description:String
     <tr>
@@ -137,6 +171,14 @@
             {
                 ##
                     ${Variable(v.Name, v.Type, v.Description)}
+                if (v.Attributes.Count > 0)
+                {
+                    foreach (var a in v.Attributes)
+                    {
+                        ##
+                            ${Attribute("'" + v.Name + ".<" + a.Key + ">", a.Value)}
+                    }
+                }
             }
         }
         else

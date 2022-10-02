@@ -1328,6 +1328,46 @@ namespace Niveum.ObjectSchema
             }
         }
 
+        public static List<KeyValuePair<String, List<String>>> Attributes(this TypeDef t)
+        {
+            if (t.OnPrimitive)
+            {
+                return t.Primitive.Attributes;
+            }
+            else if (t.OnAlias)
+            {
+                return t.Alias.Attributes;
+            }
+            else if (t.OnRecord)
+            {
+                return t.Record.Attributes;
+            }
+            else if (t.OnTaggedUnion)
+            {
+                return t.TaggedUnion.Attributes;
+            }
+            else if (t.OnEnum)
+            {
+                return t.Enum.Attributes;
+            }
+            else if (t.OnClientCommand)
+            {
+                return t.ClientCommand.Attributes;
+            }
+            else if (t.OnServerCommand)
+            {
+                return t.ServerCommand.Attributes;
+            }
+            else if (t.OnQuery)
+            {
+                return new List<KeyValuePair<String, List<String>>> { };
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
         public static IEnumerable<T> Join<T>(this IEnumerable<IEnumerable<T>> l, IEnumerable<T> Separator)
         {
             IEnumerable<T>? Output = null;
