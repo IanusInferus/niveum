@@ -3,7 +3,7 @@
 //  File:        FileParser.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 文件解析器
-//  Version:     2022.01.01.
+//  Version:     2022.10.03.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -698,24 +698,13 @@ namespace Niveum.ObjectSchema
                                         Lines.Add((IndentLevel, Tokens));
                                     }
                                 }
-                                QueryPath ParseQueryPath(Token Token)
+                                String ParseVariableName(Token Token)
                                 {
-                                    var v = GetStringValue(Token, nm, "InvalidQueryPath");
-                                    if (v == "..")
-                                    {
-                                        var p = QueryPath.CreateParent();
-                                        Mark(p, Token);
-                                        return p;
-                                    }
-                                    else
-                                    {
-                                        var p = QueryPath.CreateLocalName(v);
-                                        Mark(p, Token);
-                                        return p;
-                                    }
+                                    var v = GetStringValue(Token, nm, "InvalidVariableName");
+                                    return v;
                                 }
 
-                                var Numerals = new Dictionary<String, Func<Numeral>>
+                                Dictionary<String, Func<Numeral>> Numerals = new Dictionary<String, Func<Numeral>>
                                 {
                                     { "Optional", () => Numeral.CreateOptional() },
                                     { "One", () => Numeral.CreateOne()},
@@ -837,23 +826,29 @@ namespace Niveum.ObjectSchema
                                     QueryMappingExpr e;
                                     if (Tokens.Count == 1)
                                     {
-                                        e = new QueryMappingExpr { Variable = QueryPath.CreateLocalName(mName), Function = Optional<QueryFunction>.Empty, SubMappings = SubMappings };
+                                        e = new QueryMappingExpr { Variable = mName, Function = Optional<QueryFunction>.Empty, SubMappings = SubMappings };
                                     }
                                     else if (Tokens.Count == 2)
                                     {
-                                        var Variable = ParseQueryPath(Tokens[1]);
+                                        var Variable = ParseVariableName(Tokens[1]);
                                         e = new QueryMappingExpr { Variable = Variable, Function = Optional<QueryFunction>.Empty, SubMappings = SubMappings };
+                                    }
+                                    else if ((Tokens.Count == 4) && (Tokens[1].OnSingleLineLiteral && Tokens[1].SingleLineLiteral == "None") && Tokens[2].OnLeftParenthesis && Tokens[3].OnRightParenthesis)
+                                    {
+                                        var Function = QueryFunction.CreateNone();
+                                        Mark2(Function, Tokens[1], Tokens[4]);
+                                        e = new QueryMappingExpr { Variable = Optional<String>.Empty, Function = Function, SubMappings = SubMappings };
                                     }
                                     else if ((Tokens.Count == 5) && (Tokens[1].OnSingleLineLiteral && Tokens[1].SingleLineLiteral == "Count") && Tokens[2].OnLeftParenthesis && Tokens[4].OnRightParenthesis)
                                     {
-                                        var Variable = ParseQueryPath(Tokens[3]);
+                                        var Variable = ParseVariableName(Tokens[3]);
                                         var Function = QueryFunction.CreateCount();
                                         Mark2(Function, Tokens[1], Tokens[4]);
                                         e = new QueryMappingExpr { Variable = Variable, Function = Function, SubMappings = SubMappings };
                                     }
                                     else if ((Tokens.Count >= 5) && (Tokens[1].OnSingleLineLiteral && Tokens[1].SingleLineLiteral == "Select") && Tokens[2].OnLeftParenthesis && Tokens[Tokens.Count - 1].OnRightParenthesis)
                                     {
-                                        var Variable = ParseQueryPath(Tokens[3]);
+                                        var Variable = ParseVariableName(Tokens[3]);
 
                                         var ArgumentTokens = Tokens.AsEnumerable().Reverse().Skip(1).TakeWhile(t => !t.OnRightParenthesis).Reverse().ToList();
                                         var Arguments = new List<QueryParameter>();

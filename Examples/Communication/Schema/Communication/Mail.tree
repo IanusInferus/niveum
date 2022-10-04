@@ -4,7 +4,7 @@
       File:        Mail.tree
       Location:    Niveum.Examples <Tree>
       Description: 邮件
-      Version:     2022.10.02.
+      Version:     2022.10.04.
       Author:      F.R.C.
       Copyright(C) Public Domain
 
@@ -24,6 +24,7 @@
     Title               String                      标题
     FromId              Int                         发件用户ID
     Time                String                      "时间(UTC)：yyyy-MM-ddTHH:mm:ssZ形式"
+    ContentSize         Int                         内容长度
     Content             MailContent                 内容
     IsNew               Boolean                     是否是新邮件
 
@@ -36,8 +37,9 @@
     RichText            String                      RTF文本
 
 #Record MailAttachment                              [By:Id]邮件附件
-    Id                  Int64                       邮件ID
+    Id                  Int64                       邮件附件ID
     Name                String                      名称
+    ContentSize         Int                         内容长度
     Content             List<Byte>                  内容
 
 #ClientCommand GetUserProfile                       获取用户信息

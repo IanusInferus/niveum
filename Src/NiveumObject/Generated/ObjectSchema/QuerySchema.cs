@@ -53,40 +53,12 @@ namespace Niveum.ObjectSchema
     [Record]
     public sealed class QueryMappingExpr
     {
-        /// <summary>变量表达式</summary>
-        public QueryPath Variable { get; init; }
+        /// <summary>变量名称</summary>
+        public Optional<String> Variable { get; init; }
         /// <summary>函数映射</summary>
         public Optional<QueryFunction> Function { get; init; }
         /// <summary>子映射</summary>
         public Optional<List<QueryMappingSpec>> SubMappings { get; init; }
-    }
-    public enum QueryPathTag
-    {
-        /// <summary>本地名称</summary>
-        LocalName = 0,
-        /// <summary>上一级路径</summary>
-        Parent = 1
-    }
-    /// <summary>查询路径</summary>
-    [TaggedUnion]
-    public sealed class QueryPath
-    {
-        [Tag] public QueryPathTag _Tag { get; init; }
-
-        /// <summary>本地名称</summary>
-        public String LocalName { get; init; }
-        /// <summary>上一级路径</summary>
-        public Unit Parent { get; init; }
-
-        /// <summary>本地名称</summary>
-        public static QueryPath CreateLocalName(String Value) { return new QueryPath { _Tag = QueryPathTag.LocalName, LocalName = Value }; }
-        /// <summary>上一级路径</summary>
-        public static QueryPath CreateParent() { return new QueryPath { _Tag = QueryPathTag.Parent, Parent = default(Unit) }; }
-
-        /// <summary>本地名称</summary>
-        public Boolean OnLocalName { get { return _Tag == QueryPathTag.LocalName; } }
-        /// <summary>上一级路径</summary>
-        public Boolean OnParent { get { return _Tag == QueryPathTag.Parent; } }
     }
     /// <summary>查询参数</summary>
     [Record]
@@ -97,10 +69,12 @@ namespace Niveum.ObjectSchema
     }
     public enum QueryFunctionTag
     {
+        /// <summary>返回空</summary>
+        None = 0,
         /// <summary>获取长度</summary>
-        Count = 0,
+        Count = 1,
         /// <summary>选择器</summary>
-        Select = 1
+        Select = 2
     }
     /// <summary>查询函数映射</summary>
     [TaggedUnion]
@@ -108,16 +82,22 @@ namespace Niveum.ObjectSchema
     {
         [Tag] public QueryFunctionTag _Tag { get; init; }
 
+        /// <summary>返回空</summary>
+        public Unit None { get; init; }
         /// <summary>获取长度</summary>
         public Unit Count { get; init; }
         /// <summary>选择器</summary>
         public QuerySelect Select { get; init; }
 
+        /// <summary>返回空</summary>
+        public static QueryFunction CreateNone() { return new QueryFunction { _Tag = QueryFunctionTag.None, None = default(Unit) }; }
         /// <summary>获取长度</summary>
         public static QueryFunction CreateCount() { return new QueryFunction { _Tag = QueryFunctionTag.Count, Count = default(Unit) }; }
         /// <summary>选择器</summary>
         public static QueryFunction CreateSelect(QuerySelect Value) { return new QueryFunction { _Tag = QueryFunctionTag.Select, Select = Value }; }
 
+        /// <summary>返回空</summary>
+        public Boolean OnNone { get { return _Tag == QueryFunctionTag.None; } }
         /// <summary>获取长度</summary>
         public Boolean OnCount { get { return _Tag == QueryFunctionTag.Count; } }
         /// <summary>选择器</summary>

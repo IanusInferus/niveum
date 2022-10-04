@@ -55,10 +55,8 @@
             FromId
             Time
             ContentBrief Content
-                PlainText // TaggedUnion的每个Alternative的映射表达式只能为自身，不能进行复杂运算
-                    Size Count(..) // TaggedUnion中可以使用..表示上级结构
-                RichText
-                    Size Count(..)
+                PlainText None() // TaggedUnion的每个Alternative的映射表达式只能为自身或空，不能进行复杂运算
+                RichText None()
             IsNew
             AttachmentCount Count(Attachments)
 
@@ -71,16 +69,14 @@
     QueryBody ::= QueryMappingSpec
 
     QueryMappingSpec ::= SingleLineLiteral
-                    | SingleLineLiteral QueryMappingExpr
+                       | SingleLineLiteral QueryMappingExpr
 
-    QueryMappingExpr ::= QueryPath
-                    | QueryFunctionExpr? QueryMappingExpr*
+    QueryMappingExpr ::= SingleLineLiteral
+                       | QueryFunctionExpr? QueryMappingExpr*
 
-    QueryFunctionExpr ::= "Count" "(" QueryPath ")"
-                        | "Select" "(" QueryPath QueryFilter SingleLineLiteral* ")"
-
-    QueryPath ::= SingleLineLiteral
-                | ".."
+    QueryFunctionExpr ::= "None" "()"
+                        | "Count" "(" SingleLineLiteral ")"
+                        | "Select" "(" SingleLineLiteral QueryFilter SingleLineLiteral* ")"
 
     QueryFilter ::= "(" Numeral ("By" BySpec)? ("OrderBy" OrderBySpec)? ")"
 
@@ -90,7 +86,7 @@
             | "(" SingleLineLiteral* ")"
 
     OrderBySpec ::= SingleLineLiteral "-"?
-                | "(" (SingleLineLiteral "-"?)* ")"
+                  | "(" (SingleLineLiteral "-"?)* ")"
 
 ## 文法分析
 
@@ -98,5 +94,6 @@
 
 ## 语义
 
-    Count(Expr:QueryPath):Int //获取长度
-    Select(Expr:QueryPath, Filter:QueryFilter, Arguments:List<String>):? //查询选择器，返回类型与Filter中的Numeral相关，Arguments的内容为Query的顶层参数
+    None():Unit //返回空类型
+    Count(Variable:SingleLineLiteral):Int //获取List、Set、Map长度
+    Select(Variable:SingleLineLiteral, Filter:QueryFilter, Arguments:List<String>):? //查询选择器，返回类型与Filter中的Numeral相关，Arguments的内容为Query的顶层参数
