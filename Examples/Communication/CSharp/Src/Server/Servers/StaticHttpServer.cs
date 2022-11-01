@@ -40,6 +40,8 @@ namespace Server
         /// <summary>只能在启动前修改，以保证线程安全</summary>
         public String[] Indices { get; set; }
         /// <summary>只能在启动前修改，以保证线程安全</summary>
+        public Boolean EnableClientRewrite { get; set; }
+        /// <summary>只能在启动前修改，以保证线程安全</summary>
         public Func<String, Optional<String>> RelativePathTranslator { get; set; }
 
         public StaticHttpServer(IServerContext sc, Action<Action> QueueUserWorkItem, int ReadBufferSize = 8 * 1024)
@@ -193,6 +195,20 @@ namespace Server
                         foreach (var Index in Indices)
                         {
                             var IndexPath = FileNameHandling.GetPath(UnescapedPath, Index);
+                            if (File.Exists(IndexPath))
+                            {
+                                Path = IndexPath;
+                                Found = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!Found && EnableClientRewrite)
+                    {
+                        foreach (var Index in Indices)
+                        {
+                            var IndexPath = FileNameHandling.GetPath(Root, Index);
                             if (File.Exists(IndexPath))
                             {
                                 Path = IndexPath;

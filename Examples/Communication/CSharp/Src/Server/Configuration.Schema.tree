@@ -86,6 +86,7 @@
     ServiceVirtualPath          String
     PhysicalPath                String
     Indices                     String
+    EnableClientRewrite         Boolean
 
 #Record HttpBinding
     Prefix                      String

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2022.10.02.
+//  Version:     2022.11.01.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -468,6 +468,7 @@ namespace Server
                     Server.ServiceVirtualPath = s.ServiceVirtualPath;
                     Server.PhysicalPath = s.PhysicalPath;
                     Server.Indices = s.Indices.Split(',').Select(Index => Index.Trim(' ')).Where(Index => Index != "").ToArray();
+                    Server.EnableClientRewrite = s.EnableClientRewrite;
 
                     Server.Start();
 

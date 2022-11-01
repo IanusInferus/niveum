@@ -97,6 +97,7 @@
                             ServiceVirtualPath .*
                             PhysicalPath ../../Haxe/bin/
                             Indices index.html
+                            EnableClientRewrite False
                     Protocol
                         HttpStatic
                             Bindings
@@ -112,21 +113,7 @@
                             ServiceVirtualPath .*
                             PhysicalPath ../../CSharpBrowser/Bin/
                             Indices index.html
-                    Protocol
-                        HttpStatic
-                            Bindings
-                                Binding
-                                    Prefix http://+:8003/_framework/
-                            SessionIdleTimeout 120
-                            UnauthenticatedSessionIdleTimeout 30
-                            MaxConnections 32768
-                            MaxConnectionsPerIP 32768
-                            MaxUnauthenticatedPerIP 32768
-                            MaxBadCommands 8
-                            TimeoutCheckPeriod 30
-                            ServiceVirtualPath .*
-                            PhysicalPath ../../CSharpBrowserBlazor/Bin/netstandard2.0/dist/_framework/
-                            Indices index.html
+                            EnableClientRewrite False
                     Protocol
                         HttpStatic
                             Bindings
@@ -140,8 +127,9 @@
                             MaxBadCommands 8
                             TimeoutCheckPeriod 30
                             ServiceVirtualPath .*
-                            PhysicalPath ../../CSharpBrowserBlazor/Src/Client/wwwroot/
+                            PhysicalPath ../../CSharpBrowserBlazor/Bin/net6.0/browser-wasm/publish/wwwroot/
                             Indices index.html
+                            EnableClientRewrite True
     EnableLogNormalIn True
     EnableLogNormalOut True
     EnableLogUnknownError True

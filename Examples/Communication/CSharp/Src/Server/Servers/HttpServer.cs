@@ -417,6 +417,8 @@ namespace Server
 
                         Action<HttpListenerContext> Accept = a =>
                         {
+                            a.Response.Headers["Access-Control-Allow-Origin"] = "*";
+
                             IPEndPoint e = null;
                             try
                             {
