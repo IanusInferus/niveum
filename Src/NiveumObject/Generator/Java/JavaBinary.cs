@@ -3,7 +3,7 @@
 //  File:        JavaBinary.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 对象类型结构Java二进制代码生成器
-//  Version:     2022.10.02.
+//  Version:     2022.11.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -173,23 +173,27 @@ namespace Niveum.ObjectSchema.JavaBinary
                 if (gts.GenericTypeSpec.TypeSpec.OnTypeRef)
                 {
                     var t = TypeDict[gts.GenericTypeSpec.TypeSpec.TypeRef.VersionedName()];
-                    if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Optional") && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                    if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Optional") && (gts.GenericTypeSpec.ParameterValues.Count == 1))
                     {
+                        if (gts.GenericTypeSpec.ParameterValues.Any(pv => pv.IsGeneric())) { continue; }
                         l.AddRange(BinaryTranslator_Optional(gts, GenericOptionalType.Value, NamespaceName));
                         l.Add("");
                     }
-                    else if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("List") && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                    else if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("List") && (gts.GenericTypeSpec.ParameterValues.Count == 1))
                     {
+                        if (gts.GenericTypeSpec.ParameterValues.Any(pv => pv.IsGeneric())) { continue; }
                         l.AddRange(BinaryTranslator_List(gts, NamespaceName));
                         l.Add("");
                     }
-                    else if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Set") && gts.GenericTypeSpec.ParameterValues.Count == 1)
+                    else if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Set") && (gts.GenericTypeSpec.ParameterValues.Count == 1))
                     {
+                        if (gts.GenericTypeSpec.ParameterValues.Any(pv => pv.IsGeneric())) { continue; }
                         l.AddRange(BinaryTranslator_Set(gts, NamespaceName));
                         l.Add("");
                     }
-                    else if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Map") && gts.GenericTypeSpec.ParameterValues.Count == 2)
+                    else if (gts.GenericTypeSpec.TypeSpec.TypeRef.NameMatches("Map") && (gts.GenericTypeSpec.ParameterValues.Count == 2))
                     {
+                        if (gts.GenericTypeSpec.ParameterValues.Any(pv => pv.IsGeneric())) { continue; }
                         l.AddRange(BinaryTranslator_Map(gts, NamespaceName));
                         l.Add("");
                     }

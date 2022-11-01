@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2021.12.21.
+//  Version:     2022.11.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -506,6 +506,10 @@ namespace Niveum.ObjectSchema
                     if (TypeDefSet.Contains(t)) { return; }
                     TypeDefs.Add(t);
                     TypeDefSet.Add(t);
+                    MarkElements(t);
+                }
+                public void MarkElements(TypeDef t)
+                {
                     if (t.OnPrimitive)
                     {
                         foreach (var gp in t.Primitive.GenericParameters)
@@ -602,6 +606,11 @@ namespace Niveum.ObjectSchema
                     else if (t.OnGenericTypeSpec)
                     {
                         TypeString = MarkAndGetTypeString(t.GenericTypeSpec.TypeSpec) + "<" + String.Join(", ", t.GenericTypeSpec.ParameterValues.Select(p => MarkAndGetTypeString(p))) + ">";
+                        if (t.GenericTypeSpec.TypeSpec.OnTypeRef)
+                        {
+                            var VersionedName = t.GenericTypeSpec.TypeSpec.TypeRef.VersionedName();
+                            MarkElements(MakeGenericType(SchemaTypes[VersionedName], new List<String> { }, t.GenericTypeSpec.ParameterValues));
+                        }
                     }
                     else
                     {
@@ -1163,6 +1172,30 @@ namespace Niveum.ObjectSchema
             else if (Type.OnGenericTypeSpec)
             {
                 return Kernel(Type.GenericTypeSpec.TypeSpec, EvaluateGenericParameterRef) + "<" + String.Join(", ", Type.GenericTypeSpec.ParameterValues.Select(t => TypeString(t, EvaluateGenericParameterRef, Kernel))) + ">";
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        public static Boolean IsGeneric(this TypeSpec Type)
+        {
+            if (Type.OnTypeRef)
+            {
+                return false;
+            }
+            else if (Type.OnGenericParameterRef)
+            {
+                return true;
+            }
+            else if (Type.OnTuple)
+            {
+                return !Type.Tuple.All(e => !IsGeneric(e));
+            }
+            else if (Type.OnGenericTypeSpec)
+            {
+                return !Type.GenericTypeSpec.ParameterValues.All(e => !IsGeneric(e));
             }
             else
             {
