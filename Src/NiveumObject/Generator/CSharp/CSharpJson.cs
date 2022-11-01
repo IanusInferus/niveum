@@ -18,15 +18,15 @@ namespace Niveum.ObjectSchema.CSharpJson
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpJson(this Schema Schema, String NamespaceName)
+        public static String CompileToCSharpJson(this Schema Schema, String NamespaceName, Boolean EnableNullableDeclaration)
         {
             var t = new Templates(Schema);
-            var Lines = t.Main(Schema, NamespaceName).Select(Line => Line.TrimEnd(' '));
+            var Lines = t.Main(Schema, NamespaceName, EnableNullableDeclaration).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
         public static String CompileToCSharpJson(this Schema Schema)
         {
-            return CompileToCSharpJson(Schema, "");
+            return CompileToCSharpJson(Schema, "", false);
         }
     }
 

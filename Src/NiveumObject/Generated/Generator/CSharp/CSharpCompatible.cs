@@ -859,7 +859,7 @@ namespace Niveum.ObjectSchema.CSharpCompatible
             }
             yield return "}";
         }
-        public IEnumerable<String> Main(Schema Schema, String NamespaceName, String ImplementationNamespaceName, String ImplementationClassName)
+        public IEnumerable<String> Main(Schema Schema, String NamespaceName, String ImplementationNamespaceName, String ImplementationClassName, Boolean EnableNullableDeclaration)
         {
             yield return "//==========================================================================";
             yield return "//";
@@ -868,6 +868,11 @@ namespace Niveum.ObjectSchema.CSharpCompatible
             yield return "//";
             yield return "//==========================================================================";
             yield return "";
+            if (EnableNullableDeclaration)
+            {
+                yield return "#nullable disable";
+                yield return "";
+            }
             yield return "using System;";
             yield return "using System.Collections.Generic;";
             yield return "using System.Linq;";

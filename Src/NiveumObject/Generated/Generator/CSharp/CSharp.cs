@@ -694,7 +694,7 @@ namespace Niveum.ObjectSchema.CSharp
                 yield return "}";
             }
         }
-        public IEnumerable<String> Main(Schema Schema, String NamespaceName)
+        public IEnumerable<String> Main(Schema Schema, String NamespaceName, Boolean EnableNullableDeclaration)
         {
             yield return "//==========================================================================";
             yield return "//";
@@ -703,6 +703,11 @@ namespace Niveum.ObjectSchema.CSharp
             yield return "//";
             yield return "//==========================================================================";
             yield return "";
+            if (EnableNullableDeclaration)
+            {
+                yield return "#nullable disable";
+                yield return "";
+            }
             yield return "using System;";
             yield return "using System.Collections.Generic;";
             var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();

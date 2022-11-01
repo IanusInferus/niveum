@@ -18,15 +18,15 @@ namespace Niveum.ObjectSchema.CSharpBinary
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpBinary(this Schema Schema, String NamespaceName, Boolean WithFirefly)
+        public static String CompileToCSharpBinary(this Schema Schema, String NamespaceName, Boolean WithFirefly, Boolean EnableNullableDeclaration)
         {
             var t = new Templates(Schema, WithFirefly);
-            var Lines = t.Main(Schema, NamespaceName).Select(Line => Line.TrimEnd(' '));
+            var Lines = t.Main(Schema, NamespaceName, EnableNullableDeclaration).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
         public static String CompileToCSharpBinary(this Schema Schema)
         {
-            return CompileToCSharpBinary(Schema, "", true);
+            return CompileToCSharpBinary(Schema, "", true, false);
         }
     }
 

@@ -19,15 +19,15 @@ namespace Niveum.ObjectSchema.CSharpCompatible
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpCompatible(this Schema Schema, String NamespaceName, String ImplementationNamespaceName, String ImplementationClassName)
+        public static String CompileToCSharpCompatible(this Schema Schema, String NamespaceName, String ImplementationNamespaceName, String ImplementationClassName, Boolean EnableNullableDeclaration)
         {
             var t = new Templates(Schema);
-            var Lines = t.Main(Schema, NamespaceName, ImplementationNamespaceName, ImplementationClassName).Select(Line => Line.TrimEnd(' '));
+            var Lines = t.Main(Schema, NamespaceName, ImplementationNamespaceName, ImplementationClassName, EnableNullableDeclaration).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
         public static String CompileToCSharpCompatible(this Schema Schema, String ImplementationNamespaceName, String ImplementationClassName)
         {
-            return CompileToCSharpCompatible(Schema, "", ImplementationNamespaceName, ImplementationClassName);
+            return CompileToCSharpCompatible(Schema, "", ImplementationNamespaceName, ImplementationClassName, false);
         }
     }
 

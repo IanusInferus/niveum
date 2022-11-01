@@ -1194,7 +1194,7 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "    return ja;";
             yield return "}";
         }
-        public IEnumerable<String> Main(Schema Schema, String NamespaceName)
+        public IEnumerable<String> Main(Schema Schema, String NamespaceName, Boolean EnableNullableDeclaration)
         {
             yield return "//==========================================================================";
             yield return "//";
@@ -1206,6 +1206,11 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "//Reference:";
             yield return "//NiveumJson";
             yield return "";
+            if (EnableNullableDeclaration)
+            {
+                yield return "#nullable disable";
+                yield return "";
+            }
             yield return "using System;";
             yield return "using System.Collections.Generic;";
             yield return "using System.Linq;";

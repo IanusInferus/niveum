@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2021.12.22.
+//  Version:     2022.11.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -85,6 +85,7 @@ namespace Niveum.SchemaManipulator
                 return 0;
             }
 
+            var EnableNullableDeclaration = false;
             foreach (var opt in CmdLine.Options)
             {
                 var optNameLower = opt.Name.ToLower();
@@ -204,6 +205,19 @@ namespace Niveum.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "nullable")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        EnableNullableDeclaration = true;
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "t2b")
                 {
                     var args = opt.Arguments;
@@ -256,15 +270,15 @@ namespace Niveum.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        ObjectSchemaToCSharpCode(args[0], "", true);
+                        ObjectSchemaToCSharpCode(args[0], "", true, EnableNullableDeclaration);
                     }
                     else if (args.Length == 2)
                     {
-                        ObjectSchemaToCSharpCode(args[0], args[1], true);
+                        ObjectSchemaToCSharpCode(args[0], args[1], true, EnableNullableDeclaration);
                     }
                     else if (args.Length == 3)
                     {
-                        ObjectSchemaToCSharpCode(args[0], args[1], Boolean.Parse(args[2]));
+                        ObjectSchemaToCSharpCode(args[0], args[1], Boolean.Parse(args[2]), EnableNullableDeclaration);
                     }
                     else
                     {
@@ -277,15 +291,15 @@ namespace Niveum.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        ObjectSchemaToCSharpBinaryCode(args[0], "", true);
+                        ObjectSchemaToCSharpBinaryCode(args[0], "", true, EnableNullableDeclaration);
                     }
                     else if (args.Length == 2)
                     {
-                        ObjectSchemaToCSharpBinaryCode(args[0], args[1], true);
+                        ObjectSchemaToCSharpBinaryCode(args[0], args[1], true, EnableNullableDeclaration);
                     }
                     else if (args.Length == 3)
                     {
-                        ObjectSchemaToCSharpBinaryCode(args[0], args[1], Boolean.Parse(args[2]));
+                        ObjectSchemaToCSharpBinaryCode(args[0], args[1], Boolean.Parse(args[2]), EnableNullableDeclaration);
                     }
                     else
                     {
@@ -298,11 +312,11 @@ namespace Niveum.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        ObjectSchemaToCSharpJsonCode(args[0], "");
+                        ObjectSchemaToCSharpJsonCode(args[0], "", EnableNullableDeclaration);
                     }
                     else if (args.Length == 2)
                     {
-                        ObjectSchemaToCSharpJsonCode(args[0], args[1]);
+                        ObjectSchemaToCSharpJsonCode(args[0], args[1], EnableNullableDeclaration);
                     }
                     else
                     {
@@ -315,7 +329,7 @@ namespace Niveum.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 4)
                     {
-                        ObjectSchemaToCSharpCompatibleCode(args[0], args[1], args[2], args[3]);
+                        ObjectSchemaToCSharpCompatibleCode(args[0], args[1], args[2], args[3], EnableNullableDeclaration);
                     }
                     else
                     {
@@ -559,6 +573,8 @@ namespace Niveum.SchemaManipulator
             Console.WriteLine(@"/async:<AsyncCommandListFile>");
             Console.WriteLine(@"指定所有命令为异步");
             Console.WriteLine(@"/async:*");
+            Console.WriteLine(@"指定生成C#代码中声明nullable");
+            Console.WriteLine(@"/nullable");
             Console.WriteLine(@"将Tree格式数据转化为二进制数据");
             Console.WriteLine(@"/t2b:<TreeFile>,<BinaryFile>,<MainType>");
             Console.WriteLine(@"将二进制数据转化为Tree格式数据");
@@ -772,10 +788,10 @@ namespace Niveum.SchemaManipulator
             Txt.WriteFile(VbCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpCode(String CsCodePath, String NamespaceName, Boolean WithFirefly)
+        public static void ObjectSchemaToCSharpCode(String CsCodePath, String NamespaceName, Boolean WithFirefly, Boolean EnableNullableDeclaration)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharp(NamespaceName, WithFirefly);
+            var Compiled = ObjectSchema.CompileToCSharp(NamespaceName, WithFirefly, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -789,10 +805,10 @@ namespace Niveum.SchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpBinaryCode(String CsCodePath, String NamespaceName, Boolean WithFirefly)
+        public static void ObjectSchemaToCSharpBinaryCode(String CsCodePath, String NamespaceName, Boolean WithFirefly, Boolean EnableNullableDeclaration)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpBinary(NamespaceName, WithFirefly);
+            var Compiled = ObjectSchema.CompileToCSharpBinary(NamespaceName, WithFirefly, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -806,10 +822,10 @@ namespace Niveum.SchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpJsonCode(String CsCodePath, String NamespaceName)
+        public static void ObjectSchemaToCSharpJsonCode(String CsCodePath, String NamespaceName, Boolean EnableNullableDeclaration)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpJson(NamespaceName);
+            var Compiled = ObjectSchema.CompileToCSharpJson(NamespaceName, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -823,10 +839,10 @@ namespace Niveum.SchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpCompatibleCode(String CsCodePath, String NamespaceName, String ImplementationNamespaceName, String ImplementationClassName)
+        public static void ObjectSchemaToCSharpCompatibleCode(String CsCodePath, String NamespaceName, String ImplementationNamespaceName, String ImplementationClassName, Boolean EnableNullableDeclaration)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ImplementationNamespaceName, ImplementationClassName);
+            var Compiled = ObjectSchema.CompileToCSharpCompatible(NamespaceName, ImplementationNamespaceName, ImplementationClassName, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);

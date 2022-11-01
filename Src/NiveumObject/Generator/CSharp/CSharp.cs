@@ -3,7 +3,7 @@
 //  File:        CSharp.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 对象类型结构C#代码生成器
-//  Version:     2021.12.21.
+//  Version:     2022.11.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -19,15 +19,15 @@ namespace Niveum.ObjectSchema.CSharp
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharp(this Schema Schema, String NamespaceName, Boolean WithFirefly)
+        public static String CompileToCSharp(this Schema Schema, String NamespaceName, Boolean WithFirefly, Boolean EnableNullableDeclaration)
         {
             var t = new Templates(Schema);
-            var Lines = t.Main(Schema, NamespaceName).Select(Line => Line.TrimEnd(' '));
+            var Lines = t.Main(Schema, NamespaceName, EnableNullableDeclaration).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
         public static String CompileToCSharp(this Schema Schema)
         {
-            return CompileToCSharp(Schema, "", true);
+            return CompileToCSharp(Schema, "", true, false);
         }
     }
 

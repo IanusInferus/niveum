@@ -3,6 +3,8 @@ Niveum.Object:
 修正C#、C++、Haxe、Java泛型类型的序列化代码生成时泛型类型定义的字段/选择等的类型没有进行代入的问题。
 Examples:
 更新C#通讯浏览器Blazor示例。
+Niveum.Core, Niveum.SchemaManipulator:
+增加C#代码生成的nullable声明。
 
 2022.10.04
 Niveum.Object:
