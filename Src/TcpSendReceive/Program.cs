@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.TcpSendReceive <Visual C#>
 //  Description: TCP发送接收器
-//  Version:     2018.12.22.
+//  Version:     2022.11.21.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================

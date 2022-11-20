@@ -9,7 +9,7 @@
     <Product>Niveum.TcpSendReceive</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>TcpSendReceive</AssemblyName>
-    <AssemblyVersion>2021.12.18.0</AssemblyVersion>
+    <AssemblyVersion>2022.11.21.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputType>WinExe</OutputType>
     <OutputPath>..\..\Bin\</OutputPath>

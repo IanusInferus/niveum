@@ -238,7 +238,7 @@ namespace TcpSendReceive
                         var CommandDef = Sche.Types.Where(t => t.FullName() == CommandName && t.Version() == "").Single();
                         var jParameters = JToken.Parse(ma.Result("${Params}"));
                         var tRequest = a.GetType(CommandName + "Request");
-                        var oRequest = a.GetType("JsonTranslator").GetMethod(CommandName + "RequestFromJson").Invoke(null, new Object[] { jParameters });
+                        var oRequest = a.GetType("JsonTranslator").GetMethod(CommandName.Replace(".", "Dot") + "RequestFromJson").Invoke(null, new Object[] { jParameters });
                         var Parameters = (Byte[])a.GetType("BinaryTranslator").GetMethod("Serialize").MakeGenericMethod(tRequest).Invoke(null, new Object[] { oRequest });
                         var CommandHash = (UInt32)(Sche.GetSubSchema(new TypeDef[] { CommandDef }, new TypeSpec[] { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0));
 
@@ -501,7 +501,7 @@ namespace TcpSendReceive
                     {
                         var tReply = a.GetType(CommandName + "Reply");
                         var oParameters = a.GetType("BinaryTranslator").GetMethod("Deserialize").MakeGenericMethod(tReply).Invoke(null, new Object[] { r.Command.Parameters });
-                        var jParameters = (JToken)a.GetType("JsonTranslator").GetMethod(CommandName + "ReplyToJson").Invoke(null, new Object[] { oParameters });
+                        var jParameters = (JToken)a.GetType("JsonTranslator").GetMethod(CommandName.Replace(".", "Dot") + "ReplyToJson").Invoke(null, new Object[] { oParameters });
                         var Line = String.Format("/svr {0} {1}\r\n", CommandName, jParameters.ToString(Formatting.None));
                         TextBox_Receive.AppendText(Line);
                     }
@@ -509,7 +509,7 @@ namespace TcpSendReceive
                     {
                         var tReply = a.GetType(CommandName + "Event");
                         var oParameters = a.GetType("BinaryTranslator").GetMethod("Deserialize").MakeGenericMethod(tReply).Invoke(null, new Object[] { r.Command.Parameters });
-                        var jParameters = (JToken)a.GetType("JsonTranslator").GetMethod(CommandName + "EventToJson").Invoke(null, new Object[] { oParameters });
+                        var jParameters = (JToken)a.GetType("JsonTranslator").GetMethod(CommandName.Replace(".", "Dot") + "EventToJson").Invoke(null, new Object[] { oParameters });
                         var Line = String.Format("/svr {0} {1}\r\n", CommandName, jParameters.ToString(Formatting.None));
                         TextBox_Receive.AppendText(Line);
                     }
@@ -572,9 +572,9 @@ namespace TcpSendReceive
                 c.Mode = Mode.Binary;
                 c.SchemaPaths = new List<String>
                 {
-                    "../Examples/Communication/Schema/Common",
-                    "../Examples/Communication/Schema/Communication",
-                    "../Examples/Communication/Schema/Compatibility"
+                    "../../Examples/Communication/Schema/Common",
+                    "../../Examples/Communication/Schema/Communication",
+                    "../../Examples/Communication/Schema/Compatibility.tree"
                 };
             }
 
@@ -633,6 +633,7 @@ namespace TcpSendReceive
             var Codes = new String[] { s.CompileToCSharp(), s.CompileToCSharpBinary(), s.CompileToCSharpJson() };
 
             var cp = new CompilerParameters();
+            cp.ReferencedAssemblies.Add(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location);
             cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(System.CodeDom.Compiler.CodeCompiler)).Location); //System.dll
             cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(System.Linq.Enumerable)).Location); //System.Core.dll
             cp.ReferencedAssemblies.Add(Assembly.GetAssembly(typeof(Firefly.Texting.TreeFormat.TreeFile)).Location); //Firefly.Lite.dll
